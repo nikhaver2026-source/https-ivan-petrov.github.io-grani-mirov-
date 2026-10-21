@@ -7,6 +7,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 часть — замедлена или ускорена, петли сведены с перекрёстным затуханием;
 сборщик — lab/tools/build_sounds.py.
 
+## 070916 Machine room server rack fans 3.wav
+
+Автор: thaighaudio. Лицензия: CC0 1.0. Источник: https://freesound.org/s/349689/
+
+Файлы: `349689_2205380-hq.ogg`
+
 ## 08 - Weaponry - Ultra-Heavy Cannon B
 
 Автор: Snoops_Audio1. Лицензия: CC0 1.0. Источник: https://freesound.org/s/807665/
@@ -169,12 +175,6 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `674742_7157894-hq.ogg`
 
-## Ambience Pack 1: Sci-Fi Horror
-
-Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/ambience-pack-1-sci-fi-horror
-
-Файлы: `Cage_of_the_Cryptid.mp3`, `Infestation_in_the_Control_Room.mp3`, `The_Surreal_Truth.mp3`
-
 ## Ambient horror
 
 Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/ambient-horror
@@ -293,7 +293,7 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Автор: Joseph Sardin. Лицензия: CC0 1.0. Источник: https://bigsoundbank.com
 
-Файлы: `1487_air-compressor.flac`, `3092_beer-compressor-2.flac`, `1803_automatic-hatch-opening.flac`, `1804_automatic-hatch-closing.flac`, `1092_electric-circuit-breaker.flac`, `3442_electric-strike-1.flac`, `1711_elevator-3-floors.flac`, `1712_elevator-6-floors.flac`, `1591_broken-glass-of-champagne.flac`, `1987_pistol-cocking-4.flac`, `3011_hiss-of-steam-train-3.flac`, `3019_hiss-of-steam-train-7.flac`, `2376_microwave-oven-3.flac`, `2143_flashing-light-bulb-1.flac`, `2146_flashing-light-bulb-4.flac`, `2618_radio-frequency-sweep-2.flac`, `1973_robot-1.flac`, `1981_robot-9.flac`, `3114_thunder-3.flac`, `1662_howling-of-a-girl-1.flac`, `3411_evacuation-alarm-1.flac`, `3016_steam-locomotive-1.flac`, `2118_neon-or-transformer-1.flac`, `2119_neon-or-transformer-2.flac`, `1032_air-extractor.flac`, `1233_air-water-heat-pump-back.flac`, `3598_ventilation-5.flac`
+Файлы: `1487_air-compressor.flac`, `3092_beer-compressor-2.flac`, `1803_automatic-hatch-opening.flac`, `1804_automatic-hatch-closing.flac`, `1092_electric-circuit-breaker.flac`, `3442_electric-strike-1.flac`, `1711_elevator-3-floors.flac`, `1712_elevator-6-floors.flac`, `1591_broken-glass-of-champagne.flac`, `1987_pistol-cocking-4.flac`, `3011_hiss-of-steam-train-3.flac`, `3019_hiss-of-steam-train-7.flac`, `2376_microwave-oven-3.flac`, `2143_flashing-light-bulb-1.flac`, `2146_flashing-light-bulb-4.flac`, `2618_radio-frequency-sweep-2.flac`, `1973_robot-1.flac`, `1981_robot-9.flac`, `3114_thunder-3.flac`, `1662_howling-of-a-girl-1.flac`, `3411_evacuation-alarm-1.flac`, `3016_steam-locomotive-1.flac`, `2118_neon-or-transformer-1.flac`, `2119_neon-or-transformer-2.flac`
 
 ## Bitcrushed voice one-shots
 
@@ -553,12 +553,6 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `320139_140737-hq.ogg`
 
-## Dripping water loop
-
-Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/dripping-water-loop
-
-Файлы: `atmosbasement.mp3_.flac`
-
 ## DSRXPLOD.WAV
 
 Автор: wildweasel. Лицензия: CC BY 4.0. Источник: https://freesound.org/s/39020/
@@ -613,12 +607,6 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `30933_15696-hq.ogg`
 
-## Electronic device loop
-
-Автор: qubodup. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/electronic-device-loop
-
-Файлы: `qubodup-edev.flac`
-
 ## Elevator ding
 
 Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/elevator-ding
@@ -629,7 +617,7 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Автор: dklon. Лицензия: CC BY 3.0. Источник: https://opengameart.org/content/em-fields-pack-1
 
-Файлы: `EM Fields 01.flac`, `EM Fields 03.flac`, `EM Fields 04.flac`, `EM Fields 06.flac`, `EM Fields 07.flac`
+Файлы: `EM Fields 01.flac`, `EM Fields 03.flac`, `EM Fields 04.flac`, `EM Fields 06.flac`
 
 ## EMP Blast.wav
 
@@ -667,17 +655,17 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `explosion_somewhere_far.mp3`
 
-## Factory ambiance
-
-Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/factory-ambiance
-
-Файлы: `Factory.ogg`
-
 ## Fast whoosh, bamboo swoosh through air, version 1
 
 Автор: zapsplat.com. Лицензия: CC0 1.0. Источник: https://freesound.org/s/719636/
 
 Файлы: `719636_15601358-hq.ogg`
+
+## ferry engine room2.wav
+
+Автор: mrmayo. Лицензия: CC0 1.0. Источник: https://freesound.org/s/74915/
+
+Файлы: `74915_271213-hq.ogg`
 
 ## Fire Burst.wav
 
@@ -911,7 +899,7 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Автор: Little Robot Sound Factory. Лицензия: CC BY 3.0. Источник: https://opengameart.org/content/horror-sound-effects-library
 
-Файлы: `Ambience_MonstersBelly_00.mp3`, `Blood_Dripping_Loop_00.mp3`, `Blood_Drip_00.mp3`, `Blood_Drip_01.mp3`, `Blood_Drip_02.mp3`, `Blood_Drip_03.mp3`, `Blood_Drip_04.mp3`, `Blood_Drip_06.mp3`, `Breath_Scared_01.mp3`, `Breath_Scared_02.mp3`, `Breath_Scared_03.mp3`, `Breath_Scared_04.mp3`, `Breath_Scared_05.mp3`, `Breath_Scared_06.mp3`, `Breath_Scared_07.mp3`, `Breath_Scared_09.mp3`, `Evil_Machine_Loop_00.mp3`, `Gate_Open_00.mp3`, `Scream_Male_01.mp3`, `Scream_Male_02.mp3`, `Scream_Male_03.mp3`, `Scream_Male_04.mp3`
+Файлы: `Blood_Dripping_Loop_00.mp3`, `Blood_Drip_00.mp3`, `Blood_Drip_01.mp3`, `Blood_Drip_02.mp3`, `Blood_Drip_03.mp3`, `Blood_Drip_04.mp3`, `Blood_Drip_06.mp3`, `Breath_Scared_01.mp3`, `Breath_Scared_02.mp3`, `Breath_Scared_03.mp3`, `Breath_Scared_04.mp3`, `Breath_Scared_05.mp3`, `Breath_Scared_06.mp3`, `Breath_Scared_07.mp3`, `Breath_Scared_09.mp3`, `Gate_Open_00.mp3`, `Scream_Male_01.mp3`, `Scream_Male_02.mp3`, `Scream_Male_03.mp3`, `Scream_Male_04.mp3`
 
 ## Hungry ghoul
 
@@ -949,11 +937,23 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `121942_2015227-hq.ogg`
 
+## Industrial Machine Cycle.wav
+
+Автор: iccleste. Лицензия: CC0 1.0. Источник: https://freesound.org/s/260815/
+
+Файлы: `260815_4858376-hq.ogg`
+
 ## Industrial Music Box
 
 Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Industrial_Music_Box_(ISRC_USUAN1100812).mp3
 
 Файлы: `Industrial_Music_Box_%28ISRC_USUAN1100812%29.mp3`
+
+## industrial_machine_tone
+
+Автор: Kostrava. Лицензия: CC0 1.0. Источник: https://freesound.org/s/434507/
+
+Файлы: `434507_1134415-hq.ogg`
 
 ## INFECTED ZOMBIE MAN DYING GROWL
 
@@ -1621,6 +1621,42 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `robot1.flac`, `robot3.flac`
 
+## Room tone air conditioning equipment 4
+
+Автор: mbezzola. Лицензия: CC0 1.0. Источник: https://freesound.org/s/652477/
+
+Файлы: `652477_537412-hq.ogg`
+
+## Room tone electrical room A
+
+Автор: mbezzola. Лицензия: CC0 1.0. Источник: https://freesound.org/s/652471/
+
+Файлы: `652471_537412-hq.ogg`
+
+## Room Tone Office Industrial Ambience 03
+
+Автор: mzui. Лицензия: CC0 1.0. Источник: https://freesound.org/s/203295/
+
+Файлы: `203295_658546-hq.ogg`
+
+## Room Tone, Sci Fi, Large Hall
+
+Автор: Kinoton. Лицензия: CC0 1.0. Источник: https://freesound.org/s/353159/
+
+Файлы: `353159_2247456-hq.ogg`
+
+## Room_Tone_Ambience_Medium_Control_Low_Hum.wav
+
+Автор: gchase. Лицензия: CC0 1.0. Источник: https://freesound.org/s/144046/
+
+Файлы: `144046_430339-hq.ogg`
+
+## RoomTone07
+
+Автор: richwise. Лицензия: CC0 1.0. Источник: https://freesound.org/s/474832/
+
+Файлы: `474832_1481531-hq.ogg`
+
 ## S23-10 Electrical arcing and sparking
 
 Автор: craigsmith. Лицензия: CC0 1.0. Источник: https://freesound.org/s/675752/
@@ -1673,7 +1709,7 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Автор: Kenney. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/sci-fi-sounds
 
-Файлы: `computerNoise_000.ogg`, `computerNoise_002.ogg`, `computerNoise_003.ogg`, `doorClose_000.ogg`, `doorClose_001.ogg`, `doorClose_002.ogg`, `doorOpen_000.ogg`, `doorOpen_001.ogg`, `doorOpen_002.ogg`, `engineCircular_000.ogg`, `engineCircular_001.ogg`, `engineCircular_003.ogg`, `forceField_000.ogg`, `forceField_002.ogg`, `forceField_003.ogg`, `spaceEngineLarge_000.ogg`, `spaceEngineLarge_001.ogg`, `spaceEngineLarge_002.ogg`, `spaceEngineLow_000.ogg`, `spaceEngineLow_001.ogg`, `spaceEngineLow_002.ogg`
+Файлы: `computerNoise_002.ogg`, `computerNoise_003.ogg`, `doorClose_000.ogg`, `doorClose_001.ogg`, `doorClose_002.ogg`, `doorOpen_000.ogg`, `doorOpen_001.ogg`, `doorOpen_002.ogg`, `engineCircular_000.ogg`, `engineCircular_001.ogg`, `engineCircular_003.ogg`, `forceField_000.ogg`, `forceField_002.ogg`, `forceField_003.ogg`, `spaceEngineLarge_000.ogg`, `spaceEngineLarge_002.ogg`, `spaceEngineLow_000.ogg`, `spaceEngineLow_001.ogg`, `spaceEngineLow_002.ogg`
 
 ## Sci-Fi_Explosion_2
 
@@ -1716,6 +1752,24 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/secret-coin
 
 Файлы: `odd_coin.flac`
+
+## Server Room Ambience
+
+Автор: SoundDesignForYou. Лицензия: CC0 1.0. Источник: https://freesound.org/s/646682/
+
+Файлы: `646682_13085623-hq.ogg`
+
+## Server Room ATMOS + Electrical Buzz.wav
+
+Автор: Smice_6. Лицензия: CC0 1.0. Источник: https://freesound.org/s/536525/
+
+Файлы: `536525_5546157-hq.ogg`
+
+## Server Room ATMOS.wav
+
+Автор: Smice_6. Лицензия: CC0 1.0. Источник: https://freesound.org/s/536529/
+
+Файлы: `536529_5546157-hq.ogg`
 
 ## Servo 7
 

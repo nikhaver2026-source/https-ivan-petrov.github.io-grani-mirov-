@@ -9,7 +9,8 @@ lab/js/sounds.js (что звучит и откуда) и lab/sounds/CREDITS.md 
 
 Запуск: python3 lab/tools/build_sounds.py <exA> <exB> <exC> <exD> [шаблоны id]
 (распакованные архивы заходов 1–4; заход 4 — живые записи Freesound, CC0,
-авторы и названия — tools/sfx-fetch/fs_lab.tsv). Нужны ffmpeg (libvorbis) и numpy.
+авторы и названия — tools/sfx-fetch/fs_lab.tsv; записи следующих заходов
+Freesound — заход 6 и др. — кладутся в ту же папку lab_fsD). Нужны ffmpeg (libvorbis) и numpy.
 """
 import sys, os, glob, fnmatch, subprocess, json, re, hashlib
 import numpy as np
@@ -350,6 +351,21 @@ def loopify(a, xf):
     if a.ndim == 2: t = t[:, None]
     mixed = head * np.sqrt(t) + tail * np.sqrt(1 - t)
     return np.concatenate([mixed, a[n:-n]])
+
+def widen(path, lo2, shift, a, xf):
+    """(1.7) Ширина фона: узкая или моно-запись становится широкой — левый
+    канал — середина (L+R)/2 выбранного места записи, правый — та же запись
+    на shift секунд дальше (или раньше); у каждого канала своя петля той же
+    длины, громкость каналов выровнена. Гул тот же, но по сторонам разный,
+    как в настоящем зале, и без фазовых искажений: на динамике телефона
+    (каналы складываются) ничего не гасится."""
+    lo3 = dict(lo2); lo3["start"] = lo2["start"] + shift
+    if lo3["start"] < 0: raise SystemExit("ширина: правый канал начинается раньше записи (%s)" % os.path.basename(path))
+    b = loopify(process_one(path, lo3, "loop", None, ch=1), xf)
+    m = a.mean(axis=1) if a.ndim == 2 else a
+    if len(b) != len(m): raise SystemExit("ширина: правому каналу не хватило записи (%s)" % os.path.basename(path))
+    b = b * (rms_active(m) / max(rms_active(b), 1e-9))
+    return np.stack([m, b], axis=1).astype(np.float32)
 
 def onsets(a, need, min_gap=0.22, length=0.38):
     m = np.abs(a if a.ndim == 1 else a.mean(axis=1))
@@ -838,23 +854,30 @@ E("phase_in", "sfx", [S(A, "lab_git_freedoom", "dstelept.flac")])
 E("w_magnetron_r", "mixv", [[L(FS(699655), 0.0, 0.8), L(FS(330629, dur=1.1, af=PITCH(0.85)), 0.0, 0.9), L(FS(209860, dur=0.8, af="highpass=f=150"), 0.05, 0.5)], [L(FS(699655, af=PITCH(1.06)), 0.0, 0.8), L(FS(330629, dur=1.1, af=PITCH(0.8)), 0.0, 0.9), L(FS(210878, start=0.5, dur=0.6), 0.0, 0.4)]], mx=1.3, tgt=-14.5)
 
 # ═════ ФОН: уровни, помещения, события ═════
-E("amb_l1", "loop", [S(B, "bsb_lab_vent", "3598*")], seg=(5, 36), xf=3.0, ch=2, v=0.8)
-E("amb_l2", "loop", [S(B, "bsb_lab_vent", "1233*")], seg=(0.5, 17), xf=2.0, ch=2, v=0.8)
-E("amb_l3", "loop", [S(A, "lab_drip_atmos*", "*.flac")], seg=(0, 20), xf=2.0, ch=2, v=0.9)
-E("amb_l4", "loop", [S(C, "lab_ambpack_Infestation*", "*.mp3")], seg=(2, 44), xf=4.0, ch=2, v=0.9)
-E("amb_l5", "loop", [S(C, "lab_factory*", "Factory.ogg")], seg=(10, 50), xf=4.0, ch=2, v=0.9)
-E("amb_l6", "loop", [S(C, "lab_horrorlib*", "Evil_Machine_Loop_00.mp3")], seg=(0, 9.6), xf=0.6, ch=2, v=0.8)
-E("amb_l7", "loop", [S(C, "lab_ambpack_The_20Surreal*", "*.mp3")], seg=(4, 50), xf=4.0, ch=2, v=0.9)
-E("amb_l8", "loop", [S(C, "lab_ambpack_Cage*", "*.mp3")], seg=(4, 50), xf=4.0, ch=2, v=0.9)
-E("amb_l9", "loop", [S(C, "lab_emfields*", "EM Fields 07.flac")], seg=(1, 32), xf=3.0, v=0.7)
-E("amb_l10", "loop", [S(C, "lab_horrorlib*", "Ambience_MonstersBelly_00.mp3")], seg=(2, 55), xf=4.0, ch=2, v=1.0)
-E("room_server", "loop", [S(A, "lab_scifi_k*", "computerNoise_000.ogg")], seg=(0, 5), xf=0.5, v=0.6)
+# (1.7) Фон уровня — низкий гул машин: машинные залы, серверные, электрощитовая,
+# кондиционеры, машинное отделение (Freesound, CC0, заход 6 — tools/sfx-fetch,
+# группа amb17). Прежние записи фона убраны. Петля — 48 с из самого ровного места
+# записи (без щелчков и перепадов), стык сведён за 4 с; ниже 32 Гц срезано —
+# динамик этого не играет, а запас громкости съедает. Узкие и моно-записи
+# расширены (wide — откуда взят правый канал, см. widen): все фоны — широкое стерео.
+HUM = "highpass=f=32"
+E("amb_l1", "loop", [FS(353159, af=HUM)], seg=(126, 48), xf=4.0, ch=2, v=0.9)   # большой зал: шлюз
+E("amb_l2", "loop", [FS(652477, af=HUM)], seg=(51, 48), xf=4.0, ch=2, v=0.9, wide=60)    # кондиционеры: жилой сектор
+E("amb_l3", "loop", [FS(349689, af=HUM)], seg=(8, 48), xf=4.0, ch=2, v=0.9, wide=-8)     # вентиляторы стоек: гидропоника
+E("amb_l4", "loop", [FS(474832, af=HUM)], seg=(159, 48), xf=4.0, ch=2, v=0.9, wide=181)   # серверные: генетика
+E("amb_l5", "loop", [FS(260815, af=HUM)], seg=(3, 48), xf=4.0, ch=2, v=0.9)     # цикл станка: робототехника
+E("amb_l6", "loop", [FS(652471, af=HUM)], seg=(34, 48), xf=4.0, ch=2, v=0.85, wide=-34)   # электрощитовая: энергоблок
+E("amb_l7", "loop", [FS(536529, af=HUM)], seg=(9, 48), xf=4.0, ch=2, v=0.9, wide=-9)     # холодная серверная: криохранилище
+E("amb_l8", "loop", [FS(434507, af=HUM)], seg=(0, 48), xf=4.0, ch=2, v=0.9, wide=30)     # станочный гул: оружейные
+E("amb_l9", "loop", [FS(536525, af=HUM)], seg=(8, 48), xf=4.0, ch=2, v=0.9, wide=-8)     # серверная с электрозудом: ускоритель
+E("amb_l10", "loop", [FS(74915, af=HUM)], seg=(6, 48), xf=4.0, ch=2, v=0.9, wide=-6)     # машинное отделение: Ядро
+E("room_server", "loop", [FS(646682, af=HUM)], seg=(1, 30), xf=3.0, ch=2, v=0.6, wide=24)   # (1.7) серверная
 E("room_radio", "loop", [S(A, "lab_retrocomp*", "*.mp3")], seg=(10, 14), xf=1.0, v=0.5)
 E("room_generator", "loop", [S(A, "lab_steam_generator*", "*.flac")], seg=(1, 18), xf=1.5, v=0.8)
 E("room_transformer", "loop", [S(B, "bsb_lab_transformer", "2118*")], seg=(0.5, 9), xf=1.0, v=0.6)
 E("room_magnetron", "loop", [S(C, "lab_emfields*", "EM Fields 01.flac")], seg=(1, 18), xf=2.0, v=0.7)
 E("room_electric", "loop", [S(C, "lab_emfields*", "EM Fields 04.flac")], seg=(1, 11), xf=1.0, v=0.6)
-E("room_hum", "loop", [S(A, "lab_device*", "*.flac")], seg=(0, 1.7), xf=0.2, v=0.5)
+E("room_hum", "loop", [FS(203295, af=HUM)], seg=(11, 30), xf=3.0, ch=2, v=0.5)   # (1.7) гул кабинета
 E("room_cryo", "loop", [S(B, "bsb_lab_compressor", "1487*")], seg=(4, 22), xf=2.0, v=0.6)
 E("room_compressor", "loop", [S(B, "bsb_lab_compressor", "3092*")], seg=(4, 22), xf=2.0, v=0.6)
 E("room_drip", "loop", [S(C, "lab_horrorlib*", "Blood_Dripping_Loop_00.mp3")], seg=(0, 15), xf=1.0, v=0.7)
@@ -864,14 +887,14 @@ E("room_creatures", "loop", [S(A, "lab_ghoul*", "*.ogg")], seg=(2, 20), xf=2.0, 
 E("room_incubator", "loop", [S(A, "lab_scifi50*", "loop_ambient_weird.ogg")], seg=(0, 3.1), xf=0.4, v=0.5)
 E("room_factory", "loop", [S(A, "lab_scifi50*", "loop_machine_02.ogg")], seg=(0, 3.1), xf=0.3, v=0.6)
 E("room_ring", "loop", [S(A, "lab_scifi_k*", "engineCircular_001.ogg")], seg=(0, 5), xf=0.6, v=0.6)
-E("room_reactor", "loop", [S(A, "lab_scifi_k*", "spaceEngineLarge_001.ogg")], seg=(0, 5), xf=0.6, v=0.8)
+E("room_reactor", "loop", [FS(144046, af=HUM)], seg=(71, 40), xf=4.0, ch=2, v=0.8)   # (1.7) низкий гул пульта
 E("room_fridge", "loop", [S(B, "bsb_lab_microwave", "2376*")], seg=(2, 10), xf=1.0, v=0.4)
 E("room_fountain", "loop", [S(A, "lab_water40*", "loop_water_02.ogg")], seg=(0, 7), xf=0.8, v=0.5)
 E("room_medical", "loop", [S(A, "lab_scifi50*", "loop_machine_03.ogg")], seg=(0, 4.6), xf=0.4, v=0.4)
 E("room_elevator", "loop", [S(A, "lab_scifi_k*", "engineCircular_003.ogg")], seg=(0, 5), xf=0.6, v=0.5)
 E("room_gate", "loop", [S(A, "lab_scifi_k*", "spaceEngineLow_002.ogg")], seg=(0, 5), xf=0.6, v=0.7)
 E("room_stairwell", "loop", [S(A, "lab_sfx100b*", "*loop_ambient_02.ogg")], seg=(0, 3), xf=0.4, v=0.5)
-E("room_corridor", "loop", [S(B, "bsb_lab_vent", "1032*")], seg=(1, 18), xf=2.0, v=0.4)
+# (1.7) отдельной петли коридора нет: в коридоре звучит сам гул уровня
 # далёкие события комплекса
 E("ev_metal_groan", "sfx", [S(A, "lab_pings*", "*Marker #[1-9].flac"), S(A, "lab_pings*", "*Marker #1[0-9].flac")], n=12, mx=4.5)
 E("ev_vent_rattle", "sfx", [S(A, "lab_metalwood*", "metal_sheet_0[46].ogg"), S(A, "lab_metalwood*", "misc_0[1-3].ogg")], n=4)
@@ -1107,6 +1130,11 @@ def build():
                         lo2 = dict(lo); lo2["start"] = lo.get("start", 0) + st; lo2["dur"] = du + o.get("xf", 1.0)
                         a = process_one(path, lo2, kind, None, ch=o.get("ch", 1))
                         a = loopify(a, o.get("xf", 1.0))
+                        if o.get("wide") is not None: a = widen(path, lo2, o["wide"], a, o.get("xf", 1.0))
+                        elif a.ndim == 2 and id_.startswith(("amb_l", "room_")) and o.get("wide", 0) is not False:
+                            # стерео фона — каналы вровень: гул не перевешивает в одно ухо
+                            r0, r1 = rms_active(a[:, 0]), rms_active(a[:, 1]); k = np.sqrt(r0 * r1)
+                            a = np.stack([a[:, 0] * (k / max(r0, 1e-9)), a[:, 1] * (k / max(r1, 1e-9))], axis=1).astype(np.float32)
                     elif kind == "music":
                         # Музыка — петля в памяти (не поток: поток в WebView молчит):
                         # моно, не длиннее 110 секунд, конец сведён в начало.

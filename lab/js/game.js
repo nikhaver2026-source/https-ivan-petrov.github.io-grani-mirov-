@@ -768,6 +768,7 @@ function giveItem(it, quiet) {
     case "credits": G.credits += it.n; break;
     case "weapon":
       G.weapons.push(it.w);
+      if (LAB.oko && LAB.oko.react) later(function () { LAB.oko.react("weapon"); }, 2500);
       if (!G.tut.weapon && hintsOn()) { G.tut.weapon = 1; extra = LAB.K(" Выбрать оружие — свайп одним пальцем вверх и сразу вниз. Вынуть — касание тремя пальцами.", " Выбрать оружие — Q и E или цифры от 1 до 9. Достать — R."); }
       break;
     case "pass":
@@ -799,7 +800,7 @@ function giveItem(it, quiet) {
       if (!G.samples[it.sid]) { G.samples[it.sid] = 1; G.enMax += 2; G.en = Math.min(G.enMax, G.en + 10); gainXP(20); extra = " Собрано образцов: " + Object.keys(G.samples).length + ". Энергия имплантов выросла."; if (LAB.oko) LAB.oko.event("sample"); }
       break;
     case "chip":
-      if (G.implants.indexOf(it.implant) < 0) { G.implants.push(it.implant); extra = " Имплант установлен сам: «" + implantDef(it.implant).n + "». Панель имплантов — " + LAB.K("двойное касание четырьмя пальцами.", "клавиша U."); }
+      if (G.implants.indexOf(it.implant) < 0) { G.implants.push(it.implant); extra = " Имплант установлен сам: «" + implantDef(it.implant).n + "». Панель имплантов — " + LAB.K("двойное касание четырьмя пальцами.", "клавиша U."); if (LAB.oko && LAB.oko.react) later(function () { LAB.oko.react("implant"); }, 3000); }
       else { G.credits += 60; extra = " Такой имплант уже есть — чип продан за 60 кредитов."; }
       break;
   }
@@ -1074,6 +1075,8 @@ function roomCheck(full, run, mute) {
   var first = !CUR.fs.objs["room" + r.id];
   CUR.fs.objs["room" + r.id] = 1;
   if (first && r.annex && LAB.ach) LAB.ach.ev("room", 1);
+  /* (1.7) важное помещение (оружейная, пост охраны, серверная, хранилище) — ОКО это замечает */
+  if (first && r.annex && LAB.garrison && LAB.oko && LAB.oko.react && LAB.garrison.CAT[LAB.garrison.category(r)].imp >= 3) LAB.oko.react("vault", { room: r.name });
   var parts = [r.name + "."];
   if (first || full) {
     parts.push(r.desc || LAB.ROOMS[r.type].desc);
@@ -1522,9 +1525,10 @@ function logicDoor(d) {
   UIx("closeAll");
   if (!LAB.puzzles) { say("Замок молчит."); return; }
   LAB.puzzles.open(d.lock.kind, d.lock.seed, function (ok) {
-    if (ok) { A("play", "code_ok"); CUR.fs.doors[d.id] = 1; openDoor(d); sayq("Замок принял решение. Дверь открыта."); gainXP(14); }
+    if (ok) { A("play", "code_ok"); CUR.fs.doors[d.id] = 1; openDoor(d); sayq("Замок принял решение. Дверь открыта."); gainXP(14 + 8 * (d.lock.diff || 0)); }
     else { A("play", "term_err"); sayq("Замок не принял решение: можно подойти снова."); if (LAB.combat) LAB.combat.noise(3); }
-  }, { title: "Логический замок" });
+    if (LAB.oko && LAB.oko.react) LAB.oko.react(ok ? "puzzle_ok" : "puzzle_fail");
+  }, { title: "Логический замок", diff: d.lock.diff });
 }
 /* (1.6) Отмычки — по виду помещения за дверью: жёлтая — служебные, синяя —
    серверные и узлы связи, красная — режимные и посты охраны, зелёная —
@@ -1750,13 +1754,18 @@ function puzzleMenu(o) {
   if (st.solved) { say("Стенд погашен: испытание пройдено."); return; }
   var kinds = { sort: "настройка частот", relays: "схема реле", bulls: "подбор ключа", riddle: "загадка" };
   if (LAB.puzzles) for (var pk in LAB.puzzles.NAMES) kinds[pk] = LAB.puzzles.NAMES[pk];
-  UIx("menu", "Стенд испытаний: " + (kinds[o.kind] || "головоломка"), [
+  var dw = o.diff != null && LAB.puzzles && LAB.puzzles.hasDiff && LAB.puzzles.hasDiff(o.kind) ? ", " + ["простая", "средняя", "сложная"][o.diff] : "";
+  UIx("menu", "Стенд испытаний: " + (kinds[o.kind] || "головоломка") + dw, [
     { label: "Пройти испытание", fn: function () {
       var done = function (ok) {
+        if (LAB.oko && LAB.oko.react) LAB.oko.react(ok ? "puzzle_ok" : "puzzle_fail");
         if (!ok) { A("play", "term_err"); say("Стенд гаснет и снова загорается: можно попробовать ещё раз."); return; }
-        st.solved = true; A("play", "term_ok"); LAB.UI.fanfare(); gainXP(18);
+        st.solved = true; A("play", "term_ok"); LAB.UI.fanfare(); gainXP(18 + 10 * (o.diff || 0));
         var loot = (o.loot || []).slice(); loot.forEach(function (it, k) { if (!it.id) it.id = o.id + "-p" + k; });
-        say("Испытание пройдено! Лоток стенда открылся. " + (loot.length ? "Найдено: " + loot.map(function (it) { return giveItem(it); }).join(" ") : "Внутри пусто."));
+        /* (1.7) за среднюю и сложную задачу — премия кредитами */
+        var prize = o.diff ? LAB.credits(15 * o.diff, G.L, G.F) : 0;
+        if (prize) G.credits += prize;
+        say("Испытание пройдено! Лоток стенда открылся. " + (loot.length ? "Найдено: " + loot.map(function (it) { return giveItem(it); }).join(" ") : "Внутри пусто.") + (prize ? " Премия за сложность: " + prize + " " + plural(prize, "кредит", "кредита", "кредитов") + "." : ""));
         UIx("refresh"); autosaveSoon();
       };
       UIx("closeAll");
@@ -1764,7 +1773,7 @@ function puzzleMenu(o) {
       if (o.kind === "sort") LAB.mini.sortTones(4 + hard, done, { title: "Настройка частот" });
       else if (o.kind === "relays") LAB.mini.relays(4 + hard, done, { title: "Схема реле", seed: o.seed });
       else if (o.kind === "bulls") LAB.mini.bulls(3 + (hard >= 2 ? 1 : 0), done, { title: "Подбор ключа" });
-      else if (LAB.puzzles && LAB.puzzles.has(o.kind)) LAB.puzzles.open(o.kind, o.seed || 1, done, { title: "Стенд испытаний" });
+      else if (LAB.puzzles && LAB.puzzles.has(o.kind)) LAB.puzzles.open(o.kind, o.seed || 1, done, { title: "Стенд испытаний", diff: o.diff });
       else askRiddle(riddleFor(o.seed || 1, G.L), "Загадка стенда", done);
     } },
     { label: "Осмотреть", fn: function () { say(LAB.OBJ.puzzle.desc); } }
@@ -2472,7 +2481,7 @@ function vendingItems(o) {
   /* батареи и расходники своей глубины */
   for (var ak in LAB.AMMO) if (["energy", "magnetron", "positron"].indexOf(ak) < 0 && (LAB.AMMO[ak].depth || 1) <= G.L && (LAB.AMMO[ak].depth || 1) > G.L - 25) goods.push(["ammo:" + ak, 1]);
   /* (1.5) товары с разделом cat — еда, лекарства, защита, инструменты, ценности — у пунктов снабжения */
-  for (var ik in LAB.ITEMS) { var idf = LAB.ITEMS[ik]; if (idf.kind !== "part" && !idf.cat && idf.depth && idf.depth <= G.L && idf.depth > G.L - 20) goods.push([ik, 1]); }
+  for (var ik in LAB.ITEMS) { var idf = LAB.ITEMS[ik]; if (idf.kind !== "part" && !idf.cat && idf.depth && idf.depth <= G.L && idf.depth > G.L - 20 && LAB.srcOk(idf, "buy")) goods.push([ik, 1]); }
   var items = goods.map(function (g) {
     var id = g[0], isAmmo = id.indexOf("ammo:") === 0, name = isAmmo ? LAB.AMMO[id.slice(5)].n : LAB.ITEMS[id].n;
     var base = isAmmo ? (LAB.AMMO[id.slice(5)].price || 40) : LAB.ITEMS[id].price;
@@ -2586,6 +2595,7 @@ function implantMenu(o) {
     return { label: im.n + " — " + p + " кредитов. " + im.desc, fn: function () {
       if (G.credits < p) { LAB.UI.error(); say("Не хватает кредитов: нужно " + p + "."); return; }
       G.credits -= p; G.implants.push(im.id); A("play", "implant"); say("Имплант «" + im.n + "» установлен. Панель имплантов — " + LAB.K("двойное касание четырьмя пальцами.", "клавиша U.")); journal("Установлен имплант: " + im.n + "."); UIx("refresh");
+      if (LAB.oko && LAB.oko.react) later(function () { LAB.oko.react("implant"); }, 3000);
     } };
   });
   if (!items.length) { say("Все импланты уже установлены."); return; }
@@ -2660,6 +2670,8 @@ game.finale = finale;
 /* ════════ ВЫЖИВШИЕ ════════ */
 function npcMenu(n) {
   var items = [];
+  /* (1.7) живой человек рядом с носителем — ОКО это не нравится */
+  if (!n.robot && !n.okoSaw) { n.okoSaw = 1; if (LAB.oko && LAB.oko.react) later(function () { LAB.oko.react("survivor"); }, 4000); }
   if (n.robot) {
     var lines = LAB.ROBOT_LINES[n.type] || ["..."];
     items.push({ label: "Поговорить", fn: function () { say(lines[Math.floor(Math.random() * lines.length)], { robot: true }); } });
@@ -3018,6 +3030,7 @@ function useItem(id) {
   if (id === "wrepair" && LAB.workshop) return LAB.workshop.fieldRepair();
   if (d.kind === "trap" && LAB.traps) return LAB.traps.use(id);
   if (d.kind === "throw") {
+    if (d.fx && d.fx.gren && LAB.combat) return LAB.combat.throwGrenade(id);
     if (id === "emp") { if (LAB.combat) LAB.combat.throwEmp(); return true; }
     if (d.fx && (d.fx.decoy || d.fx.blind) && LAB.workshop) return LAB.workshop.throwDevice(id);
     return throwItem(id, d.fx && d.fx.emp ? "emp" : "noise");
@@ -3054,6 +3067,7 @@ function useItem(id) {
   if (food) eatSound(d.eat);
   else A("play", id === "bandage" ? "bandage_tear" : id === "sorbent" || id === "neuroblock" ? "pills_rattle" : id === "antidote" || id === "stim" || id === "energy_d" ? "inject" : "heal");
   say((food ? (sip ? "Вы выпили: " : "Вы съели: ") + d.n.charAt(0).toLowerCase() + d.n.slice(1) + ". " : d.n + ". ") + (d.x ? d.x + " " : "") + msg.join(" ") + " Осталось: " + (G.inv[id] || 0) + ".");
+  if (LAB.oko && LAB.oko.react) LAB.oko.react(food ? (sip ? "drink" : "eat") : d.heal ? "heal" : "");
   UIx("refresh");
   if (food) autosaveSoon();
   if (LAB.combat && S.turnBased) LAB.combat.tick();
@@ -3257,6 +3271,8 @@ function die() {
     if (cp && cp.L === G.L) enterFloor(cp.L, cp.F, "respawn");
     else enterFloor(G.L, 1, "restart");
     if (LAB.combat) LAB.combat.calmAll();
+    /* (1.7) ОКО видело, как носитель вернулся */
+    later(function () { if (LAB.oko && LAB.oko.react) LAB.oko.react("revive"); }, 5000);
   }, 4200);
 }
 game.die = die;

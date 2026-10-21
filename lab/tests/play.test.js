@@ -85,7 +85,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     return out;
   });
   ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
-  ok(/Что нового: /.test(news.note) && /Напитки — с собой/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
+  ok(/Что нового: /.test(news.note) && /Коридоры больше не пустуют/.test(news.text) && /Сапёры ОКО/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
 
   console.log("Настройки");
   await page.evaluate(() => { LAB.ui.top().i = 0; });
@@ -188,11 +188,34 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   await page.waitForTimeout(500);
   const ch1 = await page.evaluate(() => LAB.game.curWeapon().charge);
   ok(ch1 === ch0 - 1, "свайп с оружием — выстрел (заряд " + ch0 + "→" + ch1 + ")");
-  await gest({ kind: "zig", n: 1, dir: "L", dir2: "R" });
-  ok(await page.evaluate(() => LAB.game.curWeapon().charge === LAB.game.curWeapon().cap), "влево-вправо — перезарядка");
-  await gest({ kind: "zig", n: 1, dir: "U", dir2: "D" });
-  ok(await page.evaluate(() => LAB.game.G.wi === 0), "вверх-вниз — смена оружия");
-  await gest({ kind: "zig", n: 1, dir: "D", dir2: "U" });
+  /* (1.7) касание двумя пальцами — перезарядка, двойное касание двумя — смена оружия */
+  await gest({ kind: "tap", n: 2 });
+  await page.waitForTimeout(1100); /* перезарядка идёт почти секунду */
+  ok(await page.evaluate(() => LAB.game.curWeapon().charge === LAB.game.curWeapon().cap), "касание двумя пальцами — перезарядка");
+  const wiA = await page.evaluate(() => LAB.game.G.wi);
+  await gest({ kind: "dtap", n: 2 });
+  const wiB = await page.evaluate(() => LAB.game.G.wi);
+  ok(wiB !== wiA, "двойное касание двумя пальцами — смена оружия (" + wiA + "→" + wiB + ")");
+  await page.evaluate(() => { LAB.game.G.wi = LAB.game.G.weapons.length - 1; });
+  /* (1.7) зигзаг влево-вправо — бросок гранаты, вправо-влево — выбор гранаты */
+  const gr = await page.evaluate(async () => {
+    const G = LAB.game.G, out = {};
+    G.inv.gren_frag = 2; G.inv.k_netbomb = 1; SPOKEN.length = 0;
+    LAB.input.dispatch({ kind: "zig", n: 1, dir: "R", dir2: "L" });
+    const top = LAB.ui.top(), lb = top ? top.items.map(i => typeof i.label === "function" ? i.label() : i.label) : [];
+    out.menu = lb.some(l => /^Осколочная граната, 2 шт/.test(l)) && lb.some(l => /^Сетевая/.test(l));
+    LAB.ui.closeAll();
+    G.gren = "gren_frag";
+    const n0 = G.inv.gren_frag;
+    LAB.input.dispatch({ kind: "zig", n: 1, dir: "L", dir2: "R" });
+    await new Promise(r => setTimeout(r, 1800));
+    out.thrown = G.inv.gren_frag === n0 - 1 && SPOKEN.some(t => /Осколочная/.test(t));
+    out.said = SPOKEN.slice(-3).join(" | ");
+    delete G.inv.gren_frag; delete G.inv.k_netbomb;
+    return out;
+  });
+  ok(gr.menu, "вправо-влево — выбор гранаты");
+  ok(gr.thrown, "влево-вправо — бросок гранаты (" + gr.said + ")");
   /* очередь удержанием */
   await page.waitForTimeout(1000); /* перезарядка идёт почти секунду */
   await page.evaluate(() => { LAB.game.curWeapon().charge = LAB.game.curWeapon().cap; LAB.combat.startFire("N"); });
@@ -746,13 +769,16 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     out.allLoop = cams.length > 0 && cams.every(f => C.camState(f) === "loop");
     /* тёмный этаж укорачивает обзор камеры на три шага, маскировка слепит её: проверяем при штатном свете */
     G.event = "norm"; G.eventUntil = G.min + 100000; G.st.cloak = 0; G.st.jam = 0;
+    /* броня «призрак для камер» (из прошлых проверок) камеры тоже обманывает — на время проверки её нет */
+    const armSave = G.armor; G.armor = null;
     /* камера на петле не видит героя: встаём у неё на линии взгляда */
     const cam = cams[0];
     const fl = g.CUR.fl, T = LAB.T;
     const walk = (x, y) => x >= 0 && y >= 0 && x < LAB.W && y < LAB.H && (fl.t[y * LAB.W + x] === T.CORR || fl.t[y * LAB.W + x] === T.ROOM);
     const DV = { N: [0, -1], S: [0, 1], W: [-1, 0], E: [1, 0] };
     let spot = null;
-    for (const d of (cam.camDirs || ["N", "E", "S", "W"])) { const v = DV[d]; for (let k = 2; k <= 3 && !spot; k++) { const x = cam.x + v[0] * k, y = cam.y + v[1] * k; if (walk(x, y)) spot = { x, y, d }; } if (spot) break; }
+    /* место на линии взгляда: свободная клетка, и камере её видно (между ними нет обстановки) */
+    for (const d of (cam.camDirs || ["N", "E", "S", "W"])) { const v = DV[d]; for (let k = 2; k <= 3 && !spot; k++) { const x = cam.x + v[0] * k, y = cam.y + v[1] * k; if (walk(x, y) && !fl.objAt[y * LAB.W + x] && LAB.los(fl, g.CUR.fs, cam.x, cam.y, x, y)) spot = { x, y, d }; } if (spot) break; }
     out.spot = !!spot;
     if (spot) {
       cam.camDirs = cam.camDirs || ["N", "E", "S", "W"]; cam.camI = cam.camDirs.indexOf(spot.d); cam.camSw = -999;
@@ -767,6 +793,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
       cam.camI = cam.camDirs.indexOf(spot.d); cam.camSw = -999; cam.camT = 0;
       for (let i = 0; i < 3; i++) C.tick();
       out.seenAgain = O.level() > lv0 || !!O.sec().seen;
+      if (!out.seenAgain) out.camDbg = JSON.stringify({ at: G.L + "-" + G.F, lv0, lv: O.level(), cam: [cam.x, cam.y, C.camState(cam), cam.camI, cam.blindT || 0, !!cam.dead, !!cam.calm], spot, hero: [G.x, G.y], blind: !!g.CUR.fs.okoBlind, st: [G.st.cloak, G.st.jam, G.st.deaf || 0], log: O.logText(4) });
     }
     /* у самой камеры: снять питание под кожухом */
     LAB.ui.closeAll();
@@ -811,11 +838,12 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     out.isoSolved = await solve();
     out.isoGone = !st.isoUntil;
     LAB.ui.closeAll();
+    G.armor = armSave;
     return out;
   });
   ok(dnet.none || (dnet.netItem && /Камеры этажа/.test(dnet.defense) && /Турели/.test(dnet.defense)), "оборонная сеть в терминале безопасности доступна всегда" + (dnet.noTurrets ? ", и на этаже без турелей" : "") + ": " + (dnet.defense || ""));
   ok(dnet.none || (dnet.camMenu && dnet.loopSolved && dnet.allLoop), "камеры этажа: запись всех закольцована — головоломкой (камер " + dnet.nCams + ")");
-  ok(dnet.none || !dnet.spot || (dnet.blindLoop && dnet.loopFound && dnet.seenAgain), "камера на петле героя не видит; петля кончилась — ОКО находит её и снова видит (" + [dnet.blindLoop, dnet.loopFound, dnet.seenAgain].join(", ") + ")");
+  ok(dnet.none || !dnet.spot || (dnet.blindLoop && dnet.loopFound && dnet.seenAgain), "камера на петле героя не видит; петля кончилась — ОКО находит её и снова видит (" + [dnet.blindLoop, dnet.loopFound, dnet.seenAgain].join(", ") + (dnet.camDbg ? " " + dnet.camDbg : "") + ")");
   ok(dnet.none || !dnet.near || (dnet.inReach && dnet.cutMenu && dnet.cutSolved && dnet.off && dnet.toRepair && dnet.repairPlanned && dnet.kept), "у самой камеры: питание снято, ОКО шлёт ремонтника, состояние помнится на этаже (" + [dnet.inReach, dnet.cutMenu, dnet.cutSolved, dnet.off, dnet.toRepair, dnet.repairPlanned, dnet.kept].join(", ") + ")");
   ok(dnet.none || (dnet.flashTested && dnet.flashMenu && dnet.flashSolved && dnet.ours), "камера перепрошита с терминала: докладывает ОКО «чисто»" + (dnet.flashMenu === false ? " (пункт не найден)" : ""));
   ok(dnet.none || (dnet.isoItem && dnet.isoMenu && dnet.isoSolved && dnet.isoGone), "изоляция сегмента ОКО: пункт доступен, взлом маршрутизации её снимает (" + [dnet.isoItem, dnet.isoMenu, dnet.isoSolved, dnet.isoGone].join(",") + ")");
@@ -2474,13 +2502,13 @@ LAB.ui.closeAll();
     out.logic = bot4.ally === true && bot4.allyT > 0;
     bot4.dead = true;
     T.list().length = 0;
-    /* мина робота-сапёра: слышно за два шага, обезвреживается, становится вашей */
+    /* (1.7) мина сапёра ОКО (одна система с ловушками по приказу ОКО): вплотную слышно всегда, обезвреживается, становится вашей */
     put(4);
-    const mx = G.x + v[0] * 2, my = G.y + v[1] * 2;
-    T.enemyMine(mx, my, 20);
+    const mx = G.x + v[0], my = G.y + v[1];
+    T.okoTrap("mine", mx, my, { dmg: 20 });
     SPOKEN.length = 0; T.playerStep();
-    const em2 = T.list().find(t => t.by === "sapper");
-    out.heard = !!em2 && em2.known === 1 && SPOKEN.some(t => /Осторожно: мина робота-сапёра/.test(t));
+    const em2 = T.list().find(t => t.by === "oko");
+    out.heard = !!em2 && em2.known === 1 && SPOKEN.some(t => /Осторожно: .*сапёра ОКО/.test(t));
     G.x = mx - v[0]; G.y = my - v[1];
     const inv1 = G.inv.tr_mine || 0;
     T.disarm(em2);
@@ -2518,7 +2546,7 @@ LAB.ui.closeAll();
   ok(tr.remote, "заряд на радиосигнале подрывается по команде и задевает врага рядом");
   ok(tr.emp, "ЭМИ-мина: у робота снят щит, машина стоит");
   ok(tr.logic, "логическая мина перепрошивает робота на вашу сторону");
-  ok(tr.heard && tr.disarm, "мину робота-сапёра слышно за два шага, её можно обезвредить и забрать");
+  ok(tr.heard && tr.disarm, "мину сапёра ОКО слышно вплотную, её можно обезвредить и забрать");
   ok(tr.invItem && tr.menu, "инвентарь: раздел «Ловушки и мины», окно с вашими ловушками на этаже");
   ok(tr.oldTraps > 0, "старые ловушки прежних жителей на этажах: " + tr.oldTraps);
 
@@ -2633,7 +2661,7 @@ LAB.ui.closeAll();
     /* логический замок: есть на этажах, у двери — пункт решения, условие открывается окном */
     let ld = null, lfloor = null;
     for (let L = 3; L <= 6 && !ld; L++) for (let F = 1; F <= 20 && !ld; F++) { const f2 = LAB.getFloor(G.seed, L, F); const d2 = f2.doors.find(d => d.lock && d.lock.type === "logic"); if (d2) { ld = d2; lfloor = [L, F]; } }
-    out.logicDoor = !!ld && LAB.LOGIC_KINDS.indexOf(ld.lock.kind) >= 0;
+    out.logicDoor = !!ld && LAB.logicKinds().indexOf(ld.lock.kind) >= 0 && [0, 1, 2].indexOf(ld.lock.diff) >= 0;
     if (ld) {
       g.enterFloor(lfloor[0], lfloor[1], "down", true); C.foes().forEach(f => { f.dead = true; }); G.dead = false;
       ld = g.CUR.fl.doors.find(d => d.id === ld.id);
@@ -2643,7 +2671,7 @@ LAB.ui.closeAll();
       const k2 = LAB.ui.top().items.findIndex(i => /^Решить задачу замка/.test(label(i)));
       if (k2 >= 0) { LAB.ui.top().i = k2; LAB.ui.activate(); }
       const w = LAB.ui.top();
-      out.logicCond = !!w && w.note === true && /Карантинный шлюз|Щит автоматики|Пробы|Склад контейнеров|Журнал дежурств|Журнал смены/.test(labels().join(" "));
+      out.logicCond = !!w && w.note === true && (String(w.title).toLowerCase() === String(LAB.puzzles.NAMES[ld.lock.kind]).toLowerCase() || /Карантинный шлюз|Щит автоматики|Пробы|Склад контейнеров|Журнал дежурств|Журнал смены/.test(labels().join(" ")));
       out.logicDiag = (ld.lock.kind || "") + "/" + (w ? w.title : "нет окна");
       LAB.ui.closeAll(); LAB.Speech.stop();
     }
@@ -2663,7 +2691,7 @@ LAB.ui.closeAll();
     LAB.mini.gesture({ kind: "back", n: 1 }); await wait(100);
     out.instOff = !LAB.mini.active() && played >= 3;
     out.voice = LAB.instruments.voice("bell", 440, 0.3, 0) === true && LAB.instruments.voice("accordion", 330, 0.5, 0.2) === true;
-    /* ловушка — жест вверх-вниз, мина — вниз-вверх, только с пустыми руками */
+    /* ловушка — жест вверх-вниз, мина — вниз-вверх; (1.7) и с оружием в руках */
     g.enterFloor(2, 4, "down", true); C.foes().forEach(f => { f.dead = true; }); G.dead = false; G.drawn = false; G.hp = G.hpMax;
     fl = g.CUR.fl;
     const free = (x, y) => LAB.inb(x, y) && (fl.t[y * LAB.W + x] === LAB.T.ROOM || fl.t[y * LAB.W + x] === LAB.T.CORR) && !fl.objAt[y * LAB.W + x];
@@ -2684,13 +2712,14 @@ LAB.ui.closeAll();
     out.mineFlag = LAB.traps.isMine("mine") && LAB.traps.isMine("claymore") && !LAB.traps.isMine("jaw");
     G.inv.tr_jaw = 1; G.drawn = true; G.x = cell[0] + 2;
     LAB.input.dispatch({ kind: "zig", n: 1, dir: "U", dir2: "D" });
-    out.zigArmed = LAB.traps.list().length === 2 && G.inv.tr_jaw === 1;
+    out.zigArmed = LAB.traps.list().length === 3 && !G.inv.tr_jaw;
     G.drawn = false; delete G.inv.tr_jaw;
     LAB.ui.closeAll();
     /* маяки: у известной ловушки — свой источник; после скана у врага — метка и источник, который движется с ним */
     /* герой на третьей клетке, капкан и мина — на первых двух; враг — рядом, не на клетке героя (на нулевом расстоянии маяк не звучит) */
     const f0 = C.foes()[0];
-    if (f0) { f0.dead = false; f0.hp = f0.maxhp; f0.x = cell[0] + 2; f0.y = cell[1] + 1; f0.state = "idle"; }
+    /* (1.7) враг замирает: патрульный иначе уйдёт своим обходом, пока проверка ждёт маяк */
+    if (f0) { f0.dead = false; f0.hp = f0.maxhp; f0.x = cell[0] + 2; f0.y = cell[1] + 1; f0.state = "idle"; f0.frozen = 999; }
     C.useImplantFree("scan");
     out.mark = !!f0 && f0.mark > Date.now();
     await wait(600);
@@ -2699,7 +2728,7 @@ LAB.ui.closeAll();
     out.foeBeacon = !f0 || srcs.some(s => s.key === "f" + f0.id && s.x === f0.x && s.y === f0.y);
     if (f0) { f0.x = cell[0] + 1; f0.y = cell[1] + 1; await wait(500); out.foeMoves = LAB.atmos._sources().some(s => s.key === "f" + f0.id && s.x === cell[0] + 1 && s.y === cell[1] + 1); f0.dead = true; } else out.foeMoves = true;
     out.beaconDiag = [out.mark, out.trapBeacon, out.foeBeacon, out.foeMoves].join(",") + " " + srcs.map(s => s.key + (s.trap ? ":" + s.trap : "") + (s.foe ? ":" + s.foe : "")).join(" ");
-    out.hum = LAB.atmos._hum() || !LAB.AE.ctx;
+    out.hum = LAB.atmos._bed() || !LAB.AE.ctx;
     LAB.traps.list().length = 0;
     return out;
   });
@@ -2709,9 +2738,9 @@ LAB.ui.closeAll();
   ok(v16.logicDoor && v16.logicText && v16.logicItem && v16.logicCond, "логический замок: есть на этажах, пункт решения, условие окном (" + v16.logicDiag + ")");
   ok(v16.chess && v16.uniq && v16.chessFx, "задачи с единственным решением, у шахматных позиций есть мат в один ход, на столике — настоящая партия");
   ok(v16.instOn && v16.instOff && v16.voice, "инструмент: поле из трёх рядов перехватывает жесты, ноты звучат, уход — не провал");
-  ok(v16.zig && v16.mineFlag && v16.zigArmed, "ловушка — жест вверх-вниз, мина — вниз-вверх с пустыми руками; с оружием — смена оружия (" + v16.zigDiag + ")");
+  ok(v16.zig && v16.mineFlag && v16.zigArmed, "ловушка — жест вверх-вниз, мина — вниз-вверх, и с оружием в руках тоже (" + v16.zigDiag + ")");
   ok(v16.mark && v16.trapBeacon && v16.foeBeacon && v16.foeMoves, "маяки: у ловушки и мины свои, скан вешает маяк на врага, и он движется с ним (" + v16.beaconDiag + ")");
-  ok(v16.hum, "фон лаборатории: низкий гул машин и электричества звучит");
+  ok(v16.hum, "фон лаборатории: запись низкого гула машин звучит");
 
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {

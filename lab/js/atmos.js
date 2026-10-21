@@ -226,7 +226,7 @@ var FOE_BCN = {
 };
 
 /* ════════ ФОН: уровень, помещения, события ════════ */
-var bed = null, roomLoop = null, roomLoopId = "", roomLid = "", corrLoop = null, evTimer = null, evLayer = null, evLayerId = "", hbLoop = null, tension = null, worldOn = false;
+var bed = null, roomLoop = null, roomLoopId = "", roomLid = "", evTimer = null, evLayer = null, evLayerId = "", hbLoop = null, tension = null, worldOn = false;
 var ROOM_LOOP = {
   server: "room_server", comms: "room_radio", genhall: "room_generator", transformer: "room_transformer", magnetron_hall: "room_magnetron", switchboard: "room_electric",
   cable: "room_electric", powerdesk: "room_hum", cryohall: "room_cryo", freezer: "room_cryo", samples: "room_cryo", compressor: "room_compressor", thaw: "room_drip",
@@ -298,12 +298,12 @@ function enterFloor(L, F) {
     var oldBed = bed && bed.id;
     if (bed && bed.h) bed.h.stop(2.5);
     var bid = lev.amb;
-    /* (1.6) основа фона — низкий гул машин и электричества (синтез); запись уровня — лишь тихий оттенок */
-    bed = { L: L, id: bid, h: loop(bid, { bus: "amb", gain: 0.28, fadeIn: 3, reverb: 0 }, "bed") };
+    /* (1.7) фон уровня — запись низкого гула машин: машинный зал, серверная,
+       электрощитовая, машинное отделение; в коридоре звучит только он */
+    bed = { L: L, id: bid, h: loop(bid, { bus: "amb", gain: bedGain(), fadeIn: 3, reverb: 0 }, "bed") };
     if (oldBed && oldBed !== bid) releaseLater(oldBed, 3500);
     if (!bed.h) synthBed(L);
   }
-  startHum(L);
   if (!beaconT) beaconT = setInterval(function () { LAB.safe(beaconTick); if (++deadN % 20 === 0) LAB.safe(deadLoops); }, 220);
   if (!evTimer) scheduleEvent();
   var Ld = depthL(L);
@@ -325,7 +325,7 @@ var synthBedS = null;
 function synthBed(L) {
   if (synthBedS) { synthBedS.stop(2); synthBedS = null; }
   if (!AE.ensure()) return;
-  /* синтезированный гул уровня: низкий шум, гул вентиляции, ниже с глубиной */
+  /* запасной гул (запись фона не загрузилась): низкий шум и гул вентиляции, ниже с глубиной */
   var s = new LAB.SFX(AE.amb), Ld = depthL(L);
   var n = s.noise("brown", 4, true), f = s.filter("lowpass", 180 - Ld * 8, 0.7), gN = s.gain(0.0001);
   n.connect(f); f.connect(gN); gN.connect(s.out()); n.start();
@@ -335,50 +335,25 @@ function synthBed(L) {
   s.lfo(0.07, 60, f.frequency);
   synthBedS = s;
 }
-/* ── Гул лаборатории (1.6): низкий гул машин, сетевое электричество с
-   гармониками, трансформаторный зуд, редкие щелчки реле и разряды. Ниже и
-   гуще с глубиной. Это и есть атмосферный фон; записи уровня — оттенок. ── */
-var hum = null;
-function startHum(L) {
-  if (hum && hum.L === L) return;
-  stopHum(1.5);
-  if (!AE.ensure()) return;
-  var s = new LAB.SFX(AE.amb), Ld = depthL(L), c = s.ctx, t = c.currentTime;
-  try {
-    /* гул машин: коричневый шум через низкий фильтр, медленно дышит */
-    var n = s.noise("brown", 4, true), f = s.filter("lowpass", 115 - Ld * 4, 0.8), gN = s.gain(0.0001);
-    n.connect(f); f.connect(gN); gN.connect(s.out()); n.start();
-    gN.gain.setTargetAtTime(0.4, t, 2.5);
-    s.lfo(0.05, 22, f.frequency);
-    /* электричество: сетевой гул и гармоники, каждая дышит по-своему */
-    var base = 50 - Math.min(8, Ld * 0.8);
-    [[1, 0.07, "sine"], [2, 0.034, "triangle"], [3, 0.017, "triangle"], [4, 0.008, "sine"]].forEach(function (h) {
-      var o = s.osc(h[2], base * h[0]), go = s.gain(0.0001); o.connect(go); go.connect(s.out()); o.start();
-      go.gain.setTargetAtTime(h[1], t, 3);
-      s.lfo(0.09 + h[0] * 0.035, h[1] * 0.35, go.gain);
-    });
-    /* трансформаторный зуд: пила через узкую полосу */
-    var sw = s.osc("sawtooth", base * 2), bp = s.filter("bandpass", base * 6, 7), gs = s.gain(0.0001);
-    sw.connect(bp); bp.connect(gs); gs.connect(s.out()); sw.start();
-    gs.gain.setTargetAtTime(0.02, t, 4);
-    /* реле и разряды — изредка */
-    s.every(6000, 16000, function () { if (Math.random() < 0.55) s.tink(700 + Math.random() * 600); else s.crackle(); });
-  } catch (e) { s.stop(0); return; }
-  hum = { L: L, s: s };
-}
-function stopHum(fade) { if (hum) { try { hum.s.stop(fade == null ? 1.5 : fade); } catch (e) { /* */ } hum = null; } }
+/* (1.7) Громкость фона уровня: в коридоре — полная; в помещении, где гудят
+   свои машины (своя петля помещения), гул уровня отходит на второй план. */
+var BED_GAIN = 0.62, BED_DUCK = 0.38;
+function bedGain() { return roomLoop ? BED_DUCK : BED_GAIN; }
+function bedLevel(fade) { if (bed && bed.h && bed.h.setGain) bed.h.setGain(bedGain(), fade == null ? 1.2 : fade); }
 function setRoom(r) {
   var id = r ? (ROOM_LOOP[r.type] || "") : "corridor";
   if (id === roomLoopId) return;
   roomLoopId = id;
   var prevLid = roomLid;
   if (roomLoop) { roomLoop.stop(1.2); roomLoop = null; }
-  var lid = !id ? "" : id === "corridor" ? "room_corridor" : id;
+  /* (1.7) в коридоре своей петли нет — там звучит сам гул уровня */
+  var lid = !id || id === "corridor" ? "" : id;
   roomLid = lid;
-  /* гул прошлого помещения — из памяти (коридор остаётся: в него выходят часто) */
-  if (prevLid && prevLid !== lid && prevLid !== "room_corridor") releaseLater(prevLid, 3000);
+  /* гул прошлого помещения — из памяти */
+  if (prevLid && prevLid !== lid) releaseLater(prevLid, 3000);
+  if (lid) roomLoop = loop(lid, { bus: "amb", gain: 0.55, fadeIn: 1.2, reverb: 0.1 }, "room");
+  bedLevel();
   if (!id) { AE.setReverb(1.2 + depthL(G() ? G().L : 1) * 0.08, 0.28); return; }
-  roomLoop = loop(lid, { bus: "amb", gain: 0.55, fadeIn: 1.2, reverb: 0.1 }, "room");
   /* отзвук: коридор — длинный, большие залы — гулкие, тесные — сухие */
   if (r) {
     var size = (r.x1 - r.x0 + 1) * (r.y1 - r.y0 + 1);
@@ -413,7 +388,6 @@ function eventLayer(id) {
 }
 function stopWorld() {
   worldOn = false;
-  stopHum(1.5);
   var bedId = bed && bed.id;
   if (bed && bed.h) bed.h.stop(1.5);
   bed = null;
@@ -762,12 +736,11 @@ var FB = {
 };
 
 /* Звуковое устройство пересоздано (единый обработчик сам запустил петли
-   записей): синтез — гул уровня без записи, напряжение боя и синтезированная
-   музыка — запускается заново. */
+   записей): синтез — запасной гул уровня (если запись не загрузилась),
+   напряжение боя и синтезированная музыка — запускается заново. */
 Snd.onRebuild(function () {
   var g = G();
   if (synthBedS) { synthBedS = null; if (worldOn && g) synthBed(g.L); }
-  if (hum) { hum = null; if (worldOn && g) startHum(g.L); }
   if (tension) { try { if (tension.s && tension.s.stop) tension.s.stop(0); } catch (e) { /* */ } tension = null; startTension(); }
   if (mus.s) { var th = mus.theme; try { if (mus.s.stop) mus.s.stop(0); } catch (e) { /* */ } mus.s = null; mus.key = ""; mus.timers.forEach(function (t) { clearInterval(t); clearTimeout(t); }); mus.timers = []; if (th) music(th); }
 });
@@ -775,7 +748,7 @@ Snd.onRebuild(function () {
 LAB.atmos = {
   _chOf: function (id, o) { return chOf(id, o || {}); },
   play: play, at: at, has: has,
-  _hum: function () { return !!hum; }, _sources: function () { return lastSources; },
+  _bed: function () { return !!(bed && (bed.h || synthBedS)); }, _sources: function () { return lastSources; },
   enterFloor: enterFloor, setRoom: setRoom, setEvent: setEvent, stopWorld: stopWorld,
   step: step, bump: bump, bumpWall: bumpWall, bumpSoft: bumpSoft, near: near, doorOpen: doorOpen, doorClose: doorClose, doorPass: doorPass, objUse: objUse,
   container: container, stairs: stairs, stairEnter: stairEnter, stairStep: stairStep, bumpRail: bumpRail, gate: gate, gateSeal: gateSeal, elevRide: elevRide, rest: rest, death: death, npcHello: npcHello,

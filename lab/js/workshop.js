@@ -65,7 +65,7 @@ for (pk in PARTS_NEW) {
   if (LAB.PARTS.indexOf(pk) < 0) LAB.PARTS.push(pk);
   LAB.PART_DEPTH[pk] = pd.depth;
 }
-function srcOf(k) { return SRC[k] || (LAB.ITEMS[k] && LAB.ITEMS[k].src) || (LAB.ITEMS[k] && LAB.ITEMS[k].kind === "part" ? "попадается на своей глубине: ящики, склады, обломки машин" : "собирают в мастерской или покупают"); }
+function srcOf(k) { var s0 = LAB.ITEMS[k] && LAB.ITEMS[k].src; if (LAB.ARSENAL17 && LAB.ARSENAL17.srcText[s0]) return LAB.ARSENAL17.srcText[s0]; return SRC[k] || s0 || (LAB.ITEMS[k] && LAB.ITEMS[k].kind === "part" ? "попадается на своей глубине: ящики, склады, обломки машин" : "собирают в мастерской или покупают"); }
 
 /* ════════ ПАТРОНЫ, ОРУЖИЕ, УСТРОЙСТВА ════════ */
 /* стальные пули — только из мастерской и у торговцев: в случайной добыче их нет (этажи не меняются) */
@@ -847,18 +847,22 @@ function salvItems() {
 function salvMenu() { menu("Разбор предметов", salvItems(), { keep: true, rebuild: salvItems }); }
 function researchMenu() {
   var b = bench(cur.o), et = effTier(b), g = G();
-  var us = bpList("spec").filter(function (rc) { return !known(rc); }).length, ue = bpList("exp").filter(function (rc) { return !known(rc); }).length;
+  var near = function (rc) { return !rc.minL || rc.minL <= Math.max(g.L + 2, 3); };
+  var us = bpList("spec").filter(function (rc) { return !known(rc) && near(rc); }).length, ue = bpList("exp").filter(function (rc) { return !known(rc) && near(rc); }).length;
   var items = [
     { label: "Специализированная схема: " + costText(RESEARCH.spec) + ". Неизвестных: " + us + (et < 2 ? ". Нужны станки" : ""), keep: true, fn: function () { research("spec", b); } },
     { label: "Экспериментальная схема: " + costText(RESEARCH.exp) + ". Неизвестных: " + ue + (et < 3 ? ". Нужен экспериментальный стенд" : ""), keep: true, fn: function () { research("exp", b); } },
     back()
   ];
-  menu("Исследование схем", items, { intro: "Известно схем: " + bpList().filter(known).length + " из " + bpList().length + ". Новые схемы дают и документы, и инженеры, и разбор устройств, и установки глубин." });
+  menu("Исследование схем", items, { intro: "Известно схем: " + bpList().filter(known).length + " из " + bpList().filter(function (rc) { return known(rc) || near(rc); }).length + ". Новые схемы дают и документы, и инженеры, и разбор устройств, и установки глубин." });
 }
 /* Справочник деталей: сколько есть, где взять, для каких схем. */
 function uses(k) {
-  var kn = [], unk = 0;
-  LAB.RECIPES.forEach(function (rc) { if (!rc.need || !rc.need[k]) return; if (known(rc)) kn.push(rc.n.toLowerCase()); else unk++; });
+  /* (1.7) только схемы своей глубины — вашей или самой детали (и чуть глубже);
+     до десятого уровня о рецептах глубин для простых деталей — ни слова */
+  var kn = [], unk = 0, L0 = G().L, pd = LAB.PART_DEPTH[k] || 1, L = Math.max(L0, pd + 5);
+  if (L0 < 10 && pd < 10) L = Math.min(L, 9);
+  LAB.RECIPES.forEach(function (rc) { if (!rc.need || !rc.need[k] || (rc.minL && rc.minL > L)) return; if (known(rc)) kn.push(rc.n.toLowerCase()); else unk++; });
   return { kn: kn, unk: unk };
 }
 function partLine(k) {

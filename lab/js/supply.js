@@ -216,6 +216,7 @@ function shelfPool(L) {
     var d = LAB.ITEMS[id];
     if (!d.price || d.surf || d.nosell || d.kind === "valuable" || id === "proto" || id === "okokey") continue;
     if (["food", "use", "throw", "deploy", "tool", "part", "wmodule", "trap"].indexOf(d.kind) < 0) continue;
+    if (!LAB.srcOk(d, "buy")) continue; /* (1.7) только верстак или только находка — не на прилавке */
     var dep = d.depth || (d.kind === "part" ? LAB.PART_DEPTH[id] || 1 : 1);
     if (dep > L || dep >= 99) continue;
     var c = catOf(id);
@@ -249,7 +250,7 @@ function makeStock(o) {
   /* оружие: в оружейном пункте — два ствола, в общем — иногда один */
   var wpn = [];
   var nW = prof === "arms" ? 2 : prof === "all" && r.chance(0.5) ? 1 : 0;
-  for (var wi = 0; wi < nW; wi++) wpn.push(LAB.genWeapon(r, L, g.F, { bonus: 0.05 }));
+  for (var wi = 0; wi < nW; wi++) wpn.push(LAB.genWeapon(r, L, g.F, { bonus: 0.05, channel: "buy" }));
   wpn.forEach(function (w, i) { w.id = "sw" + i + "_" + CUR().key + o.id; });
   /* схемы: одна — та, которой у вас нет */
   var bps = LAB.RECIPES.filter(function (rc) { return rc.bp && (rc.minL || 1) <= Math.max(L, 2) && !(g.bp && g.bp[rc.id]); });

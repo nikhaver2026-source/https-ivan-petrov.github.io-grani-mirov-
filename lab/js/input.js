@@ -2,11 +2,12 @@
    «Подземная лаборатория» — жесты и клавиши.
    Один палец: свайп — шаг (оружие убрано) или выстрел в ту сторону
    (оружие в руках); свайп с удержанием — идти дальше или стрелять
-   очередью; вверх-вниз одним движением — сменить оружие; влево-вправо —
-   перезарядить; касание — что рядом; двойное касание — действия у двери,
-   терминала, установки.
+   очередью; влево-вправо одним движением — бросить гранату, вправо-влево —
+   выбрать гранату; вверх-вниз — поставить ловушку, вниз-вверх — мину (1.7);
+   касание — что рядом; долгое касание — повторить фразу; двойное касание —
+   действия у двери, терминала, установки.
    Два пальца: вверх — осмотреться, влево — аптечка, вправо — навигатор,
-   вниз — сканер; касание — повторить фразу, двойное — тишина.
+   вниз — сканер; касание — перезарядить, двойное — сменить оружие (1.7).
    Три пальца: касание — вынуть или убрать оружие, вверх — персонаж,
    вниз — инвентарь, влево — задания и журнал, вправо — навигатор целей.
    Четыре пальца: касание — здоровье и заряд, двойное касание — импланты,
@@ -212,16 +213,17 @@ function gameGesture(g) {
       return;
     }
     if (g.kind === "zig") {
-      /* влево-вправо — перезарядка; вверх-вниз с оружием в руках — смена оружия,
-         с пустыми руками — поставить ловушку (вверх-вниз) или мину (вниз-вверх) (1.6) */
-      if (g.dir === "L" || g.dir === "R") { game.reload(); return; }
-      if (G.drawn) { game.switchWeapon(g.dir === "U" ? 1 : -1); return; }
+      /* (1.7) влево-вправо — бросить гранату, вправо-влево — выбрать гранату;
+         вверх-вниз — поставить ловушку, вниз-вверх — мину (и с оружием в руках) */
+      if (g.dir === "L") { if (LAB.combat && LAB.combat.throwQuick) LAB.combat.throwQuick(); return; }
+      if (g.dir === "R") { if (LAB.combat && LAB.combat.pickGrenade) LAB.combat.pickGrenade(false); return; }
       if (LAB.traps && LAB.traps.quick) LAB.traps.quick(g.dir === "U" ? "trap" : "mine");
       return;
     }
     if (g.kind === "tap") { game.nearbyInfo(); return; }
     if (g.kind === "dtap") { game.interact(); return; }
-    if (g.kind === "press") { game.nearbyInfo(); return; }
+    /* долгое касание одним пальцем — повторить последнюю фразу (1.7) */
+    if (g.kind === "press") { repeatLast(); return; }
   }
   if (g.n === 2) {
     if (g.kind === "swipe") {
@@ -231,8 +233,9 @@ function gameGesture(g) {
       else if (g.dir === "D") { if (G.implants.indexOf("scan") >= 0) LAB.combat.useImplant("scan"); else game.lookAround(); }
       return;
     }
-    if (g.kind === "tap") { repeatLast(); return; }
-    if (g.kind === "dtap") { LAB.Speech.hush(); return; }
+    /* (1.7) касание двумя пальцами — перезарядить, двойное — сменить оружие */
+    if (g.kind === "tap") { game.reload(); return; }
+    if (g.kind === "dtap") { game.switchWeapon(1); return; }
   }
   if (g.n === 3) {
     if (g.kind === "tap" || g.kind === "dtap") { game.toggleDraw(); return; }
@@ -269,7 +272,8 @@ function repeatLast() {
    Tab — осмотреться, N — навигатор, M — список целей, V — сканер,
    H — аптечка, C — персонаж, I — инвентарь, J — задания и журнал,
    U — импланты, T — здоровье и заряд, K — здоровье и состояние тела,
-   B — кредиты, G — поесть, L — ловушки (поставить, снять),
+   B — кредиты, G — поесть, L — ловушки (поставить, снять), P и O — ловушка и
+   мина под ноги, Y — бросить гранату (Shift+Y — выбрать гранату),
    точка и запятая — история объявлений ОКО (назад и вперёд), Z — повторить
    фразу, X или Ctrl — тишина, Escape — окно персонажа, F1 — руководство.
    В окнах: стрелки вверх и вниз — пункты, влево и вправо — значение,
@@ -278,7 +282,7 @@ function repeatLast() {
    C и I — персонаж и инвентарь.
    Буквы работают и в русской раскладке (Ц Ф Ы В, К, Й, У, А…). */
 var KEY_LAT = { "ц": "w", "ф": "a", "ы": "s", "в": "d", "к": "r", "й": "q", "у": "e", "а": "f", "т": "n", "ь": "m", "м": "v", "р": "h", "с": "c", "ш": "i", "о": "j", "г": "u", "е": "t", "я": "z", "ч": "x",
-  "п": "g", "л": "k", "ю": ".", "б": ",", "и": "b", "д": "l", "з": "p", "щ": "o" };
+  "п": "g", "л": "k", "ю": ".", "б": ",", "и": "b", "д": "l", "з": "p", "щ": "o", "н": "y" };
 var WASD = { w: "N", a: "W", s: "S", d: "E" };
 var ARROW = { ArrowUp: "N", ArrowDown: "S", ArrowLeft: "W", ArrowRight: "E" };
 var GAME2SCR = { N: "U", S: "D", W: "L", E: "R" };
@@ -375,6 +379,8 @@ function gameKey(e, k) {
     case "l": if (LAB.traps) LAB.traps.menu(); return true;
     case "p": if (LAB.traps && LAB.traps.quick) LAB.traps.quick("trap"); return true;
     case "o": if (LAB.traps && LAB.traps.quick) LAB.traps.quick("mine"); return true;
+    /* (1.7) Y — бросить гранату, Shift+Y — выбрать гранату */
+    case "y": if (LAB.combat && LAB.combat.throwQuick) { if (e.shiftKey) LAB.combat.pickGrenade(false); else LAB.combat.throwQuick(); } return true;
     case "Escape": case "Backspace": if (window.labBack) window.labBack(); return true;
     case "F1": if (LAB.guide) LAB.guide.open(); return true;
   }

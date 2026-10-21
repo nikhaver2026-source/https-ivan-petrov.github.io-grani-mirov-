@@ -15,7 +15,7 @@ const ROOT = path.resolve(__dirname, "..");
 const ctx = { console, Math, JSON, Object, Array, String, Number, Uint8Array, Int8Array, Int16Array, Int32Array, Float64Array, Error, Date, RegExp };
 ctx.globalThis = ctx;
 vm.createContext(ctx);
-for (const f of ["js/data.js", "js/texts.js", "js/lore.js", "js/b1.js", "js/b2.js", "js/b3.js", "js/b4.js", "js/b5.js", "js/world.js", "js/depths.js", "js/goods.js", "js/arms.js", "js/traps.js", "js/puzzles.js", "js/annex_rooms.js", "js/annex_var.js", "js/annex_frag.js", "js/annex_gen.js", "js/fixtures_data.js", "js/annex.js", "js/workshop.js"]) {
+for (const f of ["js/data.js", "js/texts.js", "js/lore.js", "js/b1.js", "js/b2.js", "js/b3.js", "js/b4.js", "js/b5.js", "js/world.js", "js/depths.js", "js/goods.js", "js/arms.js", "js/traps.js", "js/puzzles.js", "js/puzzles2.js", "js/annex_rooms.js", "js/annex_var.js", "js/annex_frag.js", "js/annex_gen.js", "js/fixtures_data.js", "js/annex.js", "js/garrison.js", "js/workshop.js", "js/arsenal.js"]) {
   const p = path.join(ROOT, f);
   if (fs.existsSync(p)) vm.runInContext(fs.readFileSync(p, "utf8"), ctx, { filename: f });
 }
@@ -61,6 +61,17 @@ for (let si = 0; si < seeds; si++) {
         }
       }
       if (F === 1 && L > 1 && !fl.objs.some(o => o.type === "gate_sealed")) err(`${at}: нет запечатанного шлюза наверх`);
+      /* (1.7) охрана этажа: патрули в коридорах (кроме самого первого этажа), машины в кабинетах (с третьего этажа) */
+      const gar = fl.garrison || { patrols: 0, robots: 0, sappers: 0 };
+      if (!(L === 1 && F === 1) && gar.patrols < 1) err(`${at}: в коридорах нет патрулей`);
+      if (L === 1 && F === 1 && gar.patrols) err(`${at}: на первом этаже патрули`);
+      if ((L > 1 || F >= 3) && gar.robots < 1) err(`${at}: кабинеты без охраны`);
+      if (fl.foes.some(f => f.beat && (!f.beat.length || f.beat.some(p => fl.t[p[1] * LAB.W + p[0]] === LAB.T.WALL)))) err(`${at}: участок обхода патруля задевает стену`);
+      stat.patrols = (stat.patrols || 0) + gar.patrols; stat.guards = (stat.guards || 0) + gar.robots; stat.sappers = (stat.sappers || 0) + gar.sappers;
+      /* (1.7) головоломки: вид известен, ступень — 0, 1 или 2 */
+      for (const o of fl.objs) if (o.type === "puzzle" && (!LAB.puzzles.has(o.kind) && ["sort", "relays", "bulls", "riddle"].indexOf(o.kind) < 0 || [0, 1, 2].indexOf(o.diff) < 0)) err(`${at}: стенд с неизвестной задачей ${o.kind}/${o.diff}`);
+      for (const d of fl.doors) if (d.lock && d.lock.type === "logic" && (!LAB.puzzles.has(d.lock.kind) || [0, 1, 2].indexOf(d.lock.diff) < 0)) err(`${at}: логический замок с неизвестной задачей ${d.lock.kind}/${d.lock.diff}`);
+      stat.pz = (stat.pz || 0) + fl.objs.filter(o => o.type === "puzzle").length;
       /* коридоры: прямые, ширина 4, длина от 10 */
       for (const c of fl.corrs) {
         const wdt = c.axis === "h" ? c.y1 - c.y0 + 1 : c.x1 - c.x0 + 1;
@@ -123,6 +134,7 @@ for (let si = 0; si < seeds; si++) {
 const ms = Date.now() - t0;
 console.log(`уровней: ${LAB.LEVELS_N}, этажей: ${floors}, ошибок: ${fails}, время: ${ms} мс (${(ms / floors).toFixed(1)} мс на этаж)`);
 console.log("замки:", JSON.stringify(stat.locks));
+console.log(`охрана на этаж: патрулей ${((stat.patrols || 0) / floors).toFixed(1)}, машин в кабинетах ${((stat.guards || 0) / floors).toFixed(1)}, сапёров ${((stat.sappers || 0) / floors).toFixed(2)}; стендов с задачами ${((stat.pz || 0) / floors).toFixed(2)}`);
 console.log(`на этаж: врагов ${(stat.foes / floors).toFixed(1)}, турелей ${(stat.turrets / floors).toFixed(2)}, камер ${(stat.cams / floors).toFixed(2)}, вещей ${(stat.items / floors).toFixed(1)}, выживших ${(stat.npcs / floors).toFixed(2)}, тайных комнат ${(stat.secrets / floors).toFixed(2)}, заваленных лестниц ${stat.blocked}; коридоры от ${stat.corrMin} до ${stat.corrMax} шагов`);
 console.log("обстановка:", JSON.stringify(stat.objs));
 console.log("прессов «Подножия»:", stat.press || 0);

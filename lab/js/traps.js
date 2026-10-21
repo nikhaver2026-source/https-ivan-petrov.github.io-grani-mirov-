@@ -306,7 +306,7 @@ function stateWord(tp) {
 }
 function nameOf(tp) {
   var d = D(tp);
-  if (tp.by === "sapper") return "мина робота-сапёра";
+  if (tp.by === "oko") return d.n + " сапёра ОКО";
   if (!tp.own) return (d.g === "p" ? "старые " : d.g === "f" ? "старая " : "старый ") + d.n;
   return (d.g === "p" ? "ваши " : d.g === "f" ? "ваша " : "ваш ") + d.n;
 }
@@ -365,7 +365,7 @@ function fire(tp, who, at) {
   });
   if (killed && tp.own) { ev("trap_kill", killed); if (mech) ev("trap_mech", mech); }
   /* вы */
-  if (hero) applyHero(tp, d);
+  if (hero) { applyHero(tp, d); if (tp.by === "oko" && LAB.oko && LAB.oko.react) LAB.oko.react("oko_trap"); }
   /* огонь и газ остаются на месте */
   if (d.zone) zones.push({ k: d.zone.k, x: x, y: y, r: d.zone.r, t: d.zone.t, d: d.zone.d, own: tp.own });
   /* взрыв задевает соседние заряды */
@@ -461,6 +461,7 @@ function foeStep(f) {
     if (tp.st !== "on") continue;
     var d = D(tp);
     if (d.trig === "prox" || d.trig === "remote" || d.trig === "lure") continue;
+    if (tp.by === "oko" && f.kind === "mech") continue; /* своё машины ОКО знают */
     if (!foeOk(d, f) || !onCells(tp, f.x, f.y)) continue;
     fire(tp, { f: f }, [f.x, f.y]);
     if (f.dead) return;
@@ -488,7 +489,10 @@ function discover(rad) {
   var g = G(), found = [];
   list().forEach(function (tp) {
     if (tp.known || tp.st !== "on") return;
-    if (cheb(tp.x, tp.y, g.x, g.y) > rad) return;
+    var dd = cheb(tp.x, tp.y, g.x, g.y);
+    if (dd > rad) return;
+    /* ловушку сапёра ОКО за шаг слышно не всегда — вплотную всегда */
+    if (tp.by === "oko" && dd >= 2 && Math.random() < 0.45) return;
     tp.known = 1; found.push(tp);
   });
   found.forEach(function (tp) {
@@ -540,7 +544,7 @@ function avoid(f, x, y) {
     var tp = ts[i];
     if (tp.st !== "on" || !onCells(tp, x, y)) continue;
     if (tp.own) { if (tp.seen && tp.seen[f.id]) return true; continue; }
-    if (tp.by === "sapper") { if (f.kind === "mech") return true; continue; }
+    if (tp.by === "oko") { if (f.kind === "mech") return true; continue; }
     if (!f.spawned) return true;
   }
   return false;
@@ -653,7 +657,7 @@ function place(k, where) {
   return true;
 }
 /* Забрать свою ловушку: целую — вещью, изношенную — на детали. */
-/* Быстрая установка жестом (1.6): вверх-вниз — ловушка, вниз-вверх — мина, под ноги, с пустыми руками.
+/* Быстрая установка жестом (1.6): вверх-вниз — ловушка, вниз-вверх — мина, под ноги (с 1.7 — и с оружием в руках).
    Одна подходящая вещь в рюкзаке — ставится сразу, несколько — короткий выбор. */
 function quick(kind) {
   var g = G(), want = kind === "mine";
@@ -718,6 +722,7 @@ function disarm(tp) {
     g.inv[d.item] = (g.inv[d.item] || 0) + 1;
     gm().gainXP(6 + Math.floor(g.L / 4));
     ev("disarm", 1);
+    if (tp.by === "oko" && LAB.oko && LAB.oko.react) setTimeout(function () { LAB.oko.react("oko_trap_off"); }, 1500);
     say(cap1(nameOf(tp)) + " " + gv(d, "обезврежен", "обезврежена", "обезврежены") + ". " + cap1(d.n) + " теперь ваш" + gv(d, "", "а", "и") + ": в рюкзаке, раздел «Ловушки и мины».");
     UIx("refresh");
   }, { title: "Обезвредить: " + d.n });
@@ -848,12 +853,31 @@ function scanText(rad) {
   });
   return out.length ? "Ловушки и мины: " + out.join(", ") + "." : "";
 }
-/* Мина робота-сапёра (из боя). */
-function enemyMine(x, y, dmg) {
-  if (trapOn(x, y)) return false;
-  list().push({ id: nextId(), t: "mine", x: x, y: y, own: 0, by: "sapper", known: 0, st: "on", uses: 1, dmgAbs: dmg });
-  return true;
+/* (1.7) Ловушка, поставленная сапёром ОКО по приказу. Машины ОКО знают, где
+   она, и её не задевают; живых и вас — берёт. Видно её не сразу: вплотную
+   «Эхо» слышит её всегда, за шаг — не всегда; сканер находит все. */
+var OKO_KINDS = {
+  K: ["alarm", "shock", "net", "glue", "jaw", "mine", "spikes"], P: ["alarm", "mine", "jaw", "net", "press", "shock"],
+  C: ["resin", "net", "gas", "glue", "shock", "mine"], O: ["mirror", "echo", "glue", "shock", "mine"],
+  M: ["gear", "shock", "magnet", "mine", "glue"], I: ["roots", "glue", "shock", "mine"]
+};
+function okoKinds(L) {
+  var pool = OKO_KINDS[eraOf(L)].filter(function (k) { var d = T[k]; return d && d.depth <= Math.max(L, 2) && d.trig !== "remote" && d.trig !== "lure" && d.trig !== "cone"; });
+  /* мины и тяжёлое — не с первых уровней */
+  if (L <= 3) pool = pool.filter(function (k) { return !T[k].boom; });
+  return pool.length ? pool : ["alarm"];
 }
+function okoTrap(kind, x, y, o) {
+  o = o || {};
+  var d = T[kind];
+  if (!d || !floorOk(x, y) || trapOn(x, y)) return null;
+  var tp = { id: nextId(), t: kind, x: x, y: y, own: 0, by: "oko", known: 0, st: "on", uses: d.uses >= 99 ? 99 : 1 };
+  if (o.dmg) tp.dmgAbs = o.dmg;
+  if (d.trig === "wire") { tp.cells = wireCells(x, y, o.face || "N"); if (tp.cells.some(function (q) { return trapOn(q[0], q[1], tp); })) return null; }
+  list().push(tp);
+  return tp;
+}
+function okoCount() { return list().filter(function (tp) { return tp.by === "oko" && tp.st !== "gone"; }).length; }
 
 /* ════════ СТАРЫЕ ЛОВУШКИ ЭТАЖА ════════
    Прежние жители оборонялись: растяжка у баррикады, капкан за дверью
@@ -903,12 +927,14 @@ function enterFloor() {
   LAB.safe(worldGen);
 }
 
+/* (1.7) Огонь и газ на месте падения гранаты — те же зоны, что у ловушек. */
+function addZone(k, x, y, r, t, d, own) { zones.push({ k: k, x: x, y: y, r: r || 1, t: t || 10, d: d || 8, own: own == null ? 1 : own }); }
 LAB.traps = {
-  quick: quick, isMine: isMine,
+  quick: quick, isMine: isMine, addZone: addZone,
   menu: menu, place: place, pickUp: pickUp, detonate: detonate, disarm: disarm, rearm: rearm,
   foeStep: foeStep, playerStep: playerStep, tick: tick, avoid: avoid, knownAt: knownAt,
   adjacent: adjacent, targetName: targetName, trapMenu: trapMenu, lookList: lookList, scanText: scanText,
-  enemyMine: enemyMine, enterFloor: enterFloor, count: count, list: function () { return list(); },
+  okoTrap: okoTrap, okoKinds: okoKinds, okoCount: okoCount, at: function (x, y) { return trapOn(x, y); }, enterFloor: enterFloor, count: count, list: function () { return list(); },
   nameOf: nameOf, stateWord: stateWord, effLine: effLine, ids: ORDER, T: T,
   use: function (id) { var k = LAB.ITEMS[id] && LAB.ITEMS[id].trap; if (k) itemMenu(k); return false; },
   _fire: fire, _zones: function () { return zones; }, _worldGen: worldGen

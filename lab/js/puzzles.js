@@ -394,12 +394,25 @@ function chess(cb, opts) {
 }
 
 var FN = { breaker: breaker, decon: decon, labels: labels, dosim: dosim, shifts: shifts, tally: tally };
+/* (1.7) Новые виды задач подключаются отдельными модулями (puzzles2.js):
+   register(вид, название, fn) — fn(seed, cb, opts); opts.diff — сложность
+   0 простая, 1 средняя, 2 сложная (её задаёт этаж; без неё — по глубине). */
+var DIFFS = {};
+function register(kind, name, fn, o) {
+  FN[kind] = fn; NAMES[kind] = name;
+  if (KINDS.indexOf(kind) < 0) KINDS.push(kind);
+  if (o && o.diffs) DIFFS[kind] = true;
+}
 function open(kind, seed, cb, opts) {
   if (kind === "chess") { chess(cb, Object.assign({ seed: seed }, opts || {})); return true; }
   if (!FN[kind]) return false;
-  FN[kind](seed || 1, cb, opts || {});
+  opts = opts || {};
+  if (DIFFS[kind] && opts.diff == null) opts.diff = Math.min(2, Math.floor(lvl() / 10));
+  FN[kind](seed || 1, cb, opts);
   return true;
 }
-LAB.puzzles = { KINDS: KINDS, NAMES: NAMES, open: open, chess: chess, has: function (k) { return !!FN[k] || k === "chess"; }, nameOf: function (k) { return NAMES[k] || "головоломка"; },
+LAB.puzzles = { KINDS: KINDS, NAMES: NAMES, open: open, chess: chess, register: register, hasDiff: function (k) { return !!DIFFS[k]; },
+  has: function (k) { return !!FN[k] || k === "chess"; }, nameOf: function (k) { return NAMES[k] || "головоломка"; },
+  util: { run: run, rng: rng, pl: pl, say: say, sayq: sayq, UIx: UIx, A: A, perms: perms },
   _chessCheck: chessCheck, _matingMoves: function (s) { return matingMoves(parsePos(s)); }, _perms: perms };
 })();

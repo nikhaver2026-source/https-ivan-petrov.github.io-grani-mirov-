@@ -63,6 +63,25 @@ LAB.Rng = Rng;
 /* логические замки (1.6): виды задач — в puzzles.js */
 var LOGIC_KINDS = ["breaker", "decon", "labels", "dosim", "shifts", "tally"];
 LAB.LOGIC_KINDS = LOGIC_KINDS;
+/* (1.7) К прежним логическим задачам — новые (puzzles2.js), у каждой три
+   ступени: простая, средняя, сложная. Вид и ступень выбирает свой поток
+   случайностей — остальное на этаже от них не меняется. Чем глубже, тем
+   чаще средние и сложные; на первом уровне — почти всегда простые. */
+function logicKinds() { return LOGIC_KINDS.concat(LAB.puzzles2 && LAB.puzzles2.kinds ? LAB.puzzles2.kinds : []); }
+function stationKinds() { return ["sort", "relays", "bulls", "riddle"].concat(logicKinds(), ["chess"]); }
+LAB.logicKinds = logicKinds;
+function puzzleDiff(rz, L, F) {
+  var x = rz.next(), d0 = LAB.depth(L, F);
+  var pH = L === 1 ? 0 : Math.min(0.65, 0.05 + d0 * 0.0012);
+  var pM = L === 1 ? Math.min(0.3, F * 0.015) : Math.min(0.5, 0.35 + d0 * 0.0006, 0.95 - pH);
+  return x < pH ? 2 : x < pH + pM ? 1 : 0;
+}
+function pz17(o, seed, L, F, key, pool) {
+  var rz = LAB.Rng(seed, "pz17:" + L + ":" + F + ":" + key);
+  o.kind = rz.pick(pool);
+  o.diff = puzzleDiff(rz, L, F);
+}
+LAB.puzzleDiff = puzzleDiff;
 LAB.hash32 = hash32;
 
 /* ── ячейки сетки ── */
@@ -160,10 +179,14 @@ function recentPool(table, depthOf, L, skip) {
   }
   return { all: pool, recent: recent };
 }
+/* (1.7) Канал вещи: у оружия и гранат глубин (arsenal.js) путь один — src
+   "craft" (только верстак), "find" (только находка), "buy" (только продажа);
+   у вещи без src — любой. Добыча — канал "find", прилавок — "buy". */
+LAB.srcOk = function (d, ch) { var s = d && d.src; return !(s === "craft" || s === "find" || s === "buy") || s === ch; };
 LAB.genWeapon = function (r, L, F, opts) {
   opts = opts || {};
-  var lvl = LAB.foeLevel(L, F);
-  var P = recentPool(LAB.WEAPONS, function (k) { return LAB.WEAPON_DEPTH[k] || 99; }, L, function (k) { return k === "crowbar"; });
+  var lvl = LAB.foeLevel(L, F), ch = opts.channel || "find";
+  var P = recentPool(LAB.WEAPONS, function (k) { return LAB.WEAPON_DEPTH[k] || 99; }, L, function (k) { return k === "crowbar" || !LAB.srcOk(LAB.WEAPONS[k], ch); });
   var base = opts.base || (P.recent.length && r.chance(0.6) ? r.pick(P.recent) : r.pick(P.all));
   var roll = r.next() + Math.min(0.45, L * 0.025) + (opts.bonus || 0);
   var rank = roll < 0.5 ? 0 : roll < 0.76 ? 1 : roll < 0.9 ? 2 : roll < 0.97 ? 3 : roll < 0.995 ? 4 : 5;
@@ -665,6 +688,7 @@ function genFloor(seed, L, F, attempt) {
       /* логический замок: задача из жизни комплекса, своя у каждой двери */
       door2.lock.kind = r.pick(LOGIC_KINDS);
       door2.lock.seed = r.int(1, 99999);
+      pz17(door2.lock, seed, L, F, "d" + door2.id, logicKinds());
     } else if (lock.type === "gate") {
       /* шлюзовая ключ-карта: у стража в зале перед шлюзом или спрятана на этаже */
       door2.lock.pass = "gate" + L;
@@ -728,6 +752,7 @@ function genFloor(seed, L, F, attempt) {
       if (ot === "puzzle") extra2 = { kind: r.pick(["sort", "relays", "bulls", "riddle"].concat(LOGIC_KINDS, ["chess"])), seed: r.int(1, 99999) };
       if (ot === "radio") extra2 = { band: r.int(0, 999) };
       var o2 = addObj(ot, s, extra2);
+      if (o2 && ot === "puzzle") pz17(o2, seed, L, F, o2.id, stationKinds());
       if (o2 && (ot === "crate" || ot === "locker" || ot === "safe" || ot === "desk" || ot === "corpse")) o2.loot = genLoot(r, L, F, ot, def.loot);
       if (o2 && (ot === "pc" || ot === "puzzle")) o2.loot = genLoot(r, L, F, "desk", def.loot);
       if (o2 && ot === "safe") {
@@ -773,7 +798,7 @@ function genFloor(seed, L, F, attempt) {
   /* предметы блоков: что встречается на этой глубине */
   var bItems = [];
   /* товары пунктов снабжения (с разделом cat) раскладывает по кабинетам annex.js — здесь их нет */
-  for (var ik in LAB.ITEMS) { var idf = LAB.ITEMS[ik]; if (idf.kind !== "part" && !idf.cat && idf.depth && idf.depth <= L && idf.depth > L - 25) bItems.push(ik); }
+  for (var ik in LAB.ITEMS) { var idf = LAB.ITEMS[ik]; if (idf.kind !== "part" && !idf.cat && idf.depth && idf.depth <= L && idf.depth > L - 25 && LAB.srcOk(idf, "find")) bItems.push(ik); }
   for (nb2 = bItems.length ? r.int(0, 2) : 0; nb2 > 0; nb2--) addItem({ kind: "item", item: r.pick(bItems), n: 1 }, anyRoom());
   for (nb2 = r.int(3, 6); nb2 > 0; nb2--) addItem({ kind: "item", item: partAt(r, L), n: 1 + (r.chance(0.3) ? 1 : 0) }, anyRoom());
   if (r.chance(Math.min(0.2, 0.07 + L * 0.006))) addItem({ kind: "armor", a: LAB.genArmor(r, L, F) }, anyRoom());
@@ -947,16 +972,7 @@ function genFloor(seed, L, F, attempt) {
   if (LAB.FOES[clPool[0]] && !(L === 1 && F === 1)) {
     for (var c8 = r.chance(0.6) ? r.int(1, 2) : 0; c8 > 0; c8--) addFoe(r.pick(clPool), r.pick(mainRooms));
   }
-  /* патрули в коридорах: с второго этажа */
-  var patPool = foePool.filter(function (fid) { var b2 = LAB.FOES[fid]; return b2.kind === "mech" && (b2.beh.indexOf("patrol") >= 0 || b2.beh.indexOf("ranged") >= 0) && b2.beh.indexOf("stationary") < 0; });
-  if (patPool.length && !soft) {
-    var nP = r.chance(Math.min(0.85, 0.3 + d0 * 0.003)) ? 1 + (d0 >= 60 && r.chance(0.5) ? 1 : 0) + (d0 >= 300 && r.chance(0.4) ? 1 : 0) : 0;
-    var pCors = r.shuffle(corrs.filter(function (cr) { return cr.doorRoom !== U && cr.mouthRoom !== U && cr.doorRoom !== secret && cr.mouthRoom !== secret; }));
-    for (var p7 = 0; p7 < nP && pCors.length; p7++) {
-      var pc = corrCell(pCors[p7 % pCors.length], false, false);
-      if (pc) makeFoe(r.pick(patPool), pc[0], pc[1], -1, { corr: pCors[p7 % pCors.length].id, patrol: true });
-    }
-  }
+  /* (1.7) патрули в коридорах — garrison.js: участки обхода, больше и чаще */
 
   /* 17. Выжившие, дружественные роботы, станции имплантов, штабы фракций. */
   var quietRooms = [];
@@ -1009,7 +1025,7 @@ function genFloor(seed, L, F, attempt) {
   if (!fl.objs.some(function (o) { return o.type === "terminal" && (o.sub === "sec" || o.sub === "sci"); }) && r.chance(0.55)) addSvc("terminal", { sub: "sci" });
   /* говорящая панель ОКО, стенд с головоломкой, радиоприёмник */
   if (L >= 2 && !hasObj("okoterm") && r.chance(0.3)) addSvc("okoterm", { seed: r.int(1, 99999) });
-  if (!hasObj("puzzle") && r.chance(0.28)) { var pz = addSvc("puzzle", { kind: r.pick(["sort", "relays", "bulls", "riddle"].concat(LOGIC_KINDS, ["chess"])), seed: r.int(1, 99999) }); if (pz) pz.loot = genLoot(r, L, F, "safe", "tech"); }
+  if (!hasObj("puzzle") && r.chance(0.28)) { var pz = addSvc("puzzle", { kind: r.pick(["sort", "relays", "bulls", "riddle"].concat(LOGIC_KINDS, ["chess"])), seed: r.int(1, 99999) }); if (pz) pz17(pz, seed, L, F, pz.id, stationKinds()); if (pz) pz.loot = genLoot(r, L, F, "safe", "tech"); }
   if (!hasObj("radio") && r.chance(0.25)) addSvc("radio", { band: r.int(0, 999) });
 
   /* 17б. Автомат с едой — чаще в столовой, на кухне, в комнате отдыха;
@@ -1078,6 +1094,28 @@ function genFloor(seed, L, F, attempt) {
   /* 20. (1.5) Кабинеты у коридоров, особые зоны и пункт снабжения —
      самыми последними и своим потоком случайностей (annex.js). */
   if (LAB.annex && LAB.annex.place) LAB.annex.place({ fl: fl, L: L, F: F, seed: seed, attempt: attempt, addObj: addObj, addItem: addItem, makeFoe: makeFoe, freeCell: freeCell });
+
+  /* 20б. (1.7) Стенды с задачами в кабинетах: лаборатории, серверные,
+     мастерские, щитовые, кабинеты, классы — своим потоком. В лотке —
+     кредиты, детали и припасы, без оружия и брони. */
+  if (LAB.garrison && LAB.puzzles2) {
+    var rzp = LAB.Rng(seed, "pz17st:" + L + ":" + F + ":" + attempt);
+    var wantP = L === 1 ? (F <= 2 ? 0 : 1) : 1 + (rzp.chance(0.6) ? 1 : 0) + (L >= 10 && rzp.chance(0.5) ? 1 : 0);
+    var pzRooms = [], NOPZ = { secret: 1, supply: 1, trial: 1, decon: 1, hazard: 1 };
+    fl.rooms.forEach(function (rm) { if (rm && rm.annex && !rm.hidden && !NOPZ[((LAB.ANNEX_ROOMS || {})[rm.type] || {}).kind] && /^(lab|server|work|power|office|leisure)$/.test(LAB.garrison.category(rm))) pzRooms.push(rm.id); });
+    rzp.shuffle(pzRooms);
+    for (var pq = 0; pq < pzRooms.length && wantP > 0; pq++) {
+      var st17 = addObj("puzzle", pzRooms[pq], { seed: rzp.int(1, 99999) });
+      if (!st17) continue;
+      pz17(st17, seed, L, F, st17.id, stationKinds());
+      st17.loot = genLoot(rzp, L, F, "desk", "tech").filter(function (it) { return it.kind !== "weapon" && it.kind !== "armor"; });
+      wantP--;
+    }
+  }
+
+  /* 21. (1.7) Охрана этажа: патрули в коридорах, сапёры, машины в кабинетах
+     по важности и назначению (garrison.js) — последними, своим потоком. */
+  if (LAB.garrison && LAB.garrison.place) LAB.garrison.place({ fl: fl, L: L, F: F, seed: seed, attempt: attempt, makeFoe: makeFoe });
 
   fl.sample = d0;
   fl.turrets = turrets;

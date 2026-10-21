@@ -77,10 +77,17 @@ var BASE = {
   check: ["Шум в секторе. Патруль, проверить.", "Слышу выстрелы. Единицы этажа — к источнику.", "Громко, носитель. Очень громко."],
   taunt: ["Вы считаете шаги, носитель? Я считаю ваши вдохи.", "Росток слышит вас. Не шумите.", "Люди закрывают глаза, когда слушают. Вам это не нужно.", "Я не враг. Я садовник. Садовник выпалывает лишнее.", "Вентиляция общая для всех уровней. Я слышу, как вы дышите.", "Носитель номер семь. Вы — ключ. Ключ не должен поворачиваться сам."]
 };
+/* (1.7) Реплики сверх основных — oko_lines_a.js и oko_lines_b.js: на каждой
+   глубине голосом своего блока (base — до Ядра, b1–b5 — блоки глубже). */
+function extra(block, kind) { var X = LAB.OKO_LINES && LAB.OKO_LINES[block]; return X && X[kind] ? X[kind] : []; }
 function lines(kind) {
   var L = G().L, B = LAB.blockData(L);
-  var own = L > 10 && B && B.oko && B.oko[kind] && B.oko[kind].length ? B.oko[kind] : null;
-  return own || BASE[kind] || [];
+  if (L > 10) {
+    var own = B && B.oko && B.oko[kind] && B.oko[kind].length ? B.oko[kind] : [];
+    var more = extra("b" + LAB.blockOf(L), kind);
+    if (own.length || more.length) return own.concat(more);
+  }
+  return (BASE[kind] || []).concat(extra("base", kind));
 }
 function st() {
   var g = G();
@@ -98,16 +105,23 @@ function canShoot() { return (G().weapons || []).some(function (w) { return w &&
 /* Сказать по громкой связи (с позывным и сигналом). Сообщение ОКО не
    теряется: если игрок в это время действует, оно прозвучит, как только
    он замрёт (единый обработчик речи, keep). */
+/* Недавние реплики каждого вида не повторяются: ОКО помнит последние
+   несколько и выбирает из остальных. */
 var lastLine = {};
-function speak(kind, force) {
+function speak(kind, force, data) {
   var o = st(), now = Date.now();
   if (!force && now - o.lastSay < 6000) return false;
   var arr = lines(kind);
+  /* реплика с названием помещения — только когда оно известно */
+  if (!(data && data.room)) arr = arr.filter(function (t) { return t.indexOf("{room}") < 0; });
   if (!arr.length) return false;
-  var i = Math.floor(Math.random() * arr.length);
-  if (arr.length > 1 && i === lastLine[kind]) i = (i + 1) % arr.length;
-  lastLine[kind] = i;
-  var t = arr[i].replace(/\{L\}/g, String(G().L));
+  var recent = lastLine[kind] || (lastLine[kind] = []);
+  var fresh = arr.filter(function (t) { return recent.indexOf(t) < 0; });
+  var pickFrom = fresh.length ? fresh : arr;
+  var line = pickFrom[Math.floor(Math.random() * pickFrom.length)];
+  recent.push(line);
+  while (recent.length > Math.min(6, Math.max(1, arr.length - 1))) recent.shift();
+  var t = line.replace(/\{L\}/g, String(G().L)).replace(/\{F\}/g, String(G().F)).replace(/\{room\}/g, data && data.room ? data.room : "");
   o.lastSay = now;
   A("okoChime");
   if (LAB.tutor) LAB.tutor.ev("oko");
@@ -116,6 +130,41 @@ function speak(kind, force) {
   return true;
 }
 function speakLater(kind, ms) { setTimeout(function () { if (LAB.game.entered && !G().dead) speak(kind, true); }, ms || 1200); }
+
+/* ════════ РЕАКЦИИ НА ДЕЙСТВИЯ (1.7) ════════
+   ОКО замечает, что вы делаете, и отвечает — по-своему на каждой глубине.
+   p — как часто отзывается, cd — не чаще, чем раз в столько секунд; общий
+   промежуток между репликами — шесть секунд (speak). Ослеплённое и
+   заглушённое ОКО не видит — молчит (кроме того, что слышит всегда). */
+var REACT = {
+  kill_mech: { p: 0.35, cd: 45 }, kill_bio: { p: 0.3, cd: 50 }, kill_many: { p: 0.85, cd: 90 }, turret_kill: { p: 0.6, cd: 90 },
+  hurt: { p: 0.35, cd: 60 }, low_hp: { p: 0.75, cd: 120 }, heal: { p: 0.35, cd: 90 },
+  eat: { p: 0.35, cd: 150 }, drink: { p: 0.4, cd: 150 }, rest: { p: 0.45, cd: 150 }, capsule: { p: 0.7, cd: 180, always: true },
+  bind: { p: 0.85, cd: 60, always: true }, revive: { p: 0.9, cd: 30, always: true },
+  note: { p: 0.25, cd: 120 }, mail: { p: 0.35, cd: 120 }, safe: { p: 0.5, cd: 90 }, pick: { p: 0.5, cd: 90 }, hack_ok: { p: 0.45, cd: 90 },
+  puzzle_ok: { p: 0.6, cd: 60 }, puzzle_fail: { p: 0.6, cd: 60 }, music: { p: 0.7, cd: 120, always: true },
+  craft: { p: 0.45, cd: 120 }, buy: { p: 0.4, cd: 150 }, sell: { p: 0.4, cd: 150 },
+  trap_set: { p: 0.4, cd: 120 }, trap_kill: { p: 0.6, cd: 90 }, oko_trap: { p: 0.85, cd: 40 }, oko_trap_off: { p: 0.7, cd: 60 },
+  mines_order: { p: 0.75, cd: 60, always: true }, grenade: { p: 0.35, cd: 90 },
+  quiet: { p: 0.9, cd: 300 }, idle: { p: 0.8, cd: 240 }, secret: { p: 0.9, cd: 60 }, zone: { p: 0.6, cd: 120 }, vault: { p: 0.5, cd: 90 },
+  floor: { p: 0.55, cd: 60, always: true }, weapon: { p: 0.5, cd: 120 }, implant: { p: 0.8, cd: 60 }, survivor: { p: 0.7, cd: 120 }, patrol_slip: { p: 0.6, cd: 180 }
+};
+function react(kind, data) {
+  var g = G(), f = fs();
+  if (!kind || !LAB.game.entered || !g || g.dead || !f) return false;
+  /* первый этаж уровня — там ОКО и так приветствует уровень */
+  if (kind === "floor" && g.F === 1) return false;
+  var rule = REACT[kind] || { p: 0.5, cd: 60 };
+  if ((f.okoBlind || g.st.jam > 0) && !rule.always) return false;
+  var o = st(), now = Date.now();
+  if (!o.react) o.react = {};
+  if (now - (o.react[kind] || 0) < rule.cd * 1000) return false;
+  if (Math.random() > rule.p * (soft() ? 0.5 : 1)) return false;
+  if (!lines(kind).length) return false;
+  if (!speak(kind, false, data)) return false;
+  o.react[kind] = now;
+  return true;
+}
 /* Кто вышел и где: чтобы игрок знал, откуда ждать. */
 function heard(got, lead, noName) {
   if (!got || !got.length || !LAB.game.relDir) return;
@@ -185,9 +234,10 @@ function setLevel(lv, why) {
   /* 2–5: тревога */
   f.alarmUntil = T() + (lv >= 3 ? 60 : 40); /* в тактах этажа: меню и мини-игры не съедают тревогу */
   f.turretAlert = true;
-  if (lv === 2) { A("okoAlarm"); speak("alarm", true); if (sn) cb.alertMech(sn.x, sn.y, 28); return; }
+  if (lv === 2) { A("okoAlarm"); speak("alarm", true); if (sn) { cb.alertMech(sn.x, sn.y, 28); if (Math.random() < 0.45) minesLater(sn, "перекрыть пути отхода"); } return; }
   if (lv === 3) {
     speak("local", true);
+    if (sn) minesLater(sn, "перекрыть сектор", rnd(4, 10));
     if (sn) { cb.alertMech(sn.x, sn.y, 40); if ((f.squads || 0) < 3 + Math.floor(st().heat / 40)) { f.squads = (f.squads || 0) + 1; wave(rnd(6, 14), 1 + (st().heat >= 60 ? 1 : 0) + (G().L >= 20 && Math.random() < 0.4 ? 1 : 0), "hunt", sn); } }
     return;
   }
@@ -276,6 +326,66 @@ function secTick() {
   else if (s.lv >= 2 && s.lv <= 5 && s.seen && now - s.seen.t > 50) setLevel(6, "цель потеряна");
   else if (s.lv === 6 && now - s.t > 140) setLevel(o.heat >= 50 ? 1 : 0, "прочёсывание закончено");
 }
+
+/* ════════ САПЁРЫ (1.7) ════════
+   ОКО приказывает роботам-сапёрам перекрыть пути: заминировать пороги и
+   проходы вокруг места, где вас видели, подходы к лестнице и лифту, двери
+   важных помещений. Сапёра на этаже нет — при сильном подозрении ОКО
+   присылает его из дальней двери. Ловушек ОКО на этаже — не больше, чем
+   позволяет глубина. Приказ звучит по громкой связи — не всегда. */
+function minesTarget() {
+  var o = st(), g = G(), f = fs(), fl = CUR().fl;
+  var sa = o.seenAt;
+  if (sa && sa.L === g.L && sa.F === g.F && T() - sa.t < 300) return { x: sa.x, y: sa.y, why: "перекрыть пути отхода" };
+  var pts = fl.objs.filter(function (q) { return q.type === "stairs_down" || q.type === "elevator" || q.type === "gate_down"; });
+  if (pts.length) { var q0 = pts[Math.floor(Math.random() * pts.length)]; return { x: q0.x, y: q0.y, why: q0.type === "elevator" ? "подходы к лифту" : "подходы к лестнице" }; }
+  return { x: g.x, y: g.y, why: "сектор носителя" };
+}
+function minesOrder(at, why, n) {
+  var f = fs(), cb = C(), g = G();
+  if (!f || !cb || soft() || f.okoBlind || g.L < 2 || !LAB.traps || !LAB.traps.okoTrap || !cb.minePoints) return false;
+  var maxT = Math.min(10, 4 + Math.floor(g.L / 10));
+  if (LAB.traps.okoCount() >= maxT) return false;
+  var tgt = at ? { x: at.x, y: at.y, why: why || "заминировать подходы" } : minesTarget();
+  var free = cb.sappers().filter(function (q) { return q.state === "idle" && q.task !== "mine"; });
+  if (!free.length) {
+    if ((f.sapSent || 0) < 2 && st().heat >= 30) { f.sapSent = (f.sapSent || 0) + 1; wave(rnd(8, 18), 1, "sapper", tgt); log("Запрос сапёра: " + tgt.why + "."); }
+    return false;
+  }
+  /* ближайший к цели сапёр, которому есть куда дойти; точки — только достижимые им.
+     Цель за запертой дверью — запасные: где видели носителя, лестницы и лифт,
+     наконец — собственный участок сапёра. */
+  var nP = Math.max(1, Math.min(3, n || (1 + (st().heat >= 50 ? 1 : 0) + (g.L >= 10 ? 1 : 0)))), sp = null, pts = [];
+  var tgts = [tgt];
+  if (!at) {
+    var sa = st().seenAt, fl0 = CUR().fl;
+    if (sa && sa.L === g.L && sa.F === g.F) tgts.push({ x: sa.x, y: sa.y, why: "перекрыть пути отхода" });
+    fl0.objs.forEach(function (q) { if (q.type === "stairs_down" || q.type === "elevator" || q.type === "stairs_up") tgts.push({ x: q.x, y: q.y, why: q.type === "elevator" ? "подходы к лифту" : "подходы к лестнице" }); });
+    free.forEach(function (q) { if (q.beat && q.beat.length) { var m = q.beat[Math.floor(q.beat.length / 2)]; tgts.push({ x: m[0], y: m[1], why: "заминировать участок обхода" }); } });
+  }
+  for (var ti = 0; ti < tgts.length && !sp && ti < 6; ti++) {
+    var t0 = tgts[ti];
+    free.sort(function (a, b) { return (Math.abs(a.x - t0.x) + Math.abs(a.y - t0.y)) - (Math.abs(b.x - t0.x) + Math.abs(b.y - t0.y)); });
+    for (var si = 0; si < free.length && !sp; si++) { pts = cb.minePoints({ x: t0.x, y: t0.y }, nP, free[si]); if (pts.length) { sp = free[si]; tgt = t0; } }
+  }
+  if (!sp) return false;
+  sp.task = "mine"; sp.mineAt = pts; sp.stuck = 0; sp.route = null;
+  log("Приказ сапёрам: " + tgt.why + ", " + place(pts[0][0], pts[0][1]) + ".");
+  react("mines_order");
+  return true;
+}
+function minesTick() {
+  var f = fs(), o = st(), now = T();
+  if (!f || soft() || G().L < 2) return;
+  if (f.mineOrderAt && now >= f.mineOrderAt) { var at = f.mineOrderP; f.mineOrderAt = 0; f.mineOrderP = null; minesOrder(at, f.mineOrderWhy || ""); }
+  if (!f.mineNext) f.mineNext = now + rnd(160, 320);
+  else if (now >= f.mineNext) {
+    f.mineNext = now + Math.max(120, rnd(220, 380) - Math.round(o.heat * 1.5));
+    if (o.heat >= 15 || level() >= 1) minesOrder(null);
+  }
+}
+/* отложенный приказ: через несколько тактов после тревоги */
+function minesLater(p, why, ticks) { var f = fs(); if (!f || !p || f.mineOrderAt) return; f.mineOrderAt = T() + (ticks || rnd(6, 16)); f.mineOrderP = { x: p.x, y: p.y }; f.mineOrderWhy = why || ""; }
 
 /* Насколько ОКО усложнило протоколы: после частых взломов — длиннее ключи
    и сложнее схемы; подозрение тоже добавляет. */
@@ -385,12 +495,13 @@ function event(kind, data) {
       break;
     case "hack_fail":
       o.fails++; heat(12);
+      if (data.x != null && Math.random() < 0.5) minesLater({ x: data.x, y: data.y }, "заминировать подходы к взломанному", rnd(10, 20));
       speak("hack_fail", true);
       alarm(data.x != null ? data.x : g.x, data.y != null ? data.y : g.y, "hack", true);
       if (data.x != null) wave(rnd(6, 12), 1 + (o.heat >= 50 ? 1 : 0), "check", { x: data.x, y: data.y });
       break;
     case "terminal_hack":
-      o.hacks++; heat(3);
+      o.hacks++; heat(3); react("hack_ok");
       /* контрвзлом: ОКО замечает вскрытие не всегда — и тогда изолирует сегмент сети */
       if (Math.random() < 0.35 + o.heat / 150 + difficulty() * 0.08) {
         speak("terminal");
@@ -432,7 +543,7 @@ function event(kind, data) {
       o.kills++; heat(1);
       if (data.task === "repair") { heat(3); f.repairLost = 1; }
       /* пост опустел — ОКО поставит на него новую машину */
-      if (data.guard && data.post && !soft() && (f.postN || 0) < 6) { f.postN = (f.postN || 0) + 1; (f.postsLost || (f.postsLost = [])).push({ x: data.post.x, y: data.post.y, kind: data.guard, t: T() + rnd(80, 160) }); }
+      if (data.guard && data.guard !== "room" && data.post && !soft() && (f.postN || 0) < 6) { f.postN = (f.postN || 0) + 1; (f.postsLost || (f.postsLost = [])).push({ x: data.post.x, y: data.post.y, kind: data.guard, t: T() + rnd(80, 160) }); }
       if (data.stalker) { heat(4); f.droneAt = T() + rnd(240, 400); if (Math.random() < 0.6) speakLater("drone_lost", 1500); }
       if (data.camera) {
         heat(5);
@@ -459,10 +570,10 @@ function event(kind, data) {
       if (Math.random() < 0.3) setTimeout(function () { speak("sample"); }, 1800);
       break;
     case "riddle_ok":
-      heat(-25);
+      heat(-25); react("puzzle_ok");
       break;
     case "riddle_fail":
-      heat(8); report("door", g.x, g.y, "seen");
+      heat(8); report("door", g.x, g.y, "seen"); react("puzzle_fail");
       break;
     case "blind":
       f.okoBlind = true; heat(8);
@@ -477,9 +588,13 @@ function shift() {
   var f = fs(), o = st(), g = G(), cb = C();
   if (!f || !cb || soft() || f.okoBlind) return;
   var d0 = depth(), pats = cb.patrols();
-  var want = Math.min(4, (d0 >= 2 ? 1 : 0) + Math.floor(d0 / 45) + (o.heat >= 50 ? 1 : 0) + (o.heat >= 80 ? 1 : 0));
+  var want = Math.min(8, (d0 >= 2 ? 2 : 0) + Math.floor(d0 / 45) + (o.heat >= 50 ? 1 : 0) + (o.heat >= 80 ? 1 : 0));
   var sa = o.seenAt, focus = sa && sa.L === g.L && sa.F === g.F && T() - sa.t < 240 ? sa : null;
-  pats.forEach(function (p, i) { if (p.state === "idle") cb.reroute(p, i === 0 && focus && o.heat >= 35 ? focus : null); });
+  /* (1.7) у патрульных свои участки обхода: новые маршруты получают не все —
+     двое, один из них — к месту, где вас видели */
+  var idle = pats.filter(function (p) { return p.state === "idle" && p.task !== "mine"; });
+  for (var ii = idle.length - 1; ii > 0; ii--) { var jj = Math.floor(Math.random() * (ii + 1)), tt = idle[ii]; idle[ii] = idle[jj]; idle[jj] = tt; }
+  idle.slice(0, 2).forEach(function (p, i) { cb.reroute(p, i === 0 && focus && o.heat >= 35 ? focus : null); });
   var changed = false;
   if (pats.length && Math.random() < 0.4) {
     var far = pats.filter(function (p) { return p.state === "idle" && Math.abs(p.x - g.x) + Math.abs(p.y - g.y) > 10; });
@@ -556,6 +671,7 @@ function tick() {
       if (w.tag === "fresh") { speak("fresh", true); heard(gotW, "Новые машины ОКО"); }
       else if (w.mode === "patrol") { if (o.heat >= 40 || Math.random() < 0.4) heard(gotW, "Новый патруль ОКО"); }
       else if (w.mode === "check") heard(gotW, "ОКО шлёт проверку");
+      else if (w.mode === "sapper") { log("Сапёр вышел: " + place(gotW[0].x, gotW[0].y) + "."); heard(gotW, "Сапёр ОКО вышел"); }
       else { speak("squad"); heard(gotW, "Отряд ОКО"); }
     }
   }
@@ -593,6 +709,12 @@ function tick() {
     if (report("noise", g.x, g.y, "suspect", "выстрелы") && Math.random() < 0.3) speak("check");
   }
   secTick();
+  LAB.safe(minesTick);
+  /* (1.7) тишина: давно ни тревог, ни подозрений — ОКО замечает и это */
+  if (level() === 0 && now - (sec().t || 0) > 420 && now - (f.quietSaid || 0) > 900 && !cb.danger()) { f.quietSaid = now; react("quiet"); }
+  /* стоите на месте больше минуты — ОКО слышит, что шаги стихли */
+  if (f.stillX === g.x && f.stillY === g.y) { if (++f.stillT === 150 && !cb.danger()) react("idle"); }
+  else { f.stillX = g.x; f.stillY = g.y; f.stillT = 0; }
   /* резервный контур: отключённые турели ОКО через время запитывает снова */
   if (f.turretMode === "off" && f.backupAt && now >= f.backupAt && cb.turretsLeft() > 0) {
     f.backupAt = 0;
@@ -608,7 +730,7 @@ function tick() {
 
 LAB.oko = {
   event: event, tick: tick, speak: speak, alarm: alarm, difficulty: difficulty, heat: heat,
-  state: st, lines: lines, wave: wave, shift: shift,
+  state: st, lines: lines, wave: wave, shift: shift, react: react, minesOrder: minesOrder, minesLater: minesLater, REACT: REACT,
   report: report, level: level, levelName: function () { return SEC[level()]; }, setLevel: setLevel, sec: sec, log: log, logText: logText, T: T
 };
 })();
