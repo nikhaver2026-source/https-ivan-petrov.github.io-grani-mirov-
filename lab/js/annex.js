@@ -89,19 +89,19 @@ function annexLoot(r, L, F, tag, ot, lean) {
       case "hot": add(q < 0.35 ? it(r.chance(0.5) ? "isotope" : "goldbar") : q < 0.6 ? it(catPick(r, L, "valuable")) : q < 0.8 ? it("lead", 2) : it(r.chance(0.5) ? "radaway" : "antirad")); break;
       case "isotope": add(q < 0.4 ? it("lead", r.int(1, 2)) : q < 0.6 ? it(L >= 5 && r.chance(0.5) ? "isotope" : "antirad") : q < 0.8 ? it(catPick(r, L, "valuable")) : it("iodine")); break;
       case "classified": add(q < 0.35 ? it(catPick(r, L, "valuable")) : q < 0.55 ? { kind: "note", note: "staff", n: r.int(0, 999) } : q < 0.75 ? cr(25) : it(r.chance(0.5) ? "decoder" : "jammer")); break;
-      case "armory": add(q < 0.45 ? { kind: "ammo", ammo: r.chance(0.7) ? "energy" : (LAB.AMMO.slug && L >= 2 ? "slug" : "energy"), n: 1 + r.int(0, 1) } : q < 0.6 ? it(r.chance(0.5) ? "emp" : "wrepair") : q < 0.8 ? it(partPick(r, L)) : cr(15)); break;
+      case "armory": add(q < 0.45 ? { kind: "ammo", ammo: r.chance(0.7) ? "energy" : (LAB.AMMO.slug && L >= 2 ? "slug" : "energy"), n: 1 + r.int(0, 1) } : q < 0.6 ? it(r.chance(0.4) ? "emp" : r.chance(0.5) ? "wrepair" : "fieldkit") : q < 0.8 ? it(partPick(r, L)) : cr(15)); break;
       case "protect": add(q < 0.3 ? it(r.chance(0.6) ? "respirator" : "filter") : q < 0.5 ? it(r.chance(0.5) ? "rubber" : "filtercart") : q < 0.65 ? it(r.chance(0.5) ? "iodine" : "antirad") : q < 0.8 ? it("tape") : it(r.chance(0.15) ? "dosimeter" : "lead")); break;
       case "rad": add(q < 0.35 ? it("lead") : q < 0.55 ? it(r.chance(0.5) ? "antirad" : "iodine") : q < 0.7 ? it(catPick(r, L, "valuable")) : q < 0.85 ? it(partPick(r, L)) : it(r.chance(0.3) ? "dosimeter" : "rubber")); break;
       case "med": case "herbs": add(q < 0.55 ? it(catPick(r, L, "med")) : q < 0.75 ? it(r.chance(0.5) ? "medkit_s" : "bandage") : q < 0.9 ? it(catPick(r, L, "food")) : it("gel")); break;
       case "food": case "home": add(q < 0.6 ? it(catPick(r, L, "food")) : q < 0.75 ? it(catPick(r, L, "valuable")) : q < 0.9 ? cr(8) : it(catPick(r, L, "med"))); break;
       case "smoke": add(q < 0.45 ? it(catPick(r, L, "valuable")) : q < 0.75 ? cr(6) : it(catPick(r, L, "food"))); break;
-      case "janitor": add(q < 0.3 ? it("tape") : q < 0.5 ? it(r.chance(0.5) ? "rubber" : "reagent") : q < 0.7 ? it(partPick(r, L)) : q < 0.85 ? it(catPick(r, L, "valuable")) : it("respirator")); break;
+      case "janitor": add(q < 0.3 ? it(r.chance(0.65) ? "tape" : "fieldkit") : q < 0.5 ? it(r.chance(0.5) ? "rubber" : "reagent") : q < 0.7 ? it(partPick(r, L)) : q < 0.85 ? it(catPick(r, L, "valuable")) : it("respirator")); break;
       case "chem": add(q < 0.4 ? it(r.chance(0.6) ? "reagent" : "gel") : q < 0.6 ? it(catPick(r, L, "med")) : q < 0.75 ? it(r.chance(0.5) ? "filtercart" : "respirator") : q < 0.9 ? it(partPick(r, L)) : it(catPick(r, L, "valuable"))); break;
       case "paper": add(q < 0.35 ? { kind: "note", note: "staff", n: r.int(0, 999) } : q < 0.6 ? it(catPick(r, L, "valuable")) : q < 0.8 ? cr(10) : it(catPick(r, L, "food"))); break;
       case "tech": add(q < 0.45 ? it(r.chance(0.5) ? "chip" : partPick(r, L)) : q < 0.6 ? it("datachip") : q < 0.8 ? { kind: "ammo", ammo: "energy", n: 1 } : it(catPick(r, L, "tool"))); break;
       case "bio": add(q < 0.5 ? it(r.chance(0.6) ? "gel" : "reagent") : q < 0.7 ? it(catPick(r, L, "food")) : q < 0.85 ? it(catPick(r, L, "med")) : it(L >= 4 ? "culture" : catPick(r, L, "valuable"))); break;
       case "arms": add(q < 0.5 ? { kind: "ammo", ammo: "energy", n: 1 } : q < 0.7 ? it(r.chance(0.5) ? "bandage" : "emp") : q < 0.85 ? it(catPick(r, L, "valuable")) : cr(10)); break;
-      default: /* store, parts */ add(q < 0.5 ? it(partPick(r, L), r.chance(0.3) ? 2 : 1) : q < 0.65 ? it(catPick(r, L, "food")) : q < 0.78 ? it(r.chance(0.5) ? "tape" : "rubber") : q < 0.9 ? it(catPick(r, L, "valuable")) : cr(8));
+      default: /* store, parts */ add(q < 0.5 ? it(partPick(r, L), r.chance(0.3) ? 2 : 1) : q < 0.65 ? it(catPick(r, L, "food")) : q < 0.78 ? it(r.chance(0.4) ? "tape" : r.chance(0.6) ? "rubber" : "fieldkit") : q < 0.9 ? it(catPick(r, L, "valuable")) : cr(8));
     }
   }
   /* сейф — ценное наверняка; оружейная стойка — ствол; шкаф спецодежды — костюм от излучения */

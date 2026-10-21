@@ -81,6 +81,7 @@ var A = [
   { id: "safe10", n: "Взломщик сейфов", d: "Открыть десять сейфов", ev: "safe", need: 10, rew: { item: ["decoder", 2], cr: 80 } },
   { id: "secret10", n: "Видеть сквозь стены", d: "Найти десять тайных дверей", ev: "secret", need: 10, rew: { perk: "searcher", xp: 80 } },
   { id: "craft20", n: "Своими руками", d: "Собрать двадцать вещей у верстака", ev: "craft", need: 20, rew: { item: ["servo", 2], xp: 80 } },
+  { id: "repair15", n: "Золотые руки", d: "Пятнадцать раз починить что-нибудь походным ремкомплектом", ev: "repair", need: 15, rew: { item: ["engkit", 1], xp: 80 } },
   { id: "trap1", n: "Ловец", d: "Поставить первую ловушку", ev: "trap_set", need: 1, rew: { xp: 15, item: ["tr_spikes", 1] } },
   { id: "trap25", n: "Хозяин коридоров", d: "Поставить двадцать пять ловушек", ev: "trap_set", need: 25, rew: { xp: 80, item: ["tr_mine", 2] } },
   { id: "trapkill10", n: "Тихая охота", d: "Победить ловушками десять врагов", ev: "trap_kill", need: 10, rew: { cr: 80, xp: 60 } },

@@ -671,7 +671,7 @@ function armorItem(i) {
 }
 /* Устройства: гранаты, пластины, самоделки мастерской и вещи блоков. */
 function gadgetIds() {
-  var ids = ["emp", "plate", "decoder", "noise", "turret_kit", "jammer", "lockpick", "filter", "sonar", "repairkit", "okokey", "decoy_e", "disruptor", "turret_kit2", "wrepair"];
+  var ids = ["emp", "plate", "decoder", "fieldkit", "wrepair", "repairkit", "engkit", "noise", "turret_kit", "jammer", "lockpick", "filter", "sonar", "okokey", "decoy_e", "disruptor", "turret_kit2"];
   for (var k in LAB.ITEMS) { var d = LAB.ITEMS[k]; if (d.kind !== "part" && !d.cat && d.depth && ids.indexOf(k) < 0) ids.push(k); }
   return ids;
 }
@@ -685,8 +685,9 @@ function gadgetsMenu() {
   gadgetIds().slice(3).forEach(function (k) {
     var d = LAB.ITEMS[k];
     if (!d || !(g.inv[k] > 0)) return;
-    var verb = d.kind === "throw" ? "Бросить вперёд" : d.kind === "deploy" ? "Поставить впереди" : d.fx && d.fx.pick ? "Применяется у двери" : k === "okokey" ? "Применяется у турели и на терминале безопасности" : "Применить";
-    items.push({ label: d.n + ": " + g.inv[k] + ". " + verb + ". " + d.desc, fn: function () { gm().useItem(k); } });
+    var kit = LAB.repair && LAB.repair.isKit(k);
+    var verb = kit ? "Починить" : d.kind === "throw" ? "Бросить вперёд" : d.kind === "deploy" ? "Поставить впереди" : d.fx && d.fx.pick ? "Применяется у двери" : k === "okokey" ? "Применяется у турели и на терминале безопасности" : "Применить";
+    items.push({ label: d.n + ": " + (kit ? LAB.repair.countText(k) : g.inv[k]) + ". " + verb + ". " + d.desc, fn: function () { gm().useItem(k); } });
   });
   items.push(back());
   menu("Гранаты, пластины и устройства", items);
@@ -698,7 +699,7 @@ function partsMenu() {
     return { label: line, keep: true, fn: function () { say(LAB.ITEMS[k].desc + " " + line); } };
   });
   if (!items.length) items.push({ label: "Деталей нет. Ищите в ящиках, у роботов и на полу.", keep: true, fn: function () {} });
-  if (LAB.workshop) items.push({ label: "Все детали этой глубины: где найти и для чего", fn: function () { LAB.workshop.partsGuide(partsMenu); } });
+  if (LAB.workshop) items.push({ label: "Все детали этой глубины: где найти и для чего", fn: function () { LAB.workshop.partsGuide(); } });
   items.push(back());
   menu("Детали", items);
 }
@@ -827,66 +828,27 @@ function note(title, text, after, opts) {
 }
 
 /* ════════ МАСТЕРСКАЯ ════════ */
-/* Рецепты — по разделам; рецепты глубже текущего уровня не показываются. */
-function recipeGroup(rc) {
-  var o = String(rc.out);
-  if (o.indexOf("armor:") === 0) return "Броня";
-  if (o.indexOf("weapon:") === 0) return "Оружие";
-  if (o.indexOf("ammo:") === 0) return "Батареи и боеприпасы";
-  if (o === "plate" || o === "wmod" || o === "repairkit") return "Улучшения";
-  var d = LAB.ITEMS[o];
-  if (d && (d.heal || (d.fx && (d.fx.heal || d.fx.en || d.fx.cure)) || d.en || d.cure || d.detox || d.neuro || d.stopBleed)) return "Лечение и стимуляторы";
-  return "Гранаты и устройства";
-}
-function craft(o) {
-  if (LAB.workshop) { LAB.workshop.open(o); return; } /* мастерская: верстаки по уровням, схемы, модули, ремонт, разбор */
-  var g = G();
-  var names = ["Лечение и стимуляторы", "Батареи и боеприпасы", "Гранаты и устройства", "Оружие", "Броня", "Улучшения"];
-  var avail = LAB.RECIPES.filter(function (rc) { return !rc.minL || rc.minL <= g.L; });
-  var items = names.map(function (nm) {
-    var list = avail.filter(function (rc) { return recipeGroup(rc) === nm; });
-    if (!list.length) return null;
-    var ready = list.filter(function (rc) { return gm().canCraft(rc); }).length;
-    return { label: nm + ": можно собрать " + ready + " из " + list.length, fn: function () { craftList(nm, list); } };
-  }).filter(function (x) { return x; });
-  items.push({ label: "Уйти от верстака", fn: function () { A("play", "craft_off"); } });
-  A("play", "workbench");
-  menu("Мастерская", items, { intro: "Деталей у вас: " + LAB.PARTS.reduce(function (a, k) { return a + (g.inv[k] || 0); }, 0) + "." });
-}
-function craftList(title, list) {
-  var g = G();
-  var items = list.map(function (rc) {
-    var ok = gm().canCraft(rc);
-    var lab = rc.n + (ok ? " — можно собрать" : rc.minL && g.L < rc.minL ? " — с уровня " + rc.minL : " — нужно: " + gm().needText(rc));
-    if (rc.out.indexOf("armor:") === 0) { var d = LAB.ARMORS[rc.out.slice(6)]; lab += ". " + d.desc; }
-    else if (rc.out.indexOf("weapon:") === 0) { var wd = LAB.WEAPONS[rc.out.slice(7)]; if (wd) lab += ". " + wd.desc; }
-    else if (rc.desc) lab += ". " + rc.desc;
-    else if (LAB.ITEMS[rc.out] && LAB.ITEMS[rc.out].desc) lab += ". " + LAB.ITEMS[rc.out].desc;
-    return { label: lab, keep: true, fn: function () { gm().craft(rc); } };
-  });
-  items.push({ label: "Назад", fn: craft });
-  menu(title, items, { keep: true, rebuild: function () { return craftListItems(list); } });
-}
-function craftListItems(list) {
-  var g = G();
-  var items = list.map(function (rc) {
-    var ok = gm().canCraft(rc);
-    var lab = rc.n + (ok ? " — можно собрать" : rc.minL && g.L < rc.minL ? " — с уровня " + rc.minL : " — нужно: " + gm().needText(rc));
-    return { label: lab, keep: true, fn: function () { gm().craft(rc); } };
-  });
-  items.push({ label: "Назад", fn: craft });
-  return items;
-}
+/* Окно мастерской, рецепты, ремонт и разбор — workshop.js. */
+function craft(o) { if (LAB.workshop) LAB.workshop.open(o); }
 
 /* ════════ ИМПЛАНТЫ (четыре пальца, двойное касание) ════════ */
 function implants() {
   if (!gm().entered) return;
-  var g = G();
-  var items = g.implants.map(function (id) {
-    var d = gm().implantDef(id);
-    return { label: d.n + ", " + gm().implantCost(id) + " энергии. " + d.desc, fn: function () { if (LAB.combat) LAB.combat.useImplant(id); } };
+  var g = G(), IM = LAB.implants;
+  /* (2.0) сначала импланты, которые применяют; потом чипы — работают сами */
+  var act = g.implants.filter(function (id) { return !(IM && IM.isChip(id)); }), pas = g.implants.filter(function (id) { return IM && IM.isChip(id); });
+  var items = act.map(function (id) {
+    var d = gm().implantDef(id), tg = IM ? IM.tag(id) : "";
+    return { label: d.n + (tg ? ", " + tg : "") + ", " + gm().implantCost(id) + " энергии. " + d.desc, fn: function () { if (LAB.combat) LAB.combat.useImplant(id); } };
   });
-  items.push({ label: "Энергия: " + g.en + " из " + g.enMax, keep: true, fn: function () { say("Энергия имплантов " + g.en + " из " + g.enMax + ". Понемногу восстанавливается сама, полностью — в капсуле."); } });
+  pas.forEach(function (id) { items.push({ label: "Чип: " + IM.line(id) + " Работает сам.", keep: true, fn: function () { say(IM.line(id)); } }); });
+  /* чипы в рюкзаке: вживить; лишние — продать или разобрать у верстака */
+  if (IM) IM.chips().forEach(function (k) {
+    var it = LAB.ITEMS[k], dup = g.implants.indexOf(it.implant) >= 0;
+    items.push({ label: it.n + " в рюкзаке: " + g.inv[k] + ". " + (dup ? "Такой уже вживлён — продать или разобрать у верстака" : "Вживить"), fn: function () { gm().useItem(k); } });
+  });
+  items.push({ label: "Энергия: " + g.en + " из " + g.enMax, keep: true, fn: function () { say("Энергия имплантов " + g.en + " из " + g.enMax + ". Понемногу восстанавливается сама, если вы сыты и нервы не перегружены. Образцы «Колыбели» расширяют запас."); } });
+  if (IM) items.push({ label: IM.cyberText(), fn: function () { IM.cyberMenu(); } });
   menu("Импланты", items);
 }
 

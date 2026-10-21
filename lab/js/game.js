@@ -100,7 +100,8 @@ function markSeen() {
   if (r) {
     for (var y = r.y0 - 1; y <= r.y1 + 1; y++) for (var x = r.x0 - 1; x <= r.x1 + 1; x++) if (LAB.inb(x, y)) CUR.seen[idx(x, y)] = 1;
   } else {
-    for (var dy = -1; dy <= 1; dy++) for (var dx = -1; dx <= 1; dx++) if (LAB.inb(G.x + dx, G.y + dy)) CUR.seen[idx(G.x + dx, G.y + dy)] = 1;
+    var rr = 1 + (LAB.implants ? Math.round(LAB.implants.stat("map")) : 0); /* (2.0) чип картографа */
+    for (var dy = -rr; dy <= rr; dy++) for (var dx = -rr; dx <= rr; dx++) if (LAB.inb(G.x + dx, G.y + dy)) CUR.seen[idx(G.x + dx, G.y + dy)] = 1;
   }
 }
 function encodeSeen(arr) {
@@ -147,7 +148,8 @@ function enterFloor(L, F, how, silent) {
   G.L = L; G.F = F;
   /* (1.5) достижения: новые этажи и уровни */
   G.visited = G.visited || {};
-  if (!G.visited[L + "-" + F]) { G.visited[L + "-" + F] = 1; if (LAB.ach) { LAB.ach.ev("floor", 1); LAB.ach.ev("level", L); } }
+  var firstVisit = !G.visited[L + "-" + F];
+  if (firstVisit) { G.visited[L + "-" + F] = 1; if (LAB.ach) { LAB.ach.ev("floor", 1); LAB.ach.ev("level", L); } }
   var fl = LAB.getFloor(G.seed, L, F), fs = fsFor(L, F);
   CUR.fl = fl; CUR.fs = fs; CUR.key = L + "-" + F; CUR.room = -9; CUR.focus = null; CUR.corr = -1;
   CUR.seen = decodeSeen(fs.seen);
@@ -163,8 +165,6 @@ function enterFloor(L, F, how, silent) {
   else if (how === "load") { spot = [G.x, G.y]; if (!passable(spot[0], spot[1])) { o = findObj("stairs_up") || findObj("elevator") || findObj("wake") || findObj("gate_sealed"); spot = freeNear(o); } }
   if (!spot) { o = findObj("elevator"); spot = freeNear(o); }
   G.x = spot[0]; G.y = spot[1];
-  var firstVisit = !G.visited[L + "-" + F];
-  G.visited[L + "-" + F] = 1;
   G.maxF[L] = Math.max(G.maxF[L] || 0, F);
   navStop(); /* навигатор ведёт только по своему этажу */
   if (firstVisit) { if (L > 10) tutor("seam"); else if (how === "down" || how === "gatedown") tutor("sector"); }
@@ -175,6 +175,8 @@ function enterFloor(L, F, how, silent) {
   if (!silent) {
     var lev = LAB.LEVELS[L];
     var head = (how === "gatedown" || how === "start") ? "Уровень " + L + ", " + lev.name + ". " + lev.desc + " Этаж " + F + "." : "Уровень " + L + ", этаж " + F + ".";
+    /* (2.0) мастерская этажа — с первого прихода: навигатор знает дорогу */
+    if (firstVisit && fl.shop && how !== "respawn" && how !== "restart" && how !== "load") head += " На этаже мастерская: навигатор приведёт к станкам.";
     if (how === "respawn") head = (G.checkpoint && G.checkpoint.cap ? "«Эхо» вернуло вас к капсуле восстановления, к которой вы привязаны." : "«Эхо» вернуло вас к началу уровня.") + " Уровень " + L + ", этаж " + F + ".";
     if (how === "restart") head = "«Эхо» вернуло вас к началу уровня: привязки к капсуле на этом уровне не было. Уровень " + L + ", этаж " + F + ".";
     say(head);
@@ -278,7 +280,8 @@ function itemKind(it) {
     if (k === "medkit_s" || k === "medkit_l") return "med";
     if (k === "stim" || k === "antidote" || k === "energy_d") return "stim";
     if (k === "emp" || k === "noise") return "gren";
-    if (k === "plate" || k === "repairkit") return "plate";
+    if (k === "plate" || k === "repairkit" || k === "wrepair" || k === "fieldkit" || k === "engkit") return "plate"; /* ремкомплекты звенят железом */
+    if (LAB.ITEMS[k] && LAB.ITEMS[k].kind === "implant") return "chip";
     if (k === "decoder" || k === "lockpick" || /^pick_/.test(k) || k === "jammer" || k === "sonar" || k === "okokey") return "decoder";
     var dd = LAB.ITEMS[k];
     if (dd && dd.kind !== "part") return dd.fx && dd.fx.heal ? "med" : dd.kind === "throw" ? "gren" : "stim";
@@ -423,7 +426,13 @@ function weaponLine(w) {
 game.weaponLine = weaponLine;
 
 /* Защита: надетая броня (с пластинами) и опыт героя. */
-function armorValue() { var a = LAB.armorDef(G.armor) + Math.floor(G.lvl / 3); if (G.faction === "sec") a = Math.round(a * 1.15); return a; }
+function armorValue() {
+  var a = LAB.armorDef(G.armor) + Math.floor(G.lvl / 3);
+  /* (2.0) чип кожного панциря и наноброня */
+  if (LAB.implants) a += Math.round(LAB.implants.stat("armor")) + (G.st.nanoT > 0 ? G.st.nano || 0 : 0);
+  if (G.faction === "sec") a = Math.round(a * 1.15);
+  return a;
+}
 game.armorValue = armorValue;
 /* Какую долю урона этого вида гасит броня. */
 function armorRes(t) { if (!G.armor) return 0; var r = LAB.ARMORS[G.armor.base].res; return (r && r[t]) || 0; }
@@ -434,7 +443,8 @@ function armorLine(a) {
   if (!a) return "без брони";
   var d = LAB.ARMORS[a.base], res = [];
   for (var t in d.res) res.push(LAB.ATK_T[t] + " " + Math.round(d.res[t] * 100) + "%");
-  return a.name + ": защита " + LAB.armorDef(a) + (a.up ? ", пластин " + a.up + " из 5" : "") + (res.length ? ", стойкость: " + res.join(", ") : "") + (d.special ? ", особенность: " + LAB.ARMOR_SPECIAL[d.special] : "");
+  var c = LAB.armorCond(a);
+  return a.name + ": защита " + LAB.armorDef(a) + (c < 100 ? ", состояние " + Math.round(c) + " из 100" + (c < 50 ? " — держит хуже" : "") : "") + (a.up ? ", пластин " + a.up + " из 5" : "") + (res.length ? ", стойкость: " + res.join(", ") : "") + (d.special ? ", особенность: " + LAB.ARMOR_SPECIAL[d.special] : "");
 }
 game.armorLine = armorLine;
 function equipArmor(i) {
@@ -570,9 +580,10 @@ game.HUNGER_MIN = HUNGER_MIN;
 function bodyMinutes(min, asleep) {
   var b = body();
   if (asleep) { b.tox = Math.max(0, b.tox - min / 4); b.rad = Math.max(0, b.rad - min / 40); return; } /* сон в капсуле: раствор кормит и выводит, предупреждений нет */
-  b.food -= min / HUNGER_MIN;
+  var mk = 1 - (LAB.implants ? LAB.implants.stat("metab") : 0); /* (2.0) чип метаболизма */
+  b.food -= min / HUNGER_MIN * mk;
   /* выспались в капсуле (восемь часов и больше) — бодрость какое-то время падает вдвое медленнее */
-  b.wake -= min / 12 * (G.st.restedMin > 0 ? 0.5 : 1);
+  b.wake -= min / 12 * (G.st.restedMin > 0 ? 0.5 : 1) * mk;
   if (G.st.restedMin > 0) G.st.restedMin = Math.max(0, G.st.restedMin - min);
   if (b.tox > 0) b.tox -= min / (b.food >= 50 ? 4 : 6);
   if (b.rad > 0) b.rad -= min / 180; /* радионуклиды выводятся сами очень медленно */
@@ -607,9 +618,10 @@ function enRegen() {
   var b = body();
   if (b.food < 10 || b.neuro >= 85) return 0;
   var k = b.rad >= 45 ? 2 : 1; /* лучевая болезнь: импланты восстанавливаются вдвое медленнее */
-  if (b.food < 25) return 16 * k;
-  if (b.food < 50) return 9 * k;
-  return (b.food >= 80 ? 5 : 6) * k;
+  if (LAB.implants) k *= 1 - LAB.implants.stat("recharge"); /* (2.0) чип рекуперации */
+  if (b.food < 25) return Math.max(1, Math.round(16 * k));
+  if (b.food < 50) return Math.max(1, Math.round(9 * k));
+  return Math.max(1, Math.round((b.food >= 80 ? 5 : 6) * k));
 }
 game.enRegen = enRegen;
 /* Насколько хуже точность: усталость, тошнота, нейроперегрузка. */
@@ -643,7 +655,7 @@ function bodyApply(d, msg) {
   if (d.detox && b.tox > 0) { b.tox -= d.detox; clampBody(b); msg.push(b.tox > 0 ? "Токсины " + Math.round(b.tox) + "." : "Токсины выведены."); }
   if (d.tox) {
     if (G.st.antitox > 0 && !d.overdose) msg.push("Фильтр не пропустил токсины.");
-    else { b.tox += d.tox; clampBody(b); msg.push("Токсины " + Math.round(b.tox) + "."); }
+    else { b.tox += d.tox * (1 - (LAB.implants ? LAB.implants.stat("antitox") : 0)); clampBody(b); msg.push("Токсины " + Math.round(b.tox) + "."); }
   }
   if (d.neuro) { v = b.neuro; b.neuro += d.neuro; clampBody(b); if (Math.round(b.neuro) !== Math.round(v)) msg.push("Нейронагрузка " + Math.round(b.neuro) + "."); }
   if (d.stopBleed && G.st.bleed) { G.st.bleed = 0; msg.push("Кровотечение остановлено."); }
@@ -765,7 +777,7 @@ function giveItem(it, quiet) {
         extra = " Защита " + nw + (nw > cur ? ", выше надетой (" + cur + ")" : nw < cur ? ", ниже надетой (" + cur + ")" : ", как у надетой") + ". Надеть — инвентарь, раздел «Броня».";
       }
       break;
-    case "credits": G.credits += it.n; break;
+    case "credits": if (LAB.implants && LAB.implants.stat("loot")) it.n = Math.round(it.n * (1 + LAB.implants.stat("loot"))); G.credits += it.n; break; /* (2.0) чип старателя */
     case "weapon":
       G.weapons.push(it.w);
       if (LAB.oko && LAB.oko.react) later(function () { LAB.oko.react("weapon"); }, 2500);
@@ -800,8 +812,9 @@ function giveItem(it, quiet) {
       if (!G.samples[it.sid]) { G.samples[it.sid] = 1; G.enMax += 2; G.en = Math.min(G.enMax, G.en + 10); gainXP(20); extra = " Собрано образцов: " + Object.keys(G.samples).length + ". Энергия имплантов выросла."; if (LAB.oko) LAB.oko.event("sample"); }
       break;
     case "chip":
-      if (G.implants.indexOf(it.implant) < 0) { G.implants.push(it.implant); extra = " Имплант установлен сам: «" + implantDef(it.implant).n + "». Панель имплантов — " + LAB.K("двойное касание четырьмя пальцами.", "клавиша U."); if (LAB.oko && LAB.oko.react) later(function () { LAB.oko.react("implant"); }, 3000); }
-      else { G.credits += 60; extra = " Такой имплант уже есть — чип продан за 60 кредитов."; }
+      /* (2.0) вживляется сам, если есть место; иначе — в рюкзак */
+      if (LAB.implants) extra = LAB.implants.pickup(it.implant);
+      else if (G.implants.indexOf(it.implant) < 0) G.implants.push(it.implant);
       break;
   }
   if (!quiet) { A("pickup", itemKind(it)); if (it.kind !== "note") tutor("pickup"); }
@@ -1680,7 +1693,7 @@ function objMenu(o) {
     case "vending": vendingMenu(o); return;
     case "medst": medMenu(o); return;
     case "charger": chargerMenu(o); return;
-    case "implantlab": implantMenu(o); return;
+    case "implantlab": if (LAB.implants) LAB.implants.station(o); return;
     case "hq": hqMenu(o); return;
     case "crate": case "locker": case "desk": case "corpse": case "safe":
       containerMenu(o); return;
@@ -2576,32 +2589,22 @@ function chargerMenu(o) {
     } }
   ]);
 }
-function implantCost(id) { var c = implantDef(id).cost; if (G.faction === "sci") c = Math.round(c * 0.8); return c; }
+function implantCost(id) { var c = implantDef(id).cost; if (G.faction === "sci") c = Math.round(c * 0.8); if (LAB.implants) c = Math.max(1, Math.round(c * LAB.implants.costK(id))); return c; }
 game.implantCost = implantCost;
 function spendEnergy(id) {
   var c = implantCost(id), b = body();
-  if (b.neuro >= 85) { LAB.UI.error(); A("play", "jam"); say("Нейроперегрузка: импланты не отвечают. Нагрузка " + Math.round(b.neuro) + " — подождите, пока спадёт ниже 85, или примите нейроблокатор."); return false; }
+  var reserveOk = LAB.implants && LAB.implants.has(id, "reserve");
+  if (reserveOk && b.neuro >= 85) c *= 2;
+  else if (b.neuro >= 85) { LAB.UI.error(); A("play", "jam"); say("Нейроперегрузка: импланты не отвечают. Нагрузка " + Math.round(b.neuro) + " — подождите, пока спадёт ниже 85, или примите нейроблокатор."); return false; }
   if (b.neuro >= 60) c = Math.round(c * 1.5);
   if (G.en < c) { LAB.UI.error(); say("Не хватает энергии: нужно " + c + ", есть " + G.en + "." + (b.neuro >= 60 ? " При нейроперегрузке импланты тратят больше." : "")); return false; }
   G.en -= c;
   /* каждый имплант нагружает нервы */
-  b.neuro = Math.min(100, b.neuro + Math.max(2, Math.round(implantDef(id).cost / 2)));
+  b.neuro = Math.min(100, b.neuro + Math.max(1, Math.round(implantDef(id).cost / 2 * (LAB.implants ? LAB.implants.neuroK(id) : 1))));
   bodyWarn();
   UIx("refresh"); return true;
 }
 game.spendEnergy = spendEnergy;
-function implantMenu(o) {
-  var items = LAB.IMPLANTS.filter(function (im) { return G.implants.indexOf(im.id) < 0; }).map(function (im) {
-    var p = Math.round(im.price * priceK());
-    return { label: im.n + " — " + p + " кредитов. " + im.desc, fn: function () {
-      if (G.credits < p) { LAB.UI.error(); say("Не хватает кредитов: нужно " + p + "."); return; }
-      G.credits -= p; G.implants.push(im.id); A("play", "implant"); say("Имплант «" + im.n + "» установлен. Панель имплантов — " + LAB.K("двойное касание четырьмя пальцами.", "клавиша U.")); journal("Установлен имплант: " + im.n + "."); UIx("refresh");
-      if (LAB.oko && LAB.oko.react) later(function () { LAB.oko.react("implant"); }, 3000);
-    } };
-  });
-  if (!items.length) { say("Все импланты уже установлены."); return; }
-  UIx("menu", "Станция имплантов", items);
-}
 function hqMenu(o) {
   var f = LAB.FACTIONS[o.faction];
   var items = [{ label: "Узнать о фракции", fn: function () { say(f.n + ". " + f.desc + " Выгода: " + f.perk); } }];
@@ -2707,7 +2710,7 @@ function tradeMenu(n, kind) {
   UIx("menu", "Торговля: " + npcName(n), build(), { keep: true, rebuild: build });
 }
 function tradeItems(n, kind) {
-  var goods = kind === "med" ? ["medkit_s", "medkit_l", "bandage", "antidote", "sorbent", "stim", "neuroblock", "painkiller", "coagulant", "antirad", "iodine"] : kind === "food" ? ["stew", "ration", "noodles", "crackers", "nuts", "choco", "glucose", "medkit_s", "bread", "porridge", "fishcan", "water"] : kind === "parts" ? ["scrap", "wire", "chip", "cap", "lens", "magnet", "relay", "cell", "servo", "optic", "lead", "rubber"] : kind === "ammo" ? ["ammo:energy", "ammo:magnetron", "ammo:slug", "emp", "wrepair", "tape"] : ["medkit_s", "bandage", "ration", "ammo:energy", "chip", "gel", "reagent", "cap", "relay", "wrepair", "respirator", "water"];
+  var goods = kind === "med" ? ["medkit_s", "medkit_l", "bandage", "antidote", "sorbent", "stim", "neuroblock", "painkiller", "coagulant", "antirad", "iodine"] : kind === "food" ? ["stew", "ration", "noodles", "crackers", "nuts", "choco", "glucose", "medkit_s", "bread", "porridge", "fishcan", "water"] : kind === "parts" ? ["scrap", "wire", "chip", "cap", "lens", "magnet", "relay", "cell", "servo", "optic", "lead", "rubber"] : kind === "ammo" ? ["ammo:energy", "ammo:magnetron", "ammo:slug", "emp", "wrepair", "fieldkit", "tape"] : ["medkit_s", "bandage", "ration", "ammo:energy", "chip", "gel", "reagent", "cap", "relay", "wrepair", "repairkit", "respirator", "water"];
   goods = goods.filter(function (id) { return id.indexOf("ammo:") === 0 ? !!LAB.AMMO[id.slice(5)] : !!LAB.ITEMS[id] && (LAB.ITEMS[id].depth || 1) <= Math.max(G.L, 1); });
   var k = priceK() * (n.robot ? 1 : 0.9);
   var items = goods.map(function (id) {
@@ -2815,7 +2818,10 @@ function navTargets() {
   if (gc) list.push({ n: itemName(gc).toLowerCase(), cell: [gc.x, gc.y] });
   var vend = nearestObj(["vending"], true); if (vend) list.push({ n: "торговый терминал", o: vend });
   var sn = nearestObj(["snacks"], true); if (sn && body().food < 60) list.push({ n: "автомат с едой", o: sn });
-  var wb = nearestObj(["workbench"], true); if (wb) list.push({ n: "мастерская", o: wb });
+  /* (2.0) мастерскую этажа «Эхо» слышит с прибытия: станки гудят */
+  var wb = nearestObj(["workbench"], true), shop = shopObj();
+  if (!wb && shop) list.splice(1, 0, { n: "станки мастерской", o: shop, main: true });
+  else if (wb) list.splice(wb === shop ? 1 : list.length, 0, { n: "мастерская", o: wb });
   var cap = findObj("capsule"); if (cap && known(cap)) list.push({ n: "капсула восстановления", o: cap });
   var t = nearestObj(["terminal"], true); if (t) list.push({ n: "ближайший терминал", o: t });
   var m = nearestObj(["magnetron"], true); if (m && CUR.fl.needPower && !CUR.fs.power) list.push({ n: "магнетронная установка", o: m });
@@ -2839,6 +2845,8 @@ function doorFront(d) {
   for (var i = 0; i < 4; i++) { var x = d.x + v[i][0], y = d.y + v[i][1]; if (cellType(x, y) === T.CORR) return [x, y]; }
   return [d.x, d.y];
 }
+function shopObj() { var id = CUR.fl && CUR.fl.shop; if (!id) return null; for (var i = 0; i < CUR.fl.objs.length; i++) if (CUR.fl.objs[i].id === id) return CUR.fl.objs[i]; return null; }
+game.shopObj = shopObj;
 function nearestObj(types, onlyKnown) {
   var best = null, bd = 1e9;
   CUR.fl.objs.forEach(function (o) { if (types.indexOf(o.type) < 0) return; if (onlyKnown && !known(o)) return; var d = Math.abs(o.x - G.x) + Math.abs(o.y - G.y); if (d < bd) { bd = d; best = o; } });
@@ -3034,7 +3042,8 @@ game.useMedkit = useMedkit;
 function useItem(id) {
   var d = LAB.ITEMS[id];
   if (!d || !(G.inv[id] > 0)) { say("Нет: " + (d ? d.n : id) + "."); return false; }
-  if (id === "wrepair" && LAB.workshop) return LAB.workshop.fieldRepair();
+  if (LAB.repair && LAB.repair.isKit(id)) return LAB.repair.use(id); /* (2.0) походные ремкомплекты */
+  if (d.kind === "implant" && LAB.implants) return LAB.implants.useChip(id); /* (2.0) чип импланта — вживить */
   if (d.kind === "trap" && LAB.traps) return LAB.traps.use(id);
   if (d.kind === "throw") {
     if (d.fx && d.fx.gren && LAB.combat) return LAB.combat.throwGrenade(id);
@@ -3050,7 +3059,7 @@ function useItem(id) {
     say(d.n + " раскрылась " + relDir(at.x, at.y) + " и ищет цели на своей линии. Выстрелов — " + (d.fx.deploy || 30) + "." + (d.fx.dmgK > 1 ? " Бьёт сильнее обычной." : ""));
     UIx("refresh"); return true;
   }
-  if (d.fx && (d.fx.pick || d.fx.mend || d.fx.map || d.fx.jam || d.fx.antitox || d.fx.scan || d.fx.shield || d.fx.haste || d.fx.cloak || d.fx.heal || d.fx.en || d.fx.cure || d.fx.unslow || d.fx.food || d.fx.wake || d.fx.detox || d.fx.neuro || d.fx.stopBleed)) return useFx(id, d);
+  if (d.fx && (d.fx.pick || d.fx.map || d.fx.jam || d.fx.antitox || d.fx.scan || d.fx.shield || d.fx.haste || d.fx.cloak || d.fx.heal || d.fx.en || d.fx.cure || d.fx.unslow || d.fx.food || d.fx.wake || d.fx.detox || d.fx.neuro || d.fx.stopBleed)) return useFx(id, d);
   if (id === "plate") return installPlate();
   if (id === "decoder") { say("Декодер применяется у двери с картридером: " + LAB.K("двойное касание у двери.", "Enter у двери.")); return false; }
   if (id === "okokey") { say("Служебный ключ ОКО прикладывают к турели вплотную — подходите наискосок, вне её линии огня — или к терминалу безопасности, раздел «Оборонная сеть»: " + LAB.K("двойное касание рядом.", "Enter рядом.")); return false; }
@@ -3085,11 +3094,6 @@ game.useItem = useItem;
 function useFx(id, d) {
   var fx = d.fx, msg = [];
   if (fx.pick) { say("Отмычку применяют у двери под ключ: " + LAB.K("двойное касание у двери.", "Enter у двери.")); return false; }
-  if (fx.mend) {
-    if (!G.armor) { say("Брони на вас нет."); return false; }
-    if ((G.armor.mend || 0) >= 3) { say("Эту броню уже трижды латали: больше не держит."); return false; }
-    G.armor.mend = (G.armor.mend || 0) + 1; G.armor.def = Math.round(G.armor.def * 1.05) + 1; msg.push("Броня залатана: защита " + LAB.armorDef(G.armor) + ".");
-  }
   if (fx.map) { mapFloor(); msg.push("Карта этажа загружена в «Эхо»: навигатор ведёт до целей целиком."); }
   if (fx.jam) { G.st.jam = Math.max(G.st.jam || 0, fx.jam); msg.push("Глушилка включена: камеры и датчики ОКО вас не видят."); }
   if (fx.antitox) { G.st.antitox = Math.max(G.st.antitox || 0, fx.antitox); if (G.st.poison) { G.st.poison = 0; msg.push("Яд вышел."); } msg.push("Яды и споры пока не действуют."); }
@@ -3224,28 +3228,33 @@ function reload() {
 game.reload = reload;
 
 /* ════════ МАСТЕРСКАЯ ════════ */
-function canCraft(rc) { if (rc.minL && G.L < rc.minL) return false; for (var k in rc.need) if ((G.inv[k] || 0) < rc.need[k]) return false; return true; }
-game.canCraft = canCraft;
+function needOf(rc) { return LAB.workshop ? LAB.workshop.needOf(rc) : rc.need; }
+function canCraft(rc) { if (rc.minL && G.L < rc.minL) return false; var need = needOf(rc); for (var k in need) if ((G.inv[k] || 0) < need[k]) return false; return true; }
 function craft(rc) {
   var why = LAB.workshop ? LAB.workshop.check(rc) : "";
   if (!why && rc.minL && G.L < rc.minL) why = "Это здесь не собрать: чертежей и оснастки на этой глубине нет.";
   if (!why && !canCraft(rc)) why = "Не хватает деталей: " + needText(rc) + ".";
   if (why) { LAB.UI.error(); say(why); return false; }
   var out = rc.out === "wmod" ? "m_power" : rc.out; /* прежний модуль усиления */
-  for (var k in rc.need) G.inv[k] -= rc.need[k];
+  var need = needOf(rc), W = LAB.workshop;
+  for (var k in need) G.inv[k] -= need[k];
   G.crafted++;
   if (LAB.ach) LAB.ach.ev("craft", 1);
   var armorMsg = "";
   var bonus = G.faction === "eng" && G.crafted % 3 === 0;
-  var times = bonus ? 2 : 1;
+  /* (2.0) профиль верстака: «с запасом» и качество оружия и брони */
+  var extra = W ? W.craftBonus(rc) : 0, qual = W ? W.craftQual() : 2, batchN = W ? W.craftTimes(rc) : 1;
+  if (LAB.implants && LAB.implants.stat("craft") && Math.random() < LAB.implants.stat("craft") && !/^(armor|weapon):/.test(out)) extra++; /* (2.0) чип конструктора */
+  if (LAB.implants) LAB.implants.crafted(rc);
+  var times = batchN + (bonus ? 1 : 0) + extra;
   for (var i = 0; i < times; i++) {
     if (out.indexOf("ammo:") === 0) G.ammo[out.slice(5)] = (G.ammo[out.slice(5)] || 0) + 1;
-    else if (out.indexOf("armor:") === 0) { var na = LAB.makeArmor(out.slice(6), LAB.foeLevel(G.L, G.F), 2); armorMsg = giveItem({ kind: "armor", a: na }, true); }
-    else if (out.indexOf("weapon:") === 0) { var nw = LAB.makeWeapon(out.slice(7), LAB.foeLevel(G.L, G.F), 1, 2); armorMsg = giveItem({ kind: "weapon", w: nw }, true); }
+    else if (out.indexOf("armor:") === 0) { var na = LAB.makeArmor(out.slice(6), LAB.foeLevel(G.L, G.F), qual); armorMsg = giveItem({ kind: "armor", a: na }, true); }
+    else if (out.indexOf("weapon:") === 0) { var nw = LAB.makeWeapon(out.slice(7), LAB.foeLevel(G.L, G.F), 1, qual); armorMsg = giveItem({ kind: "weapon", w: nw }, true); }
     else G.inv[out] = (G.inv[out] || 0) + 1;
   }
   A("play", out.indexOf("armor:") === 0 || out.indexOf("weapon:") === 0 ? "craft_armor" : "craft");
-  var msg = "Собрано: " + rc.n + (bonus ? " — и ещё одно, инженерная смекалка!" : "") + "." + (armorMsg ? " " + armorMsg : "");
+  var msg = "Собрано: " + rc.n + (batchN > 1 ? " — партия из " + batchN : "") + (bonus ? " — и ещё одно, инженерная смекалка!" : "") + "." + (extra ? " " + W.specName() + ": вышло с запасом — плюс одно." : "") + (qual > 2 && (out.indexOf("armor:") === 0 || out.indexOf("weapon:") === 0) ? " Оружейный верстак: качество на ступень лучше." : "") + (armorMsg ? " " + armorMsg : "");
   if (LAB.workshop) LAB.workshop.afterCraft(rc, msg); else say(msg);
   gainXP(3);
   UIx("refresh");

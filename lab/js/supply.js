@@ -37,7 +37,7 @@ function catOf(id) {
   return "gadget";
 }
 LAB.itemCat = catOf;
-var CAT_N = { food: "Еда и напитки", med: "Лекарства", protect: "Защита", tool: "Инструменты", valuable: "Ценности", part: "Детали", wmodule: "Модули оружия", gadget: "Устройства и гранаты", trap: "Ловушки и мины", ammo: "Батареи и боеприпасы", weapon: "Оружие", armor: "Броня и комбинезоны" };
+var CAT_N = { implant: "Чипы имплантов", food: "Еда и напитки", med: "Лекарства", protect: "Защита", tool: "Инструменты", valuable: "Ценности", part: "Детали", wmodule: "Модули оружия", gadget: "Устройства и гранаты", trap: "Ловушки и мины", ammo: "Батареи и боеприпасы", weapon: "Оружие", armor: "Броня и комбинезоны" };
 LAB.CAT_N = CAT_N;
 /* Не продаются: то, без чего не пройти (ключи, пропуска — не вещи рюкзака), и образцы «Колыбели». */
 function sellable(id) { var d = LAB.ITEMS[id]; return !!d && d.price > 0 && !d.nosell; }
@@ -48,7 +48,7 @@ function depthSellK() { var k = gm().priceK ? gm().priceK() : 1; return 1 + (k -
 function profBuy(prof, cat) { var p = LAB.SUPPLY_PROFILES[prof]; return p && p.buy && p.buy[cat] ? p.buy[cat] : 1; }
 /* Торговец-выживший скупает своё дороже: медик — лекарства, инженер — детали, повар — еду. */
 var NPC_BUY = { med: { med: 1.25, protect: 1.15 }, food: { food: 1.25 }, parts: { part: 1.25, tool: 1.15 }, ammo: { ammo: 1.25, weapon: 1.15 }, all: { valuable: 1.15 } };
-function ctxK(ctx, cat) { return ctxK0(ctx, cat) * (LAB.ach && LAB.ach.has("trader") ? 1.1 : 1); }
+function ctxK(ctx, cat) { return ctxK0(ctx, cat) * (LAB.ach && LAB.ach.has("trader") ? 1.1 : 1) * (1 + (LAB.implants ? LAB.implants.stat("sell") : 0)); /* (2.0) чип оценщика */ }
 function ctxK0(ctx, cat) {
   if (!ctx) return 1;
   if (ctx.prof) return profBuy(ctx.prof, cat);
@@ -67,7 +67,8 @@ function weaponSellPrice(w, ctx) {
   return Math.max(3, Math.round(LAB.weaponPrice(w) * LAB.SELL_K.weapon * (0.35 + 0.65 * Math.max(0, Math.min(100, c)) / 100) * (LAB.QUAL_MULT[w.qual] || 1) * ctxK(ctx, "weapon")) + mods * 12);
 }
 function armorValue(a) { var d = LAB.ARMORS[a.base] || { price: 50 }; return d.price * (LAB.QUAL_MULT[a.qual] || 1) * (1 + 0.04 * Math.max(0, (a.lvl || 1) - 1)); }
-function armorSellPrice(a, ctx) { return Math.max(3, Math.round(armorValue(a) * LAB.SELL_K.armor * ctxK(ctx, "armor")) + (a.up || 0) * 30); }
+/* (2.0) изношенная броня — дешевле, как изношенное оружие */
+function armorSellPrice(a, ctx) { var c = LAB.armorCond ? LAB.armorCond(a) : 100; return Math.max(3, Math.round(armorValue(a) * LAB.SELL_K.armor * (0.35 + 0.65 * c / 100) * ctxK(ctx, "armor")) + (a.up || 0) * 30); }
 LAB.sellPrice = { item: itemSellPrice, ammo: ammoSellPrice, weapon: weaponSellPrice, armor: armorSellPrice };
 function buyK() { return gm().priceK ? gm().priceK() : 1; }
 function itemBuyPrice(id) { return Math.max(2, Math.round(LAB.ITEMS[id].price * buyK())); }
@@ -90,7 +91,7 @@ function sellCats(ctx, back) {
   Object.keys(g.inv).forEach(function (id) { if (g.inv[id] > 0 && sellable(id)) { var c = catOf(id); (inv[c] = inv[c] || []).push(id); } });
   if (g.weapons.length) items.push({ label: "Оружие: " + g.weapons.length + (g.weapons.length < 2 ? " — последнее не продаётся" : ""), fn: function () { sellWeapons(ctx, back); } });
   if (g.armors.length) items.push({ label: "Броня и комбинезоны: " + g.armors.length + (g.armor ? ", одна надета" : ""), fn: function () { sellArmors(ctx, back); } });
-  ["wmodule", "part", "valuable", "med", "protect", "food", "gadget", "trap", "tool"].forEach(function (c) {
+  ["implant", "wmodule", "part", "valuable", "med", "protect", "food", "gadget", "trap", "tool"].forEach(function (c) {
     var ids = inv[c]; if (!ids || !ids.length) return;
     var n = ids.reduce(function (a, k) { return a + (g.inv[k] || 0); }, 0);
     items.push({ label: CAT_N[c] + ": " + n + (ctxK(ctx, c) > 1.05 ? " — здесь платят дороже" : ""), fn: function () { sellItems(ctx, c, back); } });
@@ -363,7 +364,7 @@ function deliveryText() { var m = era() === LAB.SUPPLY[5] ? "непредска�
 function surfaceCatalog() {
   var L = G().L, out = [];
   for (var id in LAB.ITEMS) { var d = LAB.ITEMS[id]; if (d.surf) out.push({ id: id }); }
-  ["medkit_s", "medkit_l", "trauma", "antirad", "iodine", "radaway", "respirator", "dosimeter", "tape", "decoder", "lockpick", "jammer", "filter", "wrepair", "toolkit", "wirecutters", "lead", "rubber", "filtercart"].forEach(function (id) { var d = LAB.ITEMS[id]; if (d && (d.depth || 1) <= Math.max(L, 3)) out.push({ id: id }); });
+  ["medkit_s", "medkit_l", "trauma", "antirad", "iodine", "radaway", "respirator", "dosimeter", "tape", "decoder", "lockpick", "jammer", "filter", "wrepair", "fieldkit", "repairkit", "engkit", "toolkit", "wirecutters", "lead", "rubber", "filtercart"].forEach(function (id) { var d = LAB.ITEMS[id]; if (d && (d.depth || 1) <= Math.max(L, 3)) out.push({ id: id }); });
   ["energy", "magnetron", "slug"].forEach(function (k) { if (LAB.AMMO[k] && (LAB.AMMO[k].depth || 1) <= L + 1) out.push({ ammo: k }); });
   ["radcape", "radsuit", "hazmat", "reactorsuit"].forEach(function (b) { if (LAB.ARMORS[b] && LAB.ARMORS[b].depth <= Math.max(L, 2) + 1) out.push({ armor: b }); });
   return out;

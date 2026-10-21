@@ -148,7 +148,7 @@ var OBJ_BEACON = { stairs_down: "bcn_stairs", stairs_up: "bcn_stairs_up", elevat
 var OBJ_BEACON_FB = { bcn_radio: ["bcn_pc", 0.75], bcn_oko: ["bcn_terminal", 1.35], bcn_puzzle: ["bcn_vending", 1.25], bcn_snacks: ["bcn_drinks", 0.82],
   /* установки глубин: свои маяки, пока нет записей — знакомые маяки на другой высоте */
   bcn_powergrid: ["bcn_magnetron", 0.7], bcn_incubator: ["bcn_capsule", 1.3], bcn_mirrorterm: ["bcn_terminal", 0.8], bcn_syncgate: ["bcn_gate", 1.2], bcn_ancient: ["bcn_reactor", 0.6] };
-var OBJ_RANGE = { stairs_down: 16, stairs_up: 10, gate_down: 18, elevator: 12, reactor: 20 };
+var OBJ_RANGE = { stairs_down: 16, stairs_up: 10, gate_down: 18, elevator: 12, reactor: 20, workbench: 14 }; /* (2.0) станки мастерской слышно из коридора */
 function beaconTick() {
   var g = G(), cur = CUR();
   if (!g || !LAB.game.entered || LAB.game.paused || g.stair || !cur || !cur.fl || !S.beacons || !S.effects) return;
@@ -772,7 +772,7 @@ LAB.atmos = {
   navPing: navPing, navStart: navStart, pickup: pickup,
   foeSound: foeSound, foeStep: foeStep, foeHit: foeHit, foeDeath: foeDeath, foeMiss: foeMiss, hurt: hurt,
   shot: shot, shotWall: shotWall, shotMiss: shotMiss, swingMiss: swingMiss, explosion: explosion, grenade: grenade, shellIncoming: shellIncoming,
-  mineBeep: mineBeep, dropLoot: dropLoot, at: at, implant: implant, combatLevel: combatLevel, okoChime: okoChime, okoAlarm: okoAlarm, noiseLure: noiseLure, deafen: deafen,
+  mineBeep: mineBeep, dropLoot: dropLoot, implant: implant, combatLevel: combatLevel, okoChime: okoChime, okoAlarm: okoAlarm, noiseLure: noiseLure, deafen: deafen,
   alarmLayer: alarmLayer, camTurn: camTurn, mimicHum: mimicHum, turretHot: turretHot,
   music: music, stopMusic: stopMusic, musicVolume: musicVolume, musicNow: musicNow, preloadLevel: preloadLevel, idsFor: idsFor
 };

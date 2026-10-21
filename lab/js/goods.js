@@ -139,7 +139,7 @@ LAB.weaponPrice = function (w) {
   var p = 30 + w.dmg * 4 + (w.rng || 1) * 3 + (w.cap || 0) * 0.8 + (b.pierce ? 25 : 0) + (b.noarmor ? 30 : 0) + (b.area ? 25 : 0);
   return Math.max(10, Math.round(p * (LAB.RANK_MULT[w.rank] || 1)));
 };
-LAB.SELL_K = { part: 0.5, valuable: 0.7, food: 0.35, med: 0.4, protect: 0.4, tool: 0.45, use: 0.4, throw: 0.4, deploy: 0.4, trap: 0.4, wmodule: 0.45, ammo: 0.4, weapon: 0.45, armor: 0.42 };
+LAB.SELL_K = { implant: 0.5, part: 0.5, valuable: 0.7, food: 0.35, med: 0.4, protect: 0.4, tool: 0.45, use: 0.4, throw: 0.4, deploy: 0.4, trap: 0.4, wmodule: 0.45, ammo: 0.4, weapon: 0.45, armor: 0.42 };
 
 /* ── СНАБЖЕНИЕ ──
    На каждом этаже — пункт снабжения: прилавок с товаром своего этажа,

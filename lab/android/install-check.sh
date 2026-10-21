@@ -12,7 +12,13 @@ SDK=$(adb shell getprop ro.build.version.sdk | tr -d '\r')
 echo "Android $REL (API $SDK)"
 adb shell settings put global verifier_verify_adb_installs 0 || true
 adb shell settings put global package_verifier_enable 0 || true
-adb install -r "$APK"
+# установка: службы на свежем эмуляторе иногда ещё не поднялись — подождать и повторить
+for t in 1 2 3; do
+  adb install -r "$APK" && break
+  echo "установка не удалась (попытка $t) — жду системные службы"
+  bash "$(dirname "$0")/emu-ready.sh" 180 || true
+done
+adb shell pm path $PKG | grep -q "^package:" || { echo "APK не поставился"; exit 1; }
 adb shell dumpsys package $PKG | grep -E "versionName|targetSdk|minSdk" | head -3 || true
 adb shell dumpsys package com.google.android.webview 2>/dev/null | grep -m1 versionName || adb shell dumpsys package com.android.webview 2>/dev/null | grep -m1 versionName || true
 adb logcat -c

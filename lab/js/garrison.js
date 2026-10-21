@@ -121,6 +121,9 @@ function freeCell(fl, x, y, busy) {
   var i = y * LAB.W + x, t = fl.t[i];
   if (t !== T().ROOM && t !== T().CORR) return false;
   if (fl.objAt[i] || busy[i]) return false;
+  /* (2.0) в мастерской этажа охраны нет: у верстака работают */
+  var rr = fl.room ? fl.room[i] : -1;
+  if (rr >= 0 && fl.rooms[rr] && fl.rooms[rr].shop) return false;
   return true;
 }
 function nearDoor(fl, x, y) {

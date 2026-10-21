@@ -868,10 +868,11 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(/Ближайшая точка/.test(nav.a) || /Цель: лестница вниз/.test(nav.a), "без карты — к ближайшей точке на пути: " + nav.a.slice(0, 140));
   ok(/Цель: лестница вниз/.test(nav.b) && /Всего \d+ шаг/.test(nav.b), "с картой — весь путь до лестницы: " + nav.b.slice(0, 140));
 
-  console.log("Верстак на каждом третьем этаже, тайник с двумя выходами, переносная турель, ОКО");
+  console.log("Мастерская на первом этаже уровня и на каждом третьем, тайник с двумя выходами, переносная турель, ОКО");
   const misc = await page.evaluate(async () => {
     const g = LAB.game, G = g.G, out = {};
-    out.wb = [3, 6, 9, 12, 15, 18].every(F => LAB.getFloor(G.seed, 1, F).objs.some(o => o.type === "workbench"));
+    const shopAt = F => { const fl = LAB.getFloor(G.seed, 1, F); return !!fl.shop && fl.objs.some(o => o.id === fl.shop && o.type === "workbench"); };
+    out.wb = [1, 3, 6, 9, 12, 15, 18].every(shopAt) && [2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20].every(F => !shopAt(F));
     let sec = null;
     for (let F = 1; F <= 20 && !sec; F++) { const fl = LAB.getFloor(G.seed, 2, F); if (fl.secret >= 0) sec = fl; }
     out.secret = !sec || sec.doors.filter(d => d.lock && d.lock.type === "secret" && d.other === sec.secret).length === 2;
@@ -887,7 +888,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     out.oko = SPOKEN.join(" | ");
     return out;
   });
-  ok(misc.wb, "верстак — на этажах 3, 6, 9, 12, 15, 18");
+  ok(misc.wb, "мастерская — на 1-м этаже уровня и на 3, 6, 9, 12, 15, 18-м");
   ok(misc.secret, "у тайной комнаты два выхода");
   ok(misc.deploy && misc.ally, "переносная турель встаёт и бьёт на нашей стороне");
   ok(/ОКО по громкой связи/.test(misc.oko), "камера заметила — ОКО объявляет тревогу: " + misc.oko.slice(0, 120));
@@ -1725,7 +1726,7 @@ LAB.ui.closeAll();
     for (const k of LAB.PARTS) G.inv[k] = 8;
     /* уровень и состояние верстака постоянны для этажа */
     const b = W.bench(wb); out.det = W.bench(wb) === b && [1, 2, 3].indexOf(b.tier) >= 0;
-    b.tier = 1; b.dmg = false;
+    b.tier = 1; b.dmg = false; b.spec = ""; /* профиль общий: цены и выход — без поправок */
     LAB.ui.craft(wb);
     out.root = !!LAB.ui.top() && LAB.ui.top().title === "Мастерская" && /Базовый верстак/.test(LAB.ui.top().intro || "");
     out.tierMsg = W.check(rec("emp"));
@@ -1777,6 +1778,7 @@ LAB.ui.closeAll();
     LAB.workshop._at(wb);
     for (const k of LAB.PARTS) G.inv[k] = 8; /* модули выше съели металлолом */
     const sc0 = G.inv.scrap; out.repair = W.repairWeapon(1, b) && W.cond(w) === 100 && G.inv.scrap < sc0;
+    G.inv.toolkit = 0; G.weapons[0].cond = 100; /* набор инструментов прибавил бы десять; цель — одна */
     w.cond = 40; G.inv.wrepair = 1; g.useItem("wrepair"); out.field = W.cond(w) === 75 && !G.inv.wrepair;
     /* перегрев: долгая очередь — ствол остывает, выстрела нет */
     w.heat = 0; w.hotUntil = 0;
@@ -1826,7 +1828,7 @@ LAB.ui.closeAll();
     out.profile = /останавливает роботов/.test(W.profile(LAB.makeWeapon("suppressor", 3, 0, 1))) && /не греется/.test(W.profile(LAB.makeWeapon("kpistol", 2, 0, 1)));
     /* экономика: у каждой детали — где найти и для чего; рецепты из существующих предметов; у каждого — класс */
     out.parts = LAB.PARTS.filter(k => !(W.srcOf(k) && (W.uses(k).kn.length + W.uses(k).unk) > 0));
-    out.recipes = LAB.RECIPES.filter(rc => !Object.keys(rc.need).every(k => LAB.ITEMS[k]) || ["base", "spec", "exp"].indexOf(W.clsOf(rc)) < 0).map(rc => rc.id);
+    out.recipes = LAB.RECIPES.filter(rc => !Object.keys(rc.need).every(k => LAB.ITEMS[k]) || ["base", "spec", "exp", "cnc", "syn"].indexOf(W.clsOf(rc)) < 0).map(rc => rc.id);
     LAB.ui.closeAll(); LAB.ui.craft(wb); out.guide = pick(/Детали: где найти/) && LAB.ui.top().items.some(i => /Реле: у вас .*Где найти: щитовые/.test(label(i)));
     /* схемы и модули переживают запись и загрузку */
     G.weapons.push(LAB.makeWeapon("spark", 2, 0, 1, "w_ws2")); W.install(G.weapons[G.weapons.length - 1], "quiet");
@@ -1848,6 +1850,137 @@ LAB.ui.closeAll();
   ok(ws.stun && ws.pierce && ws.profile, "ЭМ-подавитель останавливает робота, бронебойный выстрел сильнее по броне; у оружия — свой профиль");
   ok(ws.parts && !ws.parts.length && ws.recipes && !ws.recipes.length && ws.guide, "экономика: у каждой детали — где найти и для чего; рецепты собраны из существующих предметов" + (ws.parts && ws.parts.length ? "; без пользы: " + ws.parts.join(", ") : "") + (ws.recipes && ws.recipes.length ? "; рецепты: " + ws.recipes.join(", ") : ""));
   ok(ws.saved, "схемы и модули оружия сохраняются в записи");
+
+  console.log("Мастерские этажей, походные ремкомплекты, износ брони, импланты, верстаки глубин");
+  const rp = await page.evaluate(async () => {
+    const g = LAB.game, W = LAB.workshop, R = LAB.repair, IM = LAB.implants, C = LAB.combat, out = {};
+    const G = g.G;
+    const label = i => typeof i.label === "function" ? i.label() : i.label;
+    const pick = re => { const w = LAB.ui.top(); const k = w ? w.items.findIndex(i => re.test(label(i))) : -1; if (k < 0) return false; w.i = k; LAB.ui.activate(); return true; };
+    C.stop(); LAB.ui.closeAll();
+    /* мастерская этажа: своё помещение, без охраны внутри — на всех глубинах */
+    out.floors = [];
+    for (const L of [1, 7, 30, 61, 100]) for (const F of [1, 3, 12, 18]) {
+      const fl = LAB.getFloor(G.seed, L, F), o = fl.shop && fl.objs.find(q => q.id === fl.shop);
+      if (!o) { out.floors.push(L + "-" + F + ": нет"); continue; }
+      const rm = fl.rooms[o.room];
+      if (!rm || !rm.shop) out.floors.push(L + "-" + F + ": не в мастерской");
+      if (fl.foes.some(f => f.room === o.room && !f.ally)) out.floors.push(L + "-" + F + ": охрана");
+    }
+    /* первый приход: «на этаже мастерская»; навигатор знает дорогу */
+    delete G.visited["1-15"]; SPOKEN.length = 0;
+    g.enterFloor(1, 15, "down"); C.stop(); C.foes().forEach(f => { f.dead = true; });
+    out.arrive = /На этаже мастерская/.test(SPOKEN.join(" "));
+    G.event = "norm"; G.eventUntil = G.min + 100000;
+    const shop = g.shopObj(); out.shop = !!shop;
+    SPOKEN.length = 0; for (let i = 0; i < 4 && !/мастерск/.test(SPOKEN.join(" ")); i++) g.navigate(i > 0);
+    out.nav = /станки мастерской|мастерская/.test(SPOKEN.join(" "));
+    /* окно мастерской: профиль, ремонт брони, ящик под верстаком, импланты */
+    G.x = shop.x; G.y = shop.y; G.hp = G.hpMax = 9999;
+    const b = W.bench(shop); b.dmg = false;
+    LAB.ui.craft(shop); const top = LAB.ui.top();
+    out.root = !!top && top.title === "Мастерская" && /Профил/.test(top.intro || "") && top.items.some(i => /^Ремонт брони/.test(label(i))) && top.items.some(i => /^Работа с имплантами/.test(label(i)));
+    SPOKEN.length = 0; out.drawer = pick(/^Ящик под верстаком/) && /Ящик под верстаком: .*в рюкзаке/.test(SPOKEN.join(" ")) && !LAB.ui.top().items.some(i => /^Ящик/.test(label(i)));
+    LAB.ui.closeAll();
+    /* износ брони: защита слабеет с половины износа */
+    G.weapons = G.weapons.slice(0, 1); G.wi = 0; const w = G.weapons[0]; w.cond = 100;
+    const a = LAB.makeArmor("suit", 3, 2); G.armors = [a]; G.armor = a; const d0 = LAB.armorDef(a);
+    for (let i = 0; i < 30; i++) R.armorHit(20, 6);
+    const c30 = a.cond; for (let i = 0; i < 60; i++) R.armorHit(20, 6);
+    out.wear = c30 < 100 && c30 > 40 && a.cond === 0 && LAB.armorDef(a) < d0 && /состояние 0 из 100/.test(g.armorLine(a));
+    /* походный ремнабор: две цели — окно «что чинить»; три ремонта в свёртке */
+    G.inv.toolkit = 0; w.cond = 40; G.inv.fieldkit = 1;
+    g.useItem("fieldkit"); const km = LAB.ui.top();
+    out.kitMenu = !!km && /что чинить/.test(km.title) && km.items.length === 3;
+    km.i = 0; LAB.ui.activate(); LAB.ui.closeAll();
+    out.kit1 = w.cond === 60 && R.left("fieldkit") === 2 && G.inv.fieldkit === 1;
+    for (let i = 0; i < 2; i++) { g.useItem("fieldkit"); const t = LAB.ui.top(); if (t && /что чинить/.test(t.title)) { t.i = 0; LAB.ui.activate(); } LAB.ui.closeAll(); }
+    out.kit3 = !G.inv.fieldkit && R.left("fieldkit") === 0 && w.cond === 80;
+    /* ремонтный набор оружия: одна цель — сразу, плюс 35, ствол остужен */
+    w.cond = 30; w.heat = 5; G.inv.wrepair = 1; g.useItem("wrepair"); out.wrep = w.cond === 65 && !G.inv.wrepair && !w.heat;
+    /* ремкомплект брони и набор инструментов: плюс сорок и ещё десять */
+    a.cond = 10; G.inv.repairkit = 1; G.inv.toolkit = 1; g.useItem("repairkit"); out.akit = a.cond === 60; G.inv.toolkit = 0;
+    /* инженерный кейс: чинит повреждённый верстак, сломанный автомат; начатый — пополняют у верстака */
+    a.cond = 100; w.cond = 100; b.dmg = true; G.inv.engkit = 1;
+    g.useItem("engkit"); out.engBench = !b.dmg && R.opened("engkit") === 2;
+    const mach = { id: "o_t_snack", type: "snacks", x: G.x + 1, y: G.y, room: shop.room, broken: true }; g.CUR.fl.objs.push(mach);
+    g.useItem("engkit"); out.engMach = !!g.objState(mach).fixed && R.opened("engkit") === 1;
+    g.CUR.fl.objs.pop();
+    G.inv.scrap = 5; G.inv.wire = 5; W._at(shop); out.refill = W.refillKit(b) && R.opened("engkit") === 2;
+    /* ремонт брони у верстака: ручной инструмент — до 80 (90 у ремонтного профиля), станки — до 100 */
+    b.tier = 2; b.spec = ""; a.cond = 20; G.inv.scrap = 9; G.inv.rubber = 2; G.inv.ceramic = 2;
+    out.armorBench = W.repairArmor(a, b) && a.cond === 100;
+    /* импланты: чип из рюкзака, калибровка, модификации, извлечение, разбор — схема; станция; продажа */
+    G.implants = G.implants.filter(id => id === "scan" || id === "echo"); G.impLv = {}; G.impMod = {}; G.cyber = { xp: {} };
+    out.kinds = LAB.IMPLANTS.length; out.chipKinds = LAB.IMPLANTS.filter(d => d.passive).length; out.modKinds = Object.keys(IM.MODS).length;
+    out.lv1 = IM.level() === 1 && IM.slots() === 2 && IM.modSlots() === 1 && IM.maxGrade() === 1;
+    G.inv.imp_regen = 1; g.useItem("imp_regen"); out.chipIn = G.implants.indexOf("regen") >= 0 && !G.inv.imp_regen && IM.catXp("med") > 0;
+    const c1 = g.implantCost("regen");
+    G.inv.chip = 19; G.inv.cell = 9; G.inv.optic = 5; G.inv.relay = 5; G.inv.supercond = 3; G.inv.powercell = 3; G.inv.gel = 5; G.inv.cap = 9; G.inv.magnet = 3;
+    out.gradeNo = !IM.upgrade("regen", "bench", 4); /* общая ступень кибернетики 1: калибровка закрыта */
+    G.cyber.xp.med = 560; G.cyber.xp.combat = 40; /* прокачка: общая ступень 6, медицина — пятая */
+    out.lv6 = IM.level() === 6 && IM.slots() === 5 && IM.modSlots() === 2 && IM.maxGrade() === 3 && IM.selfSurgery() && IM.catLv("med") === 5;
+    out.up2 = IM.upgrade("regen", "bench", 2) && IM.lv("regen") === 2 && !IM.upgrade("regen", "bench", 2);
+    out.up3 = IM.upgrade("regen", "bench", 4) && IM.lv("regen") === 3;
+    out.mod = IM.addMod("regen", "eco") && g.implantCost("regen") < c1 && /только для направления/.test(IM.compat("regen", "ap")) && IM.addMod("regen", "antisep") && /гнёзда модификаций заняты/.test(IM.compat("regen", "purge"));
+    G.hp = G.hpMax = 9999; G.hp = 100; G.en = 200; G.body.neuro = 0; G.st.bleed = 5; C.useImplant("regen"); out.heal = G.hp - 100 > 30 + G.L * 4 && !G.st.bleed;
+    out.extract = IM.extract("regen") && G.implants.indexOf("regen") < 0 && G.inv.imp_regen === 1 && !IM.extract("scan");
+    G.bp = G.bp || {}; delete G.bp.imp_regen;
+    out.dismantle = IM.dismantle("regen", 2) && !G.inv.imp_regen && W.known({ id: "imp_regen", bp: true });
+    G.credits = 9999; out.station = IM.upgrade("scan", "station") && IM.lv("scan") === 2;
+    G.inv.imp_cloak = 1; out.sell = LAB.itemCat("imp_cloak") === "implant" && LAB.sellPrice.item("imp_cloak") > 0;
+    G.implants.push("tk"); const nTk = G.inv.imp_tk || 0; g.giveItem({ kind: "chip", implant: "tk" }, true); out.dupChip = (G.inv.imp_tk || 0) === nTk + 1;
+    /* пассивные чипы: защита, энергия — сразу, а извлекли — прибавка ушла */
+    const av0 = g.armorValue(), em0 = G.enMax;
+    IM.install("c_dermal"); IM.install("c_battery");
+    out.chipFx = g.armorValue() === av0 + 3 && G.enMax === em0 + 20;
+    IM.extract("c_battery"); out.chipOff = G.enMax === em0 && G.inv.imp_c_battery === 1;
+    /* гнёзда: больше пяти чипов на шестой ступени не встанет */
+    ["c_aim", "c_quick", "c_cool", "c_fury", "c_ap"].forEach(id => IM.install(id));
+    out.slotsFull = G.implants.filter(id => IM.isChip(id)).length === 5 && /нейрогнёзда заняты/.test(SPOKEN.join(" ") + "") ;
+    /* новые импланты в деле: дуга, сонар, петля камер, фаза, сифон */
+    C.foes().forEach(f => { f.dead = true; });
+    const mk = (t, dx, dy) => { const c = C.freeCellNear(G.x + dx, G.y + dy, null); const f = c ? C.spawnFoe(t, c[0], c[1], {}) : null; if (f) { f.calm = false; f.ally = false; f.hp = f.maxhp = 500; } return f; };
+    ["arc", "sonar", "camloop", "phase", "siphon"].forEach(id => { if (G.implants.indexOf(id) < 0) G.implants.push(id); });
+    const bot = mk("patrolbot", 2, 0); G.en = 500; G.body.neuro = 0;
+    const h0 = bot ? bot.hp : 0; C.useImplant("arc"); out.arc = !!bot && bot.hp < h0;
+    G.body.neuro = 0; const seen0 = g.CUR.seen.reduce((a, v) => a + v, 0); C.useImplant("sonar"); out.sonar = g.CUR.seen.reduce((a, v) => a + v, 0) > seen0;
+    const cam = mk("cam", 0, 2); G.body.neuro = 0; C.useImplant("camloop"); out.camloop = !!cam && cam.blindT > 0;
+    G.body.neuro = 0; C.useImplant("phase"); const hp1 = G.hp; C.hurtPlayer(50, "phys", bot); out.phase = G.hp === hp1;
+    G.st.phaseT = 0; G.body.neuro = 0; G.en = 10; C.useImplant("siphon"); out.siphon = G.en > 10;
+    if (bot) bot.dead = true; if (cam) cam.dead = true;
+    /* сборка чипов — по ступени направления */
+    const rq = LAB.RECIPES.find(r => r.id === "imp_phase"); G.cyber.xp.defense = 0; out.craftGate = /Не хватает кибернетики/.test(IM.craftWhy(rq));
+    /* станция: свой набор, и он не весь каталог */
+    out.stock = IM.stock({ id: "o_st" }).length === 9;
+    /* верстаки глубин: ступень растёт с глубиной; партия, модернизация, перековка, синтез */
+    out.tiers = {};
+    for (const L of [2, 12, 30, 70]) { g.enterFloor(L, 3, "down", true); C.stop(); out.tiers[L] = W.bench(g.shopObj()).tier; }
+    g.enterFloor(70, 6, "down", true); C.stop(); C.foes().forEach(f => { f.dead = true; }); G.event = "norm"; G.eventUntil = G.min + 100000;
+    const ds = g.shopObj(), db = W.bench(ds); db.dmg = false; G.x = ds.x; G.y = ds.y; W._at(ds);
+    out.deepTier = db.tier; out.deepSpec = db.spec;
+    for (const k of LAB.PARTS) G.inv[k] = 40;
+    W.setBatch(true); const e0 = G.ammo.energy || 0; const nb = W.needOf(LAB.RECIPES.find(r => r.id === "bat_e")); g.craft(LAB.RECIPES.find(r => r.id === "bat_e")); W.setBatch(false);
+    out.batch = (G.ammo.energy || 0) - e0 >= 3 && nb.cap === 2;
+    const lw = LAB.makeWeapon("laser", 3, 1, 2); G.weapons.push(lw); const dm0 = lw.dmg;
+    out.modern = W.modernize("w", lw, db) && lw.dmg > dm0 * 5 && lw.lvl === LAB.foeLevel(G.L, G.F);
+    const q0 = lw.qual, dm1 = lw.dmg; out.reforge = W.reforge("w", lw, db) && lw.qual === q0 + 1 && lw.dmg > dm1;
+    const pr0 = G.inv.proto || 0; g.craft(LAB.RECIPES.find(r => r.id === "s_proto")); out.synth = (G.inv.proto || 0) > pr0;
+    LAB.workshop._at(null); LAB.ui.closeAll();
+    return out;
+  });
+  ok(rp.floors && !rp.floors.length && rp.shop && rp.arrive && rp.nav, "мастерская этажа — своё помещение без охраны на всех глубинах; при первом приходе «на этаже мастерская», навигатор ведёт к станкам" + (rp.floors && rp.floors.length ? ": " + rp.floors.join(", ") : ""));
+  ok(rp.root && rp.drawer, "окно мастерской: профиль верстака, ремонт брони, работа с имплантами; ящик под верстаком — один раз");
+  ok(rp.wear, "броня изнашивается от ударов и с половины износа держит хуже");
+  ok(rp.kitMenu && rp.kit1 && rp.kit3 && rp.wrep && rp.akit, "походные ремкомплекты: ремнабор — окно «что чинить», три ремонта в свёртке; набор оружия — плюс 35 и остужает ствол; ремкомплект брони — плюс 40, с набором инструментов — ещё 10");
+  ok(rp.engBench && rp.engMach && rp.refill && rp.armorBench, "инженерный кейс чинит верстак и сломанный автомат, начатый пополняют у верстака; броню у верстака со станками чинят до 100");
+  ok(rp.kinds > 50 && rp.chipKinds >= 20 && rp.modKinds > 30, "импланты и чипы: видов " + rp.kinds + " (пассивных чипов " + rp.chipKinds + "), модификаций " + rp.modKinds);
+  ok(rp.lv1 && rp.gradeNo && rp.lv6, "кибернетика: с опытом растут гнёзда чипов, модификации на имплант, калибровка, самостоятельное извлечение; ступени направлений");
+  ok(rp.chipIn && rp.up2 && rp.up3 && rp.mod && rp.heal && rp.extract && rp.dismantle && rp.station && rp.sell && rp.dupChip, "импланты: чип вживляется из рюкзака; калибровка до третьей ступени, модификации по направлению и гнёздам, извлечение (кроме системных), разбор — схема; станция; чипы продаются; лишний чип — в рюкзак");
+  ok(rp.chipFx && rp.chipOff && rp.slotsFull, "пассивные чипы: защита и энергия сразу, извлекли — прибавка ушла; гнёзд — по ступени кибернетики");
+  ok(rp.arc && rp.sonar && rp.camloop && rp.phase && rp.siphon && rp.craftGate && rp.stock, "новые импланты в деле: дуговой разрядник, глубинный сонар, петля камер, фазовый сдвиг, сифон энергии; сборка чипов — по ступени направления; у станции свой набор");
+  ok(rp.tiers && rp.tiers[2] <= 2 && rp.tiers[12] >= 3 && rp.tiers[30] >= 4 && rp.tiers[70] === 5 && rp.deepTier === 5 && /,/.test(rp.deepSpec || ""), "верстаки совершенствуются с глубиной: ступени " + JSON.stringify(rp.tiers) + ", в глубине — несколько профилей (" + rp.deepSpec + ")");
+  ok(rp.batch && rp.modern && rp.reforge && rp.synth, "станок собирает партиями, модернизирует оружие под глубину; молекулярный синтезатор перековывает качество и синтезирует опытные узлы");
 
   console.log("Звук и доступность: каналы микшера, низкие частоты, диапазон, режимы навигатора, подсказки, обучение, уведомление о записи");
   const acc = await page.evaluate(async () => {

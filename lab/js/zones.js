@@ -59,7 +59,7 @@ function armorDef() { var a = G().armor; return a ? LAB.ARMORS[a.base] : null; }
 function protRad() { var d = armorDef(); return (d && d.res && d.res.rad) || 0; }
 function protChem() { var d = armorDef(); return (d && d.res && d.res.chem) || 0; }
 function hasDosimeter() { return (G().inv.dosimeter || 0) > 0; }
-function radDose(level, k) { return (RAD[level] || 0) * k * (1 - protRad()) * (G().st.radBlock > 0 ? 0.5 : 1) * (LAB.ach && LAB.ach.has("lead") ? 0.9 : 1); }
+function radDose(level, k) { return (RAD[level] || 0) * k * (1 - protRad()) * (G().st.radBlock > 0 ? 0.5 : 1) * (LAB.ach && LAB.ach.has("lead") ? 0.9 : 1) * (1 - (LAB.implants ? Math.min(0.7, LAB.implants.stat("rad")) : 0)); }
 function gasDose(level, k) {
   if (G().st.antitox > 0) return 0;
   var m = 1 - protChem();

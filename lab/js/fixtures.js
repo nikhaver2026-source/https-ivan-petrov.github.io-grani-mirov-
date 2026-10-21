@@ -389,9 +389,10 @@ function run(o, def, kind, p, label, withId) {
       var a0 = G().armor;
       if (!a0) { say("Броня не надета: подшивать нечего."); return; }
       if (s.mended) { say("Нитки кончились: катушка пуста."); return; }
+      if (LAB.armorCond(a0) >= 85) { say("Швы и крепления брони целы: подшивать нечего. Остальное — у верстака."); return; }
       s.mended = 1; spend(20);
-      a0.def = a0.def + 1;
-      say("Вы ощупью подшиваете швы и крепления брони. Держит лучше прежнего: защита " + LAB.armorDef(a0) + ".");
+      a0.cond = Math.min(85, LAB.armorCond(a0) + 25);
+      say("Вы ощупью подшиваете швы и крепления брони. Состояние " + Math.round(a0.cond) + " из 100, защита " + LAB.armorDef(a0) + ".");
       return;
     }
     case "echo": {

@@ -535,6 +535,47 @@ function genFloor(seed, L, F, attempt) {
     rmm.name = LAB.ROOMS[type].n;
     rmm.surf = lev.surf; /* у каждого уровня свой пол */
   }
+  /* (2.0) Мастерская — на первом этаже уровня и на каждом третьем: ближайшее
+     к прибытию помещение начальной зоны, без замков на пути и на дверях
+     (ремонтный бокс, сборочный цех или склад по соседству — охотнее). */
+  var shopRoom = LAB.shopFloor(F) ? pickShopRoom() : -1;
+  if (shopRoom >= 0) { rooms[shopRoom].type = "workshop"; rooms[shopRoom].name = LAB.ROOMS.workshop.n; rooms[shopRoom].shop = true; }
+  else if (LAB.shopFloor(F)) {
+    /* в начальной зоне свободных помещений нет (дальше всё под замками) —
+       мастерская при лифтовом холле, а нет его — в помещении прибытия */
+    shopRoom = E >= 0 && rooms[E] ? E : U;
+    rooms[shopRoom].shop = true; rooms[shopRoom].name += " с мастерской";
+  }
+  function pickShopRoom() {
+    var ur = rooms[U];
+    if (!ur) return -1;
+    var dist = new Int32Array(W * H).fill(-1), q = [idx(ur.cx, ur.cy)], qi = 0, v4 = [1, 0, -1, 0, 0, 1, 0, -1];
+    dist[q[0]] = 0;
+    while (qi < q.length) {
+      var c = q[qi++], cx = c % W, cy = (c / W) | 0;
+      for (var k = 0; k < 8; k += 2) {
+        var nx = cx + v4[k], ny = cy + v4[k + 1];
+        if (!LAB.inb(nx, ny)) continue;
+        var j = idx(nx, ny);
+        if (dist[j] >= 0 || t[j] === T_WALL) continue;
+        if (t[j] === T_DOOR && (!doorAt[j] || doorAt[j].lock)) continue;
+        dist[j] = dist[c] + 1; q.push(j);
+      }
+    }
+    var best = -1, bestSc = 1e9, near = { repair: 1, assembly: 1, parts: 1, storage: 1 };
+    for (var s7 = 0; s7 < NS; s7++) {
+      var rm7 = rooms[s7];
+      if (!rm7 || !main[s7] || s7 === U || s7 === D || s7 === E || s7 === secret || zone[s7] !== -1) continue;
+      if (LAB.ROOMS[rm7.type] && LAB.ROOMS[rm7.type].special) continue;
+      /* путь от прибытия — без замков (запертые двери дальше, вглубь, не мешают) */
+      var d0s = dist[idx(rm7.cx, rm7.cy)];
+      if (d0s < 0) continue;
+      var area = (rm7.x1 - rm7.x0 + 1) * (rm7.y1 - rm7.y0 + 1);
+      var sc = d0s - (near[rm7.type] ? 30 : 0) + (area < 16 ? 40 : 0);
+      if (sc < bestSc) { bestSc = sc; best = s7; }
+    }
+    return best;
+  }
   /* Таблички на дверях: номер помещения на этаже и название; у некоторых —
      ещё строка («Идёт испытание», «Посторонним вход воспрещён»). */
   var rn = 0;
@@ -740,8 +781,9 @@ function genFloor(seed, L, F, attempt) {
     }
   }
   function placeRequirement(it, spot, lockChild) {
-    /* иногда вещь — у врага рядом: «пропуска добываются с монстров» */
-    if (r.chance(0.35) && spot !== U) {
+    /* иногда вещь — у врага рядом: «пропуска добываются с монстров»
+       (2.0) но не в мастерской этажа: там вещь просто лежит */
+    if (r.chance(0.35) && spot !== U && !rooms[spot].shop) {
       var pool = lev.foes.filter(function (fid) { return LAB.FOES[fid] && LAB.FOES[fid].carrier; });
       if (pool.length) {
         var fid = r.pick(pool);
@@ -844,7 +886,10 @@ function genFloor(seed, L, F, attempt) {
   if (r.chance(Math.min(0.2, 0.07 + L * 0.006))) addItem({ kind: "armor", a: LAB.genArmor(r, L, F) }, anyRoom());
   for (nb2 = r.int(2, 4); nb2 > 0; nb2--) addItem({ kind: "credits", n: LAB.credits(8 + r.int(0, 25), L, F) }, anyRoom());
   if (r.chance(0.3) || (F % 5 === 3)) addItem({ kind: "weapon", w: LAB.genWeapon(r, L, F) }, anyRoom());
-  if (r.chance(0.07)) addItem({ kind: "chip", implant: r.pick(LAB.IMPLANTS.slice(1)).id }, anyRoom());
+  /* (2.0) чипы имплантов на полу — своей глубины, и пассивные тоже */
+  var impPool = LAB.IMPLANTS.filter(function (im) { return !im.core && im.id !== "scan" && (im.minL || 1) <= L; });
+  if (!impPool.length) impPool = LAB.IMPLANTS.slice(1);
+  if (r.chance(0.09)) addItem({ kind: "chip", implant: r.pick(impPool).id }, anyRoom());
   /* записки: сюжетные (тексты — texts.js и файлы блоков) и записки персонала */
   addItem({ kind: "note", note: "story", L: L, F: F }, anyRoom());
   if (r.chance(0.5)) addItem({ kind: "note", note: "staff", n: r.int(0, 999) }, anyRoom());
@@ -857,7 +902,7 @@ function genFloor(seed, L, F, attempt) {
     addItem({ kind: "weapon", w: LAB.genWeapon(r, L, F, { bonus: 0.2, minRank: 1 }) }, secret);
     var sAmmo = []; for (ak in LAB.AMMO) if ((LAB.AMMO[ak].depth || 1) <= L && ak !== "energy") sAmmo.push(ak);
     addItem(r.chance(0.5) && sAmmo.length ? { kind: "ammo", ammo: r.pick(sAmmo), n: 1 } : { kind: "item", item: "medkit_l", n: 1 }, secret);
-    if (r.chance(0.3)) addItem({ kind: "chip", implant: r.pick(LAB.IMPLANTS.slice(1)).id }, secret);
+    if (r.chance(0.3)) addItem({ kind: "chip", implant: r.pick(impPool).id }, secret);
     if (r.chance(0.3)) addItem({ kind: "armor", a: LAB.genArmor(r, L, F, { bonus: 0.2 }) }, secret);
     /* подсказка о тайнике — в записке на этаже */
     var sd = null;
@@ -946,7 +991,8 @@ function genFloor(seed, L, F, attempt) {
   }
   for (s = 0; s < NS; s++) {
     var rm6 = rooms[s];
-    if (!rm6 || s === U || s === secret) continue;
+    /* (2.0) в мастерской этажа не сидят: у верстака можно работать */
+    if (!rm6 || s === U || s === secret || rm6.shop) continue;
     /* тварей и роботов много: почти в каждом помещении, глубже — стаями;
        (2.0) «мягкого начала» больше нет — и на первом этаже тоже */
     var p6 = Math.min(0.95, 0.75 + 0.02 * Math.min(L, 10) + d0 * 0.0001 + (F === NF ? 0.1 : 0));
@@ -1017,7 +1063,8 @@ function genFloor(seed, L, F, attempt) {
   var clPool = foesWith(lev.foes, "cleaner");
   if (!clPool.length) clPool = ["cleaner"];
   if (LAB.FOES[clPool[0]] && !(L === 1 && F === 1)) {
-    for (var c8 = r.chance(0.6) ? r.int(1, 2) : 0; c8 > 0; c8--) addFoe(r.pick(clPool), r.pick(mainRooms));
+    var clRooms = mainRooms.filter(function (s9) { return !rooms[s9].shop; }); /* (2.0) в мастерской не убирают */
+    for (var c8 = r.chance(0.6) ? r.int(1, 2) : 0; c8 > 0 && clRooms.length; c8--) addFoe(r.pick(clPool), r.pick(clRooms));
   }
   /* (2.0) патрули в коридорах — garrison.js: участки обхода, больше и чаще */
 
@@ -1050,7 +1097,7 @@ function genFloor(seed, L, F, attempt) {
   var hqFloors = { "2-10": "sec", "3-15": "sci", "5-6": "eng", "4-16": "res", "6-9": "free" };
   if (hqFloors[L + "-" + F] && quietRooms.length > 1) addObj("hq", quietRooms[1], { faction: hqFloors[L + "-" + F] });
 
-  /* торговые терминалы, мастерские — по расписанию; верстак — на каждом третьем этаже */
+  /* торговые терминалы — по расписанию; мастерская — на первом этаже уровня и на каждом третьем */
   var svcRooms = [];
   for (s = 0; s < NS; s++) if (rooms[s] && main[s] && s !== U && s !== D && s !== E && s !== secret && s !== bossSlot) svcRooms.push(s);
   function hasObj(t2) { return fl.objs.some(function (o) { return o.type === t2; }); }
@@ -1062,7 +1109,14 @@ function genFloor(seed, L, F, attempt) {
   }
   var startZone = function (s4) { return zone[s4] === -1; };
   if ([1, 5, 10, 15, 19].indexOf(F) >= 0 && !hasObj("vending")) addSvc("vending", null, startZone);
-  if (F % 3 === 0 && !hasObj("workbench")) { if (!addSvc("workbench", null, startZone)) return null; }
+  if (LAB.shopFloor(F)) {
+    /* верстак мастерской этажа; не встал в мастерской — в любом помещении начальной зоны */
+    var shopO = fl.objs.filter(function (o9) { return o9.type === "workbench" && o9.room === shopRoom; })[0] || (shopRoom >= 0 ? addObj("workbench", shopRoom) : null) || addSvc("workbench", null, startZone);
+    if (!shopO) return null;
+    shopO.shop = 1; fl.shop = shopO.id;
+    /* (2.0) глубже — мастерская богаче: зарядная станция для энергетического оружия */
+    if (L >= 26 && shopRoom >= 0) addObj("charger", shopRoom);
+  }
   /* компьютер с почтой сотрудников — почти на каждом этаже; кофе или напитки — на многих */
   if (!hasObj("pc") && svcRooms.length && r.chance(0.85)) addObj("pc", r.pick(svcRooms), { own: r.int(0, 99999), locked: r.chance(0.15) });
   if (!hasObj("coffee") && !hasObj("drinks") && svcRooms.length && r.chance(0.6)) addObj(r.chance(0.55) ? "coffee" : "drinks", r.pick(svcRooms), { broken: r.chance(0.1) });
@@ -1122,7 +1176,7 @@ function genFloor(seed, L, F, attempt) {
      сейфов в главных помещениях, тоже с первого этажа */
   {
     for (s = 0; s < NS; s++) {
-      if (!rooms[s] || !main[s] || s === U || s === D || s === E || s === secret || s === bossSlot) continue;
+      if (!rooms[s] || !main[s] || s === U || s === D || s === E || s === secret || s === bossSlot || rooms[s].shop) continue;
       var key9 = fl.objs.filter(function (o) { return o.room === s && o.type === "terminal" && o.sub === "sec"; })[0];
       var busy9 = fl.foes.some(function (q) { return q.room === s; });
       if (key9 && rg.chance(Math.min(0.8, 0.4 + d0 * 0.002))) { addGuard(s, key9, "office"); continue; }
@@ -1195,6 +1249,8 @@ function genLoot(r, L, F, ot, tag) {
     if (tag === "arms" && roll < 0.35) out.push({ kind: "ammo", ammo: ammoAt(), n: 1 });
     else if (tag === "med" && roll < 0.45) out.push({ kind: "item", item: (function (q) { return q < 0.42 ? "medkit_s" : q < 0.58 ? "bandage" : q < 0.7 ? "sorbent" : q < 0.79 ? "neuroblock" : q < 0.86 ? "antidote" : "medkit_l"; })(r.next()), n: 1 });
     else if (tag === "parts" && roll < 0.5) out.push({ kind: "item", item: L >= 3 && r.chance(0.2) ? "ceramic" : partAt(r, L), n: 1 });
+    /* (2.0) походные ремкомплекты — на складах и в мастерских */
+    else if (tag === "parts" && roll < 0.57) out.push({ kind: "item", item: L >= 2 && r.chance(0.12) ? "engkit" : r.chance(0.55) ? "fieldkit" : "wrepair", n: 1 });
     else if (tag === "tech" && roll < 0.45) out.push({ kind: "item", item: L >= 5 && r.chance(0.15) ? "supercond" : r.chance(0.5) ? r.pick(["chip", "cap", "lens", "wire"]) : partAt(r, L), n: 1 });
     else if (tag === "bio" && roll < 0.45) out.push({ kind: "item", item: r.chance(0.6) ? r.pick(["gel", "reagent", "gel"]) : partAt(r, L), n: 1 });
     else if (tag === "chem" && roll < 0.45) out.push({ kind: "item", item: r.pick(["reagent", "gel", "antidote", "sorbent", "reagent"]), n: 1 });
@@ -1202,6 +1258,7 @@ function genLoot(r, L, F, ot, tag) {
     else if (tag === "paper" && roll < 0.4) out.push({ kind: "note", note: "staff", n: r.int(0, 999) });
     else if (tag === "armor" && roll < 0.2) out.push({ kind: "armor", a: LAB.genArmor(r, L, F) });
     else if (tag === "armor" && roll < 0.45) out.push({ kind: "item", item: r.chance(0.5) ? "plate" : (L >= 3 ? "ceramic" : "scrap"), n: 1 });
+    else if (tag === "armor" && roll < 0.53) out.push({ kind: "item", item: "repairkit", n: 1 });
     else if (tag === "arms" && roll < 0.42 && r.chance(0.3)) out.push({ kind: "armor", a: LAB.genArmor(r, L, F) });
     else if (roll < 0.6) out.push({ kind: "credits", n: LAB.credits(6 + r.int(0, 20), L, F) });
     else if (roll < 0.8) out.push({ kind: "ammo", ammo: ammoAt(), n: 1 });
@@ -1290,26 +1347,12 @@ LAB.dirWord = function (dx, dy) {
 /* Коридор, в котором клетка (или −1). */
 LAB.corrOf = function (fl, x, y) { var c = fl.corrAt ? fl.corrAt[idx(x, y)] : -1; return c >= 0 ? fl.corrs[c] : null; };
 
-/* Проходима ли клетка (state — состояние этажа: открытые двери). */
+/* Занята ли клетка предметом обстановки или жителем. */
 LAB.solidAt = function (fl, x, y) {
   var i = idx(x, y);
   if (fl.objAt[i]) return true;
   for (var k = 0; k < fl.npcs.length; k++) if (fl.npcs[k].x === x && fl.npcs[k].y === y) return true;
   return false;
-};
-LAB.walkable = function (fl, st, x, y, who) {
-  if (!LAB.inb(x, y)) return false;
-  var i = idx(x, y), tt = fl.t[i];
-  if (tt === T_WALL) return false;
-  if (LAB.solidAt(fl, x, y)) return false;
-  if (tt === T_DOOR) {
-    var d = fl.doorAt[i];
-    var open = st && st.doors && st.doors[d.id] === 2;
-    if (open) return true;
-    if (who === "foe") return false;
-    return false;
-  }
-  return true;
 };
 
 /* Поиск пути в ширину; doorsAsOpen — считать закрытые незапертые двери проходимыми. */

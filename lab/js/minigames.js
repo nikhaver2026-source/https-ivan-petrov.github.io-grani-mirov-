@@ -94,7 +94,7 @@ function hack(len, cb, opts) {
   var seq = [], dirs = ["U", "D", "L", "R"];
   for (var i = 0; i < len; i++) seq.push(dirs[Math.floor(Math.random() * 4)]);
   /* четыре попытки (1.6): ошибка не губит взлом сразу — раунд звучит заново; четвёртая ошибка — защита сработала, и ОКО шлёт проверку */
-  cur = { type: "hack", name: opts.title || "Взлом", cb: cb, seq: seq, round: Math.min(3, len), pos: 0, replays: 1, busy: true, tries: opts.tries || 4, noOko: !!opts.noOko };
+  cur = { type: "hack", name: opts.title || "Взлом", cb: cb, seq: seq, round: Math.min(3, len), pos: 0, replays: 1, busy: true, tries: (opts.tries || 4) + (LAB.implants ? Math.round(LAB.implants.stat("tries")) : 0), noOko: !!opts.noOko };
   say((opts.title || "Взлом") + ". Сигналов: " + len + ". Попыток: " + cur.tries + ". У каждого сигнала своя цифра: " + sigHelp() + ". " + LAB.K("Слушайте комбинацию и повторяйте её свайпами; после каждого верного повтора добавляется ещё один сигнал. Касание — повторить комбинацию.", "Слушайте комбинацию и повторяйте её стрелками или цифрами от 1 до 4; после каждого верного повтора добавляется ещё один сигнал. Пробел — повторить комбинацию, Escape — отойти."), { interrupt: true });
   waitSpeech(function () { playRound(); });
 }

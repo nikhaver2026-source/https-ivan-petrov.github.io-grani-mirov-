@@ -5,8 +5,9 @@
    добывается на последнем этаже (у стража или спрятана), шлюз наверх на
    первом этаже запечатан; у роботов модификации растут с глубиной.
    Коридоры — прямые, в четыре шага шириной и от десяти в длину; у тайной
-   комнаты — два потайных выхода в разные коридоры; на каждом третьем этаже
-   — верстак, до которого можно дойти; если на этаже есть турели — есть и
+   комнаты — два потайных выхода в разные коридоры; на первом этаже уровня
+   и на каждом третьем — мастерская с верстаком недалеко от прибытия, без
+   замков на пути и без охраны внутри; если на этаже есть турели — есть и
    терминал безопасности, а у звукового замка — радиоприёмник с мелодией.
    Запуск: node lab/tests/world.test.js [число зёрен] [шаг по уровням] */
 "use strict";
@@ -15,7 +16,7 @@ const ROOT = path.resolve(__dirname, "..");
 const ctx = { console, Math, JSON, Object, Array, String, Number, Uint8Array, Int8Array, Int16Array, Int32Array, Float64Array, Error, Date, RegExp };
 ctx.globalThis = ctx;
 vm.createContext(ctx);
-for (const f of ["js/data.js", "js/texts.js", "js/lore.js", "js/b1.js", "js/b2.js", "js/b3.js", "js/b4.js", "js/b5.js", "js/world.js", "js/depths.js", "js/goods.js", "js/arms.js", "js/traps.js", "js/puzzles.js", "js/puzzles2.js", "js/annex_rooms.js", "js/annex_var.js", "js/annex_frag.js", "js/annex_gen.js", "js/fixtures_data.js", "js/annex.js", "js/garrison.js", "js/workshop.js", "js/arsenal.js"]) {
+for (const f of ["js/data.js", "js/texts.js", "js/lore.js", "js/b1.js", "js/b2.js", "js/b3.js", "js/b4.js", "js/b5.js", "js/world.js", "js/depths.js", "js/goods.js", "js/arms.js", "js/traps.js", "js/puzzles.js", "js/puzzles2.js", "js/annex_rooms.js", "js/annex_var.js", "js/annex_frag.js", "js/annex_gen.js", "js/fixtures_data.js", "js/annex.js", "js/garrison.js", "js/workshop.js", "js/repair.js", "js/implants.js", "js/arsenal.js"]) {
   const p = path.join(ROOT, f);
   if (fs.existsSync(p)) vm.runInContext(fs.readFileSync(p, "utf8"), ctx, { filename: f });
 }
@@ -85,12 +86,28 @@ for (let si = 0; si < seeds; si++) {
         else if (sd[0].room === sd[1].room) err(`${at}: оба выхода тайной комнаты — в одно помещение`);
         stat.secrets++;
       }
-      /* верстак — на каждом третьем этаже, достижим */
+      /* (2.0) мастерская — на первом этаже уровня и на каждом третьем: верстак в
+         мастерской, путь от прибытия без замков, охраны внутри нет */
       const nearReach = (o) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(d => res.reach[(o.y + d[1]) * LAB.W + o.x + d[0]]);
-      if (F % 3 === 0) {
-        const wb = fl.objs.filter(o => o.type === "workbench");
-        if (!wb.length) err(`${at}: нет верстака`);
-        else if (!wb.some(nearReach)) err(`${at}: до верстака не дойти`);
+      if (LAB.shopFloor(F)) {
+        const wb = fl.shop && fl.objs.find(o => o.id === fl.shop);
+        if (!wb) err(`${at}: нет мастерской`);
+        else {
+          const rm = fl.rooms[wb.room];
+          /* мастерская — своё помещение; если в начальной зоне свободных нет — при лифтовом холле или у прибытия */
+          if (!rm || !rm.shop || (rm.type !== "workshop" && wb.room !== fl.E && wb.room !== fl.U)) err(`${at}: верстак мастерской не в мастерской (${rm && rm.type})`);
+          if (rm && rm.type !== "workshop") stat.shopLift = (stat.shopLift || 0) + 1;
+          if (fl.foes.some(f => f.room === wb.room && !f.ally)) err(`${at}: в мастерской охрана`);
+          /* путь без замков: только открытые двери */
+          const arr = fl.objs.find(o => o.type === "stairs_up" || o.type === "gate_sealed" || o.type === "wake");
+          const dist = new Int32Array(LAB.W * LAB.H).fill(-1), q = [arr.y * LAB.W + arr.x]; dist[q[0]] = 0;
+          for (let i = 0; i < q.length; i++) { const c = q[i], x = c % LAB.W, y = (c / LAB.W) | 0;
+            for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const n = (y + dy) * LAB.W + x + dx, t = fl.t[n];
+              if (dist[n] >= 0 || t === LAB.T.WALL || (t === LAB.T.DOOR && fl.doorAt[n].lock)) continue; dist[n] = dist[c] + 1; q.push(n); } }
+          let dmin = -1; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const v = dist[(wb.y + dy) * LAB.W + wb.x + dx]; if (v >= 0 && (dmin < 0 || v < dmin)) dmin = v; }
+          if (dmin < 0) err(`${at}: до мастерской не дойти без ключей`);
+          else { stat.shopN = (stat.shopN || 0) + 1; stat.shopD = (stat.shopD || 0) + dmin; stat.shopMax = Math.max(stat.shopMax || 0, dmin); }
+        }
       }
       /* турели — значит, есть терминал безопасности, до которого можно дойти.
          Поведение — как в бою (combat.js): у стража своё, даже если его
@@ -134,6 +151,7 @@ const ms = Date.now() - t0;
 console.log(`уровней: ${LAB.LEVELS_N}, этажей: ${floors}, ошибок: ${fails}, время: ${ms} мс (${(ms / floors).toFixed(1)} мс на этаж)`);
 console.log("замки:", JSON.stringify(stat.locks));
 console.log(`охрана на этаж: патрулей ${((stat.patrols || 0) / floors).toFixed(1)}, машин в кабинетах ${((stat.guards || 0) / floors).toFixed(1)}, сапёров ${((stat.sappers || 0) / floors).toFixed(2)}; стендов с задачами ${((stat.pz || 0) / floors).toFixed(2)}`);
+console.log(`мастерских: ${stat.shopN || 0} (при лифтовом холле или у прибытия: ${stat.shopLift || 0}), путь от прибытия в среднем ${stat.shopN ? Math.round(stat.shopD / stat.shopN) : 0}, самый длинный ${stat.shopMax || 0} шагов`);
 console.log(`на этаж: врагов ${(stat.foes / floors).toFixed(1)}, турелей ${(stat.turrets / floors).toFixed(2)}, камер ${(stat.cams / floors).toFixed(2)}, вещей ${(stat.items / floors).toFixed(1)}, выживших ${(stat.npcs / floors).toFixed(2)}, тайных комнат ${(stat.secrets / floors).toFixed(2)}, заваленных лестниц ${stat.blocked}; коридоры от ${stat.corrMin} до ${stat.corrMax} шагов`);
 console.log("обстановка:", JSON.stringify(stat.objs));
 console.log("прессов «Подножия»:", stat.press || 0);

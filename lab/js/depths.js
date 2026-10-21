@@ -96,7 +96,8 @@ function place(api) {
     if (fl.hazards.length || r.chance(0.25)) api.addObj("powergrid", r.pick(rooms), { seed: r.int(1, 99999) });
     /* скрытый наблюдатель */
     if (api.F >= 2 && r.chance(0.4) && api.makeFoe && api.freeCell) {
-      var sr = r.pick(api.mainRooms), c0 = api.freeCell(sr);
+      var lr = api.mainRooms.filter(function (s) { return !(fl.rooms[s] && fl.rooms[s].shop); }); /* (2.0) не в мастерской */
+      var sr = lr.length ? r.pick(lr) : -1, c0 = sr >= 0 ? api.freeCell(sr) : null;
       if (c0) api.makeFoe("g_listener", c0[0], c0[1], sr, { id: "dl" + api.F, patrol: true }, r);
     }
   } else if (d === 2) {

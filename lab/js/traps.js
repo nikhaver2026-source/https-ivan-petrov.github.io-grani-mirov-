@@ -433,7 +433,7 @@ function applyHero(tp, d) {
   if (d.pjam) { g.st.navjam = Math.max(g.st.navjam || 0, d.pjam); msg.push("Навигатор сбит."); }
   if (d.ptox && !(g.st.antitox > 0) && !gm().armorSpecial("antitox")) gm().bodyApply({ tox: d.ptox }, msg);
   if (d.pneuro) gm().bodyApply({ neuro: d.pneuro }, msg);
-  if (d.parmor && g.armor) { g.armor.def = Math.max(0, Math.round((g.armor.def || 0) * (1 - d.parmor))); msg.push("Броня разъедена: защита " + LAB.armorDef(g.armor) + "."); }
+  if (d.parmor && g.armor && LAB.repair) msg.push(LAB.repair.corrode(d.parmor)); /* (2.0) — состояние брони, чинится */
   if (d.pnoise && cb()) cb().noise(d.pnoise);
   if (d.freeze && !d.ph) g.st.trapHeld = Math.max(g.st.trapHeld || 0, Math.round(d.freeze * soft));
   if (g.st.trapHeld > 0 && d.ph) msg.push(LAB.K("Вырывайтесь — свайпами в любую сторону.", "Вырывайтесь — клавишами ходьбы."));

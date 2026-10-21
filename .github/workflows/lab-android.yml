@@ -223,12 +223,25 @@ jobs:
           IMG=$(cat "$RUNNER_TEMP/img37" 2>/dev/null || true)
           [ -n "$IMG" ] || { echo "::error::в списке SDK нет образа эмулятора Android 17 (API 37)"; exit 1; }
           export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
+          echo "образ эмулятора: $IMG"
           echo "no" | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -n a37 -k "$IMG" --force
-          emulator -avd a37 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot \
-            -memory 3072 -partition-size 6144 > "$RUNNER_TEMP/emu37.log" 2>&1 &
-          adb wait-for-device
-          for i in $(seq 1 180); do [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ] && break; sleep 5; done
-          [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ] || { tail -40 "$RUNNER_TEMP/emu37.log"; echo "::error::эмулятор Android 17 не загрузился"; exit 1; }
+          # прежний эмулятор (Android 15) мог ещё не уйти из adb
+          adb kill-server > /dev/null 2>&1 || true; adb start-server
+          # готовность — не только «загрузился», но и службы пакетов и настроек
+          # отвечают (emu-ready.sh); не поднялись — другой режим графики
+          READY=""
+          for GPU in swiftshader_indirect swangle_indirect guest; do
+            echo "== эмулятор Android 17, графика: $GPU"
+            emulator -avd a37 -no-window -gpu "$GPU" -noaudio -no-boot-anim -camera-back none -no-snapshot \
+              -memory 3072 -partition-size 6144 > "$RUNNER_TEMP/emu37.log" 2>&1 &
+            timeout 300 adb wait-for-device || true
+            if bash lab/android/emu-ready.sh 420; then READY="$GPU"; break; fi
+            tail -40 "$RUNNER_TEMP/emu37.log"
+            adb emu kill > /dev/null 2>&1 || true
+            sleep 20; pkill -f qemu-system > /dev/null 2>&1 || true; sleep 5
+          done
+          [ -n "$READY" ] || { echo "::error::эмулятор Android 17 не поднял системные службы ни в одном режиме графики"; exit 1; }
+          adb devices
           for k in window_animation_scale transition_animation_scale animator_duration_scale; do adb shell settings put global $k 0 || true; done
           set +e
           bash lab/android/install-check.sh Podzemnaya-laboratoriya-Alfa-2.0.apk

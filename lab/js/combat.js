@@ -203,6 +203,7 @@ function detOf(f) {
 }
 function sees(f) {
   if (f.blindT > 0) return false; /* сенсорная помеха ослепила */
+  if (G().st.mimicT > 0 && f.kind === "mech") return false; /* (2.0) мимикрия: машины принимают за свою */
   /* «тепло»: твари «Колыбели» чуют тепло тела — маскировка их не обманывает, а слепые видят его вблизи */
   if (G().st.cloak > 0 && !has(f, "heat")) return false;
   if (has(f, "deaf") && !(has(f, "heat") && dist(f, heroPos()) <= 3)) return false;
@@ -216,6 +217,9 @@ function hears(f) {
   if (gm().armorSpecial("stealth")) n = Math.round(n * 0.6);
   if (LAB.ach && LAB.ach.has("quiet")) n -= 1;
   if (G().st.cloak > 0) n = Math.round(n * 0.3);
+  /* (2.0) глушитель шагов и чип тишины */
+  if (G().st.muteT > 0) n = Math.round(n * 0.3);
+  if (LAB.implants) n = Math.round(n * (1 - LAB.implants.stat("quiet")));
   var d = dist(f, heroPos());
   var bonus = has(f, "deaf") ? 3 : has(f, "tracker") ? 5 : 0;
   /* «вибрация»: шаги по настилу чувствуются издалека, даже тихие — но только пока вы идёте */
@@ -1454,6 +1458,7 @@ function hurtPlayer(dmg, adt, src, opts) {
   var g = G();
   if (g.dead || g.done) return 0;
   opts = opts || {};
+  if (LAB.implants && g.st.phaseT > 0) return LAB.implants.onHurt(dmg, adt, src); /* (2.0) вне фазы */
   var raw = dmg;
   if (g.st.shield > 0) {
     var ab = Math.min(g.st.shield, raw);
@@ -1465,6 +1470,8 @@ function hurtPlayer(dmg, adt, src, opts) {
   var res = gm().armorRes(adt || "phys");
   var cut = gm().armorValue() * 0.35;
   var fin = Math.max(1, Math.round(raw * (1 - res) - cut));
+  if (LAB.implants) { fin = LAB.implants.onHurt(fin, adt, src); if (!fin) { UIx("refresh"); return 0; } } /* (2.0) уклонение, отражение, заземление */
+  if (LAB.repair) LAB.repair.armorHit(raw, fin); /* (2.0) броня изнашивается от ударов, которые держит */
   g.hp -= fin;
   g.lastHurt = Date.now();
   A("hurt", adt, fin, src);
@@ -1512,7 +1519,7 @@ function statusTick(onlyTimers) {
   var g = G(), st = g.st;
   if (st.poison > 0) {
     st.poison--;
-    if (st.poison % 2 === 0) { var pd = 1 + Math.ceil(g.L / 2); g.hp -= pd; A("play", "poison_tick"); if (g.hp <= 0) { g.hp = 0; gm().die(); return; } }
+    if (st.poison % 2 === 0) { var pd = Math.max(1, Math.round((1 + Math.ceil(g.L / 2)) * (1 - (LAB.implants ? LAB.implants.stat("antitox") : 0)))); g.hp -= pd; A("play", "poison_tick"); if (g.hp <= 0) { g.hp = 0; gm().die(); return; } }
     if (!st.poison) sayq("Яд выветрился.");
   }
   if (st.bleed > 0) {
@@ -1526,6 +1533,7 @@ function statusTick(onlyTimers) {
   if (st.antitox > 0) { st.antitox--; if (!st.antitox) sayq("Фильтр противогаза отработал."); }
   if (st.radBlock > 0) { st.radBlock--; if (!st.radBlock) sayq("Йодид калия больше не защищает от облучения."); }
   if (LAB.zones && LAB.zones.tick) LAB.zones.tick(); /* облучение и газ, пока стоите в особой зоне (1.5) */
+  if (LAB.implants) LAB.implants.tick(); /* (2.0) действие имплантов во времени, чип регенерации */
   if (st.haste > 0) { st.haste--; if (!st.haste) sayq("Ускорение закончилось."); }
   if (st.cloak > 0) { st.cloak--; if (!st.cloak) { sayq("Маскировка спала."); A("play", "cloak_off"); } }
   if (st.shieldT > 0) { st.shieldT--; if (!st.shieldT && !gm().armorSpecial("regshield")) st.shield = 0; }
@@ -2175,17 +2183,21 @@ function describe(f) {
 
 /* ════════ ИМПЛАНТЫ И ГРАНАТЫ ════════ */
 function useImplant(id, free) {
-  var g = G();
+  var g = G(), IM = LAB.implants;
   if (!free && g.implants.indexOf(id) < 0) { say("Такого импланта нет."); return; }
+  /* (2.0) пассивный чип работает сам */
+  if (IM && IM.isChip(id)) { say(IM.line(id)); return; }
   if (id === "hack") { say("Дистанционный взлом применяется у запертой двери: " + LAB.K("двойное касание у двери.", "Enter у двери.")); return; }
   if ((id === "scan" || id === "echo") && jammed()) { A("play", "jam"); say("Помехи: глушилка робота рядом забивает сканер."); return; }
+  var cost = gm().implantCost(id);
   if (!free && !gm().spendEnergy(id)) return;
   A("implant", id);
-  var L = g.L, n;
   switch (id) {
     case "scan": {
-      var list = foes.filter(function (f) { return !f.dead && dist(f, heroPos()) <= 8 && !(aff(f, "cloak") && dist(f, heroPos()) > 3); });
-      var items = gm().floorItems().filter(function (it) { return Math.abs(it.x - g.x) + Math.abs(it.y - g.y) <= 8; });
+      /* (2.0) радиус и что ещё — от ступени и модификаций (implants.js) */
+      var sr = IM ? IM.scanR(id) : 8;
+      var list = foes.filter(function (f) { return !f.dead && dist(f, heroPos()) <= sr && !(aff(f, "cloak") && dist(f, heroPos()) > 3); });
+      var items = gm().floorItems().filter(function (it) { return Math.abs(it.x - g.x) + Math.abs(it.y - g.y) <= sr; });
       var parts = [];
       parts.push(list.length ? "Враги: " + list.map(describe).join("; ") + "." : "Врагов рядом нет.");
       /* (1.6) на каждого найденного — звуковой маяк: ползёт вместе с ним, пока не отстанет */
@@ -2195,29 +2207,15 @@ function useImplant(id, free) {
       var sec = gm().nearSecret(4);
       if (sec) parts.push("Пустота за стеной " + LAB.DIRN[sec.dir] + ": тайник.");
       if (LAB.traps) { var tsx = LAB.traps.scanText(8); if (tsx) parts.push(tsx); }
-      say(parts.join(" "));
+      say(parts.join(" ") + (IM ? IM.scanExtra(id, list) : ""));
       break;
     }
-    case "regen": { var b = g.hp; g.hp = Math.min(g.hpMax, g.hp + 30 + L * 4); var bl = g.st.bleed > 0; g.st.bleed = 0; say("Регенерация: плюс " + (g.hp - b) + ". Здоровье " + g.hp + "." + (bl ? " Кровотечение остановлено." : "")); hpMark = Math.round(100 * g.hp / g.hpMax); break; }
-    case "empulse": n = areaDamage(g.x, g.y, 3, 40 + L * 12, "emp"); foes.forEach(function (f) { if (!f.dead && f.kind === "mech" && cheb(f, heroPos()) <= 3 && !aff(f, "hardened")) f.shield = 0; }); say("ЭМИ-импульс. Задето роботов: " + n + "."); break;
-    case "shield": g.st.shield = Math.max(g.st.shield, 40 + L * 6); g.st.shieldT = 30; say("Силовой щит: " + g.st.shield + "."); break;
-    case "haste": g.st.haste = 20; say("Ускорение: десять секунд."); break;
-    case "thermal": n = 0; foes.forEach(function (f) { if (!f.dead && !f.calm && f.kind === "bio" && cheb(f, heroPos()) <= 2) { damageFoe(f, 35 + L * 10, "thermo", { noarmor: true, quiet: true }); n++; } }); say("Термоимпульс. Обожжено тварей: " + n + "."); break;
-    case "cloak": g.st.cloak = 16; foes.forEach(function (f) { if (f.state === "hunt") { f.state = "alert"; f.aim = false; } }); say("Маскировка: восемь секунд вас не видят."); break;
     case "echo": say(echoText()); break;
     case "tk": telekinesis(); break;
-    case "freeze": n = 0; foes.forEach(function (f) { if (!f.dead && !f.calm && cheb(f, heroPos()) <= 3) { f.frozen = 8; n++; } }); say("Криостаз. Заморожено: " + n + "."); break;
-    case "pbolt": {
-      var v = DIRV[g.face] || DIRV.N, hit = 0;
-      foes.forEach(function (f) {
-        if (f.dead || f.calm) return;
-        var dx = f.x - g.x, dy = f.y - g.y, along = dx * v[0] + dy * v[1], perp = Math.abs(dx * v[1] - dy * v[0]);
-        if (along > 0 && along <= 12 && perp === 0 && LAB.los(CUR().fl, CUR().fs, g.x, g.y, f.x, f.y)) { damageFoe(f, 90 + L * 25, "positron", { noarmor: true, quiet: true }); hit++; }
-      });
-      say("Позитронный разряд " + LAB.DIRTO[g.face] + ". Задето: " + hit + ".");
-      break;
-    }
+    /* остальные — общий механизм имплантов (implants.js): ступень, направление, модификации */
+    default: if (IM) IM.run(id);
   }
+  if (IM && !free) IM.used(id, cost);
   UIx("refresh");
 }
 function echoText() {
