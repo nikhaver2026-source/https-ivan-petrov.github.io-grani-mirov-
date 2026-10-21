@@ -880,26 +880,10 @@ function mineTask(f) {
    неё, не на глазах у героя и не вплотную к нему, друг от друга не ближе
    трёх шагов. from — сапёр: только туда, куда он сам дойдёт (точка у
    запертого зала изнутри ему не годится). */
-function reachMap(from) {
-  var fl = CUR().fl, fs = CUR().fs, W = LAB.W, H = LAB.H, rm = new Int8Array(W * H), s0 = idx(from.x, from.y), q = [s0], qi = 0;
-  rm[s0] = 1;
-  while (qi < q.length) {
-    var u = q[qi++], x = u % W, y = (u / W) | 0;
-    for (var k = 0; k < 4; k++) {
-      var nx = x + (k === 0 ? 1 : k === 1 ? -1 : 0), ny = y + (k === 2 ? 1 : k === 3 ? -1 : 0);
-      if (!LAB.inb(nx, ny)) continue;
-      var j = idx(nx, ny), tt = fl.t[j];
-      if (rm[j] || tt === LAB.T.WALL || fl.objAt[j]) continue;
-      if (tt === LAB.T.DOOR) { var d = fl.doorAt[j]; if (fs.doors[d.id] !== 2 && !foeOpens(from, d)) continue; }
-      rm[j] = 1; q.push(j);
-    }
-  }
-  return rm;
-}
 function minePoints(at, n, from) {
   var fl = CUR().fl, fs = CUR().fs, W = LAB.W, H = LAB.H, hp = heroPos();
   if (!at) at = hp;
-  var reach = from ? reachMap(from) : null;
+  var reach = from ? reachMap(from, 9999) : null; /* куда сапёр дойдёт сам: −1 — никак */
   var dm = new Int16Array(W * H).fill(-1), s0 = idx(at.x, at.y), q = [s0], qi = 0, cand = [];
   dm[s0] = 0;
   while (qi < q.length) {
@@ -907,7 +891,7 @@ function minePoints(at, n, from) {
     if (dm[u] >= 2 && dm[u] <= 14 && fl.t[u] !== LAB.T.DOOR && canStand(null, x, y)) {
       var nearD = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(function (v) { return LAB.inb(x + v[0], y + v[1]) && fl.t[idx(x + v[0], y + v[1])] === LAB.T.DOOR; });
       var far = Math.abs(x - hp.x) + Math.abs(y - hp.y) >= 5 && !LAB.los(fl, fs, x, y, hp.x, hp.y);
-      if (far && (!reach || reach[u]) && !(LAB.traps && LAB.traps.at && LAB.traps.at(x, y))) cand.push([x, y, nearD ? 0 : 1, dm[u]]);
+      if (far && (!reach || reach[u] >= 0) && !(LAB.traps && LAB.traps.at && LAB.traps.at(x, y))) cand.push([x, y, nearD ? 0 : 1, dm[u]]);
     }
     if (dm[u] >= 16) continue;
     for (var k = 0; k < 4; k++) {
