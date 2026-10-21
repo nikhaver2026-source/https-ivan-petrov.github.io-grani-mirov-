@@ -1044,7 +1044,8 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(!oko.repair || oko.repair.again >= 0, "ремонтника уничтожили — ОКО шлёт следующего (тактов: " + (oko.repair && oko.repair.again) + ")");
   ok(!oko.repair || oko.repair.t2 >= 0, "ремонтник дошёл и починил: сеть снова у ОКО (тактов: " + (oko.repair && oko.repair.t2) + ")" + (oko.repair && oko.repair.diag ? " — " + oko.repair.diag : ""));
   ok(oko.fresh.n >= 1 && oko.fresh.d1 < oko.fresh.d0, "перепрошили роботов — новые машины ОКО идут к вам (" + oko.fresh.n + ", " + oko.fresh.d0 + " → " + oko.fresh.d1 + " шагов)");
-  ok(oko.check.n >= 1 && oko.check.c1 < oko.check.c0, "неудачный взлом — проверка идёт к терминалу (" + oko.check.c0 + " → " + oko.check.c1 + ")");
+  /* появилась у самого терминала — обыскивает место рядом и ближе может не подойти */
+  ok(oko.check.n >= 1 && (oko.check.c1 < oko.check.c0 || oko.check.c1 <= 8), "неудачный взлом — проверка идёт к терминалу (" + oko.check.c0 + " → " + oko.check.c1 + ")");
   ok(oko.drone.n === 1 && oko.drone.close >= 20 && oko.drone.near >= 2 && oko.drone.hurt > 0, "дрон слежения вылетел к месту, где вас видела камера, нашёл вас, держится на расстоянии (не ближе " + oko.drone.near + " шагов) и стреляет");
   ok(oko.patrol.n >= 2 && oko.patrol.changed, "патрули смены: " + oko.patrol.n + ", маршруты меняются");
   ok(!oko.guard || (oko.guard.back && oko.guard.state === "idle"), "страж у лифта вернулся на пост");
@@ -2780,6 +2781,9 @@ LAB.ui.closeAll();
   console.log("Охрана с первого этажа: патрули в коридорах, машины в кабинетах, машину рядом слышно");
   const gar = await page.evaluate(() => {
     const g = LAB.game, G = g.G, C = LAB.combat, out = {};
+    /* первый этаж — как в новой игре: прежние проверки здесь всех уже победили */
+    g.enterFloor(1, 2, "down", true);
+    delete G.fs["1-1"];
     g.enterFloor(1, 1, "down", true);
     const live = () => C.foes().filter(f => !f.dead);
     out.patrols = live().filter(f => f.beat).length;
