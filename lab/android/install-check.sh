@@ -12,13 +12,23 @@ SDK=$(adb shell getprop ro.build.version.sdk | tr -d '\r')
 echo "Android $REL (API $SDK)"
 adb shell settings put global verifier_verify_adb_installs 0 || true
 adb shell settings put global package_verifier_enable 0 || true
-# установка: службы на свежем эмуляторе иногда ещё не поднялись — подождать и повторить
+# установка: службы на свежем эмуляторе иногда ещё не поднялись — подождать и
+# повторить другим способом: потоковая установка, без потока (adb копирует APK
+# и ставит), вручную — копия в /data/local/tmp и pm install (pm сам скажет
+# причину отказа, а не «Broken pipe»)
+inst() {
+  case "$1" in
+    1) adb install -r "$APK" ;;
+    2) adb install --no-streaming -r "$APK" ;;
+    *) adb push "$APK" /data/local/tmp/lab.apk > /dev/null && adb shell pm install -r /data/local/tmp/lab.apk ;;
+  esac
+}
 for t in 1 2 3; do
-  adb install -r "$APK" && break
+  inst $t && break
   echo "установка не удалась (попытка $t) — жду системные службы"
   bash "$(dirname "$0")/emu-ready.sh" 180 || true
 done
-adb shell pm path $PKG | grep -q "^package:" || { echo "APK не поставился"; exit 1; }
+adb shell pm path $PKG | grep -q "^package:" || { echo "APK не поставился"; adb logcat -d -b crash 2>/dev/null | tail -30 || true; exit 1; }
 adb shell dumpsys package $PKG | grep -E "versionName|targetSdk|minSdk" | head -3 || true
 adb shell dumpsys package com.google.android.webview 2>/dev/null | grep -m1 versionName || adb shell dumpsys package com.android.webview 2>/dev/null | grep -m1 versionName || true
 adb logcat -c

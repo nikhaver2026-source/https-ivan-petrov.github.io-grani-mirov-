@@ -224,7 +224,43 @@ jobs:
           [ -n "$IMG" ] || { echo "::error::в списке SDK нет образа эмулятора Android 17 (API 37)"; exit 1; }
           export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
           echo "образ эмулятора: $IMG"
-          echo "no" | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -n a37 -k "$IMG" --force
+          # Готовые cmdline-tools раннера (12.0) не понимают дробный номер API
+          # («android-37.0»): avdmanager пишет в устройство target=android-0, и
+          # эмулятор настраивает графику как для древнего образа — surfaceflinger
+          # Android 17 падает по кругу (mapper.ranchu, hasReadColorBufferDma),
+          # а установка APK — с «Broken pipe». Свежие (20.0 и новее) пишут
+          # target=android-37.0. sdkmanager не перезаписывает каталог, из которого
+          # запущен, и ставит рядом (latest-2) — переносим на место latest.
+          # инструменты — на Java 21 раннера, если она есть (свежим может не
+          # хватить 17); прежние остаются запасными в latest-old
+          CT="$ANDROID_HOME/cmdline-tools"
+          J="${JAVA_HOME_21_X64:-$JAVA_HOME}"
+          echo "cmdline-tools раннера: $(sed -n 's/^Pkg.Revision=//p' "$CT/latest/source.properties" 2>/dev/null)"
+          yes | JAVA_HOME="$J" "$CT/latest/bin/sdkmanager" --install "cmdline-tools;latest" > "$RUNNER_TEMP/cmdline.log" 2>&1 || tail -5 "$RUNNER_TEMP/cmdline.log"
+          OLD=""
+          if [ -x "$CT/latest-2/bin/avdmanager" ]; then rm -rf "$CT/latest-old"; mv "$CT/latest" "$CT/latest-old"; mv "$CT/latest-2" "$CT/latest"; OLD="$CT/latest-old"; fi
+          echo "cmdline-tools для Android 17: $(sed -n 's/^Pkg.Revision=//p' "$CT/latest/source.properties" 2>/dev/null)"
+          if ! echo "no" | JAVA_HOME="$J" "$CT/latest/bin/avdmanager" create avd -n a37 -k "$IMG" --force; then
+            [ -n "$OLD" ] || { echo "::error::avdmanager не создал устройство Android 17"; exit 1; }
+            echo "::warning::свежий avdmanager не создал устройство — создаю прежним, target поправлю ниже"
+            echo "no" | JAVA_HOME="$J" "$OLD/bin/avdmanager" create avd -n a37 -k "$IMG" --force
+          fi
+          # устройство должно знать свою версию: target=android-37.0, не android-0
+          API=$(echo "$IMG" | sed -E 's/^system-images;android-([0-9.]+);.*/\1/')
+          AVDI=""
+          for f in "${ANDROID_AVD_HOME:-$HOME/.android/avd}/a37.ini" "$HOME/.android/avd/a37.ini"; do
+            if [ -f "$f" ]; then AVDI="$f"; break; fi
+          done
+          if [ -n "$AVDI" ]; then
+            TGT=$(sed -n 's/^target=//p' "$AVDI" | tr -d '\r')
+            echo "устройство ($AVDI): target=$TGT"
+            if [ "$TGT" != "android-$API" ]; then
+              echo "::warning::avdmanager записал target=$TGT — исправляю на android-$API"
+              sed -i "s/^target=.*/target=android-$API/" "$AVDI"
+            fi
+          else
+            echo "::warning::не нашёл a37.ini — проверить target устройства нельзя"
+          fi
           # прежний эмулятор (Android 15) мог ещё не уйти из adb
           adb kill-server > /dev/null 2>&1 || true; adb start-server
           # готовность — не только «загрузился», но и службы пакетов и настроек
