@@ -1705,12 +1705,13 @@ function radioMenu(o) {
     say("Приёмник шипит, потом из него звучит короткая мелодия. Слушайте.");
     var mk0 = melKey(o.melodyFor);
     later(function () {
-      var seq = o.melody.split(""), F0 = { U: 988, D: 262, L: 523, R: 659 }, P0 = { U: 0, D: 0, L: -0.9, R: 0.9 };
-      seq.forEach(function (d, i) { LAB.UI.tone ? LAB.UI.tone(F0[d], 0.32, P0[d], 0.2, 0.3 + i * 0.5) : A("play", "term_beep"); });
-      later(function () {
+      var seq = o.melody.split("");
+      var done = function () {
         G.melodies[mk0] = o.melody;
-        say("«Эхо» запомнило мелодию: это ключ звукового замка двери «" + o.melodyRoom + "». У двери её надо сыграть самому: высокий звук — вверх, низкий — вниз, слева — влево, справа — вправо.");
-      }, 600 + seq.length * 500);
+        say("«Эхо» запомнило мелодию: это ключ звукового замка двери «" + o.melodyRoom + "». У двери её надо сыграть самому — " + LAB.K("свайпами", "стрелками или цифрами") + ": " + LAB.mini.sigHelp() + ".");
+      };
+      /* (2.0) каждый звук — вместе со своей цифрой */
+      LAB.mini.playSeq(seq, 0.3, function () { later(done, 300); });
     }, 2600);
   } });
   items.push({ label: "Слушать эфир", fn: function () { A("play", "radio"); say("Сквозь шум: " + rumor()); } });

@@ -1125,7 +1125,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     const ci = top ? top.items.findIndex(i => /перерезать кабель/.test(label(i))) : -1;
     if (ci >= 0) {
       top.i = ci; LAB.ui.activate();
-      for (let k = 0; k < 300; k++) { const c = LAB.mini._cur(); if (!c || c.type !== "hack") break; if (!c.busy) LAB.mini.gesture({ kind: "swipe", n: 1, dir: c.seq[c.pos] }); await wait(60); }
+      for (let k = 0; k < 700; k++) { const c = LAB.mini._cur(); if (!c || c.type !== "hack") break; if (!c.busy) LAB.mini.gesture({ kind: "swipe", n: 1, dir: c.seq[c.pos] }); await wait(60); }
       await wait(400);
     }
     out.cut = t.cut; out.cutRec = !!(g.CUR.fs.cutT && g.CUR.fs.cutT[t.id]);
@@ -1375,7 +1375,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     SPOKEN.length = 0;
     let hres = null;
     LAB.mini.hack(3, ok => { hres = ok; });
-    for (let k = 0; k < 300; k++) { const c = LAB.mini._cur(); if (!c || c.type !== "hack") break; if (!c.busy) { const want = c.seq[c.pos]; LAB.mini.gesture({ kind: "swipe", n: 1, dir: want }); if (c.done) { LAB.mini.gesture({ kind: "swipe", n: 1, dir: want === "U" ? "D" : "U" }); } } await wait(60); }
+    for (let k = 0; k < 700; k++) { const c = LAB.mini._cur(); if (!c || c.type !== "hack") break; if (!c.busy) { const want = c.seq[c.pos]; LAB.mini.gesture({ kind: "swipe", n: 1, dir: want }); if (c.done) { LAB.mini.gesture({ kind: "swipe", n: 1, dir: want === "U" ? "D" : "U" }); } } await wait(60); }
     await wait(500);
     out.hackClean = hres === true && !SPOKEN.some(t => /Неверно/.test(t));
     /* «Блок I» читается словом */
@@ -1933,7 +1933,7 @@ LAB.ui.closeAll();
     const wb = g.CUR.fl.objs.find(o => o.type === "workbench");
     LAB.ui.craft(wb || { id: "x", x: G.x, y: G.y }); out.wbStep = !!G.tutor.done.workbench; LAB.ui.closeAll();
     let res = null; LAB.mini.hack(3, ok => { res = ok; });
-    for (let k = 0; k < 300; k++) { const c = LAB.mini._cur(); if (!c || c.type !== "hack") break; if (!c.busy) { LAB.mini.gesture({ kind: "swipe", n: 1, dir: c.seq[c.pos] }); } await wait(40); }
+    for (let k = 0; k < 700; k++) { const c = LAB.mini._cur(); if (!c || c.type !== "hack") break; if (!c.busy) { LAB.mini.gesture({ kind: "swipe", n: 1, dir: c.seq[c.pos] }); } await wait(40); }
     await wait(400); out.puzzleStep = res === true && !!G.tutor.done.puzzle;
     /* напоминание, если игрок долго стоит: «часто» — да, «только по запросу» — нет */
     const now0 = Date.now, t0 = Date.now() + 600000; LAB.ui.closeAll();
@@ -2513,7 +2513,7 @@ LAB.ui.closeAll();
     G.x = mx - v[0]; G.y = my - v[1];
     const inv1 = G.inv.tr_mine || 0;
     T.disarm(em2);
-    for (let k = 0; k < 300; k++) { const c = LAB.mini._cur(); if (!c || c.type !== "hack") break; if (!c.busy) LAB.mini.gesture({ kind: "swipe", n: 1, dir: c.seq[c.pos] }); await wait(60); }
+    for (let k = 0; k < 700; k++) { const c = LAB.mini._cur(); if (!c || c.type !== "hack") break; if (!c.busy) LAB.mini.gesture({ kind: "swipe", n: 1, dir: c.seq[c.pos] }); await wait(60); }
     await wait(400);
     out.disarm = T.list().indexOf(em2) < 0 && (G.inv.tr_mine || 0) === inv1 + 1;
     /* окно «Ловушки и мины» в инвентаре */
@@ -2777,6 +2777,33 @@ LAB.ui.closeAll();
   ok(v16.zig && v16.mineFlag && v16.zigArmed, "ловушка — жест вверх-вниз, мина — вниз-вверх, и с оружием в руках тоже (" + v16.zigDiag + ")");
   ok(v16.mark && v16.trapBeacon && v16.foeBeacon && v16.foeMoves, "маяки: у ловушки и мины свои, скан вешает маяк на врага, и он движется с ним (" + v16.beaconDiag + ")");
   ok(v16.hum, "фон лаборатории: запись низкого гула машин звучит");
+
+  console.log("Звуковые комбинации с цифрами: вверх 1, вправо 2, вниз 3, влево 4");
+  const dig = await page.evaluate(async () => {
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const NUM = { U: "один", R: "два", D: "три", L: "четыре" }, DG = { U: 1, R: 2, D: 3, L: 4 }, out = {};
+    const digits = () => SPOKEN.filter(t => /^(один|два|три|четыре)$/.test(t));
+    let res = null;
+    SPOKEN.length = 0;
+    LAB.mini.hack(4, ok => { res = ok; }, { title: "Проверка цифр", noOko: true });
+    const c = LAB.mini._cur();
+    out.intro = SPOKEN.some(t => /вверх, один; справа — вправо, два; низкий — вниз, три; слева — влево, четыре/.test(t));
+    for (let k = 0; k < 200 && c.busy; k++) await wait(50);
+    out.round1 = JSON.stringify(digits()) === JSON.stringify(c.seq.slice(0, 3).map(d => NUM[d]));
+    /* ввод — цифрами: у каждого введённого сигнала звучит его цифра */
+    SPOKEN.length = 0;
+    for (let i = 0; i < 3; i++) LAB.mini.gesture({ kind: "digit", n: 1, d: DG[c.seq[i]] });
+    out.echo = JSON.stringify(digits()) === JSON.stringify(c.seq.slice(0, 3).map(d => NUM[d]));
+    /* верно — добавился ещё сигнал, комбинация звучит заново: четыре сигнала */
+    for (let k = 0; k < 300 && c.busy; k++) await wait(50);
+    out.more = SPOKEN.some(t => /Ещё сигнал/.test(t)) && c.round === 4 && JSON.stringify(digits().slice(3)) === JSON.stringify(c.seq.slice(0, 4).map(d => NUM[d]));
+    for (let i = 0; i < 4; i++) LAB.mini.gesture({ kind: "digit", n: 1, d: DG[c.seq[i]] });
+    await wait(500);
+    out.solved = res === true;
+    return out;
+  });
+  ok(dig.intro && dig.round1 && dig.echo, "взлом: у сигнала своя цифра — вверх один, вправо два, вниз три, влево четыре; цифры звучат с комбинацией и при вводе, вводить можно и цифрами");
+  ok(dig.more && dig.solved, "взлом: повторили верно — добавился ещё сигнал, комбинация прозвучала заново из четырёх; введена вся — взлом удался");
 
   console.log("Охрана с первого этажа: патрули в коридорах, машины в кабинетах, машину рядом слышно");
   const gar = await page.evaluate(() => {

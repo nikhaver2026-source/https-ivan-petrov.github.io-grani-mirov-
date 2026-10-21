@@ -57,9 +57,35 @@ function start(ext) {
   cur = { type: "ext", name: ext.name || "Занятие", cb: ext.cb, handler: ext.handler, cleanup: ext.cleanup, quiet: !!ext.quiet };
 }
 
-/* ════════ ВЗЛОМ: повторить сигналы ════════ */
-var HACK_TONES = { U: { f: 988, pan: 0, w: "вверх" }, D: { f: 262, pan: 0, w: "вниз" }, L: { f: 523, pan: -0.9, w: "влево" }, R: { f: 659, pan: 0.9, w: "вправо" } };
-function playSig(d, when) { var h = HACK_TONES[d]; tone(h.f, 0.32, h.pan, "triangle", 0.2, when); }
+/* ════════ ВЗЛОМ: повторить сигналы ════════
+   (2.0) У каждого сигнала своя цифра: вверх — 1, вправо — 2, вниз — 3,
+   влево — 4. Комбинация звучит вместе с цифрами, ввод — тоже; с
+   клавиатуры сигнал можно ввести и цифрой. После верного повтора
+   добавляется ещё один сигнал, и комбинация звучит заново. */
+var HACK_TONES = { U: { f: 988, pan: 0, w: "вверх", n: 1 }, R: { f: 659, pan: 0.9, w: "вправо", n: 2 }, D: { f: 262, pan: 0, w: "вниз", n: 3 }, L: { f: 523, pan: -0.9, w: "влево", n: 4 } };
+var SIG_NUM = ["", "один", "два", "три", "четыре"], NUM_SIG = { 1: "U", 2: "R", 3: "D", 4: "L" };
+var SIG_STEP = 0.7; /* между сигналами: слышно и звук, и его цифру */
+/* Сигнал и его цифра. */
+function playSig(d, when) {
+  var h = HACK_TONES[d];
+  if (!h) return;
+  tone(h.f, 0.32, h.pan, "triangle", 0.2, when);
+  var c = cur, w = SIG_NUM[h.n];
+  var sayIt = function () { if (cur === c) say(w); };
+  if (when > 0) setTimeout(sayIt, when * 1000 + 60); else sayIt();
+}
+/* Комбинация с цифрами; когда отзвучит — fn. */
+function playSeq(seq, start, fn) {
+  seq.forEach(function (d, i) { playSig(d, start + i * SIG_STEP); });
+  if (fn) setTimeout(fn, (start + seq.length * SIG_STEP) * 1000);
+}
+/* Свайп или цифра от 1 до 4 — сигнал; иначе null. */
+function sigOf(g) {
+  if (g.kind === "swipe" && g.n === 1) return g.dir;
+  if (g.kind === "digit" && NUM_SIG[g.d]) return NUM_SIG[g.d];
+  return null;
+}
+function sigHelp() { return "высокий — вверх, один; справа — вправо, два; низкий — вниз, три; слева — влево, четыре"; }
 function hack(len, cb, opts) {
   opts = opts || {};
   len = Math.max(3, Math.min(9, len || 4));
@@ -67,15 +93,13 @@ function hack(len, cb, opts) {
   for (var i = 0; i < len; i++) seq.push(dirs[Math.floor(Math.random() * 4)]);
   /* четыре попытки (1.6): ошибка не губит взлом сразу — раунд звучит заново; четвёртая ошибка — защита сработала, и ОКО шлёт проверку */
   cur = { type: "hack", name: opts.title || "Взлом", cb: cb, seq: seq, round: Math.min(3, len), pos: 0, replays: 1, busy: true, tries: opts.tries || 4, noOko: !!opts.noOko };
-  say((opts.title || "Взлом") + ". Сигналов: " + len + ". Попыток: " + cur.tries + ". " + LAB.K("Высокий — свайп вверх, низкий — вниз, слева — влево, справа — вправо. Повторяйте свайпами. Касание — повторить сигналы.", "Высокий — стрелка вверх, низкий — вниз, слева — влево, справа — вправо. Повторяйте стрелками. Пробел — повторить сигналы, Escape — отойти."), { interrupt: true });
+  say((opts.title || "Взлом") + ". Сигналов: " + len + ". Попыток: " + cur.tries + ". У каждого сигнала своя цифра: " + sigHelp() + ". " + LAB.K("Слушайте комбинацию и повторяйте её свайпами; после каждого верного повтора добавляется ещё один сигнал. Касание — повторить комбинацию.", "Слушайте комбинацию и повторяйте её стрелками или цифрами от 1 до 4; после каждого верного повтора добавляется ещё один сигнал. Пробел — повторить комбинацию, Escape — отойти."), { interrupt: true });
   waitSpeech(function () { playRound(); });
 }
 function playRound() {
   var c = cur; if (!c || c.type !== "hack") return;
   c.busy = true; c.pos = 0;
-  var n = c.round;
-  for (var i = 0; i < n; i++) playSig(c.seq[i], 0.25 + i * 0.5);
-  setTimeout(function () { if (cur === c) { c.busy = false; tone(1500, 0.06, 0, "sine", 0.1); } }, 250 + n * 500);
+  playSeq(c.seq.slice(0, c.round), 0.25, function () { if (cur === c) { c.busy = false; tone(1500, 0.06, 0, "sine", 0.1); } });
 }
 function hackGesture(g) {
   var c = cur;
@@ -84,10 +108,11 @@ function hackGesture(g) {
     if (c.replays > 0) { c.replays--; playRound(); } else say("Повторов больше нет. Вспоминайте.");
     return;
   }
-  if (g.kind !== "swipe" || g.n !== 1 || c.busy) return;
+  var sg = sigOf(g);
+  if (!sg || c.busy) return;
   var want = c.seq[c.pos];
-  playSig(g.dir, 0);
-  if (g.dir !== want) {
+  playSig(sg, 0);
+  if (sg !== want) {
     c.tries--;
     if (c.tries > 0) {
       /* ошибка: раунд с начала, попыток меньше */
@@ -104,7 +129,8 @@ function hackGesture(g) {
   if (c.pos < c.round) return;
   if (c.round >= c.seq.length) { c.busy = c.done = true; setTimeout(function () { if (cur === c) finish(true); }, 300); return; }
   c.round++; c.replays = 1; c.busy = true;
-  setTimeout(function () { tone(1320, 0.08, 0, "sine", 0.12); setTimeout(playRound, 400); }, 300);
+  /* верно: к комбинации добавляется ещё один сигнал — она звучит заново */
+  setTimeout(function () { if (cur !== c) return; tone(1320, 0.08, 0, "sine", 0.12); say("Верно. Ещё сигнал."); waitSpeech(function () { setTimeout(playRound, 250); }); }, 300);
 }
 
 /* Четыре ошибки подряд: ОКО пеленгует взлом и шлёт проверку — роботов или дрон (не всегда: иногда «Эхо» успевает оборвать сигнал). */
@@ -386,8 +412,8 @@ function melody(seq, cb, opts) {
   opts = opts || {};
   var c = { type: "melody", name: opts.title || "Звуковой замок", cb: cb, seq: seq.split(""), pos: 0, replays: opts.replays == null ? 1 : opts.replays, busy: true, mirror: !!opts.mirror };
   cur = c;
-  say((opts.title || "Звуковой замок") + ". Сыграйте мелодию: " + c.seq.length + " нот. " + (c.mirror ? "Замок зеркальный: левое и правое поменяны местами. " : "") +
-    LAB.K("Высокий — свайп вверх, низкий — вниз, слева — влево, справа — вправо. Касание — «Эхо» напомнит мелодию.", "Высокий — стрелка вверх, низкий — вниз, слева — влево, справа — вправо. Пробел — «Эхо» напомнит мелодию, Escape — отойти."), { interrupt: true });
+  say((opts.title || "Звуковой замок") + ". Сыграйте мелодию: " + c.seq.length + " нот. " + (c.mirror ? "Замок зеркальный: левое и правое поменяны местами. " : "") + "У каждого звука своя цифра: " + sigHelp() + ". " +
+    LAB.K("Играйте свайпами. Касание — «Эхо» напомнит мелодию.", "Играйте стрелками или цифрами от 1 до 4. Пробел — «Эхо» напомнит мелодию, Escape — отойти."), { interrupt: true });
   waitSpeech(function () { if (cur === c) { c.busy = false; tone(1500, 0.06, 0, "sine", 0.1); } });
 }
 function melodyGesture(g) {
@@ -396,15 +422,15 @@ function melodyGesture(g) {
     if (c.busy) return;
     if (c.replays <= 0) { say("«Эхо» больше не напомнит. Вспоминайте."); return; }
     c.replays--; c.busy = true; c.pos = 0;
-    c.seq.forEach(function (d, i) { playSig(d, 0.2 + i * 0.45); });
-    setTimeout(function () { if (cur === c) { c.busy = false; tone(1500, 0.06, 0, "sine", 0.1); } }, 300 + c.seq.length * 450);
+    playSeq(c.seq, 0.2, function () { if (cur === c) { c.busy = false; tone(1500, 0.06, 0, "sine", 0.1); } });
     return;
   }
-  if (g.kind !== "swipe" || g.n !== 1 || c.busy) return;
+  var sg = sigOf(g);
+  if (!sg || c.busy) return;
   var want = c.seq[c.pos];
   if (c.mirror) want = want === "L" ? "R" : want === "R" ? "L" : want;
-  playSig(g.dir, 0);
-  if (g.dir !== want) { c.done = true; setTimeout(function () { if (cur !== c) return; say("Фальшь. Замок сбросил мелодию."); finish(false); }, 350); return; }
+  playSig(sg, 0);
+  if (sg !== want) { c.done = true; setTimeout(function () { if (cur !== c) return; say("Фальшь. Замок сбросил мелодию."); finish(false); }, 350); return; }
   c.pos++;
   if (c.pos >= c.seq.length) { c.done = true; setTimeout(function () { if (cur === c) finish(true); }, 300); }
 }
@@ -512,6 +538,8 @@ function chain(steps, cb) {
 
 LAB.mini = {
   hack: hack, tune: tune, rhythm: rhythm, sync: sync, code: code, relays: relays, bulls: bulls, sortTones: sortTones, melody: melody, chain: chain, gesture: gesture, cancel: cancel, start: start,
+  /* (2.0) сигналы с цифрами: вверх 1, вправо 2, вниз 3, влево 4 — и для радиоприёмника */
+  playSeq: playSeq, sigHelp: sigHelp, SIG_DIGIT: { U: 1, R: 2, D: 3, L: 4 },
   active: function () { return !!cur || Date.now() < gapUntil; },
   wasCancelled: function () { return Date.now() - lastCancel < 1500; },
   _cur: function () { return cur; }, /* для проверок */
