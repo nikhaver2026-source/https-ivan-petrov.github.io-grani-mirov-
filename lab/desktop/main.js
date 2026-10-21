@@ -42,13 +42,18 @@ if (process.arch === 'ia32') app.setPath('userData', path.join(app.getPath('appD
 // На Windows с обновлениями осени 2026 года этот процесс в 32-битной сборке
 // (Electron 22) падает сразу при запуске; Chromium поднимает его девять раз
 // подряд и закрывает игру. Запасные ступени: без песочницы графики; графика
-// в главном процессе и без ускорения. Упал трижды за десять секунд (или
+// в главном процессе и без ускорения; (2.0) ещё и без проверки целостности
+// кода в процессе страницы — на Windows 11 24H2 старый Chromium роняет окно
+// с ней ещё до страницы; и последняя — совсем без песочницы (игра открывает
+// только свои файлы внутри приложения). Упал трижды за десять секунд (или
 // окно погибло, так и не открыв страницу) — игра перезапускается на
 // следующей ступени, а ступень, на которой страница
 // открылась, запоминает (gpu-step.txt в папке данных). В самопроверке игра
 // себя не перезапускает: выходит с кодом 7, и сборка запускает её снова с
 // нужным --lab-gpu-step=N.
-const GPU_STEPS = [[], ['disable-gpu-sandbox'], ['in-process-gpu', 'disable-gpu', 'disable-gpu-compositing']];
+const SAFE_GFX = ['in-process-gpu', 'disable-gpu', 'disable-gpu-compositing'];
+const GPU_STEPS = [[], ['disable-gpu-sandbox'], SAFE_GFX, SAFE_GFX.concat(['disable-features=RendererCodeIntegrity']),
+  SAFE_GFX.concat(['disable-features=RendererCodeIntegrity', 'no-sandbox'])];
 const gpuStepFile = path.join(app.getPath('userData'), 'gpu-step.txt');
 let gpuStep = 0, gpuCrashes = [];
 {
@@ -56,7 +61,7 @@ let gpuStep = 0, gpuCrashes = [];
   if (m) gpuStep = Number(m[1]);
   else { try { gpuStep = Number(fs.readFileSync(gpuStepFile, 'utf8').trim()) || 0; } catch (_) { } }
   gpuStep = Math.max(0, Math.min(GPU_STEPS.length - 1, gpuStep));
-  for (const sw of GPU_STEPS[gpuStep]) app.commandLine.appendSwitch(sw);
+  for (const sw of GPU_STEPS[gpuStep]) { const eq = sw.indexOf('='); if (eq > 0) app.commandLine.appendSwitch(sw.slice(0, eq), sw.slice(eq + 1)); else app.commandLine.appendSwitch(sw); }
 }
 function gpuNextStep(why) {
   if (gpuStep >= GPU_STEPS.length - 1) { log('процесс графики: ' + why + '; ступени кончились'); return false; }

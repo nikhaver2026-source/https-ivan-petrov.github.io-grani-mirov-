@@ -180,7 +180,7 @@ jobs:
           # Код выхода 7: процесс графики Chromium падает на этом образе Windows —
           # игра просит запустить её снова со следующей ступенью (--lab-gpu-step=N).
           STEP=""
-          for i in 1 2 3; do
+          for i in 1 2 3 4 5 6; do
             set +e
             timeout 330 "./$APPDIR/$EXE" --lab-selftest $STEP
             code=$?
@@ -220,7 +220,7 @@ jobs:
         run: |
           export LAB_LOG="$RUNNER_TEMP/selftest2.log"
           STEP=""
-          for i in 1 2 3; do
+          for i in 1 2 3 4 5 6; do
             set +e
             timeout 330 "./$APPDIR/$EXE" --lab-selftest $STEP
             code=$?
