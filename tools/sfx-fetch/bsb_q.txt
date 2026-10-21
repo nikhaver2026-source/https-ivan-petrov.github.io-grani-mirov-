@@ -79,15 +79,15 @@
 # (заход 2 скачан) bsb_lab_ping ping ~ (ping|ding|chime|bell|triangle|glass) ~ 3
 # «Подземная лаборатория», заход 6 (1.7): фон — низкий гул машин, серверные,
 # вентиляция, котельные, трансформаторы, подвалы и подземные стоянки.
-bsb_lab_server server ~ (server|computer|data) ~ 2
-bsb_lab_vent ventilation ~ (ventil|air|duct|fan|blow|extract) ~ 2
-bsb_lab_boiler boiler ~ (boiler|heating|furnace|chauf) ~ 2
-bsb_lab_trans transformer ~ (transform|electric|hum|buzz) ~ 2
-bsb_lab_gen generator ~ (generator|engine|motor) ~ 2
-bsb_lab_factory factory ~ (factory|industr|workshop|machine|plant) ~ 2
-bsb_lab_hum hum ~ (hum|drone|buzz|room) ~ 2
-bsb_lab_pump pump ~ (pump) ~ 1
-bsb_lab_cellar basement ~ (basement|cellar|underground|cave) ~ 1
-bsb_lab_parking parking ~ (parking|garage|underground) ~ 1
-bsb_lab_engine engine room ~ (engine|room|ship|boat) ~ 1
+# (заход 6 скачан) bsb_lab_server server ~ (server|computer|data) ~ 2
+# (заход 6 скачан) bsb_lab_vent ventilation ~ (ventil|air|duct|fan|blow|extract) ~ 2
+# (заход 6 скачан) bsb_lab_boiler boiler ~ (boiler|heating|furnace|chauf) ~ 2
+# (заход 6 скачан) bsb_lab_trans transformer ~ (transform|electric|hum|buzz) ~ 2
+# (заход 6 скачан) bsb_lab_gen generator ~ (generator|engine|motor) ~ 2
+# (заход 6 скачан) bsb_lab_factory factory ~ (factory|industr|workshop|machine|plant) ~ 2
+# (заход 6 скачан) bsb_lab_hum hum ~ (hum|drone|buzz|room) ~ 2
+# (заход 6 скачан) bsb_lab_pump pump ~ (pump) ~ 1
+# (заход 6 скачан) bsb_lab_cellar basement ~ (basement|cellar|underground|cave) ~ 1
+# (заход 6 скачан) bsb_lab_parking parking ~ (parking|garage|underground) ~ 1
+# (заход 6 скачан) bsb_lab_engine engine room ~ (engine|room|ship|boat) ~ 1
 

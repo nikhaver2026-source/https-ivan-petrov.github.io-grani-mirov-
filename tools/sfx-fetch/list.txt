@@ -464,29 +464,309 @@
 # Только CC0 (Freesound, отбор поиска сайта: машинные залы, серверные,
 # электрощитовые, вентиляция подвалов, машинные отделения судов). Берётся
 # предпросмотр высокого качества (OGG). Авторы и названия — в fs_lab.tsv.
-lab_fsH https://cdn.freesound.org/previews/353/353159_2247456-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/474/474832_1481531-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/349/349689_2205380-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/536/536529_5546157-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/536/536525_5546157-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/646/646682_13085623-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/329/329907_2472895-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/144/144046_430339-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/328/328364_2286319-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/260/260815_4858376-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/100/100403_336074-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/74/74915_271213-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/387/387340_4638708-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/434/434507_1134415-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/371/371598_3406193-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/652/652471_537412-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/652/652477_537412-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/652/652474_537412-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/652/652472_537412-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/203/203297_658546-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/203/203295_658546-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/203/203301_658546-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/203/203298_658546-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/417/417553_7399650-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/38/38970_107780-hq.ogg
-lab_fsH https://cdn.freesound.org/previews/520/520920_1391542-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/353/353159_2247456-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/474/474832_1481531-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/349/349689_2205380-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/536/536529_5546157-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/536/536525_5546157-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/646/646682_13085623-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/329/329907_2472895-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/144/144046_430339-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/328/328364_2286319-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/260/260815_4858376-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/100/100403_336074-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/74/74915_271213-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/387/387340_4638708-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/434/434507_1134415-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/371/371598_3406193-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/652/652471_537412-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/652/652477_537412-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/652/652474_537412-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/652/652472_537412-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/203/203297_658546-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/203/203295_658546-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/203/203301_658546-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/203/203298_658546-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/417/417553_7399650-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/38/38970_107780-hq.ogg
+# (заход 6 скачан) lab_fsH https://cdn.freesound.org/previews/520/520920_1391542-hq.ogg
+# «Подземная лаборатория», заход 7 (2.0): записи музыкальных инструментов
+# вместо синтеза. Только CC0 (Freesound): пианино — «88 piano keys, long reverb»
+# (TEDAgame, набор 25405), нейлоновая гитара — «Nylon Guitar Single notes.»
+# (SpeedY, 469), баян — «Cellini Accordion» (Miles_Thompson, 31477), шкатулка —
+# «MusicalBoxSingleNotes» (rbnuser, 19724), колокола — «VSCO 2 CE — Tubular
+# Bells» (sgossner, 21054). Номера записей набора идут подряд — берутся
+# диапазоном (чужих номеров с этим автором на сервере нет — они не скачаются).
+# Предпросмотр высокого качества (OGG). Страницы наборов — чтобы знать названия
+# записей (ноту каждой); авторы и названия использованных — в fs_lab.tsv.
+lab_fsI https://cdn.freesound.org/previews/448/448525_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448526_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448527_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448528_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448529_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448530_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448531_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448532_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448533_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448534_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448535_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448536_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448537_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448538_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448539_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448540_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448541_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448542_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448543_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448544_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448545_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448546_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448547_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448548_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448549_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448550_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448551_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448552_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448553_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448554_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448555_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448556_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448557_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448558_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448559_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448560_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448561_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448562_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448563_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448564_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448565_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448566_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448567_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448568_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448569_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448570_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448571_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448572_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448573_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448574_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448575_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448576_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448577_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448578_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448579_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448580_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448581_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448582_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448583_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448584_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448585_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448586_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448587_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448588_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448589_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448590_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448591_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448592_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448593_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448594_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448595_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448596_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448597_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448598_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448599_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448600_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448601_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448602_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448603_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448604_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448605_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448606_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448607_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448608_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448609_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448610_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448611_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448612_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448613_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448614_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448615_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448616_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448617_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448618_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448619_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/448/448620_9311684-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8378_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8379_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8380_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8381_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8382_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8383_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8384_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8385_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8386_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8387_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8388_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8389_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8390_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8391_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8392_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8393_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8394_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8395_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8396_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8397_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8398_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8399_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8400_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8401_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8402_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8403_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8404_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8405_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8406_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8407_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8408_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8409_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/8/8410_6479-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560780_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560781_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560782_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560783_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560784_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560785_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560786_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560787_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560788_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560789_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560790_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560791_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560792_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560793_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560794_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560795_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560796_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560797_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560798_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560799_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560800_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560801_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560802_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560803_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560804_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560805_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560806_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560807_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560808_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560809_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560810_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560811_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560812_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560813_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560814_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560815_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560816_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560817_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560818_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560819_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560820_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560821_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560822_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560823_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560824_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560825_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560826_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560827_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560828_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560829_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560830_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560831_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560832_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560833_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560834_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560835_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560836_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560837_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560838_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560839_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560840_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560841_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560842_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560843_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560844_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560845_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560846_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560847_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560848_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560849_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560850_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560851_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560852_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560853_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560854_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560855_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560856_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560857_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560858_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560859_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560860_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560861_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560862_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560863_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560864_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560865_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560866_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560867_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560868_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560869_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/560/560870_12390108-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347405_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347406_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347407_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347408_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347409_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347410_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347411_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347412_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347413_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347414_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347415_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347416_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347417_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347418_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347419_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347420_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347421_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347422_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347423_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347424_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347425_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347426_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347427_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347428_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347429_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/347/347430_4551235-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/374/374268_2475994-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/374/374269_2475994-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/374/374270_2475994-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/374/374271_2475994-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/374/374272_2475994-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/374/374273_2475994-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/374/374274_2475994-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/374/374275_2475994-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/374/374276_2475994-hq.ogg
+lab_fsIpg https://freesound.org/search/?f=pack_grouping%3A%2225405_88+piano+keys%2C+long+reverb%22&s=Date+added+%28newest+first%29&g=1&page=1#p25405_1.html
+lab_fsIpg https://freesound.org/search/?f=pack_grouping%3A%2225405_88+piano+keys%2C+long+reverb%22&s=Date+added+%28newest+first%29&g=1&page=2#p25405_2.html
+lab_fsIpg https://freesound.org/search/?f=pack_grouping%3A%2225405_88+piano+keys%2C+long+reverb%22&s=Date+added+%28newest+first%29&g=1&page=3#p25405_3.html
+lab_fsIpg https://freesound.org/search/?f=pack_grouping%3A%2225405_88+piano+keys%2C+long+reverb%22&s=Date+added+%28newest+first%29&g=1&page=4#p25405_4.html
+lab_fsIpg https://freesound.org/search/?f=pack_grouping%3A%2225405_88+piano+keys%2C+long+reverb%22&s=Date+added+%28newest+first%29&g=1&page=5#p25405_5.html
+lab_fsIpg https://freesound.org/search/?f=pack_grouping%3A%2225405_88+piano+keys%2C+long+reverb%22&s=Date+added+%28newest+first%29&g=1&page=6#p25405_6.html
+lab_fsIpg https://freesound.org/search/?f=pack_grouping%3A%22469_Nylon+Guitar+Single+notes.%22&s=Date+added+%28newest+first%29&g=1&page=1#p469_1.html
+lab_fsIpg https://freesound.org/search/?f=pack_grouping%3A%22469_Nylon+Guitar+Single+notes.%22&s=Date+added+%28newest+first%29&g=1&page=2#p469_2.html
+lab_fsIpg https://freesound.org/search/?f=pack_grouping%3A%2231477_Cellini+Accordion%22&s=Date+added+%28newest+first%29&g=1&page=1#p31477_1.html
+lab_fsIpg https://freesound.org/search/?f=pack_grouping%3A%2231477_Cellini+Accordion%22&s=Date+added+%28newest+first%29&g=1&page=2#p31477_2.html
+lab_fsIpg https://freesound.org/search/?f=pack_grouping%3A%2231477_Cellini+Accordion%22&s=Date+added+%28newest+first%29&g=1&page=3#p31477_3.html
+lab_fsIpg https://freesound.org/search/?f=pack_grouping%3A%2231477_Cellini+Accordion%22&s=Date+added+%28newest+first%29&g=1&page=4#p31477_4.html
+lab_fsIpg https://freesound.org/search/?f=pack_grouping%3A%2231477_Cellini+Accordion%22&s=Date+added+%28newest+first%29&g=1&page=5#p31477_5.html
+lab_fsIpg https://freesound.org/search/?f=pack_grouping%3A%2231477_Cellini+Accordion%22&s=Date+added+%28newest+first%29&g=1&page=6#p31477_6.html
+lab_fsIpg https://freesound.org/search/?f=pack_grouping%3A%2219724_MusicalBoxSingleNotes%22&s=Date+added+%28newest+first%29&g=1&page=1#p19724_1.html
+lab_fsIpg https://freesound.org/search/?f=pack_grouping%3A%2221054_VSCO+2+CE++-+Percussion+-+Tubular+Bells%22&s=Date+added+%28newest+first%29&g=1&page=1#p21054_1.html
