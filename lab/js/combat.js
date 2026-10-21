@@ -64,7 +64,7 @@ function makeRuntime(def, st) {
     /* машины ОКО: стражи постов, отряды, патрули смены, дроны слежения */
     guard: def.guard || null, post: def.post ? { x: def.post[0], y: def.post[1] } : null, oko: !!(def.oko || def.squad || def.guard), squad: !!def.squad, fresh: !!def.fresh,
     route: null, ri: 0, stuck: 0, exit: null, repT: 0, fixT: 0, heatN: 0, over: 0, nodeT: 0,
-    /* (1.7) участок обхода патруля, рабочая машина кабинета, сапёр ОКО */
+    /* (2.0) участок обхода патруля, рабочая машина кабинета, сапёр ОКО */
     beat: def.beat || null, bi: def.bi || 0, bdir: 1, work: !!def.work, garrison: def.garrison || null, sapper: !!def.sapper || base.beh.indexOf("mines") >= 0
   };
   f.hp = f.maxhp; f.shield = f.shieldMax;
@@ -124,7 +124,7 @@ function syncFoes() {
   var fs = CUR().fs;
   if (!fs) return;
   if (!fs.foes) fs.foes = {};
-  /* (1.7) пишется только то, что изменилось: целая машина на своём месте не
+  /* (2.0) пишется только то, что изменилось: целая машина на своём месте не
      пишется вовсе — охраны на этажах много, а память браузера не резиновая */
   var defs = {};
   CUR().fl.foes.forEach(function (d) { defs[d.id] = d; });
@@ -812,7 +812,7 @@ function routeStep(f) {
   var p = f.route[f.ri];
   if (!p || Math.abs(f.x - p[0]) + Math.abs(f.y - p[1]) <= 1) {
     f.ri++; f.stuck = 0;
-    /* (1.7) у патрульного свой участок: обошёл, что велело ОКО, — назад к нему */
+    /* (2.0) у патрульного свой участок: обошёл, что велело ОКО, — назад к нему */
     if (f.ri >= f.route.length && f.beat) { f.route = null; f.ri = 0; return; }
     if (f.ri >= f.route.length) { f.route = makeRoute(f); f.ri = 0; }
     if (Math.random() < 0.2) A("foeSound", f, "idle");
@@ -821,7 +821,7 @@ function routeStep(f) {
   if (stepToward(f, p[0], p[1])) f.stuck = 0;
   else if (++f.stuck > 4) { f.stuck = 0; f.ri++; }
 }
-/* (1.7) Участок обхода: точки вдоль коридоров туда-обратно. Дошёл до
+/* (2.0) Участок обхода: точки вдоль коридоров туда-обратно. Дошёл до
    точки — к следующей; дошёл до края — разворот. Путь перекрыт (дверь,
    машина) — разворот раньше. */
 function beatStep(f) {
@@ -837,7 +837,7 @@ function beatStep(f) {
   }
   if (stepToward(f, p[0], p[1])) f.stuck = 0; else f.stuck++;
 }
-/* (1.7) Рабочая машина кабинета: возится у своего места, иногда проходит
+/* (2.0) Рабочая машина кабинета: возится у своего места, иногда проходит
    по помещению; шум работы слышно из-за двери. */
 function workIdle(f, canMove) {
   var p = f.post;
@@ -847,7 +847,7 @@ function workIdle(f, canMove) {
   if (Math.abs(f.x - p.x) + Math.abs(f.y - p.y) > 3) { if (!stepToward(f, p.x, p.y) && ++f.stuck > 6) { f.stuck = 0; f.post = { x: f.x, y: f.y }; } return; }
   if (Math.random() < 0.3) wander(f);
 }
-/* (1.7) Сапёр ОКО по приказу: идёт к точке, три такта ставит ловушку —
+/* (2.0) Сапёр ОКО по приказу: идёт к точке, три такта ставит ловушку —
    слышно лязг и щелчок взвода; потом к следующей; точки кончились — назад
    на свой участок. Видели, как ставит, — ловушка известна. */
 function mineTask(f) {
@@ -1101,7 +1101,7 @@ function foeTick(f, spotted) {
   if (f.state === "flee" && f.hp > f.maxhp * 0.6) f.state = "hunt";
   /* подбитая машина ушла — и передала ОКО, где видела вас последний раз */
   if (f.state === "flee" && f.kind === "mech" && !f.fledRep && f.lastKnown && dist(f, heroPos()) >= 10 && netUp() && LAB.oko) { f.fledRep = true; A("foeSound", f, "radio"); LAB.oko.event("robot", { x: f.lastKnown.x, y: f.lastKnown.y }); }
-  /* (1.7) носитель прошёл в двух шагах от патрульного, и тот доложил «чисто» — ОКО не верит */
+  /* (2.0) носитель прошёл в двух шагах от патрульного, и тот доложил «чисто» — ОКО не верит */
   if (f.state === "idle" && !sense && (f.beat || f.route) && f.kind === "mech" && cheb(f, heroPos()) <= 2 && (f.slipT || 0) <= tickN && LAB.oko && LAB.oko.react) { f.slipT = tickN + 120; LAB.oko.react("patrol_slip"); }
 
   f.mv++; f.at++;
@@ -1397,7 +1397,7 @@ function hurtPlayer(dmg, adt, src, opts) {
     if (hpMark > marks[i] && pct <= marks[i]) { sayq("Здоровье " + g.hp + "."); if (marks[i] <= 30 && !(g.inv.medkit_s > 0 || g.inv.medkit_l > 0)) sayq("Аптечек нет — отступайте."); break; }
   }
   hpMark = pct;
-  /* (1.7) ОКО слышит, что носитель ранен — и злорадствует или «заботится» */
+  /* (2.0) ОКО слышит, что носитель ранен — и злорадствует или «заботится» */
   if (LAB.oko && LAB.oko.react && !opts.quiet) LAB.oko.react(pct <= 30 ? "low_hp" : "hurt");
   UIx("refresh");
   return fin;
@@ -1690,7 +1690,7 @@ function kill(f, quiet) {
   fs.foes[f.id] = { dead: true };
   g.stats.kills++;
   if (LAB.ach) { LAB.ach.ev("kill", 1); if (f.kind === "mech") LAB.ach.ev("kill_mech", 1); if (f.boss) LAB.ach.ev("boss", 1); }
-  /* (1.7) ОКО отвечает на потери: машина, тварь, турель — или серия подряд */
+  /* (2.0) ОКО отвечает на потери: машина, тварь, турель — или серия подряд */
   if (LAB.oko && LAB.oko.react && !f.ally && !f.boss) {
     var kn = Date.now();
     killTimes = killTimes.filter(function (t) { return kn - t < 20000; }); killTimes.push(kn);
@@ -2160,7 +2160,7 @@ function announceSpotted(list) {
   if (!G().drawn && !G().tut.drawHint && (!LAB.tutor || LAB.tutor.hintsOn())) { G().tut.drawHint = 1; sayq(LAB.K("Выньте оружие: одно касание тремя пальцами. Затем свайп в сторону врага — выстрел.", "Достаньте оружие: R. Затем стрелка в сторону врага — выстрел.")); }
 }
 
-/* ════════ ГРАНАТЫ (1.7) ════════
+/* ════════ ГРАНАТЫ (2.0) ════════
    Бросок — жест влево-вправо одним пальцем или клавиша Y: летит выбранная
    граната (вправо-влево или Shift+Y — выбрать), туда, куда вы смотрите.
    В рюкзаке одна граната — выбирать нечего, летит она. ЭМИ-граната,

@@ -109,7 +109,7 @@ function ev(name, n) {
   if (maxT) s.c[name] = Math.max(s.c[name] || 0, n); else s.c[name] = (s.c[name] || 0) + n;
   if (name === "bought") s.c.bought_n = (s.c.bought_n || 0) + 1;
   check(name);
-  /* (1.7) ОКО замечает многое из того же, что считают достижения, и отвечает
+  /* (2.0) ОКО замечает многое из того же, что считают достижения, и отвечает
      репликой — не на каждое и не дважды подряд (oko.js, таблица REACT) */
   if (OKO_REACT[name] && LAB.oko && LAB.oko.react) LAB.oko.react(OKO_REACT[name]);
 }

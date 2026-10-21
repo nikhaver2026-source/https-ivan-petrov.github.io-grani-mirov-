@@ -63,7 +63,7 @@ LAB.Rng = Rng;
 /* логические замки (1.6): виды задач — в puzzles.js */
 var LOGIC_KINDS = ["breaker", "decon", "labels", "dosim", "shifts", "tally"];
 LAB.LOGIC_KINDS = LOGIC_KINDS;
-/* (1.7) К прежним логическим задачам — новые (puzzles2.js), у каждой три
+/* (2.0) К прежним логическим задачам — новые (puzzles2.js), у каждой три
    ступени: простая, средняя, сложная. Вид и ступень выбирает свой поток
    случайностей — остальное на этаже от них не меняется. Чем глубже, тем
    чаще средние и сложные; на первом уровне — почти всегда простые. */
@@ -179,7 +179,7 @@ function recentPool(table, depthOf, L, skip) {
   }
   return { all: pool, recent: recent };
 }
-/* (1.7) Канал вещи: у оружия и гранат глубин (arsenal.js) путь один — src
+/* (2.0) Канал вещи: у оружия и гранат глубин (arsenal.js) путь один — src
    "craft" (только верстак), "find" (только находка), "buy" (только продажа);
    у вещи без src — любой. Добыча — канал "find", прилавок — "buy". */
 LAB.srcOk = function (d, ch) { var s = d && d.src; return !(s === "craft" || s === "find" || s === "buy") || s === ch; };
@@ -972,7 +972,7 @@ function genFloor(seed, L, F, attempt) {
   if (LAB.FOES[clPool[0]] && !(L === 1 && F === 1)) {
     for (var c8 = r.chance(0.6) ? r.int(1, 2) : 0; c8 > 0; c8--) addFoe(r.pick(clPool), r.pick(mainRooms));
   }
-  /* (1.7) патрули в коридорах — garrison.js: участки обхода, больше и чаще */
+  /* (2.0) патрули в коридорах — garrison.js: участки обхода, больше и чаще */
 
   /* 17. Выжившие, дружественные роботы, станции имплантов, штабы фракций. */
   var quietRooms = [];
@@ -1095,7 +1095,7 @@ function genFloor(seed, L, F, attempt) {
      самыми последними и своим потоком случайностей (annex.js). */
   if (LAB.annex && LAB.annex.place) LAB.annex.place({ fl: fl, L: L, F: F, seed: seed, attempt: attempt, addObj: addObj, addItem: addItem, makeFoe: makeFoe, freeCell: freeCell });
 
-  /* 20б. (1.7) Стенды с задачами в кабинетах: лаборатории, серверные,
+  /* 20б. (2.0) Стенды с задачами в кабинетах: лаборатории, серверные,
      мастерские, щитовые, кабинеты, классы — своим потоком. В лотке —
      кредиты, детали и припасы, без оружия и брони. */
   if (LAB.garrison && LAB.puzzles2) {
@@ -1113,7 +1113,7 @@ function genFloor(seed, L, F, attempt) {
     }
   }
 
-  /* 21. (1.7) Охрана этажа: патрули в коридорах, сапёры, машины в кабинетах
+  /* 21. (2.0) Охрана этажа: патрули в коридорах, сапёры, машины в кабинетах
      по важности и назначению (garrison.js) — последними, своим потоком. */
   if (LAB.garrison && LAB.garrison.place) LAB.garrison.place({ fl: fl, L: L, F: F, seed: seed, attempt: attempt, makeFoe: makeFoe });
 

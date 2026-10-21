@@ -3,11 +3,11 @@
    Один палец: свайп — шаг (оружие убрано) или выстрел в ту сторону
    (оружие в руках); свайп с удержанием — идти дальше или стрелять
    очередью; влево-вправо одним движением — бросить гранату, вправо-влево —
-   выбрать гранату; вверх-вниз — поставить ловушку, вниз-вверх — мину (1.7);
+   выбрать гранату; вверх-вниз — поставить ловушку, вниз-вверх — мину (2.0);
    касание — что рядом; долгое касание — повторить фразу; двойное касание —
    действия у двери, терминала, установки.
    Два пальца: вверх — осмотреться, влево — аптечка, вправо — навигатор,
-   вниз — сканер; касание — перезарядить, двойное — сменить оружие (1.7).
+   вниз — сканер; касание — перезарядить, двойное — сменить оружие (2.0).
    Три пальца: касание — вынуть или убрать оружие, вверх — персонаж,
    вниз — инвентарь, влево — задания и журнал, вправо — навигатор целей.
    Четыре пальца: касание — здоровье и заряд, двойное касание — импланты,
@@ -213,7 +213,7 @@ function gameGesture(g) {
       return;
     }
     if (g.kind === "zig") {
-      /* (1.7) влево-вправо — бросить гранату, вправо-влево — выбрать гранату;
+      /* (2.0) влево-вправо — бросить гранату, вправо-влево — выбрать гранату;
          вверх-вниз — поставить ловушку, вниз-вверх — мину (и с оружием в руках) */
       if (g.dir === "L") { if (LAB.combat && LAB.combat.throwQuick) LAB.combat.throwQuick(); return; }
       if (g.dir === "R") { if (LAB.combat && LAB.combat.pickGrenade) LAB.combat.pickGrenade(false); return; }
@@ -222,7 +222,7 @@ function gameGesture(g) {
     }
     if (g.kind === "tap") { game.nearbyInfo(); return; }
     if (g.kind === "dtap") { game.interact(); return; }
-    /* долгое касание одним пальцем — повторить последнюю фразу (1.7) */
+    /* долгое касание одним пальцем — повторить последнюю фразу (2.0) */
     if (g.kind === "press") { repeatLast(); return; }
   }
   if (g.n === 2) {
@@ -233,7 +233,7 @@ function gameGesture(g) {
       else if (g.dir === "D") { if (G.implants.indexOf("scan") >= 0) LAB.combat.useImplant("scan"); else game.lookAround(); }
       return;
     }
-    /* (1.7) касание двумя пальцами — перезарядить, двойное — сменить оружие */
+    /* (2.0) касание двумя пальцами — перезарядить, двойное — сменить оружие */
     if (g.kind === "tap") { game.reload(); return; }
     if (g.kind === "dtap") { game.switchWeapon(1); return; }
   }
@@ -379,7 +379,7 @@ function gameKey(e, k) {
     case "l": if (LAB.traps) LAB.traps.menu(); return true;
     case "p": if (LAB.traps && LAB.traps.quick) LAB.traps.quick("trap"); return true;
     case "o": if (LAB.traps && LAB.traps.quick) LAB.traps.quick("mine"); return true;
-    /* (1.7) Y — бросить гранату, Shift+Y — выбрать гранату */
+    /* (2.0) Y — бросить гранату, Shift+Y — выбрать гранату */
     case "y": if (LAB.combat && LAB.combat.throwQuick) { if (e.shiftKey) LAB.combat.pickGrenade(false); else LAB.combat.throwQuick(); } return true;
     case "Escape": case "Backspace": if (window.labBack) window.labBack(); return true;
     case "F1": if (LAB.guide) LAB.guide.open(); return true;

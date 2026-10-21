@@ -298,7 +298,7 @@ function enterFloor(L, F) {
     var oldBed = bed && bed.id;
     if (bed && bed.h) bed.h.stop(2.5);
     var bid = lev.amb;
-    /* (1.7) фон уровня — запись низкого гула машин: машинный зал, серверная,
+    /* (2.0) фон уровня — запись низкого гула машин: машинный зал, серверная,
        электрощитовая, машинное отделение; в коридоре звучит только он */
     bed = { L: L, id: bid, h: loop(bid, { bus: "amb", gain: bedGain(), fadeIn: 3, reverb: 0 }, "bed") };
     if (oldBed && oldBed !== bid) releaseLater(oldBed, 3500);
@@ -335,7 +335,7 @@ function synthBed(L) {
   s.lfo(0.07, 60, f.frequency);
   synthBedS = s;
 }
-/* (1.7) Громкость фона уровня: в коридоре — полная; в помещении, где гудят
+/* (2.0) Громкость фона уровня: в коридоре — полная; в помещении, где гудят
    свои машины (своя петля помещения), гул уровня отходит на второй план. */
 var BED_GAIN = 0.62, BED_DUCK = 0.38;
 function bedGain() { return roomLoop ? BED_DUCK : BED_GAIN; }
@@ -346,7 +346,7 @@ function setRoom(r) {
   roomLoopId = id;
   var prevLid = roomLid;
   if (roomLoop) { roomLoop.stop(1.2); roomLoop = null; }
-  /* (1.7) в коридоре своей петли нет — там звучит сам гул уровня */
+  /* (2.0) в коридоре своей петли нет — там звучит сам гул уровня */
   var lid = !id || id === "corridor" ? "" : id;
   roomLid = lid;
   /* гул прошлого помещения — из памяти */

@@ -353,7 +353,7 @@ def loopify(a, xf):
     return np.concatenate([mixed, a[n:-n]])
 
 def widen(path, lo2, shift, a, xf):
-    """(1.7) Ширина фона: узкая или моно-запись становится широкой — левый
+    """(2.0) Ширина фона: узкая или моно-запись становится широкой — левый
     канал — середина (L+R)/2 выбранного места записи, правый — та же запись
     на shift секунд дальше (или раньше); у каждого канала своя петля той же
     длины, громкость каналов выровнена. Гул тот же, но по сторонам разный,
@@ -854,7 +854,7 @@ E("phase_in", "sfx", [S(A, "lab_git_freedoom", "dstelept.flac")])
 E("w_magnetron_r", "mixv", [[L(FS(699655), 0.0, 0.8), L(FS(330629, dur=1.1, af=PITCH(0.85)), 0.0, 0.9), L(FS(209860, dur=0.8, af="highpass=f=150"), 0.05, 0.5)], [L(FS(699655, af=PITCH(1.06)), 0.0, 0.8), L(FS(330629, dur=1.1, af=PITCH(0.8)), 0.0, 0.9), L(FS(210878, start=0.5, dur=0.6), 0.0, 0.4)]], mx=1.3, tgt=-14.5)
 
 # ═════ ФОН: уровни, помещения, события ═════
-# (1.7) Фон уровня — низкий гул машин: машинные залы, серверные, электрощитовая,
+# (2.0) Фон уровня — низкий гул машин: машинные залы, серверные, электрощитовая,
 # кондиционеры, машинное отделение (Freesound, CC0, заход 6 — tools/sfx-fetch,
 # группа amb17). Прежние записи фона убраны. Петля — 48 с из самого ровного места
 # записи (без щелчков и перепадов), стык сведён за 4 с; ниже 32 Гц срезано —
@@ -871,13 +871,13 @@ E("amb_l7", "loop", [FS(536529, af=HUM)], seg=(9, 48), xf=4.0, ch=2, v=0.9, wide
 E("amb_l8", "loop", [FS(434507, af=HUM)], seg=(0, 48), xf=4.0, ch=2, v=0.9, wide=30)     # станочный гул: оружейные
 E("amb_l9", "loop", [FS(536525, af=HUM)], seg=(8, 48), xf=4.0, ch=2, v=0.9, wide=-8)     # серверная с электрозудом: ускоритель
 E("amb_l10", "loop", [FS(74915, af=HUM)], seg=(6, 48), xf=4.0, ch=2, v=0.9, wide=-6)     # машинное отделение: Ядро
-E("room_server", "loop", [FS(646682, af=HUM)], seg=(1, 30), xf=3.0, ch=2, v=0.6, wide=24)   # (1.7) серверная
+E("room_server", "loop", [FS(646682, af=HUM)], seg=(1, 30), xf=3.0, ch=2, v=0.6, wide=24)   # (2.0) серверная
 E("room_radio", "loop", [S(A, "lab_retrocomp*", "*.mp3")], seg=(10, 14), xf=1.0, v=0.5)
 E("room_generator", "loop", [S(A, "lab_steam_generator*", "*.flac")], seg=(1, 18), xf=1.5, v=0.8)
 E("room_transformer", "loop", [S(B, "bsb_lab_transformer", "2118*")], seg=(0.5, 9), xf=1.0, v=0.6)
 E("room_magnetron", "loop", [S(C, "lab_emfields*", "EM Fields 01.flac")], seg=(1, 18), xf=2.0, v=0.7)
 E("room_electric", "loop", [S(C, "lab_emfields*", "EM Fields 04.flac")], seg=(1, 11), xf=1.0, v=0.6)
-E("room_hum", "loop", [FS(203295, af=HUM)], seg=(11, 30), xf=3.0, ch=2, v=0.5)   # (1.7) гул кабинета
+E("room_hum", "loop", [FS(203295, af=HUM)], seg=(11, 30), xf=3.0, ch=2, v=0.5)   # (2.0) гул кабинета
 E("room_cryo", "loop", [S(B, "bsb_lab_compressor", "1487*")], seg=(4, 22), xf=2.0, v=0.6)
 E("room_compressor", "loop", [S(B, "bsb_lab_compressor", "3092*")], seg=(4, 22), xf=2.0, v=0.6)
 E("room_drip", "loop", [S(C, "lab_horrorlib*", "Blood_Dripping_Loop_00.mp3")], seg=(0, 15), xf=1.0, v=0.7)
@@ -887,14 +887,14 @@ E("room_creatures", "loop", [S(A, "lab_ghoul*", "*.ogg")], seg=(2, 20), xf=2.0, 
 E("room_incubator", "loop", [S(A, "lab_scifi50*", "loop_ambient_weird.ogg")], seg=(0, 3.1), xf=0.4, v=0.5)
 E("room_factory", "loop", [S(A, "lab_scifi50*", "loop_machine_02.ogg")], seg=(0, 3.1), xf=0.3, v=0.6)
 E("room_ring", "loop", [S(A, "lab_scifi_k*", "engineCircular_001.ogg")], seg=(0, 5), xf=0.6, v=0.6)
-E("room_reactor", "loop", [FS(144046, af=HUM)], seg=(71, 40), xf=4.0, ch=2, v=0.8)   # (1.7) низкий гул пульта
+E("room_reactor", "loop", [FS(144046, af=HUM)], seg=(71, 40), xf=4.0, ch=2, v=0.8)   # (2.0) низкий гул пульта
 E("room_fridge", "loop", [S(B, "bsb_lab_microwave", "2376*")], seg=(2, 10), xf=1.0, v=0.4)
 E("room_fountain", "loop", [S(A, "lab_water40*", "loop_water_02.ogg")], seg=(0, 7), xf=0.8, v=0.5)
 E("room_medical", "loop", [S(A, "lab_scifi50*", "loop_machine_03.ogg")], seg=(0, 4.6), xf=0.4, v=0.4)
 E("room_elevator", "loop", [S(A, "lab_scifi_k*", "engineCircular_003.ogg")], seg=(0, 5), xf=0.6, v=0.5)
 E("room_gate", "loop", [S(A, "lab_scifi_k*", "spaceEngineLow_002.ogg")], seg=(0, 5), xf=0.6, v=0.7)
 E("room_stairwell", "loop", [S(A, "lab_sfx100b*", "*loop_ambient_02.ogg")], seg=(0, 3), xf=0.4, v=0.5)
-# (1.7) отдельной петли коридора нет: в коридоре звучит сам гул уровня
+# (2.0) отдельной петли коридора нет: в коридоре звучит сам гул уровня
 # далёкие события комплекса
 E("ev_metal_groan", "sfx", [S(A, "lab_pings*", "*Marker #[1-9].flac"), S(A, "lab_pings*", "*Marker #1[0-9].flac")], n=12, mx=4.5)
 E("ev_vent_rattle", "sfx", [S(A, "lab_metalwood*", "metal_sheet_0[46].ogg"), S(A, "lab_metalwood*", "misc_0[1-3].ogg")], n=4)

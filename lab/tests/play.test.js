@@ -188,7 +188,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   await page.waitForTimeout(500);
   const ch1 = await page.evaluate(() => LAB.game.curWeapon().charge);
   ok(ch1 === ch0 - 1, "свайп с оружием — выстрел (заряд " + ch0 + "→" + ch1 + ")");
-  /* (1.7) касание двумя пальцами — перезарядка, двойное касание двумя — смена оружия */
+  /* (2.0) касание двумя пальцами — перезарядка, двойное касание двумя — смена оружия */
   await gest({ kind: "tap", n: 2 });
   await page.waitForTimeout(1100); /* перезарядка идёт почти секунду */
   ok(await page.evaluate(() => LAB.game.curWeapon().charge === LAB.game.curWeapon().cap), "касание двумя пальцами — перезарядка");
@@ -197,7 +197,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   const wiB = await page.evaluate(() => LAB.game.G.wi);
   ok(wiB !== wiA, "двойное касание двумя пальцами — смена оружия (" + wiA + "→" + wiB + ")");
   await page.evaluate(() => { LAB.game.G.wi = LAB.game.G.weapons.length - 1; });
-  /* (1.7) зигзаг влево-вправо — бросок гранаты, вправо-влево — выбор гранаты */
+  /* (2.0) зигзаг влево-вправо — бросок гранаты, вправо-влево — выбор гранаты */
   const gr = await page.evaluate(async () => {
     const G = LAB.game.G, out = {};
     G.inv.gren_frag = 2; G.inv.k_netbomb = 1; SPOKEN.length = 0;
@@ -2502,7 +2502,7 @@ LAB.ui.closeAll();
     out.logic = bot4.ally === true && bot4.allyT > 0;
     bot4.dead = true;
     T.list().length = 0;
-    /* (1.7) мина сапёра ОКО (одна система с ловушками по приказу ОКО): вплотную слышно всегда, обезвреживается, становится вашей */
+    /* (2.0) мина сапёра ОКО (одна система с ловушками по приказу ОКО): вплотную слышно всегда, обезвреживается, становится вашей */
     put(4);
     const mx = G.x + v[0], my = G.y + v[1];
     T.okoTrap("mine", mx, my, { dmg: 20 });
@@ -2691,7 +2691,7 @@ LAB.ui.closeAll();
     LAB.mini.gesture({ kind: "back", n: 1 }); await wait(100);
     out.instOff = !LAB.mini.active() && played >= 3;
     out.voice = LAB.instruments.voice("bell", 440, 0.3, 0) === true && LAB.instruments.voice("accordion", 330, 0.5, 0.2) === true;
-    /* ловушка — жест вверх-вниз, мина — вниз-вверх; (1.7) и с оружием в руках */
+    /* ловушка — жест вверх-вниз, мина — вниз-вверх; (2.0) и с оружием в руках */
     g.enterFloor(2, 4, "down", true); C.foes().forEach(f => { f.dead = true; }); G.dead = false; G.drawn = false; G.hp = G.hpMax;
     fl = g.CUR.fl;
     const free = (x, y) => LAB.inb(x, y) && (fl.t[y * LAB.W + x] === LAB.T.ROOM || fl.t[y * LAB.W + x] === LAB.T.CORR) && !fl.objAt[y * LAB.W + x];
@@ -2718,7 +2718,7 @@ LAB.ui.closeAll();
     /* маяки: у известной ловушки — свой источник; после скана у врага — метка и источник, который движется с ним */
     /* герой на третьей клетке, капкан и мина — на первых двух; враг — рядом, не на клетке героя (на нулевом расстоянии маяк не звучит) */
     const f0 = C.foes()[0];
-    /* (1.7) враг замирает: патрульный иначе уйдёт своим обходом, пока проверка ждёт маяк */
+    /* (2.0) враг замирает: патрульный иначе уйдёт своим обходом, пока проверка ждёт маяк */
     if (f0) { f0.dead = false; f0.hp = f0.maxhp; f0.x = cell[0] + 2; f0.y = cell[1] + 1; f0.state = "idle"; f0.frozen = 999; }
     C.useImplantFree("scan");
     out.mark = !!f0 && f0.mark > Date.now();

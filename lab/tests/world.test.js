@@ -61,14 +61,14 @@ for (let si = 0; si < seeds; si++) {
         }
       }
       if (F === 1 && L > 1 && !fl.objs.some(o => o.type === "gate_sealed")) err(`${at}: нет запечатанного шлюза наверх`);
-      /* (1.7) охрана этажа: патрули в коридорах (кроме самого первого этажа), машины в кабинетах (с третьего этажа) */
+      /* (2.0) охрана этажа: патрули в коридорах (кроме самого первого этажа), машины в кабинетах (с третьего этажа) */
       const gar = fl.garrison || { patrols: 0, robots: 0, sappers: 0 };
       if (!(L === 1 && F === 1) && gar.patrols < 1) err(`${at}: в коридорах нет патрулей`);
       if (L === 1 && F === 1 && gar.patrols) err(`${at}: на первом этаже патрули`);
       if ((L > 1 || F >= 3) && gar.robots < 1) err(`${at}: кабинеты без охраны`);
       if (fl.foes.some(f => f.beat && (!f.beat.length || f.beat.some(p => fl.t[p[1] * LAB.W + p[0]] === LAB.T.WALL)))) err(`${at}: участок обхода патруля задевает стену`);
       stat.patrols = (stat.patrols || 0) + gar.patrols; stat.guards = (stat.guards || 0) + gar.robots; stat.sappers = (stat.sappers || 0) + gar.sappers;
-      /* (1.7) головоломки: вид известен, ступень — 0, 1 или 2 */
+      /* (2.0) головоломки: вид известен, ступень — 0, 1 или 2 */
       for (const o of fl.objs) if (o.type === "puzzle" && (!LAB.puzzles.has(o.kind) && ["sort", "relays", "bulls", "riddle"].indexOf(o.kind) < 0 || [0, 1, 2].indexOf(o.diff) < 0)) err(`${at}: стенд с неизвестной задачей ${o.kind}/${o.diff}`);
       for (const d of fl.doors) if (d.lock && d.lock.type === "logic" && (!LAB.puzzles.has(d.lock.kind) || [0, 1, 2].indexOf(d.lock.diff) < 0)) err(`${at}: логический замок с неизвестной задачей ${d.lock.kind}/${d.lock.diff}`);
       stat.pz = (stat.pz || 0) + fl.objs.filter(o => o.type === "puzzle").length;

@@ -394,7 +394,7 @@ function chess(cb, opts) {
 }
 
 var FN = { breaker: breaker, decon: decon, labels: labels, dosim: dosim, shifts: shifts, tally: tally };
-/* (1.7) Новые виды задач подключаются отдельными модулями (puzzles2.js):
+/* (2.0) Новые виды задач подключаются отдельными модулями (puzzles2.js):
    register(вид, название, fn) — fn(seed, cb, opts); opts.diff — сложность
    0 простая, 1 средняя, 2 сложная (её задаёт этаж; без неё — по глубине). */
 var DIFFS = {};

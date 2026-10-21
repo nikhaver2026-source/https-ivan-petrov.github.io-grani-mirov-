@@ -216,7 +216,7 @@ function shelfPool(L) {
     var d = LAB.ITEMS[id];
     if (!d.price || d.surf || d.nosell || d.kind === "valuable" || id === "proto" || id === "okokey") continue;
     if (["food", "use", "throw", "deploy", "tool", "part", "wmodule", "trap"].indexOf(d.kind) < 0) continue;
-    if (!LAB.srcOk(d, "buy")) continue; /* (1.7) только верстак или только находка — не на прилавке */
+    if (!LAB.srcOk(d, "buy")) continue; /* (2.0) только верстак или только находка — не на прилавке */
     var dep = d.depth || (d.kind === "part" ? LAB.PART_DEPTH[id] || 1 : 1);
     if (dep > L || dep >= 99) continue;
     var c = catOf(id);

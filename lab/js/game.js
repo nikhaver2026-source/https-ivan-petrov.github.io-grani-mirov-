@@ -1075,7 +1075,7 @@ function roomCheck(full, run, mute) {
   var first = !CUR.fs.objs["room" + r.id];
   CUR.fs.objs["room" + r.id] = 1;
   if (first && r.annex && LAB.ach) LAB.ach.ev("room", 1);
-  /* (1.7) важное помещение (оружейная, пост охраны, серверная, хранилище) — ОКО это замечает */
+  /* (2.0) важное помещение (оружейная, пост охраны, серверная, хранилище) — ОКО это замечает */
   if (first && r.annex && LAB.garrison && LAB.oko && LAB.oko.react && LAB.garrison.CAT[LAB.garrison.category(r)].imp >= 3) LAB.oko.react("vault", { room: r.name });
   var parts = [r.name + "."];
   if (first || full) {
@@ -1762,7 +1762,7 @@ function puzzleMenu(o) {
         if (!ok) { A("play", "term_err"); say("Стенд гаснет и снова загорается: можно попробовать ещё раз."); return; }
         st.solved = true; A("play", "term_ok"); LAB.UI.fanfare(); gainXP(18 + 10 * (o.diff || 0));
         var loot = (o.loot || []).slice(); loot.forEach(function (it, k) { if (!it.id) it.id = o.id + "-p" + k; });
-        /* (1.7) за среднюю и сложную задачу — премия кредитами */
+        /* (2.0) за среднюю и сложную задачу — премия кредитами */
         var prize = o.diff ? LAB.credits(15 * o.diff, G.L, G.F) : 0;
         if (prize) G.credits += prize;
         say("Испытание пройдено! Лоток стенда открылся. " + (loot.length ? "Найдено: " + loot.map(function (it) { return giveItem(it); }).join(" ") : "Внутри пусто.") + (prize ? " Премия за сложность: " + prize + " " + plural(prize, "кредит", "кредита", "кредитов") + "." : ""));
@@ -2670,7 +2670,7 @@ game.finale = finale;
 /* ════════ ВЫЖИВШИЕ ════════ */
 function npcMenu(n) {
   var items = [];
-  /* (1.7) живой человек рядом с носителем — ОКО это не нравится */
+  /* (2.0) живой человек рядом с носителем — ОКО это не нравится */
   if (!n.robot && !n.okoSaw) { n.okoSaw = 1; if (LAB.oko && LAB.oko.react) later(function () { LAB.oko.react("survivor"); }, 4000); }
   if (n.robot) {
     var lines = LAB.ROBOT_LINES[n.type] || ["..."];
@@ -3271,7 +3271,7 @@ function die() {
     if (cp && cp.L === G.L) enterFloor(cp.L, cp.F, "respawn");
     else enterFloor(G.L, 1, "restart");
     if (LAB.combat) LAB.combat.calmAll();
-    /* (1.7) ОКО видело, как носитель вернулся */
+    /* (2.0) ОКО видело, как носитель вернулся */
     later(function () { if (LAB.oko && LAB.oko.react) LAB.oko.react("revive"); }, 5000);
   }, 4200);
 }
