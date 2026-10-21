@@ -199,7 +199,45 @@ LAB.genWeapon = function (r, L, F, opts) {
 /* ── ЭТАЖ ── */
 var floorCache = {};
 var cacheOrder = [];
+/* (2.0) Твари и машины — на каждом уровне, и чем глубже, тем разнообразнее.
+   В списках части уровней одни машины (блоки, где машины взяли верх): туда
+   добавляются твари своего семейства (та же приставка имени, что у машин
+   уровня), а нет своих — уже встречавшиеся выше. Всем уровням добавляются
+   виды прежних глубин: старые модели и твари никуда не делись, список
+   растёт с глубиной. Один раз, когда все блоки уже подключены. */
+LAB.enrichLevelFoes = function () {
+  var N = LAB.LEVELS_N || 0, F0 = LAB.FOES;
+  if (LAB._foesRich || !N || !F0) return;
+  LAB._foesRich = true;
+  var usable = function (id) { var b = F0[id]; return !!b && !b.boss && !(b.beh || []).some(function (k) { return k === "turret" || k === "camera" || k === "stationary"; }); };
+  var prefix = function (id) { var m = /^([a-z])_/.exec(id); return m ? m[1] : ""; };
+  var fam = {};
+  Object.keys(F0).forEach(function (id) { if (F0[id].kind !== "mech" && usable(id)) (fam[prefix(id)] = fam[prefix(id)] || []).push(id); });
+  var seenBio = [], seenMech = [];
+  for (var L = 1; L <= N; L++) {
+    var lev = LAB.LEVELS[L];
+    if (!lev || !lev.foes) continue;
+    var list = lev.foes.slice(), nBio = list.filter(function (id) { return F0[id] && F0[id].kind !== "mech"; }).length;
+    var wantBio = Math.min(6, 2 + Math.ceil(L / 20)), px = "";
+    list.forEach(function (id) { if (!px && prefix(id)) px = prefix(id); });
+    var cand = (fam[px] || []).concat(seenBio.slice().reverse());
+    for (var i = 0; i < cand.length && nBio < wantBio; i++) if (list.indexOf(cand[i]) < 0) { list.push(cand[i]); nBio++; }
+    var want = Math.min(16, 6 + Math.ceil(L / 8)), older = seenMech.slice().reverse().concat(seenBio.slice().reverse());
+    for (var j = 0; j < older.length && list.length < want; j++) if (list.indexOf(older[j]) < 0) list.push(older[j]);
+    /* мутанты — на каждом уровне: где живут одни аномалии («Отражение», «Исток»),
+       добираются твари, встреченные выше (самые глубокие — первыми) */
+    var flesh = list.filter(function (id) { return F0[id] && F0[id].kind === "bio"; }).length;
+    for (var b = seenBio.length - 1; b >= 0 && flesh < 2; b--) if (F0[seenBio[b]].kind === "bio" && list.indexOf(seenBio[b]) < 0) { list.push(seenBio[b]); flesh++; }
+    lev.foes = list;
+    list.forEach(function (id) {
+      if (!usable(id)) return;
+      if (F0[id].kind === "mech") { if (seenMech.indexOf(id) < 0) seenMech.push(id); }
+      else if (seenBio.indexOf(id) < 0) seenBio.push(id);
+    });
+  }
+};
 LAB.getFloor = function (seed, L, F) {
+  LAB.enrichLevelFoes();
   var key = seed + ":" + L + ":" + F;
   if (floorCache[key]) return floorCache[key];
   var fl = null;
@@ -207,7 +245,9 @@ LAB.getFloor = function (seed, L, F) {
   if (!fl) throw new Error("этаж не построился: " + key);
   floorCache[key] = fl;
   cacheOrder.push(key);
-  if (cacheOrder.length > 16) delete floorCache[cacheOrder.shift()];
+  /* облегчённый режим — в памяти меньше готовых этажей: недавние строятся заново за доли секунды */
+  var keepN = LAB.settings && LAB.settings.lite ? 4 : 16;
+  while (cacheOrder.length > keepN) delete floorCache[cacheOrder.shift()];
   return fl;
 };
 LAB.clearFloorCache = function () { floorCache = {}; cacheOrder = []; };
@@ -880,6 +920,10 @@ function genFloor(seed, L, F, attempt) {
     itemCell[idx(x, y)] = 1;
     return f2;
   }
+  function roomGuard(fid) {
+    var b = LAB.FOES[fid];
+    return !!b && b.kind === "mech" && !b.beh.some(function (x) { return /^(stationary|camera|turret|cleaner|mimic|stalker)$/.test(x); });
+  }
   function addFoe(fid, s2, extra) {
     var c5 = standCell(s2);
     if (!c5) return null;
@@ -900,21 +944,24 @@ function genFloor(seed, L, F, attempt) {
     }
     return cand.length ? r.pick(cand) : null;
   }
-  var soft = L === 1 && F <= 2;
   for (s = 0; s < NS; s++) {
     var rm6 = rooms[s];
     if (!rm6 || s === U || s === secret) continue;
-    if (L === 1 && F === 1 && zone[s] === -1 && r.chance(0.6)) continue; /* мягкое начало */
-    /* тварей и роботов много: почти в каждом помещении, глубже — стаями */
-    var p6 = Math.min(0.93, 0.62 + 0.03 * Math.min(L, 10) + d0 * 0.00008 + (F === NF ? 0.1 : 0));
+    /* тварей и роботов много: почти в каждом помещении, глубже — стаями;
+       (2.0) «мягкого начала» больше нет — и на первом этаже тоже */
+    var p6 = Math.min(0.95, 0.75 + 0.02 * Math.min(L, 10) + d0 * 0.0001 + (F === NF ? 0.1 : 0));
     if (s === E) p6 *= 0.5;
-    if (soft) p6 *= 0.75; /* первые шаги после пробуждения */
     if (!r.chance(p6)) continue;
     var fid2 = r.pick(foePool);
     var beh = LAB.FOES[fid2].beh;
     var big = (rm6.x1 - rm6.x0 + 1) * (rm6.y1 - rm6.y0 + 1) >= 49 ? 1 : 0;
     var cnt = beh.indexOf("swarm") >= 0 ? r.int(3, 4) : 1 + (r.chance(Math.min(0.85, 0.45 + Math.min(L, 10) * 0.03 + d0 * 0.0002)) ? 1 : 0) + (r.chance(Math.min(0.6, 0.1 + Math.min(L, 10) * 0.025 + d0 * 0.0002)) ? 1 : 0) + (big && r.chance(0.3) ? 1 : 0);
-    for (var q = 0; q < cnt; q++) addFoe(q === 0 ? fid2 : (r.chance(0.6) ? fid2 : r.pick(foePool)), s);
+    for (var q = 0; q < cnt; q++) {
+      var nf = addFoe(q === 0 ? fid2 : (r.chance(0.6) ? fid2 : r.pick(foePool)), s);
+      /* (2.0) машина помещения его и стережёт (как охрана кабинетов, garrison.js):
+         не уходит обходом в коридор, а погибнет — ОКО пришлёт в помещение новых */
+      if (nf && roomGuard(nf.type)) { nf.guard = "room"; nf.post = [nf.x, nf.y]; }
+    }
   }
   /* страж последнего этажа: шлюзовая ключ-карта при нём, если не спрятана */
   if (F === NF && bossSlot >= 0) {
@@ -1070,11 +1117,10 @@ function genFloor(seed, L, F, attempt) {
     var pool = mechG.length && (kind === "office" || rg.chance(0.6)) ? mechG : guardPool;
     return makeFoe(rg.pick(pool), c9[0], c9[1], s2, { id: "g" + (gN++), guard: kind, post: [c9[0], c9[1]] }, rg);
   }
-  if (!(L === 1 && F <= 2)) {
-    var nPost = function () { return 1 + (rg.chance(Math.min(0.75, 0.2 + d0 * 0.004)) ? 1 : 0) + (d0 >= 120 && rg.chance(0.4) ? 1 : 0); };
-    var objOf = function (tp) { return fl.objs.filter(function (o) { return o.type === tp; })[0]; };
-    for (var g1 = nPost(); g1 > 0; g1--) addGuard(E, objOf("elevator"), "lift");
-    if (F < NF) for (var g2 = nPost(); g2 > 0; g2--) addGuard(D, objOf("stairs_down"), "stairs");
+  /* (2.0) стражи у лифта, лестниц и шлюза — в garrison.js (посты охраны
+     этажа, с первого этажа); здесь — стражи терминалов безопасности и
+     сейфов в главных помещениях, тоже с первого этажа */
+  {
     for (s = 0; s < NS; s++) {
       if (!rooms[s] || !main[s] || s === U || s === D || s === E || s === secret || s === bossSlot) continue;
       var key9 = fl.objs.filter(function (o) { return o.room === s && o.type === "terminal" && o.sub === "sec"; })[0];

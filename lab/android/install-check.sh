@@ -18,7 +18,7 @@ adb shell dumpsys package com.google.android.webview 2>/dev/null | grep -m1 vers
 adb logcat -c
 adb shell am start -W -n $PKG/.MainActivity --ez lab_selftest true
 RES=""
-for i in $(seq 1 150); do
+for i in $(seq 1 240); do
   RES=$(adb logcat -d -s LabJS:* | grep -E "selftest (ok|FAIL)" || true)
   [ -n "$RES" ] && break
   # раз в минуту — жив ли процесс игры и сколько он занимает

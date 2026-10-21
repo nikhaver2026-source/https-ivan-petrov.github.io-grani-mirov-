@@ -271,7 +271,8 @@ else {
     else protocol.registerFileProtocol('app', (request, cb) => { const f = gameFile(request.url); cb(f ? { path: f } : { error: -10 }); });
     Menu.setApplicationMenu(null);
     createWindow();
-    if (SELFTEST) setTimeout(() => { log('selftest FAIL: нет итога за 150 с'); app.exit(2); }, 150000);
+    // (2.0) этажи плотнее (сотни машин), обход всех уровней дольше — запас по времени больше
+    if (SELFTEST) setTimeout(() => { log('selftest FAIL: нет итога за 240 с'); app.exit(2); }, 240000);
   });
   app.on('window-all-closed', () => app.quit());
   app.on('will-quit', () => { if (sapi) sapi.quit(); });

@@ -27,6 +27,10 @@ var LAB = window.LAB, AE = LAB.AE, Bank = LAB.Bank, S = LAB.settings;
 var MOBILE = /Android|iPhone|iPad|iPod/i.test((navigator && navigator.userAgent) || "");
 /* пределы голосов: на телефоне меньше — иначе треск и пропуски */
 var LIMIT = { total: MOBILE ? 40 : 64, fx: MOBILE ? 24 : 40, amb: 8, ui: 32, puzzle: 32, beacon: 8, music: 4, voice: 4 };
+/* облегчённый режим: голосов сразу меньше — слабому телефону легче; важные
+   звуки (выстрел, попадание, шаг, меню) по-прежнему вытесняют неважные */
+var LIMIT_LITE = { total: MOBILE ? 24 : 36, fx: MOBILE ? 14 : 22, amb: 5, ui: 20, puzzle: 24, beacon: 6, music: 3, voice: 4 };
+function lim(bus) { var L = S.lite ? LIMIT_LITE : LIMIT; return bus === "total" ? L.total : (L[bus] || L.fx); }
 /* одинаковых звуков сразу — не больше трёх; ноты мелодии (тоны) ставятся
    в расписание пачкой — им свой предел */
 var PER_ID = 3, PER_ID_OF = { tone: 32, synth: 8 };
@@ -89,8 +93,8 @@ function steal(pred, prio) {
 function room(id, bus, prio) {
   gc();
   if (count(function (v) { return v.id === id; }) >= (PER_ID_OF[id] || PER_ID) && !steal(function (v) { return v.id === id; }, prio)) return false;
-  if (count(function (v) { return v.bus === bus; }) >= (LIMIT[bus] || LIMIT.fx) && !steal(function (v) { return v.bus === bus; }, prio)) return false;
-  if (voices.length >= LIMIT.total && !steal(function () { return true; }, prio)) return false;
+  if (count(function (v) { return v.bus === bus; }) >= lim(bus) && !steal(function (v) { return v.bus === bus; }, prio)) return false;
+  if (voices.length >= lim("total") && !steal(function () { return true; }, prio)) return false;
   return true;
 }
 function track(id, bus, prio, h, o) {
@@ -362,7 +366,7 @@ LAB.Sound = {
     var sl = {}; for (var k in slots) if (slots[k]) sl[k] = { id: slots[k].id, on: !!(slots[k].h && !slots[k].h.stopped), loading: slots[k].loading };
     return { ctx: AE.ctx ? AE.ctx.state : "none", voices: voices.length, pending: pend.length, slots: sl, stats: copy(st) };
   },
-  LIMIT: LIMIT,
+  LIMIT: LIMIT, LIMIT_LITE: LIMIT_LITE, lim: lim,
   /* для проверки: оборвать источник петли, как при сбое (ячейка об этом не знает) */
   _breakSlot: function (name) { var s = slots[name]; if (s && s.h && s.h.src) { try { s.h.src.stop(); } catch (e) { /* */ } } }
 };

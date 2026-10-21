@@ -1,20 +1,21 @@
-/* «Подземная лаборатория» для Android 9 и новее: вся игра — страница,
-   код, голос eSpeak, все записи звука и музыки — лежит внутри приложения,
-   в assets/www, и открывается в WebView без сети. Папку www собирает
-   рабочий процесс .github/workflows/lab-android.yml из папки lab — в git
-   её нет. */
+/* «Подземная лаборатория» для Android 9 и новее — по Android 17
+   включительно: вся игра — страница, код, голос eSpeak, все записи звука и
+   музыки — лежит внутри приложения, в assets/www, и открывается в WebView
+   без сети. Папку www собирает рабочий процесс .github/workflows/lab-android.yml
+   из папки lab — в git её нет. Целевой API — 37 (Android 17): AGP 9.4,
+   Gradle 9.6, JDK 17. */
 plugins {
     id 'com.android.application'
 }
 
 android {
     namespace 'io.github.granimirov.lab'
-    compileSdk 36
+    compileSdk 37
 
     defaultConfig {
         applicationId 'io.github.granimirov.lab'
         minSdk 28            // Android 9
-        targetSdk 36
+        targetSdk 37
         /* Номер сборки растёт с каждым запуском рабочего процесса: новая
            версия ставится поверх прежней, сохранения остаются. */
         versionCode(2000 + ((System.getenv('BUILD_NUMBER') ?: '0') as int))

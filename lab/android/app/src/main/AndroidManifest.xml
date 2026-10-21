@@ -12,9 +12,12 @@
         </intent>
     </queries>
 
+    <!-- appCategory="game": игра. На планшетах с Android 17 система не отменяет
+         поворот экрана, который задаёт игра (инструменты — горизонтально). -->
     <application
         android:label="Подземная лаборатория"
         android:icon="@mipmap/ic_launcher"
+        android:appCategory="game"
         android:allowBackup="true"
         android:hasFragileUserData="true"
         android:enableOnBackInvokedCallback="true"

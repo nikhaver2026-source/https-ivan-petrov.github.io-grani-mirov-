@@ -182,7 +182,7 @@ jobs:
           STEP=""
           for i in 1 2 3; do
             set +e
-            timeout 240 "./$APPDIR/$EXE" --lab-selftest $STEP
+            timeout 330 "./$APPDIR/$EXE" --lab-selftest $STEP
             code=$?
             set -e
             cat "$LAB_LOG" || true
@@ -222,7 +222,7 @@ jobs:
           STEP=""
           for i in 1 2 3; do
             set +e
-            timeout 240 "./$APPDIR/$EXE" --lab-selftest $STEP
+            timeout 330 "./$APPDIR/$EXE" --lab-selftest $STEP
             code=$?
             set -e
             cat "$LAB_LOG" || true

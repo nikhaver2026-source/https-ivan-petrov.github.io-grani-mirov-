@@ -7,6 +7,8 @@
 "use strict";
 var LAB = window.LAB;
 var started = false;
+/* (2.0) все блоки подключены — списки тварей и машин уровней дополнены (world.js) */
+if (LAB.enrichLevelFoes) LAB.enrichLevelFoes();
 
 function start(e) {
   if (started) return;

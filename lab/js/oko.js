@@ -245,7 +245,7 @@ function setLevel(lv, why) {
     if (was === 5) return; /* блокировка снята, тревога продолжается */
     A("okoAlarm"); speak("complex", true);
     if (sn) cb.alertMech(sn.x, sn.y, 99);
-    if (!f.droneAt && !soft()) f.droneAt = T() + rnd(6, 20);
+    if (!f.droneAt) f.droneAt = T() + rnd(6, 20);
     if (sn) wave(rnd(10, 20), 1, "patrol", sn, "shift");
     return;
   }
@@ -343,7 +343,7 @@ function minesTarget() {
 }
 function minesOrder(at, why, n) {
   var f = fs(), cb = C(), g = G();
-  if (!f || !cb || soft() || f.okoBlind || g.L < 2 || !LAB.traps || !LAB.traps.okoTrap || !cb.minePoints) return false;
+  if (!f || !cb || f.okoBlind || g.L < 2 || !LAB.traps || !LAB.traps.okoTrap || !cb.minePoints) return false;
   var maxT = Math.min(10, 4 + Math.floor(g.L / 10));
   if (LAB.traps.okoCount() >= maxT) return false;
   var tgt = at ? { x: at.x, y: at.y, why: why || "заминировать подходы" } : minesTarget();
@@ -376,7 +376,7 @@ function minesOrder(at, why, n) {
 }
 function minesTick() {
   var f = fs(), o = st(), now = T();
-  if (!f || soft() || G().L < 2) return;
+  if (!f || G().L < 2) return;
   if (f.mineOrderAt && now >= f.mineOrderAt) { var at = f.mineOrderP; f.mineOrderAt = 0; f.mineOrderP = null; minesOrder(at, f.mineOrderWhy || ""); }
   if (!f.mineNext) f.mineNext = now + rnd(160, 320);
   else if (now >= f.mineNext) {
@@ -400,7 +400,7 @@ function floorIn(how) {
   if (!f.okoInit) {
     f.okoInit = 1;
     f.shiftAt = T() + rnd(70, 130);
-    if (!soft() && depth() >= 8 && Math.random() < Math.min(0.65, 0.2 + depth() * 0.004 + o.heat / 250)) f.droneAt = T() + rnd(60, 160);
+    if (depth() >= 8 && Math.random() < Math.min(0.65, 0.2 + depth() * 0.004 + o.heat / 250)) f.droneAt = T() + rnd(60, 160);
   }
   if (how === "elev") {
     report("lift", G().x, G().y, "suspect", "лифт прибыл");
@@ -522,7 +522,7 @@ function event(kind, data) {
       break;
     case "camera":
       report("camera", data.x != null ? data.x : g.x, data.y != null ? data.y : g.y, data.glimpse ? "suspect" : "seen", data.glimpse ? "движение на краю обзора" : "");
-      if (o.heat >= 30 && !f.droneAt && C() && !C().drones().length && !soft()) f.droneAt = T() + rnd(10, 30);
+      if (o.heat >= 30 && !f.droneAt && C() && !C().drones().length) f.droneAt = T() + rnd(10, 30);
       break;
     case "cleaner":
       report("cleaner", data.x != null ? data.x : g.x, data.y != null ? data.y : g.y, data.trace ? "suspect" : "seen", data.trace || "");
@@ -542,8 +542,8 @@ function event(kind, data) {
     case "kill":
       o.kills++; heat(1);
       if (data.task === "repair") { heat(3); f.repairLost = 1; }
-      /* пост опустел — ОКО поставит на него новую машину */
-      if (data.guard && data.guard !== "room" && data.post && !soft() && (f.postN || 0) < 6) { f.postN = (f.postN || 0) + 1; (f.postsLost || (f.postsLost = [])).push({ x: data.post.x, y: data.post.y, kind: data.guard, t: T() + rnd(80, 160) }); }
+      /* (2.0) потеря: участок обхода, кабинет, пост — ОКО пришлёт замену */
+      lost(data);
       if (data.stalker) { heat(4); f.droneAt = T() + rnd(240, 400); if (Math.random() < 0.6) speakLater("drone_lost", 1500); }
       if (data.camera) {
         heat(5);
@@ -581,14 +581,80 @@ function event(kind, data) {
   }
 }
 
+/* ── (2.0) ЗАМЕНА ПОТЕРЬ (просьба игрока) ──
+   Погиб патрульный — ОКО через время выводит на его участок новый патруль
+   (из дальней от вас точки обхода, не у вас на глазах). Опустел кабинет —
+   позже ОКО присылает в него машины; опустел пост у лестницы или лифта —
+   смену поста. Чем больше ОКО теряет на этаже, тем больше шлёт за раз и тем
+   быстрее: сначала по одной машине, после трёх потерь — по две, после
+   шести — по три-четыре, дальше по четыре-пять (в глубине и шесть), и это
+   уже тяжёлые машины, которые идут к месту потерь. Несколько минут затишья —
+   нажим спадает. Разбит последний узел связи (машины этажа не докладывают) —
+   ОКО о потерях не знает; глушилка и ослеплённое ОКО — замена ждёт. Присланные
+   машины — без добычи, опыта за них меньше: на замене не разбогатеть. */
+function lossEsc(f) {
+  var now = T();
+  if (f.lossT && now - f.lossT > 360) f.lossN = Math.max(0, (f.lossN || 0) - Math.floor((now - f.lossT) / 120));
+  return f.lossN || 0;
+}
+function lossBatch(n) {
+  if (n < 3) return 1;
+  if (n < 6) return 2;
+  if (n < 10) return 3 + (Math.random() < 0.5 ? 1 : 0);
+  return 4 + (Math.random() < 0.5 ? 1 : 0) + (depth() >= 200 && Math.random() < 0.4 ? 1 : 0);
+}
+function lossDelay(base, n) { return Math.max(20, Math.round(base * Math.max(0.35, 1 - 0.06 * n - depth() * 0.0003))); }
+function lost(data) {
+  var f = fs(), cb = C();
+  if (!f || f.netCut || !data) return;
+  if (!f.repl) f.repl = [];
+  var n = lossEsc(f);
+  f.lossN = n + 1; f.lossT = T();
+  if (f.repl.length >= 40) return;
+  var at = data.x != null ? { x: data.x, y: data.y } : null;
+  if (data.beat && data.beat.length) {
+    /* на участок — одна замена: погибли сразу несколько — придут разом, но больше */
+    var pend = f.repl.filter(function (q) { return q.k === "patrol" && q.corr === data.corr; })[0];
+    if (pend) { pend.n = Math.min(6, Math.max(pend.n, lossBatch(n))); pend.at = at; }
+    else f.repl.push({ k: "patrol", t: T() + lossDelay(rnd(80, 160), n), beat: data.beat, corr: data.corr, type: data.type, n: lossBatch(n), at: at });
+  } else if (data.guard === "room" && data.room != null && data.room >= 0) {
+    /* кабинет опустел — когда в нём не осталось ни одной машины */
+    var left = cb && cb.foes().some(function (q) { return !q.dead && q.room === data.room && q.guard === "room" && q.kind === "mech"; });
+    if (!left && !f.repl.some(function (q) { return q.k === "room" && q.room === data.room; })) f.repl.push({ k: "room", t: T() + lossDelay(rnd(220, 380), n), room: data.room, cat: data.garrison || "office", n: Math.max(1, lossBatch(n)), at: at });
+  } else if (data.guard && data.post) {
+    /* место поста — у машины это {x, y}, в записи замены — пара чисел */
+    var pp = data.post.length === 2 ? data.post : [data.post.x, data.post.y];
+    if (pp[0] != null && !f.repl.some(function (q) { return q.k === "post" && q.post[0] === pp[0] && q.post[1] === pp[1]; })) f.repl.push({ k: "post", t: T() + lossDelay(rnd(80, 160), n), post: pp, kind: data.guard, n: Math.min(3, lossBatch(n)) });
+  }
+}
+function replTick() {
+  var f = fs(), cb = C(), g = G();
+  if (!f || !f.repl || !f.repl.length || !cb || !cb.replacePatrol) return;
+  if (f.okoBlind || f.netCut || (g.st && g.st.jam > 0)) return;
+  var now = T();
+  for (var i = f.repl.length - 1; i >= 0; i--) {
+    var q = f.repl[i];
+    if (now < q.t) continue;
+    var got = q.k === "patrol" ? cb.replacePatrol(q) : q.k === "room" ? cb.refillRoom(q) : cb.dispatch(q.n, "post", { x: q.post[0], y: q.post[1], kind: q.kind });
+    if (got === null) { f.repl.splice(i, 1); continue; }
+    if (!got.length) { q.t = now + 20; continue; } /* место у вас на виду — позже */
+    f.repl.splice(i, 1);
+    f.replN = (f.replN || 0) + 1;
+    if (got.length >= 3) { speak("squad"); heard(got, "ОКО стягивает машины"); }
+    else if (q.k === "patrol") { if (o0().heat >= 40 || Math.random() < 0.5) heard(got, "Новый патруль ОКО"); }
+    else if (q.k === "post") { if (Math.random() < 0.6) speak("post"); heard(got, "Смена поста ОКО"); }
+    else log("Помещение снова под охраной: " + place(got[0].x, got[0].y) + ".");
+  }
+}
+function o0() { return st(); }
+
 /* Смена караула: патрули получают новые маршруты; иногда один уходит со
    смены, а из дальней двери выходит другой; патрульных не меньше, чем
    нужно этажу этой глубины, а при сильном подозрении — больше. */
 function shift() {
   var f = fs(), o = st(), g = G(), cb = C();
-  if (!f || !cb || soft() || f.okoBlind) return;
-  var d0 = depth(), pats = cb.patrols();
-  var want = Math.min(8, (d0 >= 2 ? 2 : 0) + Math.floor(d0 / 45) + (o.heat >= 50 ? 1 : 0) + (o.heat >= 80 ? 1 : 0));
+  if (!f || !cb || f.okoBlind) return;
+  var pats = cb.patrols();
   var sa = o.seenAt, focus = sa && sa.L === g.L && sa.F === g.F && T() - sa.t < 240 ? sa : null;
   /* (2.0) у патрульных свои участки обхода: новые маршруты получают не все —
      двое, один из них — к месту, где вас видели */
@@ -601,7 +667,8 @@ function shift() {
     far.sort(function (a, b) { return (Math.abs(b.x - g.x) + Math.abs(b.y - g.y)) - (Math.abs(a.x - g.x) + Math.abs(a.y - g.y)); });
     if (far.length && cb.dismiss(far[0])) { wave(rnd(10, 30), 1, "patrol", null, "shift"); changed = true; }
   }
-  if (pats.length < want) { wave(rnd(4, 20), 1, "patrol", focus && o.heat >= 50 ? focus : null, "shift"); changed = true; }
+  /* сильное подозрение — ещё патрульный к месту, где вас видели */
+  if (focus && o.heat >= 50 && pats.length < 40) { wave(rnd(4, 20), 1, "patrol", focus, "shift"); changed = true; }
   if (changed && (o.heat >= 40 || Math.random() < 0.35)) speak("shift");
 }
 
@@ -675,16 +742,8 @@ function tick() {
       else { speak("squad"); heard(gotW, "Отряд ОКО"); }
     }
   }
-  /* смена на опустевшие посты */
-  if (f.postsLost && f.postsLost.length) {
-    for (var pi = f.postsLost.length - 1; pi >= 0; pi--) {
-      var pl = f.postsLost[pi];
-      if (now < pl.t) continue;
-      f.postsLost.splice(pi, 1);
-      var gp = cb.dispatch(1, "post", { x: pl.x, y: pl.y, kind: pl.kind });
-      if (gp.length) { if (Math.random() < 0.6) speak("post"); heard(gp, "Смена поста ОКО"); }
-    }
-  }
+  /* замена потерь: новые патрули, машины в опустевшие кабинеты, смена постов */
+  if (tickN % 2 === 0) replTick();
   /* перепрошитый этаж: ОКО шлёт новые машины, пока роботы этажа не его */
   if (f.robots && f.flashNext && now >= f.flashNext) {
     f.flashNext = now + rnd(220, 320);
@@ -699,7 +758,7 @@ function tick() {
       if (gd.length) { speak("drone", true); heard(gd, "Вылетел дрон слежения ОКО", true); }
     }
   }
-  if (!f.droneAt && o.heat >= 55 && !soft() && now % 120 === 0 && !cb.drones().length) f.droneAt = now + rnd(20, 60);
+  if (!f.droneAt && o.heat >= 55 && now % 120 === 0 && !cb.drones().length) f.droneAt = now + rnd(20, 60);
   /* смена караула */
   if (!f.shiftAt) f.shiftAt = now + rnd(70, 130);
   else if (now >= f.shiftAt) { f.shiftAt = now + Math.max(70, 150 - Math.round(o.heat * 0.7)) + rnd(0, 40); shift(); }

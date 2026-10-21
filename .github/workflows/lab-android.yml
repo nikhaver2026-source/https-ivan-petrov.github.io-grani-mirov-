@@ -1,4 +1,5 @@
-# Сборка «Подземной лаборатории» для Android 9 и новее на серверах GitHub.
+# Сборка «Подземной лаборатории» для Android 9 и новее — по Android 17
+# включительно (целевой API 37) — на серверах GitHub.
 #
 # Полная сборка: один APK, в нём вся игра — страница, код, встроенный голос
 # eSpeak NG, все записи звука и музыки (lab/sounds). Игрок ставит один файл —
@@ -6,8 +7,9 @@
 #
 # До выпуска: проверка синтаксиса (не новее ES2018 — WebView Android 9),
 # проверка файлов блоков и генератора всех этажей, проверка игры в Chromium, затем APK
-# ставится и запускается на эмуляторах Android 9 (API 28) и Android 15
-# (API 35): страница грузится без ошибок, самопроверка игры проходит.
+# ставится и запускается на эмуляторах Android 9 (API 28), Android 15
+# (API 35) и Android 17 (API 37): страница грузится без ошибок, самопроверка
+# игры проходит.
 # Выпуск «lab-android-latest» несёт APK.
 #
 # Подпись. Ключей в репозитории нет. Сборка сама заводит свой ключ и хранит
@@ -97,13 +99,24 @@ jobs:
       - name: Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.14.3'
+          gradle-version: '9.6.0'
 
-      - name: Платформа Android 36
+      # Android 17 — API 37. Точные имена пакетов берём из списка SDK: у новых
+      # версий бывает и «android-37», и «android-37.0». Нет платформы в списке —
+      # её скачает сам AGP 9.4 (он знает свою compileSdk 37).
+      - name: Платформа Android 17 (API 37)
         run: |
           SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           yes | "$SDKM" --licenses > /dev/null || true
-          "$SDKM" "platforms;android-36" "build-tools;36.0.0" > /dev/null
+          "$SDKM" --list > "$RUNNER_TEMP/sdk-list.txt" 2>/dev/null || true
+          grep -oE '(platforms|system-images);android-37[^ |]*' "$RUNNER_TEMP/sdk-list.txt" | sort -u || true
+          PLAT=$(grep -oE 'platforms;android-37(\.[0-9]+)?' "$RUNNER_TEMP/sdk-list.txt" | sort -u | head -1)
+          if [ -n "$PLAT" ]; then echo "платформа: $PLAT"; "$SDKM" "$PLAT" "build-tools;36.0.0" > /dev/null
+          else echo "::warning::платформы API 37 в списке SDK нет — её скачает AGP"; "$SDKM" "build-tools;36.0.0" > /dev/null; fi
+          IMG=$(grep -oE 'system-images;android-37(\.[0-9]+)?;google_apis(_ps16k)?;x86_64' "$RUNNER_TEMP/sdk-list.txt" | sort -u | head -1)
+          echo "образ эмулятора Android 17: ${IMG:-нет}"
+          echo "$IMG" > "$RUNNER_TEMP/img37"
+          ls "$ANDROID_HOME/platforms"
 
       - name: Сложить игру внутрь приложения
         run: |
@@ -165,13 +178,14 @@ jobs:
       # Эмулятор и образы Android скачиваются заранее, с повтором: архив с
       # серверов Google иногда приходит битым, и без повтора сборка падает,
       # не дойдя до проверки игры.
-      - name: Эмулятор и образы Android 9 и 15 — скачать
+      - name: Эмулятор и образы Android 9, 15 и 17 — скачать
         run: |
           SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          IMG37=$(cat "$RUNNER_TEMP/img37" 2>/dev/null || true)
           for i in 1 2 3 4; do
             if "$SDKM" --install emulator --channel=0 \
                  "system-images;android-28;google_apis;x86_64" \
-                 "system-images;android-35;google_apis;x86_64" > "$RUNNER_TEMP/sdk.log" 2>&1; then
+                 "system-images;android-35;google_apis;x86_64" ${IMG37:+"$IMG37"} > "$RUNNER_TEMP/sdk.log" 2>&1; then
               echo "скачано с попытки $i"; break
             fi
             tail -3 "$RUNNER_TEMP/sdk.log"; echo "попытка $i не удалась"; sleep $((i * 15))
@@ -202,6 +216,26 @@ jobs:
           disable-animations: true
           script: bash lab/android/install-check.sh Podzemnaya-laboratoriya-Alfa-2.0.apk
 
+      # Android 17: имя образа — из списка SDK (шаг «Платформа Android 17»),
+      # поэтому эмулятор запускаем сами, без готового действия.
+      - name: Установка и самопроверка на Android 17
+        run: |
+          IMG=$(cat "$RUNNER_TEMP/img37" 2>/dev/null || true)
+          [ -n "$IMG" ] || { echo "::error::в списке SDK нет образа эмулятора Android 17 (API 37)"; exit 1; }
+          export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
+          echo "no" | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -n a37 -k "$IMG" --force
+          emulator -avd a37 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot \
+            -memory 3072 -partition-size 6144 > "$RUNNER_TEMP/emu37.log" 2>&1 &
+          adb wait-for-device
+          for i in $(seq 1 180); do [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ] && break; sleep 5; done
+          [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ] || { tail -40 "$RUNNER_TEMP/emu37.log"; echo "::error::эмулятор Android 17 не загрузился"; exit 1; }
+          for k in window_animation_scale transition_animation_scale animator_duration_scale; do adb shell settings put global $k 0 || true; done
+          set +e
+          bash lab/android/install-check.sh Podzemnaya-laboratoriya-Alfa-2.0.apk
+          RC=$?
+          adb emu kill > /dev/null 2>&1 || true
+          exit $RC
+
       - name: Выпуск «lab-android-latest»
         env:
           GH_TOKEN: ${{ github.token }}
@@ -215,11 +249,11 @@ jobs:
           for i in $(seq 1 12); do git ls-remote --exit-code --tags "https://github.com/$GITHUB_REPOSITORY" "refs/tags/lab-android-latest" > /dev/null 2>&1 || break; sleep 5; done
           SIZE=$(stat -c %s Podzemnaya-laboratoriya-Alfa-2.0.apk)
           cat > "$RUNNER_TEMP/notes.md" <<EOF
-          «Подземная лаборатория» Альфа 2.0 — звуковая игра для Android 9 и новее. Сборка ${GITHUB_RUN_NUMBER} из ${GITHUB_REF_NAME} (${GITHUB_SHA}).
+          «Подземная лаборатория» Альфа 2.0 — звуковая игра для Android 9 и новее, по Android 17 включительно. Сборка ${GITHUB_RUN_NUMBER} из ${GITHUB_REF_NAME} (${GITHUB_SHA}).
 
           Полная сборка: вся игра внутри одного файла Podzemnaya-laboratoriya-Alfa-2.0.apk (${SIZE} байт) — речь, звуки, музыка. Сеть не нужна, докачивать ничего не надо. Подключённая клавиатура тоже работает: W A S D — шаг, R — оружие, стрелки — выстрел.
 
-          Проверено: ставится и запускается на эмуляторах Android 9 и Android 15, самопроверка игры пройдена.
+          Проверено: ставится и запускается на эмуляторах Android 9, Android 15 и Android 17, самопроверка игры пройдена.
           EOF
           gh release create lab-android-latest Podzemnaya-laboratoriya-Alfa-2.0.apk --prerelease --target "$GITHUB_SHA" \
             --title "Подземная лаборатория Альфа 2.0 для Android (сборка ${GITHUB_RUN_NUMBER})" \

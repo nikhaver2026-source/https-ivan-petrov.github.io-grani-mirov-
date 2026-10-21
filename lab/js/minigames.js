@@ -52,9 +52,11 @@ function cancel(silent) {
   finish(quiet ? true : false, cur.type === "code" ? null : (quiet ? true : false));
 }
 /* Внешнее занятие с перехватом жестов (1.6): музыкальный инструмент и т. п.
-   ext: { name, handler(g), cleanup, cb, quiet } — quiet: уход не считается провалом. */
+   ext: { name, handler(g), cleanup, cb, quiet, back } — quiet: уход не
+   считается провалом; back() — «Назад» занятие не прерывает, если вернула
+   true (2.0: инструмент на весь экран уводят только четыре пальца). */
 function start(ext) {
-  cur = { type: "ext", name: ext.name || "Занятие", cb: ext.cb, handler: ext.handler, cleanup: ext.cleanup, quiet: !!ext.quiet };
+  cur = { type: "ext", name: ext.name || "Занятие", cb: ext.cb, handler: ext.handler, cleanup: ext.cleanup, quiet: !!ext.quiet, back: ext.back || null };
 }
 
 /* ════════ ВЗЛОМ: повторить сигналы ════════
@@ -509,7 +511,10 @@ function gesture(g) {
     return false;
   }
   if (cur.done) return true; /* итог уже решён — лишний жест его не перебьёт */
-  if ((g.kind === "swipe" && g.n === 2 && g.dir === "D") || g.kind === "back") { cancel(); return true; }
+  if ((g.kind === "swipe" && g.n === 2 && g.dir === "D") || g.kind === "back") {
+    if (cur.type === "ext" && cur.back && LAB.safe(cur.back)) return true;
+    cancel(); return true;
+  }
   if (g.kind === "down") { if (cur.type === "rhythm") rhythmDown(g.t); return true; }
   if (cur.type === "rhythm") return true;
   if (cur.type === "ext") { if (cur.handler) LAB.safe(function () { cur.handler(g); }); return true; }

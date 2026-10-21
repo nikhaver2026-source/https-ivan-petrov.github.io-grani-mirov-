@@ -546,6 +546,9 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     const o = fl.objs.find(x => x.type === "stairs_up" && !x.blocked);
     if (!o) return { none: true };
     const F0 = G.F;
+    /* (2.0) у лестницы стоят стражи: пришли сверху — они уже гонятся, а с погоней
+       на лестницу не пускают; здесь проверяется сама лестница — погоню снимаем */
+    LAB.combat.foes().forEach(f => { if (f.state === "hunt") { f.state = "idle"; f.lastKnown = null; } });
     g.useStairs(o);
     const t0 = Date.now(); while (Date.now() - t0 < 130) { }
     g.tryMove("N", false);
@@ -556,7 +559,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     g.tryMove("S", false);
     return { F: G.F, F0, stair: !!G.stair, said: SPOKEN.join(" | ") };
   });
-  ok(back.none || (back.F === back.F0 && !back.stair && /сошли с лестницы/.test(back.said)), "шаг назад с первой ступени — снова на этаже");
+  ok(back.none || (back.F === back.F0 && !back.stair && /сошли с лестницы/.test(back.said)), "шаг назад с первой ступени — снова на этаже" + (back.none || /сошли с лестницы/.test(back.said) ? "" : " (" + back.said + ")"));
   const pc = await page.evaluate(() => {
     const g = LAB.game, G = g.G, fl = g.CUR.fl;
     const o = { id: "tpc1", type: "pc", x: G.x, y: G.y, room: -1, code: "4821", codeFor: "dX", codeRoom: "Проверочная" };
@@ -961,7 +964,9 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     const posts = { lift: 0, stairs: 0, office: 0, inRoom: true };
     for (let L = 1; L <= 12; L++) for (let F = 3; F <= 19; F += 4) {
       const fl = LAB.getFloor(G.seed, L, F);
-      fl.foes.forEach(f => { if (!f.guard) return; posts[f.guard]++; if (f.guard === "lift" && f.room !== fl.E) posts.inRoom = false; if (f.guard === "stairs" && f.room !== fl.D) posts.inRoom = false; });
+      /* (2.0) стражи лифта и лестниц — в нескольких шагах от входа (garrison.js) */
+      const near = (f, re) => fl.objs.some(o => re.test(o.type) && Math.abs(o.x - f.x) + Math.abs(o.y - f.y) <= 7);
+      fl.foes.forEach(f => { if (!f.guard) return; posts[f.guard] = (posts[f.guard] || 0) + 1; if (f.guard === "lift" && !near(f, /^elevator$/)) posts.inRoom = false; if (f.guard === "stairs" && !near(f, /^stairs_/)) posts.inRoom = false; });
     }
     out.posts = posts;
     /* ремонтник: выходит, доходит, чинит; уничтожили — идёт следующий */
@@ -1013,19 +1018,20 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     const dr = C.dispatch(1, "drone", { x: G.x, y: G.y }), hp0 = G.hp, dd = [];
     for (let i = 0; i < 200; i++) { C.tick(); if (dr[0]) dd.push(dH(dr[0])); }
     out.drone = { n: dr.length, near: dr[0] ? Math.min.apply(null, dd) : 0, close: dd.filter(v => v <= 6).length, hurt: hp0 - G.hp };
-    /* патрули смены: маршруты меняются, патрульных хватает */
+    /* (2.0) патрули смены: у патрульных свои участки (garrison.js); смена
+       караула меняет маршруты, уводит дальнего и присылает нового, а при
+       сильном подозрении — ещё патрульного к месту, где вас видели */
     g.enterFloor(3, 9, "down", true); god();
-    live().forEach(f => { f.dead = true; });
     LAB.oko.state().heat = 60;
-    LAB.oko.shift(); for (let i = 0; i < 40; i++) C.tick();
+    LAB.oko.report("camera", G.x, G.y, "seen");
+    const pat0 = C.patrols().length;
     let r1 = C.patrols().map(f => JSON.stringify(f.route)), changed = false;
-    /* смена за сменой: патрульных набирается сколько нужно, маршруты новые */
-    for (let k = 0; k < 4 && (!changed || C.patrols().length < 2); k++) {
+    for (let k = 0; k < 4 && !changed; k++) {
       LAB.oko.shift(); for (let i = 0; i < 40; i++) C.tick();
-      if (C.patrols().some(f => r1.indexOf(JSON.stringify(f.route)) < 0)) changed = true;
+      if (C.patrols().some(f => f.route && r1.indexOf(JSON.stringify(f.route)) < 0)) changed = true;
       r1 = C.patrols().map(f => JSON.stringify(f.route));
     }
-    out.patrol = { n: C.patrols().length, changed };
+    out.patrol = { n: C.patrols().length, n0: pat0, changed };
     LAB.oko.state().heat = 0;
     /* страж у лифта: погнался — и вернулся на пост */
     g.enterFloor(2, 6, "down", true); god();
@@ -1047,7 +1053,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   /* появилась у самого терминала — обыскивает место рядом и ближе может не подойти */
   ok(oko.check.n >= 1 && (oko.check.c1 < oko.check.c0 || oko.check.c1 <= 8), "неудачный взлом — проверка идёт к терминалу (" + oko.check.c0 + " → " + oko.check.c1 + ")");
   ok(oko.drone.n === 1 && oko.drone.close >= 20 && oko.drone.near >= 2 && oko.drone.hurt > 0, "дрон слежения вылетел к месту, где вас видела камера, нашёл вас, держится на расстоянии (не ближе " + oko.drone.near + " шагов) и стреляет");
-  ok(oko.patrol.n >= 2 && oko.patrol.changed, "патрули смены: " + oko.patrol.n + ", маршруты меняются");
+  ok(oko.patrol.n0 >= 3 && oko.patrol.n >= 2 && oko.patrol.changed, "патрули смены: на этаже " + oko.patrol.n0 + " → " + oko.patrol.n + ", маршруты меняются");
   ok(!oko.guard || (oko.guard.back && oko.guard.state === "idle"), "страж у лифта вернулся на пост");
   ok(oko.dead !== false, "павший враг не встаёт, когда вы вернулись на этаж");
 
@@ -2134,11 +2140,11 @@ LAB.ui.closeAll();
       await page4.goto(url); await page4.waitForFunction(() => window.LAB_READY === true, null, { timeout: 60000 });
       await page4.evaluate(() => { window.SPOKEN = []; LAB.say = function (t) { SPOKEN.push(String(t)); }; });
       await page4.keyboard.press("Space"); await page4.waitForTimeout(150);
-      run = await page4.evaluate(() => ({ run: localStorage.getItem("lab_run"), slot: localStorage.getItem("lab_slot1"), auto: localStorage.getItem("lab_auto"), prologue: localStorage.getItem("lab_prologue_seen"), ratePct: LAB.settings.ratePct, wiped: LAB.restartRun && LAB.restartRun.wiped, verWiped: LAB.freshStart && LAB.freshStart.wiped, intro: LAB.ui.top() ? LAB.ui.top().intro : "" }));
+      run = await page4.evaluate(() => ({ R: String(LAB.RUN), run: localStorage.getItem("lab_run"), slot: localStorage.getItem("lab_slot1"), auto: localStorage.getItem("lab_auto"), prologue: localStorage.getItem("lab_prologue_seen"), ratePct: LAB.settings.ratePct, wiped: LAB.restartRun && LAB.restartRun.wiped, verWiped: LAB.freshStart && LAB.freshStart.wiped, intro: LAB.ui.top() ? LAB.ui.top().intro : "" }));
     } catch (e) { run = { err: String(e && e.message || e).slice(0, 200) }; }
     await ctx4.close();
   }
-  ok(run && run.run === String(2) && run.slot === null && run.auto === null && run.prologue === null && run.ratePct === 70 && run.wiped >= 3 && !run.verWiped && /начинается заново/.test(run.intro || ""),
+  ok(run && run.run === run.R && run.slot === null && run.auto === null && run.prologue === null && run.ratePct === 70 && run.wiped >= 3 && !run.verWiped && /начинается заново/.test(run.intro || ""),
     "прохождение заново (та же версия): сохранения, автозапись и пролог сброшены, настройки остались, игрок слышит об этом в главном меню" + (run ? " (" + JSON.stringify(run).slice(0, 300) + ")" : ""));
   const tp2 = await page.evaluate(() => {
     const g = LAB.game, C = LAB.combat, out = {}, W = LAB.W, H = LAB.H;
@@ -2741,63 +2747,115 @@ LAB.ui.closeAll();
       out.samplesDiag = [insN.length, hp && hp.src ? hp.src.playbackRate.value : "синтез", ha && ha.src ? [ha.src.loop, ha.src.loopStart, ha.src.loopEnd].join("/") : "синтез", JSON.stringify(pk), JSON.stringify(pl)].join(" ");
       LAB.settings.effects = S0;
     }
-    /* (2.0) телефон боком: весь экран — инструмент, игра пальцами, касание четырьмя пальцами — отойти */
-    const kb0 = LAB.keysMode, W0 = window.innerWidth, H0 = window.innerHeight, I = LAB.instruments;
-    const r2 = f => Math.round(f * 100) / 100;
-    const pe = (type, id, x, y) => LAB.surface.pointer({ type, pointerId: id, clientX: x, clientY: y });
+    /* (2.0) телефон боком: весь экран — настоящий инструмент, игра пальцами;
+       «Назад» не уводит, отойти — только касанием четырьмя пальцами */
+    const kb0 = LAB.keysMode, W0 = window.innerWidth, H0 = window.innerHeight, I = LAB.instruments, SF = LAB.surface;
+    const pe = (type, id, x, y) => SF.pointer({ type, pointerId: id, clientX: x, clientY: y });
     const slide = (id, x0, y0, x1, y1, n) => { pe("pointerdown", id, x0, y0); for (let k = 1; k <= n; k++) pe("pointermove", id, x0 + (x1 - x0) * k / n, y0 + (y1 - y0) * k / n); pe("pointerup", id, x1, y1); };
+    const logFrom = n => SF._state().log.slice(n);
+    const four = [0.15, 0.35, 0.55, 0.75];
+    const quadTap = async (y) => { four.forEach((x, k) => pe("pointerdown", 40 + k, W0 * x, H0 * y)); await wait(80); four.forEach((x, k) => pe("pointerup", 40 + k, W0 * x, H0 * y)); await wait(100); };
     LAB.keysMode = false;
+    /* пианино: белые клавиши — во всю высоту, чёрные — в верхней части; крышка — октавы */
     let pl2 = -1;
     LAB.instruments.open("piano", { name: "Пианино" }, n => { pl2 = n; });
-    const s1 = LAB.surface._state();
-    out.surfOn = s1.on && s1.kind === "keys" && s1.orient === "landscape" && LAB.mini.active();
-    slide(1, 2, H0 * 0.5, W0 - 2, H0 * 0.5, 40);
-    out.gliss = JSON.stringify(LAB.surface._state().log) === JSON.stringify([0, 1, 2, 3, 4, 5, 6].map(i => r2(I.freq(1, i))));
-    slide(2, 3, H0 * 0.95, 3, H0 * 0.05, 30);
-    out.rows = JSON.stringify(LAB.surface._state().log.slice(-3)) === JSON.stringify([0, 1, 2].map(r => r2(I.freq(r, 0))));
-    /* игра не закрывает инструмент: два пальца вниз по рядам, аккорд из четырёх нот, который держат, скольжение четырьмя пальцами */
-    pe("pointerdown", 3, W0 * 0.3, H0 * 0.2); pe("pointerdown", 4, W0 * 0.6, H0 * 0.2);
-    for (let k = 1; k <= 10; k++) { pe("pointermove", 3, W0 * 0.3, H0 * (0.2 + 0.06 * k)); pe("pointermove", 4, W0 * 0.6, H0 * (0.2 + 0.06 * k)); }
-    pe("pointerup", 3, W0 * 0.3, H0 * 0.8); pe("pointerup", 4, W0 * 0.6, H0 * 0.8);
+    const s1 = SF._state();
+    out.surfOn = s1.on && s1.inst === "piano" && s1.orient === "landscape" && s1.view && LAB.mini.active();
+    slide(1, 2, H0 * 0.92, W0 - 2, H0 * 0.92, 60);
+    out.white = logFrom(0);
+    slide(2, 2, H0 * 0.3, W0 - 2, H0 * 0.3, 150);
+    out.upper = logFrom(out.white.length);
+    pe("pointerdown", 3, W0 * 0.9, 4); pe("pointerup", 3, W0 * 0.9, 4);
+    out.octUp = SF._state().base;
+    pe("pointerdown", 3, W0 * 0.1, 4); pe("pointerup", 3, W0 * 0.1, 4);
+    out.octBack = SF._state().base;
+    /* «Назад» инструмент не закрывает — подсказывает, как отойти */
+    SPOKEN.length = 0;
+    out.backKept = window.labBack() === 1 && SF.active() && LAB.mini.active() && /четырьмя пальцами/.test(SPOKEN.join(" "));
+    LAB.mini.gesture({ kind: "swipe", n: 2, dir: "D" });
+    out.backKept = out.backKept && SF.active();
+    /* игра не закрывает инструмент: два пальца по клавишам, аккорд из четырёх нот, который держат, скольжение четырьмя пальцами */
+    pe("pointerdown", 4, W0 * 0.3, H0 * 0.2); pe("pointerdown", 5, W0 * 0.6, H0 * 0.2);
+    for (let k = 1; k <= 10; k++) { pe("pointermove", 4, W0 * 0.3, H0 * (0.2 + 0.06 * k)); pe("pointermove", 5, W0 * 0.6, H0 * (0.2 + 0.06 * k)); }
+    pe("pointerup", 4, W0 * 0.3, H0 * 0.8); pe("pointerup", 5, W0 * 0.6, H0 * 0.8);
     await wait(100);
-    out.keep2 = LAB.surface.active() && LAB.mini.active();
-    const four = [0.15, 0.35, 0.55, 0.75];
+    out.keep2 = SF.active() && LAB.mini.active();
     four.forEach((x, k) => pe("pointerdown", 20 + k, W0 * x, H0 * 0.5));
     await wait(900);
     four.forEach((x, k) => pe("pointerup", 20 + k, W0 * x, H0 * 0.5));
-    out.keepChord = LAB.surface.active();
+    out.keepChord = SF.active();
     four.forEach((x, k) => pe("pointerdown", 30 + k, W0 * x, H0 * 0.8));
     for (let j = 1; j <= 6; j++) four.forEach((x, k) => pe("pointermove", 30 + k, W0 * x, H0 * (0.8 - 0.1 * j)));
     four.forEach((x, k) => pe("pointerup", 30 + k, W0 * x, H0 * 0.2));
-    out.keepSlide = LAB.surface.active();
-    /* касание четырьмя пальцами — отойти: экран снова вертикальный, ноты касания затихли */
-    const n0 = LAB.surface._state().log.length;
-    four.forEach((x, k) => pe("pointerdown", 40 + k, W0 * x, H0 * 0.3));
-    await wait(80);
-    four.forEach((x, k) => pe("pointerup", 40 + k, W0 * x, H0 * 0.3));
-    await wait(100);
-    const s2 = LAB.surface._state();
-    out.surfOff = !s2.on && s2.orient === "portrait" && !LAB.mini.active() && pl2 >= 10;
-    out.quadDiag = [out.keep2, out.keepChord, out.keepSlide, n0, s2.on, s2.orient, LAB.mini.active(), pl2].join(" ");
+    out.keepSlide = SF.active();
+    await quadTap(0.6);
+    const s2 = SF._state();
+    out.surfOff = !s2.on && s2.orient === "portrait" && !s2.view && !LAB.mini.active() && pl2 >= 10;
+    out.quadDiag = [out.keep2, out.keepChord, out.keepSlide, s2.on, s2.orient, LAB.mini.active(), pl2].join(" ");
+    /* гитара: удар по открытым струнам, лад на грифе, аккорд с заглушённой струной */
     let pl3 = -1;
     LAB.instruments.open("guitar", { name: "Гитара" }, n => { pl3 = n; });
-    const s3 = LAB.surface._state();
-    out.gtrOn = s3.on && s3.kind === "strings" && !s3.frets;
-    slide(5, W0 * 0.05, H0 * 0.97, W0 * 0.05, H0 * 0.03, 40);
-    out.strum = JSON.stringify(LAB.surface._state().log.slice(-6)) === JSON.stringify(I.CHORDS[0].m.map(m => r2(I.midiF(m))));
-    pe("pointerdown", 6, W0 * 0.5, H0 * 0.5); pe("pointerdown", 7, W0 * 0.7, H0 * 0.5); pe("pointerup", 6, W0 * 0.5, H0 * 0.5); pe("pointerup", 7, W0 * 0.7, H0 * 0.5);
-    out.frets = LAB.surface._state().frets;
-    slide(8, 2, H0 * 0.97, W0 * 0.33, H0 * 0.97, 30);
-    out.fretRun = JSON.stringify(LAB.surface._state().log.slice(-4)) === JSON.stringify([0, 1, 2, 3].map(k => r2(I.midiF(I.GTR_OPEN[0] + k))));
-    /* удар двумя пальцами вниз по струнам — это игра, а не выход */
-    const g0 = LAB.surface._state().log.length;
-    pe("pointerdown", 11, W0 * 0.2, H0 * 0.03); pe("pointerdown", 12, W0 * 0.45, H0 * 0.03);
-    for (let k = 1; k <= 12; k++) { pe("pointermove", 11, W0 * 0.2, H0 * (0.03 + 0.078 * k)); pe("pointermove", 12, W0 * 0.45, H0 * (0.03 + 0.078 * k)); }
-    pe("pointerup", 11, W0 * 0.2, H0 * 0.97); pe("pointerup", 12, W0 * 0.45, H0 * 0.97);
+    const head = Math.max(34, W0 * 0.07), neck = W0 * 0.64, fretX = k => head + (neck - head) * (k - 0.5) / 9, strY = i => H0 * (i + 0.5) / 6;
+    out.gtrOn = SF._state().on && SF._state().inst === "guitar" && SF._state().mode === "frets";
+    slide(5, W0 * 0.85, 2, W0 * 0.85, H0 - 2, 30);
+    out.strum = JSON.stringify(logFrom(0)) === JSON.stringify(I.GTR_OPEN);
+    const g1 = SF._state().log.length;
+    pe("pointerdown", 6, fretX(3), strY(5));                 /* тонкая струна, третий лад: соль */
+    pe("pointerdown", 7, W0 * 0.85, strY(5)); pe("pointerup", 7, W0 * 0.85, strY(5));
+    out.fret = JSON.stringify(logFrom(g1)) === JSON.stringify([67, 67]) && SF._state().frets[5] === 3;
+    pe("pointerup", 6, fretX(3), strY(5));
+    out.fretOff = SF._state().frets[5] === 0;
+    pe("pointerdown", 8, 4, H0 / 2); pe("pointerup", 8, 4, H0 / 2);          /* колки — аккорды */
+    out.chordMode = SF._state().mode === "chords";
+    pe("pointerdown", 9, head + (neck - head) * 0.5 / 7, H0 / 2);            /* до мажор: толстая струна молчит */
+    const g2 = SF._state().log.length;
+    slide(10, W0 * 0.85, 2, W0 * 0.85, H0 - 2, 30);
+    out.chordC = JSON.stringify(logFrom(g2)) === JSON.stringify([48, 52, 55, 60, 64]);
+    pe("pointerup", 9, head + (neck - head) * 0.5 / 7, H0 / 2);
+    /* удар двумя пальцами по струнам — это игра, а не выход */
+    const g3 = SF._state().log.length;
+    pe("pointerdown", 11, W0 * 0.75, 3); pe("pointerdown", 12, W0 * 0.9, 3);
+    for (let k = 1; k <= 12; k++) { pe("pointermove", 11, W0 * 0.75, H0 * 0.078 * k); pe("pointermove", 12, W0 * 0.9, H0 * 0.078 * k); }
+    pe("pointerup", 11, W0 * 0.75, H0 * 0.97); pe("pointerup", 12, W0 * 0.9, H0 * 0.97);
     await wait(100);
-    out.gtrStrum2 = LAB.surface.active() && LAB.surface._state().log.length - g0 >= 10;
-    LAB.mini.gesture({ kind: "back", n: 1 }); await wait(100);
-    out.gtrOff = !LAB.surface.active() && LAB.surface._state().orient === "portrait" && pl3 > 0;
+    out.gtrStrum2 = SF.active() && SF._state().log.length - g3 >= 10;
+    await quadTap(0.5);
+    out.gtrOff = !SF.active() && SF._state().orient === "portrait" && pl3 > 0;
+    /* баян: по столбцу снизу вверх — полутоны, вдоль ряда — малые терции; слева бас и аккорд */
+    LAB.instruments.open("accordion", { name: "Баян" }, () => {});
+    const split = W0 * 0.36, colX = j => split + (W0 - split) * (j + 0.5) / 12, rowY = r => H0 * (2.5 - r) / 3;
+    slide(13, colX(0), rowY(0), colX(0), rowY(2), 20);
+    const b0 = SF._state().log.length;
+    slide(14, colX(0), rowY(0), colX(3), rowY(0), 30);
+    pe("pointerdown", 15, split / 6 * 1.5, rowY(0)); pe("pointerdown", 16, split / 6 * 1.5, rowY(1));
+    out.bayan = JSON.stringify(logFrom(0).slice(0, 3)) === JSON.stringify([48, 49, 50]) && JSON.stringify(logFrom(b0)) === JSON.stringify([48, 51, 54, 57, 36, 60]);
+    out.bayanDiag = logFrom(0).join(",");
+    pe("pointerup", 15, split / 6 * 1.5, rowY(0)); pe("pointerup", 16, split / 6 * 1.5, rowY(1));
+    await quadTap(0.5);
+    /* колокола: внизу основные, вверху с диезами; глушитель */
+    LAB.instruments.open("bell", { name: "Колокола" }, () => {});
+    slide(17, 2, H0 * 0.9, W0 - 2, H0 * 0.9, 60);
+    const c0 = SF._state().log.length;
+    slide(18, 2, H0 * 0.3, W0 - 2, H0 * 0.3, 150);
+    out.chimes = JSON.stringify(logFrom(0).slice(0, c0)) === JSON.stringify([60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77]) && JSON.stringify(logFrom(c0)) === JSON.stringify([61, 63, 66, 68, 70, 73, 75]);
+    await quadTap(0.6);
+    /* колыбель: гребёнка шкатулки и ручка завода — колыбельная */
+    LAB.instruments.open("lullaby", { name: "Колыбель" }, () => {});
+    slide(19, 2, H0 * 0.5, W0 * 0.7, H0 * 0.5, 60);
+    const m0 = SF._state().log.length;
+    const cx = W0 * 0.86, cy = H0 * 0.5, R = Math.min(W0 * 0.12, H0 * 0.4) * 0.8;
+    pe("pointerdown", 20, cx + R, cy);
+    for (let k = 1; k <= 80; k++) { const a = k / 80 * Math.PI * 4; pe("pointermove", 20, cx + Math.cos(a) * R, cy + Math.sin(a) * R); }
+    pe("pointerup", 20, cx + R, cy);
+    out.box = m0 === 15 && JSON.stringify(logFrom(m0).slice(0, 6)) === JSON.stringify([88, 88, 91, 88, 88, 91]);
+    /* назад по кругу — только трещотка */
+    const m1 = SF._state().log.length;
+    pe("pointerdown", 21, cx + R, cy);
+    for (let k = 1; k <= 40; k++) { const a = -k / 40 * Math.PI * 2; pe("pointermove", 21, cx + Math.cos(a) * R, cy + Math.sin(a) * R); }
+    pe("pointerup", 21, cx + R, cy);
+    out.boxBack = SF._state().log.length === m1;
+    await quadTap(0.5);
+    out.allOff = !SF.active() && !LAB.mini.active();
     LAB.keysMode = kb0;
     /* ловушка — жест вверх-вниз, мина — вниз-вверх; (2.0) и с оружием в руках */
     g.enterFloor(2, 4, "down", true); C.foes().forEach(f => { f.dead = true; }); G.dead = false; G.drawn = false; G.hp = G.hpMax;
@@ -2847,9 +2905,15 @@ LAB.ui.closeAll();
   ok(v16.chess && v16.uniq && v16.chessFx, "задачи с единственным решением, у шахматных позиций есть мат в один ход, на столике — настоящая партия");
   ok(v16.instOn && v16.instOff && v16.voice, "инструмент: поле из трёх рядов перехватывает жесты, ноты звучат, уход — не провал");
   ok(v16.samples, "инструменты — записи настоящих нот: до первой октавы звучит без сдвига, до-диез — из соседней записи на полутон, у баяна петля, шкатулка на две октавы выше, ноты не грузятся заранее (" + v16.samplesDiag + ")");
-  ok(v16.surfOn && v16.gliss && v16.rows && v16.surfOff, "пианино на весь экран: экран горизонтально, палец по ряду — семь нот подряд, по рядам снизу вверх — три октавы, касание четырьмя пальцами — отойти, экран снова вертикальный");
-  ok(v16.keep2 && v16.keepChord && v16.keepSlide && v16.gtrStrum2, "выход не мешает игре: два пальца вниз по рядам, аккорд из четырёх нот, который держат, скольжение четырьмя пальцами и удар двумя пальцами по струнам инструмент не закрывают (" + v16.quadDiag + ")");
-  ok(v16.gtrOn && v16.strum && v16.frets && v16.fretRun && v16.gtrOff, "гитара на весь экран: перебор поперёк струн — аккорд до мажор, касание двумя пальцами — лады, вдоль струны — по полутону, «Назад» — отойти");
+  const wantWhite = [48, 50, 52, 53, 55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72], wantUpper = Array.from({ length: 25 }, (_, i) => 48 + i);
+  ok(v16.surfOn && JSON.stringify(v16.white) === JSON.stringify(wantWhite) && JSON.stringify(v16.upper) === JSON.stringify(wantUpper) && v16.octUp === 60 && v16.octBack === 48 && v16.surfOff,
+    "пианино на весь экран: внизу — пятнадцать белых клавиш подряд, в верхней части — и чёрные, все полутона; крышка — октава выше и ниже; касание четырьмя пальцами — отойти, экран снова вертикальный (" + (v16.upper || []).length + " клавиш вверху)");
+  ok(v16.backKept, "кнопка «Назад» и два пальца вниз инструмент не закрывают: звучит подсказка, как отойти");
+  ok(v16.keep2 && v16.keepChord && v16.keepSlide && v16.gtrStrum2, "выход не мешает игре: два пальца по клавишам, аккорд из четырёх нот, который держат, скольжение четырьмя пальцами и удар двумя пальцами по струнам инструмент не закрывают (" + v16.quadDiag + ")");
+  ok(v16.gtrOn && v16.strum && v16.fret && v16.fretOff && v16.chordMode && v16.chordC && v16.gtrOff, "гитара: удар вниз по открытым струнам — ми, ля, ре, соль, си, ми; третий лад на тонкой — соль; колки — аккорды, до мажор без толстой струны");
+  ok(v16.bayan, "баян: по столбцу снизу вверх — полутоны, вдоль ряда — через малую терцию, слева бас и мажорный аккорд (" + v16.bayanDiag + ")");
+  ok(v16.chimes, "колокола: внизу основные трубы, вверху — с диезами, между ними");
+  ok(v16.box && v16.boxBack && v16.allOff, "колыбель: гребёнка из пятнадцати язычков, ручка по часовой стрелке играет колыбельную, назад — не играет");
   ok(v16.zig && v16.mineFlag && v16.zigArmed, "ловушка — жест вверх-вниз, мина — вниз-вверх, и с оружием в руках тоже (" + v16.zigDiag + ")");
   ok(v16.mark && v16.trapBeacon && v16.foeBeacon && v16.foeMoves, "маяки: у ловушки и мины свои, скан вешает маяк на врага, и он движется с ним (" + v16.beaconDiag + ")");
   ok(v16.hum, "фон лаборатории: запись низкого гула машин звучит");
@@ -2930,6 +2994,144 @@ LAB.ui.closeAll();
   ok(gar.patrols >= 3 && gar.rooms >= 8, "охрана с первого этажа: патрули в коридорах (" + gar.patrols + "), машины в кабинетах (" + gar.rooms + ")");
   ok(gar.walkers >= 1 && /^(Шаги|Гул) патруля: .+(шаг|шага|шагов)\.$/.test(gar.cue || ""), "наверху патрулируют обходчики (" + gar.walkers + "), патруль поблизости «Эхо» называет: " + (gar.cue || "молчит"));
   ok(gar.near >= 4 && gar.near > gar.far * 2, "машину в кабинете слышно, когда вы рядом (" + gar.type + "): в одном помещении — " + gar.near + " раз за 20 секунд, издалека — " + gar.far);
+
+  console.log("Плотная охрана на всех уровнях; ОКО заменяет потери и усиливает нажим");
+  const dense = await page.evaluate(() => {
+    /* этажи — как их строит генератор (прежние проверки многих здесь уже победили) */
+    const G = LAB.game.G, out = { rows: [] };
+    for (const [L, F] of [[1, 1], [1, 6], [4, 10], [10, 20], [25, 7], [50, 14], [75, 3], [100, 20]]) {
+      const fl = LAB.getFloor(G.seed, L, F), all = fl.foes, beh = f => (LAB.FOES[f.type] || {}).beh || [], kind = f => (LAB.FOES[f.type] || {}).kind;
+      const annex = fl.rooms.filter(r => r && r.annex && !r.hidden).length;
+      const rooms = new Set(all.filter(f => f.garrison && f.room >= 0).map(f => f.room)).size;
+      out.rows.push({ L, F, n: all.length, patrols: all.filter(f => f.beat).length, drones: all.filter(f => f.beat && beh(f).indexOf("fly") >= 0).length,
+        rooms, roomsAll: annex, stair: all.filter(f => f.stairPost).length, bio: all.filter(f => kind(f) === "bio").length, anom: all.filter(f => kind(f) === "anom").length, types: new Set(all.map(f => f.type)).size });
+    }
+    return out;
+  });
+  const rowsTxt = dense.rows.map(r => r.L + "-" + r.F + ": " + r.n + " врагов, патрулей " + r.patrols + " (дронов " + r.drones + "), кабинетов под охраной " + r.rooms + " из " + r.roomsAll + ", у лестниц " + r.stair + ", тварей " + r.bio + (r.anom ? ", аномалий " + r.anom : "") + ", видов " + r.types).join("; ");
+  ok(dense.rows.every(r => r.n >= 150 && r.patrols >= 5 && r.stair >= 1 && r.bio >= 1 && r.rooms >= r.roomsAll * 0.6), "охрана плотная на всех уровнях: робот почти в каждом кабинете, патрули, стражи у лестниц, твари — " + rowsTxt);
+  ok(dense.rows.some(r => r.drones >= 1), "по коридорам летают патрульные дроны");
+  const d1 = dense.rows[0], dz = dense.rows[dense.rows.length - 1];
+  ok(dz.types > d1.types && dz.n >= d1.n, "чем глубже, тем разнообразнее и больше: видов " + d1.types + " → " + dz.types + ", врагов " + d1.n + " → " + dz.n);
+
+  const repl = await page.evaluate(() => {
+    const g = LAB.game, G = g.G, C = LAB.combat, O = LAB.oko, out = {};
+    const live = () => C.foes().filter(f => !f.dead);
+    const hero = (f) => Math.abs(f.x - G.x) + Math.abs(f.y - G.y);
+    const repl = () => g.CUR.fs.repl || [];
+    /* этаж — заново, как в новой игре: прежние проверки здесь всех уже победили */
+    const fresh = (L, F) => { g.enterFloor(L, F === 1 ? 2 : F - 1, "down", true); delete G.fs[L + "-" + F]; g.enterFloor(L, F, "down", true); };
+    fresh(2, 4);
+    G.hp = G.hpMax = 1e7; G.st.cloak = 1e6;
+    /* убили патрульного — ОКО шлёт нового на тот же участок, не у вас на глазах */
+    const pat = live().filter(f => f.beat && f.kind === "mech" && !f.boss).sort((a, b) => hero(b) - hero(a))[0];
+    const corr = pat.corr, beatKey = JSON.stringify(pat.beat);
+    C.damageFoe(pat, 1e7, "kinetic", { quiet: true });
+    const q = repl().find(q => q.k === "patrol" && q.corr === corr);
+    out.pQueued = !!q; out.pDelay = q ? q.t - O.T() : -1;
+    let got = null, ticks = 0;
+    for (; ticks < 500 && !got; ticks++) { C.tick(); got = live().find(f => f.spawned && f.beat && JSON.stringify(f.beat) === beatKey); }
+    out.pBack = !!got; out.pTicks = ticks; out.pFar = got ? hero(got) : 0; out.pSpawned = !!(got && got.spawned);
+    /* опустел кабинет — через время ОКО присылает в него машины */
+    const rmF = live().filter(f => f.guard === "room" && f.kind === "mech" && f.room >= 0).sort((a, b) => hero(b) - hero(a))[0];
+    const room = rmF.room;
+    live().filter(f => f.room === room && f.guard === "room" && f.kind === "mech").forEach(f => C.damageFoe(f, 1e7, "kinetic", { quiet: true }));
+    out.rQueued = repl().some(q => q.k === "room" && q.room === room);
+    let back = null; ticks = 0;
+    for (; ticks < 700 && !back; ticks++) { C.tick(); back = live().find(f => f.spawned && f.room === room && f.guard === "room"); }
+    out.rBack = !!back; out.rTicks = ticks;
+    /* пал страж у лестницы — ОКО присылает смену на тот же пост */
+    const gd = live().filter(f => f.guard === "stairs" && f.post && !f.boss).sort((a, b) => hero(b) - hero(a))[0];
+    if (gd) {
+      const px = gd.post.x, py = gd.post.y;
+      C.damageFoe(gd, 1e7, "kinetic", { quiet: true });
+      out.sQueued = repl().some(q => q.k === "post" && q.post[0] === px && q.post[1] === py && q.kind === "stairs");
+      let sb = null; ticks = 0;
+      for (; ticks < 500 && !sb; ticks++) { C.tick(); sb = live().find(f => f.spawned && f.guard === "stairs" && f.post && f.post.x === px && f.post.y === py); }
+      out.sBack = !!sb; out.sTicks = ticks;
+    }
+    /* «качаться» на одних и тех же: каждая новая потеря — замена больше и быстрее */
+    fresh(2, 5);
+    G.hp = G.hpMax = 1e7; G.st.cloak = 1e6;
+    const batches = [], killOne = () => {
+      const p = live().find(f => f.beat && f.kind === "mech" && !f.boss && !f.sapper);
+      if (!p) return;
+      C.damageFoe(p, 1e7, "kinetic", { quiet: true });
+      const nq = repl().find(q => q.k === "patrol" && q.corr === p.corr);
+      batches.push(nq ? nq.n : 0);
+      g.CUR.fs.repl = []; /* следующую замену считаем отдельно */
+    };
+    for (let i = 0; i < 6; i++) killOne();
+    /* а если бить так и дальше — десять потерь подряд */
+    g.CUR.fs.lossN = 10; g.CUR.fs.lossT = O.T();
+    killOne(); killOne();
+    out.batches = batches;
+    /* затишье — нажим спадает */
+    g.CUR.fs.lossT = O.T() - 5000;
+    const p2 = live().find(f => f.beat && f.kind === "mech" && !f.boss && !f.sapper);
+    if (p2) { C.damageFoe(p2, 1e7, "kinetic", { quiet: true }); const nq = repl().find(q => q.k === "patrol" && q.corr === p2.corr); out.calmBatch = nq ? nq.n : 0; }
+    G.st.cloak = 0;
+    return out;
+  });
+  ok(repl.pQueued && repl.pBack && repl.pFar >= 12 && repl.pSpawned, "убили патрульного — ОКО присылает нового на тот же участок, издалека (" + repl.pTicks + " тактов, в " + repl.pFar + " шагах от вас)");
+  ok(repl.rQueued && repl.rBack, "зачистили кабинет — через время ОКО присылает в него машины (" + repl.rTicks + " тактов)");
+  ok(repl.sQueued && repl.sBack, "пал страж у лестницы — ОКО присылает смену на тот же пост (" + repl.sTicks + " тактов)");
+  const b = repl.batches;
+  ok(b.length === 8 && b[0] === 1 && b[2] === 1 && b[3] === 2 && b[5] === 2 && b[6] >= 4 && b[7] >= 4, "бьёте одних и тех же — ОКО присылает больше: по одной, после трёх потерь — по две, дальше — по четыре-пять: " + b.join(", "));
+  ok(repl.calmBatch === 1, "затишье — нажим ОКО спадает: снова по одной машине (" + repl.calmBatch + ")");
+
+  console.log("Облегчённый режим для слабых телефонов");
+  const lite = await page.evaluate(async () => {
+    const S = LAB.settings, C = LAB.combat, Snd = LAB.Sound, AE = LAB.AE, B = LAB.Bank, g = LAB.game, G = g.G, out = {};
+    const lab = i => typeof i.label === "function" ? i.label() : i.label;
+    S.lite = 0; LAB.saveSettings(); if (AE.applyLite) AE.applyLite();
+    out.fx0 = Snd.lim("fx"); out.lod0 = C.lodLevel();
+    LAB.ui.settings();
+    const w = LAB.ui.top(), li = w.items.findIndex(i => /Облегчённый режим/.test(lab(i)));
+    out.item = li >= 0 ? lab(w.items[li]) : "";
+    SPOKEN.length = 0; w.i = li; LAB.ui.activate();
+    out.on = S.lite; out.said = SPOKEN.join(" | ");
+    out.lod = C.lodLevel(); out.fx = Snd.lim("fx"); out.total = Snd.lim("total"); out.convOff = AE.convOff;
+    LAB.ui.closeAll();
+    /* мир: дальняя спокойная машина думает реже ближней (этаж — заново) */
+    g.enterFloor(3, 3, "down", true); delete G.fs["3-4"]; g.enterFloor(3, 4, "down", true);
+    G.hp = G.hpMax = 1e7; G.st.cloak = 1e6;
+    const live = C.foes().filter(f => !f.dead && !f.calm && !f.ally && !f.boss && !f.task && f.kind === "mech" && f.beat && (f.base.beh || []).indexOf("stalker") < 0);
+    const dist = f => Math.max(Math.abs(f.x - G.x), Math.abs(f.y - G.y));
+    const far = live.filter(f => dist(f) > 60)[0];
+    let near = null;
+    if (far) {
+      /* ближняя — ставим рядом спокойную патрульную машину */
+      near = live.filter(f => f !== far)[0];
+      if (near) { near.x = G.x + 3; near.y = G.y; }
+    }
+    /* обе стоят на месте (иначе патрульный уйдёт обходом и станет дальним) */
+    if (far) far.frozen = 999; if (near) near.frozen = 999;
+    const a0 = far ? far.hitT : 0, n0 = near ? near.hitT : 0;
+    for (let i = 0; i < 48; i++) { if (far) far.state = "idle"; if (near) near.state = "idle"; C.tick(); }
+    out.farTicks = far ? far.hitT - a0 : -1; out.nearTicks = near ? near.hitT - n0 : -1;
+    if (far) far.frozen = 0; if (near) near.frozen = 0;
+    /* эффекты после загрузки — в моно, музыка — как записана */
+    const fxId = Object.keys(B.defs).find(id => B.defs[id].bus === "fx" && /^w_/.test(id) && B.defs[id].f.length);
+    if (fxId && AE.ensure()) {
+      const file = B.defs[fxId].f[0];
+      delete B.bufs[file];
+      const buf = await B.load(file);
+      out.fxCh = buf ? buf.numberOfChannels : -1;
+    }
+    /* выключили — всё как было */
+    LAB.ui.settings();
+    const w2 = LAB.ui.top(); w2.i = li; LAB.ui.activate();
+    out.off = S.lite; out.fx2 = Snd.lim("fx"); out.lod2 = C.lodLevel(); out.convOff2 = AE.convOff;
+    LAB.ui.closeAll();
+    G.st.cloak = 0;
+    return out;
+  });
+  ok(/Облегчённый режим для слабых/.test(lite.item) && lite.on === 1 && /думают реже/.test(lite.said) && /отзвука помещений нет/.test(lite.said), "в настройках — облегчённый режим; включили — сказано, что изменилось: " + lite.said.slice(0, 160));
+  ok(lite.lod >= 2 && lite.lod0 < lite.lod && lite.fx < lite.fx0 && lite.convOff === true, "облегчённый режим: мир подробнее только рядом (уровень " + lite.lod0 + " → " + lite.lod + "), звуков сразу меньше (" + lite.fx0 + " → " + lite.fx + "), отзвук отключён");
+  ok(lite.farTicks >= 0 && lite.nearTicks >= 40 && lite.farTicks <= lite.nearTicks / 3, "дальняя спокойная машина думает реже ближней: " + lite.farTicks + " и " + lite.nearTicks + " тактов из 48");
+  ok(lite.fxCh === 1, "облегчённый режим: эффекты в памяти — в моно (каналов " + lite.fxCh + ")");
+  ok(lite.off === 0 && lite.fx2 === lite.fx0 && lite.convOff2 === false, "выключили облегчённый режим — звук и мир как прежде");
 
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {

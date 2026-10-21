@@ -178,15 +178,28 @@ function refresh() {
   if (hp) { hp.textContent = "❤ " + g.hp + "/" + g.hpMax + (g.st.shield ? " 🛡" + g.st.shield : ""); hp.style.color = g.hp < g.hpMax * 0.3 ? "#ff6b6b" : ""; }
   if (wp) wp.textContent = (g.drawn ? "⚔ " : "") + (w ? (w.ammo === "none" ? w.name : w.name + " " + w.charge + "/" + w.cap) : "—");
   if (pl) pl.textContent = "Ур. " + g.L + " · эт. " + g.F + " · " + (gm().roomAt(g.x, g.y) ? gm().roomAt(g.x, g.y).name : "коридор");
-  drawMap();
+  drawMapSoon();
   if (top()) render();
+}
+/* (2.0) Карта на экране перерисовывается раз за кадр, сколько бы раз её ни
+   просили (шаг, попадание, такт), а в облегчённом режиме — не чаще раза в
+   полторы секунды: весь этаж — десятки тысяч клеток. */
+var mapReq = false, mapAt = 0;
+function drawMapSoon() {
+  if (mapReq) return;
+  mapReq = true;
+  var go = function () { mapReq = false; mapAt = Date.now(); if (screen === "game" && gm() && gm().CUR && gm().CUR.fl) LAB.safe(drawMap); };
+  var frame = function () { if (window.requestAnimationFrame) window.requestAnimationFrame(go); else setTimeout(go, 16); };
+  var wait = S.lite ? 1500 - (Date.now() - mapAt) : 0;
+  if (wait > 0) setTimeout(frame, wait); else frame();
 }
 function drawMap() {
   var cv = $("map");
   if (!cv || !cv.getContext || !gm().CUR.fl) return;
   var CUR = gm().CUR, fl = CUR.fl, W = LAB.W, H = LAB.H;
   var cs = Math.max(4, Math.floor(Math.min(cv.clientWidth || 340, 520) / W));
-  cv.width = W * cs; cv.height = H * cs;
+  if (cv.width !== W * cs) cv.width = W * cs;
+  if (cv.height !== H * cs) cv.height = H * cs;
   var c = cv.getContext("2d");
   c.fillStyle = "#06070c"; c.fillRect(0, 0, cv.width, cv.height);
   for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) {
@@ -314,7 +327,33 @@ function freshNote() {
     rr.said = true;
     return "В этой сборке игра начинается заново: прежнее прохождение и сохранения сброшены — в комплексе многое изменилось, и пройти его стоит с самого начала, с пролога. Настройки остались прежними. Что изменилось — пункт «Что нового?».";
   }
+  /* слабое устройство: один раз подсказать про облегчённый режим */
+  if (!S.lite && weakDevice() && !LAB.store.get("lab_lite_hint")) {
+    LAB.store.set("lab_lite_hint", "1");
+    return (LAB.desktop ? "У этого компьютера" : "У этого телефона") + " немного памяти или ядер процессора. Если игра будет запаздывать, включите облегчённый режим: «Настройки», пункт «Облегчённый режим».";
+  }
   return "";
+}
+/* Слабое устройство: мало памяти (2 ГБ и меньше) или ядер (два и меньше);
+   приложение для Android само говорит, что телефон слабый. */
+function weakDevice() {
+  try {
+    if (window.LabTTS && window.LabTTS.lowRam && String(window.LabTTS.lowRam()) === "1") return true;
+    var dm = +navigator.deviceMemory || 0, hc = +navigator.hardwareConcurrency || 0;
+    return (dm > 0 && dm <= 2) || (hc > 0 && hc <= 2);
+  } catch (e) { return false; }
+}
+/* Облегчённый режим включён или выключен. Что изменилось, окно скажет
+   вместе со значением (descOf). */
+function liteSet(v) {
+  S.lite = v ? 1 : 0; LAB.saveSettings();
+  if (LAB.AE.applyLite) LAB.AE.applyLite();
+}
+function liteDesc(v) {
+  /* частота звука выбирается при запуске: устройство уже работает с другой — нужен перезапуск */
+  var rate = !!LAB.AE.ctx && LAB.AE.liteCtx !== !!v;
+  return v ? "Дальние спокойные машины думают реже, и их шагов издалека не слышно; отзвука помещений нет; звуков одновременно меньше; карта на экране рисуется реже; в памяти меньше готовых этажей. Игра та же: машин столько же, сохранения общие." + (rate ? " Звук станет ещё легче — 22 килогерца, записи в моно — после перезапуска игры." : "")
+    : "Полная подробность мира и звука." + (rate ? " Полное качество звука — после перезапуска игры." : "");
 }
 function startGame() {
   var hasAuto = !!gm().slotInfo("auto");
@@ -379,6 +418,9 @@ function settingsMenu() {
     tog("Голос робота у машин", "robotVoice"),
     tog("Подсказки", "verbose"),
     tog("Субтитры звуков на экране", "subtitles"),
+    { kind: "choice", label: LAB.desktop ? "Облегчённый режим для слабых компьютеров" : "Облегчённый режим для слабых телефонов",
+      options: [{ v: 0, label: "выключен" }, { v: 1, label: "включён" }],
+      get: function () { return S.lite ? 1 : 0; }, set: function (v) { liteSet(v); }, descOf: liteDesc },
     { label: "Микшер: каналы звука, низкие частоты, диапазон громкости", fn: mixerMenu },
     { kind: "choice", label: "Режим навигатора", options: [
         { v: "full", label: "подробный: путь и повороты по шагам" }, { v: "brief", label: "краткий: сколько шагов и куда сначала" },

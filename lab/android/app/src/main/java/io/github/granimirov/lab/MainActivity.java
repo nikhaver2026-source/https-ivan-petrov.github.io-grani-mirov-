@@ -1,9 +1,11 @@
 package io.github.granimirov.lab;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.graphics.Rect;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
@@ -16,6 +18,7 @@ import android.speech.tts.Voice;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.view.WindowManager;
 import android.webkit.ConsoleMessage;
 import android.webkit.JavascriptInterface;
@@ -34,6 +37,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -49,9 +53,19 @@ import java.util.Set;
    Мост LabTTS отдаёт странице синтезатор речи телефона — тот же, что у
    TalkBack: speak(текст, темп, громкость, номер), stop(), status()
    ("init" | "ready" | "failed"), isSpeaking(), hasRussian(), getVoices(), setVoice(имя),
-   vibrate(узор), setOrientation("landscape" | "portrait"), exitApp(), log(строка). О начале, конце и ошибке фразы
+   vibrate(узор), setOrientation("landscape" | "portrait"), setFullscreen("1" | "0"), lowRam(),
+   exitApp(), log(строка). О начале, конце и ошибке фразы
    приложение сообщает вызовами LabTTSStart(номер), LabTTSDone(номер),
-   LabTTSError(номер). Кнопка «Назад» закрывает окно игры (labBack). */
+   LabTTSError(номер). Кнопка «Назад» закрывает окно игры (labBack); на
+   инструменте во весь экран она не уводит — отойти можно только касанием
+   четырьмя пальцами.
+
+   Android 9–17: с целевым API 36 и выше «Назад» приходит только в
+   зарегистрированный обработчик (onBackPressed не зовётся — он остаётся
+   для Android 9–12); приложение помечено как игра (appCategory="game"), и
+   на планшетах с Android 17 поворот экрана для инструментов остаётся за
+   игрой; окно рисуется от края до края, поля под системные панели ставим
+   сами. */
 public class MainActivity extends Activity {
     private static final String START = "https://appassets.androidplatform.net/assets/www/index.html";
     private static final String TAG = "LabJS";
@@ -63,6 +77,8 @@ public class MainActivity extends Activity {
     private volatile TextToSpeech speaker;
     private volatile String state = "init";
     private final List<String[]> pending = new ArrayList<>();
+    /* инструмент во весь экран: системные панели спрятаны, края экрана — игре */
+    private volatile boolean full = false;
 
     private final UtteranceProgressListener prog = new UtteranceProgressListener() {
         @Override public void onStart(String id) { callJs("LabTTSStart", id); }
@@ -158,6 +174,8 @@ public class MainActivity extends Activity {
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(0xFF05060A);
         root.addView(web, new FrameLayout.LayoutParams(-1, -1));
+        /* экран повернулся — края, защищённые от жеста «Назад», пересчитать */
+        web.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> { if (full) guardEdges(true); });
         /* С целевым API 35 и выше окно рисуется от края до края: поля под
            строку состояния и панель жестов ставим сами. */
         root.setOnApplyWindowInsetsListener((v, ins) -> {
@@ -180,8 +198,43 @@ public class MainActivity extends Activity {
         if (saved == null || web.restoreState(saved) == null) web.loadUrl(START);
     }
 
+    /* Android 9–12: «Назад» — сюда; Android 13 и новее — в обработчик выше. */
     @Override
     public void onBackPressed() { goBack(); }
+
+    /* Весь экран для инструмента: строка состояния и панель жестов уходят
+       (смахнуть от края — покажутся на время), края экрана — игре. */
+    private void applyFullscreen(boolean on) {
+        full = on;
+        if (Build.VERSION.SDK_INT >= 30) {
+            WindowInsetsController c = getWindow().getInsetsController();
+            if (c != null) {
+                if (on) {
+                    c.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                    c.hide(WindowInsets.Type.systemBars());
+                } else c.show(WindowInsets.Type.systemBars());
+            }
+        } else {
+            View d = getWindow().getDecorView();
+            d.setSystemUiVisibility(on ? (View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN) : View.SYSTEM_UI_FLAG_VISIBLE);
+        }
+        guardEdges(on);
+    }
+
+    /* Жест «Назад» от края экрана (Android 10 и новее) не должен ловить
+       глиссандо, начатое у края: средняя часть левого и правого краёв —
+       игре (система отдаёт не больше 200 dp на край). */
+    private void guardEdges(boolean on) {
+        if (Build.VERSION.SDK_INT < 29 || web == null) return;
+        if (!on) { web.setSystemGestureExclusionRects(Collections.emptyList()); return; }
+        float dp = getResources().getDisplayMetrics().density;
+        int w = web.getWidth(), h = web.getHeight(), ex = Math.min(h, (int) (200 * dp)), edge = (int) (48 * dp), top = Math.max(0, (h - ex) / 2);
+        List<Rect> rs = new ArrayList<>();
+        rs.add(new Rect(0, top, edge, top + ex));
+        rs.add(new Rect(Math.max(0, w - edge), top, w, top + ex));
+        web.setSystemGestureExclusionRects(rs);
+    }
 
     /* «Назад» закрывает верхнее окно игры; на игровом поле — открывает окно
        персонажа (там «Сохранить игру» и «Выход»). */
@@ -355,6 +408,26 @@ public class MainActivity extends Activity {
         public void setOrientation(String mode) {
             final int o = "landscape".equals(mode) ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
             runOnUiThread(() -> { try { setRequestedOrientation(o); } catch (Exception ignored) { } });
+        }
+
+        /* Инструмент во весь экран (2.0): "1" — спрятать системные панели, "0" — вернуть. */
+        @JavascriptInterface
+        public void setFullscreen(String on) {
+            final boolean f = "1".equals(on);
+            runOnUiThread(() -> { try { applyFullscreen(f); } catch (Exception ignored) { } });
+        }
+
+        /* Слабый телефон (мало памяти): игра один раз подскажет про облегчённый режим. */
+        @JavascriptInterface
+        public String lowRam() {
+            try {
+                ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+                if (am == null) return "0";
+                if (am.isLowRamDevice()) return "1";
+                ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+                am.getMemoryInfo(mi);
+                return mi.totalMem > 0 && mi.totalMem < 3L * 1024 * 1024 * 1024 ? "1" : "0";
+            } catch (Exception e) { return "0"; }
         }
 
         /* «Выход» в окне персонажа: игра уже записана — закрываем приложение. */

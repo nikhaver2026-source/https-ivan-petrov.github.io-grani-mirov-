@@ -441,8 +441,22 @@ function heartCheck() {
 /* ════════ ВРАГИ ════════ */
 var lastFoeSound = {};
 function foeSet(f) { return f.snd || "drone"; }
+/* (2.0) Машин на этаже сотни: шаги, гул и возню дальше, чем их слышно, не
+   играем вовсе — иначе отовсюду шуршит неразборчивый фон, а слабый телефон
+   захлёбывается звуками. За стеной слышно ближе, чем в открытую. */
+function outOfEar(f, far, walled) {
+  var g = G(); if (!g) return false;
+  /* дальше, чем мир думает каждый такт, — тоже не слышно: там машины ходят реже */
+  var C = LAB.combat, r = C && C.lodR ? C.lodR() - 2 : far;
+  if (r < far) { walled = Math.max(6, walled - (far - r)); far = r; }
+  var d = Math.max(Math.abs(f.x - g.x), Math.abs(f.y - g.y));
+  if (d > far) return true;
+  if (d <= walled) return false;
+  try { return !LAB.los(CUR().fl, CUR().fs, g.x, g.y, f.x, f.y); } catch (e) { return false; }
+}
 function foeSound(f, kind) {
   var now = Date.now(), key = f.id + kind;
+  if (kind === "idle" && outOfEar(f, 20, 12)) return;
   if (kind === "idle" && lastFoeSound[key] && now - lastFoeSound[key] < 3000) return;
   lastFoeSound[key] = now;
   var set = foeSet(f);
@@ -472,6 +486,7 @@ var hoverT = {};
 function foeStep(f) {
   /* (2.0) патрульного слышно лучше: его шаги — знак, что по коридору идёт обход */
   var pat = !!(f.beat || f.patrol);
+  if (outOfEar(f, f.boss ? 30 : pat ? 24 : 20, pat ? 14 : 12)) return;
   /* летающая машина не шагает — слышно, как она жужжит */
   var beh0 = (f.base && f.base.beh) || [];
   if (beh0.indexOf("fly") >= 0) {

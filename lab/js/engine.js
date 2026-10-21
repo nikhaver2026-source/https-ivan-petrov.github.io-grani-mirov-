@@ -75,7 +75,11 @@ var DEF = {
      маяка, free — только по запросу; подсказки: 0 — только по запросу,
      1 — редко, 2 — обычно, 3 — часто; обучение; уведомление о записи:
      0 — нет, 1 — звук, 2 — звук и голос */
-  navMode: "full", hints: 2, tutor: 1, saveNote: 1
+  navMode: "full", hints: 2, tutor: 1, saveNote: 1,
+  /* (2.0) облегчённый режим для слабых телефонов: дальние машины думают
+     реже, звук легче (без отзвука, меньше голосов сразу, после перезапуска —
+     22 кГц и записи в моно), карта на экране рисуется реже */
+  lite: 0
 };
 var saved = {};
 try { saved = JSON.parse(store.get("lab_settings") || "{}") || {}; } catch (e) { saved = {}; }
@@ -126,9 +130,14 @@ var AE = {
     }
     var C = window.AudioContext || window.webkitAudioContext;
     if (!C) return null;
-    /* 32 кГц: записи в памяти занимают на треть меньше, а слух разницы почти не замечает */
-    try { this.ctx = new C({ latencyHint: "interactive", sampleRate: 32000 }); }
-    catch (e) { try { this.ctx = new C({ latencyHint: "interactive" }); } catch (e1) { try { this.ctx = new C(); } catch (e2) { return null; } } }
+    /* 32 кГц: записи в памяти занимают на треть меньше, а слух разницы почти не замечает.
+       Облегчённый режим — 22 кГц и запас буфера побольше: слабому телефону
+       легче смешивать звуки, и они не трещат. Частота устройства выбирается
+       при запуске, поэтому новый режим звука — со следующего запуска игры. */
+    var lite = !!settings.lite, hint = lite ? "balanced" : "interactive";
+    try { this.ctx = new C({ latencyHint: hint, sampleRate: lite ? 22050 : 32000 }); }
+    catch (e) { try { this.ctx = new C({ latencyHint: hint }); } catch (e1) { try { this.ctx = new C(); } catch (e2) { return null; } } }
+    this.liteCtx = lite;
     var c = this.ctx;
     this.master = c.createGain(); this.master.gain.value = 0.95;
     /* мягкий ограничитель на выходе: громкие сцены не хрипят; за ним — подъём
@@ -155,10 +164,21 @@ var AE = {
     this.conv = c.createConvolver();
     this.conv.buffer = this.impulse(1.6, 3.2);
     this.wet = c.createGain(); this.wet.gain.value = 0.35 * spaceK();
-    this.conv.connect(this.wet); this.wet.connect(this.fx);
+    this.conv.connect(this.wet); this.wet.connect(this.fx); this.convOff = false;
     this.applyVolumes();
     this.applyMix();
+    this.applyLite();
     return c;
+  },
+  /* Облегчённый режим: отзвук помещений (свёртка — самый дорогой узел
+     звука) отключён от выхода — устройство его не считает, а сами звуки
+     в отзвук не посылаются. */
+  applyLite: function () {
+    if (!this.ctx || !this.conv) return;
+    var off = !!settings.lite;
+    if (off === this.convOff) return;
+    this.convOff = off;
+    try { if (off) this.conv.disconnect(); else this.conv.connect(this.wet); } catch (e) { /* */ }
   },
   /* Устройство сломалось — новое: шины, отзвук, шум заново. Записи в памяти
      (AudioBuffer) годятся и новому устройству. */
@@ -270,7 +290,7 @@ SFX.prototype = {
     var gg = this.ctx.createGain(); gg.gain.value = g == null ? 1 : g;
     this.master.connect(gg); gg.connect(pn); pn.connect(this.bus); this.nodes.push(pn, gg);
   },
-  send: function (node, amount) { var g = this.ctx.createGain(); g.gain.value = amount; node.connect(g); g.connect(AE.conv); this.nodes.push(g); return g; },
+  send: function (node, amount) { if (settings.lite) return null; var g = this.ctx.createGain(); g.gain.value = amount; node.connect(g); g.connect(AE.conv); this.nodes.push(g); return g; },
   noise: function (type, sec, loop) { var s = this.ctx.createBufferSource(); s.buffer = AE.getNoise(type, sec); s.loop = loop !== false; this.nodes.push(s); return s; },
   osc: function (type, freq) { var o = this.ctx.createOscillator(); o.type = type; o.frequency.value = freq; this.nodes.push(o); return o; },
   gain: function (v) { var g = this.ctx.createGain(); g.gain.value = v == null ? 1 : v; this.nodes.push(g); return g; },
@@ -460,10 +480,19 @@ LAB.synth = function (fn, ms, bus, pan, gain) {
    Каждая запись — id и несколько вариантов; при игре берётся случайный
    вариант, слегка меняется высота: одинаковых звуков подряд не бывает. */
 var Bank = {
-  root: "sounds/", defs: {}, bufs: {}, pend: {}, bad: {}, retry: {}, loaded: 0, total: 0,
+  root: "sounds/", defs: {}, bufs: {}, pend: {}, bad: {}, retry: {}, loaded: 0, total: 0, fileBus: {},
   def: function (id, files, opt) {
     opt = opt || {};
     this.defs[id] = { f: files, v: opt.v == null ? 1 : opt.v, bus: opt.bus || "fx", vary: opt.vary == null ? 0.04 : opt.vary, desc: opt.desc || "", cat: opt.cat || "" };
+    for (var i = 0; i < files.length; i++) if (!this.fileBus[files[i]] || this.fileBus[files[i]] === "fx") this.fileBus[files[i]] = opt.bus || "fx";
+  },
+  /* Свести стерео в моно (облегчённый режим). */
+  mono: function (buf) {
+    try {
+      var n = buf.length, m = AE.ctx.createBuffer(1, n, buf.sampleRate), d = m.getChannelData(0), a = buf.getChannelData(0), b = buf.getChannelData(1);
+      for (var i = 0; i < n; i++) d[i] = (a[i] + b[i]) * 0.5;
+      return m;
+    } catch (e) { return null; }
   },
   has: function (id) { return !!this.defs[id]; },
   load: function (file) {
@@ -488,6 +517,9 @@ var Bank = {
         } catch (e) { rej(e); }
       });
     }).then(function (buf) {
+      /* облегчённый режим: записи — в моно, память вдвое меньше. Откуда звук,
+         слышно и так: в точку этажа его ставит панорама игры, а не запись */
+      if (settings.lite && buf && buf.numberOfChannels > 1) buf = self.mono(buf) || buf;
       self.bufs[file] = buf; delete self.pend[file]; self.loaded++; return buf;
     }).catch(function () { clearTimeout(to); if (hard) self.bad[file] = 1; else self.retry[file] = Date.now() + 15000; delete self.pend[file]; return null; });
     this.pend[file] = p;
@@ -558,7 +590,7 @@ var Bank = {
     /* канал внутри шины: оружие, противники, тревоги (o.ch) — своя громкость */
     out.connect((o.ch && AE[o.ch]) || AE[o.bus || d.bus] || AE.fx);
     var rv = o.reverb == null ? (o.bus === "ui" || d.bus === "ui" || d.bus === "beacon" ? 0 : 0.25) : o.reverb;
-    if (rv > 0) { var sg = c.createGain(); sg.gain.value = rv; g.connect(sg); sg.connect(AE.conv); }
+    if (rv > 0 && !settings.lite) { var sg = c.createGain(); sg.gain.value = rv; g.connect(sg); sg.connect(AE.conv); }
     if (o.fadeIn) { g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + o.fadeIn); }
     try { src.start(t, o.offset || 0); } catch (e) { return null; }
     var h = {

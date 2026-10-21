@@ -65,7 +65,9 @@ function makeRuntime(def, st) {
     guard: def.guard || null, post: def.post ? { x: def.post[0], y: def.post[1] } : null, oko: !!(def.oko || def.squad || def.guard), squad: !!def.squad, fresh: !!def.fresh,
     route: null, ri: 0, stuck: 0, exit: null, repT: 0, fixT: 0, heatN: 0, over: 0, nodeT: 0,
     /* (2.0) участок обхода патруля, рабочая машина кабинета, сапёр ОКО */
-    beat: def.beat || null, bi: def.bi || 0, bdir: 1, work: !!def.work, garrison: def.garrison || null, sapper: !!def.sapper || base.beh.indexOf("mines") >= 0
+    beat: def.beat || null, bi: def.bi || 0, bdir: 1, work: !!def.work, garrison: def.garrison || null, sapper: !!def.sapper || base.beh.indexOf("mines") >= 0,
+    /* (2.0) страж лестницы, лифта или шлюза (вид объекта) и тварь, обжившая кабинет */
+    stairPost: def.stairPost || null, lair: !!def.lair
   };
   f.hp = f.maxhp; f.shield = f.shieldMax;
   if (aff(f, "fast")) { f.spd = Math.max(1, f.spd - 1); f.acd = Math.max(1, f.acd - 1); }
@@ -157,18 +159,39 @@ function nearHero(f) {
   return (fr >= 0 && fr === rm[idx(G().x, G().y)]) || cheb(f, heroPos()) <= 5;
 }
 function losTo(f) { return LAB.los(CUR().fl, CUR().fs, f.x, f.y, G().x, G().y); }
+/* (2.0) Узлы связи и начальники этажа — список раз в такт: машин на этаже
+   сотни, а ум машины спрашивают на каждом шаге и у каждой двери в поиске
+   пути — перебирать ради этого весь этаж слишком дорого. */
+var specN = -1, specOf = null, relays = [], commanders = [];
+function specials() {
+  if (specN === tickN && specOf === foes) return;
+  specN = tickN; specOf = foes; relays = []; commanders = [];
+  for (var i = 0; i < foes.length; i++) {
+    var o = foes[i];
+    if (o.dead || o.calm) continue;
+    if (has(o, "relay")) relays.push(o);
+    if (!o.ally && has(o, "commander")) commanders.push(o);
+  }
+}
 function relayNear(f) {
   if (f.kind !== "mech") return false;
-  for (var i = 0; i < foes.length; i++) { var r = foes[i]; if (!r.dead && !r.calm && r !== f && has(r, "relay") && cheb(r, f) <= 6) return true; }
+  specials();
+  for (var i = 0; i < relays.length; i++) { var r = relays[i]; if (!r.dead && !r.calm && r !== f && cheb(r, f) <= 6) return true; }
   return false;
 }
 /* Начальник рядом: роботы умнее и злее. */
 function commanderNear(f) {
   if (f.kind !== "mech") return false;
-  for (var i = 0; i < foes.length; i++) { var c = foes[i]; if (c !== f && !c.dead && !c.calm && !c.ally && has(c, "commander") && cheb(c, f) <= 5) return true; }
+  specials();
+  for (var i = 0; i < commanders.length; i++) { var c = commanders[i]; if (c !== f && !c.dead && !c.calm && !c.ally && cheb(c, f) <= 5) return true; }
   return false;
 }
-function iqOf(f) { return Math.max(0, f.iq + (relayNear(f) ? 2 : 0) + (commanderNear(f) ? 2 : 0) - (f.confused > 0 ? 3 : 0)); }
+/* ум машины за такт считается один раз: его спрашивают на каждом шаге поиска пути у дверей */
+function iqOf(f) {
+  if (f.iqN === tickN) return f.iqV;
+  f.iqN = tickN;
+  return (f.iqV = Math.max(0, f.iq + (relayNear(f) ? 2 : 0) + (commanderNear(f) ? 2 : 0) - (f.confused > 0 ? 3 : 0)));
+}
 function detOf(f) {
   var d = f.det;
   if (gm().armorSpecial("stealth")) d -= 3;
@@ -197,6 +220,9 @@ function hears(f) {
   var bonus = has(f, "deaf") ? 3 : has(f, "tracker") ? 5 : 0;
   /* «вибрация»: шаги по настилу чувствуются издалека, даже тихие — но только пока вы идёте */
   if (has(f, "vibro") && gm().lastMoveAt && Date.now() - gm().lastMoveAt() < 900 && d <= 9) return true;
+  /* (2.0) дальше, чем слышно и в открытую, — не слышит: прямую видимость не считаем
+     (машин на этаже — сотни, такт должен оставаться лёгким) */
+  if (d > n + bonus) return false;
   if (!losTo(f)) n -= 2; /* за стеной хуже слышно */
   return d <= n + bonus;
 }
@@ -349,6 +375,39 @@ function realTick() {
   if (S.turnBased) return;                     /* по ходам: мир движется после действий героя */
   tick();
 }
+/* (2.0) Подробность мира. Машин на этаже сотни, а слышно и видно только
+   ближних: спокойная машина далеко от носителя (не гонится, без приказа ОКО,
+   не начальник этажа) думает не каждый такт, а через один — или реже, если
+   устройству тяжело или включён облегчённый режим. Дальше, чем слышно её
+   шаги, разницы не заметить: она так же обходит участок, только медленнее,
+   а подойдёте ближе — снова в полную силу. Тревога, погоня, приказ — сразу
+   каждый такт. Уровень растёт сам, если такт долго не укладывается в
+   бюджет, и опускается, когда снова легко. */
+var LOD = [
+  { r: 32, k: 2, r2: 56, k2: 4 },
+  { r: 26, k: 3, r2: 44, k2: 6 },
+  { r: 20, k: 4, r2: 36, k2: 8 },
+  { r: 16, k: 6, r2: 28, k2: 12 }
+];
+var lodAuto = 0, tickEma = 0, lodAt = 0, heavyN = 0, heavyTold = false;
+var perfNow = window.performance && performance.now ? function () { return performance.now(); } : function () { return Date.now(); };
+function lodBase() { return S.lite ? 2 : 0; }
+function lodLevel() { return Math.max(lodBase(), lodAuto); }
+/* до какого расстояния машины думают каждый такт — дальше шаги и возню не играем */
+function lodR() { return LOD[lodLevel()].r; }
+function thinnable(f) { return f.state === "idle" && !f.task && !f.boss && !f.ally && !(f.bleedT > 0) && !has(f, "stalker"); }
+function tickBudget(ms) {
+  tickEma = tickEma ? tickEma * 0.8 + ms * 0.2 : ms;
+  if (tickN - lodAt < 12) return;
+  if (tickEma > 110 && lodAuto < LOD.length - 1) { lodAuto++; lodAt = tickN; tickEma = 80; }
+  else if (tickEma < 35 && lodAuto > 0 && tickN - lodAt > 40) { lodAuto--; lodAt = tickN; }
+  /* устройству тяжело и облегчённого режима нет — подсказать один раз */
+  heavyN = tickEma > 200 ? heavyN + 1 : 0;
+  if (heavyN >= 30 && !heavyTold && !S.lite) {
+    heavyTold = true;
+    LAB.say((LAB.desktop ? "Компьютеру" : "Телефону") + " тяжело: на этаже много машин. В настройках есть облегчённый режим — с ним игра пойдёт ровнее.", { interrupt: false, prio: "info" });
+  }
+}
 /* Один такт мира. В пошаговом режиме зовётся после каждого действия героя. */
 function tick() {
   if (G().stair) return; /* игрок на лестнице: этаж ждёт */
@@ -356,13 +415,21 @@ function tick() {
   if (G().st.navjam > 0 && --G().st.navjam === 0) say("Навигатор снова видит этаж.");
   if (LAB.depths) LAB.safe(function () { LAB.depths.tick(); });
   tickN++;
+  var t0 = perfNow();
   statusTick(false);
   var fs = CUR().fs;
-  var spotted = [];
+  var spotted = [], lod = LOD[lodLevel()], hx = G().x, hy = G().y;
   for (var i = 0; i < foes.length; i++) {
     var f = foes[i];
     if (f.dead) continue;
-    LAB.safe(function () { foeTick(f, spotted); });
+    if (thinnable(f)) {
+      var dd = Math.max(Math.abs(f.x - hx), Math.abs(f.y - hy));
+      if (dd > lod.r) {
+        if (f.lodP == null) f.lodP = Math.floor(Math.random() * 24);
+        if ((tickN + f.lodP) % (dd > lod.r2 ? lod.k2 : lod.k)) continue;
+      }
+    }
+    try { foeTick(f, spotted); } catch (e) { try { console.warn("[Лаборатория]", e); } catch (_) { /* */ } }
     if (G().dead) return;
   }
   shellsTick();
@@ -377,6 +444,7 @@ function tick() {
   /* бой окончен: короткий сигнал, когда опасность ушла надолго */
   if (dz) { dangerT++; calmT = 0; } else { calmT++; if (dangerT >= 4 && calmT === 4) { A("play", "combat_clear"); dangerT = 0; } if (calmT > 4) dangerT = 0; }
   if (tickN % 10 === 0) syncFoes();
+  tickBudget(perfNow() - t0);
 }
 
 /* ── особые машины и твари ── */
@@ -682,9 +750,11 @@ function serviceStep(f, canMove) {
   var t = f.svc && !f.svc.dead && f.svc.hp < f.svc.maxhp ? f.svc : null;
   if (!t) {
     f.svc = null;
+    /* кого чинить, ищет раз в несколько тактов: машин на этаже сотни */
+    if ((f.svcN || 0) > tickN) return false;
     var bd = 13;
     foes.forEach(function (o) { if (o !== f && hostile(o) && o.kind === "mech" && o.hp < o.maxhp * 0.75 && dist(o, f) < bd) { bd = dist(o, f); t = o; } });
-    if (!t) return false;
+    if (!t) { f.svcN = tickN + 4; return false; }
     f.svc = t;
   }
   if (cheb(f, t) <= 1) {
@@ -1718,7 +1788,8 @@ function kill(f, quiet) {
     /* машины ОКО остались без маршрутов и приказов — растерялись */
     foes.forEach(function (o) { if (o !== f && hostile(o) && o.kind === "mech" && (o.oko || o.patrol || o.route || o.guard)) o.confused = Math.max(o.confused || 0, 12); });
   }
-  if (LAB.oko && f.kind === "mech" && !f.ally) LAB.oko.event("kill", { task: f.task, stalker: has(f, "stalker"), camera: has(f, "camera"), guard: f.guard, post: f.post, oko: f.oko, x: f.x, y: f.y });
+  if (LAB.oko && f.kind === "mech" && !f.ally) LAB.oko.event("kill", { task: f.task, stalker: has(f, "stalker"), camera: has(f, "camera"), guard: f.guard, post: f.post, oko: f.oko, x: f.x, y: f.y,
+    beat: f.beat && !f.sapper ? f.beat : null, corr: f.corr, room: f.room, type: f.type, garrison: f.garrison });
   if (LAB.oko && f.boss) LAB.oko.event("boss");
   if (has(f, "commander")) {
     var lost = 0;
@@ -1969,6 +2040,60 @@ function dispatch(n, mode, at) {
   return got;
 }
 function sendSquad(n, mode) { return dispatch(n, mode).length; }
+/* (2.0) Замена потерь (oko.js). Новый патрульный выходит на участок погибшего
+   из дальней от вас точки обхода — не у вас на глазах. Пусто — место на виду,
+   ОКО подождёт. При большом нажиме (q.n от трёх) идут тяжёлые машины и сразу
+   — к месту потерь. */
+function replacePatrol(q) {
+  var hp = heroPos(), fl = CUR().fl, fs = CUR().fs, best = null, bd = -1;
+  (q.beat || []).forEach(function (pt) {
+    var d = Math.abs(pt[0] - hp.x) + Math.abs(pt[1] - hp.y);
+    if (d < 12 || d <= bd) return;
+    if (d < 24 && LAB.los(fl, fs, hp.x, hp.y, pt[0], pt[1])) return;
+    best = pt; bd = d;
+  });
+  if (!best) return [];
+  var heavy = q.n >= 3, pool = heavy ? okoPool("hunt") : (LAB.garrison ? LAB.garrison.patrolPool(G().L, G().F) : okoPool("patrol")), got = [];
+  for (var i = 0; i < q.n; i++) {
+    var c = i === 0 && canStand(null, best[0], best[1]) ? best : freeCellNear(best[0], best[1], null);
+    if (!c) break;
+    var type = !heavy && i === 0 && q.type && LAB.FOES[q.type] ? q.type : pool[Math.floor(Math.random() * pool.length)];
+    if (!LAB.FOES[type]) type = "patrolbot";
+    var sp = spawnFoe(type, c[0], c[1], { patrol: true, beat: q.beat, corr: q.corr, oko: true, squad: q.n > 1 });
+    if (!sp) break;
+    if (heavy && q.at) { sp.state = "alert"; sp.lastKnown = { x: q.at.x, y: q.at.y }; sp.lost = 0; } else sp.state = "idle";
+    got.push(sp);
+  }
+  if (got.length) A("foeSound", { x: best[0], y: best[1], id: "repl" + got[0].id, snd: "robot", kind: "mech" }, "radio");
+  return got;
+}
+/* Кабинет опустел — ОКО присылает в него машины по назначению помещения
+   (при большом нажиме — стражей), пока вас нет ни в нём, ни у его двери.
+   null — кабинета нет, ждать нечего. */
+function refillRoom(q) {
+  var fl = CUR().fl, rm = fl.rooms[q.room], hp = heroPos();
+  if (!rm) return null;
+  if (fl.room[idx(hp.x, hp.y)] === q.room) return [];
+  var door = null;
+  for (var di = 0; di < fl.doors.length; di++) if (fl.doors[di].room === q.room) { door = fl.doors[di]; break; }
+  if (door && Math.abs(door.x - hp.x) + Math.abs(door.y - hp.y) < 7) return [];
+  var cells = [];
+  for (var y = rm.y0; y <= rm.y1; y++) for (var x = rm.x0; x <= rm.x1; x++) if (canStand(null, x, y)) cells.push([x, y]);
+  for (var k = cells.length - 1; k > 0; k--) { var j = Math.floor(Math.random() * (k + 1)), t = cells[k]; cells[k] = cells[j]; cells[j] = t; }
+  var GR = LAB.garrison, cat = (GR && GR.CAT[q.cat]) || { roles: ["guard"] }, got = [];
+  for (var i = 0; i < q.n && i < cells.length; i++) {
+    var role = q.n >= 3 ? "guard" : cat.roles[Math.min(i, cat.roles.length - 1)];
+    var pool = GR ? GR.rolePool(role, G().L, G().F) : ["patrolbot"];
+    var type = pool[Math.floor(Math.random() * pool.length)], base = LAB.FOES[type];
+    if (!base) continue;
+    var ex = { garrison: q.cat, oko: true };
+    if (!has(base, "cleaner") && !has(base, "mimic")) { ex.guard = "room"; ex.post = [cells[i][0], cells[i][1]]; }
+    var sp = spawnFoe(type, cells[i][0], cells[i][1], ex);
+    if (sp) { sp.state = "idle"; got.push(sp); }
+  }
+  if (got.length && door) A("doorOpen", door, true);
+  return got;
+}
 function doorNear(x, y) {
   var fl = CUR().fl;
   for (var k = 0; k < 4; k++) { var v = DIRV[["N", "S", "W", "E"][k]], nx = x + v[0], ny = y + v[1]; if (LAB.inb(nx, ny) && fl.t[idx(nx, ny)] === LAB.T.DOOR) return fl.doorAt[idx(nx, ny)]; }
@@ -2291,8 +2416,9 @@ LAB.combat = {
   danger: danger, hunted: hunted, visibleFoes: visibleFoes, nearestFoe: nearestFoe, aliveCount: aliveCount, jammed: jammed,
   afterPlayerMove: afterPlayerMove, noise: noise, turretsOff: turretsOff, turretsOurs: turretsOurs, turretsHostile: turretsHostile, turretsLeft: turretsLeft,
   robotsCalm: robotsCalm, calmAll: calmAll, chaser: chaser, alertMech: alertMech, sendSquad: sendSquad, deployTurret: deployTurret, noiseLure: noiseLure, throwNoise: throwNoise,
-  dispatch: dispatch, okoPoint: okoPoint, patrols: patrols, sappers: sappers, minePoints: minePoints, drones: drones, repairers: repairers, guards: guards, sendCheck: sendCheck, reroute: reroute, dismiss: dismiss, despawn: despawn,
-  lastSquad: function () { return lastSquad; }, tickN: function () { return tickN; }, search: search, netUp: netUp, camFacing: camFacing,
+  dispatch: dispatch, replacePatrol: replacePatrol, refillRoom: refillRoom, okoPoint: okoPoint, patrols: patrols, sappers: sappers, minePoints: minePoints, drones: drones, repairers: repairers, guards: guards, sendCheck: sendCheck, reroute: reroute, dismiss: dismiss, despawn: despawn,
+  lastSquad: function () { return lastSquad; }, tickN: function () { return tickN; },
+  lodR: lodR, lodLevel: lodLevel, tickMs: function () { return tickEma; }, search: search, netUp: netUp, camFacing: camFacing,
   quietTurret: quietTurret, jammer: jammer, freeCellNear: freeCellNear, spawnFoe: spawnFoe, damageFoe: damageFoe, unmask: unmask, dropCarry: dropCarry, _relayCall: function (f) { relayCall(f); }, _cleanerTick: function (f) { cleanerTick(f); }, isTurret: isTurret, cutTurret: cutTurret, mineTurret: mineTurret, unmineTurrets: unmineTurrets, flankCell: flankCell,
   mineCount: function () { return foes.filter(function (f) { return isNetTurret(f) && f.mine; }).length; }, cutCount: function () { return foes.filter(function (f) { return (isNetTurret(f) && f.cut) || (isCam(f) && f.camOff); }).length; },
   cams: cams, camState: camState, camSet: camSet, camExpire: camExpire, camCount: camCount, isCam: isCam,
