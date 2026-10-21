@@ -42,8 +42,9 @@ if (process.arch === 'ia32') app.setPath('userData', path.join(app.getPath('appD
 // На Windows с обновлениями осени 2026 года этот процесс в 32-битной сборке
 // (Electron 22) падает сразу при запуске; Chromium поднимает его девять раз
 // подряд и закрывает игру. Запасные ступени: без песочницы графики; графика
-// в главном процессе и без ускорения. Упал трижды за десять секунд — игра
-// перезапускается на следующей ступени, а ступень, на которой страница
+// в главном процессе и без ускорения. Упал трижды за десять секунд (или
+// окно погибло, так и не открыв страницу) — игра перезапускается на
+// следующей ступени, а ступень, на которой страница
 // открылась, запоминает (gpu-step.txt в папке данных). В самопроверке игра
 // себя не перезапускает: выходит с кодом 7, и сборка запускает её снова с
 // нужным --lab-gpu-step=N.
@@ -76,6 +77,10 @@ function gpuGone(d) {
 }
 // Окно погибло следом за процессом графики — тоже повод для следующей ступени.
 function gpuRecent() { return gpuCrashes.length > 0 && Date.now() - gpuCrashes[gpuCrashes.length - 1] < 10000; }
+// (2.0) Окно погибло, так и не открыв страницу, — тоже: на образе Windows
+// осени 2026 года 32-битная сборка без песочницы графики роняет окно ещё до
+// страницы, а графика в главном процессе и без ускорения работает.
+let pageOpened = false;
 
 // ── ЖУРНАЛ ── (папка данных игры: %APPDATA%\Подземная лаборатория\lab.log;
 // у 32-битной сборки — %APPDATA%\Подземная лаборатория (32 бит)\lab.log)
@@ -185,6 +190,7 @@ function createWindow() {
   win.webContents.on('render-process-gone', (e, d) => {
     log('render-process-gone ' + (d && d.reason));
     if (gpuRecent() && gpuNextStep('окно погибло следом')) return;
+    if (!pageOpened && d && d.reason !== 'clean-exit' && d.reason !== 'killed' && gpuNextStep('окно погибло, не открыв страницу')) return;
     if (SELFTEST) app.exit(3);
   });
   win.on('page-title-updated', e => e.preventDefault());
@@ -216,6 +222,7 @@ function createWindow() {
   sapiReady.then(open); setTimeout(open, 6000);
   sapiReady.then(pushTts);
   win.webContents.on('did-finish-load', () => {
+    pageOpened = true;
     pushTts();
     // Страница открылась на запасной ступени — с неё и начинать в следующий раз.
     if (gpuStep > 0) { try { fs.writeFileSync(gpuStepFile, String(gpuStep), 'utf8'); } catch (_) { } }
