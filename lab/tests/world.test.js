@@ -109,14 +109,16 @@ for (let si = 0; si < seeds; si++) {
           else { stat.shopN = (stat.shopN || 0) + 1; stat.shopD = (stat.shopD || 0) + dmin; stat.shopMax = Math.max(stat.shopMax || 0, dmin); }
         }
       }
-      /* (2.0) стартовый набор у капсулы пробуждения: две аптечки и две энергобатареи
-         в двух шагах от неё (или хотя бы в её помещении); бластера и брони на полу нет */
+      /* (2.0) стартовый набор у капсулы пробуждения: (2.1) десять аптечек и десять
+         энергобатарей в двух шагах от неё (или хотя бы в её помещении); бластера и
+         брони на полу нет */
       if (L === 1 && F === 1) {
         const cap = fl.objs.find(o => o.type === "wake");
         const at2 = i => cap && (Math.max(Math.abs(i.x - cap.x), Math.abs(i.y - cap.y)) <= 2 || fl.room[i.y * LAB.W + i.x] === cap.room);
-        const med = fl.items.filter(i => at2(i) && i.kind === "item" && i.item === "medkit_s").length;
-        const bat = fl.items.filter(i => at2(i) && i.kind === "ammo" && i.ammo === "energy").length;
-        if (!cap || med < 2 || bat < 2) err(`${at}: у капсулы аптечек ${med}, энергобатарей ${bat}`);
+        const sumN = a => a.reduce((t, i) => t + (i.n || 1), 0);
+        const med = sumN(fl.items.filter(i => at2(i) && i.kind === "item" && i.item === "medkit_s"));
+        const bat = sumN(fl.items.filter(i => at2(i) && i.kind === "ammo" && i.ammo === "energy"));
+        if (!cap || med < 10 || bat < 10) err(`${at}: у капсулы аптечек ${med}, энергобатарей ${bat}`);
         if (fl.items.some(i => (i.w && i.w.id === "w_start_spark") || (i.a && i.a.id === "a_start_suit"))) err(`${at}: стартовый бластер или комбинезон лежит на полу`);
         stat.kitNear = (stat.kitNear || 0) + fl.items.filter(i => cap && Math.max(Math.abs(i.x - cap.x), Math.abs(i.y - cap.y)) <= 2 && ((i.kind === "item" && i.item === "medkit_s") || (i.kind === "ammo" && i.ammo === "energy"))).length;
       }

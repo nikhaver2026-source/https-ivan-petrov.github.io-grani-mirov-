@@ -151,8 +151,48 @@ LAB.floorSlots = function (seed, L, F) {
 var weaponSeq = 0;
 /* Ступень оружия — число после модели в названии («Искра» Б-3): растёт с редкостью и глубиной. */
 LAB.weaponMark = function (rank, lvl) { return 1 + (rank || 0) + Math.floor((lvl || 1) / 10); };
-/* (1.5) Бластер чем круче, тем больше зарядов: каждая ступень — плюс восемь. */
 LAB.isBlaster = function (b) { return !!b && (b.cls === "blaster" || /бластер/.test(b.n || "")); };
+/* (2.1, просьба игрока) Ёмкость — сколько выстрелов даёт одна батарея или
+   заряд. Чем оружие лучше, тем больше: «Искра» — тридцать, у вида ёмкость
+   растёт с силой выстрела (урон, очередь, свойства, дальность) и с глубиной,
+   где он встречается; у экземпляра — ещё с каждой ступенью (плюс восемь
+   процентов от ёмкости вида) и с качеством (плюс пять процентов за шаг).
+   Так у всех бластеров, лучей и излучателей на батареях и зарядах;
+   огнестрел на пулях, дроби, иглах и газе — как прежде: в двустволке два
+   патрона. Прежде тяжёлое оружие делало два-восемь выстрелов, а лишь у
+   бластеров было плюс восемь за ступень. */
+var PHYS_AMMO = { none: 1, slug: 1, buckshot: 1, k_needle: 1, g_gascan: 1 };
+LAB.chargeGun = function (b) { return !!b && b.cap > 0 && (b.rng || 1) > 1 && !PHYS_AMMO[b.ammo]; };
+function shotPower(b) {
+  var k = 1 + (b.pierce ? 0.25 : 0) + (b.area ? 0.25 : 0) + (b.noarmor ? 0.3 : 0) + 0.1 * (b.chain || 0) + (b.freeze || b.slow || b.mark || b.stunMech || b.knock ? 0.1 : 0);
+  return b.dmg * (b.burst || 1) * k * (1 + ((b.rng || 6) - 6) * 0.03);
+}
+var capMemo = {};
+LAB.capBase = function (base) {
+  var b = LAB.WEAPONS[base];
+  if (!LAB.chargeGun(b)) return b ? b.cap || 0 : 0;
+  if (capMemo[base] == null) capMemo[base] = Math.max(30, Math.round(30 * Math.pow(shotPower(b) / shotPower(LAB.WEAPONS.spark), 0.4) * (1 + ((LAB.WEAPON_DEPTH[base] || 1) - 1) / 300)));
+  return capMemo[base];
+};
+LAB.weaponCap = function (base, rank, lvl, qual) {
+  var b = LAB.WEAPONS[base];
+  if (!b || !b.cap) return 0;
+  if (!LAB.chargeGun(b)) return b.cap + ((rank || 0) >= 3 ? Math.ceil(b.cap * 0.25) : 0);
+  var q = qual == null ? 1 : qual;
+  return Math.round(LAB.capBase(base) * (1 + 0.08 * (LAB.weaponMark(rank, lvl) - 1)) * (1 + 0.05 * (q - 1)));
+};
+/* Оружие из прежней записи — с ёмкостью по новому правилу: база
+   пересчитывается, модули и расточка мастерской остаются, заряд — в той же
+   доле (полный — полный). */
+LAB.fixCap = function (w) {
+  if (!w || w.capV === 2 || !LAB.WEAPONS[w.base]) return w;
+  var was = w.cap || 0, full = was > 0 && w.charge >= was, nb = LAB.weaponCap(w.base, w.rank, w.lvl, w.qual);
+  if (w.cap0 != null && LAB.workshop && LAB.workshop.recalc) { w.cap0 = nb; LAB.workshop.recalc(w); }
+  else w.cap = nb;
+  if (was > 0) w.charge = full ? w.cap : Math.min(w.cap, Math.round((w.charge || 0) * w.cap / was));
+  w.capV = 2;
+  return w;
+};
 LAB.makeWeapon = function (base, lvl, rank, qual, idHint) {
   var b = LAB.WEAPONS[base];
   var k = (1 + 0.14 * (lvl - 1)) * LAB.RANK_MULT[rank] * LAB.QUAL_MULT[qual], mark = LAB.weaponMark(rank, lvl);
@@ -160,7 +200,7 @@ LAB.makeWeapon = function (base, lvl, rank, qual, idHint) {
     id: idHint || ("w" + (++weaponSeq) + "_" + base),
     base: base, g: b.g, rank: rank, qual: qual, lvl: lvl,
     dmg: Math.max(1, Math.round(b.dmg * k)),
-    rng: b.rng, spread: b.spread, cap: b.cap ? (LAB.isBlaster(b) ? b.cap + 8 * (mark - 1) : b.cap + (rank >= 3 ? Math.ceil(b.cap * 0.25) : 0)) : 0,
+    rng: b.rng, spread: b.spread, cap: LAB.weaponCap(base, rank, lvl, qual), capV: 2,
     cd: b.cd, ammo: b.ammo, dt: b.dt, mods: 0
   };
   w.charge = w.cap;
@@ -806,11 +846,12 @@ function genFloor(seed, L, F, attempt) {
     placeRequirement({ kind: "elevpass", L: L }, r.pick(ez), -1);
   }
 
-  /* 12. (2.1) Стартовый набор у капсулы: две энергобатареи и две аптечки — в
-     двух шагах от неё, каждая на своей клетке (свой маяк). Бластер и
-     комбинезон теперь сразу у героя (game.js, newState). Прежняя комната
-     находок выбирается, как раньше, и случайных выборов столько же: остальной
-     первый этаж в прежних записях не сдвигается. */
+  /* 12. (2.1) Стартовый набор у капсулы: десять энергобатарей и десять
+     аптечек — четыре стопки по пять в двух шагах от неё, каждая на своей
+     клетке (свой маяк). Бластер и комбинезон сразу у героя (game.js,
+     newState). Прежняя комната находок выбирается, как раньше, и случайных
+     выборов столько же: остальной первый этаж в прежних записях не
+     сдвигается. */
   if (L === 1 && F === 1) {
     var z0 = [];
     for (s = 0; s < NS; s++) if (main[s] && zone[s] === -1 && s !== U) z0.push(s);
@@ -822,7 +863,7 @@ function genFloor(seed, L, F, attempt) {
         if (Math.max(Math.abs(x9 - capO.x), Math.abs(y9 - capO.y)) <= 2 && !objCell[idx(x9, y9)] && !itemCell[idx(x9, y9)]) c9.push([x9, y9]);
       return c9.length ? r.pick(c9) : null;
     };
-    [{ kind: "ammo", ammo: "energy", n: 1 }, { kind: "ammo", ammo: "energy", n: 1 }, { kind: "item", item: "medkit_s", n: 1 }, { kind: "item", item: "medkit_s", n: 1 }]
+    [{ kind: "ammo", ammo: "energy", n: 5 }, { kind: "ammo", ammo: "energy", n: 5 }, { kind: "item", item: "medkit_s", n: 5 }, { kind: "item", item: "medkit_s", n: 5 }]
       .forEach(function (it9) { addItem(it9, U, nearCap()); });
   }
 
@@ -1229,6 +1270,8 @@ function genFloor(seed, L, F, attempt) {
   /* 21. (2.0) Охрана этажа: патрули в коридорах, сапёры, машины в кабинетах
      по важности и назначению (garrison.js) — последними, своим потоком. */
   if (LAB.garrison && LAB.garrison.place) LAB.garrison.place({ fl: fl, L: L, F: F, seed: seed, attempt: attempt, makeFoe: makeFoe });
+  /* 22. (2.1) Камеры ОКО в помещениях (garrison.js) — после охраны, своим потоком. */
+  if (LAB.garrison && LAB.garrison.placeCams) LAB.garrison.placeCams({ fl: fl, L: L, F: F, seed: seed, attempt: attempt, makeFoe: makeFoe });
 
   fl.sample = d0;
   fl.turrets = turrets;

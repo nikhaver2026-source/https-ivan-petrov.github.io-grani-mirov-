@@ -334,8 +334,10 @@ function deconMenu(o) {
 /* ── электрощит этажа: камеры и аварийные блокировки ── */
 function fuseMenu(o) {
   var cb = LAB.combat, s = st(o), items = [], fs = CUR().fs;
-  var live = cb && cb.cams ? cb.cams().filter(function (f) { return cb.camState(f) !== "off"; }) : [];
-  items.push({ label: live.length ? "Обесточить камеры этажа: рубильники и схема реле (головоломка)" : "Камеры этажа уже обесточены", disabled: !live.length, fn: function () {
+  var all = cb && cb.cams ? cb.cams() : [], live = all.filter(function (f) { return cb.camState(f) !== "off"; });
+  /* (2.1) камер нет вовсе — так и сказать (прежде щит говорил «уже обесточены») */
+  if (!all.length) items.push({ label: "Камер на этаже нет" + (cb && cb.camsBroken && cb.camsBroken() ? ": все разбиты" : "") + " — обесточивать нечего", info: true, keep: true, fn: function () { say("Автоматы камер на щите стоят без нагрузки: на этаже нет ни одной целой камеры ОКО."); } });
+  else items.push({ label: live.length ? "Обесточить камеры этажа: рубильники и схема реле (головоломка), камер под током — " + live.length : "Камеры этажа уже обесточены: ремонтник ОКО поднимет рубильники по одной камере", disabled: !live.length, why: "Все камеры этажа и так без питания.", fn: function () {
     UIx("closeAll");
     LAB.mini.relays(5 + Math.min(2, Math.floor(G().L / 25)), function (ok) {
       if (!ok) { A("play", "alarm_short"); say("Автомат выбило с треском: схема не сошлась. Шум слышно по коридору."); if (cb) cb.noise(8); return; }
@@ -356,7 +358,7 @@ function fuseMenu(o) {
       if (LAB.oko) LAB.oko.event("lockdown");
     }, { title: "Защёлки дверей" });
   } });
-  items.push({ label: "Осмотреть щит", fn: function () { say(LAB.OBJ.fusebox.desc + " На щите " + (cb && cb.cams ? cb.cams().length : 0) + " " + pl(cb && cb.cams ? cb.cams().length : 0, "автомат камеры", "автомата камер", "автоматов камер") + " и рубильники дверей."); } });
+  items.push({ label: "Осмотреть щит", fn: function () { say(LAB.OBJ.fusebox.desc + " На щите " + all.length + " " + pl(all.length, "автомат камеры", "автомата камер", "автоматов камер") + (all.length ? ", под током — " + live.length : "") + " и рубильники дверей."); } });
   UIx("menu", "Электрощит этажа", items);
 }
 

@@ -99,7 +99,8 @@ function enter(o) {
 /* ── привязка (1.5): возрождение у этой капсулы — за кредиты ──
    Цена растёт каждые десять этажей вглубь: этажи 1–10 первого уровня —
    4 кредита, 11–20 — 8, на втором уровне — 12 и 16 и так далее. */
-function bindPrice(L, F) { return 4 * (Math.floor(LAB.depth(L, F) / 10) + 1); }
+/* (2.1) по режиму сложности: лёгкий — дешевле, сложные — дороже и круче растёт */
+function bindPrice(L, F) { var dk = LAB.dk(), n = Math.floor(LAB.depth(L, F) / 10); return Math.max(1, Math.round(4 * (dk.price || 1) * (1 + n * (dk.pgrow || 1)))); }
 function boundHere(o) {
   var cp = G().checkpoint;
   return !!(cp && cp.cap && cp.L === G().L && cp.F === G().F && cp.cap === o.id);

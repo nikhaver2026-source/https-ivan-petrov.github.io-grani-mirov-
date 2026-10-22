@@ -311,5 +311,41 @@ function place(ctx) {
   fl.garrison = { patrols: stats.patrols, sappers: stats.sappers, rooms: stats.rooms, posts: posts, robots: placed + posts };
 }
 
-LAB.garrison = { place: place, category: category, CAT: CAT, rolePool: rolePool, patrolPool: patrolPool, bioPool: bioPool };
+/* ── (2.1, просьба игрока) камеры ОКО в помещениях ──
+   Под потолком в углу важных помещений: постов, оружейных, серверных и
+   хранилищ — чаще, щитовых, лабораторий, мастерских и складов — реже,
+   кабинетов и медпунктов — изредка. Смотрят по комнате, поворачиваясь от
+   стены к стене (camLook); их можно разбить. На первом этаже их нет,
+   дальше — от одной до шести на этаж. Своим потоком и последними: прочее на
+   этаже (и в прежних сохранениях) от них не сдвигается. */
+function placeCams(ctx) {
+  var fl = ctx.fl, L = ctx.L, F = ctx.F;
+  if (!fl || !ctx.makeFoe || (L === 1 && F === 1)) return;
+  var r = LAB.Rng(ctx.seed, "roomcam:" + L + ":" + F + ":" + (ctx.attempt || 0));
+  var pool = (LAB.LEVELS[L].foes || []).filter(function (id) { var b = LAB.FOES[id]; return b && has(b, "camera"); });
+  if (!pool.length) pool = ["cam"];
+  if (!LAB.FOES[pool[0]]) return;
+  var want = Math.min(6, 1 + Math.floor(LAB.depth(L, F) / 30)), busy = busyMap(fl), arr = arrivals(fl), cand = {}, n = 0;
+  fl.rooms.forEach(function (rm, id) {
+    if (!rm || !rm.annex || rm.hidden || rm.shop || SKIP_KIND[((LAB.ANNEX_ROOMS || {})[rm.type] || {}).kind]) return;
+    var imp = CAT[category(rm)].imp;
+    if (imp >= 1) cand[id] = imp * imp;
+  });
+  while (n < want) {
+    var ks = Object.keys(cand);
+    if (!ks.length) break;
+    var id = +r.weighted(cand), rm = fl.rooms[id];
+    delete cand[id];
+    var cs = r.shuffle([[rm.x0, rm.y0, ["E", "S"]], [rm.x1, rm.y0, ["W", "S"]], [rm.x0, rm.y1, ["E", "N"]], [rm.x1, rm.y1, ["W", "N"]]]);
+    for (var i = 0; i < cs.length; i++) {
+      var c = cs[i];
+      if (!freeCell(fl, c[0], c[1], busy) || nearDoor(fl, c[0], c[1]) || !farFrom(arr, c[0], c[1], 3)) continue;
+      if (ctx.makeFoe(r.pick(pool), c[0], c[1], id, { camLook: c[2] }, r)) { busy[c[1] * LAB.W + c[0]] = 1; n++; }
+      break;
+    }
+  }
+  fl.roomCams = n;
+}
+
+LAB.garrison = { place: place, placeCams: placeCams, category: category, CAT: CAT, rolePool: rolePool, patrolPool: patrolPool, bioPool: bioPool };
 })();

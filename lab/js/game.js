@@ -28,7 +28,8 @@ var WORLD_V = 3;
 /* (2.1) Стартовый набор — с ним носитель выходит из капсулы: монтировка и
    заряженный бластер «Искра» (выбран он), надетый защитный комбинезон
    «Ковчег», бинт, походный ремнабор, сухпаёк и кредиты на первую покупку.
-   Две аптечки и две энергобатареи лежат у капсулы (world.js, шаг 12). */
+   Десять аптечек и десять энергобатарей лежат у капсулы — четыре стопки
+   по пять (world.js, шаг 12). */
 var START_KIT = 2;
 function newState(seed) {
   var suit = LAB.makeArmor("suit", 1, 1, "a_start_suit");
@@ -586,7 +587,7 @@ game.HUNGER_MIN = HUNGER_MIN;
 function bodyMinutes(min, asleep) {
   var b = body();
   if (asleep) { b.tox = Math.max(0, b.tox - min / 4); b.rad = Math.max(0, b.rad - min / 40); return; } /* сон в капсуле: раствор кормит и выводит, предупреждений нет */
-  var mk = 1 - (LAB.implants ? LAB.implants.stat("metab") : 0); /* (2.0) чип метаболизма */
+  var mk = (1 - (LAB.implants ? LAB.implants.stat("metab") : 0)) * (LAB.dk().body || 1); /* (2.0) чип метаболизма; (2.1) режим сложности */
   b.food -= min / HUNGER_MIN * mk;
   /* выспались в капсуле (восемь часов и больше) — бодрость какое-то время падает вдвое медленнее */
   b.wake -= min / 12 * (G.st.restedMin > 0 ? 0.5 : 1) * mk;
@@ -785,6 +786,7 @@ function giveItem(it, quiet) {
       break;
     case "credits": if (LAB.implants && LAB.implants.stat("loot")) it.n = Math.round(it.n * (1 + LAB.implants.stat("loot"))); G.credits += it.n; break; /* (2.0) чип старателя */
     case "weapon":
+      LAB.fixCap(it.w); /* (2.1) оружие из прежней записи — с новой ёмкостью */
       G.weapons.push(it.w);
       if (LAB.oko && LAB.oko.react) later(function () { LAB.oko.react("weapon"); }, 2500);
       if (!G.tut.weapon && hintsOn()) { G.tut.weapon = 1; extra = LAB.K(" Выбрать оружие — свайп одним пальцем вверх и сразу вниз. Вынуть — касание тремя пальцами.", " Выбрать оружие — Q и E или цифры от 1 до 9. Достать — R."); }
@@ -1134,7 +1136,10 @@ function sideOfDoor(r, d) { return d.x > r.x1 ? "E" : d.x < r.x0 ? "W" : d.y > r
 function roomStuff(r, brief, itemsFirst) {
   var objs = brief ? [] : CUR.fl.objs.filter(function (o) { return o.room === r.id; }).map(function (o) { return objName(o) + " " + relDir(o.x, o.y); });
   var npcs = CUR.fl.npcs.filter(function (n) { return n.room === r.id; }).map(function (n) { return npcName(n) + " " + relDir(n.x, n.y); });
-  var foes = LAB.combat ? LAB.combat.visibleFoes(8).map(function (f) { return f.name + " " + relDir(f.x, f.y); }) : [];
+  var seenF = LAB.combat ? LAB.combat.visibleFoes(8) : [], camF = LAB.combat && LAB.combat.isCam ? seenF.filter(LAB.combat.isCam) : [];
+  var foes = seenF.filter(function (f) { return camF.indexOf(f) < 0; }).map(function (f) { return f.name + " " + relDir(f.x, f.y); });
+  /* (2.1) камеры — отдельно: их можно разбить */
+  var cams = camF.map(function (f) { return f.name.split(",")[0].toLowerCase() + " " + relDir(f.x, f.y) + (f.camOff ? ", обесточена" : ""); });
   var items = floorItems().filter(function (it) { var rr = roomAt(it.x, it.y); return rr && rr.id === r.id; }).map(function (it) { return itemName(it) + " " + relDir(it.x, it.y); });
   var s = [], floor = items.length ? "На полу: " + items.slice(0, 5).join(", ") + (items.length > 5 ? " и ещё " + (items.length - 5) : "") + "." : "";
   /* «Осмотреться»: сначала что лежит на полу, потом что стоит в помещении */
@@ -1144,6 +1149,7 @@ function roomStuff(r, brief, itemsFirst) {
   if (trapsL) s.push(trapsL);
   if (npcs.length) s.push("Живые: " + npcs.join(", ") + ".");
   if (!itemsFirst && floor) s.push(floor);
+  if (cams.length) s.push("Под потолком: " + cams.join(", ") + ".");
   if (foes.length) s.push("Опасность: " + foes.join(", ") + "!");
   return s.join(" ");
 }
@@ -1287,6 +1293,11 @@ game.camsNear = camsNear;
 function cameraSabotage(f) {
   var cb = LAB.combat, k = cb.camState(f), dif = okoDiff(), items = [];
   var spotted = function () { if (LAB.oko) LAB.oko.event("camera", { x: G.x, y: G.y }); if (LAB.combat) LAB.combat.noise(6); };
+  /* (2.1, просьба игрока) разбить — сразу и навсегда: ремонтнику чинить нечего, но удар слышно, а ОКО заметит, что камера замолчала */
+  items.push({ label: "Разбить камеру: удар по объективу и кожуху — она ослепнет навсегда, но удар слышно, а ОКО заметит обрыв", fn: function () {
+    UIx("closeAll");
+    if (cb.smashCam(f)) say("Удар — объектив хрустит, кожух сорван, камера повисла на проводах. Она больше ничего не видит. ОКО заметит, что она замолчала, и пришлёт проверку.");
+  } });
   if (k !== "off") items.push({ label: "Закольцевать запись: подключить петлю к сервисному разъёму (повторите сигналы)", fn: function () {
     UIx("closeAll");
     LAB.mini.hack(hackLength(1 + Math.floor(Math.min(G.L, 20) / 6) + dif), function (ok) {
@@ -2039,7 +2050,7 @@ function terminalMenu(o) {
     /* (1.5) Оборонная сеть доступна всегда: камеры, турели, тревога. Прежде
        без турелей на этаже пункт был серым, а изоляция сегмента ОКО
        выключала все защитные функции — и казалось, что сеть не работает. */
-    if (iso) items.push({ label: "Защитные функции: ОКО изолировало сегмент сети, вернёт его примерно через " + iso + " " + plural(iso, "секунду", "секунды", "секунд") + " игры. Обойти изоляцию", fn: function () { isoMenu(o, st); } });
+    if (iso) items.push({ label: "Оборонная сеть: ОКО временно отрезало этот терминал (изоляция сегмента), вернёт его примерно через " + iso + " " + plural(iso, "секунду", "секунды", "секунд") + " игры. Обойти изоляцию или подождать", fn: function () { isoMenu(o, st); } });
     else items.push({ label: "Оборонная сеть этажа: " + defenseLine(), fn: function () { defenseMenu(o, st); } });
     if (!iso) items.push({ label: CUR.fs.robots ? "Роботы перепрошиты" : "Перепрошить роботов этажа (настройка частот и взлом)", fn: function () {
       if (CUR.fs.robots) { say("Роботы этажа уже не враждебны."); return; }
@@ -2149,12 +2160,13 @@ function turretMenu(o, st) {
    снова, если вас увидят. */
 function camWord(k) { return k === "off" ? "обесточена" : k === "ours" ? "перепрошита, докладывает «чисто»" : k === "loop" ? "на петле записи" : "смотрит для ОКО"; }
 function camLine() {
-  var cb = LAB.combat, cs = cb && cb.cams ? cb.cams() : [];
-  if (!cs.length) return "камер нет";
+  var cb = LAB.combat, cs = cb && cb.cams ? cb.cams() : [], nb = cb && cb.camsBroken ? cb.camsBroken() : 0;
+  if (!cs.length) return nb ? "камер нет: все " + nb + " разбиты" : "камер нет";
   var by = { on: 0, loop: 0, ours: 0, off: 0 };
   cs.forEach(function (f) { by[cb.camState(f)]++; });
   var p = [];
   if (by.on) p.push("смотрят " + by.on); if (by.loop) p.push("на петле " + by.loop); if (by.ours) p.push("ваших " + by.ours); if (by.off) p.push("обесточено " + by.off);
+  if (nb) p.push("разбито " + nb);
   return cs.length + " " + plural(cs.length, "камера", "камеры", "камер") + " (" + p.join(", ") + ")";
 }
 function defenseLine() {
@@ -2166,10 +2178,11 @@ function camTicks(base) { var dif = okoDiff(), blk = LAB.blockOf(G.L); return Ma
 function secs(t) { var s = Math.round(t / 2); return s + " " + plural(s, "секунду", "секунды", "секунд"); }
 function defenseMenu(o, st) {
   var cb = LAB.combat, items = [], nT = cb ? cb.turretsLeft() : 0, cs = cb && cb.cams ? cb.cams() : [];
+  /* (2.1) чего на этаже нет — сведения, а не «недоступно»: сеть работает, управлять здесь просто нечем */
   if (cs.length) items.push({ label: "Камеры этажа: " + camLine(), fn: function () { camerasMenu(o, st); } });
-  else items.push({ label: "Камеры: на этаже их нет", disabled: true, why: "На этом этаже ОКО не повесило камер — или их уже разбили.", fn: function () {} });
+  else items.push({ label: "Камеры: " + camLine() + " — управлять нечем", info: true, keep: true, fn: function () { say(cb && cb.camsBroken && cb.camsBroken() ? "Все камеры этажа разбиты: ОКО видит здесь только глазами машин." : "На этом этаже ОКО не повесило камер: оно видит только глазами машин и слышит датчиками."); } });
   if (nT) items.push({ label: "Турели этажа: " + nT + ", " + turretStatus(), fn: function () { turretMenu(o, st); } });
-  else items.push({ label: "Турели: на этаже их нет", disabled: true, why: "Турелей на этом этаже нет — ни отключать, ни перехватывать нечего. Камеры и тревога — здесь же.", fn: function () {} });
+  else items.push({ label: "Турели: на этаже их нет — управлять нечем", info: true, keep: true, fn: function () { say("Турелей на этом этаже нет — ни отключать, ни перехватывать нечего. Камеры и тревога — здесь же."); } });
   var lv = LAB.oko ? LAB.oko.level() : 0;
   if (lv >= 2 && lv <= 5) items.push({ label: "Сбросить тревогу: подменить доклады сенсоров (подбор ключа и взлом)", fn: function () {
     UIx("closeAll");
@@ -2202,7 +2215,7 @@ function isoMenu(o, st) {
         defenseMenu(o, st);
       }, { title: "Маршрутизация" });
     } },
-    { label: "Подождать: ОКО вернёт сегмент примерно через " + iso + " " + plural(iso, "секунду", "секунды", "секунд") + " игры", keep: true, fn: function () { say("Пока открыто окно, время в игре стоит. Отойдите от терминала и вернитесь позже — или найдите другой терминал безопасности."); } },
+    { label: "Подождать: ОКО вернёт терминал примерно через " + iso + " " + plural(iso, "секунду", "секунды", "секунд") + " игры — «Эхо» скажет, когда", fn: function () { say("Окно закрыто, время идёт. Когда ОКО вернёт терминал в оборонную сеть, «Эхо» скажет — и тогда подойдите к нему снова."); } },
     { label: "Назад", fn: function () { terminalMenu(o); } }
   ]);
 }
@@ -2242,7 +2255,8 @@ function camerasMenu(o, st) {
     });
   } });
   cs.forEach(function (f) {
-    items.push({ label: f.name.split(",")[0] + " " + relDir(f.x, f.y) + ": " + camWord(cb.camState(f)), fn: function () { cameraRemote(o, st, f); } });
+    var rr = roomAt(f.x, f.y); /* (2.1) камера в помещении — с его названием */
+    items.push({ label: f.name.split(",")[0] + (rr ? " в помещении «" + rr.name + "»" : "") + " " + relDir(f.x, f.y) + ": " + camWord(cb.camState(f)), fn: function () { cameraRemote(o, st, f); } });
   });
   items.push({ label: "Назад", fn: function () { defenseMenu(o, st); } });
   UIx("menu", "Камеры этажа", items);
@@ -2485,8 +2499,13 @@ function openContainer(o) {
 }
 
 /* ── МАГАЗИНЫ И СЛУЖБЫ ── */
-function priceK() { var k = G.L <= 10 ? 1 + G.L * 0.12 : 1 + 0.15 * (LAB.wealth(G.L, G.F) - 1); if (G.faction === "res") k *= 0.8; return k; }
+/* Рост цен с глубиной; (2.1) по режиму сложности — и сами цены (price), и то,
+   как круто они растут с каждым блоком (pgrow). priceDepth — без режима:
+   от него считается скупка (supply.js). */
+function priceDepth() { return G.L <= 10 ? 1 + G.L * 0.12 : 1 + 0.15 * (LAB.wealth(G.L, G.F) - 1); }
+function priceK() { var dk = LAB.dk(), k = (dk.price || 1) * (1 + (priceDepth() - 1) * (dk.pgrow || 1)); if (G.faction === "res") k *= 0.8; return k; }
 game.priceK = priceK;
+game.priceDepth = priceDepth;
 /* Торговый терминал: расходники, броня своей глубины, скупка деталей. */
 function vendingMenu(o) {
   A("play", "vend");
@@ -3279,7 +3298,7 @@ function die() {
   if (LAB.input) LAB.input.stopAll();
   A("death");
   LAB.vib([200, 100, 300]);
-  var lost = Math.round(G.credits * ((LAB.DIFF[S.difficulty || 1] || LAB.DIFF[1]).lose || 0.15));
+  var lost = Math.round(G.credits * (LAB.dk().lose || 0.15));
   G.credits -= lost;
   say("Вы погибли. «Эхо» удерживает сознание... Потеряно кредитов: " + lost + ".");
   journal("Гибель на уровне " + G.L + ", этаж " + G.F + ".");
@@ -3418,6 +3437,8 @@ function migrate(g) {
   if (!g.blockSeen) g.blockSeen = {};
   /* модули усиления прежних версий — модули мощности */
   (g.weapons || []).forEach(function (w) { if (w && w.mods > 0 && !w.mod) w.mod = { power: w.mods }; });
+  /* (2.1) ёмкость оружия — по новому правилу: «Искра» — тридцать, лучше оружие — больше */
+  (g.weapons || []).forEach(function (w) { LAB.fixCap(w); });
   /* надетая броня — та же запись, что в списке брони (после загрузки это были копии) */
   if (g.armor && g.armors) {
     var am = g.armors.filter(function (a) { return a && a.id === g.armor.id; })[0];
@@ -3472,7 +3493,7 @@ function newGame() {
   /* (2.1) стартовый набор: что при себе и что лежит у капсулы */
   var kitHint = hintsOn() ? LAB.K(" Достать оружие — касание тремя пальцами, сменить — двойное касание двумя пальцами.", " Достать оружие — R, сменить — Q и E.") : "";
   if (kitHint) G.tut.weapon = 1;
-  sayq("При вас монтировка и бластер «Искра» с полным зарядом, на вас защитный комбинезон «Ковчег». В рюкзаке бинт, походный ремнабор и сухпаёк. У капсулы лежат две аптечки и две энергобатареи — заберите их." + kitHint + " Пока вы в капсульном отсеке, машины вас не тронут: соберитесь, прежде чем выходить.");
+  sayq("При вас монтировка и бластер «Искра» с полным зарядом, на вас защитный комбинезон «Ковчег». В рюкзаке бинт, походный ремнабор и сухпаёк. У капсулы лежат десять аптечек и десять энергобатарей, четыре стопки по пять, — заберите их." + kitHint + " Пока вы в капсульном отсеке, машины вас не тронут: соберитесь, прежде чем выходить.");
   tutor("start");
   roomCheck(true);
   journal("Пробуждение. Уровень 1, этаж 1.");
@@ -3496,7 +3517,7 @@ function characterText() {
   if (st.length) lines.push("Состояние: " + st.join(", ") + ".");
   lines.push("Энергия имплантов " + G.en + " из " + G.enMax + ". Уровень героя " + G.lvl + ", опыт " + G.xp + " из " + LAB.xpNeed(G.lvl) + ". Сила " + G.str + ", ловкость " + G.agi + ", интеллект " + G.mind + ", харизма " + G.cha + ". Кредиты " + G.credits + ".");
   lines.push("Комплекс: уровень " + G.L + " «" + LAB.LEVELS[G.L].name + "», этаж " + G.F + ". Пропуск: " + (G.tier ? LAB.TIERS[G.tier].n.toLowerCase() : "нет") + ". Лифт этажей: " + (G.elev[G.L] ? "есть пропуск" : "нет пропуска") + ". " + (!LAB.isReactorLevel(G.L) ? "Шлюзовая ключ-карта уровня " + G.L + ": " + (G.gate[G.L] ? "есть" : "нет") : "Ключ доступа к «Истоку»: " + (hasCore(G.L) ? "есть" : "нет")) + ".");
-  lines.push("Образцов " + Object.keys(G.samples).length + ", тайников " + G.stats.secrets + ", записок " + G.stats.notes + ", побеждено врагов " + G.stats.kills + ". Сложность: " + LAB.DIFF[S.difficulty || 1].n.toLowerCase() + ".");
+  lines.push("Образцов " + Object.keys(G.samples).length + ", тайников " + G.stats.secrets + ", записок " + G.stats.notes + ", побеждено врагов " + G.stats.kills + ". Режим сложности: " + LAB.dk().n.toLowerCase() + ".");
   if (G.faction) lines.push("Фракция: " + LAB.FACTIONS[G.faction].n + ".");
   return lines;
 }

@@ -407,7 +407,7 @@ function settingsMenu() {
     { kind: "choice", label: "Синтезатор речи", options: ttsOpts, get: function () { return S.tts; }, set: function (v) { S.tts = v; LAB.saveSettings(); Sp.choose(); } },
     { label: function () { return "Голос синтезатора: " + (S.tts === "espeak" ? "встроенный eSpeak" : S.voice || autoVoiceName()); }, fn: voiceMenu },
     { kind: "slider", label: "Скорость речи", min: 0, max: 100, step: 5, get: function () { return S.ratePct == null ? 50 : +S.ratePct; }, set: function (v) { S.ratePct = v; S.rate = LAB.rateFromPct(v); LAB.saveSettings(); }, fmt: function (v) { return Math.round(v) + " процентов" + (v === 50 ? ", обычная" : ""); } },
-    { kind: "choice", label: "Уровень сложности", options: (LAB.DIFF_ORDER || [1, 2, 3]).map(function (k) { return { v: k, label: LAB.DIFF[k].n }; }), get: function () { return S.difficulty || 1; }, set: function (v) { S.difficulty = v; LAB.saveSettings(); }, descOf: function (v) { return LAB.DIFF[v] ? LAB.DIFF[v].desc : ""; } },
+    { kind: "choice", label: "Режим сложности", options: (LAB.DIFF_ORDER || [1, 2, 3]).map(function (k) { return { v: k, label: LAB.DIFF[k].n }; }), get: function () { return S.difficulty || 1; }, set: function (v) { S.difficulty = v; LAB.saveSettings(); }, descOf: function (v) { return LAB.DIFF[v] ? LAB.DIFF[v].desc : ""; } },
     vol("Громкость музыки", "musicVol"),
     vol("Громкость звуков", "fxVol"),
     vol("Громкость атмосферы", "ambVol"),
@@ -585,7 +585,7 @@ function weaponMenu(i) {
     { label: "Осмотреть", fn: function () {
       var Wk = LAB.workshop, ml = Wk ? Wk.modsLine(w) : "";
       var pf = Wk ? Wk.profile(w) : "";
-      say(w.name + ". " + d.desc + " Урон " + w.dmg + " (" + LAB.DTYPE_N[w.dt] + ")" + (w.cap ? ", заряд " + w.charge + " из " + w.cap : "") + ". " + (Wk ? pf.charAt(0).toUpperCase() + pf.slice(1) + " Состояние " + Math.round(Wk.cond(w)) + " из 100. " + (ml ? "Модули: " + ml + ". " : "") + "Гнёзд для модулей: " + Wk.slots(w) + ", занято " + Wk.used(w) + ". " : "Дальность " + w.rng + ". ") + LAB.RANKS[w.rank] + ".");
+      say(w.name + ". " + d.desc + " Урон " + LAB.weaponDmg(w) + " (" + LAB.DTYPE_N[w.dt] + ")" + (w.cap ? ", заряд " + w.charge + " из " + w.cap : "") + ". " + (Wk ? pf.charAt(0).toUpperCase() + pf.slice(1) + " Состояние " + Math.round(Wk.cond(w)) + " из 100. " + (ml ? "Модули: " + ml + ". " : "") + "Гнёзд для модулей: " + Wk.slots(w) + ", занято " + Wk.used(w) + ". " : "Дальность " + w.rng + ". ") + LAB.RANKS[w.rank] + ".");
       weaponMenu(i); } },
     { label: "Разобрать на детали", fn: function () { gm().scrapWeapon(i); weaponsMenu(); } },
     back(weaponsMenu)
@@ -867,7 +867,7 @@ function ending(win) {
   A("music", "ending");
   var g = G();
   var mins = Math.round((g.stats.ms + Date.now() - (gm().t0 || Date.now())) / 60000);
-  var stats = "Итоги. В игре " + Math.floor(mins / 60) + " ч " + (mins % 60) + " мин. Уровень героя " + g.lvl + ". Побеждено врагов " + g.stats.kills + ". Тайников " + g.stats.secrets + ". Записок " + g.stats.notes + ". Образцов " + Object.keys(g.samples).length + ". Гибелей " + g.stats.deaths + ". Сложность: " + LAB.DIFF[S.difficulty || 1].n.toLowerCase() + ".";
+  var stats = "Итоги. В игре " + Math.floor(mins / 60) + " ч " + (mins % 60) + " мин. Уровень героя " + g.lvl + ". Побеждено врагов " + g.stats.kills + ". Тайников " + g.stats.secrets + ". Записок " + g.stats.notes + ". Образцов " + Object.keys(g.samples).length + ". Гибелей " + g.stats.deaths + ". Режим сложности: " + LAB.dk().n.toLowerCase() + ".";
   /* как вы прошли пять глубин — страница перед итогами */
   var epi = LAB.depths && LAB.depths.epilogue ? LAB.depths.epilogue() : "";
   var pages = LAB.ENDING.concat(epi ? [epi] : [], [stats, LAB.CREDITS_TEXT || "Конец. Спасибо, что слушали."]);

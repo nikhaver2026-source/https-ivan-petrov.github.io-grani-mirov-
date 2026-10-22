@@ -175,7 +175,7 @@ function onLine(h, x, y) { for (var i = 0; i < h.cells.length; i++) if (h.cells[
 function slam(h) {
   var g = G(), cb = LAB.combat;
   if (onLine(h, g.x, g.y)) {
-    var dk = (LAB.DIFF[LAB.settings.difficulty || 1] || LAB.DIFF[1]).dmg || 1;
+    var dk = LAB.dk().dmg || 1;
     var dmg = Math.max(8, Math.round(g.hpMax * 0.28 * dk));
     if (cb && cb.hurtPlayer) cb.hurtPlayer(dmg, "phys", null);
     /* отбрасывает поперёк линии пресса — назад, туда, откуда шли (если там глухо — вперёд) */

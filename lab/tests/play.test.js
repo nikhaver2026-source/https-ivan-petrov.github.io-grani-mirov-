@@ -105,13 +105,13 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   const di = labels.findIndex(l => /сложности/.test(l));
   for (let i = mi; i > di; i--) await gest({ kind: "swipe", n: 1, dir: "L" });
   await gest({ kind: "swipe", n: 1, dir: "U" });
-  ok(await page.evaluate(() => LAB.settings.difficulty) === 2, "сложность переключается: тяжёлая");
+  ok(await page.evaluate(() => LAB.settings.difficulty) === 2, "режим сложности переключается: сложный");
   await gest({ kind: "swipe", n: 1, dir: "U" });
-  ok(await page.evaluate(() => LAB.settings.difficulty) === 3, "очень тяжёлая");
+  ok(await page.evaluate(() => LAB.settings.difficulty) === 3, "очень сложный");
   await gest({ kind: "swipe", n: 1, dir: "U" });
-  ok(await page.evaluate(() => LAB.settings.difficulty) === 4, "лёгкая");
+  ok(await page.evaluate(() => LAB.settings.difficulty) === 4, "лёгкий");
   await gest({ kind: "swipe", n: 1, dir: "U" });
-  ok(await page.evaluate(() => LAB.settings.difficulty) === 1, "и снова обычная");
+  ok(await page.evaluate(() => LAB.settings.difficulty) === 1, "и снова обычный");
   const ri = labels.findIndex(l => /Скорость речи/.test(l));
   const rs = await page.evaluate((ri) => {
     const w = LAB.ui.top(); w.i = ri;
@@ -221,8 +221,8 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   await page.evaluate(() => { LAB.game.curWeapon().charge = LAB.game.curWeapon().cap; LAB.combat.startFire("N"); });
   await page.waitForTimeout(1500);
   await page.evaluate(() => LAB.combat.stopFire());
-  const ch2 = await page.evaluate(() => LAB.game.curWeapon().charge);
-  ok(ch2 <= 12 - 3, "очередь: несколько выстрелов за удержание (осталось " + ch2 + ")");
+  const ch2 = await page.evaluate(() => LAB.game.curWeapon().charge), cap2 = await page.evaluate(() => LAB.game.curWeapon().cap);
+  ok(ch2 <= cap2 - 3, "очередь: несколько выстрелов за удержание (осталось " + ch2 + " из " + cap2 + ")");
   await gest({ kind: "tap", n: 3 });
   ok(await page.evaluate(() => !LAB.game.G.drawn), "оружие убрано");
 
@@ -1916,7 +1916,7 @@ LAB.ui.closeAll();
     out.lv1 = IM.level() === 1 && IM.slots() === 2 && IM.modSlots() === 1 && IM.maxGrade() === 1;
     G.inv.imp_regen = 1; g.useItem("imp_regen"); out.chipIn = G.implants.indexOf("regen") >= 0 && !G.inv.imp_regen && IM.catXp("med") > 0;
     const c1 = g.implantCost("regen");
-    G.inv.chip = 19; G.inv.cell = 9; G.inv.optic = 5; G.inv.relay = 5; G.inv.supercond = 3; G.inv.powercell = 3; G.inv.gel = 5; G.inv.cap = 9; G.inv.magnet = 3;
+    G.inv.chip = 19; G.inv.cell = 9; G.inv.optic = 5; G.inv.relay = 5; G.inv.supercond = 3; G.inv.powercell = 3; G.inv.gel = 5; G.inv.cap = 9; G.inv.magnet = 3; G.inv.reagent = 5;
     out.gradeNo = !IM.upgrade("regen", "bench", 4); /* общая ступень кибернетики 1: калибровка закрыта */
     G.cyber.xp.med = 560; G.cyber.xp.combat = 40; /* прокачка: общая ступень 6, медицина — пятая */
     out.lv6 = IM.level() === 6 && IM.slots() === 5 && IM.modSlots() === 2 && IM.maxGrade() === 3 && IM.selfSurgery() && IM.catLv("med") === 5;
@@ -1940,12 +1940,24 @@ LAB.ui.closeAll();
     out.slotsFull = G.implants.filter(id => IM.isChip(id)).length === 5 && /нейрогнёзда заняты/.test(SPOKEN.join(" ") + "") ;
     /* новые импланты в деле: дуга, сонар, петля камер, фаза, сифон */
     C.foes().forEach(f => { f.dead = true; });
-    const mk = (t, dx, dy) => { const c = C.freeCellNear(G.x + dx, G.y + dy, null); const f = c ? C.spawnFoe(t, c[0], c[1], {}) : null; if (f) { f.calm = false; f.ally = false; f.hp = f.maxhp = 500; } return f; };
+    g.CUR.fs.cleared = {}; C.tick(); /* (2.1) не в убежище: туда ОКО никого не выводит, а здесь нужны враги рядом */
+    /* враг рядом и на виду: разряд ищет цель по прямой видимости, а у стены «два шага вбок» бывают за стеной */
+    const mk = (t, dx, dy) => {
+      for (const [ax, ay] of [[dx, dy], [-dx, -dy], [dy, dx], [-dy, -dx], [1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const c = C.freeCellNear(G.x + ax, G.y + ay, null);
+        if (!c || !LAB.los(g.CUR.fl, g.CUR.fs, G.x, G.y, c[0], c[1])) continue;
+        const f = C.spawnFoe(t, c[0], c[1], {});
+        if (f) { f.calm = false; f.ally = false; f.hp = f.maxhp = 500; return f; }
+      }
+      return null;
+    };
     ["arc", "sonar", "camloop", "phase", "siphon"].forEach(id => { if (G.implants.indexOf(id) < 0) G.implants.push(id); });
     const bot = mk("patrolbot", 2, 0); G.en = 500; G.body.neuro = 0;
     const h0 = bot ? bot.hp : 0; C.useImplant("arc"); out.arc = !!bot && bot.hp < h0;
+    out.arcDiag = [!!bot, h0, bot && bot.hp, bot && (bot.x - G.x), bot && (bot.y - G.y), C.refuge(), G.en, (SPOKEN.slice(-2).join(" | ") || "").slice(0, 160)].join("/");
     G.body.neuro = 0; const seen0 = g.CUR.seen.reduce((a, v) => a + v, 0); C.useImplant("sonar"); out.sonar = g.CUR.seen.reduce((a, v) => a + v, 0) > seen0;
-    const cam = mk("cam", 0, 2); G.body.neuro = 0; C.useImplant("camloop"); out.camloop = !!cam && cam.blindT > 0;
+    const cam = mk("cam", 0, 2); G.body.neuro = 0; SPOKEN.length = 0; C.useImplant("camloop"); out.camloop = !!cam && cam.blindT > 0;
+    out.camDiag = [!!cam, cam && cam.blindT, cam && (cam.x - G.x), cam && (cam.y - G.y), G.en, G.body.neuro, (SPOKEN.join(" | ") || "").slice(0, 200)].join("/");
     G.body.neuro = 0; C.useImplant("phase"); const hp1 = G.hp; C.hurtPlayer(50, "phys", bot); out.phase = G.hp === hp1;
     G.st.phaseT = 0; G.body.neuro = 0; G.en = 10; C.useImplant("siphon"); out.siphon = G.en > 10;
     if (bot) bot.dead = true; if (cam) cam.dead = true;
@@ -1976,9 +1988,9 @@ LAB.ui.closeAll();
   ok(rp.engBench && rp.engMach && rp.refill && rp.armorBench, "инженерный кейс чинит верстак и сломанный автомат, начатый пополняют у верстака; броню у верстака со станками чинят до 100");
   ok(rp.kinds > 50 && rp.chipKinds >= 20 && rp.modKinds > 30, "импланты и чипы: видов " + rp.kinds + " (пассивных чипов " + rp.chipKinds + "), модификаций " + rp.modKinds);
   ok(rp.lv1 && rp.gradeNo && rp.lv6, "кибернетика: с опытом растут гнёзда чипов, модификации на имплант, калибровка, самостоятельное извлечение; ступени направлений");
-  ok(rp.chipIn && rp.up2 && rp.up3 && rp.mod && rp.heal && rp.extract && rp.dismantle && rp.station && rp.sell && rp.dupChip, "импланты: чип вживляется из рюкзака; калибровка до третьей ступени, модификации по направлению и гнёздам, извлечение (кроме системных), разбор — схема; станция; чипы продаются; лишний чип — в рюкзак");
+  ok(rp.chipIn && rp.up2 && rp.up3 && rp.mod && rp.heal && rp.extract && rp.dismantle && rp.station && rp.sell && rp.dupChip, "импланты: чип вживляется из рюкзака; калибровка до третьей ступени, модификации по направлению и гнёздам, извлечение (кроме системных), разбор — схема; станция; чипы продаются; лишний чип — в рюкзак (" + ["chipIn", "up2", "up3", "mod", "heal", "extract", "dismantle", "station", "sell", "dupChip"].filter(k => !rp[k]).join(",") + ")");
   ok(rp.chipFx && rp.chipOff && rp.slotsFull, "пассивные чипы: защита и энергия сразу, извлекли — прибавка ушла; гнёзд — по ступени кибернетики");
-  ok(rp.arc && rp.sonar && rp.camloop && rp.phase && rp.siphon && rp.craftGate && rp.stock, "новые импланты в деле: дуговой разрядник, глубинный сонар, петля камер, фазовый сдвиг, сифон энергии; сборка чипов — по ступени направления; у станции свой набор");
+  ok(rp.arc && rp.sonar && rp.camloop && rp.phase && rp.siphon && rp.craftGate && rp.stock, "новые импланты в деле: дуговой разрядник, глубинный сонар, петля камер, фазовый сдвиг, сифон энергии; сборка чипов — по ступени направления; у станции свой набор (" + ["arc", "sonar", "camloop", "phase", "siphon", "craftGate", "stock"].filter(k => !rp[k]).join(",") + (rp.arc ? "" : "; " + rp.arcDiag) + (rp.camloop ? "" : "; " + rp.camDiag) + ")");
   ok(rp.tiers && rp.tiers[2] <= 2 && rp.tiers[12] >= 3 && rp.tiers[30] >= 4 && rp.tiers[70] === 5 && rp.deepTier === 5 && /,/.test(rp.deepSpec || ""), "верстаки совершенствуются с глубиной: ступени " + JSON.stringify(rp.tiers) + ", в глубине — несколько профилей (" + rp.deepSpec + ")");
   ok(rp.batch && rp.modern && rp.reforge && rp.synth, "станок собирает партиями, модернизирует оружие под глубину; молекулярный синтезатор перековывает качество и синтезирует опытные узлы");
 
@@ -2593,12 +2605,26 @@ LAB.ui.closeAll();
       out.respawnStart = G.L === 3 && G.F === 1;
       C.stop();
     }
-    /* бластер: чем выше ступень, тем больше зарядов — по восемь; ёмкие энергобатареи с верстака */
-    const mk = (b, lvl, rank) => LAB.makeWeapon(b, lvl, rank, 1);
+    /* (2.1) ёмкость: «Искра» — тридцать, ступень — плюс восемь процентов; чем лучше оружие, тем больше;
+       огнестрел — как прежде; ёмкие энергобатареи и расточка отсека — доли ёмкости оружия */
+    const mk = (b, lvl, rank, q) => LAB.makeWeapon(b, lvl, rank, q == null ? 1 : q);
     out.blaster = [mk("spark", 1, 0).cap, mk("spark", 1, 1).cap, mk("spark", 25, 0).cap, mk("pulse", 1, 2).cap].join(",");
     out.blName = / Б-3$/.test(mk("spark", 25, 0).name);
+    const cb0 = id => LAB.capBase(id);
+    out.capOrder = cb0("spark") === 30 && cb0("heavy") > cb0("spark") && cb0("pulse") > cb0("spark") && cb0("gauss") > cb0("laser") && cb0("pcannon") > cb0("gauss") && cb0("i_sourcebeam") > cb0("pcannon") &&
+      Object.keys(LAB.WEAPONS).filter(k => LAB.chargeGun(LAB.WEAPONS[k])).every(k => cb0(k) >= 30) && mk("spark", 1, 0, 3).cap > mk("spark", 1, 0, 1).cap;
+    out.capPhys = mk("g_twinbarrel", 30, 0).cap === 2 && mk("k_bonebow", 30, 0).cap === 1 && mk("kpistol", 2, 0).cap === 8;
+    out.capTxt = [cb0("spark"), cb0("heavy"), cb0("gauss"), cb0("pcannon"), cb0("i_sourcebeam")].join(",");
     const bw = mk("spark", 1, 0), W5 = LAB.workshop;
-    out.big = W5.install(bw, "bigcell") === "" && bw.cap === 20 && W5.install(bw, "hugecell") === "" && bw.cap === 36;
+    out.big = W5.install(bw, "bigcell") === "" && bw.cap === 45 && W5.install(bw, "hugecell") === "" && bw.cap === 75;
+    /* расточка батарейного отсека: ступень — плюс пятнадцать процентов, не выше оснастки верстака */
+    const invB = JSON.stringify(G.inv);
+    Object.assign(G.inv, { cell: 30, wire: 10, scrap: 10, cap: 10, chip: 10, magnet: 10, powercell: 5, supercond: 5 });
+    const bw2 = mk("spark", 1, 0), bays = [];
+    out.bayLow = W5.bayBore(bw2, { tier: 1, dmg: false }) && !W5.bayBore(bw2, { tier: 1, dmg: false }) && bw2.bay === 1;
+    for (let i = 0; i < 5; i++) { W5.bayBore(bw2, { tier: 5, dmg: false }); bays.push(bw2.cap); }
+    out.bay = bays.join(",");
+    G.inv = JSON.parse(invB);
     out.bigNo = /не от энергобатарей/.test(W5.compat(LAB.makeWeapon("kpistol", 2, 0, 1), "bigcell"));
     out.bigRec = ["m_bigcell", "m_hugecell"].every(id => LAB.RECIPES.some(rc => rc.out === id)) && LAB.RECIPES.find(rc => rc.out === "m_bigcell").cls === "base";
     /* ловушки: вещи, схемы, полки */
@@ -2723,7 +2749,9 @@ LAB.ui.closeAll();
   ok(tr.prices === "4,4,8,8,12,20", "привязка к капсуле: этажи 1–10 — 4 кредита, каждые десять этажей — дороже: " + tr.prices);
   ok(!tr.hasCap || (tr.bindItem && tr.bindPoor && tr.bindOk && tr.boundInfo), "капсула: привязка — первым пунктом, без кредитов — нельзя, с кредитами — списывает цену");
   ok(!tr.hasCap || (tr.respawnCap && tr.respawnStart), "гибель: к привязанной капсуле, без привязки — к началу уровня");
-  ok(tr.blaster === "12,20,28,34" && tr.blName, "бластер: «Искра» первой ступени — 12 зарядов, дальше по восемь за ступень (" + tr.blaster + ")");
+  ok(tr.blaster === "30,32,35,42" && tr.blName, "бластер: «Искра» первой ступени — 30 зарядов, ступень — плюс восемь процентов (" + tr.blaster + ")");
+  ok(tr.capOrder && tr.capPhys, "ёмкость: чем лучше оружие, тем больше, у всего на батареях и зарядах — не меньше тридцати; огнестрел — как прежде (" + tr.capTxt + ")");
+  ok(tr.bayLow && tr.bay === "39,44,48,53,53", "батарейный отсек: ступень расточки — плюс пятнадцать процентов, не выше оснастки верстака, пять ступеней (" + tr.bay + ")");
   ok(tr.big && tr.bigNo && tr.bigRec, "ёмкая и сверхъёмкая энергобатареи собираются у верстака и добавляют бластеру зарядов");
   ok(tr.nTypes >= 25 && tr.items && tr.recipes && tr.cat && tr.wsGroup, "ловушки и мины: " + tr.nTypes + " видов, у всех вещь, описание и схема сборки, своя полка снабжения");
   ok(tr.placed && tr.wait && tr.armed, "капкан ставится под ноги и взводится, когда герой отойдёт");
@@ -3186,7 +3214,8 @@ LAB.ui.closeAll();
     live().filter(f => f.room === room && f.guard === "room" && f.kind === "mech").forEach(f => C.damageFoe(f, 1e7, "kinetic", { quiet: true }));
     out.rQueued = repl().some(q => q.k === "room" && q.room === room);
     let back = null; ticks = 0;
-    for (; ticks < 700 && !back; ticks++) { C.tick(); back = live().find(f => f.spawned && f.room === room && f.guard === "room"); }
+    /* (2.1) пришёл любой присланный ОКО — страж, рабочая машина или уборщик (у уборщика своего поста нет) */
+    for (; ticks < 900 && !back; ticks++) { C.tick(); back = live().find(f => f.spawned && f.oko && g.CUR.fl.room[f.y * LAB.W + f.x] === room); }
     out.rBack = !!back; out.rTicks = ticks;
     /* пал страж у лестницы — ОКО присылает смену на тот же пост */
     const gd = live().filter(f => f.guard === "stairs" && f.post && !f.boss).sort((a, b) => hero(b) - hero(a))[0];
@@ -3216,7 +3245,9 @@ LAB.ui.closeAll();
     out.batches = batches;
     /* затишье — нажим спадает */
     g.CUR.fs.lossT = O.T() - 5000;
-    const p2 = live().find(f => f.beat && f.kind === "mech" && !f.boss && !f.sapper);
+    /* патрульных на этаже могло не хватить — тогда поднять одного из павших */
+    let p2 = live().find(f => f.beat && f.kind === "mech" && !f.boss && !f.sapper);
+    if (!p2) { p2 = C.foes().find(f => f.dead && f.beat && f.kind === "mech" && !f.boss && !f.sapper); if (p2) { p2.dead = false; p2.hp = p2.maxhp; } }
     if (p2) { C.damageFoe(p2, 1e7, "kinetic", { quiet: true }); const nq = repl().find(q => q.k === "patrol" && q.corr === p2.corr); out.calmBatch = nq ? nq.n : 0; }
     G.st.cloak = 0;
     return out;
@@ -3285,7 +3316,7 @@ LAB.ui.closeAll();
   const kit = await page.evaluate(() => {
     const g = LAB.game, C = LAB.combat, out = {};
     LAB.ui.closeAll(); SPOKEN.length = 0;
-    /* новая игра: бластер и комбинезон — сразу у героя, у капсулы — две аптечки и две энергобатареи */
+    /* новая игра: бластер и комбинезон — сразу у героя, у капсулы — (2.1) десять аптечек и десять энергобатарей */
     g.newGame(); C.stop();
     let G = g.G;
     out.weapons = G.weapons.map(w => w.base).join(",");
@@ -3293,9 +3324,10 @@ LAB.ui.closeAll();
     out.armor = G.armor && G.armor.base; out.worn = G.armors[0] === G.armor; out.def = LAB.armorDef(G.armor);
     out.inv = JSON.stringify(G.inv); out.credits = G.credits; out.energy = G.ammo.energy;
     const fl = g.CUR.fl, cap = fl.objs.find(o => o.type === "wake");
-    const near = fl.items.filter(i => cap && Math.max(Math.abs(i.x - cap.x), Math.abs(i.y - cap.y)) <= 2);
-    out.nearMed = near.filter(i => i.kind === "item" && i.item === "medkit_s").length;
-    out.nearBat = near.filter(i => i.kind === "ammo" && i.ammo === "energy").length;
+    const near = fl.items.filter(i => cap && (Math.max(Math.abs(i.x - cap.x), Math.abs(i.y - cap.y)) <= 2 || fl.room[i.y * LAB.W + i.x] === fl.room[cap.y * LAB.W + cap.x]));
+    const sumN = a => a.reduce((t, i) => t + (i.n || 1), 0);
+    out.nearMed = sumN(near.filter(i => i.kind === "item" && i.item === "medkit_s"));
+    out.nearBat = sumN(near.filter(i => i.kind === "ammo" && i.ammo === "energy"));
     out.floorSpark = fl.items.some(i => (i.w && i.w.id === "w_start_spark") || (i.a && i.a.id === "a_start_suit"));
     out.said = SPOKEN.join(" | ");
     /* безопасное пробуждение: в капсульном отсеке враги не видят, не бьют и не входят в него */
@@ -3415,8 +3447,8 @@ LAB.ui.closeAll();
     "новая игра: монтировка и заряженный бластер «Искра» (выбран), надет защитный комбинезон с защитой 2 (" + kit.weapons + ", защита " + kit.def + ")");
   ok(/"bandage":1/.test(kit.inv) && /"fieldkit":1/.test(kit.inv) && /"ration":1/.test(kit.inv) && kit.credits === 40 && kit.energy === 0,
     "в рюкзаке с начала — бинт, походный ремнабор, сухпаёк и 40 кредитов (" + kit.inv + ")");
-  ok(kit.nearMed >= 2 && kit.nearBat >= 2 && !kit.floorSpark, "у капсулы лежат две аптечки и две энергобатареи, оружия и брони на полу нет (" + kit.nearMed + " и " + kit.nearBat + ")");
-  ok(/две аптечки и две энергобатареи/.test(kit.said) && /бластер «Искра»/.test(kit.said), "при пробуждении сказано, что при себе и что лежит у капсулы");
+  ok(kit.nearMed >= 10 && kit.nearBat >= 10 && !kit.floorSpark, "у капсулы лежат десять аптечек и десять энергобатарей, оружия и брони на полу нет (" + kit.nearMed + " и " + kit.nearBat + ")");
+  ok(/десять аптечек и десять энергобатарей/.test(kit.said) && /бластер «Искра»/.test(kit.said), "при пробуждении сказано, что при себе и что лежит у капсулы");
   ok(kit.safe0 && kit.safeHit.adj && kit.safeHit.outside && kit.safeHit.hurtSafe === 0 && kit.safeHit.entered === 0,
     "безопасное пробуждение: в капсульном отсеке робот вплотную не бьёт, робот у открытой двери в отсек не входит (" + JSON.stringify(kit.safeHit) + ")");
   ok(kit.left && kit.leftOnce && kit.fight, "вышли из отсека или сами ранили врага — защита снята, «Эхо» предупреждает; вернулись — её больше нет");
@@ -3425,6 +3457,124 @@ LAB.ui.closeAll();
   ok(kit.corner && kit.cornerOpen, "взгляд и выстрел не проходят по диагонали между двумя стенами (угол), а мимо одной стены проходят");
   ok(kit.flee && kit.losClosed === false && kit.losOpen === true && kit.flee.hurtClosed === 0 && kit.flee.hurtOpen >= 1 && kit.flee.shots >= 4 && kit.flee.shots <= Math.ceil(24 / kit.flee.acd) + 1 && kit.doorway,
     "раненый загнанный робот за закрытой дверью не стреляет; дверь открыта — стреляет, не чаще перезарядки; носитель в проёме виден" + (kit.flee ? " (" + JSON.stringify(kit.flee) + ")" : " (не нашлось двери для проверки)"));
+
+  console.log("Убежище, камеры в помещениях, оборонная сеть и режимы сложности (2.1)");
+  const v21 = await page.evaluate(() => {
+    const g = LAB.game, C = LAB.combat, O = LAB.oko, S = LAB.settings, W = LAB.W, out = {};
+    let G = g.G;
+    C.stop(); LAB.ui.closeAll();
+    const d0 = S.difficulty, hp0 = G.hp, hpm0 = G.hpMax, cl0 = G.st.cloak;
+    S.difficulty = 1;
+    const fresh = (L, F) => { g.enterFloor(L, F === 1 ? 2 : F - 1, "down", true); delete G.fs[L + "-" + F]; g.enterFloor(L, F, "down", true); C.stop(); G = g.G; };
+    const live = () => C.foes().filter(f => !f.dead);
+    const freeIn = (fl, rid, not) => { for (let y = 0; y < LAB.H; y++) for (let x = 0; x < W; x++) { if (fl.room[y * W + x] !== rid || fl.t[y * W + x] !== LAB.T.ROOM || LAB.solidAt(fl, x, y)) continue; if (C.foes().some(f => !f.dead && f.x === x && f.y === y) || (not && not.x === x && not.y === y)) continue; return { x, y }; } return null; };
+    G.hp = G.hpMax = 1e6; G.st.cloak = 0;
+    /* 1. убежище: зачищенный кабинет с закрытой дверью */
+    fresh(2, 6);
+    let fl = g.CUR.fl, fs = g.CUR.fs;
+    let pick = null;
+    for (let i = 0; i < fl.rooms.length && !pick; i++) {
+      const rm = fl.rooms[i];
+      if (!rm || !rm.annex || rm.hidden || rm.doors.length !== 1 || (rm.mouths || []).length) continue;
+      const d = fl.doors.find(q => q.id === rm.doors[0]);
+      const outC = d && [[1, 0], [-1, 0], [0, 1], [0, -1]].map(v => [d.x + v[0], d.y + v[1]]).find(c => LAB.inb(c[0], c[1]) && fl.room[c[1] * W + c[0]] !== i && fl.t[c[1] * W + c[0]] === LAB.T.CORR);
+      if (!d || !outC || d.lock) continue;
+      const cell = freeIn(fl, i), cell2 = cell && freeIn(fl, i, cell);
+      if (cell && cell2) pick = { rid: i, d, outC, cell, cell2 };
+    }
+    out.found = !!pick;
+    if (pick) {
+      const rid = pick.rid, d = pick.d;
+      /* герой внутри; враги этажа — подальше, кроме тех, что в кабинете */
+      G.x = pick.cell.x; G.y = pick.cell.y;
+      C.foes().forEach(f => { if (!f.dead && fl.room[f.y * W + f.x] !== rid && Math.abs(f.x - G.x) + Math.abs(f.y - G.y) < 30) f.dead = true; });
+      const guard = C.spawnFoe("patrolbot", pick.cell2.x, pick.cell2.y, { guard: "room", post: [pick.cell2.x, pick.cell2.y] });
+      fs.doors[d.id] = 1; C.tick();
+      out.notYet = C.refuge() === -1; /* враг внутри — убежища нет */
+      live().filter(f => fl.room[f.y * W + f.x] === rid && !f.ally).forEach(f => C.damageFoe(f, 1e7, "kinetic", { quiet: true }));
+      out.cleared = !!(fs.cleared && fs.cleared[rid]) && !!(guard && guard.dead);
+      fs.doors[d.id] = 1; SPOKEN.length = 0; C.tick();
+      out.refuge = C.refuge() === rid && C.sheltered();
+      out.said = SPOKEN.some(t => /Помещение зачищено/.test(t));
+      /* робот за дверью: охотится, умный (открывает двери), знает, где вы */
+      const bot = C.spawnFoe("patrolbot", pick.outC[0], pick.outC[1], {});
+      if (bot) { bot.state = "hunt"; bot.lastKnown = { x: G.x, y: G.y }; bot.iq = 12; bot.det = 12; }
+      out.noSpawnIn = C.spawnFoe("patrolbot", pick.cell2.x, pick.cell2.y, {}) === null;
+      for (let i = 0; i < 40; i++) { if (bot) { bot.state = "hunt"; bot.lastKnown = { x: G.x, y: G.y }; } C.tick(); }
+      out.shut = fs.doors[d.id] !== 2;
+      out.outside = !!bot && fl.room[bot.y * W + bot.x] !== rid;
+      out.unhurt = G.hp === 1e6;
+      /* открыли дверь — убежища нет */
+      fs.doors[d.id] = 2; C.tick();
+      out.off = C.refuge() === -1 && !C.sheltered();
+      if (bot) bot.dead = true;
+    }
+    /* 2. камеры в помещениях: со второго этажа, глубже — больше; разбить вплотную */
+    const camN = [[1, 1], [1, 2], [2, 5], [5, 10], [20, 3]].map(([L, F]) => LAB.getFloor(G.seed, L, F).foes.filter(q => q.camLook).length);
+    out.camN = camN.join(",");
+    fresh(5, 10); fl = g.CUR.fl; fs = g.CUR.fs;
+    const cam = live().find(f => f.camLook);
+    if (cam) {
+      const nb = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]].map(v => [cam.x + v[0], cam.y + v[1]]).find(c => LAB.inb(c[0], c[1]) && fl.t[c[1] * W + c[0]] === LAB.T.ROOM && !LAB.solidAt(fl, c[0], c[1]) && !C.foes().some(f => !f.dead && f.x === c[0] && f.y === c[1]));
+      if (nb) {
+        G.x = nb[0]; G.y = nb[1];
+        C.foes().forEach(f => { if (f !== cam && !f.dead && Math.abs(f.x - G.x) + Math.abs(f.y - G.y) < 12) f.dead = true; });
+        out.camDirs = cam.camLook.join("") ;
+        SPOKEN.length = 0; g.roomCheck(true); out.camHeard = SPOKEN.some(t => /Под потолком: камера/.test(t));
+        LAB.ui.closeAll(); g.cameraSabotage(cam);
+        const top = LAB.ui.top();
+        out.smashItem = !!top && /^Разбить камеру/.test(top.items[0].label);
+        if (top) { top.i = 0; G.noise = 0; LAB.ui.activate(); }
+        out.smashed = cam.dead && G.noise >= 8 && C.camsBroken() >= 1;
+        LAB.ui.closeAll();
+      }
+    }
+    /* 3. щит без камер — так и говорит; терминал отсекается только при тревоге и сообщает о возврате */
+    fresh(1, 2); fl = g.CUR.fl; fs = g.CUR.fs;
+    C.foes().forEach(f => { if (C.isCam(f)) f.dead = true; });
+    LAB.zones.objMenu({ type: "fusebox", id: "t21fuse", x: G.x, y: G.y });
+    out.fuseNone = !!LAB.ui.top() && LAB.ui.top().items.some(i => /^Камер на этаже нет/.test(typeof i.label === "function" ? i.label() : i.label)) && !LAB.ui.top().items.some(i => /уже обесточены/.test(typeof i.label === "function" ? i.label() : i.label));
+    LAB.ui.closeAll();
+    const term = { type: "terminal", id: "t21term", x: G.x, y: G.y, sub: "sec" };
+    for (let i = 0; i < 40; i++) { O.state().heat = 0; O.event("terminal_hack", { x: G.x, y: G.y, o: term }); }
+    out.isoCalm = !g.objState(term).isoUntil;
+    O.state().heat = 90;
+    for (let i = 0; i < 200 && !g.objState(term).isoUntil; i++) O.event("terminal_hack", { x: G.x, y: G.y, o: term });
+    const iu = g.objState(term).isoUntil;
+    out.isoHot = !!iu;
+    SPOKEN.length = 0;
+    for (let i = 0; i < 120 && O.T() < (iu || 0) + 1; i++) O.tick();
+    out.isoBack = SPOKEN.some(t => /вернуло терминал в оборонную сеть/.test(t));
+    O.state().heat = 0;
+    /* 4. режимы сложности: число врагов, их сила, цены, кредиты, рост оружия */
+    const rows = {};
+    [4, 1, 2, 3].forEach(m => {
+      S.difficulty = m; fresh(3, 4); fl = g.CUR.fl;
+      const c = live().length, def = fl.foes.find(q => q.guard === "room" && !q.boss && LAB.FOES[q.type] && LAB.FOES[q.type].kind === "mech");
+      const rt = def && C.foes().find(f => f.id === def.id);
+      const L0 = G.L, F0 = G.F; G.L = 30; G.F = 1;
+      rows[m] = { n: c, hp: rt ? rt.maxhp : 0, price: Math.round(g.priceK() * 100) / 100, cash: LAB.credits(100, 30, 1), grow: Math.round(LAB.wGrowK({ lvl: 60 }) * 100) / 100, bind: LAB.capsule.bindPrice(3, 5), desc: (LAB.dk().desc || "").length };
+      G.L = L0; G.F = F0;
+    });
+    S.difficulty = 1;
+    out.diff = rows;
+    const e = rows[4], n = rows[1], h = rows[2], v = rows[3];
+    out.diffOk = e.n < n.n && n.n < h.n && h.n < v.n && e.hp < n.hp && n.hp < h.hp && h.hp < v.hp && e.price < n.price && n.price < h.price && h.price < v.price &&
+      e.cash > n.cash && n.cash > h.cash && h.cash > v.cash && e.grow > n.grow && n.grow === 1 && h.grow < 1 && v.grow < h.grow && e.bind < n.bind && n.bind < v.bind && [e, n, h, v].every(r => r.desc > 80);
+    out.names = [4, 1, 2, 3].map(k => LAB.DIFF[k].n).join(",");
+    S.difficulty = d0; G.hp = hp0; G.hpMax = hpm0; G.st.cloak = cl0;
+    fresh(1, 3);
+    LAB.ui.closeAll();
+    return out;
+  });
+  ok(v21.found && v21.notYet && v21.cleared && v21.refuge && v21.said, "убежище: робот в кабинете убит, дверь закрыта — «Эхо» говорит, что здесь можно перевести дух (" + JSON.stringify({ f: v21.found, n: v21.notYet, c: v21.cleared, r: v21.refuge, s: v21.said }) + ")");
+  ok(v21.shut && v21.outside && v21.unhurt && v21.noSpawnIn, "убежище: робот за дверью её не открывает и не входит, ОКО внутрь никого не выводит, носителя не трогают (" + JSON.stringify({ shut: v21.shut, out: v21.outside, hp: v21.unhurt, sp: v21.noSpawnIn }) + ")");
+  ok(v21.off, "открыли дверь — убежища нет");
+  ok(/^0,[1-9],[1-9],[1-9],[1-9]$/.test(v21.camN || "") && +v21.camN.split(",")[4] >= +v21.camN.split(",")[1], "камеры ОКО в помещениях: на первом этаже нет, дальше есть, в глубине больше (" + v21.camN + ")");
+  ok(v21.camHeard && v21.smashItem && v21.smashed, "камеру в помещении слышно при входе, вплотную её можно разбить — удар слышно, терминал считает разбитые (" + JSON.stringify({ h: v21.camHeard, i: v21.smashItem, s: v21.smashed, d: v21.camDirs }) + ")");
+  ok(v21.fuseNone, "электрощит без камер говорит «камер на этаже нет», а не «уже обесточены»");
+  ok(v21.isoCalm && v21.isoHot && v21.isoBack, "терминал ОКО отсекает только при тревоге, и «Эхо» говорит, когда он снова в оборонной сети (" + JSON.stringify({ c: v21.isoCalm, h: v21.isoHot, b: v21.isoBack }) + ")");
+  ok(v21.diffOk && v21.names === "Лёгкий,Обычный,Сложный,Очень сложный", "режимы сложности различаются: врагов, их сила, цены, кредиты, рост оружия, привязка (" + JSON.stringify(v21.diff) + ")");
 
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {
