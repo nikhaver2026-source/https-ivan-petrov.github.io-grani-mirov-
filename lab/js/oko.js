@@ -618,6 +618,13 @@ function lossBatch(n) {
   return Math.max(1, Math.round(b * (LAB.dk().repl || 1))); /* (2.2) по режиму сложности */
 }
 function lossDelay(base, n) { return Math.max(20, Math.round(base * Math.max(0.35, 1 - 0.06 * n - depth() * 0.0003) * (LAB.dk().replT || 1))); }
+/* (2.3, просьба игрока) Зачищенное помещение ОКО заселяет снова не раньше,
+   чем через время режима (LAB.DIFF, room — в секундах, такт ОКО — полсекунды):
+   лёгкий — десять минут, обычный — семь, сложный — пять, очень сложный — три
+   с половиной; сверху — до десятой доли, чтобы помещения не оживали разом.
+   Нажим ОКО (серия потерь) и глубина этот срок не сокращают: растёт лишь
+   число присланных машин. */
+function roomDelay() { return Math.round((LAB.dk().room || 420) * 2 * (1 + Math.random() * 0.1)); }
 function lost(data) {
   var f = fs(), cb = C();
   if (!f || f.netCut || !data) return;
@@ -634,7 +641,7 @@ function lost(data) {
   } else if (data.guard === "room" && data.room != null && data.room >= 0) {
     /* кабинет опустел — когда в нём не осталось ни одной машины */
     var left = cb && cb.foes().some(function (q) { return !q.dead && q.room === data.room && q.guard === "room" && q.kind === "mech"; });
-    if (!left && !f.repl.some(function (q) { return q.k === "room" && q.room === data.room; })) f.repl.push({ k: "room", t: T() + lossDelay(rnd(220, 380), n), room: data.room, cat: data.garrison || "office", n: Math.max(1, lossBatch(n)), at: at });
+    if (!left && !f.repl.some(function (q) { return q.k === "room" && q.room === data.room; })) f.repl.push({ k: "room", t: T() + roomDelay(), room: data.room, cat: data.garrison || "office", n: Math.max(1, lossBatch(n)), at: at });
   } else if (data.guard && data.post) {
     /* место поста — у машины это {x, y}, в записи замены — пара чисел */
     var pp = data.post.length === 2 ? data.post : [data.post.x, data.post.y];
@@ -649,6 +656,8 @@ function replTick() {
   for (var i = f.repl.length - 1; i >= 0; i--) {
     var q = f.repl[i];
     if (now < q.t) continue;
+    /* (2.3) пост в безопасной зоне у капсулы — смены не будет */
+    if (q.k === "post" && cb.havenAt && cb.havenAt(q.post[0], q.post[1])) { f.repl.splice(i, 1); continue; }
     var got = q.k === "patrol" ? cb.replacePatrol(q) : q.k === "room" ? cb.refillRoom(q) : cb.dispatch(q.n, "post", { x: q.post[0], y: q.post[1], kind: q.kind });
     if (got === null) { f.repl.splice(i, 1); continue; }
     if (!got.length) { q.t = now + 20; continue; } /* место у вас на виду — позже */

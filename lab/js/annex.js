@@ -453,7 +453,8 @@ function furnish(ctx, r, s, rm, def, v, gen) {
     var o = ctx.addObj(ot, rm.id, extra);
     if (!o) continue;
     placed++;
-    if (LAB.CONTAINERS.indexOf(ot) >= 0) o.loot = special || ot === "safe" || r.chance(0.55) ? annexLoot(r, L, F, lootTag, ot, !special) : [];
+    /* (2.5, просьба игрока) пустое хранилище — редкость: одно из десяти */
+    if (LAB.CONTAINERS.indexOf(ot) >= 0) o.loot = special || ot === "safe" || r.chance(0.9) ? annexLoot(r, L, F, lootTag, ot, !special) : [];
     if (ot === "safe") {
       var mains = fl.rooms.filter(function (m, i) { return m && i < 12 && i !== fl.secret; }).map(function (m) { return m.id; });
       ctx.addItem({ kind: "note", note: "safe", code: o.code, room: rm.name }, r.pick(mains));
@@ -480,7 +481,7 @@ function furnish(ctx, r, s, rm, def, v, gen) {
   }
   if (!placed) { var o2 = ctx.addObj(def.kind === "hazard" ? "crate" : "shelf", rm.id, null); if (o2) o2.loot = annexLoot(r, L, F, lootTag, "shelf", !special); }
   /* состояние: обысканное — почти пустое; брошенное в спешке — с забытыми вещами */
-  if (rm.state === "ransacked") fl.objs.forEach(function (q) { if (q.room === rm.id && q.loot && q.loot.length) q.loot = q.loot.filter(function () { return r.chance(0.35); }); });
+  if (rm.state === "ransacked") fl.objs.forEach(function (q) { if (q.room === rm.id && q.loot && q.loot.length) q.loot = q.loot.filter(function () { return r.chance(0.5); }); });
   if (rm.state === "hurry" && r.chance(0.7)) { var hv = annexLoot(r, L, F, r.pick(["home", "smoke", "food", "paper"]), "floor", true)[0]; if (hv && hv.kind !== "weapon" && hv.kind !== "armor") ctx.addItem(hv, rm.id); }
   if (r.chance(special ? 0.4 : 0.15)) { var x = annexLoot(r, L, F, lootTag, "floor", !special)[0]; if (x && x.kind !== "weapon" && x.kind !== "armor") ctx.addItem(x, rm.id); }
   var lev = LAB.LEVELS[L];

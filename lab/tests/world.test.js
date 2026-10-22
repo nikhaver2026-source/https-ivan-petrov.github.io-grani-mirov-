@@ -16,7 +16,7 @@ const ROOT = path.resolve(__dirname, "..");
 const ctx = { console, Math, JSON, Object, Array, String, Number, Uint8Array, Int8Array, Int16Array, Int32Array, Float64Array, Error, Date, RegExp };
 ctx.globalThis = ctx;
 vm.createContext(ctx);
-for (const f of ["js/data.js", "js/texts.js", "js/lore.js", "js/b1.js", "js/b2.js", "js/b3.js", "js/b4.js", "js/b5.js", "js/world.js", "js/depths.js", "js/goods.js", "js/arms.js", "js/traps.js", "js/puzzles.js", "js/puzzles2.js", "js/annex_rooms.js", "js/annex_var.js", "js/annex_frag.js", "js/annex_gen.js", "js/fixtures_data.js", "js/annex.js", "js/garrison.js", "js/workshop.js", "js/repair.js", "js/implants.js", "js/arsenal.js"]) {
+for (const f of ["js/data.js", "js/texts.js", "js/lore.js", "js/b1.js", "js/b2.js", "js/b3.js", "js/b4.js", "js/b5.js", "js/world.js", "js/mutants.js", "js/depths.js", "js/goods.js", "js/arms.js", "js/traps.js", "js/puzzles.js", "js/puzzles2.js", "js/annex_rooms.js", "js/annex_var.js", "js/annex_frag.js", "js/annex_gen.js", "js/fixtures_data.js", "js/annex.js", "js/garrison.js", "js/workshop.js", "js/repair.js", "js/implants.js", "js/arsenal.js"]) {
   const p = path.join(ROOT, f);
   if (fs.existsSync(p)) vm.runInContext(fs.readFileSync(p, "utf8"), ctx, { filename: f });
 }
@@ -156,6 +156,23 @@ for (let si = 0; si < seeds; si++) {
       for (const o of fl.objs) if (["powergrid", "incubator", "mirrorterm", "syncgate", "ancient"].indexOf(o.type) >= 0 && !nearReach(o)) err(`${at}: до установки «${o.type}» не дойти`);
       for (const h of (fl.hazards || [])) { stat.press = (stat.press || 0) + 1; if (!h.cells.every(c => fl.t[c[1] * LAB.W + c[0]] === LAB.T.CORR)) err(`${at}: пресс не на клетках коридора`); }
       if (!fl.items.some(i => i.kind === "sample")) err(`${at}: нет образца`);
+      /* (2.5) хранилища пусты лишь изредка */
+      for (const o of fl.objs) if (o.type !== "safe" && (LAB.CONTAINERS || []).indexOf(o.type) >= 0 && o.loot) { stat.box = (stat.box || 0) + 1; if (!o.loot.length) stat.boxEmpty = (stat.boxEmpty || 0) + 1; }
+      /* (2.5) отряды тварей: один вожак на отряд, все — в одном помещении, не у капсулы, не в мастерской */
+      if (LAB.mutants) {
+        const packs = {};
+        for (const f of fl.foes) if (f.pack) (packs[f.pack] = packs[f.pack] || []).push(f);
+        const calmR = {};
+        for (const o of fl.objs) if (/^(wake|capsule|workbench)$/.test(o.type)) calmR[o.room] = 1;
+        for (const id in packs) {
+          const m = packs[id];
+          stat.packs = (stat.packs || 0) + 1; stat.packFoes = (stat.packFoes || 0) + m.length;
+          if (m.filter(f => f.lead).length > 1) err(`${at}: в отряде ${id} больше одного вожака`);
+          if (m.some(f => f.room !== m[0].room)) err(`${at}: отряд ${id} разбросан по помещениям`);
+          if (calmR[m[0].room]) err(`${at}: отряд ${id} стоит у капсулы или в мастерской`);
+        }
+        for (const f of fl.foes) { const b = LAB.FOES[f.type]; if (b && b.kind === "bio") { stat.bio = (stat.bio || 0) + 1; const st = f.evo != null ? f.evo : LAB.mutants.stage0(b, LAB.depth(L, F), f.id, 0); stat.evo = stat.evo || [0, 0, 0, 0]; stat.evo[st]++; } }
+      }
     }
     LAB.clearFloorCache();
   }
@@ -171,4 +188,38 @@ console.log("обстановка:", JSON.stringify(stat.objs));
 console.log("прессов «Подножия»:", stat.press || 0);
 console.log(`броня на полу: ${(stat.armor / floors).toFixed(2)} на этаж; модификации роботов:`, JSON.stringify(stat.aff));
 console.log("роботы по уровням (доля с модификациями, средний ум):", Object.keys(stat.mechByL).map(L => `${L}: ${(100 * (stat.affByL[L] || 0) / stat.mechByL[L]).toFixed(0)}%, ${(stat.iqByL[L] / stat.mechByL[L]).toFixed(1)}`).join("; "));
+/* (2.5) хранилища и мир мутантов */
+if (stat.box) {
+  const share = (stat.boxEmpty || 0) / stat.box;
+  console.log(`хранилищ на этаж: ${(stat.box / floors).toFixed(1)}, пустых: ${(100 * share).toFixed(1)} %`);
+  if (share > 0.2) err(`пустых хранилищ слишком много: ${(100 * share).toFixed(1)} %`);
+}
+if (LAB.mutants) {
+  const M = LAB.mutants, SND = new Set(["rat", "roach", "labmut", "slug", "vine", "spore", "swamp", "chimera", "lizard", "weaver", "blind", "spark", "frozen", "thawed", "soldier", "phase", "proto"]);
+  const BEH = new Set(["chase", "ranged", "stationary", "ambush", "deaf", "swarm", "blink", "regen", "poison", "slow", "web", "explode", "dooropen", "shieldally", "kamikaze", "tracker", "splash", "summon", "drain", "mimic", "patrol", "reflect", "phaseshift", "split", "burrow", "healer", "leech", "charge", "screamer", "fly", "vibro", "mimicsnd", "heat",
+    "flee", "howl", "bomber", "trapper", "feeder", "rad", "psi", "corrode", "silent", "adapt", "lure", "marker"]);
+  const CASTE = new Set(["worker", "soldier", "hunter", "spitter", "guard", "priest", "seer", "leader", "queen", "drone", "trapper"]);
+  const RANK = new Set(["low", "mid", "high", "apex"]);
+  const onLevel = {};
+  for (let L = 1; L <= LAB.LEVELS_N; L++) (LAB.LEVELS[L].foes || []).forEach(id => { onLevel[id] = 1; });
+  for (const id of M.ids) {
+    const b = LAB.FOES[id];
+    if (!b || b.kind !== "bio") { err(`тварь ${id}: нет в таблице врагов`); continue; }
+    if (!SND.has(b.snd)) err(`тварь ${id}: неизвестный звук ${b.snd}`);
+    b.beh.forEach(k => { if (!BEH.has(k)) err(`тварь ${id}: неизвестная повадка ${k}`); });
+    if (b.caste && !CASTE.has(b.caste)) err(`тварь ${id}: неизвестная каста ${b.caste}`);
+    if (!RANK.has(b.rank) || [0, 1, 2, 3].indexOf(b.mind) < 0 || !b.fam) err(`тварь ${id}: нет ума, ранга или семейства`);
+    if (!["m", "f"].includes(b.g)) err(`тварь ${id}: род ${b.g}`);
+    ["hp", "dmg", "arm", "spd", "rng", "acd", "det", "xp"].forEach(k => { if (!(typeof b[k] === "number" && b[k] >= 0)) err(`тварь ${id}: поле ${k}`); });
+    if (!(b.lv && b.lv[0] >= 1 && b.lv[1] >= b.lv[0])) err(`тварь ${id}: глубина ${b.lv}`);
+    if (!b.nolist && !onLevel[id]) err(`тварь ${id}: нет ни на одном уровне`);
+    if (!/[.!?»]$/.test(b.desc) || b.desc.length < 60 || /"/.test(b.desc) || /\.\./.test(b.desc)) err(`тварь ${id}: описание`);
+    if (b.minion && !LAB.FOES[b.minion]) err(`тварь ${id}: рождает неизвестного ${b.minion}`);
+  }
+  for (const id in LAB.FOES) { const b = LAB.FOES[id]; if (b.kind === "bio" && (b.mind == null || !b.rank || !b.fam)) err(`тварь ${id}: в бестиарии без ума, ранга или семейства`); }
+  for (const p of M.PACKS) { if (p.lead && !LAB.FOES[p.lead]) err(`отряд ${p.id}: нет вожака ${p.lead}`); p.members.forEach(m => { if (!LAB.FOES[m[0]]) err(`отряд ${p.id}: нет вида ${m[0]}`); }); }
+  const nb = Object.keys(LAB.FOES).filter(id => LAB.FOES[id].kind === "bio").length;
+  console.log(`твари: видов ${nb}, новых ${M.ids.length}; отрядов на этаж ${((stat.packs || 0) / floors).toFixed(2)} (в них ${((stat.packFoes || 0) / floors).toFixed(1)}), тварей на этаж ${((stat.bio || 0) / floors).toFixed(1)}; ступени развития: ${(stat.evo || []).join("/")}`);
+  if (nb < 100) err(`тварей меньше сотни: ${nb}`);
+}
 process.exit(fails ? 1 : 0);

@@ -25,6 +25,7 @@ function cheb(a, b) { return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 function has(f, b) { return f.beh.indexOf(b) >= 0; }
 function aff(f, a) { return !!(f.aff && f.aff.indexOf(a) >= 0); }
 function diff() { return LAB.dk(); }
+function gameMin() { var g = G(); return (g.day || 0) * 1440 + (g.min || 0); }
 var DIRV = { N: [0, -1], S: [0, 1], W: [-1, 0], E: [1, 0] };
 
 var TICK = 500;
@@ -81,25 +82,72 @@ function refugeTick() {
 }
 function inRefuge(x, y) { return refugeId >= 0 && CUR().fl.room[idx(x, y)] === refugeId; }
 function refugeDoor(d) { var rm = refugeId >= 0 ? CUR().fl.rooms[refugeId] : null; return !!(rm && rm.doors.indexOf(d.id) >= 0); }
-/* носитель укрыт: безопасное пробуждение или убежище */
-function sheltered() { return safeHero || refugeId >= 0; }
+/* носитель укрыт: безопасное пробуждение, убежище или (2.3) безопасная зона у капсулы */
+function sheltered() { return safeHero || refugeId >= 0 || havenId >= 0; }
 /* Пал враг: помещение, где он стоял (и которое стерёг), зачищено. */
 function markCleared(f) {
   var fl = CUR().fl, fs = CUR().fs, rr = [fl.room[idx(f.x, f.y)]];
-  if (f.guard === "room" && f.post) rr.push(fl.room[idx(f.post.x, f.post.y)]);
+  if (f.guard && f.post && f.post.x != null) rr.push(fl.room[idx(f.post.x, f.post.y)]); /* (2.3) и пост стража лестницы или лифта */
   rr.forEach(function (r) { if (r != null && r >= 0) { if (!fs.cleared) fs.cleared = {}; fs.cleared[r] = 1; } });
+}
+/* (2.3, просьба игрока) Безопасная зона у капсулы. Помещение с капсулой
+   восстановления — у прибытия на каждом этаже — и капсульный отсек первого
+   этажа: носитель убил тех, кто здесь был (fs.cleared: пала машина или тварь,
+   или страж здешнего поста), и живых внутри не осталось, — и оно становится
+   безопасной зоной этажа насовсем
+   (fs.haven): машины и твари в неё не входят и её двери не открывают, ОКО не
+   выводит туда отряды, не шлёт замену охраны и не заселяет её снова. Пока
+   носитель внутри, снаружи его не видят, не слышат и не бьют. Начал бой
+   отсюда — выстрел, удар, граната, — и на время боя (десять секунд после
+   последнего) зона его не прикрывает, хотя внутрь по-прежнему никто не
+   войдёт. Камера ОКО в самом помещении, пока цела, видит и докладывает. */
+var havenId = -1, havenOffT = 0;
+function capRooms(fl) {
+  if (!fl.capR) { fl.capR = {}; fl.objs.forEach(function (o) { if ((o.type === "capsule" || o.type === "wake") && o.room != null && o.room >= 0) fl.capR[o.room] = 1; }); }
+  return fl.capR;
+}
+function havenAt(x, y) { var fs = CUR().fs, r; return !!(fs && fs.haven && LAB.inb(x, y) && (r = CUR().fl.room[idx(x, y)]) >= 0 && fs.haven[r]); }
+function inHaven(x, y) { return havenId >= 0 && CUR().fl.room[idx(x, y)] === havenId; }
+function havenTick() {
+  var g = G(), fl = CUR().fl, fs = CUR().fs;
+  havenId = -1;
+  if (!fl || !fs || g.dead) return;
+  var r = fl.room[idx(g.x, g.y)];
+  if (r == null || r < 0 || !capRooms(fl)[r]) return;
+  /* «убил всех»: здесь пала машина или тварь (или страж здешнего поста), и живых внутри нет */
+  if (!(fs.haven && fs.haven[r]) && !(fs.cleared && fs.cleared[r])) return;
+  if (foes.some(function (f) { return hostile(f) && !has(f, "camera") && fl.room[idx(f.x, f.y)] === r; })) return;
+  if (!fs.haven) fs.haven = {};
+  if (!fs.haven[r]) {
+    fs.haven[r] = 1;
+    var cam = foes.some(function (f) { return isCam(f) && !f.dead && !f.camOff && fl.room[idx(f.x, f.y)] === r; });
+    sayq("«Эхо»: «У капсулы чисто — здесь теперь безопасная зона. Машины и твари сюда не войдут, и ОКО никого сюда не пришлёт. Пока вы здесь, снаружи вас не видят и не тронут, если сами не начнёте бой»." + (cam ? " «Камера ОКО под потолком, пока цела, видит вас — разбейте её»." : ""));
+  }
+  if (tickN < havenOffT) return; /* бой отсюда — зона на время боя не прикрывает */
+  havenId = r;
+}
+/* носитель стреляет, бьёт или бросает гранату из безопасной зоны */
+function havenFight() {
+  if (havenId < 0 && tickN >= havenOffT) return;
+  var g = G(), fs = CUR().fs, r = CUR().fl.room[idx(g.x, g.y)];
+  if (!(fs && fs.haven && r >= 0 && fs.haven[r])) return;
+  if (tickN >= havenOffT) sayOnce("havenFight", "«Эхо»: «Бой из безопасной зоны — пока он идёт, она вас не прикрывает».", 30000);
+  havenOffT = tickN + 20; havenId = -1;
 }
 
 /* ════════ ВРАГИ ЭТАЖА ════════ */
 function foeName(base, f) {
-  var n = f.boss ? LAB.BOSSES[f.boss].n : base.n;
+  var n = f.boss ? LAB.BOSSES[f.boss].n : base.n, adj = [];
+  /* (2.5) ступень развития твари: окрепшая, матёрая, древняя */
+  if (f.evo && LAB.mutants) adj.push(LAB.mutants.evoWord(f));
   if (f.aff && f.aff.length) {
     var g = f.boss ? LAB.BOSSES[f.boss].g : base.g;
-    var adj = f.aff.map(function (a) { return LAB.AFFIX[a][g === "f" ? "f" : "m"]; });
-    n += ", " + (adj.length > 1 ? adj.slice(0, -1).join(", ") + " и " + adj[adj.length - 1] : adj[0]);
+    adj = adj.concat(f.aff.map(function (a) { return LAB.AFFIX[a][g === "f" ? "f" : "m"]; }));
   }
+  if (adj.length) n += ", " + (adj.length > 1 ? adj.slice(0, -1).join(", ") + " и " + adj[adj.length - 1] : adj[0]);
   return n;
 }
+var MX = ["flee", "howl", "bomber", "trapper", "feeder", "rad", "lure"];
 function makeRuntime(def, st) {
   var base = LAB.FOES[def.type];
   var bdef = def.boss ? LAB.BOSSES[def.boss] : null;
@@ -131,6 +179,16 @@ function makeRuntime(def, st) {
     /* (2.2) камера в углу помещения смотрит по комнате — от стены к стене */
     camLook: def.camLook || null
   };
+  /* (2.5) твари: ум, ранг, каста, отряд и ступень развития (mutants.js) */
+  if (f.kind === "bio") {
+    var MU = LAB.mutants;
+    f.mind = base.mind != null ? base.mind : 1; f.rank = base.rank || "mid"; f.caste = base.caste || null;
+    f.pack = (st && st.pack) || def.pack || null; f.lead = st && st.lead != null ? !!st.lead : !!def.lead; f.packDyn = !!(st && st.pack); f.packT = def.packT || null;
+    f.evo = st && st.evo != null ? st.evo : def.evo != null ? def.evo : (MU && !f.boss && !def.spawned ? MU.stage0(base, LAB.depth(G().L, G().F), def.id, 0) : 0);
+    f.evoUp = !!(st && st.evo != null); f.evoXP = (st && st.evoXP) || 0;
+    if (f.evo && MU && !f.boss) { var em = MU.evoMul(f.evo); f.maxhp = Math.round(f.maxhp * em.hp); f.dmg = Math.round(f.dmg * em.dmg); f.arm = (f.arm || 0) + em.arm; }
+    f.mx = !!(f.pack || f.caste || MX.some(function (k) { return f.beh.indexOf(k) >= 0; }));
+  }
   f.hp = f.maxhp; f.shield = f.shieldMax;
   if (aff(f, "fast")) { f.spd = Math.max(1, f.spd - 1); f.acd = Math.max(1, f.acd - 1); }
   if (aff(f, "sniper")) f.rng += 3;
@@ -160,7 +218,8 @@ function makeRuntime(def, st) {
    меньше, добычи нет. */
 function countable(def) {
   var b = LAB.FOES[def.type];
-  if (!b || def.boss || def.ally || def.spawned || def.task || def.twin || (def.carry && def.carry.length)) return false;
+  /* (2.5) вожак и матка отряда тварей выходят всегда: без них отряд — не отряд */
+  if (!b || def.boss || def.ally || def.spawned || def.task || def.twin || def.lead || (def.carry && def.carry.length)) return false;
   return !["turret", "camera", "cleaner", "stationary", "mimic", "relay", "observer"].some(function (k) { return b.beh.indexOf(k) >= 0; });
 }
 function dkRoll(id, salt) { return (LAB.hash32(CUR().key + ":" + salt + ":" + id) >>> 0) % 1000 / 1000; }
@@ -175,7 +234,7 @@ function twinOf(def) {
     if ((x === G().x && y === G().y) || fl.foes.some(function (d) { return d.x === x && d.y === y; }) || foes.some(function (f) { return f.x === x && f.y === y; })) continue;
     var tw = {}, k;
     for (k in def) tw[k] = def[k];
-    tw.id = def.id + "d"; tw.x = x; tw.y = y; tw.twin = true; tw.spawned = true; tw.carry = null;
+    tw.id = def.id + "d"; tw.x = x; tw.y = y; tw.twin = true; tw.spawned = true; tw.carry = null; tw.lead = false; /* (2.5) напарник вожака — не второй вожак */
     if (def.post) tw.post = [x, y];
     return tw;
   }
@@ -219,6 +278,15 @@ function loadFoes() {
     /* камеры: петля записи, снятое питание, чужая прошивка — помнятся на этаже */
     if (has(f, "camera") && fs.camS && fs.camS[f.id]) { var cs0 = fs.camS[f.id]; f.camOff = !!cs0.off; f.camLoop = cs0.loop || 0; f.camOurs = cs0.ours || 0; }
   });
+  /* (2.5) пока носителя не было два часа и дольше, разумные твари этажа окрепли */
+  var nowM = gameMin(), wasM = fs.seenAt;
+  fs.seenAt = nowM;
+  if (LAB.mutants && wasM != null && nowM - wasM >= 120) {
+    var grown = 0;
+    foes.forEach(function (f) { if (f.kind === "bio" && !f.dead && !f.boss && (f.mind || 0) >= 2 && Math.random() < 0.5 * (diff().evo || 1) && evolve(f, true)) grown++; });
+    if (grown) sayq("Пока вас не было, разумные твари этажа окрепли" + (grown > 1 ? ": " + grown + " " + gm().plural(grown, "тварь стала", "твари стали", "тварей стали") + " сильнее." : "."));
+  }
+  bodies = [];
   hpMark = Math.round(100 * G().hp / G().hpMax);
   graceT = tickN + 6; /* три секунды после входа на этаж враги не бьют: осмотреться */
 }
@@ -226,6 +294,7 @@ function syncFoes() {
   var fs = CUR().fs;
   if (!fs) return;
   if (!fs.foes) fs.foes = {};
+  fs.seenAt = gameMin(); /* (2.5) когда носитель был на этаже — для роста тварей в его отсутствие */
   /* (2.0) пишется только то, что изменилось: целая машина на своём месте не
      пишется вовсе — охраны на этажах много, а память браузера не резиновая */
   var defs = {};
@@ -247,6 +316,10 @@ function syncFoes() {
     if (f.noCarry) { e.noCarry = true; n++; }
     if (f.built) { e.built = f.built; n++; }
     if (f.reported) { e.reported = true; n++; }
+    /* (2.5) окрепшая тварь, её опыт и новый вожак отряда — помнятся */
+    if (f.evoUp) { e.evo = f.evo; n++; }
+    if (f.evoXP >= 1) { e.evoXP = Math.round(f.evoXP); n++; }
+    if (f.packDyn && f.pack) { e.pack = f.pack; e.lead = !!f.lead; n++; }
     if (n) fs.foes[f.id] = e; else delete fs.foes[f.id];
   });
 }
@@ -262,15 +335,16 @@ function losTo(f) { return LAB.los(CUR().fl, CUR().fs, f.x, f.y, G().x, G().y); 
 /* (2.0) Узлы связи и начальники этажа — список раз в такт: машин на этаже
    сотни, а ум машины спрашивают на каждом шаге и у каждой двери в поиске
    пути — перебирать ради этого весь этаж слишком дорого. */
-var specN = -1, specOf = null, relays = [], commanders = [];
+var specN = -1, specOf = null, relays = [], commanders = [], packLeads = {};
 function specials() {
   if (specN === tickN && specOf === foes) return;
-  specN = tickN; specOf = foes; relays = []; commanders = [];
+  specN = tickN; specOf = foes; relays = []; commanders = []; packLeads = {};
   for (var i = 0; i < foes.length; i++) {
     var o = foes[i];
     if (o.dead || o.calm) continue;
     if (has(o, "relay")) relays.push(o);
     if (!o.ally && has(o, "commander")) commanders.push(o);
+    if (o.lead && o.pack) packLeads[o.pack] = o; /* (2.5) вожаки отрядов тварей */
   }
 }
 function relayNear(f) {
@@ -304,6 +378,7 @@ function detOf(f) {
 function sees(f) {
   if (safeHero) return false; /* (2.1) безопасное пробуждение */
   if (refugeId >= 0 && !inRefuge(f.x, f.y)) return false; /* (2.2) убежище */
+  if (havenId >= 0 && !inHaven(f.x, f.y)) return false; /* (2.3) безопасная зона у капсулы */
   if (f.blindT > 0) return false; /* сенсорная помеха ослепила */
   if (G().st.mimicT > 0 && f.kind === "mech") return false; /* (2.0) мимикрия: машины принимают за свою */
   /* «тепло»: твари «Колыбели» чуют тепло тела — маскировка их не обманывает, а слепые видят его вблизи */
@@ -316,6 +391,7 @@ function sees(f) {
 function hears(f) {
   if (safeHero) return false; /* (2.1) безопасное пробуждение */
   if (refugeId >= 0 && !inRefuge(f.x, f.y)) return false; /* (2.2) убежище */
+  if (havenId >= 0 && !inHaven(f.x, f.y)) return false; /* (2.3) безопасная зона у капсулы */
   if (f.deafT > 0) return false; /* (1.5) оглушён ловушкой */
   var n = G().noise;
   if (gm().armorSpecial("stealth")) n = Math.round(n * 0.6);
@@ -361,7 +437,7 @@ function occupied(x, y, self) {
 function canStand(f, x, y) {
   var fl = CUR().fl;
   if (!LAB.inb(x, y)) return false;
-  if (f && !f.ally && (inSafeRoom(x, y) || inRefuge(x, y))) return false; /* (2.2) капсульный отсек при пробуждении и убежище: враги в них не входят */
+  if (f && !f.ally && (inSafeRoom(x, y) || inRefuge(x, y) || havenAt(x, y))) return false; /* (2.2) капсульный отсек при пробуждении и убежище, (2.3) безопасная зона у капсулы: враги в них не входят */
   var t = fl.t[idx(x, y)];
   if (t === LAB.T.WALL) return false;
   if (t === LAB.T.DOOR) { var d = fl.doorAt[idx(x, y)]; if (CUR().fs.doors[d.id] !== 2) return false; }
@@ -383,8 +459,9 @@ function okoDoors(f) {
 }
 /* Можно ли врагу открыть эту дверь. */
 function foeOpens(f, d) {
-  if (!f.ally && refugeDoor(d)) return false; /* (2.2) дверь убежища враги не открывают */
-  if (!has(f, "dooropen") && !(f.kind === "mech" && iqOf(f) >= 5) && !okoDoors(f)) return false;
+  if (!f.ally && (refugeDoor(d) || (CUR().fs.haven && CUR().fs.haven[d.room]))) return false; /* (2.2) дверь убежища и (2.3) безопасной зоны у капсулы враги не открывают */
+  /* (2.5) разумные твари (ум 2 и выше) открывают простые двери сами */
+  if (!has(f, "dooropen") && !(f.kind === "mech" && iqOf(f) >= 5) && !(f.kind === "bio" && (f.mind || 0) >= 2) && !okoDoors(f)) return false;
   var st = CUR().fs.doors[d.id];
   if (st === 2) return true;
   if (d.lock && d.lock.type === "secret") return false;
@@ -422,12 +499,12 @@ function stepToward(f, tx, ty, opts) {
   return true;
 }
 function moveFoe(f, nx, ny) {
-  if ((inSafeRoom(nx, ny) || inRefuge(nx, ny)) && !f.ally) return; /* (2.2) в капсульный отсек при пробуждении и в убежище не входят */
+  if ((inSafeRoom(nx, ny) || inRefuge(nx, ny) || havenAt(nx, ny)) && !f.ally) return; /* (2.2) в капсульный отсек при пробуждении и в убежище, (2.3) в безопасную зону у капсулы не входят */
   var px = f.x, py = f.y;
   f.x = nx; f.y = ny;
   var r = CUR().fl.room[idx(nx, ny)];
   f.room = r;
-  if (!aff(f, "cloak") || dist(f, heroPos()) <= 3) A("foeStep", f);
+  if ((!aff(f, "cloak") && !has(f, "silent")) || dist(f, heroPos()) <= 3) A("foeStep", f); /* (2.5) беззвучные твари — слышно только вблизи */
   /* сапёр в погоне оставляет мины в проходах — те же ловушки ОКО, что и по
      приказу (traps.js, okoTrap): их слышно вплотную, их можно обезвредить */
   if (has(f, "mines") && f.minesLeft > 0 && f.state === "hunt" && CUR().fl.room[idx(px, py)] < 0 && Math.random() < 0.25 && LAB.traps && LAB.traps.okoTrap) {
@@ -529,6 +606,7 @@ function tick() {
   var t0 = perfNow();
   safeHero = wakeSafeTick();
   refugeTick();
+  havenTick();
   statusTick(false);
   var fs = CUR().fs;
   var spotted = [], lod = LOD[lodLevel()], hx = G().x, hy = G().y;
@@ -547,6 +625,7 @@ function tick() {
   }
   shellsTick();
   if (LAB.traps) { LAB.safe(LAB.traps.tick); if (G().dead) return; }
+  if (LAB.stash) { LAB.safe(LAB.stash.tick); if (G().dead) return; } /* (2.5) граната из хранилища, клещ, метка улья */
   if (LAB.oko) LAB.safe(LAB.oko.tick);
   if (LAB.game.doorAutoClose) LAB.safe(LAB.game.doorAutoClose); /* двери закрываются за прошедшими */
   if (spotted.length) announceSpotted(spotted);
@@ -709,7 +788,10 @@ function unmask(f) {
 }
 /* Что уборщик подбирает: мусор и мелочь — но не записки, образцы, ключи,
    пропуска и ключ-карты (без них этаж не пройти). */
-function cleanable(it) { return ["note", "sample", "key", "pass", "elevpass", "gatepass", "chip"].indexOf(it.kind) < 0; }
+/* (2.3, просьба игрока) И не добычу с поверженных врагов (fs.drops, «d…»): она
+   ждёт носителя. Прежде уборщик рядом шёл к ней и молча уносил — носитель
+   слышал «Что-то упало», приходил на место и не находил ничего. */
+function cleanable(it) { return !/^d\d/.test(String(it.id || "")) && ["note", "sample", "key", "pass", "elevpass", "gatepass", "chip"].indexOf(it.kind) < 0; }
 /* Скрытый наблюдатель «Подножия»: не нападает — увидев носителя, щёлкает
    реле и передаёт ОКО, где он, потом отходит из виду. Его выдаёт сухой
    щелчок передатчика. */
@@ -940,7 +1022,8 @@ function unmineTurrets() {
    куда герой отступил бы от первого. */
 function flankCell(f) {
   var h = heroPos(), lead = null, bd = dist(f, h);
-  foes.forEach(function (o) { if (o !== f && hostile(o) && o.kind === "mech" && o.state === "hunt" && dist(o, h) < bd) { bd = dist(o, h); lead = o; } });
+  /* (2.5) твари отряда берут в клещи вместе со своими, машины — с машинами */
+  foes.forEach(function (o) { if (o !== f && hostile(o) && o.kind === f.kind && (f.kind !== "bio" || o.pack === f.pack) && o.state === "hunt" && dist(o, h) < bd) { bd = dist(o, h); lead = o; } });
   if (!lead || bd > 5) return null;
   var dx = Math.sign(h.x - lead.x), dy = Math.sign(h.y - lead.y);
   var cand = [[h.x + dx, h.y + dy], [h.x + dy, h.y + dx], [h.x - dy, h.y - dx]];
@@ -1312,6 +1395,8 @@ function foeTick(f, spotted) {
   var canMove = f.mv >= f.spd && !has(f, "stationary");
   var canAct = f.at >= f.acd;
   var d = dist(f, heroPos());
+  /* (2.5) твари: отряды и касты, трусы, трутни, падальщики, ткачи (ниже, «Мир мутантов») */
+  if (f.mx && mutantTick(f, see, sense, d, canMove, canAct)) return;
 
   /* особые умения */
   if (has(f, "relay") && f.state !== "idle" && canAct) { relayCall(f); f.at = 0; return; }
@@ -1418,7 +1503,7 @@ function foeTick(f, spotted) {
       f.mv = 0;
       if (iq >= 3 && see && inFireLine(f) && d > 2 && Math.random() < 0.45 && sidestep(f)) return;
       var tgt = f.lastKnown || heroPos();
-      if (f.kind === "mech" && iq >= 4 && see && d > 1 && d <= 10) {
+      if ((f.kind === "mech" ? iq >= 4 : (f.mind || 0) >= 2 && !!f.pack) && see && d > 1 && d <= 10) {
         var fc = flankCell(f);
         if (fc && stepToward(f, fc[0], fc[1])) { if (!f.flank) { f.flank = 1; sayOnce("flk" + f.id, f.name.split(",")[0] + " заходит с фланга, " + gm().relDir(f.x, f.y) + "!", 9000); } return; }
       }
@@ -1493,7 +1578,7 @@ function relayCall(f) {
 }
 function summon(f) {
   var bd = f.boss && LAB.BOSSES[f.boss];
-  var minion = (bd && bd.minion && LAB.FOES[bd.minion]) ? bd.minion : ({ b_brood: "roach", b_root: "vine" }[f.boss] || "rat");
+  var minion = (bd && bd.minion && LAB.FOES[bd.minion]) ? bd.minion : (f.base.minion && LAB.FOES[f.base.minion]) ? f.base.minion : ({ b_brood: "roach", b_root: "vine" }[f.boss] || "rat");
   var n = foes.filter(function (o) { return !o.dead && o.spawned && o.from === f.id; }).length;
   if (n >= 4) return;
   var c = freeCellNear(f.x, f.y, f);
@@ -1507,7 +1592,8 @@ function spawnFoe(type, x, y, extra) {
   var L = G().L, F = G().F, d0 = LAB.depth(L, F);
   var lvl = LAB.foeLevel(L, F), sc = LAB.scaleFoe(base, lvl);
   var fs = CUR().fs;
-  var def = { id: "s" + (fs.sseq = (fs.sseq || 0) + 1), type: type, x: x, y: y, lvl: lvl, hp: sc.hp, maxhp: sc.hp, dmg: sc.dmg, arm: sc.arm, room: CUR().fl.room[idx(x, y)], iq: LAB.foeIQ(base.kind, d0, 0), spawned: true };
+  var miq = LAB.mutants ? LAB.mutants.iqFor(base, d0) : null;
+  var def = { id: "s" + (fs.sseq = (fs.sseq || 0) + 1), type: type, x: x, y: y, lvl: lvl, hp: sc.hp, maxhp: sc.hp, dmg: sc.dmg, arm: sc.arm, room: CUR().fl.room[idx(x, y)], iq: miq != null ? miq : LAB.foeIQ(base.kind, d0, 0), spawned: true };
   if (fs.spawned.length > 60) fs.spawned = fs.spawned.filter(function (sd) { return !(fs.foes[sd.id] && fs.foes[sd.id].dead); });
   if (extra) for (var k in extra) def[k] = extra[k];
   fs.spawned.push(def);
@@ -1525,6 +1611,201 @@ function blink(f) {
   return true;
 }
 
+/* ════════ МИР МУТАНТОВ (2.5, просьба игрока) ════════
+   Отряды и касты тварей (данные — mutants.js). Заметил один — знают все
+   в отряде; вожак рядом — свои злее, пал — отряд теряется, если жрец не
+   подхватит командование (а у разумных — кто-то из старших); провидец
+   видит носителя сквозь стены и шепчет отряду (маскировка его сбивает);
+   рабочие и трусы бегут и поднимают тревогу; трутень лопается вплотную;
+   падальщик ест павших и крепнет; ткач ставит ловушки поперёк ходов;
+   зазывала кричит человеческим голосом. Твари крепнут: ранив вас,
+   пережив бой, съев павшего; улей глубин привыкает к вашему оружию. */
+var bodies = [];
+function packLeadNear(f) {
+  if (!f.pack || f.lead) return false;
+  specials();
+  var l = packLeads[f.pack];
+  return !!(l && l !== f && !l.dead && cheb(l, f) <= 6);
+}
+function packMates(f, r) {
+  var out = [];
+  for (var i = 0; i < foes.length; i++) { var o = foes[i]; if (o !== f && !o.dead && !o.calm && !o.ally && o.pack === f.pack && (!r || cheb(o, f) <= r)) out.push(o); }
+  return out;
+}
+/* Заметил один — знают все в отряде: разумные идут на вас, прочие — проверить. */
+function packAlert(f, at, r) {
+  packMates(f, r).forEach(function (o) {
+    if (o.state === "flee" || (o.fleeT || 0) > tickN) return;
+    o.lastKnown = { x: at.x, y: at.y }; o.lost = 0;
+    if (o.state === "idle" || o.state === "alert") o.state = (o.mind || 0) >= 2 ? "hunt" : "alert";
+  });
+}
+/* Провидец: видит сквозь стены и шепчет отряду, где вы. */
+function seerSight(f) {
+  var h = heroPos();
+  if (G().st.cloak > 0 || cheb(f, h) > 18) return;
+  f.lastKnown = { x: h.x, y: h.y }; f.lost = 0;
+  var list = f.pack ? packMates(f, 22) : foes.filter(function (o) { return o !== f && hostile(o) && o.kind === "bio" && (o.mind || 0) >= 1 && cheb(o, f) <= 14; });
+  var n = 0;
+  list.forEach(function (o) { if (o.state === "flee" || (o.fleeT || 0) > tickN) return; o.lastKnown = { x: h.x, y: h.y }; o.lost = 0; if (o.state !== "hunt") o.state = "hunt"; n++; });
+  if (n) sayOnce("seer" + f.id, f.name.split(",")[0] + " видит вас сквозь стены и подсказывает своим, где вы. Маскировка его собьёт.", 25000);
+}
+/* Вой: скликать своих — тот же вид, то же семейство, тот же отряд; разумные
+   без отряда собираются в отряд вокруг того, кто позвал. */
+function howl(f) {
+  var h = heroPos(), n = 0, fam = f.base.fam, dyn = (f.mind || 0) >= 2 && !f.pack;
+  if (dyn) { f.pack = "t" + f.id; f.lead = true; f.packDyn = true; }
+  foes.forEach(function (o) {
+    if (o === f || o.dead || o.calm || o.ally || o.kind !== "bio" || cheb(o, f) > 12) return;
+    if (!(o.type === f.type || (fam && o.base.fam === fam) || (f.pack && o.pack === f.pack))) return;
+    if (o.state === "idle") { o.state = "alert"; o.lastKnown = { x: h.x, y: h.y }; o.lost = 0; n++; }
+    if (dyn && !o.pack && (o.mind || 0) >= 2) { o.pack = f.pack; o.packDyn = true; o.lead = false; }
+  });
+  A("foeSound", f, "alert");
+  /* одна фраза на семейство: свора из четырёх гончих не перебивает сама себя */
+  if (n && cheb(f, h) <= 16) sayOnce("howl:" + (fam || f.type), f.name.split(",")[0] + " скликает своих" + (dyn ? ": они сбиваются в отряд." : "."), 12000);
+}
+/* Трус смел в стае: двое своих рядом — и он кусает. */
+function brave(f) {
+  if (f.caste === "worker") return false;
+  var n = 0;
+  for (var i = 0; i < foes.length && n < 2; i++) { var o = foes[i]; if (o !== f && !o.dead && o.type === f.type && cheb(o, f) <= 3) n++; }
+  return n >= 2;
+}
+/* Падальщик: павший рядом — съесть и окрепнуть. */
+function feedTick(f, canMove) {
+  if (!bodies.length) return false;
+  var b = null, bd = 9;
+  bodies.forEach(function (q) { var dd = cheb(q, f); if (dd < bd && tickN - q.t < 240) { bd = dd; b = q; } });
+  if (!b) return false;
+  if (bd <= 1) {
+    f.feedN = (f.feedN || 0) + 1;
+    if (f.feedN % 2 === 0) A("foeSound", f, "attack");
+    if (f.feedN >= 5) {
+      f.feedN = 0; bodies.splice(bodies.indexOf(b), 1);
+      f.hp = Math.min(f.maxhp, f.hp + Math.round(f.maxhp * 0.3));
+      if (cheb(f, heroPos()) <= 10) sayOnce("feed" + f.id, f.name.split(",")[0] + " " + (f.g === "f" ? "сожрала" : "сожрал") + " павшего — и крепнет.", 10000);
+      gainEvo(f, 40);
+    }
+    return true;
+  }
+  if (canMove) { f.mv = 0; if (!stepToward(f, b.x, b.y)) bodies.splice(bodies.indexOf(b), 1); }
+  return true;
+}
+/* Ткач: поперёк прохода — ловушка своей глубины (своих она не трогает). */
+var WEAVE = { K: "glue", P: "net", C: "resin", O: "glue", M: "gear", I: "roots" };
+function trapperTick(f) {
+  f.trapT = tickN + 24;
+  if ((f.trapsSet || 0) >= 2 || !LAB.traps || !LAB.traps.okoTrap || !LAB.TRAPS) return;
+  if (CUR().fl.room[idx(f.x, f.y)] >= 0) return; /* только в проходах */
+  var L = G().L, era = L <= 10 ? "K" : L <= 20 ? "P" : L <= 40 ? "C" : L <= 60 ? "O" : L <= 80 ? "M" : "I";
+  var kind = LAB.TRAPS[WEAVE[era]] ? WEAVE[era] : "glue";
+  var tp = LAB.traps.okoTrap(kind, f.x, f.y, { dmg: Math.round(f.dmg * 1.2) });
+  if (tp) { tp.by = "hive"; f.trapsSet = (f.trapsSet || 0) + 1; if (cheb(f, heroPos()) <= 6) A("foeSound", f, "idle"); }
+}
+/* Фонящая тварь: рядом с ней — доза облучения. */
+function radTick(f) {
+  var m = [];
+  if (gm().bodyApply) gm().bodyApply({ rad: G().st.radBlock > 0 ? 1 : 2 }, m);
+  sayOnce("radf", "Счётчик трещит: рядом фонит " + f.name.split(",")[0].toLowerCase() + ". Отойдите.", 15000);
+}
+/* Зазывала: из темноты — человеческий крик о помощи. Вблизи «Эхо» узнаёт подделку. */
+function lureTick(f) {
+  var d = cheb(f, heroPos());
+  if (d > 14 || Math.random() > 0.05) return;
+  if (LAB.atmos && LAB.atmos.at) A("at", "ev_cry", f.x, f.y, { gain: 0.9 }); else A("play", "ev_cry");
+  if (d <= 5) sayOnce("lure" + f.id, "«Эхо»: этот крик — подделка. Кричит не человек, а зазывала, " + gm().relDir(f.x, f.y) + ".", 30000);
+}
+function mutantTick(f, see, sense, d, canMove, canAct) {
+  /* пережил бой — окреп */
+  if (f.state === "hunt" && f.hitT < 4) f.fought = true;
+  else if (f.state === "idle" && f.fought) { f.fought = false; gainEvo(f, 15); }
+  /* убегает: трус, рабочая каста или отряд без вожака */
+  if ((f.fleeT || 0) > tickN) { if (canMove) { f.mv = 0; stepAway(f); } return true; }
+  /* заметил один — знают все в отряде */
+  if (f.pack && sense && (f.packCallT || 0) <= tickN) { f.packCallT = tickN + 4; packAlert(f, heroPos(), see ? 20 : 12); }
+  if (f.caste === "seer" && f.state !== "idle" && tickN % 2 === 0) seerSight(f);
+  if (has(f, "howl") && sense && (f.howlT || 0) <= tickN) { f.howlT = tickN + 30; howl(f); }
+  if ((has(f, "flee") || f.caste === "worker") && f.state === "hunt" && d <= 5 && !brave(f)) {
+    if (f.caste === "worker" && (f.alarmT || 0) <= tickN) {
+      f.alarmT = tickN + 40; A("foeSound", f, "alert");
+      if (f.pack) packAlert(f, heroPos(), 18); else howl(f);
+      sayOnce("wrk", f.name.split(",")[0] + " удирает и поднимает тревогу!", 9000);
+    }
+    if (canMove) { f.mv = 0; if (!stepAway(f) && canAct && d <= 1) { f.at = 0; attack(f, true); } }
+    return true;
+  }
+  /* трутень добежал — лопается */
+  if (has(f, "bomber") && f.state === "hunt" && d <= 1 && !sheltered() && tickN >= graceT) {
+    sayOnce("bmb", f.name.split(",")[0] + " лопается вплотную!", 3000);
+    explode(f, 1, Math.round(f.dmg * 1.6), "chem");
+    return true;
+  }
+  if (has(f, "feeder") && f.state !== "hunt" && feedTick(f, canMove)) return true;
+  if (has(f, "trapper") && f.state !== "idle" && (f.trapT || 0) <= tickN) trapperTick(f);
+  if (has(f, "rad") && cheb(f, heroPos()) <= 2 && tickN % 2 === 0 && !sheltered()) radTick(f);
+  if (has(f, "lure") && f.state === "idle") lureTick(f);
+  return false;
+}
+/* Удар твари достиг цели: нервы, броня, метка — и опыт твари. */
+function mutantHit(f, fin) {
+  var g = G();
+  if (has(f, "psi")) {
+    var m = []; if (gm().bodyApply) gm().bodyApply({ neuro: 5 + Math.floor(g.L / 12) }, m);
+    if (Math.random() < 0.25) g.st.navjam = Math.max(g.st.navjam || 0, 6);
+    sayOnce("psi", "Удар по нервам: в голове звенит.", 8000);
+  }
+  if (has(f, "corrode") && g.armor && LAB.repair && LAB.repair.corrode) { var t = LAB.repair.corrode(0.03); if (t) sayOnce("corr", t, 8000); }
+  if (has(f, "marker")) { g.st.psiMark = Math.max(g.st.psiMark || 0, 20); sayOnce("mark", "Вас пометили: разумные твари вокруг какое-то время чуют вас.", 10000); }
+  gainEvo(f, fin * 0.8);
+}
+/* Тварь пала: павший — для падальщиков; отряд без вожака теряется. */
+function mutantDeath(f, quiet) {
+  bodies.push({ x: f.x, y: f.y, t: tickN }); if (bodies.length > 10) bodies.shift();
+  if (!f.pack || !(f.lead || f.caste === "queen")) return;
+  var mates = packMates(f, 0);
+  if (!mates.length) return;
+  var heir = mates.filter(function (o) { return o.caste === "priest"; })[0] || null;
+  if (!heir && (f.mind || 0) >= 2) heir = mates.filter(function (o) { return (o.mind || 0) >= 2 && o.caste !== "worker" && o.caste !== "drone"; }).sort(function (a, b) { return ((b.evo || 0) - (a.evo || 0)) || (b.maxhp - a.maxhp); })[0] || null;
+  mates.forEach(function (o) {
+    o.confused = Math.max(o.confused || 0, heir ? 4 : 10);
+    if (!heir && (o.rank === "low" || o.caste === "worker" || (o.mind || 0) < 2)) o.fleeT = tickN + 12;
+  });
+  if (quiet) return;
+  if (heir) {
+    heir.lead = true; heir.packDyn = true; A("foeSound", heir, "alert");
+    sayq(heir.name.split(",")[0] + (heir.caste === "priest" ? " подхватывает командование: отряд снова собирается." : " становится новым вожаком: отряд собирается снова."));
+  } else {
+    var pn = f.packT && LAB.mutants ? LAB.mutants.packName(f.packT) : "отряд";
+    sayq(f.caste === "queen" ? "Матка мертва: " + pn + " в смятении, твари разбегаются." : pn.charAt(0).toUpperCase() + pn.slice(1) + " без вожака: твари растеряны и разбегаются.");
+  }
+}
+/* Ступень развития: прочнее на четверть, бьёт сильнее, панцирь толще. */
+function evolve(f, quiet) {
+  var MU = LAB.mutants;
+  if (!MU || f.boss || f.kind !== "bio" || (f.evo || 0) >= MU.evoCap(f.base)) return false;
+  var was = f.evo || 0;
+  f.evo = was + 1; f.evoUp = true; f.evoXP = 0;
+  var k = (1 + 0.25 * f.evo) / (1 + 0.25 * was);
+  f.maxhp = Math.round(f.maxhp * k); f.hp = Math.min(f.maxhp, Math.round(f.hp * k + f.maxhp * 0.2));
+  f.dmg = Math.max(1, Math.round(f.dmg * (1 + 0.15 * f.evo) / (1 + 0.15 * was))); f.arm = (f.arm || 0) + 1;
+  f.name = foeName(f.base, f);
+  if (!quiet) { A("foeSound", f, "summon"); if (cheb(f, heroPos()) <= 12) sayOnce("evo" + f.id, f.base.n + " " + (f.g === "f" ? "окрепла" : "окреп") + " на глазах: теперь " + MU.evoWord(f) + ".", 8000); }
+  return true;
+}
+function gainEvo(f, n) {
+  if (f.kind !== "bio" || f.boss || !LAB.mutants || !(n > 0)) return;
+  f.evoXP = (f.evoXP || 0) + n * (diff().evo || 1);
+  if (f.evoXP >= LAB.mutants.evoNeed(f.evo || 0)) evolve(f, false);
+}
+/* Улей учится: каким оружием вы бьёте разумных тварей глубин. */
+function hiveLearn(f, dt) {
+  var ch = LAB.mutants.noteHit(f, dt, G());
+  if (!ch) return;
+  if (ch.now) sayq("«Эхо»: твари этих глубин учатся — к урону «" + (LAB.DTYPE_N[ch.now] || ch.now) + "» они уже стойче. Смените оружие.");
+  else sayq("«Эхо»: твари этих глубин больше не ждут прежнего оружия.");
+}
+
 /* ════════ АТАКИ ВРАГОВ ════════ */
 function attack(f, seen) {
   var g = G();
@@ -1539,12 +1820,13 @@ function attack(f, seen) {
   /* только что вошли на этаж: враг наводится, но не бьёт */
   if (tickN < graceT) { A("foeSound", f, ranged ? "aim" : "alert"); return; }
   A("foeSound", f, ranged ? "shoot" : "attack");
-  var acc = 0.72 + 0.025 * iqOf(f) + (aff(f, "sniper") ? 0.12 : 0) - (g.agi - 10) * 0.01 - (g.st.haste > 0 ? 0.12 : 0) - (ranged ? 0.015 * d : 0);
+  var acc = 0.72 + 0.025 * iqOf(f) + (aff(f, "sniper") ? 0.12 : 0) - (g.agi - 10) * 0.01 - (g.st.haste > 0 ? 0.12 : 0) - (ranged ? 0.015 * d : 0) + (diff().acc || 0);
   if (ranged && gm().armorSpecial("deflect") && Math.random() < 0.15) { A("play", "deflect"); sayOnce("defl", "Экран отклонил выстрел."); return; }
   if (Math.random() > Math.max(0.2, Math.min(0.95, acc))) { A("foeMiss", f, ranged); return; }
   var dmg = f.dmg;
   if (has(f, "splash")) dmg = Math.round(dmg * 1.1);
   if (commanderNear(f)) dmg = Math.round(dmg * 1.2);
+  if (packLeadNear(f)) dmg = Math.round(dmg * 1.2); /* (2.5) вожак рядом — свои злее */
   if (f.chargeHit) dmg = Math.round(dmg * 1.5);
   if (gm().armorSpecial("phaseveil") && Math.random() < 0.15) { A("play", "phase_out"); sayOnce("pveil", "Удар прошёл сквозь вас."); return; }
   var fin = hurtPlayer(dmg, f.adt, f);
@@ -1557,6 +1839,7 @@ function attack(f, seen) {
   if (f.adt === "chem" && fin > 0) toxins(2 + Math.round(fin / 6));
   if ((has(f, "slow") || f.adt === "therm" && f.kind === "bio") && Math.random() < 0.5 && !gm().armorSpecial("frost")) { if (!g.st.slow) sayq("Холод сковывает: вы замедлены."); g.st.slow = 6; }
   if (has(f, "web") && ranged && Math.random() < 0.4) { g.st.web = 2; A("play", "web_hit"); sayq(LAB.K("Паутина! Свайп — рвать её.", "Паутина! Шаг в любую сторону — рвать её.")); }
+  if (fin > 0 && f.kind === "bio") mutantHit(f, fin);
 }
 function poison(t) {
   var g = G();
@@ -1579,7 +1862,7 @@ var BLEEDERS = { chimera: 1, lizard: 1, proto: 1, weaver: 1, labmut: 1, blind: 1
 function bleed(f, fin) {
   var g = G();
   if (!g.body || fin <= 0) return;
-  var p = (BLEEDERS[f.type] || (f.boss && BLEEDERS[f.boss]) ? 0.3 : f.kind === "bio" ? 0.1 : 0.05) + Math.min(0.15, fin / g.hpMax);
+  var p = (BLEEDERS[f.type] || f.base.bleeder || (f.boss && BLEEDERS[f.boss]) ? 0.3 : f.kind === "bio" ? 0.1 : 0.05) + Math.min(0.15, fin / g.hpMax);
   if (Math.random() > p) return;
   var t = 10 + Math.floor(Math.random() * 10) + Math.floor(g.L / 10);
   if (!g.st.bleed) { sayq("Кровотечение: рана кровит. Бинт или аптечка остановят кровь."); A("play", "hurt_phys"); }
@@ -1682,6 +1965,9 @@ function statusTick(onlyTimers) {
     if (st.shield < cap) { st.shield = Math.min(cap, st.shield + 2); if (st.shield === cap) A("play", "shield_full"); }
   }
   /* понемногу набирается энергия имплантов — если герой не голоден и нервы не перегружены */
+  /* (2.5, просьба игрока) лёгкий режим: вне боя здоровье понемногу возвращается само — до порога regen */
+  var rgH = diff().regen;
+  if (rgH && tickN % 6 === 0 && g.hp < g.hpMax * rgH && Date.now() - (g.lastHurt || 0) > 8000 && !st.poison && !st.bleed && !danger()) { g.hp++; if (g.hp >= Math.floor(g.hpMax * rgH)) sayq("Дыхание выровнялось: здоровье " + g.hp + "."); }
   var rg0 = gm().enRegen ? gm().enRegen() : 6;
   if (rg0 && tickN % rg0 === 0 && g.en < g.enMax) g.en++;
   if (onlyTimers) return;
@@ -1742,6 +2028,7 @@ function fire(dir, burst) {
   lastShot = now;
   if (wk === "misfire") { A("play", "w_empty"); if (S.turnBased) tick(); UIx("refresh"); return true; }
   g.stats.shots++;
+  havenFight(); /* (2.3) бой из безопасной зоны у капсулы */
   var melee = w.rng <= 1;
   var loud = { melee: 2, laser: 6, cryo: 5, thermo: 6, gauss: 10, positron: 12, magnetron: 8 }[LAB.WEAPONS[w.base].cls] || 8;
   if (w.base === "pcannon") loud = 14;
@@ -1870,6 +2157,8 @@ function damageFoe(f, raw, dt, o) {
   var res = f.base.res && f.base.res[dt] != null ? f.base.res[dt] : 1;
   if (aff(f, "hardened") && (dt === "emp" || dt === "ion")) vs *= dt === "emp" ? 0 : 0.5;
   var dmg = raw * vs * res * (1 - (f.adapt[dt] || 0)) * (f.markT > 0 ? 1.25 : 1);
+  /* (2.5) улей глубин привык к вашему оружию */
+  if (f.kind === "bio" && LAB.mutants) dmg *= LAB.mutants.resK(f, dt, G());
   /* щитоносец прикрывает соседей */
   if (foes.some(function (s) { return s !== f && !s.dead && !s.calm && has(s, "shieldally") && cheb(s, f) <= 2; })) dmg *= 0.6;
   /* тяжёлая машина: разряд по снятому щиту перегружает энергоузел — броня на время не держит */
@@ -1888,7 +2177,7 @@ function damageFoe(f, raw, dt, o) {
     else A("foeSound", f, "shield_hit");
   }
   dmg = Math.round(Math.max(0, dmg));
-  if (aff(f, "adaptive") && dmg > 0) {
+  if ((aff(f, "adaptive") || has(f, "adapt")) && dmg > 0) {
     var before = f.adapt[dt] || 0;
     f.adapt[dt] = Math.min(0.6, before + 0.12);
     if (before < 0.36 && f.adapt[dt] >= 0.36 && !o.quiet) sayOnce("adapt" + f.id, f.name.split(",")[0] + " привыкает к этому оружию. Смените оружие.", 6000);
@@ -1898,6 +2187,7 @@ function damageFoe(f, raw, dt, o) {
   if (o.stunMech && f.kind === "mech" && !f.boss && !aff(f, "hardened") && !f.dead) { f.frozen = Math.max(f.frozen || 0, o.stunMech); if (!o.quiet) sayOnce("stun" + f.id, f.name.split(",")[0] + " замер: импульс сбил ему контур.", 5000); }
   if (has(f, "reflect") && !o.ally && dmg > 0 && Math.random() < 0.5) { var back = Math.max(1, Math.round(dmg * 0.2)); A("play", "deflect"); sayOnce("rfl" + f.id, f.name.split(",")[0] + " отражает часть удара!", 6000); hurtPlayer(back, "field", f, { quiet: true }); }
   f.hp -= dmg; f.hitT = 0;
+  if (f.kind === "bio" && LAB.mutants && !o.ally && !o.quiet && dmg > 0) hiveLearn(f, dt);
   wake(f);
   if (f.hp <= 0) { kill(f); return true; }
   A("foeHit", f, dt, dmg, o.crit);
@@ -1940,6 +2230,7 @@ function kill(f, quiet) {
   if (LAB.oko && f.kind === "mech" && !f.ally) LAB.oko.event("kill", { task: f.task, stalker: has(f, "stalker"), camera: has(f, "camera"), guard: f.guard, post: f.post, oko: f.oko, x: f.x, y: f.y,
     beat: f.beat && !f.sapper ? f.beat : null, corr: f.corr, room: f.room, type: f.type, garrison: f.garrison });
   if (LAB.oko && f.boss) LAB.oko.event("boss");
+  if (f.kind === "bio") mutantDeath(f, quiet); /* (2.5) отряд без вожака, павший для падальщиков */
   if (has(f, "commander")) {
     var lost = 0;
     foes.forEach(function (o) { if (o !== f && hostile(o) && o.kind === "mech" && cheb(o, f) <= 8) { o.confused = 10; lost++; } });
@@ -2098,7 +2389,7 @@ function okoPoint(o) {
   dm[s0] = 0;
   while (qi < q.length) {
     var u = q[qi++], x = u % W, y = (u / W) | 0;
-    if (u !== s0 && fl.t[u] !== LAB.T.DOOR && canStand(null, x, y) && !inRefuge(x, y)) {
+    if (u !== s0 && fl.t[u] !== LAB.T.DOOR && canStand(null, x, y) && !inRefuge(x, y) && !havenAt(x, y)) {
       var dh = Math.abs(x - hp.x) + Math.abs(y - hp.y);
       if (dh >= minH && (o.hidden === false || !LAB.los(fl, fs, x, y, hp.x, hp.y))) {
         any.push([x, y, dm[u]]);
@@ -2198,7 +2489,7 @@ function replacePatrol(q) {
   var hp = heroPos(), fl = CUR().fl, fs = CUR().fs, best = null, bd = -1;
   (q.beat || []).forEach(function (pt) {
     var d = Math.abs(pt[0] - hp.x) + Math.abs(pt[1] - hp.y);
-    if (d < 12 || d <= bd) return;
+    if (d < 12 || d <= bd || havenAt(pt[0], pt[1])) return; /* (2.3) не в безопасной зоне у капсулы */
     if (d < 24 && LAB.los(fl, fs, hp.x, hp.y, pt[0], pt[1])) return;
     best = pt; bd = d;
   });
@@ -2223,6 +2514,7 @@ function replacePatrol(q) {
 function refillRoom(q) {
   var fl = CUR().fl, rm = fl.rooms[q.room], hp = heroPos();
   if (!rm) return null;
+  if (CUR().fs.haven && CUR().fs.haven[q.room]) return null; /* (2.3) безопасную зону у капсулы ОКО не заселяет */
   if (fl.room[idx(hp.x, hp.y)] === q.room) return [];
   var door = null;
   for (var di = 0; di < fl.doors.length; di++) if (fl.doors[di].room === q.room) { door = fl.doors[di]; break; }
@@ -2321,8 +2613,11 @@ function describe(f) {
   if (has(f, "camera")) return f.name + ", " + gm().relDir(f.x, f.y) + ", " + (camDirs(f) && camFacing(f) ? "смотрит в вашу сторону" : "смотрит в другую сторону");
   if (has(f, "observer")) return f.name + ", " + gm().relDir(f.x, f.y) + ", не нападает — следит и докладывает ОКО";
   if (isNetTurret(f) && (f.cut || f.mine)) return f.name + ", " + gm().relDir(f.x, f.y) + ", " + (f.cut ? "кабель перерезан, молчит" : "признала вас по ключу ОКО, бьёт по врагам");
-  return f.name + ", " + gm().relDir(f.x, f.y) + ", " + st + (f.shield > 0 ? ", под щитом" : "") + (f.calm ? ", не враждебен" : f.state === "hunt" ? ", охотится" : f.state === "alert" ? ", насторожен" : "") + (f.guard ? ", на посту" : f.task === "repair" ? ", идёт чинить турели" : f.route ? ", патрулирует" : "");
+  /* (2.5) у тварей отряда — их роль: вожак, жрец, провидец… */
+  var role = f.kind === "bio" ? (f.lead && f.pack ? "вожак отряда" : f.caste ? CASTE_SHORT[f.caste] || "" : f.pack ? "в отряде" : "") : "";
+  return f.name + ", " + gm().relDir(f.x, f.y) + ", " + st + (role ? ", " + role : "") + (f.shield > 0 ? ", под щитом" : "") + (f.calm ? ", не враждебен" : f.state === "hunt" ? ", охотится" : f.state === "alert" ? ", насторожен" : "") + (f.guard && f.kind !== "bio" ? ", на посту" : f.task === "repair" ? ", идёт чинить турели" : f.route ? ", патрулирует" : "");
 }
+var CASTE_SHORT = { worker: "рабочая каста", soldier: "воин", hunter: "охотник", spitter: "стрелок", guard: "страж", priest: "жрец", seer: "провидец", leader: "вожак", queen: "матка", drone: "трутень", trapper: "ткач" };
 
 /* ════════ ИМПЛАНТЫ И ГРАНАТЫ ════════ */
 function useImplant(id, free) {
@@ -2350,6 +2645,7 @@ function useImplant(id, free) {
       var sec = gm().nearSecret(4);
       if (sec) parts.push("Пустота за стеной " + LAB.DIRN[sec.dir] + ": тайник.");
       if (LAB.traps) { var tsx = LAB.traps.scanText(8); if (tsx) parts.push(tsx); }
+      if (LAB.stash) { var tsy = LAB.stash.scanText(8); if (tsy) parts.push(tsy); }
       say(parts.join(" ") + (IM ? IM.scanExtra(id, list) : ""));
       break;
     }
@@ -2449,10 +2745,13 @@ function patrolCue() {
 function announceSpotted(list) {
   var now = Date.now();
   var names = list.map(function (f) { return f.name.split(",")[0] + " " + gm().relDir(f.x, f.y); });
+  /* (2.5) стая и отряд — не перечислять до конца: четыре имени и «ещё сколько-то» */
+  var more = names.length > 4 ? " и ещё " + (names.length - 4) : "";
+  if (more) names = names.slice(0, 4);
   var verb = list.length > 1 ? "заметили вас" : (list[0].g === "f" ? "заметила вас" : "заметил вас");
   if (now - lastSpot < 2500 && list.length === 1) { sayq(names[0] + "."); lastSpot = now; return; }
   lastSpot = now;
-  say(names.join(", ") + " — " + verb + "!", { interrupt: false });
+  say(names.join(", ") + more + " — " + verb + "!", { interrupt: false });
   if (LAB.tutor && list.some(function (f) { return f.kind === "mech"; })) LAB.tutor.ev("robot");
   if (!G().drawn && !G().tut.drawHint && (!LAB.tutor || LAB.tutor.hintsOn())) { G().tut.drawHint = 1; sayq(LAB.K("Выньте оружие: одно касание тремя пальцами. Затем свайп в сторону врага — выстрел.", "Достаньте оружие: R. Затем стрелка в сторону врага — выстрел.")); }
 }
@@ -2506,6 +2805,7 @@ function throwGrenade(id) {
   var g = G(), d = LAB.ITEMS[id], q = d && d.fx && d.fx.gren;
   if (!q || !(g.inv[id] > 0)) { say("Нет: " + (d ? d.n : id) + "."); return false; }
   g.inv[id]--;
+  havenFight(); /* (2.3) бой из безопасной зоны у капсулы */
   var p = flight(q.range || 5), dirW = LAB.DIRTO[g.face] || "";
   A("grenade", p.x, p.y);
   var k = 1 + 0.12 * (LAB.foeLevel(g.L, g.F) - 1), dmg = Math.round((q.dmg || 0) * k), r = q.r == null ? 1 : q.r;
@@ -2559,11 +2859,16 @@ LAB.combat = {
   robotsCalm: robotsCalm, calmAll: calmAll, chaser: chaser, alertMech: alertMech, sendSquad: sendSquad, deployTurret: deployTurret, noiseLure: noiseLure, throwNoise: throwNoise,
   dispatch: dispatch, replacePatrol: replacePatrol, refillRoom: refillRoom, okoPoint: okoPoint, patrols: patrols, sappers: sappers, minePoints: minePoints, drones: drones, repairers: repairers, guards: guards, sendCheck: sendCheck, reroute: reroute, dismiss: dismiss, despawn: despawn,
   lastSquad: function () { return lastSquad; }, tickN: function () { return tickN; }, wakeSafe: function () { return safeHero; }, sheltered: sheltered, refuge: function () { return refugeId; },
+  haven: function () { return havenId; }, havenAt: havenAt,
   lodR: lodR, lodLevel: lodLevel, tickMs: function () { return tickEma; }, search: search, netUp: netUp, camFacing: camFacing,
   quietTurret: quietTurret, jammer: jammer, freeCellNear: freeCellNear, spawnFoe: spawnFoe, damageFoe: damageFoe, unmask: unmask, dropCarry: dropCarry, _relayCall: function (f) { relayCall(f); }, _cleanerTick: function (f) { cleanerTick(f); }, isTurret: isTurret, cutTurret: cutTurret, mineTurret: mineTurret, unmineTurrets: unmineTurrets, flankCell: flankCell,
   mineCount: function () { return foes.filter(function (f) { return isNetTurret(f) && f.mine; }).length; }, cutCount: function () { return foes.filter(function (f) { return (isNetTurret(f) && f.cut) || (isCam(f) && f.camOff); }).length; },
   cams: cams, camState: camState, camSet: camSet, camExpire: camExpire, camCount: camCount, isCam: isCam, smashCam: smashCam, camsBroken: camsBroken,
   areaDamage: areaDamage, throwEmp: throwEmp, reloadPause: reloadPause, fire: fire, startFire: startFire, stopFire: stopFire,
-  useImplant: useImplant, useImplantFree: function (id) { useImplant(id, true); }, describe: describe, hurtPlayer: hurtPlayer, foes: function () { return foes; }
+  useImplant: useImplant, useImplantFree: function (id) { useImplant(id, true); }, describe: describe, hurtPlayer: hurtPlayer, foes: function () { return foes; },
+  /* (2.5) мир мутантов — для проверок */
+  _evolve: evolve, _gainEvo: gainEvo, _bodies: function () { return bodies; }, graceEnd: function () { return graceT; },
+  /* для проверок, что подменяют часы: забыть время прошлого выстрела */
+  _shotReset: function () { lastShot = 0; reloadUntil = 0; }
 };
 })();

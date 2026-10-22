@@ -307,6 +307,7 @@ function stateWord(tp) {
 function nameOf(tp) {
   var d = D(tp);
   if (tp.by === "oko") return d.n + " сапёра ОКО";
+  if (tp.by === "hive") return d.n + " тварей"; /* (2.5) ловушку сплёл ткач */
   if (!tp.own) return (d.g === "p" ? "старые " : d.g === "f" ? "старая " : "старый ") + d.n;
   return (d.g === "p" ? "ваши " : d.g === "f" ? "ваша " : "ваш ") + d.n;
 }
@@ -462,6 +463,7 @@ function foeStep(f) {
     var d = D(tp);
     if (d.trig === "prox" || d.trig === "remote" || d.trig === "lure") continue;
     if (tp.by === "oko" && f.kind === "mech") continue; /* своё машины ОКО знают */
+    if (tp.by === "hive" && f.kind === "bio") continue; /* (2.5) и твари — свои ловушки */
     if (!foeOk(d, f) || !onCells(tp, f.x, f.y)) continue;
     fire(tp, { f: f }, [f.x, f.y]);
     if (f.dead) return;
@@ -492,7 +494,7 @@ function discover(rad) {
     var dd = cheb(tp.x, tp.y, g.x, g.y);
     if (dd > rad) return;
     /* ловушку сапёра ОКО за шаг слышно не всегда — вплотную всегда */
-    if (tp.by === "oko" && dd >= 2 && Math.random() < 0.45) return;
+    if ((tp.by === "oko" || tp.by === "hive") && dd >= 2 && Math.random() < 0.45) return;
     tp.known = 1; found.push(tp);
   });
   found.forEach(function (tp) {
@@ -545,6 +547,7 @@ function avoid(f, x, y) {
     if (tp.st !== "on" || !onCells(tp, x, y)) continue;
     if (tp.own) { if (tp.seen && tp.seen[f.id]) return true; continue; }
     if (tp.by === "oko") { if (f.kind === "mech") return true; continue; }
+    if (tp.by === "hive") { if (f.kind === "bio") return true; continue; } /* (2.5) своё твари знают */
     if (!f.spawned) return true;
   }
   return false;

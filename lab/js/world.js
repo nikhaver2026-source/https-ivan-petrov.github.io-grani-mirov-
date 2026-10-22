@@ -1014,7 +1014,9 @@ function genFloor(seed, L, F, attempt) {
       if (aff.indexOf("shielded") >= 0) f2.shield = f2.shieldMax = Math.round(f2.maxhp * 0.35);
       f2.hp = f2.maxhp = Math.round(f2.maxhp * (1 + 0.1 * aff.length));
     }
-    f2.iq = LAB.foeIQ(base.kind, d0, aff.length) + (f2.boss ? 2 : 0);
+    /* (2.5) ум твари — от её разумности (mutants.js), машины умнеют с глубиной */
+    var miq = LAB.mutants ? LAB.mutants.iqFor(base, d0) : null;
+    f2.iq = (miq != null ? miq : LAB.foeIQ(base.kind, d0, aff.length)) + (f2.boss ? 2 : 0);
     fl.foes.push(f2);
     itemCell[idx(x, y)] = 1;
     return f2;
@@ -1272,6 +1274,8 @@ function genFloor(seed, L, F, attempt) {
   if (LAB.garrison && LAB.garrison.place) LAB.garrison.place({ fl: fl, L: L, F: F, seed: seed, attempt: attempt, makeFoe: makeFoe });
   /* 22. (2.2) Камеры ОКО в помещениях (garrison.js) — после охраны, своим потоком. */
   if (LAB.garrison && LAB.garrison.placeCams) LAB.garrison.placeCams({ fl: fl, L: L, F: F, seed: seed, attempt: attempt, makeFoe: makeFoe });
+  /* 23. (2.5) Отряды тварей: своры, семьи, звенья, ульи, банды (mutants.js) — своим потоком. */
+  if (LAB.mutants && LAB.mutants.place) LAB.mutants.place({ fl: fl, L: L, F: F, seed: seed, attempt: attempt, makeFoe: makeFoe });
 
   fl.sample = d0;
   fl.turrets = turrets;
@@ -1293,7 +1297,8 @@ function makeSurvivor(r, L, F, s, rm) {
 /* Добыча контейнеров: склонность комнаты влияет на состав. */
 function genLoot(r, L, F, ot, tag) {
   var out = [];
-  var n = ot === "safe" ? 3 : ot === "crate" ? r.int(1, 3) : r.int(0, 2);
+  /* (2.5, просьба игрока) шкафчик, стол, тело — пусты лишь изредка */
+  var n = ot === "safe" ? 3 : ot === "crate" ? r.int(1, 3) : r.chance(0.9) ? r.int(1, 2) : 0;
   var ammoAt = function () {
     var pool = [];
     for (var k in LAB.AMMO) if ((LAB.AMMO[k].depth || 1) <= L && LAB.AMMO[k].loot !== false) pool.push(k);

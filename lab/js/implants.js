@@ -434,7 +434,8 @@ function run(id) {
       break;
     case "traps": {
       var tt = LAB.traps && LAB.traps.scanText ? LAB.traps.scanText(p.r) : "";
-      t = d.n + ": " + (tt || "ловушек и мин рядом нет.");
+      var tc = LAB.stash ? LAB.stash.scanText(p.r) : "";
+      t = d.n + ": " + ((tt + (tt && tc ? " " : "") + tc) || "ловушек и мин рядом нет.");
       break;
     }
     case "secret": {

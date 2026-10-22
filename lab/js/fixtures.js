@@ -552,13 +552,16 @@ var TAGMAP = { cushion: "smoke", top: "store", under: "smoke", med: "med", mattr
 function doSearch(o, def, label, p) {
   var s = st(o);
   if (s["s_" + label]) { say("Здесь вы уже искали."); return; }
+  /* (2.5) пакость: игла в ящике тумбочки, клещ под матрасом (stash.js) */
+  if (LAB.stash && LAB.stash.guard(o, function () { doSearch(o, def, label, p); })) return;
   s["s_" + label] = 1;
   spend(2); snd("search", "pickup");
   var r = rng(o, "search:" + label), L = G().L, F = G().F, loot = [];
   if (risk(p.risk, r)) return;
   var tag = TAGMAP[p.tag] || "store";
-  var n = p.tag === "mattress" || p.tag === "cash" ? 2 : r.chance(LAB.ach && LAB.ach.has("searcher") ? 0.8 : 0.6) ? 1 : 0;
-  if (n && LAB.annexLoot) loot = LAB.annexLoot(r, L, F, tag, "desk", true).slice(0, n).filter(function (x) { return x.kind !== "weapon" && x.kind !== "armor"; });
+  /* (2.5, просьба игрока) в тумбочке, под матрасом, в ящике — почти всегда что-то есть, бывает и две вещи */
+  var n = p.tag === "mattress" || p.tag === "cash" ? 2 : r.chance(LAB.ach && LAB.ach.has("searcher") ? 0.97 : 0.88) ? (r.chance(0.25) ? 2 : 1) : 0;
+  if (n && LAB.annexLoot) loot = LAB.annexLoot(r, L, F, tag, n > 1 ? "crate" : "desk", true).slice(0, n).filter(function (x) { return x.kind !== "weapon" && x.kind !== "armor"; });
   if (p.tag === "cash" || (p.tag === "cushion" && r.chance(0.5))) loot.push({ kind: "credits", n: LAB.credits(p.tag === "cash" ? 20 : 3 + r.int(0, 6), L, F) });
   if (p.tag === "lost" && r.chance(0.6)) { var vv = ["watch", "ring", "pen", "harmonica"].filter(function (k) { return LAB.ITEMS[k]; }); if (vv.length) loot.push({ kind: "item", item: r.pick(vv), n: 1 }); }
   /* записки, что лежали здесь с самого начала (annex.js) */
@@ -653,9 +656,10 @@ function examine(o) {
     if (s.harvAt) { var left = 0; def.a.forEach(function (a) { if (a[0] === "harvest") left = a[2].every - (nowMin() - s.harvAt); }); out.push(left > 0 ? "Следующий урожай — через " + minW(left) + "." : "Снова можно собирать."); }
     if (o.notes && o.notes.length && !s.notes) out.push(def.a.some(function (a) { return a[0] === "search"; }) ? "Шуршит бумага: кажется, там что-то лежит." : "Сверху лежит сложенная записка.");
     if (rm && rm.owner && !rm.owner.m && h32(o.id) % 4 === 0) out.push("«Эхо» связывает эту вещь с хозяином помещения: " + rm.owner.n + ", " + rm.owner.post + ".");
+    if (LAB.stash) { var tl0 = LAB.stash.examineLine(o); if (tl0) out.push(tl0); }
     return out.join(" ");
   }
-  if (o.type === "corpse") return corpseText(o, identity(o));
+  if (o.type === "corpse") { var ct = corpseText(o, identity(o)), tl1 = LAB.stash ? LAB.stash.examineLine(o) : ""; return tl1 ? ct + " " + tl1 : ct; }
   var od = LAB.OBJ[o.type] || {};
   out.push(gm().objName(o) + ". " + (od.desc || ""));
   var isBox = (LAB.CONTAINERS || []).indexOf(o.type) >= 0;
@@ -669,6 +673,7 @@ function examine(o) {
   if (o.type === "comp" && LAB.COMPS) { var cd = LAB.COMPS[o.kind] || LAB.COMPS.archive; out.push(cd.desc + (o.locked ? " Вход по паролю." : " Не заблокирован.")); }
   if (o.broken) out.push("Не работает: внутри что-то перегорело.");
   if (rm && rm.owner && (o.type === "desk" || o.type === "cabinet" || o.type === "locker")) out.push("На " + (o.type === "desk" ? "краю стола" : "дверце") + " — бирка: «" + rm.owner.n + "».");
+  if (isBox && !s.open && LAB.stash) { var tl2 = LAB.stash.examineLine(o); if (tl2) out.push(tl2); }
   return out.join(" ");
 }
 var BOXHINT = { crate: "Внутри что-то перекатывается, когда ящик качнуть.", locker: "Внутри что-то шуршит и звякает.", desk: "Один ящик чуть выдвинут, в нём шуршит бумага.", shelf: "На полках — коробки и свёртки, не все пустые.", cabinet: "Ящики тяжёлые: папки, а между ними что-то ещё.", fridge: "Компрессор гудит: внутри, кажется, ещё есть еда.", firstaid: "За дверцей с крестом что-то гремит: упаковки, флаконы.", suitlocker: "Внутри висит что-то тяжёлое и шуршащее.", rack: "В гнёздах стойки что-то есть.", tubepost: "В ячейках выдачи — капсулы." };
@@ -701,12 +706,17 @@ function corpseMenu(o) {
   UIx("menu", "Тело: " + id.p.sign, items);
 }
 function pockets(o, id) {
-  var s = st(o); if (s.pockets) return; s.pockets = 1;
+  var s = st(o); if (s.pockets) return;
+  /* (2.5) граната под телом, клещ в складках одежды (stash.js) */
+  if (LAB.stash && LAB.stash.guard(o, function () { pockets(o, id); })) return;
+  s.pockets = 1;
   spend(1); snd("cloth", "pickup");
   var r = rng(o, "pockets"), L = G().L, F = G().F, loot = [];
   if (r.chance(0.55)) loot.push({ kind: "credits", n: LAB.credits(3 + r.int(0, 10), L, F) });
   if (r.chance(0.45) && LAB.annexLoot) { var x = LAB.annexLoot(r, L, F, r.pick(["smoke", "food", "home"]), "floor", true)[0]; if (x && x.kind !== "weapon" && x.kind !== "armor") loot.push(x); }
   if (o.notes && o.notes.length) o.notes.forEach(function (src, i) { loot.push(Object.assign({ kind: "note", id: o.id + "-p" + i }, src)); });
+  /* (2.5, просьба игрока) пустые карманы — редкость: хоть мелочь, да найдётся */
+  if (!loot.length && r.chance(0.8)) loot.push({ kind: "credits", n: LAB.credits(2 + r.int(0, 6), L, F) });
   if (!loot.length) { say("В карманах — только песок и обрывок билета."); return; }
   say("В карманах: " + giveAll(loot).join(" "));
   readFirstNote(loot);

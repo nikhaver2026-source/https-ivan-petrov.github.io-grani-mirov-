@@ -284,7 +284,8 @@ function nearCell(x, y) {
 }
 function spawnBeast(o, weak) {
   var cb = LAB.combat, L = G().L;
-  var pool = (LAB.LEVELS[L].foes || []).filter(function (id) { var b = LAB.FOES[id]; return b && b.kind === "bio" && b.beh.indexOf("stationary") < 0; });
+  /* (2.5) из инкубатора выходят звери, а не притворщики: шкафник здесь ни к чему */
+  var pool = (LAB.LEVELS[L].foes || []).filter(function (id) { var b = LAB.FOES[id]; return b && b.kind === "bio" && b.beh.indexOf("stationary") < 0 && b.beh.indexOf("mimic") < 0; });
   var type = pool.length ? pool[Math.floor(Math.random() * pool.length)] : "labmut";
   var c = nearCell(o.x, o.y);
   if (!c || !cb) return null;

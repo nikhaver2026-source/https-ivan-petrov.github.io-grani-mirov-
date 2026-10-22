@@ -84,8 +84,8 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     LAB.ui.closeTop(true); LAB.ui.closeAll(); LAB.ui.mainMenu(true);
     return out;
   });
-  ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.items.some(l => /^Альфа 2\.1$/.test(l)) && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
-  ok(/Что нового: /.test(news.note) && /десять аптечек и десять энергобатарей/.test(news.text) && /Убежище/.test(news.text) && /Режимы сложности/.test(news.text) && /чистого листа/.test(news.text) && /настройки теперь переживают смену версии/.test(news.text) && !/начинается со снаряжением/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
+  ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.items.some(l => /^Альфа 2\.2$/.test(l)) && news.items.some(l => /^Альфа 2\.1$/.test(l)) && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
+  ok(/Что нового: /.test(news.note) && /больше сотни видов/.test(news.text) && /отрядами и кастами/.test(news.text) && /пусты лишь изредка/.test(news.text) && /ловушки и пакости/.test(news.text) && /уборщики её больше не уносят/.test(news.text) && /Безопасная зона у капсулы/.test(news.text) && /через семь/.test(news.text) && /Лёгкий режим стал легче/.test(news.text) && /настройки остались прежними/.test(news.text) && !/десять аптечек/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
 
   console.log("Настройки");
   await page.evaluate(() => { LAB.ui.top().i = 0; });
@@ -1358,8 +1358,11 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
       const cl = C.spawnFoe("cleaner", cc[0], cc[1], {});
       g.CUR.fs.drops.push({ id: "tkey1", kind: "key", key: "tk", keyName: "Ключ от двери: проверка", n: "Ключ", x: cc[0], y: cc[1] });
       g.CUR.fs.drops.push({ id: "tscr1", kind: "item", item: "scrap", n: 1, x: cc[0], y: cc[1] });
+      /* (2.3) добыча с поверженного врага ждёт носителя: уборщик её не трогает */
+      const did = "d" + (g.CUR.fs.dseq = (g.CUR.fs.dseq || 0) + 1);
+      g.CUR.fs.drops.push({ id: did, kind: "item", item: "medkit_s", n: 1, x: cc[0], y: cc[1] });
       C._cleanerTick(cl);
-      out.cleaner = { key: !!g.CUR.fs.taken.tkey1, scrap: !!g.CUR.fs.taken.tscr1 };
+      out.cleaner = { key: !!g.CUR.fs.taken.tkey1, scrap: !!g.CUR.fs.taken.tscr1, loot: !!g.CUR.fs.taken[did] };
       cl.dead = true;
     }
     /* узел ОКО без свежего контакта не поднимает этаж */
@@ -1417,9 +1420,9 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(stab.bak && stab.bakLoad, "резервная копия слота есть и загружается");
   ok(stab.badRefused, "битая запись не загружается, текущая игра остаётся");
   ok(stab.descNoAuto, "во время спуска автозапись ждёт");
-  ok(stab.easyLoss === 50, "лёгкая сложность: при гибели теряется 5 % кредитов (" + stab.easyLoss + ")");
+  ok(stab.easyLoss === 0, "лёгкая сложность: при гибели кредиты не теряются (" + stab.easyLoss + ")");
   ok(stab.bg.t1 === stab.bg.t0 && stab.bg.t2 > stab.bg.t1, "игра в фоне: мир стоит, вернулись — идёт (" + stab.bg.t0 + " → " + stab.bg.t1 + " → " + stab.bg.t2 + ")");
-  ok(!stab.cleaner || (!stab.cleaner.key && stab.cleaner.scrap), "уборщик не подбирает ключ, а металлолом подбирает");
+  ok(!stab.cleaner || (!stab.cleaner.key && stab.cleaner.scrap && !stab.cleaner.loot), "уборщик не подбирает ключ и добычу с поверженных врагов, а металлолом подбирает");
   ok(stab.relayPb && stab.relayStale && stab.relayFresh, "узел ОКО поднимает машины только по свежему контакту");
 
   console.log("Глубины под Ядром: прессы и щит, инкубаторы, журналы «Отражения», затвор, древние узлы, враги глубин");
@@ -2030,7 +2033,8 @@ LAB.ui.closeAll();
       await wait(700);
       const m0 = AE.music.gain.value, a0 = AE.amb.gain.value;
       LAB.mini.hack(4, () => {});
-      await wait(700);
+      /* (2.5) под нагрузкой затухание доходит дольше — ждём до двух с половиной секунд */
+      for (let i = 0; i < 25; i++) { await wait(100); if (i >= 6 && AE.music.gain.value <= m0 * 0.3 && AE.amb.gain.value <= a0 * 0.45) break; }
       const m1 = AE.music.gain.value, a1 = AE.amb.gain.value, p1 = AE.puzzle.gain.value, u1 = AE.ui.gain.value;
       LAB.mini.cancel(true); await wait(1000);
       const m2 = AE.music.gain.value;
@@ -2251,8 +2255,11 @@ LAB.ui.closeAll();
   /* новая версия — с чистого листа: сохранения прежней версии (слот, автозапись, запасная копия) при
      запуске новой стираются — в браузере, на Android и в Windows хранилище одно; (2.2) изменённые
      настройки, отметка о прологе и подсказка про облегчённый режим остаются */
-  let fresh = null;
-  {
+  let fresh = null, freshDiag = "";
+  /* (2.5) редкий сбой окружения: обе отметки однажды не дошли до новой страницы —
+     тогда проверка повторяется один раз, а что было в хранилище, пишется в журнал */
+  for (let attempt = 0; attempt < 2; attempt++) {
+    fresh = null;
     const stOld = await page.context().storageState();
     const fixtureRaw = fs.readFileSync(path.join(__dirname, "fixtures", "alfa-1.1-save.json"), "utf8");
     /* прохождение — то же (метку стёр localStorage.clear() в начале проверки): меняется только версия */
@@ -2264,8 +2271,10 @@ LAB.ui.closeAll();
     const ctx3 = await browser.newContext({ storageState: stOld });
     const page3 = await ctx3.newPage();
     page3.on("pageerror", e => errors.push("pageerror (новая версия): " + e.message));
+    let keys0 = "";
     try {
       await page3.goto(url); await page3.waitForFunction(() => window.LAB_READY === true, null, { timeout: 60000 });
+      keys0 = await page3.evaluate(() => Object.keys(localStorage).sort().join(","));
       await page3.evaluate(() => { window.SPOKEN = []; LAB.say = function (t) { SPOKEN.push(String(t)); }; });
       await page3.keyboard.press("Space"); await page3.waitForTimeout(150);
       fresh = await page3.evaluate(() => {
@@ -2279,13 +2288,16 @@ LAB.ui.closeAll();
       });
     } catch (e) { fresh = { err: String(e && e.message || e).slice(0, 200) }; }
     await ctx3.close();
+    if (fresh && fresh.prologue === "1" && fresh.lite === "1") break;
+    freshDiag = "origins " + stOld.origins.length + ", ключи при запуске: " + keys0;
+    if (!attempt) console.log("  (проверка новой версии повторяется: " + freshDiag + ")");
   }
   await page.evaluate(k => { Object.assign(LAB.settings, k); LAB.saveSettings(); }, keepS);
   ok(restart, "A, H: после перезапуска игры настройки речи и доступности — те же" + (restartDiag ? " (" + restartDiag + ")" : ""));
   ok(fresh && fresh.ver === fresh.cur && fresh.slot === null && fresh.auto === null && fresh.bak === null && fresh.wiped >= 3 && fresh.from === "Альфа 1.1" && /новая версия/i.test(fresh.intro || "") && /Сохранения прежних версий сброшены/.test(fresh.intro || ""),
     "новая версия — с чистого листа: слоты, автозапись и запасные копии прежней версии при запуске стёрты, игрок слышит об этом в главном меню" + (fresh ? " (" + JSON.stringify(fresh).slice(0, 300) + ")" : ""));
   ok(fresh && fresh.stored && fresh.ratePct === 65 && fresh.navMode === "beacon" && fresh.hints === 3 && fresh.prologue === "1" && fresh.lite === "1" && /Настройки остались прежними/.test(fresh.intro || "") && !/настройки[^.]*сброшены/i.test(fresh.intro || ""),
-    "новая версия: настройки, отметка о прологе и подсказка про облегчённый режим остались, игроку сказано, что настройки прежние" + (fresh ? " (" + JSON.stringify({ stored: fresh.stored, ratePct: fresh.ratePct, navMode: fresh.navMode, hints: fresh.hints, prologue: fresh.prologue, lite: fresh.lite }) + ")" : ""));
+    "новая версия: настройки, отметка о прологе и подсказка про облегчённый режим остались, игроку сказано, что настройки прежние" + (fresh ? " (" + JSON.stringify({ stored: fresh.stored, ratePct: fresh.ratePct, navMode: fresh.navMode, hints: fresh.hints, prologue: fresh.prologue, lite: fresh.lite }) + (freshDiag ? "; " + freshDiag.slice(0, 300) : "") + ")" : ""));
   ok(fresh && /новая версия/i.test(fresh.both1 || "") && !/начинается заново/.test(fresh.both2 || ""),
     "сменились и версия, и прохождение — одно сообщение о новой версии, без второго о прохождении" + (fresh ? " (" + String(fresh.both2 || "").slice(0, 120) + ")" : ""));
   /* (2.0) прохождение заново: та же версия, прежнее прохождение — сохранения стёрты, настройки остались */
@@ -3219,7 +3231,15 @@ LAB.ui.closeAll();
     const rmF = live().filter(f => f.guard === "room" && f.kind === "mech" && f.room >= 0).sort((a, b) => hero(b) - hero(a))[0];
     const room = rmF.room;
     live().filter(f => f.room === room && f.guard === "room" && f.kind === "mech").forEach(f => C.damageFoe(f, 1e7, "kinetic", { quiet: true }));
-    out.rQueued = repl().some(q => q.k === "room" && q.room === room);
+    const rq = repl().find(q => q.k === "room" && q.room === room);
+    out.rQueued = !!rq;
+    /* (2.3) срок — по режиму: в обычном семь минут (840 тактов по полсекунды) и до десятой доли сверху */
+    out.rDelay = rq ? rq.t - O.T() : -1;
+    const sec = LAB.DIFF[LAB.settings.difficulty || 1].room;
+    out.rDelayOk = rq ? out.rDelay >= sec * 2 && out.rDelay <= Math.ceil(sec * 2 * 1.1) + 1 : false;
+    out.rSec = sec;
+    /* срок проверен — дальше не ждём семь минут */
+    if (rq) rq.t = O.T() + 3;
     let back = null; ticks = 0;
     /* (2.2) пришёл любой присланный ОКО — страж, рабочая машина или уборщик (у уборщика своего поста нет) */
     for (; ticks < 900 && !back; ticks++) { C.tick(); back = live().find(f => f.spawned && f.oko && g.CUR.fl.room[f.y * LAB.W + f.x] === room); }
@@ -3262,7 +3282,7 @@ LAB.ui.closeAll();
     return out;
   });
   ok(repl.pQueued && repl.pBack && repl.pFar >= 12 && repl.pSpawned, "убили патрульного — ОКО присылает нового на тот же участок, издалека (" + repl.pTicks + " тактов, в " + repl.pFar + " шагах от вас)");
-  ok(repl.rQueued && repl.rBack, "зачистили кабинет — через время ОКО присылает в него машины (" + repl.rTicks + " тактов)");
+  ok(repl.rQueued && repl.rDelayOk && repl.rBack, "зачистили кабинет — ОКО заселит его снова не раньше, чем через время режима (" + repl.rSec + " с; срок " + repl.rDelay + " тактов), и присылает машины (" + repl.rTicks + " тактов)");
   ok(repl.sQueued && repl.sBack, "пал страж у лестницы — ОКО присылает смену на тот же пост (" + repl.sTicks + " тактов)");
   const b = repl.batches;
   ok(b.length === 8 && b[0] === 1 && b[2] === 1 && b[3] === 2 && b[5] === 2 && b[6] >= 4 && b[7] >= 4, "бьёте одних и тех же — ОКО присылает больше: по одной, после трёх потерь — по две, дальше — по четыре-пять: " + b.join(", "));
@@ -3394,7 +3414,7 @@ LAB.ui.closeAll();
       const a = C.fire("N", false); t += 290; const b = C.fire("N", false); t += 20; const c = C.fire("N", false);
       G.weapons[0].cd = 500; t += 305; const d = C.fire("N", false);
       out.crow = [a, b, c, d].map(v => v ? 1 : 0).join("");
-    } finally { Date.now = real; }
+    } finally { Date.now = real; if (C._shotReset) C._shotReset(); /* (2.5) выстрел «из будущего» не держит оружие минуту */ }
     out.crowCd = LAB.weaponCd(G.weapons[0]);
     G.drawn = false; G.wi = 1;
     /* угол стены: взгляд по диагонали между двумя стенами не проходит */
@@ -3589,6 +3609,343 @@ LAB.ui.closeAll();
   ok(v21.fuseNone, "электрощит без камер говорит «камер на этаже нет», а не «уже обесточены»");
   ok(v21.isoCalm && v21.isoHot && v21.isoBack, "терминал ОКО отсекает только при тревоге, и «Эхо» говорит, когда он снова в оборонной сети (" + JSON.stringify({ c: v21.isoCalm, h: v21.isoHot, b: v21.isoBack }) + ")");
   ok(v21.diffOk && v21.names === "Лёгкий,Обычный,Сложный,Очень сложный", "режимы сложности различаются: врагов, их сила, цены, кредиты, рост оружия, привязка (" + JSON.stringify(v21.diff) + ")");
+
+  console.log("Безопасная зона у капсулы; лёгкий режим; время повторного заселения по режиму (2.3)");
+  const hav = await page.evaluate(async () => {
+    const g = LAB.game, C = LAB.combat, O = LAB.oko, S = LAB.settings, W = LAB.W, out = {};
+    let G = g.G;
+    C.stop(); LAB.ui.closeAll();
+    const d0 = S.difficulty, hp0 = G.hp, hpm0 = G.hpMax, cl0 = G.st.cloak;
+    S.difficulty = 1;
+    const fresh = (L, F) => { g.enterFloor(L, F === 1 ? 2 : F - 1, "down", true); delete G.fs[L + "-" + F]; g.enterFloor(L, F, "down", true); C.stop(); G = g.G; };
+    const live = () => C.foes().filter(f => !f.dead);
+    G.hp = G.hpMax = 1e6; G.st.cloak = 0;
+    /* время повторного заселения по режимам: лёгкий — 10 минут, обычный — 7, сложный — 5, очень сложный — 3,5 */
+    out.rooms = [4, 1, 2, 3].map(k => LAB.DIFF[k].room).join(",");
+    /* 1. помещение с капсулой у прибытия: убили всех — безопасная зона */
+    fresh(2, 3);
+    const fl = g.CUR.fl, fs = g.CUR.fs, cap = fl.objs.find(o => o.type === "capsule");
+    out.cap = !!cap;
+    if (!cap) return out;
+    const rid = cap.room, inR = (x, y) => fl.room[y * W + x] === rid;
+    const cells = [];
+    for (let y = 0; y < LAB.H; y++) for (let x = 0; x < W; x++) if (inR(x, y) && fl.t[y * W + x] === LAB.T.ROOM && !LAB.solidAt(fl, x, y)) cells.push({ x, y });
+    const free = c => !C.foes().some(f => !f.dead && f.x === c.x && f.y === c.y) && !fl.objAt[c.y * W + c.x];
+    const hc = cells.find(free);
+    G.x = hc.x; G.y = hc.y;
+    /* стражи и прочие в помещении — живы: зоны ещё нет */
+    const inside = () => live().filter(f => !LAB.FOES[f.type].beh.includes("camera") && !f.ally && inR(f.x, f.y));
+    if (!inside().length) { const c2 = cells.find(c => free(c) && (c.x !== hc.x || c.y !== hc.y)); if (c2) C.spawnFoe("patrolbot", c2.x, c2.y, { guard: "room", post: [c2.x, c2.y] }); }
+    C.foes().forEach(f => { if (!f.dead && !inR(f.x, f.y) && Math.abs(f.x - G.x) + Math.abs(f.y - G.y) < 25) f.dead = true; });
+    C.tick();
+    out.notYet = !(fs.haven && fs.haven[rid]) && C.haven() < 0;
+    /* исчезли без боя — тоже не зона: «убил всех» — значит, был бой */
+    const gone = inside(); gone.forEach(f => { f.dead = true; }); C.tick();
+    out.notYetNoKill = !(fs.haven && fs.haven[rid]) && C.haven() < 0;
+    gone.forEach(f => { f.dead = false; });
+    SPOKEN.length = 0;
+    inside().forEach(f => C.damageFoe(f, 1e9, "kinetic", { quiet: true }));
+    C.tick();
+    out.haven = !!(fs.haven && fs.haven[rid]) && C.haven() === rid && C.sheltered();
+    out.said = SPOKEN.some(t => /безопасная зона/.test(t));
+    /* 2. враг у входа внутрь не заходит, двери не открывает, носителя не видит и не бьёт */
+    const edge = cells.find(c => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(v => { const x = c.x + v[0], y = c.y + v[1]; return LAB.inb(x, y) && !inR(x, y) && fl.t[y * W + x] !== LAB.T.WALL; }));
+    let outC = null;
+    if (edge) for (const v of [[1, 0], [-1, 0], [0, 1], [0, -1], [2, 0], [-2, 0], [0, 2], [0, -2]]) { const x = edge.x + v[0], y = edge.y + v[1]; if (LAB.inb(x, y) && !inR(x, y) && fl.t[y * W + x] === LAB.T.CORR && !LAB.solidAt(fl, x, y)) { outC = { x, y }; break; } }
+    if (outC) {
+      const hp1 = G.hp;
+      const foe = C.spawnFoe("patrolbot", outC.x, outC.y, {});
+      foe.state = "hunt"; foe.lastKnown = { x: G.x, y: G.y };
+      for (let i = 0; i < 40; i++) C.tick();
+      out.stayOut = !foe.dead && !inR(foe.x, foe.y) && G.hp === hp1;
+      foe.dead = true;
+    } else out.stayOut = true;
+    /* 3. ОКО туда никого не выводит и не заселяет её */
+    /* точки ОКО для отрядов и замены — не в зоне */
+    let inZone = 0; for (let i = 0; i < 12; i++) { const pt = C.okoPoint({ minHero: 2, dmin: 0, dmax: 30, hidden: false }); if (pt && inR(pt[0], pt[1])) inZone++; }
+    out.noSpawn = inZone === 0;
+    out.noRefill = C.refillRoom({ room: rid, n: 2, cat: "office" }) === null;
+    /* 4. при входе «Эхо» называет зону */
+    SPOKEN.length = 0; g.roomCheck(true);
+    out.entry = SPOKEN.some(t => /Безопасная зона/.test(t));
+    /* 5. бой из зоны: на время боя она не прикрывает; затишье — прикрывает снова */
+    /* (2.5) после прежних проверок у носителя может не оказаться оружия в руках, окно — открытым,
+       мини-игра — идущей: всё это выстрел отменяет; на время проверки — бластер наготове */
+    LAB.ui.closeAll(); if (LAB.mini && LAB.mini.active && LAB.mini.active()) LAB.mini.cancel(true); g.paused = false; if (C._shotReset) C._shotReset();
+    if (!g.curWeapon()) { G.weapons.push(LAB.makeWeapon("spark", 1, 0, 1)); G.wi = G.weapons.length - 1; }
+    G.drawn = true; const w = g.curWeapon();
+    if (w && w.cap && (w.charge || 0) < 1) w.charge = w.cap;
+    /* оружие после прежних проверок может быть горячим или изношенным, а прошлый
+       выстрел — только что: остудить, починить и подождать паузу между выстрелами */
+    if (w) { w.hotUntil = 0; w.heat = 0; w.cond = 100; }
+    out.fired = false;
+    for (let i = 0; i < 20 && !out.fired; i++) { out.fired = C.fire("N", false); if (!out.fired) await new Promise(r => setTimeout(r, 150)); }
+    if (!out.fired) out.fireDiag = { w: w ? w.base : null, drawn: G.drawn, dead: G.dead, paused: g.paused, layer: !!(LAB.ui.layer && LAB.ui.layer()), mini: !!(LAB.mini && LAB.mini.active && LAB.mini.active()), charge: w && w.charge, cap: w && w.cap, ammo: w && w.ammo };
+    C.tick();
+    out.fightOff = C.haven() < 0;
+    for (let i = 0; i < 24; i++) C.tick();
+    out.fightBack = C.haven() === rid;
+    /* 6. вышли — не укрыты, но зона осталась зоной */
+    if (outC) { G.x = outC.x; G.y = outC.y; C.tick(); out.leftOff = C.haven() < 0 && !!fs.haven[rid]; } else out.leftOff = true;
+    /* 7. лёгкий режим: гибель ничего не стоит, врагов вдвое меньше */
+    out.easy = LAB.DIFF[4].count <= 0.5 && LAB.DIFF[4].lose === 0 && LAB.DIFF[4].dmg < 0.5 && LAB.DIFF[4].hp <= 0.5;
+    S.difficulty = d0; G.hp = hp0; G.hpMax = hpm0; G.st.cloak = cl0;
+    fresh(1, 3);
+    LAB.ui.closeAll();
+    return out;
+  });
+  ok(hav.rooms === "600,420,300,210", "зачищенное помещение ОКО заселяет снова: лёгкий — через 10 минут, обычный — через 7, сложный — через 5, очень сложный — через 3,5 (" + hav.rooms + ")");
+  ok(hav.cap && hav.notYet && hav.notYetNoKill && hav.haven && hav.said, "помещение с капсулой: пока враг внутри или пропал без боя — не зона, убили всех — безопасная зона, «Эхо» сообщает (" + JSON.stringify({ c: hav.cap, n: hav.notYet, nk: hav.notYetNoKill, h: hav.haven, s: hav.said }) + ")");
+  ok(hav.stayOut && hav.noSpawn && hav.noRefill && hav.entry, "в безопасную зону враг не входит и не бьёт, ОКО никого туда не выводит и не заселяет её; при входе «Безопасная зона» (" + JSON.stringify({ o: hav.stayOut, sp: hav.noSpawn, rf: hav.noRefill, e: hav.entry }) + ")");
+  ok(hav.fightOff && hav.fightBack && hav.leftOff, "бой из зоны — на время боя она не прикрывает, затишье — снова; вышли — не укрыты, но зона осталась (" + JSON.stringify({ shot: hav.fired, f: hav.fightOff, b: hav.fightBack, l: hav.leftOff, d: hav.fireDiag }) + ")");
+  ok(hav.easy, "лёгкий режим ещё легче: врагов вдвое меньше, они слабее, гибель не стоит кредитов");
+
+  console.log("Хранилища реже пустые; ловушки и пакости в хранилищах (2.5)");
+  const stash = await page.evaluate(() => {
+    const g = LAB.game, C = LAB.combat, S = LAB.settings, SH = LAB.stash, W = LAB.W, out = {};
+    let G = g.G;
+    C.stop(); LAB.ui.closeAll();
+    const d0 = S.difficulty, hp0 = G.hp, hpm0 = G.hpMax, inv0 = JSON.stringify(G.inv), rnd = Math.random;
+    const label = i => typeof i.label === "function" ? i.label() : i.label;
+    S.difficulty = 1;
+    const fresh = (L, F) => { g.enterFloor(L, F === 1 ? 2 : F - 1, "down", true); delete G.fs[L + "-" + F]; g.enterFloor(L, F, "down", true); C.stop(); G = g.G; };
+    const calm = () => { C.foes().forEach(f => { if (!f.dead && Math.abs(f.x - G.x) + Math.abs(f.y - G.y) < 30) f.dead = true; }); };
+    try {
+      /* 1. доля ловушек: на первых двух этажах нет, глубже — больше, по режиму — меньше или больше */
+      out.curve = [SH.chanceAt(1, 1), SH.chanceAt(1, 2), SH.chanceAt(1, 3), SH.chanceAt(10, 5), SH.chanceAt(60, 10)].map(v => Math.round(v * 1000) / 1000);
+      S.difficulty = 4; const pe = SH.chanceAt(30, 5); S.difficulty = 3; const pv = SH.chanceAt(30, 5); S.difficulty = 1; const pn = SH.chanceAt(30, 5);
+      out.byMode = pe < pn && pn < pv;
+      fresh(6, 4);
+      G.hp = G.hpMax = 1e6; G.dead = false;
+      const fl = g.CUR.fl, fs = g.CUR.fs;
+      calm();
+      const boxes = fl.objs.filter(o => ["locker", "desk", "crate", "cabinet", "shelf", "suitlocker"].indexOf(o.type) >= 0 && o.loot && o.loot.length && !(o.type === "locker" && o.locked) && !g.objState(o).open);
+      out.boxes = boxes.length;
+      const nextBox = (types) => { const i = boxes.findIndex(o => !types || types.indexOf(o.type) >= 0); return i >= 0 ? boxes.splice(i, 1)[0] : null; };
+      /* этаж каждый раз новый: у хранилища тоже успокоить машин и тварей, иначе они вмешаются */
+      const near = o => { const c = C.freeCellNear(o.x, o.y, null); if (c) { G.x = c[0]; G.y = c[1]; } calm(); };
+      fs.ctrap = fs.ctrap || {};
+      /* 2. не заметили: игла в замке сработала, а хранилище открылось */
+      const b1 = nextBox(); near(b1); fs.ctrap[b1.id] = { k: "needle", st: "armed" };
+      G.st.poison = 0; G.inv.rubber = 0; SPOKEN.length = 0; Math.random = () => 0.99;
+      g.openContainer(b1);
+      out.needle = G.st.poison > 0 && !!g.objState(b1).open && SPOKEN.some(t => /игла/.test(t)) && SPOKEN.some(t => /Найдено/.test(t));
+      G.st.poison = 0;
+      /* 3. прорезиненная ткань спасает руки */
+      const b2 = nextBox(); near(b2); fs.ctrap[b2.id] = { k: "shock", st: "armed" }; G.inv.rubber = 1; SPOKEN.length = 0;
+      const hpA = G.hp; g.openContainer(b2);
+      out.rubber = G.hp === hpA && SPOKEN.some(t => /прорезиненная ткань/.test(t)) && !!g.objState(b2).open;
+      G.inv.rubber = 0;
+      /* 4. в последний миг отдёрнули руку: ловушка известна, окно с выбором */
+      const b3 = nextBox(); near(b3); fs.ctrap[b3.id] = { k: "blade", st: "armed" }; Math.random = () => 0.01; SPOKEN.length = 0;
+      g.openContainer(b3);
+      const top3 = LAB.ui.top();
+      out.reflex = fs.ctrap[b3.id].st === "known" && !G.st.bleed && !!top3 && top3.items.some(i => /^Обезвредить/.test(label(i))) && !g.objState(b3).open;
+      /* 5. обезвредить удачно: детали в рюкзак, хранилище открыто */
+      const parts0 = (G.inv.scrap || 0) + (G.inv.wire || 0);
+      Math.random = () => 0; const di = top3.items.findIndex(i => /^Обезвредить/.test(label(i))); top3.items[di].fn();
+      out.disarm = fs.ctrap[b3.id].st === "off" && (G.inv.scrap || 0) + (G.inv.wire || 0) > parts0 && !!g.objState(b3).open && SPOKEN.some(t => /Обезврежено/.test(t));
+      LAB.ui.closeAll();
+      /* 6. «Осмотреть» находит ловушку; сканер называет все рядом */
+      const b4 = nextBox(); near(b4); fs.ctrap[b4.id] = { k: "gas", st: "armed" }; Math.random = () => 0;
+      out.examine = /Ловушка/.test(LAB.fixtures.examine(b4)) && fs.ctrap[b4.id].st === "known";
+      const b5 = nextBox(); near(b5); fs.ctrap[b5.id] = { k: "alarm", st: "armed" }; Math.random = () => 0.99;
+      out.scan = /Ловушки в хранилищах/.test(SH.scanText(12)) && fs.ctrap[b5.id].st === "known";
+      /* 7. граната на растяжке: две секунды — отошли на два шага, и осколки мимо */
+      const b6 = nextBox(); near(b6); fs.ctrap[b6.id] = { k: "grenade", st: "armed" }; Math.random = () => 0.99; SPOKEN.length = 0;
+      g.openContainer(b6);
+      out.grenadeSet = SH._grenades().length === 1 && !g.objState(b6).open;
+      let far = null; for (let r = 3; r < 9 && !far; r++) for (let dy = -r; dy <= r && !far; dy++) for (let dx = -r; dx <= r && !far; dx++) { const x = b6.x + dx, y = b6.y + dy; if (Math.max(Math.abs(dx), Math.abs(dy)) === r && LAB.inb(x, y) && fl.t[y * W + x] !== LAB.T.WALL && !LAB.solidAt(fl, x, y)) far = [x, y]; }
+      const hpB = G.hp; if (far) { G.x = far[0]; G.y = far[1]; }
+      for (let i = 0; i < 6; i++) C.tick();
+      /* здоровье не меньше прежнего: взрыв может убить кого-то рядом с хранилищем, и новый уровень его прибавит */
+      out.grenadeMiss = !!far && G.hp >= hpB && SH._grenades().length === 0 && SPOKEN.some(t => /успели отойти/.test(t)) && !SPOKEN.some(t => /Взрыв накрыл/.test(t));
+      if (!out.grenadeMiss) out.grenadeDiag = { far, hd: hpB - G.hp, gl: SH._grenades().length, sp: SPOKEN.slice(-4) };
+      /* 8. клещ-кровосос пьёт кровь, аптечка его снимает */
+      const b7 = nextBox(); near(b7); fs.ctrap[b7.id] = { k: "parasite", st: "armed" }; Math.random = () => 0.99;
+      g.openContainer(b7);
+      const hpC = G.hp; for (let i = 0; i < 8; i++) C.tick();
+      out.parasite = G.st.parasite > 0 && G.hp < hpC;
+      G.inv.medkit_s = (G.inv.medkit_s || 0) + 1; G.hp = G.hpMax - 50; g.useItem("medkit_s");
+      out.cure = !(G.st.parasite > 0);
+      /* 9. шкафник: дверца распахивается сама — тварь рядом */
+      const b8 = nextBox(["locker", "cabinet", "suitlocker", "crate"]); if (b8) { near(b8); fs.ctrap[b8.id] = { k: "mimic", st: "armed" }; g.openContainer(b8); }
+      out.mimic = !!b8 && C.foes().some(f => !f.dead && f.type === "u_lockermimic" && f.state === "hunt");
+      /* 10. тумбочка с ловушкой: обыск вещи обстановки тоже под защитой */
+      const ns = { id: "t_ns25", type: "fx", fx: "nightstand", x: G.x, y: G.y, room: g.CUR.room, seed: 7 };
+      fs.ctrap[ns.id] = { k: "cans", st: "armed" }; Math.random = () => 0.99; SPOKEN.length = 0;
+      LAB.fixtures.menu(ns); const si = LAB.ui.top().items.findIndex(i => /ящик тумбочки/.test(label(i))); if (si >= 0) LAB.ui.top().items[si].fn();
+      out.fxTrap = si >= 0 && SPOKEN.some(t => /банок|банки/.test(t)) && fs.ctrap[ns.id].st === "sprung";
+      LAB.ui.closeAll();
+      /* 11. тумбочки почти никогда не пустые */
+      Math.random = rnd;
+      let empty = 0, n = 0;
+      for (let i = 0; i < 60; i++) {
+        const o = { id: "t_nsx" + i, type: "fx", fx: "nightstand", x: G.x, y: G.y, room: g.CUR.room, seed: 100 + i };
+        fs.ctrap[o.id] = { k: null };
+        SPOKEN.length = 0; LAB.fixtures.menu(o); const k2 = LAB.ui.top().items.findIndex(it => /ящик тумбочки/.test(label(it))); if (k2 < 0) continue;
+        LAB.ui.top().items[k2].fn(); n++; if (SPOKEN.some(t => /^Пусто|Ничего, кроме|только паутину/.test(t))) empty++;
+        LAB.ui.closeAll();
+      }
+      out.nsEmpty = n ? Math.round(100 * empty / n) : 100;
+    } catch (e) { out.err = String(e && e.stack || e).slice(0, 300); }
+    Math.random = rnd;
+    S.difficulty = d0; G.hp = hp0; G.hpMax = hpm0; G.st.poison = 0; G.st.parasite = 0; G.st.bleed = 0; G.st.trapHeld = 0; G.st.slow = 0;
+    try { G.inv = JSON.parse(inv0); } catch (e) { /* */ }
+    fresh(1, 3);
+    LAB.ui.closeAll();
+    return out;
+  });
+  ok(!stash.err && stash.curve[0] === 0 && stash.curve[1] === 0 && stash.curve[2] > 0 && stash.curve[4] > stash.curve[3] && stash.byMode, "ловушки в хранилищах: на первых двух этажах нет, глубже больше, в лёгком режиме меньше, в сложных больше (" + JSON.stringify({ c: stash.curve, m: stash.byMode, e: stash.err }) + ")");
+  ok(stash.needle && stash.rubber && stash.reflex && stash.disarm, "игла в замке колет и травит, а добыча остаётся; прорезиненная ткань бережёт руки; в последний миг можно отдёрнуть руку; обезвредить — детали в рюкзак (" + JSON.stringify({ n: stash.needle, r: stash.rubber, x: stash.reflex, d: stash.disarm, b: stash.boxes }) + ")");
+  ok(stash.examine && stash.scan, "«Осмотреть» находит ловушку в хранилище, сканер называет все рядом (" + JSON.stringify({ e: stash.examine, s: stash.scan }) + ")");
+  ok(stash.grenadeSet && stash.grenadeMiss, "граната на растяжке: две секунды — отошли, и осколки мимо (" + JSON.stringify({ s: stash.grenadeSet, m: stash.grenadeMiss, d: stash.grenadeDiag }) + ")");
+  ok(stash.parasite && stash.cure && stash.mimic && stash.fxTrap, "клещ пьёт кровь, аптечка снимает его; шкафник выбирается сам; тумбочка тоже бывает с подвохом (" + JSON.stringify({ p: stash.parasite, c: stash.cure, m: stash.mimic, f: stash.fxTrap }) + ")");
+  ok(stash.nsEmpty <= 25, "тумбочки почти никогда не пустые: пустых " + stash.nsEmpty + " %");
+
+  console.log("Мир мутантов: ум, ранги, касты, отряды, развитие, улей (2.5)");
+  const mut = await page.evaluate(() => {
+    const g = LAB.game, C = LAB.combat, S = LAB.settings, M = LAB.mutants, W = LAB.W, out = {};
+    let G = g.G;
+    C.stop(); LAB.ui.closeAll();
+    const d0 = S.difficulty, hp0 = G.hp, hpm0 = G.hpMax, cl0 = G.st.cloak, rnd = Math.random;
+    S.difficulty = 1;
+    const fresh = (L, F) => { g.enterFloor(L, F === 1 ? 2 : F - 1, "down", true); delete G.fs[L + "-" + F]; g.enterFloor(L, F, "down", true); C.stop(); G = g.G; };
+    const tickUntil = (fn, n) => { for (let i = 0; i < n; i++) { C.tick(); if (fn()) return true; } return fn(); };
+    try {
+      out.species = Object.keys(LAB.FOES).filter(k => LAB.FOES[k].kind === "bio").length;
+      out.nature = M.natureLine(LAB.FOES.u_cseer) + " | " + M.natureLine(LAB.FOES.rat);
+      fresh(90, 6);
+      G.hp = G.hpMax = 1e6; G.dead = false; G.st.cloak = 0; G.noise = 0;
+      const fl = g.CUR.fl;
+      C.foes().forEach(f => { f.dead = true; });
+      for (let i = 0; i < 8; i++) C.tick(); /* прошли три секунды после входа */
+      const free = (x, y) => LAB.inb(x, y) && fl.t[y * W + x] !== LAB.T.WALL && fl.t[y * W + x] !== LAB.T.DOOR && !LAB.solidAt(fl, x, y) && !C.foes().some(f => !f.dead && f.x === x && f.y === y) && !(x === G.x && y === G.y);
+      const cellAt = (pred) => { for (let r = 1; r < 22; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue; const x = G.x + dx, y = G.y + dy; if (free(x, y) && pred(x, y, r)) return [x, y]; } return null; };
+      const los = (x, y) => LAB.los(fl, g.CUR.fs, x, y, G.x, G.y);
+      const spawn = (t, c, ex) => { const f = C.spawnFoe(t, c[0], c[1], ex); f.lvl = 1; return f; };
+      /* 1. отряд: заметил один — знают все, даже тот, кто за стеной */
+      const cSee = cellAt((x, y, r) => r >= 2 && r <= 4 && los(x, y));
+      const cWall = cellAt((x, y, r) => r >= 6 && r <= 14 && !los(x, y));
+      out.cells = !!(cSee && cWall);
+      if (cSee && cWall) {
+        const a = spawn("u_cwarrior", cSee, { pack: "tp1" }), b = spawn("u_cwarrior", cWall, { pack: "tp1" });
+        tickUntil(() => b.state === "hunt" && !!b.lastKnown, 6);
+        out.packAlert = a.state === "hunt" && b.state === "hunt" && !!b.lastKnown && b.lastKnown.x === G.x && b.lastKnown.y === G.y;
+        a.dead = b.dead = true;
+      }
+      /* 2. вожак пал — жрец подхватывает командование */
+      const c1 = cellAt((x, y, r) => r >= 7 && r <= 12), c2 = c1 && cellAt((x, y, r) => r >= 7 && r <= 12 && (x !== c1[0] || y !== c1[1]));
+      const chief = spawn("u_chief", c1, { pack: "tp2", lead: true }), shaman = spawn("u_shaman", c2, { pack: "tp2" });
+      SPOKEN.length = 0; C.damageFoe(chief, 1e9, "kinetic", {});
+      out.heir = chief.dead && shaman.lead === true && SPOKEN.some(t => /подхватывает командование/.test(t));
+      shaman.dead = true;
+      /* 3. своре без вожака и без жреца — бежать */
+      const c3 = cellAt((x, y, r) => r >= 7 && r <= 12), c4 = c3 && cellAt((x, y, r) => r >= 7 && r <= 12 && (x !== c3[0] || y !== c3[1]));
+      const alpha = spawn("u_alphadog", c3, { pack: "tp3", lead: true }), dog = spawn("u_dog", c4, { pack: "tp3" });
+      SPOKEN.length = 0; C.damageFoe(alpha, 1e9, "kinetic", {});
+      out.scatter = alpha.dead && (dog.fleeT || 0) > C.tickN() && SPOKEN.some(t => /без вожака/.test(t));
+      dog.dead = true;
+      /* 4. провидец видит сквозь стены и подсказывает отряду; маскировка сбивает */
+      if (cWall) {
+        const seer = spawn("u_cseer", cWall, { pack: "tp4" }), cW2 = cellAt((x, y, r) => r >= 6 && r <= 16 && !los(x, y) && (x !== cWall[0] || y !== cWall[1]));
+        const w = cW2 ? spawn("u_cwarrior", cW2, { pack: "tp4" }) : null;
+        seer.state = "alert"; G.st.cloak = 30;
+        for (let i = 0; i < 4; i++) C.tick();
+        const hidden = !w || !(w.lastKnown && w.lastKnown.x === G.x && w.lastKnown.y === G.y);
+        G.st.cloak = 0; seer.state = "alert";
+        tickUntil(() => w && w.lastKnown && w.lastKnown.x === G.x && w.lastKnown.y === G.y, 6);
+        out.seer = !!w && hidden && w.lastKnown && w.lastKnown.x === G.x && w.lastKnown.y === G.y;
+        seer.dead = true; if (w) w.dead = true;
+      }
+      /* 5. трутень добегает и лопается вплотную */
+      const cAdj = cellAt((x, y, r) => r === 1);
+      const bomb = spawn("u_bomber", cAdj, {}); bomb.state = "hunt"; bomb.lastKnown = { x: G.x, y: G.y };
+      const hpA = G.hp; tickUntil(() => bomb.dead, 4);
+      out.bomber = bomb.dead && G.hp < hpA;
+      /* 6. рабочая каста бежит и поднимает тревогу */
+      const cW = cellAt((x, y, r) => r === 2 && los(x, y));
+      const wk = spawn("u_cworker", cW, {}); wk.state = "hunt"; wk.lastKnown = { x: G.x, y: G.y };
+      SPOKEN.length = 0; const dW = Math.abs(wk.x - G.x) + Math.abs(wk.y - G.y);
+      for (let i = 0; i < 6; i++) C.tick();
+      out.worker = Math.abs(wk.x - G.x) + Math.abs(wk.y - G.y) > dW && SPOKEN.some(t => /поднимает тревогу/.test(t));
+      wk.dead = true;
+      /* 7. развитие: ступень — прочнее, злее, имя со ступенью; помнится на этаже */
+      const cE = cellAt((x, y, r) => r >= 8 && r <= 14);
+      const h = spawn("u_hound", cE, {}); const hp1 = h.maxhp, dm1 = h.dmg;
+      C._evolve(h, true);
+      out.evolve = h.evo === 1 && h.maxhp > hp1 && h.dmg >= dm1 && /окрепш/.test(h.name);
+      C.syncFoes(); out.evoSaved = !!(g.CUR.fs.foes[h.id] && g.CUR.fs.foes[h.id].evo === 1);
+      SPOKEN.length = 0; C._gainEvo(h, 1000);
+      out.evoGain = h.evo === 2 && /матёр/.test(h.name);
+      h.dead = true;
+      /* 8. падальщик ест павшего и крепнет */
+      const cF = cellAt((x, y, r) => r >= 14 && r <= 20 && !los(x, y));
+      if (cF) {
+        const vat = spawn("u_vatling", cF, {}); const cB = C.freeCellNear(cF[0], cF[1], vat);
+        const prey = spawn("rat", cB, {}); C.damageFoe(prey, 1e9, "kinetic", { quiet: true });
+        vat.state = "idle"; G.st.cloak = 30;
+        tickUntil(() => (vat.evoXP || 0) > 0 || vat.evo > 0, 20);
+        out.feeder = (vat.evoXP || 0) > 0 || vat.evo > 0;
+        G.st.cloak = 0; vat.dead = true;
+      }
+      /* 9. улей учится: одно оружие — разумные твари глубин держат его урон лучше; сменили — привычка ушла */
+      G.hive = {};
+      const cH = cellAt((x, y, r) => r >= 8 && r <= 14);
+      const hv = spawn("u_cwarrior", cH, {}); hv.maxhp = hv.hp = 1e9;
+      SPOKEN.length = 0;
+      for (let i = 0; i < 30; i++) C.damageFoe(hv, 1, "laser", {});
+      out.hive = M.hiveOf(G).dt === "laser" && M.resK(hv, "laser", G) < 1 && M.resK(hv, "plasma", G) === 1 && SPOKEN.some(t => /учатся/.test(t));
+      for (let i = 0; i < 60; i++) C.damageFoe(hv, 1, "plasma", {});
+      out.hiveForget = M.hiveOf(G).dt !== "laser";
+      hv.dead = true;
+      /* 10. ткач ставит ловушку поперёк прохода — своих она не трогает */
+      const cC = cellAt((x, y, r) => r >= 4 && r <= 18 && fl.room[y * W + x] < 0);
+      if (cC) {
+        const wv = spawn("u_cweaver", cC, {}); wv.state = "alert"; wv.lastKnown = { x: G.x, y: G.y }; G.st.cloak = 30;
+        const n0 = LAB.traps.list().filter(t => t.by === "hive").length;
+        tickUntil(() => LAB.traps.list().filter(t => t.by === "hive").length > n0, 6);
+        out.weaver = LAB.traps.list().filter(t => t.by === "hive").length > n0;
+        G.st.cloak = 0; wv.dead = true;
+      } else out.weaver = "нет прохода";
+      /* 11. пока вас не было два часа, разумные твари этажа окрепли */
+      fresh(90, 7);
+      const keyF = g.CUR.key;
+      g.enterFloor(90, 6, "down", true); C.stop(); G = g.G; /* ушли с этажа — он запомнил, когда */
+      G.fs[keyF].seenAt = (G.day || 0) * 1440 + (G.min || 0) - 300; /* прошло пять часов */
+      Math.random = () => 0;
+      SPOKEN.length = 0;
+      g.enterFloor(90, 7, "down", true); C.stop(); G = g.G;
+      out.grewAway = g.CUR.key === keyF && SPOKEN.some(t => /Пока вас не было, разумные твари этажа окрепли/.test(t));
+      Math.random = rnd;
+      /* 12. лёгкий режим: вне боя здоровье понемногу возвращается — до шестидесяти процентов */
+      S.difficulty = 4;
+      C.foes().forEach(f => { f.dead = true; });
+      G.hpMax = 100; G.hp = 20; G.lastHurt = 0; G.st.poison = 0; G.st.bleed = 0;
+      /* ОКО после прежних проверок могло прислать отряд — на время проверки этаж пуст */
+      const quiet = () => { C.foes().forEach(f => { f.dead = true; }); if (LAB.oko && LAB.oko.state) LAB.oko.state().heat = 0; g.CUR.fs.alarmUntil = 0; };
+      const t0r = C.tickN();
+      for (let i = 0; i < 60; i++) { quiet(); C.tick(); }
+      out.regen = G.hp > 20 && G.hp <= 60;
+      if (!out.regen) out.regenDiag = { hp: G.hp, stair: !!G.stair, dang: C.danger(), ticks: C.tickN() - t0r, poison: G.st.poison, bleed: G.st.bleed, par: G.st.parasite, d: S.difficulty, rg: LAB.dk().regen, dead: G.dead };
+      G.hp = 70; for (let i = 0; i < 30; i++) { quiet(); C.tick(); }
+      out.regenCap = G.hp === 70;
+    } catch (e) { out.err = String(e && e.stack || e).slice(0, 300); }
+    Math.random = rnd;
+    S.difficulty = d0; G.hp = hp0; G.hpMax = hpm0; G.st.cloak = cl0; G.hive = {};
+    fresh(1, 3);
+    LAB.ui.closeAll();
+    return out;
+  });
+  ok(!mut.err && mut.species >= 100 && /сверхразумный/.test(mut.nature) && /каста провидцев/.test(mut.nature) && /неразумный, низший/.test(mut.nature), "тварей больше сотни видов; у каждой — ум, ранг, у народов глубин — каста (" + JSON.stringify({ n: mut.species, t: mut.nature, e: mut.err }) + ")");
+  ok(mut.cells && mut.packAlert, "отряд: заметил один — знают все, даже тот, кто за стеной (" + JSON.stringify({ c: mut.cells, a: mut.packAlert }) + ")");
+  ok(mut.heir && mut.scatter, "пал вожак: жрец подхватывает командование, а свора без жреца разбегается (" + JSON.stringify({ h: mut.heir, s: mut.scatter }) + ")");
+  ok(mut.seer, "провидец видит носителя сквозь стены и подсказывает отряду; маскировка его сбивает");
+  ok(mut.bomber && mut.worker, "трутень лопается вплотную; рабочая каста убегает и поднимает тревогу (" + JSON.stringify({ b: mut.bomber, w: mut.worker }) + ")");
+  ok(mut.evolve && mut.evoSaved && mut.evoGain && mut.feeder, "твари растут: ступень прочнее и злее, звучит в имени и помнится; опыт поднимает ступень; падальщик крепнет, съев павшего (" + JSON.stringify({ e: mut.evolve, s: mut.evoSaved, g: mut.evoGain, f: mut.feeder }) + ")");
+  ok(mut.hive && mut.hiveForget, "улей глубин привыкает к оружию носителя, а сменили оружие — привычка уходит (" + JSON.stringify({ h: mut.hive, f: mut.hiveForget }) + ")");
+  ok(mut.weaver === true && mut.grewAway, "ткач ставит ловушки поперёк проходов; пока носителя долго нет, разумные твари этажа крепнут (" + JSON.stringify({ w: mut.weaver, g: mut.grewAway }) + ")");
+  ok(mut.regen && mut.regenCap, "лёгкий режим: вне боя здоровье само возвращается до шестидесяти процентов (" + JSON.stringify({ r: mut.regen, c: mut.regenCap, d: mut.regenDiag }) + ")");
 
   console.log("Уход в фон: звук выключен или приглушён, окно компьютера сворачивается (2.2)");
   const bgt = await page.evaluate(async () => {

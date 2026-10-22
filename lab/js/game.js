@@ -162,6 +162,7 @@ function enterFloor(L, F, how, silent) {
   CUR.seen = decodeSeen(fs.seen);
   if (LAB.combat) LAB.combat.loadFoes();
   if (LAB.traps) LAB.traps.enterFloor();
+  if (LAB.stash) LAB.stash.enterFloor();
   var spot = null, o;
   if (how === "down" || how === "start") { o = findObj("stairs_up") || findObj("wake") || findObj("gate_sealed"); spot = freeNear(o); }
   else if (how === "up") { o = findObj("stairs_down"); spot = freeNear(o); }
@@ -196,7 +197,13 @@ function enterFloor(L, F, how, silent) {
 game.enterFloor = enterFloor;
 
 /* ════════ ОПИСАНИЯ ════════ */
-function objName(o) {
+/* (2.5) замеченная ловушка в хранилище слышна в его имени: «Шкафчик, с ловушкой» (plain — без пометки) */
+function objName(o, plain) {
+  var n = objName0(o);
+  if (!plain && n && LAB.stash && LAB.stash.knownTrap && LAB.stash.knownTrap(o)) n += ", с ловушкой";
+  return n;
+}
+function objName0(o) {
   if (!o) return "";
   if (o.type === "terminal") return { sec: "Терминал безопасности", sci: "Научный терминал", eng: "Инженерный терминал" }[o.sub] || "Терминал";
   if (o.type === "hq") return "Штаб: " + LAB.FACTIONS[o.faction].n;
@@ -684,6 +691,7 @@ function bodyAlerts() {
   var out = [];
   ["food", "wake", "tox", "neuro", "rad"].forEach(function (k) { if (bodyBad(k)) out.push(bodyWord(k)); });
   if (G.st.bleed) out.push("кровотечение");
+  if (G.st.parasite > 0) out.push("клещ-кровосос");
   return out;
 }
 game.bodyAlerts = bodyAlerts;
@@ -694,6 +702,7 @@ function bodyStatus() {
   var b = body(), st = [];
   if (G.st.poison) st.push("отравление"); if (G.st.bleed) st.push("кровотечение"); if (G.st.slow) st.push("замедление"); if (G.st.deaf) st.push("звон в ушах"); if (G.st.antitox) st.push("фильтр противогаза действует"); if (G.st.radBlock) st.push("йодид калия защищает");
   if (G.st.trapHeld > 0) st.push("нога в ловушке");
+  if (LAB.stash) st = st.concat(LAB.stash.status()); /* (2.5) клещ, метка улья */
   var hpw = G.hp >= G.hpMax * 0.8 ? "в порядке" : G.hp >= G.hpMax * 0.5 ? "ранены" : G.hp >= G.hpMax * 0.25 ? "тяжело ранены" : "при смерти";
   say("Здоровье " + G.hp + " из " + G.hpMax + ": " + hpw + (G.st.shield ? ", щит " + G.st.shield : "") + ". Бодрость " + Math.round(b.wake) + ": " + bodyWord("wake") + ". Сытость " + Math.round(b.food) + ": " + bodyWord("food") + ". Токсины " + Math.round(b.tox) + ": " + bodyWord("tox") + ". Нейронагрузка " + Math.round(b.neuro) + ": " + bodyWord("neuro") + ". Облучение " + Math.round(b.rad) + ": " + bodyWord("rad") + ". Энергия имплантов " + G.en + " из " + G.enMax + "." + (G.armor ? " Броня: " + armorWord() + "." : "") + (st.length ? " Состояние: " + st.join(", ") + "." : ""));
 }
@@ -1098,7 +1107,8 @@ function roomCheck(full, run, mute) {
   if (first && r.annex && LAB.ach) LAB.ach.ev("room", 1);
   /* (2.0) важное помещение (оружейная, пост охраны, серверная, хранилище) — ОКО это замечает */
   if (first && r.annex && LAB.garrison && LAB.oko && LAB.oko.react && LAB.garrison.CAT[LAB.garrison.category(r)].imp >= 3) LAB.oko.react("vault", { room: r.name });
-  var parts = [r.name + "."];
+  /* (2.3) безопасная зона у капсулы — так и сказать при входе */
+  var parts = [r.name + "." + (CUR.fs.haven && CUR.fs.haven[r.id] ? " Безопасная зона." : "")];
   if (first || full) {
     parts.push(r.desc || LAB.ROOMS[r.type].desc);
     var ex = roomExits(r);
@@ -1106,7 +1116,7 @@ function roomCheck(full, run, mute) {
   }
   var stuff = roomStuff(r, !(first || full));
   if (stuff) parts.push(stuff);
-  if (run && !first) parts = [r.name + "."];
+  if (run && !first) parts = [parts[0]];
   sayq(parts.join(" "));
 }
 game.roomCheck = roomCheck;
@@ -2484,6 +2494,8 @@ function safeNoteFor(code) {
   return null;
 }
 function openContainer(o) {
+  /* (2.5) пакость в хранилище: ловушка, гнездо, шкафник (stash.js) */
+  if (LAB.stash && LAB.stash.guard(o, function () { openContainer(o); })) return;
   var st = objState(o);
   st.open = true;
   A("container", o.type);
@@ -3103,6 +3115,7 @@ function useItem(id) {
   if (d.heal && !od) { var before = G.hp; G.hp = Math.min(G.hpMax, G.hp + (/^medkit|^bandage/.test(id) && LAB.ach && LAB.ach.has("medic") ? Math.round(d.heal * 1.17) : hv)); if (G.hp > before || !food) msg.push("Здоровье плюс " + (G.hp - before) + ", теперь " + G.hp + " из " + G.hpMax + "."); }
   if (d.en) { var e0 = G.en; G.en = Math.min(G.enMax, G.en + d.en); msg.push("Энергия имплантов " + G.en + (G.en > e0 ? "" : ", и так полная") + "."); }
   if (d.cure && G.st.poison) { G.st.poison = 0; msg.push("Отравление снято."); }
+  if (LAB.stash) { var pc = LAB.stash.cure(id); if (pc) msg.push(pc); } /* (2.5) клещ из хранилища */
   if (d.unslow) { G.st.slow = 0; G.st.web = 0; }
   bodyApply(d, msg);
   if (food) eatSound(d.eat);
@@ -3298,9 +3311,10 @@ function die() {
   if (LAB.input) LAB.input.stopAll();
   A("death");
   LAB.vib([200, 100, 300]);
-  var lost = Math.round(G.credits * (LAB.dk().lose || 0.15));
+  /* (2.3) в лёгком режиме гибель не стоит ни кредита (lose: 0) */
+  var lk = LAB.dk().lose, lost = Math.round(G.credits * (lk != null ? lk : 0.15));
   G.credits -= lost;
-  say("Вы погибли. «Эхо» удерживает сознание... Потеряно кредитов: " + lost + ".");
+  say("Вы погибли. «Эхо» удерживает сознание..." + (lost ? " Потеряно кредитов: " + lost + "." : " Кредиты при вас."));
   journal("Гибель на уровне " + G.L + ", этаж " + G.F + ".");
   game.paused = true;
   later(function () {
@@ -3513,7 +3527,7 @@ function characterText() {
   lines.push("Сытость " + Math.round(bb.food) + " из 100: " + bodyWord("food") + ". Бодрость " + Math.round(bb.wake) + ": " + bodyWord("wake") + ". Токсины " + Math.round(bb.tox) + ": " + bodyWord("tox") + ". Нейронагрузка " + Math.round(bb.neuro) + ": " + bodyWord("neuro") + ".");
   lines.push("Аптечки " + (G.inv.medkit_s || 0) + ", большие аптечки " + (G.inv.medkit_l || 0) + ", бинты " + (G.inv.bandage || 0) + ", стимуляторы " + (G.inv.stim || 0) + ", антидоты " + (G.inv.antidote || 0) + ", сорбенты " + (G.inv.sorbent || 0) + ", еды " + FOODS().reduce(function (a, k) { return a + (G.inv[k] || 0); }, 0) + ".");
   var st = [];
-  if (G.st.poison) st.push("отравление"); if (G.st.bleed) st.push("кровотечение"); if (G.st.slow) st.push("замедление"); if (G.st.deaf) st.push("звон в ушах"); if (G.st.antitox) st.push("фильтр противогаза"); if (G.st.shield) st.push("силовой щит " + G.st.shield); if (G.st.haste) st.push("ускорение"); if (G.st.cloak) st.push("маскировка");
+  if (G.st.poison) st.push("отравление"); if (G.st.bleed) st.push("кровотечение"); if (G.st.slow) st.push("замедление"); if (G.st.deaf) st.push("звон в ушах"); if (G.st.antitox) st.push("фильтр противогаза"); if (G.st.shield) st.push("силовой щит " + G.st.shield); if (G.st.haste) st.push("ускорение"); if (G.st.cloak) st.push("маскировка"); if (LAB.stash) st = st.concat(LAB.stash.status());
   if (st.length) lines.push("Состояние: " + st.join(", ") + ".");
   lines.push("Энергия имплантов " + G.en + " из " + G.enMax + ". Уровень героя " + G.lvl + ", опыт " + G.xp + " из " + LAB.xpNeed(G.lvl) + ". Сила " + G.str + ", ловкость " + G.agi + ", интеллект " + G.mind + ", харизма " + G.cha + ". Кредиты " + G.credits + ".");
   lines.push("Комплекс: уровень " + G.L + " «" + LAB.LEVELS[G.L].name + "», этаж " + G.F + ". Пропуск: " + (G.tier ? LAB.TIERS[G.tier].n.toLowerCase() : "нет") + ". Лифт этажей: " + (G.elev[G.L] ? "есть пропуск" : "нет пропуска") + ". " + (!LAB.isReactorLevel(G.L) ? "Шлюзовая ключ-карта уровня " + G.L + ": " + (G.gate[G.L] ? "есть" : "нет") : "Ключ доступа к «Истоку»: " + (hasCore(G.L) ? "есть" : "нет")) + ".");
