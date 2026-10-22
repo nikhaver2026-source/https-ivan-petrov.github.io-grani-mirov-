@@ -5,7 +5,7 @@
 образец «Я готов(а) в путь». Прежний голос героя (Уверенный, Algieba)
 лежит в sounds/voice; здесь — его образец и одиннадцать новых голосов.
 
-Записей: 1301
+Записей: 1310
 
 Речь синтезирована 30 сентября 2026 года нейроголосами **Gemini** (Google),
 модель gemini-3.8-flash-tts, по тексту игры. Каждая запись проверена
@@ -274,7 +274,7 @@
 
 Целые фразы героя в бою — угроза, ответ врагу, удачный удар, рана, свой
 край, край врага, победа — записаны голосами «Настроек персонажа» с
-интонацией мига боя. Записей: 8352. Нейроголоса **Gemini** (Google),
+интонацией мига боя. Записей: 8466. Нейроголоса **Gemini** (Google),
 модель gemini-3.8-flash-tts, по тексту игры; каждая проверена
 распознаванием (GigaAM). Обработка: −18 LUFS, пик не выше −1 дБ, 24 кГц, FLAC.
 
@@ -9688,3 +9688,126 @@
 | hero_f_120ynn3_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Я на краю. Осторожнее. |
 | hero_f_l0wv9w_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Осталось немного. |
 | hero_f_lqs38f_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Рухнешь, дубина! |
+| hero_f_1yvsd0e_algieba_g.flac | Уверенный (муж.) | Algieba | На! Ещё на! |
+| hero_f_retygk_algieba_g.flac | Уверенный (муж.) | Algieba | Вот тебе, отродье! |
+| hero_f_1lte2f9_aoede_g.flac | Лёгкий (жен.) | Aoede | Знай наших! |
+| hero_f_13emju8_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | На ещё! |
+| hero_f_slnn8e_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | Дошло. |
+| hero_f_yzh46z_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | Простыню-то где потерял? |
+| hero_f_9668kf_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | Съел? |
+| hero_f_e6v1yu_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | Как тебе такое, а? |
+| hero_f_1gimva9_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | Суп сварю. |
+| hero_f_v46c4_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | Наживка сама приплыла. |
+| hero_f_1yvsd0e_fenrir_g.flac | Горячий (муж.) | Fenrir | На! Ещё на! |
+| hero_f_1sof8nl_fenrir_g.flac | Горячий (муж.) | Fenrir | Ломаю! |
+| hero_f_9668kf_fenrir_g.flac | Горячий (муж.) | Fenrir | Съел? |
+| hero_f_616pts_fenrir_g.flac | Горячий (муж.) | Fenrir | Зелье! Срочно, зараза! |
+| hero_f_y6hiz4_fenrir_g.flac | Горячий (муж.) | Fenrir | Неплохо, правда? |
+| hero_f_1dgt8o8_fenrir_g.flac | Горячий (муж.) | Fenrir | Не нравится? Терпи! |
+| hero_f_1tl6nq7_fenrir_g.flac | Горячий (муж.) | Fenrir | Мне бы сейчас к лекарю. Прямо сейчас. |
+| hero_f_2v9eo5_fenrir_g.flac | Горячий (муж.) | Fenrir | Хрясь — и ещё будет! |
+| hero_f_1lte2f9_fenrir_g.flac | Горячий (муж.) | Fenrir | Знай наших! |
+| hero_f_7dorra_fenrir_g.flac | Горячий (муж.) | Fenrir | Хрустнуло! |
+| hero_f_25clev_fenrir_g.flac | Горячий (муж.) | Fenrir | Ой, я даже не целился. |
+| hero_f_1rifh2f_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | Нельзя падать. Сначала зелье. |
+| hero_f_1xxs69s_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | Раскрошу! |
+| hero_f_2v9eo5_sadachbia_g.flac | Живой (муж.) | Sadachbia | Хрясь — и ещё будет! |
+| hero_f_1sof8nl_sadachbia_g.flac | Живой (муж.) | Sadachbia | Ломаю! |
+| hero_f_13emju8_sadachbia_g.flac | Живой (муж.) | Sadachbia | На ещё! |
+| hero_f_1ku8y9u_sadachbia_g.flac | Живой (муж.) | Sadachbia | Ещё хочешь? |
+| hero_f_srmup1_sadachbia_g.flac | Живой (муж.) | Sadachbia | Мягкий, хороший, вкусный. |
+| hero_f_wstchs_sadachbia_g.flac | Живой (муж.) | Sadachbia | Ещё немного. |
+| hero_f_47akx6_sadachbia_g.flac | Живой (муж.) | Sadachbia | Мало? Добавлю! |
+| hero_f_1dbwgqs_sadachbia_g.flac | Живой (муж.) | Sadachbia | Ах ты ж зараза! |
+| hero_f_sk7fo4_sadachbia_g.flac | Живой (муж.) | Sadachbia | Кис-кис. Не подходи. |
+| hero_f_1uyakzk_sadachbia_g.flac | Живой (муж.) | Sadachbia | Уха почти готова. |
+| hero_f_1sof8nl_autonoe_g.flac | Светлый (жен.) | Autonoe | Ломаю! |
+| hero_f_dw2o0p_autonoe_g.flac | Светлый (жен.) | Autonoe | Щит держит. |
+| hero_f_13emju8_autonoe_g.flac | Светлый (жен.) | Autonoe | На ещё! |
+| hero_f_wstchs_autonoe_g.flac | Светлый (жен.) | Autonoe | Ещё немного. |
+| hero_f_47akx6_autonoe_g.flac | Светлый (жен.) | Autonoe | Мало? Добавлю! |
+| hero_f_1pkv1ay_autonoe_g.flac | Светлый (жен.) | Autonoe | Ещё не конец. |
+| hero_f_1dbwgqs_autonoe_g.flac | Светлый (жен.) | Autonoe | Ах ты ж зараза! |
+| hero_f_1r6ccbu_autonoe_g.flac | Светлый (жен.) | Autonoe | Так и знал. |
+| hero_f_4u0oed_autonoe_g.flac | Светлый (жен.) | Autonoe | Щекотно, да? |
+| hero_f_7dorra_autonoe_g.flac | Светлый (жен.) | Autonoe | Хрустнуло! |
+| hero_f_yzh46z_autonoe_g.flac | Светлый (жен.) | Autonoe | Простыню-то где потерял? |
+| hero_f_121m77v_autonoe_g.flac | Светлый (жен.) | Autonoe | Ха! Не пробьёшь! |
+| hero_f_3ulm4c_autonoe_g.flac | Светлый (жен.) | Autonoe | Задел. |
+| hero_f_l5ajbk_autonoe_g.flac | Светлый (жен.) | Autonoe | Это было сильно. |
+| hero_f_114sw1a_autonoe_g.flac | Светлый (жен.) | Autonoe | Кто тут такой мокрый? |
+| hero_f_1sehnum_autonoe_g.flac | Светлый (жен.) | Autonoe | Будет уха. |
+| hero_f_iyjo6n_autonoe_g.flac | Светлый (жен.) | Autonoe | Из тебя выйдет хорошая ограда. |
+| hero_f_1gkfxbm_autonoe_g.flac | Светлый (жен.) | Autonoe | Развею, нечисть! |
+| hero_f_1m0dm4o_autonoe_g.flac | Светлый (жен.) | Autonoe | Сгинь, погань! |
+| hero_f_147ygn2_autonoe_g.flac | Светлый (жен.) | Autonoe | Изыди, нежить! |
+| hero_f_lg3ax2_autonoe_g.flac | Светлый (жен.) | Autonoe | Кажется, у кого-то кончился огонь. |
+| hero_f_1248483_autonoe_g.flac | Светлый (жен.) | Autonoe | Хвост тебе прищемлю, чёрт! |
+| hero_f_1hgn2nl_autonoe_g.flac | Светлый (жен.) | Autonoe | Жарко? Это тебе не пекло. |
+| hero_f_xwauw9_autonoe_g.flac | Светлый (жен.) | Autonoe | Бард, записывай. |
+| hero_f_vl3iit_autonoe_g.flac | Светлый (жен.) | Autonoe | Изыди, погань! |
+| hero_f_1k5y0ct_autonoe_g.flac | Светлый (жен.) | Autonoe | Мимо, косорукий! |
+| hero_f_1b4hjl3_autonoe_g.flac | Светлый (жен.) | Autonoe | Сгинь, нечисть! |
+| hero_f_18eqx6j_autonoe_g.flac | Светлый (жен.) | Autonoe | Хрясь! Будешь знать! |
+| hero_f_1vy4l75_autonoe_g.flac | Светлый (жен.) | Autonoe | Отвалилось что-то. Не моё. |
+| hero_f_kapztd_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Ну что, сыграем в догонялки? |
+| hero_f_1yvsd0e_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | На! Ещё на! |
+| hero_f_13emju8_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | На ещё! |
+| hero_f_srmup1_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Мягкий, хороший, вкусный. |
+| hero_f_sk7fo4_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Кис-кис. Не подходи. |
+| hero_f_wstchs_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Ещё немного. |
+| hero_f_187ddpr_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Вот так тебе! |
+| hero_f_6wy854_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Сдачи не надо. |
+| hero_f_14j2wnb_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Улыбнись, это будет весело. Мне. |
+| hero_f_1lvutwr_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Ну всё, ты нарвался! |
+| hero_f_l1ey2j_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Ещё один. |
+| hero_f_1ojobvh_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Раз — и в точку! |
+| hero_f_zf7pog_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Держи ещё! |
+| hero_f_bkt4y2_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Больно, но стою. |
+| hero_f_2r8vjh_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Сапоги будут. Драконьи! |
+| hero_f_ztad2k_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Давай быстро, у меня ещё дела. |
+| hero_f_1notcw1_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Ровно лёг. |
+| hero_f_1dm90wo_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Держу. Ещё держу. |
+| hero_f_yhya80_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Вот так, с размаху! |
+| hero_f_2v9eo5_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Хрясь — и ещё будет! |
+| hero_f_xg6hvm_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Добью, гада! |
+| hero_f_1lte2f9_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Знай наших! |
+| hero_f_1q8ez1f_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Встань и дерись. |
+| hero_f_120sgz5_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Чисто. |
+| hero_f_13emju8_laomedeia_g.flac | Звонкий (жен.) | Laomedeia | На ещё! |
+| hero_f_wstchs_laomedeia_g.flac | Звонкий (жен.) | Laomedeia | Ещё немного. |
+| hero_f_1jeaxzv_laomedeia_g.flac | Звонкий (жен.) | Laomedeia | Всё. |
+| hero_f_xwauw9_laomedeia_g.flac | Звонкий (жен.) | Laomedeia | Бард, записывай. |
+| hero_f_1gq3wie_laomedeia_g.flac | Звонкий (жен.) | Laomedeia | Пропустил. |
+| hero_f_1q8ez1f_laomedeia_g.flac | Звонкий (жен.) | Laomedeia | Встань и дерись. |
+| hero_f_omoozb_laomedeia_g.flac | Звонкий (жен.) | Laomedeia | Одной лапкой меньше. |
+| hero_f_n5h5ee_laomedeia_g.flac | Звонкий (жен.) | Laomedeia | А я-то думал, будет скучный день. |
+| hero_f_yrtdg1_laomedeia_g.flac | Звонкий (жен.) | Laomedeia | Хвост оторву, змеюка! |
+| hero_f_z96ukp_laomedeia_g.flac | Звонкий (жен.) | Laomedeia | Ой, неужели больно? |
+| hero_f_1yvsd0e_laomedeia_g.flac | Звонкий (жен.) | Laomedeia | На! Ещё на! |
+| hero_f_1cd8gxb_laomedeia_g.flac | Звонкий (жен.) | Laomedeia | Жало вырву! |
+| hero_f_xg6hvm_laomedeia_g.flac | Звонкий (жен.) | Laomedeia | Добью, гада! |
+| hero_f_1yvsd0e_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | На! Ещё на! |
+| hero_f_13kghqu_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Держусь. |
+| hero_f_1ianq3e_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Получай, гниль! |
+| hero_f_1fcumfr_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Кошелёк остался при мне. |
+| hero_f_1iofyv2_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Я ещё вернусь. Если выживу. |
+| hero_f_13emju8_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | На ещё! |
+| hero_f_7dorra_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Хрустнуло! |
+| hero_f_6wy854_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Сдачи не надо. |
+| hero_f_1cd8gxb_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Жало вырву! |
+| hero_f_xzeinw_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Хрусть! Минус ребро. |
+| hero_f_jvppdg_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Упокою, гнильё! |
+| hero_f_1lte2f9_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Знай наших! |
+| hero_f_1gq3wie_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Пропустил. |
+| hero_f_1no9gg6_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Сдыхай уже! |
+| hero_f_h4fptk_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Яд больше не страшен. |
+| hero_rassprosit_3_autonoe_g.flac | Светлый (жен.) | Autonoe | confident, natural | Что здесь происходит? |
+| hero_rassprosit_4_autonoe_g.flac | Светлый (жен.) | Autonoe | confident, natural | Расскажи, чем живёт ваш край. |
+| hero_znanie_1_autonoe_g.flac | Светлый (жен.) | Autonoe | confident, natural | Я бывала в этих краях. |
+| hero_zapugat_4_fenrir_g.flac | Горячий (муж.) | Fenrir | menacing | Я дважды не предупреждаю. |
+| hero_podkup_1_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | conspiratorial, low voice | Монета за молчание — честная сделка. |
+| hero_podkup_2_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | conspiratorial, low voice | Это тебе. А меня здесь не было. |
+| hero_podkup_4_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | conspiratorial, low voice | Пусть это останется между нами. |
+| hero_provoc_4_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | taunting | Давай, я жду. |
+| hero_rassprosit_1_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | confident, natural | Что у вас нового? |
