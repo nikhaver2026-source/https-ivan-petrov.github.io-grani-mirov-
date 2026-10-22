@@ -4935,7 +4935,12 @@ const Speech={voice:null,keepAlive:null,
      такой пункт считался повтором и молчал — при быстром листании туда и
      обратно казалось, что синтезатор замолк. */
   const dk=key||m.text;const rec=m.nav?null:this.recent.get(dk);
-  if(rec&&Date.now()-rec.at<this.WINDOW.dedupe){
+  /* (22 октября) Длинное описание места, обрываемое следующим шагом, не начинается заново, пока могло бы ещё
+     звучать: окно повтора той же фразы — по её длине (70 мс на знак, от 1,2 до 6 с). Только для описаний,
+     сведений вокруг, предметов и подсказок; запрос игрока, листание, бой и итоги — как прежде. */
+  const окноПовтора=(!user&&rec&&rec.text===m.text&&/^(desc|spatial|object|context)$/.test(String(m.cat||"")))
+   ?Math.max(this.WINDOW.dedupe,Math.min(6000,70*String(m.text).length)):this.WINDOW.dedupe;
+  if(rec&&Date.now()-rec.at<окноПовтора){
    if(key&&rec.text!==m.text){
     const q=this.queue.find(x=>x.key===key);
     if(q){q.state="REPLACED";this.queue=this.queue.filter(x=>x!==q);this.stats.replaced++;done(q.onDone);}
