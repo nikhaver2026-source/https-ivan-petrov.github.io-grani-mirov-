@@ -85,7 +85,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     return out;
   });
   ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
-  ok(/Что нового: /.test(news.note) && /начинается со снаряжением/.test(news.text) && /сквозь стены и закрытые двери/.test(news.text) && /чистого листа/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
+  ok(/Что нового: /.test(news.note) && /начинается со снаряжением/.test(news.text) && /сквозь стены и закрытые двери/.test(news.text) && /чистого листа/.test(news.text) && /настройки теперь переживают смену версии/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
 
   console.log("Настройки");
   await page.evaluate(() => { LAB.ui.top().i = 0; });
@@ -2230,15 +2230,18 @@ LAB.ui.closeAll();
     if (!restart) restartDiag = JSON.stringify(s2);
   } catch (e) { restartDiag = String(e && e.message || e).slice(0, 200); }
   await ctx2.close();
-  /* новая версия — с чистого листа: хранилище прежней версии (своя метка версии, слот, изменённые
-     настройки) при запуске новой стирается целиком — в браузере, на Android и в Windows хранилище одно */
+  /* новая версия — с чистого листа: сохранения прежней версии (слот, автозапись, запасная копия) при
+     запуске новой стираются — в браузере, на Android и в Windows хранилище одно; (2.1) изменённые
+     настройки, отметка о прологе и подсказка про облегчённый режим остаются */
   let fresh = null;
   {
     const stOld = await page.context().storageState();
     const fixtureRaw = fs.readFileSync(path.join(__dirname, "fixtures", "alfa-1.1-save.json"), "utf8");
+    /* прохождение — то же (метку стёр localStorage.clear() в начале проверки): меняется только версия */
+    const runNow = await page.evaluate(() => String(LAB.RUN));
     stOld.origins.forEach(o => {
       const ls = o.localStorage, setK = (n, v) => { const e = ls.find(q => q.name === n); if (e) e.value = v; else ls.push({ name: n, value: v }); };
-      setK("lab_ver", "Альфа 1.1"); setK("lab_slot1", fixtureRaw); setK("lab_prologue_seen", "1");
+      setK("lab_ver", "Альфа 1.1"); setK("lab_run", runNow); setK("lab_slot1", fixtureRaw); setK("lab_auto", fixtureRaw); setK("lab_slot2_bak", fixtureRaw); setK("lab_prologue_seen", "1"); setK("lab_lite_hint", "1");
     });
     const ctx3 = await browser.newContext({ storageState: stOld });
     const page3 = await ctx3.newPage();
@@ -2247,14 +2250,26 @@ LAB.ui.closeAll();
       await page3.goto(url); await page3.waitForFunction(() => window.LAB_READY === true, null, { timeout: 60000 });
       await page3.evaluate(() => { window.SPOKEN = []; LAB.say = function (t) { SPOKEN.push(String(t)); }; });
       await page3.keyboard.press("Space"); await page3.waitForTimeout(150);
-      fresh = await page3.evaluate(() => ({ ver: localStorage.getItem("lab_ver"), cur: LAB.VERSION, slot: localStorage.getItem("lab_slot1"), prologue: localStorage.getItem("lab_prologue_seen"), ratePct: LAB.settings.ratePct, navMode: LAB.settings.navMode, wiped: LAB.freshStart && LAB.freshStart.wiped, from: LAB.freshStart && LAB.freshStart.from, intro: LAB.ui.top() ? LAB.ui.top().intro : "" }));
+      fresh = await page3.evaluate(() => {
+        const L = localStorage, out = { ver: L.getItem("lab_ver"), cur: LAB.VERSION, slot: L.getItem("lab_slot1"), auto: L.getItem("lab_auto"), bak: L.getItem("lab_slot2_bak"), prologue: L.getItem("lab_prologue_seen"), lite: L.getItem("lab_lite_hint"), stored: !!L.getItem("lab_settings"), ratePct: LAB.settings.ratePct, navMode: LAB.settings.navMode, hints: LAB.settings.hints, wiped: LAB.freshStart && LAB.freshStart.wiped, from: LAB.freshStart && LAB.freshStart.from, intro: LAB.ui.top() ? LAB.ui.top().intro : "" };
+        /* сменились и версия, и прохождение — сообщение одно: о новой версии */
+        const fs0 = LAB.freshStart, rr = LAB.restartRun;
+        fs0.said = false; rr.wiped = 1; rr.said = false;
+        LAB.ui.mainMenu(true); out.both1 = LAB.ui.top() ? LAB.ui.top().intro : "";
+        LAB.ui.mainMenu(true); out.both2 = LAB.ui.top() ? LAB.ui.top().intro : "";
+        return out;
+      });
     } catch (e) { fresh = { err: String(e && e.message || e).slice(0, 200) }; }
     await ctx3.close();
   }
   await page.evaluate(k => { Object.assign(LAB.settings, k); LAB.saveSettings(); }, keepS);
   ok(restart, "A, H: после перезапуска игры настройки речи и доступности — те же" + (restartDiag ? " (" + restartDiag + ")" : ""));
-  ok(fresh && fresh.ver === fresh.cur && fresh.slot === null && fresh.prologue === null && fresh.ratePct === 50 && fresh.navMode === "full" && fresh.wiped >= 3 && fresh.from === "Альфа 1.1" && /новая версия/i.test(fresh.intro || ""),
-    "новая версия — с чистого листа: сохранения и настройки прежней версии при запуске стёрты, игрок слышит об этом в главном меню" + (fresh ? " (" + JSON.stringify(fresh).slice(0, 300) + ")" : ""));
+  ok(fresh && fresh.ver === fresh.cur && fresh.slot === null && fresh.auto === null && fresh.bak === null && fresh.wiped >= 3 && fresh.from === "Альфа 1.1" && /новая версия/i.test(fresh.intro || "") && /Сохранения прежних версий сброшены/.test(fresh.intro || ""),
+    "новая версия — с чистого листа: слоты, автозапись и запасные копии прежней версии при запуске стёрты, игрок слышит об этом в главном меню" + (fresh ? " (" + JSON.stringify(fresh).slice(0, 300) + ")" : ""));
+  ok(fresh && fresh.stored && fresh.ratePct === 65 && fresh.navMode === "beacon" && fresh.hints === 3 && fresh.prologue === "1" && fresh.lite === "1" && /Настройки остались прежними/.test(fresh.intro || "") && !/настройки[^.]*сброшены/i.test(fresh.intro || ""),
+    "новая версия: настройки, отметка о прологе и подсказка про облегчённый режим остались, игроку сказано, что настройки прежние" + (fresh ? " (" + JSON.stringify({ stored: fresh.stored, ratePct: fresh.ratePct, navMode: fresh.navMode, hints: fresh.hints, prologue: fresh.prologue, lite: fresh.lite }) + ")" : ""));
+  ok(fresh && /новая версия/i.test(fresh.both1 || "") && !/начинается заново/.test(fresh.both2 || ""),
+    "сменились и версия, и прохождение — одно сообщение о новой версии, без второго о прохождении" + (fresh ? " (" + String(fresh.both2 || "").slice(0, 120) + ")" : ""));
   /* (2.0) прохождение заново: та же версия, прежнее прохождение — сохранения стёрты, настройки остались */
   let run = null;
   {

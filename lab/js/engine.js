@@ -21,18 +21,19 @@ var store = {
 LAB.store = store;
 
 /* ── НОВАЯ ВЕРСИЯ — С ЧИСТОГО ЛИСТА (1.5, просьба игрока) ──
-   Игра меняется, и каждую версию проходят заново: сохранения и
-   настройки прежних версий не переносятся — ни в браузере, ни в
-   приложениях для Android и Windows (у них то же хранилище страницы).
-   Метка версии — «lab_ver»: другая или её нет, а записи «lab_…» есть —
-   все они стираются до того, как игра прочтёт настройки. */
+   Игра меняется, и каждую версию проходят заново: сохранения прежних
+   версий не переносятся — ни в браузере, ни в приложениях для Android и
+   Windows (у них то же хранилище страницы). Метка версии — «lab_ver»:
+   другая или её нет — стираются слоты, автозапись и их запасные копии.
+   (2.1, просьба игрока) Остаются настройки (речь, громкость, навигатор и
+   прочие), отметка о прологе и подсказка про облегчённый режим. */
 var VER_KEY = "lab_ver";
 LAB.freshStart = (function () {
   var was = store.get(VER_KEY), out = { from: was || "", wiped: 0 };
   if (was === LAB.VERSION) return out;
   try {
     var keys = [];
-    for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k && k.indexOf("lab_") === 0 && k !== VER_KEY) keys.push(k); }
+    for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k && /^lab_(slot\d|auto)/.test(k)) keys.push(k); }
     keys.forEach(function (k) { localStorage.removeItem(k); });
     out.wiped = keys.length;
   } catch (e) { /* хранилища нет — и стирать нечего */ }
