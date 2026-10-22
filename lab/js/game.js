@@ -25,15 +25,21 @@ var DIRS = LAB.DIRS;
 /* Версия мира: этажи построены заново (широкие коридоры, тайные комнаты с
    двумя выходами, турели у дверей) — старые записи этажей к ним не подходят. */
 var WORLD_V = 3;
+/* (2.0) Стартовый набор — с ним носитель выходит из капсулы: монтировка и
+   заряженный бластер «Искра» (выбран он), надетый защитный комбинезон
+   «Ковчег», бинт, походный ремнабор, сухпаёк и кредиты на первую покупку.
+   Две аптечки и две энергобатареи лежат у капсулы (world.js, шаг 12). */
+var START_KIT = 2;
 function newState(seed) {
+  var suit = LAB.makeArmor("suit", 1, 1, "a_start_suit");
   return {
     v: 1, worldV: WORLD_V, seed: seed, L: 1, F: 1, x: 0, y: 0, face: "N",
     hp: 100, hpMax: 100, str: 10, agi: 10, mind: 10, cha: 10,
-    en: 30, enMax: 30, lvl: 1, xp: 0, credits: 20,
-    weapons: [LAB.makeWeapon("crowbar", 1, 0, 1, "w_start_crowbar")], wi: 0, drawn: false,
-    armor: null, armors: [],
+    en: 30, enMax: 30, lvl: 1, xp: 0, credits: 40,
+    weapons: [LAB.makeWeapon("crowbar", 1, 0, 1, "w_start_crowbar"), LAB.makeWeapon("spark", 1, 0, 1, "w_start_spark")], wi: 1, drawn: false,
+    armor: suit, armors: [suit],
     ammo: { energy: 0, magnetron: 0, positron: 0 },
-    inv: {}, keys: {}, tier: 0, elev: {}, gate: {}, core: false, cores: {}, codes: {}, melodies: {}, blockSeen: {},
+    inv: { bandage: 1, fieldkit: 1, ration: 1 }, keys: {}, tier: 0, startKit: START_KIT, elev: {}, gate: {}, core: false, cores: {}, codes: {}, melodies: {}, blockSeen: {},
     notes: {}, noteList: [], samples: {}, implants: ["scan", "echo"], faction: null, crafted: 0, bp: {}, bpNpc: {},
     quests: [], journal: [], fs: {}, maxF: { 1: 1 }, visited: { "1-1": 1 },
     checkpoint: null, day: 1, min: 8 * 60, event: "norm", eventUntil: 8 * 60 + 90,
@@ -3388,9 +3394,17 @@ function loadSlot(n, fromBak) {
   return true;
 }
 game.loadSlot = loadSlot;
+/* Запись до стартового набора: бластер и комбинезон лежали в соседнем
+   помещении первого этажа, а теперь их там нет — недостающее выдаётся. */
+function fillStartKit(g) {
+  if (!(g.weapons || []).some(function (w) { return w && (w.rng || 1) > 1; })) g.weapons.push(LAB.makeWeapon("spark", 1, 0, 1, "w_start_spark"));
+  if (!g.armor && !(g.armors && g.armors.length)) { var a = LAB.makeArmor("suit", 1, 1, "a_start_suit"); g.armors = [a]; g.armor = a; }
+}
 function migrate(g) {
+  var oldKit = g.startKit == null;
   var base = newState(g.seed || "lab");
   for (var k in base) if (g[k] === undefined) g[k] = base[k];
+  if (oldKit) fillStartKit(g);
   if (!g.st) g.st = base.st;
   for (var k2 in base.st) if (g.st[k2] === undefined) g.st[k2] = 0;
   if (!g.body) g.body = base.body;
@@ -3423,6 +3437,7 @@ function migrate(g) {
   }
   return g;
 }
+game._migrate = migrate; /* для проверок: перенос прежней записи */
 var autoTimer = null;
 var autoNoteAt = 0;
 function autosave() {
@@ -3443,6 +3458,7 @@ game.autosave = autosave;
 function newGame() {
   var seed = "lab-" + Date.now().toString(36) + "-" + Math.floor(Math.random() * 1e6).toString(36);
   G = newState(seed);
+  G.wakeSafe = 1; /* (2.0) безопасное пробуждение: в капсульном отсеке никто не тронет (combat.js) */
   game.session++; game.paused = false; game.descending = false;
   if (LAB.office && LAB.office.clear) LAB.office.clear();
   freshSession();
@@ -3453,6 +3469,10 @@ function newGame() {
   UIx("showGame");
   enterFloor(1, 1, "start", true);
   say("Вы просыпаетесь в криокапсуле. Холод отпускает. «Эхо» включается: «Носитель номер семь, слышите меня? Зрение не восстановлено. Я буду вашими глазами. " + LAB.K("Шагайте свайпами. Осмотреться — два пальца вверх. Двойное касание у предмета — действия", "Шагайте клавишами W A S D. Осмотреться — Tab. Enter у предмета — действия. Все клавиши — в руководстве, F1") + "»." );
+  /* (2.0) стартовый набор: что при себе и что лежит у капсулы */
+  var kitHint = hintsOn() ? LAB.K(" Достать оружие — касание тремя пальцами, сменить — двойное касание двумя пальцами.", " Достать оружие — R, сменить — Q и E.") : "";
+  if (kitHint) G.tut.weapon = 1;
+  sayq("При вас монтировка и бластер «Искра» с полным зарядом, на вас защитный комбинезон «Ковчег». В рюкзаке бинт, походный ремнабор и сухпаёк. У капсулы лежат две аптечки и две энергобатареи — заберите их." + kitHint + " Пока вы в капсульном отсеке, машины вас не тронут: соберитесь, прежде чем выходить.");
   tutor("start");
   roomCheck(true);
   journal("Пробуждение. Уровень 1, этаж 1.");

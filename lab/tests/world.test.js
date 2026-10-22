@@ -109,6 +109,17 @@ for (let si = 0; si < seeds; si++) {
           else { stat.shopN = (stat.shopN || 0) + 1; stat.shopD = (stat.shopD || 0) + dmin; stat.shopMax = Math.max(stat.shopMax || 0, dmin); }
         }
       }
+      /* (2.0) стартовый набор у капсулы пробуждения: две аптечки и две энергобатареи
+         в двух шагах от неё (или хотя бы в её помещении); бластера и брони на полу нет */
+      if (L === 1 && F === 1) {
+        const cap = fl.objs.find(o => o.type === "wake");
+        const at2 = i => cap && (Math.max(Math.abs(i.x - cap.x), Math.abs(i.y - cap.y)) <= 2 || fl.room[i.y * LAB.W + i.x] === cap.room);
+        const med = fl.items.filter(i => at2(i) && i.kind === "item" && i.item === "medkit_s").length;
+        const bat = fl.items.filter(i => at2(i) && i.kind === "ammo" && i.ammo === "energy").length;
+        if (!cap || med < 2 || bat < 2) err(`${at}: у капсулы аптечек ${med}, энергобатарей ${bat}`);
+        if (fl.items.some(i => (i.w && i.w.id === "w_start_spark") || (i.a && i.a.id === "a_start_suit"))) err(`${at}: стартовый бластер или комбинезон лежит на полу`);
+        stat.kitNear = (stat.kitNear || 0) + fl.items.filter(i => cap && Math.max(Math.abs(i.x - cap.x), Math.abs(i.y - cap.y)) <= 2 && ((i.kind === "item" && i.item === "medkit_s") || (i.kind === "ammo" && i.ammo === "energy"))).length;
+      }
       /* турели — значит, есть терминал безопасности, до которого можно дойти.
          Поведение — как в бою (combat.js): у стража своё, даже если его
          основа — турель (Метроном «Сначала» терминалом не отключается). */
@@ -152,6 +163,7 @@ console.log(`уровней: ${LAB.LEVELS_N}, этажей: ${floors}, ошиб�
 console.log("замки:", JSON.stringify(stat.locks));
 console.log(`охрана на этаж: патрулей ${((stat.patrols || 0) / floors).toFixed(1)}, машин в кабинетах ${((stat.guards || 0) / floors).toFixed(1)}, сапёров ${((stat.sappers || 0) / floors).toFixed(2)}; стендов с задачами ${((stat.pz || 0) / floors).toFixed(2)}`);
 console.log(`мастерских: ${stat.shopN || 0} (при лифтовом холле или у прибытия: ${stat.shopLift || 0}), путь от прибытия в среднем ${stat.shopN ? Math.round(stat.shopD / stat.shopN) : 0}, самый длинный ${stat.shopMax || 0} шагов`);
+console.log(`стартовый набор у капсулы (аптечки и энергобатареи в двух шагах): ${stat.kitNear || 0}`);
 console.log(`на этаж: врагов ${(stat.foes / floors).toFixed(1)}, турелей ${(stat.turrets / floors).toFixed(2)}, камер ${(stat.cams / floors).toFixed(2)}, вещей ${(stat.items / floors).toFixed(1)}, выживших ${(stat.npcs / floors).toFixed(2)}, тайных комнат ${(stat.secrets / floors).toFixed(2)}, заваленных лестниц ${stat.blocked}; коридоры от ${stat.corrMin} до ${stat.corrMax} шагов`);
 console.log("обстановка:", JSON.stringify(stat.objs));
 console.log("прессов «Подножия»:", stat.press || 0);

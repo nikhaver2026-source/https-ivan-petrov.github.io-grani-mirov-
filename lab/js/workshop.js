@@ -523,7 +523,7 @@ function modsLine(w) {
 function profile(w) {
   var b = LAB.WEAPONS[w.base] || {}, s = [];
   s.push(melee(w) ? "ближний бой" : "дальность " + w.rng + " " + gm().plural(w.rng, "шаг", "шага", "шагов"));
-  var cd = (w.cd || b.cd || 500) * gapK(w) / 1000;
+  var cd = LAB.weaponCd(w) * gapK(w) / 1000;
   s.push((melee(w) ? "удар" : "выстрел") + " раз в " + String(Math.round(cd * 10) / 10).replace(".", ",") + " " + (cd === 1 ? "секунду" : "секунды"));
   if (battery(w)) s.push(w.cap + " " + gm().plural(w.cap, "выстрел", "выстрела", "выстрелов") + " в заряде, питание: " + (LAB.AMMO[w.ammo] ? LAB.AMMO[w.ammo].n.toLowerCase() : w.ammo));
   else s.push("без батарей");

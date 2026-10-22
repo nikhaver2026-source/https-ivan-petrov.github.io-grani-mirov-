@@ -384,7 +384,7 @@ LAB.BOSSES = {
    1 — и соседняя линия), cap — выстрелов в заряде, cd — перезарядка выстрела, мс;
    pierce — бьёт всех в линии; area — задевает соседей цели. g — род. */
 LAB.WEAPONS = {
-  crowbar:   { n: "монтировка", g: "f", cls: "melee", ammo: "none", dt: "kinetic", dmg: 7, rng: 1, spread: 1, cap: 0, cd: 500, snd: "w_melee", desc: "Тяжёлая стальная монтировка. Годится и для ящиков, и для черепов." },
+  crowbar:   { n: "монтировка", g: "f", cls: "melee", ammo: "none", dt: "kinetic", dmg: 7, rng: 1, spread: 1, cap: 0, cd: 300, snd: "w_melee", sndRate: 1.1, desc: "Стальная монтировка: короткий быстрый замах. Годится и для ящиков, и для черепов." },
   baton:     { n: "электрошоковая дубинка", g: "f", cls: "melee", ammo: "none", dt: "shock", dmg: 8, rng: 1, spread: 1, cap: 0, cd: 550, snd: "w_shock", desc: "Дубинка охраны с разрядником. Особенно хороша против роботов." },
   vibro:     { n: "виброклинок", g: "m", cls: "melee", ammo: "none", dt: "kinetic", dmg: 12, rng: 1, spread: 1, cap: 0, cd: 450, snd: "w_vibro", desc: "Клинок, дрожащий с ультразвуковой частотой." },
   cutter:    { n: "плазменный резак", g: "m", cls: "melee", ammo: "energy", dt: "plasma", dmg: 15, rng: 1, spread: 1, cap: 20, cd: 500, snd: "w_cutter", desc: "Инструмент сварщика. Режет металл, плоть и паутину." },

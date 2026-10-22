@@ -3266,6 +3266,151 @@ LAB.ui.closeAll();
   ok(lite.fxCh === 1, "облегчённый режим: эффекты в памяти — в моно (каналов " + lite.fxCh + ")");
   ok(lite.off === 0 && lite.fx2 === lite.fx0 && lite.convOff2 === false, "выключили облегчённый режим — звук и мир как прежде");
 
+  console.log("Стартовый набор, безопасное пробуждение, быстрая монтировка, враги не бьют сквозь стены и закрытые двери");
+  const kit = await page.evaluate(() => {
+    const g = LAB.game, C = LAB.combat, out = {};
+    LAB.ui.closeAll(); SPOKEN.length = 0;
+    /* новая игра: бластер и комбинезон — сразу у героя, у капсулы — две аптечки и две энергобатареи */
+    g.newGame(); C.stop();
+    let G = g.G;
+    out.weapons = G.weapons.map(w => w.base).join(",");
+    out.wi = G.wi; out.full = G.weapons[1] && G.weapons[1].charge === G.weapons[1].cap && G.weapons[1].cap > 0;
+    out.armor = G.armor && G.armor.base; out.worn = G.armors[0] === G.armor; out.def = LAB.armorDef(G.armor);
+    out.inv = JSON.stringify(G.inv); out.credits = G.credits; out.energy = G.ammo.energy;
+    const fl = g.CUR.fl, cap = fl.objs.find(o => o.type === "wake");
+    const near = fl.items.filter(i => cap && Math.max(Math.abs(i.x - cap.x), Math.abs(i.y - cap.y)) <= 2);
+    out.nearMed = near.filter(i => i.kind === "item" && i.item === "medkit_s").length;
+    out.nearBat = near.filter(i => i.kind === "ammo" && i.ammo === "energy").length;
+    out.floorSpark = fl.items.some(i => (i.w && i.w.id === "w_start_spark") || (i.a && i.a.id === "a_start_suit"));
+    out.said = SPOKEN.join(" | ");
+    /* безопасное пробуждение: в капсульном отсеке враги не видят, не бьют и не входят в него */
+    C.tick();
+    const capRoom = cap.room, roomAt = (x, y) => g.CUR.fl.room[y * LAB.W + x], home = [G.x, G.y];
+    out.safe0 = C.wakeSafe() && G.wakeSafe === 1 && roomAt(G.x, G.y) === capRoom;
+    G.hp = G.hpMax = 5000;
+    let hurtSafe = 0, hp0 = G.hp;
+    const adj = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(v => [G.x + v[0], G.y + v[1]]).find(c => g.passable(c[0], c[1]) && roomAt(c[0], c[1]) === capRoom);
+    if (adj) {
+      const r1 = C.spawnFoe("guardbot", adj[0], adj[1], {});
+      for (let k = 0; k < 12; k++) { r1.state = "hunt"; r1.lastKnown = { x: G.x, y: G.y }; r1.at = 99; r1.mv = 99; C.tick(); if (G.hp < hp0) hurtSafe++; hp0 = G.hp = G.hpMax; }
+      r1.dead = true;
+    }
+    const fl0 = g.CUR.fl, fs0 = g.CUR.fs;
+    const wd = fl0.doors.find(d => (d.room === capRoom || d.other === capRoom) && !d.lock);
+    let entered = 0, outside = null;
+    if (wd) {
+      for (const v of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const c1 = [wd.x + v[0], wd.y + v[1]], c2 = [wd.x + 2 * v[0], wd.y + 2 * v[1]];
+        if (g.passable(c1[0], c1[1]) && roomAt(c1[0], c1[1]) !== capRoom && g.passable(c2[0], c2[1]) && roomAt(c2[0], c2[1]) !== capRoom) { outside = c2; break; }
+      }
+      if (outside) {
+        const w1 = C.spawnFoe("walker", outside[0], outside[1], {});
+        for (let k = 0; k < 15; k++) { fs0.doors[wd.id] = 2; w1.state = "hunt"; w1.lastKnown = { x: G.x, y: G.y }; w1.mv = 99; w1.at = 99; C.tick(); if (roomAt(w1.x, w1.y) === capRoom) entered++; if (G.hp < hp0) hurtSafe++; hp0 = G.hp = G.hpMax; }
+        w1.dead = true;
+      }
+    }
+    out.safeHit = { adj: !!adj, outside: !!outside, hurtSafe, entered };
+    /* вышел из отсека — защита снята навсегда, «Эхо» предупреждает */
+    if (outside) {
+      SPOKEN.length = 0; G.x = outside[0]; G.y = outside[1]; C.tick();
+      out.left = !C.wakeSafe() && G.wakeSafe === 0 && SPOKEN.some(t => /Вы вышли из капсульного отсека/.test(t));
+      G.x = home[0]; G.y = home[1]; C.tick();
+      out.leftOnce = !C.wakeSafe();
+    }
+    /* сам ранил врага — защита снята */
+    G.wakeSafe = 1; G.x = home[0]; G.y = home[1]; C.tick();
+    const tgt = C.spawnFoe("walker", outside ? outside[0] : home[0] + 3, outside ? outside[1] : home[1], {});
+    SPOKEN.length = 0; C.damageFoe(tgt, 1, "kinetic", {});
+    out.fight = G.wakeSafe === 0 && SPOKEN.some(t => /Вы начали бой/.test(t));
+    tgt.dead = true; G.wakeSafe = 0; G.hp = G.hpMax = 100;
+    /* прежняя запись без набора получает бластер и комбинезон один раз, найденное не дублирует */
+    const bare = JSON.parse(JSON.stringify(G)); delete bare.startKit; bare.weapons = [bare.weapons[0]]; bare.armor = null; bare.armors = [];
+    const m1 = g._migrate(bare);
+    out.mig = m1.weapons.filter(w => w.base === "spark").length === 1 && m1.armor && m1.armor.base === "suit" && m1.armors.length === 1 && m1.startKit === 2;
+    const m2 = g._migrate(JSON.parse(JSON.stringify(m1)));
+    const had = JSON.parse(JSON.stringify(G)); delete had.startKit;
+    const m3 = g._migrate(had);
+    out.migOnce = m2.weapons.length === m1.weapons.length && m3.weapons.length === G.weapons.length && m3.armors.length === G.armors.length;
+    /* монтировка: удар раз в 0,3 с (прежде 0,5) — и у монтировки из старой записи (в ней cd 500) */
+    G.wi = 0; G.drawn = true;
+    const real = Date.now; let t = real() + 60000; Date.now = () => t;
+    try {
+      const a = C.fire("N", false); t += 290; const b = C.fire("N", false); t += 20; const c = C.fire("N", false);
+      G.weapons[0].cd = 500; t += 305; const d = C.fire("N", false);
+      out.crow = [a, b, c, d].map(v => v ? 1 : 0).join("");
+    } finally { Date.now = real; }
+    out.crowCd = LAB.weaponCd(G.weapons[0]);
+    G.drawn = false; G.wi = 1;
+    /* угол стены: взгляд по диагонали между двумя стенами не проходит */
+    const W = LAB.W, H = LAB.H, T = LAB.T, sf = { t: new Uint8Array(W * H).fill(T.ROOM), doorAt: {} }, I = (x, y) => y * W + x;
+    sf.t[I(5, 5)] = T.WALL; sf.t[I(6, 6)] = T.WALL;
+    out.corner = !LAB.los(sf, { doors: {} }, 5, 6, 6, 5) && !LAB.los(sf, { doors: {} }, 6, 5, 5, 6) && !LAB.los(sf, { doors: {} }, 4, 7, 7, 4);
+    sf.t[I(6, 6)] = T.ROOM;
+    out.cornerOpen = LAB.los(sf, { doors: {} }, 5, 6, 6, 5) && LAB.los(sf, { doors: {} }, 4, 7, 7, 4) === LAB.los(sf, { doors: {} }, 7, 4, 4, 7);
+    /* раненый робот за закрытой дверью, загнанный в угол: не стреляет; дверь открыта — стреляет, не чаще перезарядки */
+    const pass = (x, y) => x > 0 && y > 0 && x < W - 1 && y < H - 1 && g.passable(x, y);
+    let spot = null;
+    for (let F = 1; F <= 8 && !spot; F++) {
+      g.enterFloor(1, F, "down", true); C.stop(); G = g.G;
+      const fl2 = g.CUR.fl;
+      for (const d of fl2.doors) {
+        if (d.lock) continue;
+        for (const v of [[1, 0], [0, 1]]) {
+          const A = [d.x + 2 * v[0], d.y + 2 * v[1]], B = [d.x - 2 * v[0], d.y - 2 * v[1]];
+          const ok2 = [A, B, [d.x + v[0], d.y + v[1]], [d.x - v[0], d.y - v[1]]].every(c => pass(c[0], c[1]));
+          if (!ok2) continue;
+          /* соседние клетки робота займут неподвижные «пробки»: отступать некуда */
+          const nb = [[B[0] + 1, B[1]], [B[0] - 1, B[1]], [B[0], B[1] + 1], [B[0], B[1] - 1]];
+          spot = { d, A, B, nb, F, v }; break;
+        }
+        if (spot) break;
+      }
+    }
+    if (spot) {
+      const fs = g.CUR.fs, d = spot.d, type = ["guardbot", "patrolbot", "android"].find(k => LAB.FOES[k]);
+      C.foes().forEach(f => { f.dead = true; });
+      G.x = spot.A[0]; G.y = spot.A[1]; G.hp = G.hpMax = 5000; G.st.cloak = 0; G.st.mimicT = 0; G.event = "norm";
+      fs.doors[d.id] = 1;
+      out.losClosed = LAB.los(g.CUR.fl, fs, spot.B[0], spot.B[1], spot.A[0], spot.A[1]);
+      const f = C.spawnFoe(type, spot.B[0], spot.B[1], {});
+      spot.nb.forEach(c => { if (g.passable(c[0], c[1]) && !(c[0] === d.x && c[1] === d.y)) { const pl = C.spawnFoe(type, c[0], c[1], {}); pl.calm = true; } });
+      const keepFlee = () => { f.state = "flee"; f.hp = Math.max(1, Math.round(f.maxhp * 0.1)); f.hitT = 0; f.mv = 99; f.lastKnown = { x: G.x, y: G.y }; };
+      let hurtClosed = 0, hp = G.hp;
+      for (let k = 0; k < 24; k++) { keepFlee(); fs.doors[d.id] = 1; C.tick(); if (G.hp < hp) hurtClosed++; hp = G.hp = G.hpMax; }
+      fs.doors[d.id] = 2;
+      out.losOpen = LAB.los(g.CUR.fl, fs, spot.B[0], spot.B[1], spot.A[0], spot.A[1]);
+      let hurtOpen = 0, shots = 0, trace = ""; hp = G.hp;
+      const fsnd = LAB.atmos.foeSound;
+      LAB.atmos.foeSound = function (o, kind) { if (o === f && (kind === "shoot" || kind === "attack")) shots++; return fsnd.apply(this, arguments); };
+      try {
+        /* дверь держим открытой: сама она закрывается, когда носитель отошёл */
+        for (let k = 0; k < 24; k++) { keepFlee(); fs.doors[d.id] = 2; C.tick(); trace += (G.hp < hp ? "Х" : f.at === 0 ? "в" : ".") + (k % 6 === 5 ? " " : ""); if (G.hp < hp) hurtOpen++; hp = G.hp = G.hpMax; }
+      } finally { LAB.atmos.foeSound = fsnd; }
+      out.flee = { hurtClosed, hurtOpen, shots, trace, acd: f.acd, type, F: spot.F, still: f.x === spot.B[0] && f.y === spot.B[1] };
+      /* носитель в открытом проёме виден изнутри по диагонали */
+      const diag = [d.x - spot.v[0] + spot.v[1], d.y - spot.v[1] + spot.v[0]];
+      out.doorway = !pass(diag[0], diag[1]) || LAB.los(g.CUR.fl, fs, diag[0], diag[1], d.x, d.y);
+      C.foes().forEach(o => { o.dead = true; });
+    }
+    G.hp = G.hpMax = 100;
+    LAB.ui.closeAll();
+    return out;
+  });
+  ok(kit.weapons === "crowbar,spark" && kit.wi === 1 && kit.full && kit.armor === "suit" && kit.worn && kit.def === 2,
+    "новая игра: монтировка и заряженный бластер «Искра» (выбран), надет защитный комбинезон с защитой 2 (" + kit.weapons + ", защита " + kit.def + ")");
+  ok(/"bandage":1/.test(kit.inv) && /"fieldkit":1/.test(kit.inv) && /"ration":1/.test(kit.inv) && kit.credits === 40 && kit.energy === 0,
+    "в рюкзаке с начала — бинт, походный ремнабор, сухпаёк и 40 кредитов (" + kit.inv + ")");
+  ok(kit.nearMed >= 2 && kit.nearBat >= 2 && !kit.floorSpark, "у капсулы лежат две аптечки и две энергобатареи, оружия и брони на полу нет (" + kit.nearMed + " и " + kit.nearBat + ")");
+  ok(/две аптечки и две энергобатареи/.test(kit.said) && /бластер «Искра»/.test(kit.said), "при пробуждении сказано, что при себе и что лежит у капсулы");
+  ok(kit.safe0 && kit.safeHit.adj && kit.safeHit.outside && kit.safeHit.hurtSafe === 0 && kit.safeHit.entered === 0,
+    "безопасное пробуждение: в капсульном отсеке робот вплотную не бьёт, робот у открытой двери в отсек не входит (" + JSON.stringify(kit.safeHit) + ")");
+  ok(kit.left && kit.leftOnce && kit.fight, "вышли из отсека или сами ранили врага — защита снята, «Эхо» предупреждает; вернулись — её больше нет");
+  ok(kit.mig && kit.migOnce, "прежняя запись без набора получает бластер и комбинезон один раз; найденное не дублируется");
+  ok(kit.crow === "1011" && kit.crowCd === 300, "монтировка бьёт раз в 0,3 секунды — и монтировка из старой записи тоже (" + kit.crow + ", " + kit.crowCd + " мс)");
+  ok(kit.corner && kit.cornerOpen, "взгляд и выстрел не проходят по диагонали между двумя стенами (угол), а мимо одной стены проходят");
+  ok(kit.flee && kit.losClosed === false && kit.losOpen === true && kit.flee.hurtClosed === 0 && kit.flee.hurtOpen >= 1 && kit.flee.shots >= 4 && kit.flee.shots <= Math.ceil(24 / kit.flee.acd) + 1 && kit.doorway,
+    "раненый загнанный робот за закрытой дверью не стреляет; дверь открыта — стреляет, не чаще перезарядки; носитель в проёме виден" + (kit.flee ? " (" + JSON.stringify(kit.flee) + ")" : " (не нашлось двери для проверки)"));
+
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {
     const g = LAB.game, G = g.G, out = { floors: 0, err: [], want: 0 };

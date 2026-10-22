@@ -763,7 +763,7 @@ function tick() {
   if (!f.shiftAt) f.shiftAt = now + rnd(70, 130);
   else if (now >= f.shiftAt) { f.shiftAt = now + Math.max(70, 150 - Math.round(o.heat * 0.7)) + rnd(0, 40); shift(); }
   /* слух ОКО: громкая стрельба — акустические датчики, проверка источника */
-  if (g.noise >= 10 && now - (f.noiseT || -999) > 40) {
+  if (g.noise >= 10 && now - (f.noiseT || -999) > 40 && !(LAB.combat && LAB.combat.wakeSafe && LAB.combat.wakeSafe())) {
     f.noiseT = now;
     if (report("noise", g.x, g.y, "suspect", "выстрелы") && Math.random() < 0.3) speak("check");
   }

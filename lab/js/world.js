@@ -167,6 +167,10 @@ LAB.makeWeapon = function (base, lvl, rank, qual, idHint) {
   w.name = LAB.QUAL[b.g][qual] + " " + b.n + (b.cls === "melee" && base !== "cutter" ? "" : " " + LAB.MODEL[base] + "-" + mark);
   return w;
 };
+/* (2.0) Пауза между выстрелами и ударами — из таблицы оружия, а не из
+   записанного экземпляра: так новая скорость (монтировка — 0,3 с вместо 0,5)
+   доходит и до оружия в прежних сохранениях. */
+LAB.weaponCd = function (w) { var b = w && LAB.WEAPONS[w.base]; return (b && b.cd) || (w && w.cd) || 500; };
 /* Что встречается на этой глубине: чаще — вещи своего блока. */
 function recentPool(table, depthOf, L, skip) {
   var pool = [], recent = [], k;
@@ -802,15 +806,24 @@ function genFloor(seed, L, F, attempt) {
     placeRequirement({ kind: "elevpass", L: L }, r.pick(ez), -1);
   }
 
-  /* 12. Начальное оружие и первый урок. */
+  /* 12. (2.0) Стартовый набор у капсулы: две энергобатареи и две аптечки — в
+     двух шагах от неё, каждая на своей клетке (свой маяк). Бластер и
+     комбинезон теперь сразу у героя (game.js, newState). Прежняя комната
+     находок выбирается, как раньше, и случайных выборов столько же: остальной
+     первый этаж в прежних записях не сдвигается. */
   if (L === 1 && F === 1) {
     var z0 = [];
     for (s = 0; s < NS; s++) if (main[s] && zone[s] === -1 && s !== U) z0.push(s);
-    var ws = z0.length ? r.pick(z0) : U;
-    addItem({ kind: "weapon", w: LAB.makeWeapon("spark", 1, 0, 1, "w_start_spark") }, ws);
-    addItem({ kind: "ammo", ammo: "energy", n: 2 }, ws);
-    addItem({ kind: "armor", a: LAB.makeArmor("suit", 1, 1, "a_start_suit") }, ws);
-    addItem({ kind: "item", item: "medkit_s", n: 1 }, U);
+    if (z0.length) r.pick(z0);
+    var capO = fl.objs.filter(function (o9) { return o9.type === "wake"; })[0];
+    var nearCap = function () {
+      var c9 = [];
+      if (capO && ur) for (var y9 = ur.y0; y9 <= ur.y1; y9++) for (var x9 = ur.x0; x9 <= ur.x1; x9++)
+        if (Math.max(Math.abs(x9 - capO.x), Math.abs(y9 - capO.y)) <= 2 && !objCell[idx(x9, y9)] && !itemCell[idx(x9, y9)]) c9.push([x9, y9]);
+      return c9.length ? r.pick(c9) : null;
+    };
+    [{ kind: "ammo", ammo: "energy", n: 1 }, { kind: "ammo", ammo: "energy", n: 1 }, { kind: "item", item: "medkit_s", n: 1 }, { kind: "item", item: "medkit_s", n: 1 }]
+      .forEach(function (it9) { addItem(it9, U, nearCap()); });
   }
 
   /* 13. Обстановка комнат по их типу. */
@@ -1452,17 +1465,25 @@ LAB.route = function (fl, st, sx, sy, goal, opts) {
 };
 
 /* Прямая видимость по Брезенхэму: стены и закрытые двери заслоняют. */
+/* Клетка закрывает обзор: стена или закрытая дверь (открытая — 2). */
+function losBlock(fl, st, x, y) {
+  var i = idx(x, y), tt = fl.t[i];
+  if (tt === T_WALL) return true;
+  if (tt === T_DOOR) { var d = fl.doorAt[i]; return !(st && st.doors && st.doors[d.id] === 2); }
+  return false;
+}
 LAB.los = function (fl, st, x0, y0, x1, y1) {
   var dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1, err = dx - dy;
   var x = x0, y = y0;
   while (!(x === x1 && y === y1)) {
-    var e2 = 2 * err;
-    if (e2 > -dy) { err -= dy; x += sx; }
-    if (e2 < dx) { err += dx; y += sy; }
+    var e2 = 2 * err, mx = e2 > -dy, my = e2 < dx;
+    /* (2.0) шаг по диагонали между двумя стенами (закрытыми дверями) — это
+       угол: взгляд и выстрел его не огибают, иначе бьют «сквозь угол» */
+    if (mx && my && losBlock(fl, st, x + sx, y) && losBlock(fl, st, x, y + sy)) return false;
+    if (mx) { err -= dy; x += sx; }
+    if (my) { err += dx; y += sy; }
     if (x === x1 && y === y1) break;
-    var i = idx(x, y), tt = fl.t[i];
-    if (tt === T_WALL) return false;
-    if (tt === T_DOOR) { var d = fl.doorAt[i]; if (!(st && st.doors && st.doors[d.id] === 2)) return false; }
+    if (losBlock(fl, st, x, y)) return false;
   }
   return true;
 };
