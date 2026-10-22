@@ -78,6 +78,7 @@ hron/priklyuch170_late.js
 hron/edin175_late.js
 hron/vyhod175_late.js
 hron/fonstrazh175_late.js
+hron/lestboy175_late.js
 hron/zvuk_lufs.py
 hron/lufs175.json
 hron/patch_guide_put165.py

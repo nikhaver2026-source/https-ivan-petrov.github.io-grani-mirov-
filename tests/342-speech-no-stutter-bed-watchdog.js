@@ -12,6 +12,8 @@
    4. Сторож фона: перенос из яруса наверх без выхода из места — фон и
       живой слой яруса сменяются фоном поверхности.
    5. Сторож не вмешивается в бой.
+   6. В бою на лестнице «действие здесь» не заводит марш лестницы с начала
+      на каждое нажатие, а говорит, что сначала надо отбиться.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :: '+JSON.stringify(e):''));
@@ -57,6 +59,16 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const бой=await p.evaluate(()=>{const п0=ФонСтраж.подпись;G.inCombat=true;G.place={kind:"dungeon",name:"проба",bx:1,by:1,depth:2};
   const r=ФонСтраж.проверить("проба");G.inCombat=false;G.place=null;ФонСтраж.подпись=п0;return {r};});
  check('5. в бою сторож фона не вмешивается',бой.r===false,бой);
+
+ /* 6. в бою на лестнице «действие здесь» не заводит марш, а говорит, что сначала — отбиться */
+ const лест=await p.evaluate(()=>{let c=null;for(let x=1000;x<60000&&!c;x+=37)for(let y=1000;y<1400&&!c;y+=41){const cc=cellContent(x,y);if(cc.structure&&PLACE_KIND[cc.structure.type]==="dungeon")c={x,y};}
+  G.place=null;G.x=c.x;G.y=c.y;enterPlace(cellContent(c.x,c.y));while(activeLayer())closeTopUI();if(G.inCombat){safeFn(()=>endCombat());}
+  const на=tileAt(curLevel(),G.place.x,G.place.y);G.flight=null;window.__said=[];if(!Speech.__said0){Speech.__said0=Speech.say.bind(Speech);Speech.say=function(t,o){window.__said.push(String(t));return Speech.__said0(t,o);};}
+  const m=Object.assign({},MONSTERS.find(z=>z.id==="goblin")||MONSTERS[0],{hp:300,dmg:1,lvl:1,xp:5,gold:1});safeFn(()=>startCombat({x:G.x,y:G.y,monster:m}));
+  return {на,бой:!!G.inCombat};});
+ for(let i=0;i<3;i++){await p.keyboard.press("Enter");await p.waitForTimeout(400);}
+ const лест2=await p.evaluate(()=>({бой:!!G.inCombat,марш:!!G.flight,сказано:window.__said.join(" | ").slice(-300)}));
+ check('6. в бою на лестнице марш не начинается и сказано, что сначала — отбиться',лест.на==="<"&&лест.бой&&!лест2.марш&&/В бою по лестнице не уйти/.test(лест2.сказано)&&!/Марш лестницы/.test(лест2.сказано),{лест,лест2});
 
  check('Ошибок страницы нет',errors.length===0,errors.slice(0,3));
  await browser.close();
