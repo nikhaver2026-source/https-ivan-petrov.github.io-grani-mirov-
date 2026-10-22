@@ -191,7 +191,7 @@ const Тайны165={
    safeFn(()=>Actors.stop());safeFn(()=>Scape.stop());
    G.place=null;G.flight=null;
    const x=Math.max(0,Math.min(WORLD_MAX-1,bx+в.dx)),y=Math.max(0,Math.min(WORLD_MAX-1,by+в.dy));G.x=x;G.y=y;
-   safeFn(()=>{const c=cellContent(G.x,G.y);Play.stopKey("amb0");Play.stopKey("amb1");if(settings.effects)Play.start("amb0",(AMB[c.terrain[0]]||["wind"])[0],{loop:true});Weather.resume();Music.start(c.terrain[0]);bankUpdateAmbient();});
+   safeFn(()=>{const c=cellContent(G.x,G.y);ambLayers(c.terrain[0]);Weather.resume();Music.start(c.terrain[0]);bankUpdateAmbient();});
    const d=Math.max(Math.abs(в.dx),Math.abs(в.dy));
    narrate(`Ход долго петляет и выводит наружу: вы выбираетесь из-под замшелой плиты. «${имя}» осталось ${stepWords(d)} ${safeFn(()=>dirAtWord(bx-x,by-y),"позади")}. ${safeFn(()=>cellContent(G.x,G.y).terrain[1],"")}.`,{interrupt:true});
    safeFn(()=>journal(`Тайный ход вывел наружу из «${имя}».`));

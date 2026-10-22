@@ -93,7 +93,7 @@ safeFn(()=>{const d0=defeat;defeat=обёртка165(function(){
   safeFn(()=>{const dx=ц.x-G.x,dy=ц.y-G.y;(Director.st2().q||[]).forEach(q=>{if(q&&q.type==="travel"&&Number.isFinite(q.x)){q.x+=dx;q.y+=dy;}});});
   G.x=ц.x;G.y=ц.y;G.respawn165={x:ц.x,y:ц.y,имя:ц.s.name,день:Number(G.day)||1};
   safeFn(()=>contentCache&&contentCache.delete&&contentCache.delete(ц.x+","+ц.y));
-  safeFn(()=>{const c=cellContent(G.x,G.y);Play.stopKey("amb0");if(settings.effects)Play.start("amb0",(AMB[c.terrain[0]]||["wind"])[0],{loop:true});bankUpdateAmbient();});
+  safeFn(()=>{const c=cellContent(G.x,G.y);ambLayers(c.terrain[0]);bankUpdateAmbient();});
   safeFn(()=>journal(`Очнулись после поражения у поселения: ${ц.s.name}.`));
   safeFn(()=>refresh());safeFn(()=>saveGame(true));}
  return r;},d0);});

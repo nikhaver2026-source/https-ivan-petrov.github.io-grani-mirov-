@@ -4424,9 +4424,9 @@ const Speech={voice:null,keepAlive:null,
     подключается сам; в приложениях для Windows и Android его ставят один раз
     (настройки, «Синтезатор», «Голосовой пакет»), и приложение отдаёт его по
     тому же адресу sounds/gvoice_pack/. Нет пакета — звучит то, что вшито. */
- GVOICES:{m:{url:"sounds/gvoice/bank_28.js",dir:"sounds/gvoice/",glob:"GVOICE_BANK",map:null,state:"off",
+ GVOICES:{m:{url:"sounds/gvoice/bank_30.js",dir:"sounds/gvoice/",glob:"GVOICE_BANK",map:null,state:"off",
    pack:{url:"sounds/gvoice_pack/m/bank.js",dir:"sounds/gvoice_pack/m/",glob:"GVOICE_PACK_M",map:null,state:"off"}},
-  f:{url:"sounds/gvoice_f/bank_f28.js",dir:"sounds/gvoice_f/",glob:"GVOICE_BANK_F",map:null,state:"off",
+  f:{url:"sounds/gvoice_f/bank_f30.js",dir:"sounds/gvoice_f/",glob:"GVOICE_BANK_F",map:null,state:"off",
    pack:{url:"sounds/gvoice_pack/f/bank.js",dir:"sounds/gvoice_pack/f/",glob:"GVOICE_PACK_F",map:null,state:"off"}},
   /* (9.5.1) Вестник — свой голос для достижений и событий (Zephyr). Пока его
      опись не записана (GV_HERALD_ON), вести звучат выбранным голосом. */
@@ -4468,7 +4468,8 @@ const Speech={voice:null,keepAlive:null,
   const готово=()=>{const j=window[g.glob];
    if(j&&j.p){g.map=j.p;g.state="ready";
     /* Первые пункты, которые слышат чаще всего, готовятся заранее. */
-    (j.top||[]).slice(0,12).forEach(id=>{try{const a=new Audio(g.dir+id+".flac");a.preload="auto";a.load();}catch(_){}});}
+    /* (17.5) прогрев кэша — запросом, без плеера: двенадцать плееров разом на телефоне — двенадцать системных плееров */
+    (j.top||[]).slice(0,12).forEach(id=>{try{if(typeof fetch==="function"&&/^https?:$/.test(location.protocol))fetch(g.dir+id+".flac").catch(()=>{});}catch(_){}});}
    else g.state="failed";};
   if(window[g.glob]){готово();return g;}
   try{const sc=document.createElement("script");sc.src=g.url;sc.async=true;
@@ -4602,7 +4603,12 @@ const Speech={voice:null,keepAlive:null,
   const стоп=()=>{const a=эл;эл=null;if(a){try{a.onended=null;a.onerror=null;a.pause();}catch(_){}}};
   const аудио=url=>{let a=пул.get(url);
    if(a){пул.delete(url);пул.set(url,a);return a;}
-   a=Плееры.взять(url);a.preload="auto";пул.set(url,a);
+   /* (17.5) Пул полон — самый давний плеер (не тот, что звучит) берёт новую запись, а не уходит на свалку: голос
+      держит не больше восьми плееров на всю игру, а не заводит новый на каждый кусок фразы. */
+   if(пул.size>=8)for(const [k,v] of пул){if(v===эл)continue;пул.delete(k);
+    try{v.onended=null;v.onerror=null;v.__stopped=true;v.pause();v.__stopped=false;v.loop=false;v.muted=false;v.src=url;a=v;}catch(_){a=null;}
+    break;}
+   if(!a)a=Плееры.взять(url);a.preload="auto";пул.set(url,a);
    /* Плееров немного: на Android число живых медиаплееров ограничено, а
       звуки мира держат свои. Вытесненный плеер отпускает запись. */
    /* Было 24: при быстром листании пул заполнялся за секунды, и вместе со
@@ -4794,7 +4800,7 @@ const Speech={voice:null,keepAlive:null,
      const следующий=()=>{if(мой!==ток)return;
       if(k>=куски.length){стоп();идёт=false;if(o.onend)o.onend();return;}
       const w=готов||синт(куски[k]);готов=null;k++;if(!w){следующий();return;}
-      const a=(self._плеер&&self._открыто&&self._открыто.плеер)?self._плеер:new Audio();
+      const a=(self._плеер&&self._открыто&&self._открыто.плеер)?self._плеер:(self._плеерЕ||(self._плеерЕ=new Audio()));
       if(ссылка){try{URL.revokeObjectURL(ссылка);}catch(_){}}ссылка=URL.createObjectURL(w);эл=a;
       a.onended=()=>{if(мой!==ток||эл!==a)return;следующий();};
       a.onerror=()=>{if(мой!==ток||эл!==a)return;следующий();};
@@ -4806,7 +4812,7 @@ const Speech={voice:null,keepAlive:null,
     let wav=null;try{wav=ESpeak.wav(String(text),self.synthRate(),self.synthVolume(o.volume),пол);}catch(_){wav=null;}
     if(!wav)return запас?запас.speak(text,o):false;
     идёт=true;
-    const a=(self._плеер&&self._открыто&&self._открыто.плеер)?self._плеер:new Audio();
+    const a=(self._плеер&&self._открыто&&self._открыто.плеер)?self._плеер:(self._плеерЕ||(self._плеерЕ=new Audio()));
     ссылка=URL.createObjectURL(wav);эл=a;
     const конец=()=>{if(мой!==ток||эл!==a)return;стоп();идёт=false;if(o.onend)o.onend();};
     a.onended=конец;a.onerror=()=>{if(мой!==ток||эл!==a)return;стоп();идёт=false;if(o.onerror)o.onerror();};
@@ -6360,6 +6366,47 @@ const LIVE_INSTEAD={
 const LIVE_LOOP={forest:"amb_forest",birds:"amb_plains",wind:"amb_wind",
  sea:"sea_open",cave:"amb_cave",crickets:"amb_night",stream:"amb_water",
  rain:"amb_rain",swamp:"amb_swamp"};
+/* ── (17.5) СТАРЫЕ СЛОИ МЕСТНОСТИ ──
+   Слои amb0 и amb1 остались от поры, когда фон рисовался синтезом. С записями их заводили одиннадцать мест игры
+   поверх фона места (bankUpdateAmbient, канал «place»): равнина и лес звучали одной записью дважды, горы и топи —
+   двумя-тремя фонами разом, а каждая смена местности гасила слой и заводила заново. Теперь фоном местности ведает
+   одно место — канал «place»; слои остались только запасом для игры совсем без записей.
+   terr — местность (null — только снять слои). */
+function ambLayers(terr){
+ safeFn(()=>{Play.stopKey("amb0");Play.stopKey("amb1");});
+ if(!terr||!settings.effects||safeFn(()=>Bank.enabled,false))return;
+ const a=(G.dark?(DARK_AMB[terr]||["wind"]):AMB[terr])||["wind"];
+ Play.start("amb0",a[0],{loop:true});if(a[1])Play.start("amb1",a[1],{loop:true});}
+/* ── (17.5) МЕСТНОСТЬ ДЛЯ ФОНА И МУЗЫКИ ──
+   Идущий по краю дороги и поля или вдоль опушки менял местность на каждом шаге, и на каждом шаге гасли и заново
+   заводились музыка, фон места, живой слой и фон звуковой картины — «звук глючит, включается и не работает».
+   Теперь фон и музыка поверхности идут по устоявшейся местности: новая вступает, когда герой прошёл по ней три
+   шага подряд или пробыл на ней три секунды. Прыжок — выход из постройки, причал, перенос — сразу. */
+const Местность={т:null,канд:null,n:0,x:0,y:0,таймер:null,ШАГОВ:3,МС:3000,
+ сырая(c){return c&&c.terrain?c.terrain[0]:null;},
+ /* рядом — в пределах пяти клеток: шаг верхом и полёт (до четырёх клеток) — ещё шаг, а не прыжок */
+ рядом(){return Math.max(Math.abs((G.x|0)-this.x),Math.abs((G.y|0)-this.y))<=5;},
+ /* шаг по поверхности (arrive): true — устоявшаяся местность сменилась */
+ шаг(c){const r=this.сырая(c);if(!r)return false;
+  const прыжок=!this.рядом();this.x=G.x|0;this.y=G.y|0;
+  if(!this.т||прыжок){const было=this.т;this.уст(r);return было!==r;}
+  if(r===this.т){this.уст(r);return false;}
+  if(r!==this.канд){this.канд=r;this.n=0;if(this.таймер)clearTimeout(this.таймер);
+   this.таймер=setTimeout(()=>{this.таймер=null;safeFn(()=>this.дождался());},this.МС);}
+  if(++this.n>=this.ШАГОВ){this.уст(r);return true;}
+  return false;},
+ уст(r){this.т=r;this.канд=null;this.n=0;if(this.таймер){clearTimeout(this.таймер);this.таймер=null;}},
+ /* герой постоял на новой местности — она вступает и без шагов */
+ дождался(){const к=this.канд;if(!к||G.place||G.ship||G.inCombat||!this.рядом())return;
+  if(!safeFn(()=>gameActive(),true))return;
+  if(this.сырая(safeFn(()=>cellContent(G.x,G.y),null))!==к)return;
+  this.уст(к);ambLayers(к);Music.start(к);safeFn(()=>bankUpdateAmbient());},
+ /* местность, по которой звучат фон и музыка здесь и сейчас */
+ тек(c){c=c||safeFn(()=>cellContent(G.x,G.y),null);const r=this.сырая(c);
+  if(!this.т||G.place||G.ship||!this.рядом())return r;
+  return this.т;},
+ /* край местности: под ногами уже другая, но она ещё не устоялась */
+ ждёт(){return !!this.канд&&!G.place&&!G.ship&&this.рядом();}};
 /* Живая запись вместо рисованной сцены. Возвращает «нет», если банк молчит,
    и только тогда зовущий имеет право вернуться к синтезу. */
 function liveInstead(id,opts){
@@ -18461,6 +18508,17 @@ const Bank={
   }catch(e){if(this.plays===0)this.enabled=false;return null;}},
  /* Остановить запись так, чтобы это не считалось ошибкой загрузки. */
  kill(el){try{if(!el)return;el.__stopped=true;el.pause();el.removeAttribute("src");el.load();}catch(_){}},
+ /* (17.5) Плеер, доигравший свою часть бесшовной петли, не выбрасывается, а ждёт следующего стыка той же петли:
+    петля держит два плеера на всё время, а не заводит новый на каждом стыке (на телефоне новый плеер — это сеть,
+    разбор записи и система звука; в местах с короткими фонами их заводились десятки). Звук из памяти
+    (ЗвукИзПамяти) плеера не держит — его просто отпускаем. */
+ _запас(rec,el){if(!el)return;if(el.__память||rec.запас){this.kill(el);return;}
+  try{el.__stopped=true;el.pause();}catch(_){this.kill(el);return;}rec.запас=el;},
+ _снова(rec,f,v){const el=rec.запас;if(!el)return null;rec.запас=null;
+  try{const url=this.url(f);el.__stopped=false;el.loop=false;el.muted=false;el.volume=Math.max(0,Math.min(1,v));
+   if(el.getAttribute("src")!==url)el.src=url;else el.currentTime=0;
+   Звук.играть(el,"петля");return el;}
+  catch(_){this.kill(el);return null;}},
  /* Фон места: один канал — одна непрерывная запись.
     ── ТЕМА ИЗ НЕСКОЛЬКИХ ЗАПИСЕЙ ──
     У города, равнины или таверны тем бывает две-четыре, и из разных игр.
@@ -18486,6 +18544,10 @@ const Bank={
   if(cur&&(cur.file===file||cur.role===role)){
    cur.gain=base*(музыка?musicFileGain(cur.file):1);cur.base=base;cur.kind=kind;
    if(!cur.fading)cur.el.volume=Math.max(0,Math.min(1,this.vol(kind)*cur.gain));return cur.el;}
+  /* (17.5) Та же петля уже звучит другим каналом фона (место, живой слой, звуковая картина, погода) — второй копии
+     не заводим: прежде пустыня звучала одной записью дважды (фон места и фон звуковой картины). */
+  const фон=к=>к==="place"||к==="live"||к==="scape"||/^слой:/.test(к);
+  if(!музыка&&фон(channel))for(const [к,r] of this.loops)if(к!==channel&&фон(к)&&r&&r.role===role&&r.el){this.stop(channel);return r.el;}
   this.stop(channel);
   /* Фон места, голос местности, погода — бесшовная петля (см. ниже). */
   if(this.chanOf(kind)!=="music")return this._seamless(channel,role,file,g,kind);
@@ -18508,7 +18570,7 @@ const Bank={
    el.addEventListener("ended",next,{once:true});}
   return el;},
  stop(channel){const cur=this.loops.get(channel);
-  if(cur){this.kill(cur.el);if(cur.el2)this.kill(cur.el2);
+  if(cur){this.kill(cur.el);if(cur.el2)this.kill(cur.el2);if(cur.запас){this.kill(cur.запас);cur.запас=null;}
    clearInterval(cur.timer);clearTimeout(cur.fx);cur.el2=null;}
   this.loops.delete(channel);},
  /* ── БЕСШОВНАЯ ПЕТЛЯ ──
@@ -18531,7 +18593,7 @@ const Bank={
   const rec={el:null,el2:null,file,gain:g,kind,role,seamless:true,timer:null,fx:null,fading:false,seams:0,paused:false};
   const vol=()=>Math.max(0,Math.min(1,this.vol(rec.kind)*rec.gain));
   const заводи=(f,v)=>{
-   const el=this.make(f,v,false);if(!el)return null;
+   const el=this._снова(rec,f,v)||this.make(f,v,false);if(!el)return null;
    const [lead]=this._edge(f);
    if(lead>0.05){const сдвиг=()=>{try{el.currentTime=lead;}catch(_){}};
     if(el.readyState>=1)сдвиг();else el.addEventListener("loadedmetadata",сдвиг,{once:true});}
@@ -18561,10 +18623,11 @@ const Bank={
     const k=Math.min(1,(Date.now()-t0)/длина),v=vol();
     try{el.volume=Math.max(0,Math.cos(k*Math.PI/2)*v);ne.volume=Math.max(0,Math.sin(k*Math.PI/2)*v);}catch(_){}
     if(k<1){rec.fx=setTimeout(шаг,40);return;}
-    this.kill(el);rec.el=ne;rec.el2=null;rec.file=nf;rec.fading=false;};
+    this._запас(rec,el);rec.el=ne;rec.el2=null;rec.file=nf;rec.fading=false;};
    шаг();
    safeFn(()=>{if(typeof this.onSeam==="function")this.onSeam(channel,role,rec);});};
-  rec.timer=setInterval(()=>safeFn(тик),100);
+  /* (17.5) все петли — по общему такту (Такт): одно пробуждение на все, а не свой таймер у каждой */
+  rec.timer=Такт.каждые(100,()=>safeFn(тик),"петля "+channel);
   return rec.el;},
  stopAll(){[...this.loops.keys()].forEach(k=>this.stop(k));
   this.shots.forEach(a=>this.kill(a));this.shots=[];safeFn(()=>Voices.stopAll());},
@@ -20336,7 +20399,10 @@ function bankAmbientRole(){
   const стан=campBed(c);if(стан)return стан;
   if(c.structure&&c.structure.type==="port")return Bank.has("bed_port")?"bed_port":"hall_port";
   return {forest:"amb_forest",mountains:"amb_mountain",desert:"amb_desert",swamp:"amb_swamp",
-   plains:"amb_plains",road:"amb_road",coast:"sea_calm",cave:"deep_wind"}[c.terrain[0]]||"amb_plains";
+   plains:"amb_plains",road:"amb_road",coast:"sea_calm",cave:"deep_wind"}[Местность.тек(c)]
+   /* (17.5) Тёмные земли: пепел и шрам — ветер, кость, зеркало и жила — пещерный гул, гниль — топь, утопь —
+      вода. Прежде они звучали равниной, и это прикрывал старый слой местности. */
+   ||((typeof DARK_AMB!=="undefined"&&DARK_AMB[Местность.тек(c)])?LIVE_LOOP[DARK_AMB[Местность.тек(c)][0]]:null)||"amb_plains";
  }catch(_){return "amb_plains";}
 }
 /* Фон обновляется при каждом переходе: земля, город, глубина, палуба корабля. */
@@ -20624,9 +20690,12 @@ function liveAmbient(seed){
   else if(p||safeFn(()=>campBed(cellContent(G.x,G.y)),null)){Bank.stop("live");return;}
   else if(G.ship)role=pick(["sky_wave","ad_wave_rocky"]);
   else{
-   const t=cellContent(G.x,G.y).terrain[0];
+   const t=Местность.тек();
    if(G.weather==="Гроза")role="sky_thunder";
-   else if(G.weather==="Дождь")role=pick(["wild_rain","ad_rain_long","oc_rain"]);
+   /* (17.5) Дождь уже звучит слоем погоды (Weather, канал «слой:w1»): второй дождь поверх — лишний плеер и каша.
+      У ливня своей петли погоды нет — его долгий шум идёт живым слоем. */
+   else if(G.weather==="Дождь"&&!safeFn(()=>Weather.hushed,false)){Bank.stop("live");return;}
+   else if(G.weather==="Ливень")role=pick(["ad_rain_long","wild_rain","oc_rain"]);
    else if(isNight())role=t==="forest"?"wild_owl":(t==="desert"?"lug_desert":"wild_raven");
    else role=pick(LIVE_AMB_LAND[t]||LIVE_AMB_LAND.plains);}
   if(role)Bank.loop("live",role,{seed:Number(seed)||0,gain:p&&p.depth>0?0.6:0.32,kind:"ambient"});
@@ -21385,7 +21454,7 @@ function boardShip(i){
   legs:sh.legs,left:safeFn(()=>mountSeaCut(sh.legs),sh.legs),leg:0,war:sh.war,storm:false,fare:sh.fare};
  const m=document.getElementById("modal-harbor");if(m&&!m.hidden)safeFn(()=>closeModal(m));
  safeFn(()=>{beacon("port_horn",0,0);Bank.play("ship_depart",{seed:sh.tox,gain:0.8,maxSec:8});});
- safeFn(()=>{Play.stopKey("amb0");Play.stopKey("amb1");Bank.stop("live");Music.start("coast");bankUpdateAmbient();});
+ safeFn(()=>{ambLayers(null);Bank.stop("live");Music.start("coast");bankUpdateAmbient();});
  G.hour+=1;if(G.hour>=24){G.hour-=24;G.day++;}
  narrate(`Вы на борту: ${sh.name}, курс на «${sh.toName}». Переходов до порта: ${sh.legs}. Груза в трюме ${load} из ${hold}. Свайп в любую сторону — идти дальше, свайп двумя пальцами вверх — сколько до порта.`);
  journal(`Отплытие: ${sh.name} в ${sh.toName}.`);
@@ -21435,7 +21504,7 @@ function arriveShip(){
  G.ship=null;
  safeFn(()=>{beacon("port_horn",0,0);Bank.play("ship_arrive",{seed:G.x,gain:0.8,maxSec:8});});
  safeFn(()=>{const c=cellContent(G.x,G.y);
-  Play.stopKey("amb0");if(settings.effects)Play.start("amb0",(AMB[c.terrain[0]]||["sea"])[0],{loop:true});
+  ambLayers(c.terrain[0]);
   Music.start(c.terrain[0]);bankUpdateAmbient();});
  narrate(`Швартовка: «${name}». Сходни спущены, вы на берегу. Порт торгует по своим ценам — загляните к торговцу.`);
  journal(`Прибытие морем: ${name}.`);
@@ -41486,8 +41555,7 @@ function leavePlace(){
  G.place=null;
  safeFn(()=>UI.close());
  const c=cellContent(G.x,G.y);
- safeFn(()=>{Play.stopKey("amb0");Play.stopKey("amb1");
-  if(settings.effects)Play.start("amb0",(AMB[c.terrain[0]]||["wind"])[0],{loop:true});
+ safeFn(()=>{ambLayers(c.terrain[0]);
   Weather.resume();Music.start(c.terrain[0]);bankUpdateAmbient();});
  narrate(`Вы вышли наружу: ${name} остаётся позади. ${c.terrain[1]}, ${c.empire.name}.`,{cat:"result"});
  refresh();saveGame(true);
@@ -42676,7 +42744,12 @@ const Scape={
     kind==="mountain"?"amb_wind":
     kind==="field"?(ночь?"amb_night":"amb_day"):null;
    const key=role?kind+":"+role+":"+(ночь?"n":"d"):null;
-   if(key===this.bedKind)return;
+   /* (17.5) Край местности: под ногами уже другая, но она ещё не устоялась (Местность) — фон не дёргаем. */
+   if(this.bedKind&&safeFn(()=>Местность.ждёт(),false))return;
+   /* Та же петля уже звучит другим каналом (Bank.loop второй копии не заводит) — канал картины пуст, и фон
+      картины заведётся на ближайшем ударе часов, когда та петля смолкнет. Капель под землёй — места свода
+      (Drips), а не петля: её не просим каждый удар. */
+   if(key===this.bedKind&&(!role||role==="cave_leak"||!Bank.has(role)||Bank.loops.has("scape")))return;
    this.bedKind=key;
    if(!role){Bank.stop("scape");return;}
    Bank.loop("scape",role,{seed:G.x+G.y,gain:0.20,kind:"fx"});
@@ -45133,7 +45206,8 @@ function move(dir){
   for(const k in G.depleted){if(G.depleted[k].day<G.day)delete G.depleted[k];}}
  if(settings.effects)stepSound();
  safeFn(()=>Tutor.note("move:"+dir));
- if(Math.random()<0.2){const w=rollWeather();if(w!==G.weather){G.weather=w;Weather.set(w);
+ /* (17.5) погода держится не меньше четырёх минут (Weather.ПОКОЙ): прежде она менялась каждые несколько шагов */
+ if(Math.random()<0.2&&Date.now()-(Number(Weather.сменаВ)||0)>=Weather.ПОКОЙ){const w=rollWeather();if(w!==G.weather){G.weather=w;Weather.set(w);Weather.сменаВ=Date.now();
    safeFn(()=>Bank.play("sky_gust",{seed:G.day,gain:0.45,maxSec:5}));}}
  arrive(dir);}
 /* ════════════════════════════════════════════════════════════════════════
@@ -45893,23 +45967,23 @@ const borderCue={horn:0,voice:{}};
 function arrive(dir){
  const c=cellContent(G.x,G.y);
  const terrChanged=!lastArrive||lastArrive.terrain[0]!==c.terrain[0];
+ /* (17.5) Фон и музыка поверхности — по устоявшейся местности (Местность): на краю дороги и поля они не
+    переключаются на каждом шаге. */
+ const фонСменился=Местность.шаг(c);
  if(terrChanged||!lastArrive||lastEmp!==c.empire.name){
-  Play.stopKey("amb0");Play.stopKey("amb1");
-  const a=(G.dark?(DARK_AMB[c.terrain[0]]||["wind"]):AMB[c.terrain[0]])||["wind"];
-  if(settings.effects){Play.start("amb0",a[0],{loop:true});
-   if(a[1])Play.start("amb1",a[1],{loop:true});}
   /* У каждой местности свой живой голос поверх ровного фона: лес отвечает
      птицами, топи — бульканьем, берег — накатом, пещера — сквозняком, горы —
      ветром, пустыня — сухим ветром и зноем, равнина — днём в поле, тракт —
      гравием. Ни маримбы, ни калимбы, ни тома: только записи самих мест. */
-  if(terrChanged)safeFn(()=>{const v={forest:"wild_birds",swamp:"amb_swamp",
+  if(фонСменился)safeFn(()=>{const v={forest:"wild_birds",swamp:"amb_swamp",
    coast:"sky_wave",cave:"deep_wind",mountains:"sky_wind",desert:"lug_desert",
-   plains:"ad_day",road:"tread_gravel"}[c.terrain[0]];
+   plains:"ad_day",road:"tread_gravel"}[Местность.тек(c)];
    if(v)setTimeout(()=>safeFn(()=>Bank.play(v,{seed:G.x+G.y,gain:0.45,maxSec:6})),400);});
   /* (5.0) Новая местность — герой отзывается: удивлён, насторожен, рад. */
   if(terrChanged&&lastArrive&&!G.inCombat)setTimeout(()=>safeFn(()=>СловоГероя.местность(c.terrain[0])),900);
   const empChanged=lastEmp!==c.empire.name;
-  Music.start(c.terrain[0]);safeFn(()=>bankUpdateAmbient());lastEmp=c.empire.name;
+  if(фонСменился||empChanged||!lastArrive){const т=Местность.тек(c);ambLayers(т);Music.start(т);safeFn(()=>bankUpdateAmbient());}
+  lastEmp=c.empire.name;
   /* Пересекая границу, игрок узнаёт, чья это земля, чьи народы её населяют,
      кому здесь молятся и с кем эта держава воюет. */
   /* Пересечение границы объявляется окликом заставы — не чаще раза в
@@ -45928,6 +46002,8 @@ function arrive(dir){
    const w=warsAt(G.day).filter(x=>x.a===i||x.b===i);
    narrate(`Земли: ${e.name}. Народы: ${(e.races||[e.race]).slice(0,4).join(", ")}. Здесь чтут: ${g?g.n:"разных богов"}. `+
     (w.length?`Идёт война с державами: ${w.map(x=>EMPIRES[x.a===i?x.b:x.a].short).join(", ")}.`:"Держава ни с кем не воюет."),{interrupt:false});});}
+ /* местность устоялась шагом по ней же — фон и музыка сменяются теперь */
+ else if(фонСменился){const т=Местность.тек(c);ambLayers(т);Music.start(т);safeFn(()=>bankUpdateAmbient());}
  safeFn(()=>ДальнийКруг.шаг(c));
  lastArrive=c;
  /* Область и великий лес объявляются на входе, не чаще смены. */
@@ -46377,6 +46453,7 @@ function rollWeather(){
  for(const k of ключи){б-=веса[k];if(б<=0)return k;}
  return ключи[ключи.length-1];}
 const Weather={cur:null,timer:null,
+ ПОКОЙ:240000,сменаВ:0,
  set(w){this.clear();this.cur=w;safeFn(()=>deed("weathers"));
   /* Живая запись поверх синтеза: погода перестала быть ровным шумом. */
   safeFn(()=>{const r={"Дождь":"stk_rain","Ливень":"stk_rain","Гроза":"sky_gust","Туман":"amb_wind",
@@ -46437,7 +46514,7 @@ function openSky(){
 function skyLayers(){
  try{
   if(openSky()){Weather.resume();return true;}
-  Play.stopKey("amb0");Play.stopKey("amb1");Weather.hush();
+  ambLayers(null);Weather.hush();
   return false;
  }catch(_){return false;}}
 
@@ -47800,8 +47877,7 @@ function defeat(){const павший=G.combat&&G.combat.m;safeFn(()=>Director.on
  if(G.fishing)G.fishing.active=false;
  safeFn(()=>stopRun());
  safeFn(()=>{while(activeLayer())closeTopUI();});
- safeFn(()=>{const c=cellContent(G.x,G.y);Play.stopKey("amb0");Play.stopKey("amb1");
-  if(settings.effects)Play.start("amb0",(AMB[c.terrain[0]]||["wind"])[0],{loop:true});
+ safeFn(()=>{const c=cellContent(G.x,G.y);ambLayers(c.terrain[0]);
   bankUpdateAmbient();});
  /* Милость Мортаны Тихой: поражение обходится дешевле её последователям. */
  const mercy=Math.min(0.09,0.03*fxLevel("mercy"));
@@ -77151,7 +77227,7 @@ function applySave(raw,whence){
    narrate(`Вы вернулись: ${placeTitle()}. ${describeHere(true)} Уровень ${G.level}.`);
    safeFn(()=>pingSurroundings(3,3));refresh();return;}
   const c=cellContent(G.x,G.y);
-  safeFn(()=>{Play.start("amb0",(AMB[c.terrain[0]]||["wind"])[0],{loop:true});
+  safeFn(()=>{ambLayers(c.terrain[0]);
    Music.start(c.terrain[0]);bankUpdateAmbient();});
   narrate(`Вы вернулись: ${c.terrain[1]}, ${c.empire.name}. Уровень ${G.level}.`);refresh();},600);
  return true;
@@ -77549,7 +77625,7 @@ function enterGame(){if(entered){showScreen("screen-game");normalizeWeaponState(
  safeFn(()=>Clock.resume());safeFn(()=>{Clock.last=Date.now();});
  G.weather=rollWeather();Weather.set(G.weather);
  const c=cellContent(G.x,G.y);
- if(settings.effects&&openSky()&&!G.place)Play.start("amb0",(AMB[c.terrain[0]]||["wind"])[0],{loop:true});
+ if(openSky()&&!G.place)ambLayers(c.terrain[0]);
  /* Сохранение могло застать героя в подземелье: тема — по месту, а не по местности наверху. */
  Music.start(locationMusicKey());safeFn(()=>bankUpdateAmbient());lastEmp=c.empire.name;lastArrive=c;
  narrate(`Вы вошли в мир. ${c.terrain[1]}, ${c.empire.name}. Погода: ${G.weather}. ${isDesktopApp()?"Управление: стрелки — шаг, Shift со стрелкой — бег, E — действие, I — инвентарь, Tab — карта, M или Esc — меню, Shift+F1 — все клавиши.":"Управление: свайп — шаг, свайп и удержание — бег, свайп тремя пальцами вверх — меню действий, касание двумя пальцами — собрать ресурс."}`);
