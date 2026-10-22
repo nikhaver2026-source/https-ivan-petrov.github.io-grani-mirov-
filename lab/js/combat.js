@@ -34,7 +34,7 @@ var hold = null;
 var reloadUntil = 0, lastShot = 0, lastEmpty = 0, lastHurtSay = 0, lastSpot = 0;
 var hpMark = 100;
 var graceT = 0, dangerT = 0, calmT = 0;
-/* (2.0) Безопасное пробуждение: в новой игре, пока носитель в капсульном
+/* (2.1) Безопасное пробуждение: в новой игре, пока носитель в капсульном
    отсеке первого этажа (до первого выхода из него), враги его не видят и не
    слышат, не бьют и в отсек не заходят — есть время собраться. Вышел из
    отсека или сам ранил врага — защита снята, «Эхо» предупреждает. */
@@ -224,7 +224,7 @@ function detOf(f) {
   return Math.max(2, d);
 }
 function sees(f) {
-  if (safeHero) return false; /* (2.0) безопасное пробуждение */
+  if (safeHero) return false; /* (2.1) безопасное пробуждение */
   if (f.blindT > 0) return false; /* сенсорная помеха ослепила */
   if (G().st.mimicT > 0 && f.kind === "mech") return false; /* (2.0) мимикрия: машины принимают за свою */
   /* «тепло»: твари «Колыбели» чуют тепло тела — маскировка их не обманывает, а слепые видят его вблизи */
@@ -235,7 +235,7 @@ function sees(f) {
   return losTo(f);
 }
 function hears(f) {
-  if (safeHero) return false; /* (2.0) безопасное пробуждение */
+  if (safeHero) return false; /* (2.1) безопасное пробуждение */
   if (f.deafT > 0) return false; /* (1.5) оглушён ловушкой */
   var n = G().noise;
   if (gm().armorSpecial("stealth")) n = Math.round(n * 0.6);
@@ -281,7 +281,7 @@ function occupied(x, y, self) {
 function canStand(f, x, y) {
   var fl = CUR().fl;
   if (!LAB.inb(x, y)) return false;
-  if (f && !f.ally && inSafeRoom(x, y)) return false; /* (2.0) капсульный отсек при пробуждении: враги в него не входят */
+  if (f && !f.ally && inSafeRoom(x, y)) return false; /* (2.1) капсульный отсек при пробуждении: враги в него не входят */
   var t = fl.t[idx(x, y)];
   if (t === LAB.T.WALL) return false;
   if (t === LAB.T.DOOR) { var d = fl.doorAt[idx(x, y)]; if (CUR().fs.doors[d.id] !== 2) return false; }
@@ -341,7 +341,7 @@ function stepToward(f, tx, ty, opts) {
   return true;
 }
 function moveFoe(f, nx, ny) {
-  if (inSafeRoom(nx, ny) && !f.ally) return; /* (2.0) в капсульный отсек при пробуждении не входят */
+  if (inSafeRoom(nx, ny) && !f.ally) return; /* (2.1) в капсульный отсек при пробуждении не входят */
   var px = f.x, py = f.y;
   f.x = nx; f.y = ny;
   var r = CUR().fl.room[idx(nx, ny)];
@@ -515,7 +515,7 @@ function camDirs(f) {
   return f.camDirs;
 }
 function camSees(f, extra) {
-  if (safeHero) return false; /* (2.0) безопасное пробуждение */
+  if (safeHero) return false; /* (2.1) безопасное пробуждение */
   var g = G(), v = DIRV[camDirs(f)[f.camI]], dx = g.x - f.x, dy = g.y - f.y;
   var along = dx * v[0] + dy * v[1], perp = Math.abs(dx * v[1] - dy * v[0]);
   var range = detOf(f) - (g.event === "dark" ? 3 : 0) + (extra || 0);
@@ -1102,7 +1102,7 @@ function search(f, p) {
 }
 function scream(f) {
   A("foeSound", f, "alert");
-  /* (2.0) за стеной и закрытой дверью визг слышен глухо: слух не глушит, не ранит */
+  /* (2.1) за стеной и закрытой дверью визг слышен глухо: слух не глушит, не ранит */
   if (!losTo(f)) return;
   if (gm().armorSpecial("sonicguard")) { sayOnce("scrG", "Визг — защита слуха гасит его.", 6000); return; }
   G().st.deaf = 6;
@@ -1282,7 +1282,7 @@ function foeTick(f, spotted) {
     return;
   }
   if (f.state === "flee") {
-    /* (2.0) загнанный в угол бьёт, только если видит носителя, и не чаще своей
+    /* (2.1) загнанный в угол бьёт, только если видит носителя, и не чаще своей
        перезарядки (прежде — каждый такт и сквозь стену) */
     if (canMove) { f.mv = 0; if (!stepAway(f) && canAct && d <= Math.max(1, f.rng) && (d <= 1 || see)) { f.at = 0; attack(f, true); } }
     return;
@@ -1308,7 +1308,7 @@ function foeTick(f, spotted) {
   var punish = iq >= 7 && Date.now() < reloadUntil;
   if (has(f, "indirect")) {
     /* мортира: навесом туда, где слышала героя, — поверх ящиков и машин, но
-       (2.0) не сквозь стену и закрытую дверь: стены комплекса до потолка */
+       (2.1) не сквозь стену и закрытую дверь: стены комплекса до потолка */
     var mt = f.lastKnown, mClear = !!mt && LAB.los(CUR().fl, CUR().fs, f.x, f.y, mt.x, mt.y);
     if (canAct && mt && d <= f.rng && mClear) { f.at = 0; mortarShell(f, mt.x, mt.y); return; }
     if (canMove && d < 3) { f.mv = 0; stepAway(f); return; }
@@ -1435,12 +1435,12 @@ function attack(f, seen) {
   var g = G();
   var d = dist(f, heroPos());
   var ranged = d > 1;
-  /* (2.0) сквозь стену и закрытую дверь не бьёт никто: издалека — только по
+  /* (2.1) сквозь стену и закрытую дверь не бьёт никто: издалека — только по
      прямой видимости (вплотную — соседняя клетка, стены между ними не бывает).
      Закрытую дверь машина сначала открывает (stepToward), а стреляет уже в
      открытый проём; носитель в проёме виден с обеих сторон. */
   if (ranged && !losTo(f)) { f.aim = false; return; }
-  if (safeHero) { f.aim = false; return; } /* (2.0) безопасное пробуждение */
+  if (safeHero) { f.aim = false; return; } /* (2.1) безопасное пробуждение */
   /* только что вошли на этаж: враг наводится, но не бьёт */
   if (tickN < graceT) { A("foeSound", f, ranged ? "aim" : "alert"); return; }
   A("foeSound", f, ranged ? "shoot" : "attack");
@@ -1548,7 +1548,7 @@ function shellsTick() {
     if (G().dead) return;
   }
 }
-/* (2.0) Взрыв и разрыв задевают только тех, кого от них не закрывает стена
+/* (2.1) Взрыв и разрыв задевают только тех, кого от них не закрывает стена
    или закрытая дверь. */
 function clearTo(x, y, tx, ty) { return LAB.los(CUR().fl, CUR().fs, x, y, tx, ty); }
 function explode(f, r, dmg, adt) {
@@ -1769,7 +1769,7 @@ function wake(f) {
 function damageFoe(f, raw, dt, o) {
   o = o || {};
   if (f.dead || f.burrowed) return false;
-  if (G().wakeSafe && !f.ally) endWakeSafe("fight"); /* (2.0) сам начал бой */
+  if (G().wakeSafe && !f.ally) endWakeSafe("fight"); /* (2.1) сам начал бой */
   if (f.phased) { A("foeSound", f, "blink_out"); if (!o.quiet) sayOnce("ph" + f.id, f.name.split(",")[0] + " в фазе: удар проходит сквозь.", 4000); return false; }
   var vs = (LAB.DMG_VS[f.kind] || {})[dt]; if (vs == null) vs = 1;
   var res = f.base.res && f.base.res[dt] != null ? f.base.res[dt] : 1;

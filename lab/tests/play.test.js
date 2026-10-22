@@ -85,7 +85,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     return out;
   });
   ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
-  ok(/Что нового: /.test(news.note) && /Коридоры больше не пустуют/.test(news.text) && /Сапёры ОКО/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
+  ok(/Что нового: /.test(news.note) && /начинается со снаряжением/.test(news.text) && /сквозь стены и закрытые двери/.test(news.text) && /чистого листа/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
 
   console.log("Настройки");
   await page.evaluate(() => { LAB.ui.top().i = 0; });
