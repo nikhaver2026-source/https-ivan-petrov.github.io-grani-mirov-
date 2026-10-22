@@ -5,7 +5,7 @@
 стражник у ворот, жрец, трактирщик, староста, кузнец, торговец, наставник, смотритель порта. Прежде эти строки читал голос
 игры в кавычках; теперь у каждой своя запись и своя интонация.
 
-Записей: 8067
+Записей: 8066
 
 Речь синтезирована 27–29 сентября 2026 года нейроголосами **Gemini** (Google),
 модель `gemini-3.8-flash-tts`, через Gemini API (Interactions API,
@@ -2942,7 +2942,6 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | quest_have_2_g.flac | заказчик: дело уже взято | Umbriel | patient, reminding | Ты уже взялся за моё дело. Сперва закончи его. |
 | quest_have_2_f_g.flac | заказчик: дело уже взято | Despina | patient, reminding | Ты уже взялся за моё дело. Сперва закончи его. |
 | quest_have_2_v1_g.flac | заказчик: дело уже взято | Sadachbia | patient, reminding | Ты уже взялся за моё дело. Сперва закончи его. |
-| quest_have_2_v1_f_g.flac | заказчик: дело уже взято | Leda | patient, reminding | Ты уже взялся за моё дело. Сперва закончи его. |
 | quest_have_3_g.flac | заказчик: дело уже взято | Umbriel | impatient, reminding | Я жду. Дело-то моё ещё не сделано. |
 | quest_have_3_f_g.flac | заказчик: дело уже взято | Despina | impatient, reminding | Я жду. Дело-то моё ещё не сделано. |
 | quest_have_3_v1_g.flac | заказчик: дело уже взято | Sadachbia | impatient, reminding | Я жду. Дело-то моё ещё не сделано. |
