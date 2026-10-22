@@ -77221,7 +77221,8 @@ function applySave(raw,whence){
  narrate(`Игра загружена (${whence}).`);
  setTimeout(()=>{
   if(G.place){
-   safeFn(()=>Music.start(G.place.depth>0?underTrack(G.place.depth):"prologue"));
+   /* (17.5) тема — по месту, как при входе в игру: прежде в доме и городе звучала тема пролога */
+   safeFn(()=>Music.start(locationMusicKey()));
    safeFn(()=>bankUpdateAmbient());
    safeFn(()=>Actors.ensure());
    narrate(`Вы вернулись: ${placeTitle()}. ${describeHere(true)} Уровень ${G.level}.`);
