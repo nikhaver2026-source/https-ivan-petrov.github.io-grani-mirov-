@@ -88,7 +88,7 @@ function activate() {
   var w = top(); if (!w) return;
   var it = w.items[w.i];
   if (!it) return;
-  if (it.kind === "toggle") { it.set(!it.get()); LAB.UI.click(); say(itemText(it)); render(); return; }
+  if (it.kind === "toggle") { it.set(!it.get()); LAB.UI.click(); say(itemText(it) + (it.descOf ? ". " + it.descOf(it.get()) : "")); render(); return; }
   if (it.kind === "choice") { cycle(it, 1); return; }
   if (it.kind === "slider") { say(itemText(it) + LAB.K(". Свайп вверх — больше, вниз — меньше.", ". Стрелка вправо — больше, влево — меньше.")); return; }
   if (it.disabled) { LAB.UI.error(); say(it.why || "Недоступно."); return; }
@@ -143,7 +143,7 @@ function adjust(it, dir) {
     return true;
   }
   if (it.kind === "choice") { cycle(it, dir > 0 ? 1 : -1); return true; }
-  if (it.kind === "toggle") { it.set(dir > 0); LAB.UI.click(); say(itemText(it)); render(); return true; }
+  if (it.kind === "toggle") { it.set(dir > 0); LAB.UI.click(); say(itemText(it) + (it.descOf ? ". " + it.descOf(it.get()) : "")); render(); return true; }
   return false;
 }
 function readAll() {
@@ -321,7 +321,7 @@ function freshNote() {
   var fs0 = LAB.freshStart, rr = LAB.restartRun;
   if (fs0 && fs0.wiped && !fs0.said) {
     fs0.said = true;
-    /* (2.1) сменилась и версия, и прохождение — хватит одного сообщения */
+    /* (2.2) сменилась и версия, и прохождение — хватит одного сообщения */
     if (rr) rr.said = true;
     return "Это новая версия игры — " + LAB.VERSION + ". Сохранения прежних версий сброшены: в игре много нового, и её проходят заново, с самого начала. Настройки остались прежними. Что изменилось — пункт «Что нового?».";
   }
@@ -356,6 +356,12 @@ function liteDesc(v) {
   var rate = !!LAB.AE.ctx && LAB.AE.liteCtx !== !!v;
   return v ? "Дальние спокойные машины думают реже, и их шагов издалека не слышно; отзвука помещений нет; звуков одновременно меньше; карта на экране рисуется реже; в памяти меньше готовых этажей. Игра та же: машин столько же, сохранения общие." + (rate ? " Звук станет ещё легче — 22 килогерца, записи в моно — после перезапуска игры." : "")
     : "Полная подробность мира и звука." + (rate ? " Полное качество звука — после перезапуска игры." : "");
+}
+/* (2.2, просьба игрока) Звук в фоне: что будет, когда вы уйдёте в другое
+   окно или приложение. */
+function bgDesc(v) {
+  if (v) return "Ушли в другое " + (LAB.desktop ? "окно" : "приложение") + " или свернули игру — она ждёт вас, а звук звучит тише" + (LAB.desktop ? "; окно не сворачивается" : "") + ". Вернулись — звук как прежде.";
+  return (LAB.desktop ? "Ушли в другое окно — окно игры сворачивается и ждёт вас, звук выключен." : "Свернули игру или ушли в другое приложение — она ждёт вас, звук выключен.") + " Вернулись — звук снова звучит.";
 }
 function startGame() {
   var hasAuto = !!gm().slotInfo("auto");
@@ -423,6 +429,7 @@ function settingsMenu() {
     { kind: "choice", label: LAB.desktop ? "Облегчённый режим для слабых компьютеров" : "Облегчённый режим для слабых телефонов",
       options: [{ v: 0, label: "выключен" }, { v: 1, label: "включён" }],
       get: function () { return S.lite ? 1 : 0; }, set: function (v) { liteSet(v); }, descOf: liteDesc },
+    { kind: "toggle", label: "Приглушать звук в фоне", get: function () { return !!S.bgDim; }, set: function (v) { S.bgDim = v ? 1 : 0; LAB.saveSettings(); }, descOf: bgDesc },
     { label: "Микшер: каналы звука, низкие частоты, диапазон громкости", fn: mixerMenu },
     { kind: "choice", label: "Режим навигатора", options: [
         { v: "full", label: "подробный: путь и повороты по шагам" }, { v: "brief", label: "краткий: сколько шагов и куда сначала" },

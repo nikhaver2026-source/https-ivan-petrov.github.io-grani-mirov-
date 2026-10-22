@@ -42,24 +42,62 @@ function boot() {
   setTimeout(function () { if (!started) LAB.say(LAB.TITLE + ". " + LAB.K("Коснитесь экрана, чтобы начать.", "Нажмите любую клавишу, чтобы начать.")); }, 900);
   /* компьютер: звук разрешён приложением — игра начинается сама */
   if (LAB.desktop) setTimeout(function () { start(null); }, 500);
-  /* уход в фон (звонок, свёрнутое окно): игра записывает себя, мир стоит,
-     речь молчит, звук приглушён; вернулись — всё продолжается */
+  /* Уход в фон — звонок, свёрнутое окно, (2.2) другое окно или приложение:
+     игра записывает себя, мир стоит, речь молчит. (2.2, просьба игрока) Звук —
+     по флажку «Приглушать звук в фоне»: снят — звук выключается, а окно на
+     компьютере ещё и сворачивается; стоит — звук звучит тише, окно остаётся.
+     Вернулись — звук и речь снова. Причин несколько (страница скрыта, окно без
+     фокуса или свёрнуто, приложение на паузе): игра в фоне, пока есть хоть одна. */
+  var resume0 = window.labResume, why = {}, minT = 0;
+  /* приложение для Android: уход в фон — его onPause, а фокус окна теряется
+     и от шторки уведомлений */
+  var app = !!window.LabTTS && !LAB.desktop;
+  /* компьютер, говорит чтец экрана (NVDA, JAWS): речь не обрывать — при смене
+     окна чтец замолкает сам и читает новое окно, а обрыв заглушил бы и это */
+  var viaReader = function () {
+    var Sp = LAB.Speech;
+    if (!LAB.desktop || !Sp || Sp.backend !== "android" || !Sp.listVoices) return false;
+    var id = LAB.settings.voice, v = Sp.listVoices().filter(function (x) { return id ? x.id === id : x.auto; })[0];
+    return !!(v && /^чтец экрана/.test(v.engine || ""));
+  };
   var toBg = function (on) {
+    var AE = LAB.AE, dim = !!LAB.settings.bgDim;
     LAB.bg = on;
     if (on) {
       if (LAB.game && LAB.game.entered) LAB.game.autosave();
       LAB.safe(function () { if (LAB.input) LAB.input.stopAll(); });
       LAB.safe(function () { if (LAB.combat && LAB.combat.stopFire) LAB.combat.stopFire(); });
-      LAB.safe(function () { if (LAB.Speech && LAB.Speech.hush) LAB.Speech.hush(); });
-      try { if (LAB.AE.ctx) LAB.AE.ctx.suspend(); } catch (e) { /* */ }
+      LAB.safe(function () { var Sp = LAB.Speech; if (!Sp) return; if (viaReader()) { Sp.queue = []; Sp.later = []; Sp.held = []; } else if (Sp.hush) Sp.hush(); });
+      LAB.safe(function () { if (AE.setBgDim) AE.setBgDim(dim); });
+      if (!dim) { try { if (AE.ctx) AE.ctx.suspend(); } catch (e) { /* */ } }
     } else {
-      try { if (LAB.AE.ctx) LAB.AE.ctx.resume(); } catch (e) { /* */ }
+      LAB.safe(function () { if (AE.setBgDim) AE.setBgDim(false); });
+      try { if (AE.ctx) AE.ctx.resume(); } catch (e) { /* */ }
+      if (resume0) LAB.safe(resume0);
     }
   };
-  document.addEventListener("visibilitychange", function () { toBg(document.hidden); });
-  window.labPause = function () { toBg(true); };
-  var resume0 = window.labResume;
-  window.labResume = function () { toBg(false); if (resume0) resume0(); };
+  var bgSet = function (k, on) {
+    if (on) why[k] = 1; else delete why[k];
+    var any = false, r;
+    for (r in why) any = true;
+    if (any !== !!LAB.bg) toBg(any);
+    /* компьютер: окно без фокуса полсекунды (не мелькнуло) — свернуть, если звук в фоне выключен */
+    clearTimeout(minT);
+    if (why.blur && LAB.desktop && !LAB.settings.bgDim && window.LabDesktop && window.LabDesktop.minimize)
+      minT = setTimeout(function () { if (why.blur && !LAB.settings.bgDim) LAB.safe(function () { window.LabDesktop.minimize(); }); }, 500);
+  };
+  /* для главного процесса компьютера (свернули, развернули окно) и для самопроверки */
+  window.labBgSet = function (k, on) { if (!LAB.selftesting) bgSet(String(k), !!on); };
+  window.labBgReset = function () { why = {}; clearTimeout(minT); if (LAB.bg) toBg(false); };
+  document.addEventListener("visibilitychange", function () { bgSet("hidden", document.hidden); });
+  if (!app) {
+    window.addEventListener("blur", function () { if (!LAB.selftesting) bgSet("blur", true); });
+    window.addEventListener("focus", function () { bgSet("blur", false); });
+  }
+  /* нажали клавишу или коснулись — игра на экране, что бы ни сказали события окна */
+  ["pointerdown", "keydown"].forEach(function (ev) { window.addEventListener(ev, function () { if ((why.blur || why.min) && !document.hidden) { delete why.min; bgSet("blur", false); } }, true); });
+  window.labPause = function () { bgSet("pause", true); };
+  window.labResume = function () { delete why.blur; bgSet("pause", false); };
   /* для проверок: в приложении — отметка в журнале устройства */
   window.LAB_READY = true;
   try { if (window.LabTTS && window.LabTTS.log) window.LabTTS.log("ready " + LAB.TITLE + " " + LAB.VERSION + ", звуков: " + Object.keys(LAB.SND || {}).length); } catch (e) { /* */ }
@@ -72,6 +110,9 @@ LAB.selftest = function () {
   var fails = [];
   var step = function (name, fn) { try { fn(); } catch (e) { fails.push(name + ": " + (e && e.message)); } };
   log("selftest start; webview " + navigator.userAgent);
+  /* (2.2) окно самопроверки может быть без фокуса — уход в фон ей не мешает */
+  LAB.selftesting = true;
+  if (window.labBgReset) window.labBgReset();
   step("start", function () { start({ type: "pointerdown" }); });
   step("newgame", function () { LAB.game.newGame(); });
   var G = LAB.game.G;

@@ -44,7 +44,7 @@ function sellable(id) { var d = LAB.ITEMS[id]; return !!d && d.price > 0 && !d.n
 
 /* ════════ ЦЕНЫ ════════ */
 /* Скупка глубже платит больше, но мягче, чем растут цены прилавка. */
-/* (2.1) скупка — от глубины без режима, а режим — своим множителем (sell) */
+/* (2.2) скупка — от глубины без режима, а режим — своим множителем (sell) */
 function depthSellK() { var k = gm().priceDepth ? gm().priceDepth() : gm().priceK ? gm().priceK() : 1; return (1 + (k - 1) * 0.6) * (LAB.dk().sell || 1); }
 function profBuy(prof, cat) { var p = LAB.SUPPLY_PROFILES[prof]; return p && p.buy && p.buy[cat] ? p.buy[cat] : 1; }
 /* Торговец-выживший скупает своё дороже: медик — лекарства, инженер — детали, повар — еду. */
@@ -59,7 +59,7 @@ function ctxK0(ctx, cat) {
 function itemSellPrice(id, ctx) {
   var d = LAB.ITEMS[id], cat = catOf(id);
   var p = Math.max(1, Math.round(d.price * (LAB.SELL_K[cat] || LAB.SELL_K[d.kind] || 0.4) * depthSellK() * ctxK(ctx, cat)));
-  /* (2.1) скупка не дороже 85 процентов прилавка: купить и тут же продать с прибылью нельзя ни в каком режиме */
+  /* (2.2) скупка не дороже 85 процентов прилавка: купить и тут же продать с прибылью нельзя ни в каком режиме */
   return Math.max(1, Math.min(p, Math.floor(itemBuyPrice(id) * 0.85)));
 }
 function ammoSellPrice(k, ctx) { var a = LAB.AMMO[k]; return Math.max(1, Math.round((a.price || 30) * LAB.SELL_K.ammo * depthSellK() * ctxK(ctx, "ammo"))); }
@@ -76,7 +76,7 @@ LAB.sellPrice = { item: itemSellPrice, ammo: ammoSellPrice, weapon: weaponSellPr
 function buyK() { return gm().priceK ? gm().priceK() : 1; }
 function itemBuyPrice(id) { return Math.max(2, Math.round(LAB.ITEMS[id].price * buyK())); }
 function ammoBuyPrice(k) { return Math.max(2, Math.round((LAB.AMMO[k].price || 30) * buyK() * (G().faction === "sec" ? 0.85 : 1))); }
-/* (2.1) броня и оружие на прилавке — тоже по режиму: цена (price) и её рост с глубиной (pgrow) */
+/* (2.2) броня и оружие на прилавке — тоже по режиму: цена (price) и её рост с глубиной (pgrow) */
 function armorBuyPrice(a) { var L = G().L, dk = LAB.dk(), k = L <= 10 ? 1 + 0.15 * (L - 1) : 0.6 + 0.4 * LAB.wealth(L, G().F); return Math.round(armorValue(a) * (dk.price || 1) * (1 + (k - 1) * (dk.pgrow || 1)) * (G().faction === "res" ? 0.8 : 1)); }
 function weaponBuyPrice(w) { var dk = LAB.dk(); return Math.round(LAB.weaponPrice(w) * (LAB.QUAL_MULT[w.qual] || 1) * 1.1 * (dk.price || 1) * (1 + 0.15 * ((dk.pgrow || 1) - 1) * Math.min(9, LAB.blockOf ? LAB.blockOf(G().L) : 1))); }
 function bpPrice(rc) { return Math.round((90 + 25 * (rc.minL || 1)) * Math.min(4, buyK())); }

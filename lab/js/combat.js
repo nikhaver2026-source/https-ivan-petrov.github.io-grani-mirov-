@@ -56,7 +56,7 @@ function endWakeSafe(why) {
   else if (why === "fight") sayq("«Эхо»: «Вы начали бой — теперь вас видят и слышат все машины вокруг».");
 }
 function inSafeRoom(x, y) { return safeHero && safeRoomId >= 0 && CUR().fl.room[idx(x, y)] === safeRoomId; }
-/* (2.1, просьба игрока) Убежище. Носитель зачистил помещение — в нём пала
+/* (2.2, просьба игрока) Убежище. Носитель зачистил помещение — в нём пала
    машина или тварь (fs.cleared), — врагов внутри не осталось, а все входы —
    двери, и они закрыты. Пока он внутри, машины и твари его не видят и не
    слышат, двери этого помещения не открывают и в него не входят; ОКО не
@@ -104,7 +104,7 @@ function makeRuntime(def, st) {
   var base = LAB.FOES[def.type];
   var bdef = def.boss ? LAB.BOSSES[def.boss] : null;
   var dk = diff();
-  /* (2.1) режим сложности: прочность и урон, рост с глубиной (к сотому уровню врага —
+  /* (2.2) режим сложности: прочность и урон, рост с глубиной (к сотому уровню врага —
      ещё доля grow сверху), обзор, быстрота шага и удара */
   var gk = 1 + (dk.grow || 0) * Math.min(1, Math.max(0, (def.lvl || 1) - 1) / 100), hk = dk.hp * gk, mk = dk.dmg * gk;
   var spd0 = base.spd >= 99 ? base.spd : Math.max(1, base.spd + (dk.spd || 0));
@@ -128,7 +128,7 @@ function makeRuntime(def, st) {
     beat: def.beat || null, bi: def.bi || 0, bdir: 1, work: !!def.work, garrison: def.garrison || null, sapper: !!def.sapper || base.beh.indexOf("mines") >= 0,
     /* (2.0) страж лестницы, лифта или шлюза (вид объекта) и тварь, обжившая кабинет */
     stairPost: def.stairPost || null, lair: !!def.lair,
-    /* (2.1) камера в углу помещения смотрит по комнате — от стены к стене */
+    /* (2.2) камера в углу помещения смотрит по комнате — от стены к стене */
     camLook: def.camLook || null
   };
   f.hp = f.maxhp; f.shield = f.shieldMax;
@@ -151,7 +151,7 @@ function makeRuntime(def, st) {
   }
   return f;
 }
-/* (2.1, просьба игрока) Число врагов по режиму. Кого это касается: охраны
+/* (2.2, просьба игрока) Число врагов по режиму. Кого это касается: охраны
    кабинетов, патрулей, стражей постов, тварей; стражи уровней, носители
    ключей и вещей, турели, камеры, мирные и неподвижные — как есть. Выбор — по
    номеру врага, он один и тот же при каждом входе, поэтому этаж не «пляшет»;
@@ -184,12 +184,12 @@ function twinOf(def) {
 function loadFoes() {
   var fl = CUR().fl, fs = CUR().fs;
   foes = [];
-  refugeId = -1; /* (2.1) убежище прежнего этажа здесь не действует — до первого такта */
+  refugeId = -1; /* (2.2) убежище прежнего этажа здесь не действует — до первого такта */
   hold = null;
   shells = []; /* снаряды прошлого этажа сюда не падают */
   if (!fs.foes) fs.foes = {};
   if (!fs.spawned) fs.spawned = [];
-  /* (2.1) сколько врагов — по режиму сложности (count): в лёгком часть машин и
+  /* (2.2) сколько врагов — по режиму сложности (count): в лёгком часть машин и
      тварей не выходит, в сложных у части — напарник рядом */
   var cnt = diff().count || 1;
   fl.foes.forEach(function (def) {
@@ -303,7 +303,7 @@ function detOf(f) {
 }
 function sees(f) {
   if (safeHero) return false; /* (2.1) безопасное пробуждение */
-  if (refugeId >= 0 && !inRefuge(f.x, f.y)) return false; /* (2.1) убежище */
+  if (refugeId >= 0 && !inRefuge(f.x, f.y)) return false; /* (2.2) убежище */
   if (f.blindT > 0) return false; /* сенсорная помеха ослепила */
   if (G().st.mimicT > 0 && f.kind === "mech") return false; /* (2.0) мимикрия: машины принимают за свою */
   /* «тепло»: твари «Колыбели» чуют тепло тела — маскировка их не обманывает, а слепые видят его вблизи */
@@ -315,7 +315,7 @@ function sees(f) {
 }
 function hears(f) {
   if (safeHero) return false; /* (2.1) безопасное пробуждение */
-  if (refugeId >= 0 && !inRefuge(f.x, f.y)) return false; /* (2.1) убежище */
+  if (refugeId >= 0 && !inRefuge(f.x, f.y)) return false; /* (2.2) убежище */
   if (f.deafT > 0) return false; /* (1.5) оглушён ловушкой */
   var n = G().noise;
   if (gm().armorSpecial("stealth")) n = Math.round(n * 0.6);
@@ -361,7 +361,7 @@ function occupied(x, y, self) {
 function canStand(f, x, y) {
   var fl = CUR().fl;
   if (!LAB.inb(x, y)) return false;
-  if (f && !f.ally && (inSafeRoom(x, y) || inRefuge(x, y))) return false; /* (2.1) капсульный отсек при пробуждении и убежище: враги в них не входят */
+  if (f && !f.ally && (inSafeRoom(x, y) || inRefuge(x, y))) return false; /* (2.2) капсульный отсек при пробуждении и убежище: враги в них не входят */
   var t = fl.t[idx(x, y)];
   if (t === LAB.T.WALL) return false;
   if (t === LAB.T.DOOR) { var d = fl.doorAt[idx(x, y)]; if (CUR().fs.doors[d.id] !== 2) return false; }
@@ -383,7 +383,7 @@ function okoDoors(f) {
 }
 /* Можно ли врагу открыть эту дверь. */
 function foeOpens(f, d) {
-  if (!f.ally && refugeDoor(d)) return false; /* (2.1) дверь убежища враги не открывают */
+  if (!f.ally && refugeDoor(d)) return false; /* (2.2) дверь убежища враги не открывают */
   if (!has(f, "dooropen") && !(f.kind === "mech" && iqOf(f) >= 5) && !okoDoors(f)) return false;
   var st = CUR().fs.doors[d.id];
   if (st === 2) return true;
@@ -422,7 +422,7 @@ function stepToward(f, tx, ty, opts) {
   return true;
 }
 function moveFoe(f, nx, ny) {
-  if ((inSafeRoom(nx, ny) || inRefuge(nx, ny)) && !f.ally) return; /* (2.1) в капсульный отсек при пробуждении и в убежище не входят */
+  if ((inSafeRoom(nx, ny) || inRefuge(nx, ny)) && !f.ally) return; /* (2.2) в капсульный отсек при пробуждении и в убежище не входят */
   var px = f.x, py = f.y;
   f.x = nx; f.y = ny;
   var r = CUR().fl.room[idx(nx, ny)];
@@ -690,7 +690,7 @@ function camExpire() {
   return out;
 }
 function camCount(kind) { return cams().filter(function (f) { return camState(f) === kind; }).length; }
-/* (2.1, просьба игрока) Разбить камеру вплотную — монтировкой, прикладом,
+/* (2.2, просьба игрока) Разбить камеру вплотную — монтировкой, прикладом,
    чем угодно: сразу и навсегда (ремонтнику ОКО чинить нечего), но удар
    слышно по коридору, а ОКО заметит, что камера замолчала. */
 function smashCam(f) {
@@ -1503,7 +1503,7 @@ function summon(f) {
 }
 function spawnFoe(type, x, y, extra) {
   var base = LAB.FOES[type];
-  if (!(extra && extra.ally) && inRefuge(x, y)) return null; /* (2.1) в убежище ОКО никого не выводит */
+  if (!(extra && extra.ally) && inRefuge(x, y)) return null; /* (2.2) в убежище ОКО никого не выводит */
   var L = G().L, F = G().F, d0 = LAB.depth(L, F);
   var lvl = LAB.foeLevel(L, F), sc = LAB.scaleFoe(base, lvl);
   var fs = CUR().fs;
@@ -1535,7 +1535,7 @@ function attack(f, seen) {
      Закрытую дверь машина сначала открывает (stepToward), а стреляет уже в
      открытый проём; носитель в проёме виден с обеих сторон. */
   if (ranged && !losTo(f)) { f.aim = false; return; }
-  if (sheltered()) { f.aim = false; return; } /* (2.1) безопасное пробуждение и убежище */
+  if (sheltered()) { f.aim = false; return; } /* (2.2) безопасное пробуждение и убежище */
   /* только что вошли на этаж: враг наводится, но не бьёт */
   if (tickN < graceT) { A("foeSound", f, ranged ? "aim" : "alert"); return; }
   A("foeSound", f, ranged ? "shoot" : "attack");
@@ -1811,7 +1811,7 @@ function shoot(w, f, perp, along, burst, melee) {
     return 0;
   }
   var dt = w.dt;
-  var dmg = w.dmg * LAB.wGrowK(w); /* (2.1) рост оружия — по режиму сложности */
+  var dmg = w.dmg * LAB.wGrowK(w); /* (2.2) рост оружия — по режиму сложности */
   if (melee) { dmg *= 1 + (g.str - 10) * 0.03; if (gm().armorSpecial("strength")) dmg *= 1.6; }
   var crit = Math.random() < 0.05 + (g.agi - 10) * 0.008 + (wf(w, "crit") || 0);
   if (crit) dmg *= 1.75;
@@ -1916,7 +1916,7 @@ function kill(f, quiet) {
   var g = G(), fs = CUR().fs;
   fs.foes[f.id] = { dead: true };
   g.stats.kills++;
-  if (!f.ally) markCleared(f); /* (2.1) помещение зачищено — в нём можно укрыться */
+  if (!f.ally) markCleared(f); /* (2.2) помещение зачищено — в нём можно укрыться */
   if (LAB.ach) { LAB.ach.ev("kill", 1); if (f.kind === "mech") LAB.ach.ev("kill_mech", 1); if (f.boss) LAB.ach.ev("boss", 1); }
   /* (2.0) ОКО отвечает на потери: машина, тварь, турель — или серия подряд */
   if (LAB.oko && LAB.oko.react && !f.ally && !f.boss) {
@@ -2242,7 +2242,7 @@ function refillRoom(q) {
     if (sp) { sp.state = "idle"; got.push(sp); }
   }
   if (got.length && door) A("doorOpen", door, true);
-  if (got.length && CUR().fs.cleared) delete CUR().fs.cleared[q.room]; /* (2.1) охрана вернулась — помещение уже не убежище */
+  if (got.length && CUR().fs.cleared) delete CUR().fs.cleared[q.room]; /* (2.2) охрана вернулась — помещение уже не убежище */
   return got;
 }
 function doorNear(x, y) {

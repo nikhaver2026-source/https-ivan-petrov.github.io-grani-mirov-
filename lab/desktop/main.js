@@ -27,7 +27,7 @@ protocol.registerSchemesAsPrivileged([{
 // Звук с первой секунды, без щелчка мышью: игроку нечем «разрешить» звук.
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
-const VERSION = 'Альфа 2.1';
+const VERSION = 'Альфа 2.2';
 const TITLE = 'Подземная лаборатория ' + VERSION;
 // Самопроверка (сборка на серверах GitHub): игра проходит все этажи, пишет
 // итог в журнал и закрывается с кодом 0 (всё хорошо) или 1.
@@ -199,6 +199,15 @@ function createWindow() {
     if (SELFTEST) app.exit(3);
   });
   win.on('page-title-updated', e => e.preventDefault());
+  // (2.2) Окно свернули, развернули, увели с него фокус — игра узнаёт отсюда:
+  // со снятым backgroundThrottling страница сама не видит, что её свернули.
+  // В самопроверке окно может быть без фокуса — ей это не мешает.
+  if (!SELFTEST) {
+    win.on('minimize', () => js("window.labBgSet&&window.labBgSet('min',true)"));
+    win.on('restore', () => js("window.labBgSet&&window.labBgSet('min',false)"));
+    win.on('blur', () => js("window.labBgSet&&window.labBgSet('blur',true)"));
+    win.on('focus', () => js("window.labBgSet&&window.labBgSet('blur',false)"));
+  }
   win.once('ready-to-show', () => { win.show(); win.focus(); win.webContents.focus(); });
   // Закрытие окна (Alt+F4, «Закрыть приложение»): игра сперва пишет автозапись.
   let closing = false;
@@ -260,6 +269,8 @@ ipcMain.handle('lab-tts-restart', async () => {
 });
 ipcMain.on('lab-log', (e, m) => log(m));
 ipcMain.on('lab-quit', () => app.quit());
+// (2.2) Игра ушла в фон без звука: окно сворачивается — если фокус к нему так и не вернулся.
+ipcMain.on('lab-minimize', () => { if (!SELFTEST && win && !win.isDestroyed() && !win.isFocused() && !win.isMinimized()) win.minimize(); });
 
 const single = SELFTEST || app.requestSingleInstanceLock();
 if (!single) { if (sapi) sapi.quit(); app.quit(); }

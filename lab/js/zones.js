@@ -335,7 +335,7 @@ function deconMenu(o) {
 function fuseMenu(o) {
   var cb = LAB.combat, s = st(o), items = [], fs = CUR().fs;
   var all = cb && cb.cams ? cb.cams() : [], live = all.filter(function (f) { return cb.camState(f) !== "off"; });
-  /* (2.1) камер нет вовсе — так и сказать (прежде щит говорил «уже обесточены») */
+  /* (2.2) камер нет вовсе — так и сказать (прежде щит говорил «уже обесточены») */
   if (!all.length) items.push({ label: "Камер на этаже нет" + (cb && cb.camsBroken && cb.camsBroken() ? ": все разбиты" : "") + " — обесточивать нечего", info: true, keep: true, fn: function () { say("Автоматы камер на щите стоят без нагрузки: на этаже нет ни одной целой камеры ОКО."); } });
   else items.push({ label: live.length ? "Обесточить камеры этажа: рубильники и схема реле (головоломка), камер под током — " + live.length : "Камеры этажа уже обесточены: ремонтник ОКО поднимет рубильники по одной камере", disabled: !live.length, why: "Все камеры этажа и так без питания.", fn: function () {
     UIx("closeAll");

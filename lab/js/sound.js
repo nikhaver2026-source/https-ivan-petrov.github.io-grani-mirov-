@@ -106,6 +106,9 @@ function track(id, bus, prio, h, o) {
 
 /* ── пробуждение устройства ── */
 function wake() {
+  /* (2.2) игра в фоне без звука: не будить — прежде сторож будил звук через
+     секунду, и на телефоне игра звучала из фона */
+  if (LAB.bgMuted && LAB.bgMuted()) return false;
   var c = AE.ensure();
   if (!c) return false;
   if (c.state === "running") { asleepSince = 0; wakeTries = 0; return true; }
@@ -318,7 +321,7 @@ function tick() {
   var c = AE.ctx, hidden = typeof document !== "undefined" && document.hidden;
   if (c.state === "closed") { rebuild(true); return; }
   if (c.state !== "running") {
-    if (!hidden) {
+    if (!hidden && !(LAB.bgMuted && LAB.bgMuted())) {
       wake();
       /* не просыпается дольше восьми секунд — пересоздать */
       if (asleepSince && now() - asleepSince > 8000 && wakeTries > 6) rebuild();

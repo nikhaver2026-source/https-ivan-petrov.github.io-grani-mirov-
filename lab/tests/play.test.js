@@ -84,8 +84,8 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     LAB.ui.closeTop(true); LAB.ui.closeAll(); LAB.ui.mainMenu(true);
     return out;
   });
-  ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
-  ok(/Что нового: /.test(news.note) && /начинается со снаряжением/.test(news.text) && /сквозь стены и закрытые двери/.test(news.text) && /чистого листа/.test(news.text) && /настройки теперь переживают смену версии/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
+  ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.items.some(l => /^Альфа 2\.1$/.test(l)) && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
+  ok(/Что нового: /.test(news.note) && /десять аптечек и десять энергобатарей/.test(news.text) && /Убежище/.test(news.text) && /Режимы сложности/.test(news.text) && /чистого листа/.test(news.text) && /настройки теперь переживают смену версии/.test(news.text) && !/начинается со снаряжением/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
 
   console.log("Настройки");
   await page.evaluate(() => { LAB.ui.top().i = 0; });
@@ -722,7 +722,9 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     const solve = async () => {
       for (let k = 0; k < 2500; k++) { /* длинные взломы (девять сигналов, семь раундов) занимают до полуминуты */
         const c = LAB.mini._cur();
-        if (!c) { if (!LAB.mini.active()) return true; await wait(80); continue; }
+        /* головоломка закрылась: её итог игра применяет чуть позже (через 30 мс), а цепочка
+           начинает следующий шаг после паузы, — убедиться, что ничего не идёт, и только тогда выйти */
+        if (!c) { if (!LAB.mini.active()) { await wait(150); if (!LAB.mini._cur() && !LAB.mini.active()) return true; } else await wait(80); continue; }
         if (c.done) { await wait(80); continue; }
         if (c.type === "hack") { if (!c.busy) LAB.mini.gesture({ kind: "swipe", n: 1, dir: c.seq[c.pos] }); await wait(40); continue; }
         if (c.type === "sort") {
@@ -822,6 +824,9 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     /* обесточенную камеру «чинит» проверка, чтобы было что перепрошивать */
     C.cams().forEach(f => { f.camOff = false; f.camLoop = 0; f.camOurs = 0; }); g.CUR.fs.camS = {};
     const live = C.cams().find(f => C.camState(f) !== "off");
+    /* (2.2) камер одного вида на этаже бывает несколько (в коридоре и в помещениях): остальные —
+       без питания, чтобы в списке терминала «смотрит для ОКО» была только проверяемая */
+    C.cams().forEach(f => { if (f !== live) f.camOff = true; });
     out.flashTested = !!live;
     if (live) {
       g.objMenu(term); pick(/^Оборонная сеть этажа/); pick(/^Камеры этажа/);
@@ -830,6 +835,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
       out.flashMenu = k >= 0 && pick(/Перепрошить камеру/);
       out.flashSolved = await solve();
       out.ours = C.camState(live) === "ours";
+      if (!out.flashSolved || !out.ours) out.flashDbg = JSON.stringify({ at: G.L + "-" + G.F, cam: [live.x, live.y, C.camState(live), !!live.dead], top: LAB.ui.top() ? LAB.ui.top().title : null, log: O.logText(4), said: SPOKEN.slice(-4) });
     } else out.ours = true;
     /* изоляция сегмента: пункт не серый, взлом маршрутизации снимает её */
     LAB.ui.closeAll();
@@ -848,7 +854,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(dnet.none || (dnet.camMenu && dnet.loopSolved && dnet.allLoop), "камеры этажа: запись всех закольцована — головоломкой (камер " + dnet.nCams + ")");
   ok(dnet.none || !dnet.spot || (dnet.blindLoop && dnet.loopFound && dnet.seenAgain), "камера на петле героя не видит; петля кончилась — ОКО находит её и снова видит (" + [dnet.blindLoop, dnet.loopFound, dnet.seenAgain].join(", ") + (dnet.camDbg ? " " + dnet.camDbg : "") + ")");
   ok(dnet.none || !dnet.near || (dnet.inReach && dnet.cutMenu && dnet.cutSolved && dnet.off && dnet.toRepair && dnet.repairPlanned && dnet.kept), "у самой камеры: питание снято, ОКО шлёт ремонтника, состояние помнится на этаже (" + [dnet.inReach, dnet.cutMenu, dnet.cutSolved, dnet.off, dnet.toRepair, dnet.repairPlanned, dnet.kept].join(", ") + ")");
-  ok(dnet.none || (dnet.flashTested && dnet.flashMenu && dnet.flashSolved && dnet.ours), "камера перепрошита с терминала: докладывает ОКО «чисто»" + (dnet.flashMenu === false ? " (пункт не найден)" : ""));
+  ok(dnet.none || (dnet.flashTested && dnet.flashMenu && dnet.flashSolved && dnet.ours), "камера перепрошита с терминала: докладывает ОКО «чисто»" + (dnet.flashMenu === false ? " (пункт не найден)" : "") + " (" + [dnet.flashTested, dnet.flashMenu, dnet.flashSolved, dnet.ours].join(", ") + (dnet.flashDbg ? " " + dnet.flashDbg : "") + ")");
   ok(dnet.none || (dnet.isoItem && dnet.isoMenu && dnet.isoSolved && dnet.isoGone), "изоляция сегмента ОКО: пункт доступен, взлом маршрутизации её снимает (" + [dnet.isoItem, dnet.isoMenu, dnet.isoSolved, dnet.isoGone].join(",") + ")");
 
   console.log("Навигатор: без карты — до ближайшей двери, с картой — до лестницы");
@@ -1940,7 +1946,7 @@ LAB.ui.closeAll();
     out.slotsFull = G.implants.filter(id => IM.isChip(id)).length === 5 && /нейрогнёзда заняты/.test(SPOKEN.join(" ") + "") ;
     /* новые импланты в деле: дуга, сонар, петля камер, фаза, сифон */
     C.foes().forEach(f => { f.dead = true; });
-    g.CUR.fs.cleared = {}; C.tick(); /* (2.1) не в убежище: туда ОКО никого не выводит, а здесь нужны враги рядом */
+    g.CUR.fs.cleared = {}; C.tick(); /* (2.2) не в убежище: туда ОКО никого не выводит, а здесь нужны враги рядом */
     /* враг рядом и на виду: разряд ищет цель по прямой видимости, а у стены «два шага вбок» бывают за стеной */
     const mk = (t, dx, dy) => {
       for (const [ax, ay] of [[dx, dy], [-dx, -dy], [dy, dx], [-dy, -dx], [1, 0], [-1, 0], [0, 1], [0, -1]]) {
@@ -2243,7 +2249,7 @@ LAB.ui.closeAll();
   } catch (e) { restartDiag = String(e && e.message || e).slice(0, 200); }
   await ctx2.close();
   /* новая версия — с чистого листа: сохранения прежней версии (слот, автозапись, запасная копия) при
-     запуске новой стираются — в браузере, на Android и в Windows хранилище одно; (2.1) изменённые
+     запуске новой стираются — в браузере, на Android и в Windows хранилище одно; (2.2) изменённые
      настройки, отметка о прологе и подсказка про облегчённый режим остаются */
   let fresh = null;
   {
@@ -2605,7 +2611,7 @@ LAB.ui.closeAll();
       out.respawnStart = G.L === 3 && G.F === 1;
       C.stop();
     }
-    /* (2.1) ёмкость: «Искра» — тридцать, ступень — плюс восемь процентов; чем лучше оружие, тем больше;
+    /* (2.2) ёмкость: «Искра» — тридцать, ступень — плюс восемь процентов; чем лучше оружие, тем больше;
        огнестрел — как прежде; ёмкие энергобатареи и расточка отсека — доли ёмкости оружия */
     const mk = (b, lvl, rank, q) => LAB.makeWeapon(b, lvl, rank, q == null ? 1 : q);
     out.blaster = [mk("spark", 1, 0).cap, mk("spark", 1, 1).cap, mk("spark", 25, 0).cap, mk("pulse", 1, 2).cap].join(",");
@@ -3200,7 +3206,8 @@ LAB.ui.closeAll();
     fresh(2, 4);
     G.hp = G.hpMax = 1e7; G.st.cloak = 1e6;
     /* убили патрульного — ОКО шлёт нового на тот же участок, не у вас на глазах */
-    const pat = live().filter(f => f.beat && f.kind === "mech" && !f.boss).sort((a, b) => hero(b) - hero(a))[0];
+    /* (2.2) не сапёр: его участок ОКО не возобновляет (у сапёра свой приказ) */
+    const pat = live().filter(f => f.beat && f.kind === "mech" && !f.boss && !f.sapper).sort((a, b) => hero(b) - hero(a))[0];
     const corr = pat.corr, beatKey = JSON.stringify(pat.beat);
     C.damageFoe(pat, 1e7, "kinetic", { quiet: true });
     const q = repl().find(q => q.k === "patrol" && q.corr === corr);
@@ -3214,7 +3221,7 @@ LAB.ui.closeAll();
     live().filter(f => f.room === room && f.guard === "room" && f.kind === "mech").forEach(f => C.damageFoe(f, 1e7, "kinetic", { quiet: true }));
     out.rQueued = repl().some(q => q.k === "room" && q.room === room);
     let back = null; ticks = 0;
-    /* (2.1) пришёл любой присланный ОКО — страж, рабочая машина или уборщик (у уборщика своего поста нет) */
+    /* (2.2) пришёл любой присланный ОКО — страж, рабочая машина или уборщик (у уборщика своего поста нет) */
     for (; ticks < 900 && !back; ticks++) { C.tick(); back = live().find(f => f.spawned && f.oko && g.CUR.fl.room[f.y * LAB.W + f.x] === room); }
     out.rBack = !!back; out.rTicks = ticks;
     /* пал страж у лестницы — ОКО присылает смену на тот же пост */
@@ -3231,7 +3238,9 @@ LAB.ui.closeAll();
     fresh(2, 5);
     G.hp = G.hpMax = 1e7; G.st.cloak = 1e6;
     const batches = [], killOne = () => {
-      const p = live().find(f => f.beat && f.kind === "mech" && !f.boss && !f.sapper);
+      let p = live().find(f => f.beat && f.kind === "mech" && !f.boss && !f.sapper);
+      /* (2.2) патрульных на этаже могло не хватить на восемь потерь — поднять одного из павших */
+      if (!p) { p = C.foes().find(f => f.dead && f.beat && f.kind === "mech" && !f.boss && !f.sapper); if (p) { p.dead = false; p.hp = p.maxhp; } }
       if (!p) return;
       C.damageFoe(p, 1e7, "kinetic", { quiet: true });
       const nq = repl().find(q => q.k === "patrol" && q.corr === p.corr);
@@ -3316,7 +3325,7 @@ LAB.ui.closeAll();
   const kit = await page.evaluate(() => {
     const g = LAB.game, C = LAB.combat, out = {};
     LAB.ui.closeAll(); SPOKEN.length = 0;
-    /* новая игра: бластер и комбинезон — сразу у героя, у капсулы — (2.1) десять аптечек и десять энергобатарей */
+    /* новая игра: бластер и комбинезон — сразу у героя, у капсулы — (2.2) десять аптечек и десять энергобатарей */
     g.newGame(); C.stop();
     let G = g.G;
     out.weapons = G.weapons.map(w => w.base).join(",");
@@ -3458,7 +3467,7 @@ LAB.ui.closeAll();
   ok(kit.flee && kit.losClosed === false && kit.losOpen === true && kit.flee.hurtClosed === 0 && kit.flee.hurtOpen >= 1 && kit.flee.shots >= 4 && kit.flee.shots <= Math.ceil(24 / kit.flee.acd) + 1 && kit.doorway,
     "раненый загнанный робот за закрытой дверью не стреляет; дверь открыта — стреляет, не чаще перезарядки; носитель в проёме виден" + (kit.flee ? " (" + JSON.stringify(kit.flee) + ")" : " (не нашлось двери для проверки)"));
 
-  console.log("Убежище, камеры в помещениях, оборонная сеть и режимы сложности (2.1)");
+  console.log("Убежище, камеры в помещениях, оборонная сеть и режимы сложности (2.2)");
   const v21 = await page.evaluate(() => {
     const g = LAB.game, C = LAB.combat, O = LAB.oko, S = LAB.settings, W = LAB.W, out = {};
     let G = g.G;
@@ -3513,9 +3522,14 @@ LAB.ui.closeAll();
     const camN = [[1, 1], [1, 2], [2, 5], [5, 10], [20, 3]].map(([L, F]) => LAB.getFloor(G.seed, L, F).foes.filter(q => q.camLook).length);
     out.camN = camN.join(",");
     fresh(5, 10); fl = g.CUR.fl; fs = g.CUR.fs;
-    const cam = live().find(f => f.camLook);
+    /* камера в углу, к которой можно подойти вплотную: у иной все соседние клетки заставлены
+       обстановкой (такую разбивают выстрелом) — берём первую, у которой есть свободная */
+    const free = c => LAB.inb(c[0], c[1]) && fl.t[c[1] * W + c[0]] === LAB.T.ROOM && !LAB.solidAt(fl, c[0], c[1]) && !C.foes().some(f => !f.dead && f.x === c[0] && f.y === c[1]);
+    let cam = null, nb = null;
+    const roomCams = live().filter(f => f.camLook);
+    out.roomCams = roomCams.length;
+    for (const f of roomCams) { nb = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]].map(v => [f.x + v[0], f.y + v[1]]).find(free); if (nb) { cam = f; break; } }
     if (cam) {
-      const nb = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]].map(v => [cam.x + v[0], cam.y + v[1]]).find(c => LAB.inb(c[0], c[1]) && fl.t[c[1] * W + c[0]] === LAB.T.ROOM && !LAB.solidAt(fl, c[0], c[1]) && !C.foes().some(f => !f.dead && f.x === c[0] && f.y === c[1]));
       if (nb) {
         G.x = nb[0]; G.y = nb[1];
         C.foes().forEach(f => { if (f !== cam && !f.dead && Math.abs(f.x - G.x) + Math.abs(f.y - G.y) < 12) f.dead = true; });
@@ -3571,10 +3585,76 @@ LAB.ui.closeAll();
   ok(v21.shut && v21.outside && v21.unhurt && v21.noSpawnIn, "убежище: робот за дверью её не открывает и не входит, ОКО внутрь никого не выводит, носителя не трогают (" + JSON.stringify({ shut: v21.shut, out: v21.outside, hp: v21.unhurt, sp: v21.noSpawnIn }) + ")");
   ok(v21.off, "открыли дверь — убежища нет");
   ok(/^0,[1-9],[1-9],[1-9],[1-9]$/.test(v21.camN || "") && +v21.camN.split(",")[4] >= +v21.camN.split(",")[1], "камеры ОКО в помещениях: на первом этаже нет, дальше есть, в глубине больше (" + v21.camN + ")");
-  ok(v21.camHeard && v21.smashItem && v21.smashed, "камеру в помещении слышно при входе, вплотную её можно разбить — удар слышно, терминал считает разбитые (" + JSON.stringify({ h: v21.camHeard, i: v21.smashItem, s: v21.smashed, d: v21.camDirs }) + ")");
+  ok(v21.camHeard && v21.smashItem && v21.smashed, "камеру в помещении слышно при входе, вплотную её можно разбить — удар слышно, терминал считает разбитые (" + JSON.stringify({ n: v21.roomCams, h: v21.camHeard, i: v21.smashItem, s: v21.smashed, d: v21.camDirs }) + ")");
   ok(v21.fuseNone, "электрощит без камер говорит «камер на этаже нет», а не «уже обесточены»");
   ok(v21.isoCalm && v21.isoHot && v21.isoBack, "терминал ОКО отсекает только при тревоге, и «Эхо» говорит, когда он снова в оборонной сети (" + JSON.stringify({ c: v21.isoCalm, h: v21.isoHot, b: v21.isoBack }) + ")");
   ok(v21.diffOk && v21.names === "Лёгкий,Обычный,Сложный,Очень сложный", "режимы сложности различаются: врагов, их сила, цены, кредиты, рост оружия, привязка (" + JSON.stringify(v21.diff) + ")");
+
+  console.log("Уход в фон: звук выключен или приглушён, окно компьютера сворачивается (2.2)");
+  const bgt = await page.evaluate(async () => {
+    const AE = LAB.AE, S = LAB.settings, out = {};
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const label = i => typeof i.label === "function" ? i.label() : i.label;
+    const fire = t => window.dispatchEvent(new Event(t));
+    LAB.ui.closeAll();
+    if (window.labBgReset) window.labBgReset();
+    AE.ensure(); try { await AE.ctx.resume(); } catch (e) { /* */ }
+    const dim0 = S.bgDim;
+    /* флажок в настройках: по умолчанию снят, описание говорит, что будет */
+    S.bgDim = 0;
+    LAB.ui.settings();
+    const w = LAB.ui.top(), k = w ? w.items.findIndex(i => /^Приглушать звук в фоне/.test(label(i))) : -1;
+    out.item = k >= 0 && w.items[k].kind === "toggle" && w.items[k].get() === false;
+    SPOKEN.length = 0;
+    if (k >= 0) { w.i = k; LAB.ui.activate(); }
+    out.itemOn = S.bgDim === 1 && /включено\. .*тише/.test(SPOKEN.join(" "));
+    if (k >= 0) LAB.ui.activate();
+    out.itemOff = S.bgDim === 0 && /выключено\. .*звук выключен/.test(SPOKEN.join(" "));
+    LAB.ui.closeAll();
+    /* 1. флажок снят: ушли в другое окно — игра в фоне, звук выключен, и сторож звука его не будит */
+    fire("blur");
+    out.bgOn = LAB.bg === true;
+    await wait(100);
+    LAB.Sound.tick(); await wait(1200); LAB.Sound.tick(); await wait(300);
+    out.muted = AE.ctx.state !== "running";
+    fire("focus"); await wait(300);
+    out.back = !LAB.bg && AE.ctx.state === "running";
+    /* 2. флажок стоит: звук тише, но звучит; вернулись — как был */
+    S.bgDim = 1;
+    fire("blur"); await wait(600);
+    out.dim = LAB.bg === true && AE.ctx.state === "running" && AE.bgK < 0.5 && AE.master.gain.value < 0.4;
+    fire("focus"); await wait(700);
+    out.dimBack = !LAB.bg && AE.bgK === 1 && AE.master.gain.value > 0.8;
+    /* 3. телефон: приложение ушло с экрана — звук выключен, сторож его не будит; вернулось — звучит */
+    S.bgDim = 0;
+    window.labPause(); await wait(100);
+    LAB.Sound.tick(); await wait(1200); LAB.Sound.tick(); await wait(300);
+    out.pause = LAB.bg === true && AE.ctx.state !== "running";
+    window.labResume(); await wait(300);
+    out.resume = !LAB.bg && AE.ctx.state === "running";
+    /* 4. компьютер: окно без фокуса сворачивается, если звук в фоне выключен; с флажком и при мелькнувшем фокусе — нет */
+    const desk0 = LAB.desktop, ld0 = window.LabDesktop; let mins = 0;
+    LAB.desktop = true; window.LabDesktop = Object.assign({}, ld0 || {}, { minimize: () => { mins++; } });
+    S.bgDim = 0; fire("blur"); await wait(800); out.minOff = mins; fire("focus"); await wait(100);
+    S.bgDim = 1; fire("blur"); await wait(800); out.minDim = mins - out.minOff; fire("focus"); await wait(100);
+    S.bgDim = 0; fire("blur"); await wait(150); fire("focus"); await wait(700); out.minFlick = mins - out.minOff - out.minDim;
+    /* свернули окно (событие главного процесса) — в фоне; развернули и вернули фокус — снова в игре */
+    window.labBgSet("min", true); out.minBg = LAB.bg === true; window.labBgSet("min", false); out.minBack = !LAB.bg;
+    LAB.desktop = desk0; window.LabDesktop = ld0;
+    /* 5. фокус «потерялся», а игрок нажал клавишу — игра на экране */
+    fire("blur"); window.dispatchEvent(new KeyboardEvent("keydown", { key: "Unidentified" }));
+    out.keyBack = !LAB.bg;
+    S.bgDim = dim0;
+    if (window.labBgReset) window.labBgReset();
+    try { await AE.ctx.resume(); } catch (e) { /* */ }
+    return out;
+  });
+  ok(bgt.item && bgt.itemOn && bgt.itemOff, "настройки: флажок «Приглушать звук в фоне», по умолчанию снят, с описанием (" + JSON.stringify({ i: bgt.item, on: bgt.itemOn, off: bgt.itemOff }) + ")");
+  ok(bgt.bgOn && bgt.muted && bgt.back, "ушли в другое окно — игра ждёт, звук выключен, сторож его не будит; вернулись — звук снова (" + JSON.stringify({ bg: bgt.bgOn, m: bgt.muted, b: bgt.back }) + ")");
+  ok(bgt.dim && bgt.dimBack, "с флажком звук в фоне тише, но звучит; вернулись — как был (" + JSON.stringify({ d: bgt.dim, b: bgt.dimBack }) + ")");
+  ok(bgt.pause && bgt.resume, "телефон: приложение ушло с экрана — звук выключен и не просыпается; вернулось — звучит (" + JSON.stringify({ p: bgt.pause, r: bgt.resume }) + ")");
+  ok(bgt.minOff === 1 && bgt.minDim === 0 && bgt.minFlick === 0 && bgt.minBg && bgt.minBack, "компьютер: окно без фокуса сворачивается, с флажком — нет, мелькнувший фокус — не в счёт; свёрнутое окно — в фоне (" + JSON.stringify({ off: bgt.minOff, dim: bgt.minDim, fl: bgt.minFlick, mb: bgt.minBg, mr: bgt.minBack }) + ")");
+  ok(bgt.keyBack, "нажали клавишу — игра снова на экране, даже если окно не сообщило о фокусе");
 
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {

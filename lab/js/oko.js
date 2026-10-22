@@ -114,7 +114,7 @@ function speak(kind, force, data) {
   var arr = lines(kind);
   /* реплика с названием помещения — только когда оно известно */
   if (!(data && data.room)) arr = arr.filter(function (t) { return t.indexOf("{room}") < 0; });
-  /* (2.1) о камерах — только когда они на этаже есть, а тревога — когда заметили именно они:
+  /* (2.2) о камерах — только когда они на этаже есть, а тревога — когда заметили именно они:
      прежде ОКО говорило «носитель на камерах» и там, где камер не было вовсе */
   if (!/^cam_/.test(kind)) {
     var cb0 = C();
@@ -186,7 +186,7 @@ function heat(n) {
 function wave(delay, n, mode, at, tag) {
   var f = fs(), dk = LAB.dk();
   if (!f || n <= 0) return;
-  /* (2.1) режим сложности: отряды больше или меньше (repl) и быстрее или медленнее (replT) */
+  /* (2.2) режим сложности: отряды больше или меньше (repl) и быстрее или медленнее (replT) */
   n = Math.max(1, Math.round(n * (dk.repl || 1))); delay = Math.max(1, Math.round(delay * (dk.replT || 1)));
   if (!f.waves) f.waves = [];
   if (f.waves.length > 6) return;
@@ -516,7 +516,7 @@ function event(kind, data) {
         speak("terminal");
         var tx = data.x != null ? data.x : g.x, ty = data.y != null ? data.y : g.y;
         report("terminal", tx, ty, "suspect", "терминал вскрыт без пропуска");
-        /* (2.1) отсекает терминал, только когда уже настороже (жар или тревога), и ненадолго:
+        /* (2.2) отсекает терминал, только когда уже настороже (жар или тревога), и ненадолго:
            прежде — почти каждый пятый вскрытый терминал, сразу после входа, и игроку казалось,
            что оборонная сеть сломана. Когда вернёт — «Эхо» скажет. */
         if (data.o && (o.heat >= 40 || level() >= 2) && Math.random() < 0.3 + difficulty() * 0.15) {
@@ -615,7 +615,7 @@ function lossEsc(f) {
 }
 function lossBatch(n) {
   var b = n < 3 ? 1 : n < 6 ? 2 : n < 10 ? 3 + (Math.random() < 0.5 ? 1 : 0) : 4 + (Math.random() < 0.5 ? 1 : 0) + (depth() >= 200 && Math.random() < 0.4 ? 1 : 0);
-  return Math.max(1, Math.round(b * (LAB.dk().repl || 1))); /* (2.1) по режиму сложности */
+  return Math.max(1, Math.round(b * (LAB.dk().repl || 1))); /* (2.2) по режиму сложности */
 }
 function lossDelay(base, n) { return Math.max(20, Math.round(base * Math.max(0.35, 1 - 0.06 * n - depth() * 0.0003) * (LAB.dk().replT || 1))); }
 function lost(data) {
@@ -713,7 +713,7 @@ function tick() {
       else f.repairAt = now + 40;
     }
   } else if (f.repairAt) f.repairAt = 0;
-  /* (2.1) отсечённый терминал снова в оборонной сети */
+  /* (2.2) отсечённый терминал снова в оборонной сети */
   if (f.isoT && f.isoT.length && f.isoT.some(function (t) { return now >= t; })) {
     f.isoT = f.isoT.filter(function (t) { return now < t; });
     log("Сегмент сети терминала возвращён."); LAB.say("«Эхо»: «ОКО вернуло терминал в оборонную сеть: камеры, турели и тревога снова доступны с него».", { prio: "event", keep: true });

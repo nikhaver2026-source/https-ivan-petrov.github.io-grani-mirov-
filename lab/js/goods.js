@@ -136,7 +136,7 @@ REC.forEach(function (rc) { if (!LAB.RECIPES.some(function (q) { return q.id ===
 LAB.weaponPrice = function (w) {
   if (!w) return 0;
   var b = LAB.WEAPONS[w.base] || {};
-  /* (2.1) ёмкость выросла втрое — в цене она считается до сорока выстрелов */
+  /* (2.2) ёмкость выросла втрое — в цене она считается до сорока выстрелов */
   var p = 30 + w.dmg * 4 + (w.rng || 1) * 3 + Math.min(40, w.cap || 0) * 0.8 + (b.pierce ? 25 : 0) + (b.noarmor ? 30 : 0) + (b.area ? 25 : 0);
   return Math.max(10, Math.round(p * (LAB.RANK_MULT[w.rank] || 1)));
 };

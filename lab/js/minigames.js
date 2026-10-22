@@ -27,7 +27,7 @@ function tone(f, dur, pan, type, vol, when) {
 /* Пока идёт головоломка (и паузы между её частями), мир звучит тише. */
 var duckOn = false;
 function puzzleDuck() {
-  var on = !!cur || Date.now() < gapUntil;
+  var on = !!cur || gapOn;
   if (on === duckOn) return;
   duckOn = on;
   if (LAB.AE && LAB.AE.setPuzzle) LAB.AE.setPuzzle(on);
@@ -502,12 +502,14 @@ function waitSpeech(fn) {
   setTimeout(chk, 400);
 }
 
-/* Жесты — мини-игре. */
-var gapUntil = 0, gapCancel = false;
+/* Жесты — мини-игре. (2.2) Пауза между шагами цепочки длится, пока не начнётся
+   следующий шаг, а не 800 мс: опоздавший таймер не пускает жесты в игру и не
+   даёт миру сделать ход между двумя головоломками. */
+var gapOn = false, gapCancel = false;
 function gesture(g) {
   if (!cur) {
     /* пауза между шагами цепочки: жесты не уходят в игру */
-    if (Date.now() < gapUntil) { if ((g.kind === "swipe" && g.n === 2 && g.dir === "D") || g.kind === "back") { gapCancel = true; lastCancel = Date.now(); } return true; }
+    if (gapOn) { if ((g.kind === "swipe" && g.n === 2 && g.dir === "D") || g.kind === "back") { gapCancel = true; lastCancel = Date.now(); } return true; }
     return false;
   }
   if (cur.done) return true; /* итог уже решён — лишний жест его не перебьёт */
@@ -536,7 +538,7 @@ function chain(steps, cb) {
     if (!ok) { cb(false); return; }
     if (i >= steps.length) { cb(true); return; }
     var s = steps[i++];
-    if (i > 1) { LAB.UI.ok(); gapUntil = Date.now() + 800; gapCancel = false; setTimeout(function () { gapUntil = 0; if (gapCancel) { gapCancel = false; say("Прервано."); cb(false); return; } s(next); }, 700); } else s(next);
+    if (i > 1) { LAB.UI.ok(); gapOn = true; gapCancel = false; setTimeout(function () { gapOn = false; if (gapCancel) { gapCancel = false; say("Прервано."); cb(false); return; } s(next); }, 700); } else s(next);
   };
   next(true);
 }
@@ -545,7 +547,7 @@ LAB.mini = {
   hack: hack, tune: tune, rhythm: rhythm, sync: sync, code: code, relays: relays, bulls: bulls, sortTones: sortTones, melody: melody, chain: chain, gesture: gesture, cancel: cancel, start: start,
   /* (2.0) сигналы с цифрами: вверх 1, вправо 2, вниз 3, влево 4 — и для радиоприёмника */
   playSeq: playSeq, sigHelp: sigHelp, SIG_DIGIT: { U: 1, R: 2, D: 3, L: 4 },
-  active: function () { return !!cur || Date.now() < gapUntil; },
+  active: function () { return !!cur || gapOn; },
   wasCancelled: function () { return Date.now() - lastCancel < 1500; },
   _cur: function () { return cur; }, /* для проверок */
   raw: function () { return !!(cur && cur.raw); },

@@ -25,7 +25,7 @@ LAB.store = store;
    версий не переносятся — ни в браузере, ни в приложениях для Android и
    Windows (у них то же хранилище страницы). Метка версии — «lab_ver»:
    другая или её нет — стираются слоты, автозапись и их запасные копии.
-   (2.1, просьба игрока) Остаются настройки (речь, громкость, навигатор и
+   (2.2, просьба игрока) Остаются настройки (речь, громкость, навигатор и
    прочие), отметка о прологе и подсказка про облегчённый режим. */
 var VER_KEY = "lab_ver";
 LAB.freshStart = (function () {
@@ -80,7 +80,11 @@ var DEF = {
   /* (2.0) облегчённый режим для слабых телефонов: дальние машины думают
      реже, звук легче (без отзвука, меньше голосов сразу, после перезапуска —
      22 кГц и записи в моно), карта на экране рисуется реже */
-  lite: 0
+  lite: 0,
+  /* (2.2, просьба игрока) игра в фоне — свёрнутое окно, другое окно или
+     приложение: 0 — звук выключается, а окно на компьютере сворачивается;
+     1 — звук звучит тише, окно остаётся (main.js) */
+  bgDim: 0
 };
 var saved = {};
 try { saved = JSON.parse(store.get("lab_settings") || "{}") || {}; } catch (e) { saved = {}; }
@@ -101,6 +105,8 @@ if (saved.musV !== 2) { if (saved.musicVol == null || +saved.musicVol === 0.5) s
 settings.rate = LAB.rateFromPct(settings.ratePct);
 LAB.settings = settings;
 LAB.saveSettings = function () { store.set("lab_settings", JSON.stringify(settings)); };
+/* (2.2) игра в фоне, и звук в фоне выключен (main.js): будить его нельзя */
+LAB.bgMuted = function () { return !!LAB.bg && !settings.bgDim; };
 
 LAB.vib = function (p) {
   if (!settings.haptics) return;
@@ -118,15 +124,19 @@ function vol01(v) { return v == null ? 1 : Math.max(0, Math.min(1, +v)); }
 function spaceK() { return settings.spaceVol == null ? 1 : Math.max(0, Math.min(1.5, +settings.spaceVol)); }
 /* Во сколько раз канал сигналов головоломок громче интерфейса (около +7 дБ). */
 var PUZZLE_GAIN = 2.2;
+/* (2.2) Игра в фоне со звуком: общая громкость — четверть обычной. */
+var BG_DIM = 0.25;
 var AE = {
   ctx: null, master: null, fx: null, music: null, amb: null, beacon: null, ui: null, voice: null, conv: null, wet: null, cache: {}, irc: {}, duck: 1,
   weap: null, foe: null, alarm: null, bed: null, bass: null, comp: null, makeup: null, wetBase: 0.35,
   /* канал сигналов головоломок и приглушение мира, пока идёт головоломка */
   puzzle: null, pduck: 0,
+  /* (2.2) игра в фоне со звуком: множитель общей громкости */
+  bgK: 1,
   ensure: function () {
     if (this.ctx) {
-      /* в фоне звук не будим: его разбудит возврат на экран */
-      if (this.ctx.state === "suspended" && !LAB.bg && !document.hidden) { try { this.ctx.resume(); } catch (e) { /* */ } }
+      /* в фоне звук не будим: его разбудит возврат на экран (а приглушённый в фоне — звучит) */
+      if (this.ctx.state === "suspended" && !LAB.bgMuted() && !document.hidden) { try { this.ctx.resume(); } catch (e) { /* */ } }
       return this.ctx;
     }
     var C = window.AudioContext || window.webkitAudioContext;
@@ -140,7 +150,7 @@ var AE = {
     catch (e) { try { this.ctx = new C({ latencyHint: hint }); } catch (e1) { try { this.ctx = new C(); } catch (e2) { return null; } } }
     this.liteCtx = lite;
     var c = this.ctx;
-    this.master = c.createGain(); this.master.gain.value = 0.95;
+    this.master = c.createGain(); this.master.gain.value = 0.95 * this.bgK;
     /* мягкий ограничитель на выходе: громкие сцены не хрипят; за ним — подъём
        громкости для сжатого диапазона */
     var comp = c.createDynamicsCompressor();
@@ -221,6 +231,11 @@ var AE = {
     this.makeup.gain.setTargetAtTime(P.mk, t, 0.1);
   },
   setDuck: function (on) { this.duck = on ? 0 : 1; this.applyVolumes(); },
+  /* (2.2) игра ушла в фон со звуком — вся громкость тише; вернулась — как была */
+  setBgDim: function (on) {
+    this.bgK = on ? BG_DIM : 1;
+    if (this.ctx && this.master) { try { this.master.gain.setTargetAtTime(0.95 * this.bgK, this.ctx.currentTime, 0.15); } catch (e) { /* */ } }
+  },
   /* головоломка началась или кончилась (зовёт minigames.js) */
   setPuzzle: function (on) { on = on ? 1 : 0; if (this.pduck === on) return; this.pduck = on; this.applyVolumes(); },
   /* Отзвук помещения: отклики заготовлены по длине (шаг четверть секунды,
@@ -663,7 +678,8 @@ var Speech = {
     }
     this.choose();
     if (settings.robotVoice) setTimeout(function () { self.loadESpeak(); }, 2500);
-    try { document.addEventListener("visibilitychange", function () { if (!document.hidden) self.resume(); }); } catch (e) { /* */ }
+    /* (2.2) окно снова видно, но игра ещё в фоне (без фокуса) — речь продолжит возврат в игру (main.js) */
+    try { document.addEventListener("visibilitychange", function () { if (!document.hidden && !LAB.bg) self.resume(); }); } catch (e) { /* */ }
   },
   /* Голоса моста заново: телефон или компьютер (голоса перечитаны). */
   refreshBridge: function (st) {

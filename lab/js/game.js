@@ -587,7 +587,7 @@ game.HUNGER_MIN = HUNGER_MIN;
 function bodyMinutes(min, asleep) {
   var b = body();
   if (asleep) { b.tox = Math.max(0, b.tox - min / 4); b.rad = Math.max(0, b.rad - min / 40); return; } /* сон в капсуле: раствор кормит и выводит, предупреждений нет */
-  var mk = (1 - (LAB.implants ? LAB.implants.stat("metab") : 0)) * (LAB.dk().body || 1); /* (2.0) чип метаболизма; (2.1) режим сложности */
+  var mk = (1 - (LAB.implants ? LAB.implants.stat("metab") : 0)) * (LAB.dk().body || 1); /* (2.0) чип метаболизма; (2.2) режим сложности */
   b.food -= min / HUNGER_MIN * mk;
   /* выспались в капсуле (восемь часов и больше) — бодрость какое-то время падает вдвое медленнее */
   b.wake -= min / 12 * (G.st.restedMin > 0 ? 0.5 : 1) * mk;
@@ -786,7 +786,7 @@ function giveItem(it, quiet) {
       break;
     case "credits": if (LAB.implants && LAB.implants.stat("loot")) it.n = Math.round(it.n * (1 + LAB.implants.stat("loot"))); G.credits += it.n; break; /* (2.0) чип старателя */
     case "weapon":
-      LAB.fixCap(it.w); /* (2.1) оружие из прежней записи — с новой ёмкостью */
+      LAB.fixCap(it.w); /* (2.2) оружие из прежней записи — с новой ёмкостью */
       G.weapons.push(it.w);
       if (LAB.oko && LAB.oko.react) later(function () { LAB.oko.react("weapon"); }, 2500);
       if (!G.tut.weapon && hintsOn()) { G.tut.weapon = 1; extra = LAB.K(" Выбрать оружие — свайп одним пальцем вверх и сразу вниз. Вынуть — касание тремя пальцами.", " Выбрать оружие — Q и E или цифры от 1 до 9. Достать — R."); }
@@ -1138,7 +1138,7 @@ function roomStuff(r, brief, itemsFirst) {
   var npcs = CUR.fl.npcs.filter(function (n) { return n.room === r.id; }).map(function (n) { return npcName(n) + " " + relDir(n.x, n.y); });
   var seenF = LAB.combat ? LAB.combat.visibleFoes(8) : [], camF = LAB.combat && LAB.combat.isCam ? seenF.filter(LAB.combat.isCam) : [];
   var foes = seenF.filter(function (f) { return camF.indexOf(f) < 0; }).map(function (f) { return f.name + " " + relDir(f.x, f.y); });
-  /* (2.1) камеры — отдельно: их можно разбить */
+  /* (2.2) камеры — отдельно: их можно разбить */
   var cams = camF.map(function (f) { return f.name.split(",")[0].toLowerCase() + " " + relDir(f.x, f.y) + (f.camOff ? ", обесточена" : ""); });
   var items = floorItems().filter(function (it) { var rr = roomAt(it.x, it.y); return rr && rr.id === r.id; }).map(function (it) { return itemName(it) + " " + relDir(it.x, it.y); });
   var s = [], floor = items.length ? "На полу: " + items.slice(0, 5).join(", ") + (items.length > 5 ? " и ещё " + (items.length - 5) : "") + "." : "";
@@ -1293,7 +1293,7 @@ game.camsNear = camsNear;
 function cameraSabotage(f) {
   var cb = LAB.combat, k = cb.camState(f), dif = okoDiff(), items = [];
   var spotted = function () { if (LAB.oko) LAB.oko.event("camera", { x: G.x, y: G.y }); if (LAB.combat) LAB.combat.noise(6); };
-  /* (2.1, просьба игрока) разбить — сразу и навсегда: ремонтнику чинить нечего, но удар слышно, а ОКО заметит, что камера замолчала */
+  /* (2.2, просьба игрока) разбить — сразу и навсегда: ремонтнику чинить нечего, но удар слышно, а ОКО заметит, что камера замолчала */
   items.push({ label: "Разбить камеру: удар по объективу и кожуху — она ослепнет навсегда, но удар слышно, а ОКО заметит обрыв", fn: function () {
     UIx("closeAll");
     if (cb.smashCam(f)) say("Удар — объектив хрустит, кожух сорван, камера повисла на проводах. Она больше ничего не видит. ОКО заметит, что она замолчала, и пришлёт проверку.");
@@ -2178,7 +2178,7 @@ function camTicks(base) { var dif = okoDiff(), blk = LAB.blockOf(G.L); return Ma
 function secs(t) { var s = Math.round(t / 2); return s + " " + plural(s, "секунду", "секунды", "секунд"); }
 function defenseMenu(o, st) {
   var cb = LAB.combat, items = [], nT = cb ? cb.turretsLeft() : 0, cs = cb && cb.cams ? cb.cams() : [];
-  /* (2.1) чего на этаже нет — сведения, а не «недоступно»: сеть работает, управлять здесь просто нечем */
+  /* (2.2) чего на этаже нет — сведения, а не «недоступно»: сеть работает, управлять здесь просто нечем */
   if (cs.length) items.push({ label: "Камеры этажа: " + camLine(), fn: function () { camerasMenu(o, st); } });
   else items.push({ label: "Камеры: " + camLine() + " — управлять нечем", info: true, keep: true, fn: function () { say(cb && cb.camsBroken && cb.camsBroken() ? "Все камеры этажа разбиты: ОКО видит здесь только глазами машин." : "На этом этаже ОКО не повесило камер: оно видит только глазами машин и слышит датчиками."); } });
   if (nT) items.push({ label: "Турели этажа: " + nT + ", " + turretStatus(), fn: function () { turretMenu(o, st); } });
@@ -2255,7 +2255,7 @@ function camerasMenu(o, st) {
     });
   } });
   cs.forEach(function (f) {
-    var rr = roomAt(f.x, f.y); /* (2.1) камера в помещении — с его названием */
+    var rr = roomAt(f.x, f.y); /* (2.2) камера в помещении — с его названием */
     items.push({ label: f.name.split(",")[0] + (rr ? " в помещении «" + rr.name + "»" : "") + " " + relDir(f.x, f.y) + ": " + camWord(cb.camState(f)), fn: function () { cameraRemote(o, st, f); } });
   });
   items.push({ label: "Назад", fn: function () { defenseMenu(o, st); } });
@@ -2499,7 +2499,7 @@ function openContainer(o) {
 }
 
 /* ── МАГАЗИНЫ И СЛУЖБЫ ── */
-/* Рост цен с глубиной; (2.1) по режиму сложности — и сами цены (price), и то,
+/* Рост цен с глубиной; (2.2) по режиму сложности — и сами цены (price), и то,
    как круто они растут с каждым блоком (pgrow). priceDepth — без режима:
    от него считается скупка (supply.js). */
 function priceDepth() { return G.L <= 10 ? 1 + G.L * 0.12 : 1 + 0.15 * (LAB.wealth(G.L, G.F) - 1); }
@@ -3437,7 +3437,7 @@ function migrate(g) {
   if (!g.blockSeen) g.blockSeen = {};
   /* модули усиления прежних версий — модули мощности */
   (g.weapons || []).forEach(function (w) { if (w && w.mods > 0 && !w.mod) w.mod = { power: w.mods }; });
-  /* (2.1) ёмкость оружия — по новому правилу: «Искра» — тридцать, лучше оружие — больше */
+  /* (2.2) ёмкость оружия — по новому правилу: «Искра» — тридцать, лучше оружие — больше */
   (g.weapons || []).forEach(function (w) { LAB.fixCap(w); });
   /* надетая броня — та же запись, что в списке брони (после загрузки это были копии) */
   if (g.armor && g.armors) {
