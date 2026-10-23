@@ -808,90 +808,110 @@
 
 # «Подземная лаборатория», заход 8 (2.6), часть 2: отобранные записи Freesound (CC0 и CC BY) —
 # бросок, чека, падение гранаты, взрывы, осколки, осыпь, огонь, вспышка, лёд, газ, сеть, мины, ЭМИ, кислота.
-lab_fsL https://cdn.freesound.org/previews/611/611613_1834147-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/346/346373_4882199-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/463/463763_123355-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/394/394873_6479820-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/209/209645_2886479-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/259/259553_2316086-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/725/725813_6401406-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/874/874472_16682330-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/739/739218_5287430-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/93/93839_1386366-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/161/161622_2698284-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/609/609587_1038806-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/244/244394_525427-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/523/523365_6142149-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/398/398283_2351866-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/516/516914_2247456-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/563/563010_6253486-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/136/136765_2482480-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/165/165808_2872744-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/132/132929_1887925-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/560/560510_9250976-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/220/220062_181941-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/523/523089_11537497-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/402/402006_2155630-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/620/620229_7554526-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/255/255111_2472317-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/235/235968_4265427-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/177/177556_1423336-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/665/665094_4898018-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/372/372086_6417448-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/324/324277_1134415-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/129/129281_2356029-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/753/753843_6823432-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/172/172334_3133255-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/550/550342_9250976-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/703/703247_13504080-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/703/703248_13504080-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/333/333988_1134415-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/179/179341_544580-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/483/483322_2524442-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/260/260554_3968707-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/244/244926_3983630-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/242/242721_2042115-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/186/186374_2421128-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/737/737326_15956618-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/734/734095_15956618-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/752/752628_15956618-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/27/27879_56897-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/459/459800_5696249-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/685/685253_5175373-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/452/452645_612689-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/342/342546_3562222-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/422/422623_8455865-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/418/418194_3656686-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/551/551429_9297711-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/398/398077_6996854-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/406/406089_7919598-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/800/800740_15956618-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/719/719638_15601358-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/349/349662_464940-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/332/332671_950925-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/720/720888_15107322-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/418/418329_6511463-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/138/138108_1572282-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/367/367458_6750383-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/438/438494_2524442-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/108/108859_1631474-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/202/202094_3756348-hq.ogg
-lab_fsL https://cdn.freesound.org/previews/382/382313_460876-hq.ogg
-lab_fsLpg https://freesound.org/people/CGEffex/sounds/93839/#s_93839.html
-lab_fsLpg https://freesound.org/people/ryanconway/sounds/161622/#s_161622.html
-lab_fsLpg https://freesound.org/people/EvanBoyerman/sounds/753843/#s_753843.html
-lab_fsLpg https://freesound.org/people/knova/sounds/172334/#s_172334.html
-lab_fsLpg https://freesound.org/search/?q=wire+snap&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_wsnap.html
-lab_fsLpg https://freesound.org/search/?q=string+snap&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_ssnap.html
-lab_fsLpg https://freesound.org/search/?q=grenade+spoon&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_spoon.html
-lab_fsLpg https://freesound.org/search/?q=safety+pin&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_spin.html
-lab_fsLpg https://freesound.org/search/?q=metal+bounce+floor&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_mbnc.html
-lab_fsLpg https://freesound.org/search/?q=metal+roll&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_mroll.html
-lab_fsLpg https://freesound.org/search/?q=mousetrap&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_mtrap.html
-lab_fsLpg https://freesound.org/search/?q=pressure+plate&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_plate.html
-lab_fsLpg https://freesound.org/search/?q=net+throw&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_nthrow.html
-lab_fsLpg https://freesound.org/search/?q=underground+explosion&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_uexp.html
-lab_fsLpg https://freesound.org/search/?q=tunnel+explosion&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_texp.html
-lab_fsLpg https://freesound.org/search/?q=metal+ping&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_mping.html
-lab_fsLpg https://freesound.org/search/?q=ricochet&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_ric.html
-lab_fsLpg https://freesound.org/search/?q=can+drop&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_cans.html
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/611/611613_1834147-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/346/346373_4882199-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/463/463763_123355-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/394/394873_6479820-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/209/209645_2886479-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/259/259553_2316086-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/725/725813_6401406-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/874/874472_16682330-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/739/739218_5287430-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/93/93839_1386366-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/161/161622_2698284-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/609/609587_1038806-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/244/244394_525427-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/523/523365_6142149-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/398/398283_2351866-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/516/516914_2247456-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/563/563010_6253486-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/136/136765_2482480-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/165/165808_2872744-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/132/132929_1887925-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/560/560510_9250976-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/220/220062_181941-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/523/523089_11537497-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/402/402006_2155630-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/620/620229_7554526-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/255/255111_2472317-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/235/235968_4265427-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/177/177556_1423336-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/665/665094_4898018-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/372/372086_6417448-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/324/324277_1134415-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/129/129281_2356029-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/753/753843_6823432-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/172/172334_3133255-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/550/550342_9250976-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/703/703247_13504080-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/703/703248_13504080-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/333/333988_1134415-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/179/179341_544580-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/483/483322_2524442-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/260/260554_3968707-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/244/244926_3983630-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/242/242721_2042115-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/186/186374_2421128-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/737/737326_15956618-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/734/734095_15956618-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/752/752628_15956618-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/27/27879_56897-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/459/459800_5696249-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/685/685253_5175373-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/452/452645_612689-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/342/342546_3562222-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/422/422623_8455865-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/418/418194_3656686-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/551/551429_9297711-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/398/398077_6996854-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/406/406089_7919598-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/800/800740_15956618-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/719/719638_15601358-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/349/349662_464940-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/332/332671_950925-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/720/720888_15107322-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/418/418329_6511463-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/138/138108_1572282-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/367/367458_6750383-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/438/438494_2524442-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/108/108859_1631474-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/202/202094_3756348-hq.ogg
+# (заход 8 скачан) lab_fsL https://cdn.freesound.org/previews/382/382313_460876-hq.ogg
+# (заход 8 скачан) lab_fsLpg https://freesound.org/people/CGEffex/sounds/93839/#s_93839.html
+# (заход 8 скачан) lab_fsLpg https://freesound.org/people/ryanconway/sounds/161622/#s_161622.html
+# (заход 8 скачан) lab_fsLpg https://freesound.org/people/EvanBoyerman/sounds/753843/#s_753843.html
+# (заход 8 скачан) lab_fsLpg https://freesound.org/people/knova/sounds/172334/#s_172334.html
+# (заход 8 скачан) lab_fsLpg https://freesound.org/search/?q=wire+snap&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_wsnap.html
+# (заход 8 скачан) lab_fsLpg https://freesound.org/search/?q=string+snap&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_ssnap.html
+# (заход 8 скачан) lab_fsLpg https://freesound.org/search/?q=grenade+spoon&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_spoon.html
+# (заход 8 скачан) lab_fsLpg https://freesound.org/search/?q=safety+pin&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_spin.html
+# (заход 8 скачан) lab_fsLpg https://freesound.org/search/?q=metal+bounce+floor&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_mbnc.html
+# (заход 8 скачан) lab_fsLpg https://freesound.org/search/?q=metal+roll&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_mroll.html
+# (заход 8 скачан) lab_fsLpg https://freesound.org/search/?q=mousetrap&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_mtrap.html
+# (заход 8 скачан) lab_fsLpg https://freesound.org/search/?q=pressure+plate&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_plate.html
+# (заход 8 скачан) lab_fsLpg https://freesound.org/search/?q=net+throw&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_nthrow.html
+# (заход 8 скачан) lab_fsLpg https://freesound.org/search/?q=underground+explosion&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_uexp.html
+# (заход 8 скачан) lab_fsLpg https://freesound.org/search/?q=tunnel+explosion&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_texp.html
+# (заход 8 скачан) lab_fsLpg https://freesound.org/search/?q=metal+ping&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_mping.html
+# (заход 8 скачан) lab_fsLpg https://freesound.org/search/?q=ricochet&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_ric.html
+# (заход 8 скачан) lab_fsLpg https://freesound.org/search/?q=can+drop&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_cans.html
+
+# «Подземная лаборатория», заход 8 (2.6), часть 3: нажимная пластина, рывок струны, мышеловка,
+# отскок металла, рикошеты, подземный и тоннельный взрыв, «Big Boom» (Freesound, CC0).
+lab_fsM https://cdn.freesound.org/previews/138/138098_2527354-hq.ogg
+lab_fsM https://cdn.freesound.org/previews/667/667382_14357477-hq.ogg
+lab_fsM https://cdn.freesound.org/previews/537/537084_6652872-hq.ogg
+lab_fsM https://cdn.freesound.org/previews/560/560094_12128104-hq.ogg
+lab_fsM https://cdn.freesound.org/previews/466/466272_4135289-hq.ogg
+lab_fsM https://cdn.freesound.org/previews/422/422870_6613468-hq.ogg
+lab_fsM https://cdn.freesound.org/previews/181/181115_1591616-hq.ogg
+lab_fsM https://cdn.freesound.org/previews/389/389188_7268131-hq.ogg
+lab_fsM https://cdn.freesound.org/previews/587/587443_5487341-hq.ogg
+lab_fsM https://cdn.freesound.org/previews/329/329033_4361321-hq.ogg
+lab_fsM https://cdn.freesound.org/previews/30/30932_15696-hq.ogg
+lab_fsM https://cdn.freesound.org/previews/148/148840_2676248-hq.ogg
+lab_fsM https://cdn.freesound.org/previews/703/703070_1431924-hq.ogg
+lab_fsM https://cdn.freesound.org/previews/505/505807_181941-hq.ogg
+lab_fsM https://cdn.freesound.org/previews/189/189779_1038806-hq.ogg
+lab_fsM https://cdn.freesound.org/previews/826/826213_13332713-hq.ogg
+lab_fsM https://cdn.freesound.org/previews/512/512215_10756146-hq.ogg
