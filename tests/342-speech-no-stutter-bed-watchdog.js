@@ -13,7 +13,8 @@
       живой слой яруса сменяются фоном поверхности.
    5. Сторож не вмешивается в бой.
    6. В бою на лестнице «действие здесь» не заводит марш лестницы с начала
-      на каждое нажатие, а говорит, что сначала надо отбиться.
+      на каждое нажатие, а говорит, что сначала надо отбиться; отказ самой
+      шахты (у дна — «Глубже хода нет») звучит и в бою, как прежде.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :: '+JSON.stringify(e):''));
@@ -69,6 +70,12 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  for(let i=0;i<3;i++){await p.keyboard.press("Enter");await p.waitForTimeout(400);}
  const лест2=await p.evaluate(()=>({бой:!!G.inCombat,марш:!!G.flight,сказано:window.__said.join(" | ").slice(-300)}));
  check('6. в бою на лестнице марш не начинается и сказано, что сначала — отбиться',лест.на==="<"&&лест.бой&&!лест2.марш&&/В бою по лестнице не уйти/.test(лест2.сказано)&&!/Марш лестницы/.test(лест2.сказано),{лест,лест2});
+
+ /* 6б. (23 октября) отказ самой шахты в бою звучит, как прежде: у дна — «Глубже хода нет», а не «в бою не уйти» */
+ const дно=await p.evaluate(()=>{const pl=G.place;const было=window.maxDepthHere;window.maxDepthHere=()=>pl.depth;
+  const бой0=G.inCombat;G.inCombat=true;G.flight=null;window.__said=[];const r=startFlight(1,"N");
+  window.maxDepthHere=было;G.inCombat=бой0;return {r,марш:!!G.flight,сказано:window.__said.join(" | ").slice(-300)};});
+ check('6б. в бою у дна шахты сказано «Глубже хода нет», а не про бой',дно.r===false&&!дно.марш&&/Глубже хода нет|Дно/.test(дно.сказано)&&!/В бою по лестнице/.test(дно.сказано),дно);
 
  check('Ошибок страницы нет',errors.length===0,errors.slice(0,3));
  await browser.close();

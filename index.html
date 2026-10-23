@@ -93546,8 +93546,13 @@ safeFn(()=>Такт.каждые(1500,()=>ФонСтраж.проверить("�
    игра говорит, что сначала надо отбиться или отступить (это ответ на действие
    игрока — тихий бой его не глушит).
    ════════════════════════════════════════════════════════════════════════ */
-safeFn(()=>{const s0=startFlight;startFlight=function(){
- if(G.inCombat){safeFn(()=>narrate("В бою по лестнице не уйти: сначала отбейтесь или отступите от твари.",{key:"boi_lestnica",pri:1,cat:"result",user:true}));return false;}
+/* (23 октября) Отказ самой шахты — тайная палата, дно, запертый порог Зодчих, верх — говорится, как прежде, и в бою:
+   «Глубже хода нет» сообщает больше, чем «в бою не уйти». Про бой — только когда марш мог бы начаться. */
+safeFn(()=>{const s0=startFlight;startFlight=function(delta){
+ if(G.inCombat){const p=G.place;
+  const откажет=!p||p.тайник||(delta>0?(p.depth+1>safeFn(()=>maxDepthHere(),MAX_DEPTH)||!!safeFn(()=>Perekroy.depthCap(),null)):p.depth+delta<0);
+  if(откажет)return s0.apply(this,arguments);
+  safeFn(()=>narrate("В бою по лестнице не уйти: сначала отбейтесь или отступите от твари.",{key:"boi_lestnica",pri:1,cat:"result",user:true}));return false;}
  return s0.apply(this,arguments);};});
 
 /* ── последний из поздних модулей: обёртки показывают текст прежнего правила (см. ДО150 в начале подъёмников) ──
