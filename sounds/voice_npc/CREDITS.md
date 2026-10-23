@@ -5,7 +5,7 @@
 стражник у ворот, жрец, трактирщик, староста, кузнец, торговец, наставник, смотритель порта. Прежде эти строки читал голос
 игры в кавычках; теперь у каждой своя запись и своя интонация.
 
-Записей: 8066
+Записей: 8077
 
 Речь синтезирована 27–29 сентября 2026 года нейроголосами **Gemini** (Google),
 модель `gemini-3.8-flash-tts`, через Gemini API (Interactions API,
@@ -2942,6 +2942,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | quest_have_2_g.flac | заказчик: дело уже взято | Umbriel | patient, reminding | Ты уже взялся за моё дело. Сперва закончи его. |
 | quest_have_2_f_g.flac | заказчик: дело уже взято | Despina | patient, reminding | Ты уже взялся за моё дело. Сперва закончи его. |
 | quest_have_2_v1_g.flac | заказчик: дело уже взято | Sadachbia | patient, reminding | Ты уже взялся за моё дело. Сперва закончи его. |
+| quest_have_2_v1_f_g.flac | заказчик: дело уже взято | Leda | patient, reminding | Ты уже взялся за моё дело. Сперва закончи его. |
 | quest_have_3_g.flac | заказчик: дело уже взято | Umbriel | impatient, reminding | Я жду. Дело-то моё ещё не сделано. |
 | quest_have_3_f_g.flac | заказчик: дело уже взято | Despina | impatient, reminding | Я жду. Дело-то моё ещё не сделано. |
 | quest_have_3_v1_g.flac | заказчик: дело уже взято | Sadachbia | impatient, reminding | Я жду. Дело-то моё ещё не сделано. |
@@ -7981,6 +7982,15 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_spirit_attack_7_v1_g.flac | в бою: дух, удар | Vindemiatrix | eerie, echoing ghost | Стынь… |
 | foe_spirit_kray_0_v1_g.flac | в бою: дух, слабеет | Vindemiatrix | eerie, echoing ghost | Я таю... таю... |
 | foe_spirit_kray_1_v1_g.flac | в бою: дух, слабеет | Vindemiatrix | eerie, echoing ghost | Свет... слишком ярко... |
+| foe_bandit_kray_3_v1_g.flac | в бою: разбойник, слабеет | Enceladus | rough highway robber | Всё, всё, ухожу! |
+| foe_giant_hurt_5_g.flac | в бою: великан, рана | Alnilam | huge, slow, rumbling giant | Колешь. Зачем колешь? |
+| foe_goblin_death_4_g.flac | в бою: гоблин, последние слова | Puck | shrill, cunning goblin | Ии… нора… |
+| foe_lich_attack_0_g.flac | в бою: лич, удар | Schedar | cold, hollow, ancient undead lord | Тлей! |
+| foe_lich_death_3_g.flac | в бою: лич, последние слова | Schedar | cold, hollow, ancient undead lord | Я… вернусь… |
+| foe_pirate_attack_8_g.flac | в бою: пират, удар | Algenib | salty, swaggering pirate | Йо-хо, руби! |
+| foe_pirate_attack_8_v1_g.flac | в бою: пират, удар | Zephyr | salty, swaggering pirate | Йо-хо, руби! |
+| foe_pirate_kray_1_g.flac | в бою: пират, слабеет | Algenib | salty, swaggering pirate | Тону... тону! |
+| foe_siren_attack_6_g.flac | в бою: сирена, удар | Autonoe | alluring, cold sea siren | Тони… |
 
 ## 15.0: женское обращение к героине
 

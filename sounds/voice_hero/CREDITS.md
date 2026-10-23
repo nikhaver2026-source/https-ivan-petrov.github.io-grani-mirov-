@@ -274,7 +274,7 @@
 
 Целые фразы героя в бою — угроза, ответ врагу, удачный удар, рана, свой
 край, край врага, победа — записаны голосами «Настроек персонажа» с
-интонацией мига боя. Записей: 8466. Нейроголоса **Gemini** (Google),
+интонацией мига боя. Записей: 8472. Нейроголоса **Gemini** (Google),
 модель gemini-3.8-flash-tts, по тексту игры; каждая проверена
 распознаванием (GigaAM). Обработка: −18 LUFS, пик не выше −1 дБ, 24 кГц, FLAC.
 
@@ -9811,3 +9811,9 @@
 | hero_podkup_4_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | conspiratorial, low voice | Пусть это останется между нами. |
 | hero_provoc_4_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | taunting | Давай, я жду. |
 | hero_rassprosit_1_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | confident, natural | Что у вас нового? |
+| hero_f_1kggna7_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | Вот так-то! |
+| hero_f_18eqx6j_sadachbia_g.flac | Живой (муж.) | Sadachbia | Хрясь! Будешь знать! |
+| hero_f_t94oy5_sadachbia_g.flac | Живой (муж.) | Sadachbia | Об щит, дурень! |
+| hero_f_cz74k7_autonoe_g.flac | Светлый (жен.) | Autonoe | На, получи! |
+| hero_f_t94oy5_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Об щит, дурень! |
+| hero_f_1xin3nj_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Уху из тебя сварю. |
