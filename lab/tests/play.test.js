@@ -84,8 +84,8 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     LAB.ui.closeTop(true); LAB.ui.closeAll(); LAB.ui.mainMenu(true);
     return out;
   });
-  ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.items.some(l => /^Альфа 2\.2$/.test(l)) && news.items.some(l => /^Альфа 2\.1$/.test(l)) && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
-  ok(/Что нового: /.test(news.note) && /больше сотни видов/.test(news.text) && /отрядами и кастами/.test(news.text) && /пусты лишь изредка/.test(news.text) && /ловушки и пакости/.test(news.text) && /уборщики её больше не уносят/.test(news.text) && /Безопасная зона у капсулы/.test(news.text) && /через семь/.test(news.text) && /Лёгкий режим стал легче/.test(news.text) && /настройки остались прежними/.test(news.text) && !/десять аптечек/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
+  ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.items.some(l => /^Альфа 2\.5$/.test(l)) && news.items.some(l => /^Альфа 2\.2$/.test(l)) && news.items.some(l => /^Альфа 2\.1$/.test(l)) && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
+  ok(/Что нового: /.test(news.note) && /аптечный автомат/.test(news.text) && /пять энергобатарей/.test(news.text) && /с каждого четвёртого уничтоженного робота/.test(news.text) && /зарядить оружие за кредиты/.test(news.text) && /В каждой второй комнате/.test(news.text) && /Целители глубин/.test(news.text) && /режима сложности/.test(news.text) && /Пошаговый режим стал строже/.test(news.text) && /вдогонку/.test(news.text) && /Гранаты, мины и взрывы звучат по-новому/.test(news.text) && /настройки остались прежними/.test(news.text) && !/больше сотни видов/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
 
   console.log("Настройки");
   await page.evaluate(() => { LAB.ui.top().i = 0; });
@@ -93,7 +93,8 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   await gest({ kind: "dtap", n: 1 });
   ok(await page.evaluate(() => LAB.ui.top().title) === "Настройки", "открыты настройки");
   const labels = await page.evaluate(() => LAB.ui.top().items.map(i => typeof i.label === "function" ? i.label() : i.label));
-  ok(labels.some(l => /Синтезатор/.test(l)) && labels.some(l => /сложности/.test(l)) && labels.some(l => /музыки/.test(l)), "есть синтезатор, сложность, громкость музыки");
+  ok(labels.some(l => /Синтезатор/.test(l)) && labels.some(l => /музыки/.test(l)), "есть синтезатор и громкость музыки");
+  ok(labels.some(l => /^Режим сложности выбирают в начале новой игры/.test(l)), "режим сложности в настройках не меняют: его выбирают в начале новой игры");
   const mi = labels.findIndex(l => /музыки/.test(l));
   for (let i = 0; i < mi; i++) await gest({ kind: "swipe", n: 1, dir: "R" });
   const v0 = await page.evaluate(() => LAB.settings.musicVol);
@@ -104,14 +105,8 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(v1 > v0 && v2 < v1, `музыка: свайп вверх громче (${v0}→${v1}), вниз тише (${v2})`);
   const di = labels.findIndex(l => /сложности/.test(l));
   for (let i = mi; i > di; i--) await gest({ kind: "swipe", n: 1, dir: "L" });
-  await gest({ kind: "swipe", n: 1, dir: "U" });
-  ok(await page.evaluate(() => LAB.settings.difficulty) === 2, "режим сложности переключается: сложный");
-  await gest({ kind: "swipe", n: 1, dir: "U" });
-  ok(await page.evaluate(() => LAB.settings.difficulty) === 3, "очень сложный");
-  await gest({ kind: "swipe", n: 1, dir: "U" });
-  ok(await page.evaluate(() => LAB.settings.difficulty) === 4, "лёгкий");
-  await gest({ kind: "swipe", n: 1, dir: "U" });
-  ok(await page.evaluate(() => LAB.settings.difficulty) === 1, "и снова обычный");
+  await gest({ kind: "swipe", n: 1, dir: "U" }); await gest({ kind: "swipe", n: 1, dir: "D" }); await gest({ kind: "dtap", n: 1 });
+  ok(await page.evaluate(() => LAB.settings.difficulty) === 1, "строка о режиме в настройках его не переключает");
   const ri = labels.findIndex(l => /Скорость речи/.test(l));
   const rs = await page.evaluate((ri) => {
     const w = LAB.ui.top(); w.i = ri;
@@ -127,16 +122,33 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   await gest({ kind: "swipe", n: 2, dir: "D" });
   ok(await page.evaluate(() => LAB.ui.top().title).then ? true : true, "окно закрыто");
 
-  console.log("Новая игра начинается с пролога");
-  await page.evaluate(() => { while (LAB.ui.top() && !LAB.ui.top().root) LAB.ui.closeTop(true); LAB.ui.top().i = 0; });
+  console.log("Новая игра: режим сложности, затем пролог");
+  await page.evaluate(() => { while (LAB.ui.top() && !LAB.ui.top().root) LAB.ui.closeTop(true); LAB.ui.top().i = 0; SPOKEN.length = 0; });
   await gest({ kind: "dtap", n: 1 });
   await page.waitForTimeout(100);
-  ok(await page.evaluate(() => LAB.ui.screen()) === "prologue" && /Пролог/.test(await said()), "«Начать игру» — сначала пролог");
+  const dm = await page.evaluate(() => { const w = LAB.ui.top(); return w ? { t: w.title, i: w.i, l: w.items.map(i => typeof i.label === "function" ? i.label() : i.label) } : null; });
+  t = await said();
+  ok(dm && dm.t === "Новая игра: режим сложности" && dm.l.length === 5 && /^Лёгкий: /.test(dm.l[0]) && /^Обычный: /.test(dm.l[1]) && /^Сложный: /.test(dm.l[2]) && /^Очень сложный: /.test(dm.l[3]) && dm.i === 1, "«Начать игру» — сперва режим сложности: четыре режима, курсор на прежнем (" + JSON.stringify(dm) + ")");
+  ok(/один раз на всю игру/.test(t) && /во время игры его не сменить/.test(t) && /начните новую игру/.test(t), "окно предупреждает: режим — на всю игру, сменить — только новой игрой");
+  await gest({ kind: "swipe", n: 1, dir: "L" }); await gest({ kind: "dtap", n: 1 }); await page.waitForTimeout(80);
+  const dc = await page.evaluate(() => { const w = LAB.ui.top(); return w ? { t: w.title, l: w.items.map(i => typeof i.label === "function" ? i.label() : i.label) } : null; });
+  t = await said();
+  ok(dc && dc.t === "Режим «Лёгкий»" && dc.l[0] === "Начать игру в этом режиме" && /Для знакомства с игрой/.test(t), "выбранный режим — с подробным описанием и подтверждением");
+  await gest({ kind: "swipe", n: 1, dir: "R" }); await gest({ kind: "dtap", n: 1 }); await page.waitForTimeout(80);
+  ok(await page.evaluate(() => LAB.ui.top() && LAB.ui.top().title) === "Новая игра: режим сложности" && await page.evaluate(() => LAB.settings.difficulty) === 1, "«Выбрать другой режим» — назад к выбору, режим не сменился");
+  await gest({ kind: "swipe", n: 1, dir: "R" }); await gest({ kind: "dtap", n: 1 }); await page.waitForTimeout(80);
+  ok(await page.evaluate(() => LAB.ui.top() && LAB.ui.top().title) === "Режим «Обычный»", "выбран обычный");
+  await gest({ kind: "dtap", n: 1 });
+  await page.waitForTimeout(100);
+  ok(await page.evaluate(() => LAB.ui.screen()) === "prologue" && /Пролог/.test(await said()), "после выбора режима — пролог");
   await gest({ kind: "swipe", n: 1, dir: "U" });
   await page.waitForTimeout(200);
   ok(await page.evaluate(() => LAB.ui.screen()) === "game", "после пролога игра началась");
-  let st = await page.evaluate(() => ({ L: LAB.game.G.L, F: LAB.game.G.F, hp: LAB.game.G.hp }));
+  let st = await page.evaluate(() => ({ L: LAB.game.G.L, F: LAB.game.G.F, hp: LAB.game.G.hp, diff: LAB.game.G.diff }));
   ok(st.L === 1 && st.F === 1, "уровень 1, этаж 1");
+  ok(st.diff === 1, "игра идёт в выбранном режиме: обычный");
+  const sd = await page.evaluate(() => { LAB.ui.settings(); const w = LAB.ui.top(); const it = w.items.find(i => /сложности/.test(typeof i.label === "function" ? i.label() : i.label)); const l = it ? it.label() : ""; w.i = w.items.indexOf(it); LAB.input.dispatch({ kind: "swipe", n: 1, dir: "U" }); LAB.ui.activate(); const r = { l: l, kind: it && it.kind, d: LAB.settings.difficulty, gd: LAB.game.G.diff }; LAB.ui.closeAll(); return r; });
+  ok(/^Режим сложности этой игры: обычный\. Он выбран в начале игры и не меняется/.test(sd.l) && !sd.kind && sd.d === 1 && sd.gd === 1, "в настройках во время игры — только сведения о режиме, сменить нельзя (" + JSON.stringify(sd) + ")");
   t = await said();
   ok(/криокапсуле/.test(t), "вступление «Эхо»");
   await page.waitForFunction(() => LAB.Bank.ready("mus_l1") && LAB.Bank.ready("amb_l1") && !LAB.Bank.ready("mus_menu"), null, { timeout: 15000 }).catch(() => {});
@@ -1333,6 +1345,18 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     g.saveSlot(3);
     out.bak = !!localStorage.getItem("lab_slot3_bak");
     out.bakLoad = g.loadSlot(3, true) === true;
+    /* (2.6) запись помнит режим сложности: загрузили — играете в нём же */
+    const dg = g.G.diff; g.saveSlot(3);
+    LAB.settings.difficulty = dg === 3 ? 2 : 3;
+    g.loadSlot(3);
+    out.diffKept = g.G.diff === dg && LAB.settings.difficulty === dg && LAB.dk() === LAB.DIFF[dg];
+    const raw3 = JSON.parse(localStorage.getItem("lab_slot3")); raw3.g.diff = 4; raw3.meta.diff = 4; localStorage.setItem("lab_slot2", JSON.stringify(raw3));
+    out.diffSlot = g.slotText(2);
+    g.loadSlot(2);
+    out.diffLoad = g.G.diff === 4 && LAB.settings.difficulty === 4 && LAB.dk().n === "Лёгкий";
+    localStorage.removeItem("lab_slot2");
+    g.loadSlot(3);
+    out.diffBack = g.G.diff === dg && LAB.settings.difficulty === dg;
     /* битая запись: не загружается, текущая игра остаётся */
     const seed0 = g.G.seed;
     localStorage.setItem("lab_slot2", JSON.stringify({ meta: { L: 150, F: 1 }, g: { L: 150, F: 1, seed: "битая", weapons: [], hp: 1, hpMax: 1 } }));
@@ -1418,6 +1442,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(stab.noteRef && stab.noteAfterLoad, "записка хранится ссылкой, текст собирается и после загрузки");
   ok(stab.armorSame, "после загрузки надетая броня — та же запись, что в списке брони");
   ok(stab.bak && stab.bakLoad, "резервная копия слота есть и загружается");
+  ok(stab.diffKept && stab.diffLoad && stab.diffBack && /лёгкий режим/.test(stab.diffSlot || ""), "запись помнит режим сложности: загрузка возвращает режим записи, слот его называет (" + JSON.stringify({ k: stab.diffKept, l: stab.diffLoad, b: stab.diffBack, s: stab.diffSlot }) + ")");
   ok(stab.badRefused, "битая запись не загружается, текущая игра остаётся");
   ok(stab.descNoAuto, "во время спуска автозапись ждёт");
   ok(stab.easyLoss === 0, "лёгкая сложность: при гибели кредиты не теряются (" + stab.easyLoss + ")");
@@ -3734,7 +3759,9 @@ LAB.ui.closeAll();
       /* 3. прорезиненная ткань спасает руки */
       const b2 = nextBox(); near(b2); fs.ctrap[b2.id] = { k: "shock", st: "armed" }; G.inv.rubber = 1; SPOKEN.length = 0;
       const hpA = G.hp; g.openContainer(b2);
-      out.rubber = G.hp === hpA && SPOKEN.some(t => /прорезиненная ткань/.test(t)) && !!g.objState(b2).open;
+      /* (2.6) урона нет: здоровье не ниже прежнего (награда за достижение после прежних проверок может и прибавить) */
+      out.rubber = G.hp >= hpA && SPOKEN.some(t => /прорезиненная ткань/.test(t)) && !!g.objState(b2).open;
+      if (!out.rubber) out.rubberDiag = { dh: G.hp - hpA, open: !!g.objState(b2).open, said: SPOKEN.join(" | ").slice(0, 300) };
       G.inv.rubber = 0;
       /* 4. в последний миг отдёрнули руку: ловушка известна, окно с выбором */
       const b3 = nextBox(); near(b3); fs.ctrap[b3.id] = { k: "blade", st: "armed" }; Math.random = () => 0.01; SPOKEN.length = 0;
@@ -3797,7 +3824,7 @@ LAB.ui.closeAll();
     return out;
   });
   ok(!stash.err && stash.curve[0] === 0 && stash.curve[1] === 0 && stash.curve[2] > 0 && stash.curve[4] > stash.curve[3] && stash.byMode, "ловушки в хранилищах: на первых двух этажах нет, глубже больше, в лёгком режиме меньше, в сложных больше (" + JSON.stringify({ c: stash.curve, m: stash.byMode, e: stash.err }) + ")");
-  ok(stash.needle && stash.rubber && stash.reflex && stash.disarm, "игла в замке колет и травит, а добыча остаётся; прорезиненная ткань бережёт руки; в последний миг можно отдёрнуть руку; обезвредить — детали в рюкзак (" + JSON.stringify({ n: stash.needle, r: stash.rubber, x: stash.reflex, d: stash.disarm, b: stash.boxes }) + ")");
+  ok(stash.needle && stash.rubber && stash.reflex && stash.disarm, "игла в замке колет и травит, а добыча остаётся; прорезиненная ткань бережёт руки; в последний миг можно отдёрнуть руку; обезвредить — детали в рюкзак (" + JSON.stringify({ n: stash.needle, r: stash.rubber, x: stash.reflex, d: stash.disarm, b: stash.boxes, rd: stash.rubberDiag }) + ")");
   ok(stash.examine && stash.scan, "«Осмотреть» находит ловушку в хранилище, сканер называет все рядом (" + JSON.stringify({ e: stash.examine, s: stash.scan }) + ")");
   ok(stash.grenadeSet && stash.grenadeMiss, "граната на растяжке: две секунды — отошли, и осколки мимо (" + JSON.stringify({ s: stash.grenadeSet, m: stash.grenadeMiss, d: stash.grenadeDiag }) + ")");
   ok(stash.parasite && stash.cure && stash.mimic && stash.fxTrap, "клещ пьёт кровь, аптечка снимает его; шкафник выбирается сам; тумбочка тоже бывает с подвохом (" + JSON.stringify({ p: stash.parasite, c: stash.cure, m: stash.mimic, f: stash.fxTrap }) + ")");
@@ -3946,6 +3973,257 @@ LAB.ui.closeAll();
   ok(mut.hive && mut.hiveForget, "улей глубин привыкает к оружию носителя, а сменили оружие — привычка уходит (" + JSON.stringify({ h: mut.hive, f: mut.hiveForget }) + ")");
   ok(mut.weaver === true && mut.grewAway, "ткач ставит ловушки поперёк проходов; пока носителя долго нет, разумные твари этажа крепнут (" + JSON.stringify({ w: mut.weaver, g: mut.grewAway }) + ")");
   ok(mut.regen && mut.regenCap, "лёгкий режим: вне боя здоровье само возвращается до шестидесяти процентов (" + JSON.stringify({ r: mut.regen, c: mut.regenCap, d: mut.regenDiag }) + ")");
+
+  console.log("Лечение и снабжение у капсул, целители, пошаговый режим (2.6)");
+  const v26 = await page.evaluate(async () => {
+    const g = LAB.game, C = LAB.combat, S = LAB.settings, M = LAB.medic, W = LAB.W, out = {};
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const label = i => typeof i.label === "function" ? i.label() : i.label;
+    let G = g.G;
+    C.stop(); LAB.ui.closeAll();
+    const d0 = S.difficulty, tb0 = S.turnBased, hp0 = G.hp, hpm0 = G.hpMax, cr0 = G.credits, rnd = Math.random;
+    const inv0 = JSON.stringify(G.inv), ammo0 = JSON.stringify(G.ammo), w0 = G.weapons.slice(), wi0 = G.wi, drawn0 = G.drawn, st0 = JSON.stringify(G.st), body0 = JSON.stringify(G.body);
+    const fresh = (L, F) => { g.enterFloor(L, F === 1 ? 2 : F - 1, "down", true); delete G.fs[L + "-" + F]; g.enterFloor(L, F, "down", true); C.stop(); G = g.G; };
+    const reenter = (L, F) => { g.enterFloor(L, F === 1 ? 2 : F - 1, "down", true); g.enterFloor(L, F, "down", true); C.stop(); G = g.G; };
+    const invSet = o => { Object.keys(G.inv).forEach(k => { const d = LAB.ITEMS[k]; if (d && d.kind === "use") G.inv[k] = 0; }); Object.assign(G.inv, o); };
+    S.difficulty = 1; S.turnBased = 0;
+    try {
+      /* 1. у капсулы прибытия — аптечный автомат и энергобатареи; сколько батарей и припасов — по режиму */
+      fresh(3, 5);
+      let fl = g.CUR.fl;
+      const capU = fl.objs.find(o => o.type === "capsule" && o.room === fl.U);
+      out.vend = !!capU && fl.objs.some(o => o.type === "medvend" && o.room === capU.room);
+      const bat = () => fl.items.find(i => i.cap26);
+      out.batNear = !!(capU && bat() && Math.max(Math.abs(bat().x - capU.x), Math.abs(bat().y - capU.y)) <= 2 && bat().kind === "ammo" && bat().ammo === "energy");
+      const batN = {}, medSum = {};
+      let medOk = true;
+      [4, 1, 2, 3].forEach(m => {
+        S.difficulty = m; reenter(3, 5); fl = g.CUR.fl;
+        batN[m] = bat() ? bat().n : -1;
+        const k = LAB.dk().med;
+        medSum[m] = fl.items.filter(i => i.med26).reduce((t, i) => { if (i.n !== Math.max(1, Math.min(7, Math.round(i.n0 * k)))) medOk = false; return t + i.n; }, 0);
+      });
+      out.batN = batN; out.medSum = medSum; out.medOk = medOk;
+      out.piles = fl.items.filter(i => i.med26).length;
+      S.difficulty = 1; reenter(3, 5); fl = g.CUR.fl;
+      /* 2. аптечный автомат: только аптечки и энергобатареи; глубже и в трудном режиме — дороже */
+      const vo = fl.objs.find(o => o.type === "medvend");
+      LAB.ui.closeAll(); M.vendMenu(vo);
+      const vw = LAB.ui.top(); out.vendTitle = vw && vw.title;
+      const vl = vw ? vw.items.slice(1).map(label) : [];
+      const kits = M.kitsFor(G.L).map(id => LAB.ITEMS[id].n);
+      out.vendOnly = vl.length >= 2 && vl.every(l => kits.some(n => l.indexOf(n + " — ") === 0) || /^Энергобатарея — /.test(l)) && vl.some(l => /^Энергобатарея — /.test(l));
+      G.credits = 1000; const k0 = G.inv.medkit_s || 0, p0 = M.vendPrice("medkit_s");
+      if (vw) { vw.i = 1 + vl.findIndex(l => l.indexOf(LAB.ITEMS.medkit_s.n + " — ") === 0); LAB.ui.activate(); }
+      out.vendBuy = (G.inv.medkit_s || 0) === k0 + 1 && G.credits === 1000 - p0;
+      LAB.ui.closeAll();
+      const L0 = G.L, F0 = G.F;
+      const at = (L, m, fn) => { S.difficulty = m; G.L = L; G.F = 1; const v = fn(); G.L = L0; G.F = F0; S.difficulty = 1; return v; };
+      const vp = (L, m, id) => at(L, m, () => M.vendPrice(id));
+      out.vendDepth = vp(1, 1, "medkit_s") < vp(30, 1, "medkit_s") && vp(30, 1, "medkit_s") < vp(80, 1, "medkit_s") && vp(1, 1, "ammo:energy") < vp(60, 1, "ammo:energy");
+      out.vendMode = vp(30, 4, "ammo:energy") < vp(30, 1, "ammo:energy") && vp(30, 1, "ammo:energy") < vp(30, 2, "ammo:energy") && vp(30, 2, "ammo:energy") < vp(30, 3, "ammo:energy");
+      out.kitsDeep = M.kitsFor(1).join(",") + " | " + M.kitsFor(85).join(",");
+      /* 3. зарядка оружия в капсуле: ёмче, выше ступенью и уровнем, глубже, труднее — дороже */
+      const Cp = LAB.capsule.chargePrice, mk = (lvl, rank) => { const w = LAB.makeWeapon("spark", lvl, rank, 1); w.charge = 0; return w; };
+      const wa = mk(1, 0), wBig = Object.assign({}, wa, { cap: wa.cap * 3, charge: 0 }), wLvl = Object.assign({}, wa, { lvl: 150, rank: 4, charge: 0 });
+      out.chCap = at(1, 1, () => Cp(wBig) > Cp(wa));
+      out.chLvl = at(1, 1, () => Cp(wLvl) > Cp(wa));
+      out.chDepth = at(1, 1, () => Cp(wa)) < at(40, 1, () => Cp(wa)) && at(40, 1, () => Cp(wa)) < at(90, 1, () => Cp(wa));
+      out.chMode = at(30, 4, () => Cp(wa)) < at(30, 1, () => Cp(wa)) && at(30, 1, () => Cp(wa)) < at(30, 3, () => Cp(wa));
+      const half = Object.assign({}, wa, { charge: Math.floor(wa.cap / 2) });
+      out.chPart = at(30, 1, () => Cp(half) < Cp(wa) && Cp(half) > 0);
+      G.credits = 10000; const pa = Cp(wa), r1 = LAB.capsule.chargeOne(wa, true);
+      out.chOk = r1 === pa && wa.charge === wa.cap && G.credits === 10000 - pa;
+      wa.charge = 0; G.credits = 0; const r2 = LAB.capsule.chargeOne(wa, true);
+      out.chPoor = r2 === -1 && wa.charge === 0;
+      const slugBase = Object.keys(LAB.WEAPONS).find(k => LAB.WEAPONS[k].ammo === "slug");
+      out.chPhys = !slugBase || !LAB.capsule.chargeable(LAB.makeWeapon(slugBase, 1, 0, 1));
+      G.weapons = [wa]; G.wi = 0; wa.charge = 0; G.credits = 500;
+      if (capU) {
+        LAB.capsule.menu(capU); await wait(1500);
+        const cl = LAB.ui.top() ? LAB.ui.top().items.map(label) : [];
+        out.capItem = cl.some(l => /^Зарядить оружие за кредиты: \d+ кредит/.test(l));
+        LAB.capsule.leave(true); LAB.ui.closeAll();
+      }
+      /* 3б. зарядная станция в комнате — тот же обработчик и те же цены, что у капсулы: даром больше не заряжает */
+      {
+        LAB.ui.closeAll(); wa.charge = 0; G.weapons = [wa]; G.wi = 0; G.credits = 5000;
+        const pSt = Cp(wa), pBat = M.vendPrice("ammo:energy"), e0 = G.ammo.energy || 0;
+        g.objMenu({ id: "test_charger", type: "charger", x: G.x, y: G.y, room: -1 });
+        const sw = LAB.ui.top(), sl = sw ? sw.items.map(label) : [];
+        out.stTitle = sw && sw.title;
+        const iw = sl.findIndex(l => l.indexOf("Зарядить полностью — " + pSt + " кредит") >= 0), ib = sl.findIndex(l => l.indexOf("Зарядить энергобатарею — " + pBat + " кредит") === 0);
+        if (sw && iw >= 0) { sw.i = iw; LAB.ui.activate(); }
+        out.stCharge = iw >= 0 && wa.charge === wa.cap && G.credits === 5000 - pSt;
+        const c1 = G.credits, sw2 = LAB.ui.top();
+        if (sw2 && ib >= 0) { sw2.i = ib; LAB.ui.activate(); }
+        out.stBat = ib >= 0 && (G.ammo.energy || 0) === e0 + 1 && G.credits === c1 - pBat;
+        wa.charge = 0; G.credits = 0; const sw3 = LAB.ui.top();
+        if (sw3) { sw3.i = sw3.items.map(label).findIndex(l => l.indexOf("Зарядить полностью — ") >= 0); if (sw3.i >= 0) LAB.ui.activate(); }
+        out.stPoor = wa.charge === 0 && G.credits === 0;
+        out.stLines = sl.slice(0, 4);
+        LAB.ui.closeAll(); G.credits = 500;
+      }
+      /* 4. в коридоре — энергобатарея с каждого N-го робота (по режиму); в комнате и с присланных ОКО — нет */
+      C.foes().forEach(f => { f.dead = true; });
+      const busy = (x, y) => C.foes().some(f => !f.dead && f.x === x && f.y === y) || (x === G.x && y === G.y);
+      const corr = [], roomC = [];
+      for (let y = 1; y < LAB.H - 1 && (corr.length < 6 || roomC.length < 1); y++) for (let x = 1; x < W - 1; x++) {
+        const t = fl.t[y * W + x];
+        if (LAB.solidAt(fl, x, y) || busy(x, y)) continue;
+        if (t === LAB.T.CORR && corr.length < 6) corr.push([x, y]);
+        else if (t === LAB.T.ROOM && roomC.length < 1) roomC.push([x, y]);
+      }
+      const mech = Object.keys(LAB.FOES).find(k => { const b = LAB.FOES[k]; return b.kind === "mech" && !b.boss && ["stationary", "camera", "turret", "observer", "fixer", "relay"].every(x => b.beh.indexOf(x) < 0); });
+      const killAt = (c, spawned) => { const f = C.spawnFoe(mech, c[0], c[1], {}); if (!f) return null; f.spawned = !!spawned; f.ally = false; f.lvl = 1; C.damageFoe(f, 1e9, "kinetic", { quiet: true }); return f; };
+      const drops = () => (g.CUR.fs.drops || []).filter(d => d.corr26).length;
+      const runN = (m, n) => { S.difficulty = m; G.corrBots = 0; const d1 = drops(), res = []; for (let i = 0; i < n; i++) { killAt(corr[i % corr.length]); res.push(drops() - d1); } S.difficulty = 1; return res; };
+      out.mech = mech; out.cells = corr.length + "/" + roomC.length;
+      SPOKEN.length = 0;
+      out.corr4 = runN(1, 8).join(",");
+      out.corrHint = SPOKEN.some(t => /с каждого четвёртого уничтоженного робота падает энергобатарея/.test(t));
+      out.corr3 = runN(4, 6).join(",");
+      out.corr6 = runN(3, 6).join(",");
+      out.corrBat = (g.CUR.fs.drops || []).filter(d => d.corr26).every(d => d.kind === "ammo" && d.ammo === "energy");
+      G.corrBots = 0; killAt(corr[0], true); if (roomC[0]) killAt(roomC[0]);
+      out.corrSkip = (G.corrBots || 0) === 0;
+      /* с роботов в комнате энергобатарей нет вовсе, в коридоре — ровно каждая N-я (случайного выпадения больше нет) */
+      const enAt = c => (g.CUR.fs.drops || []).filter(d => d.kind === "ammo" && d.ammo === "energy" && d.x === c[0] && d.y === c[1]).length;
+      if (roomC[0]) { const e1 = enAt(roomC[0]); for (let i = 0; i < 20; i++) killAt(roomC[0]); out.roomNoBat = enAt(roomC[0]) - e1; } else out.roomNoBat = -1;
+      { S.difficulty = 1; G.corrBots = 0; const ea = corr.reduce((t, c) => t + enAt(c), 0); for (let i = 0; i < 12; i++) killAt(corr[i % corr.length]); out.corrOnly = corr.reduce((t, c) => t + enAt(c), 0) - ea; }
+      C.foes().forEach(f => { f.dead = true; });
+      /* 5. целители: за кредиты и по-своему; глубже и в трудном режиме — дороже */
+      out.prof = [M.profileOf({ robot: true, type: "meddroid" }), M.profileOf({ robot: false, prof: "Медик" }), M.profileOf({ robot: true, type: "hive", heal: "hive" }), M.profileOf({ robot: false, prof: "Хранительница колодца" })].join(",");
+      const P = M.HEALERS.meddroid, hc = (L, m) => at(L, m, () => M.healCost(P, 100));
+      out.healDepth = hc(1, 1) < hc(30, 1) && hc(30, 1) < hc(80, 1);
+      out.healMode = hc(30, 4) < hc(30, 1) && hc(30, 1) < hc(30, 2) && hc(30, 2) < hc(30, 3);
+      out.altDepth = at(1, 1, () => M.altK()) < at(90, 1, () => M.altK()) && at(30, 4, () => M.altK()) < at(30, 3, () => M.altK());
+      const mkH = pid => { const H = M.HEALERS[pid], human = H.kind === "human"; return { id: "th_" + pid, robot: !human, type: human ? undefined : pid, n: "Тестовый целитель", first: "Тест", prof: H.prof || "Медик", heal: pid, x: G.x, y: G.y, key: "t" }; };
+      G.hpMax = 200; G.hp = 50; G.credits = 100000; G.st.bleed = 0; G.st.poison = 0;
+      const nD = mkH("meddroid"), cost = M.healCost(P, 150);
+      const fI = M.healItems(nD).find(i => /^Вылечить полностью: плюс 150/.test(label(i)));
+      if (fI) fI.fn();
+      out.healFull = !!fI && G.hp === 200 && G.credits === 100000 - cost;
+      G.hp = 50; G.ammo.energy = 50;
+      const aI = M.healItems(nD).find(i => /^Вылечить полностью энергобатареями/.test(label(i)));
+      if (aI) aI.fn();
+      out.healBat = !!aI && G.hp === 200 && G.ammo.energy < 50;
+      G.hp = 50; const m0 = G.day * 1440 + G.min;
+      const tI = M.healItems(mkH("keeper")).find(i => /^Вылечить полностью временем/.test(label(i)));
+      if (tI) tI.fn();
+      out.healTime = !!tI && G.hp === 200 && G.day * 1440 + G.min > m0;
+      G.hp = 50; G.body.neuro = 0;
+      const nI = M.healItems(mkH("mirror")).find(i => /^Вылечить полностью своим покоем/.test(label(i)));
+      if (nI) nI.fn();
+      out.healNerve = !!nI && G.hp === 200 && G.body.neuro > 0;
+      G.body.rad = 50; G.body.neuro = 0;
+      out.surgRad = M.healItems(mkH("surgeon")).some(i => /^Вывести облучение/.test(label(i))) && !M.healItems(mkH("hive")).some(i => /^Вывести облучение/.test(label(i)));
+      G.body.rad = 0;
+      LAB.ui.closeAll(); M.healMenu(nD); out.healTitle = !!LAB.ui.top() && /^Лечение: /.test(LAB.ui.top().title); LAB.ui.closeAll();
+      /* 6. аптечка сама подбирает лекарство */
+      G.hpMax = 300; G.hp = 270; G.st.bleed = 10; G.st.poison = 0; G.body.tox = 0;
+      invSet({ bandage_h: 1, medkit_a: 1 }); g.useMedkit();
+      out.pickBleed = G.inv.bandage_h === 0 && G.inv.medkit_a === 1 && !G.st.bleed;
+      G.st.bleed = 0; G.hp = 40; invSet({ herb_k: 3, medkit_a: 1 }); g.useMedkit();
+      out.pickLow = G.inv.medkit_a === 0 && G.inv.herb_k === 3;
+      G.hp = 282; invSet({ herb_k: 1, medkit_a: 1 }); g.useMedkit();
+      out.pickSmall = G.inv.herb_k === 0 && G.inv.medkit_a === 1;
+      G.hp = 250; G.st.poison = 10; invSet({ medkit_s: 1, herb_m: 1 }); g.useMedkit();
+      out.pickCure = G.inv.herb_m === 0 && G.inv.medkit_s === 1 && !G.st.poison;
+      G.st.poison = 0;
+      /* 7. звуки гранат, мин и взрывов: у каждого вида свои слои */
+      const Snd = LAB.Sound, sp0 = Snd.play, heard = [];
+      Snd.play = function (id, o) { heard.push(id); return null; };
+      const layers = (fn) => { heard.length = 0; fn(); return heard.slice(); };
+      try {
+        const X = G.x, Y = G.y;
+        out.sndBank = ["grenade_pin", "grenade_throw", "grenade_land", "explosion_frag", "explosion_small", "explosion_big", "explosion_far", "explosion_shrapnel", "debris", "explosion_fire", "explosion_flash", "explosion_ring", "explosion_cryo", "explosion_gas", "explosion_net", "explosion_zap", "acid_sizzle", "mine_click", "mine_set", "mine_arm", "wire_snap", "trap_snap"].filter(id => !LAB.Bank.has(id)).join(",") || "все";
+        out.sFrag = layers(() => LAB.atmos.explosion(X + 3, Y, "frag")).join(",");
+        out.sMine = layers(() => LAB.atmos.explosion(X + 3, Y, "mine")).join(",");
+        out.sWire = layers(() => LAB.atmos.explosion(X + 3, Y, "wire")).join(",");
+        out.sFire = layers(() => LAB.atmos.explosion(X + 3, Y, "fire")).join(",");
+        out.sFlash = layers(() => LAB.atmos.explosion(X + 1, Y, "flash")).join(",");
+        out.sCryo = layers(() => LAB.atmos.explosion(X + 3, Y, "cryo")).join(",");
+        out.sClus = layers(() => LAB.atmos.explosion(X + 3, Y, "cluster")).join(",");
+        out.sFar = layers(() => LAB.atmos.explosion(X + 20, Y, "frag")).join(",");
+        out.sThrow = layers(() => LAB.atmos.grenade(X + 4, Y, { fuse: 900 })).join(",");
+        out.sLure = layers(() => LAB.atmos.grenade(X + 4, Y, { noPin: true })).join(",");
+      } finally { Snd.play = sp0; }
+      /* 8. пошаговый режим: действия стоят ходов, удар вдогонку, враги не ждут вечно */
+      S.turnBased = 1; G.stair = null; G.dead = false;
+      C.foes().forEach(f => { f.dead = true; });
+      for (let i = 0; i < 8; i++) C.tick(); /* после входа на этаж враги не бьют — эти такты прошли */
+      const tk = () => C.tickN();
+      const we = LAB.makeWeapon("spark", 1, 0, 1); we.charge = 0; G.weapons = [we]; G.wi = 0; G.ammo.energy = 5;
+      let t1 = tk(); g.reload(); out.tbReload = tk() - t1;
+      const posBase = Object.keys(LAB.WEAPONS).find(k => LAB.WEAPONS[k].ammo === "positron");
+      if (posBase) { const wp = LAB.makeWeapon(posBase, 1, 0, 1); wp.charge = 0; G.weapons = [wp, we]; G.wi = 0; G.ammo.positron = 3; t1 = tk(); g.reload(); out.tbPos = tk() - t1; }
+      if (G.weapons.length < 2) G.weapons.push(LAB.makeWeapon("spark", 1, 0, 1));
+      t1 = tk(); g.switchWeapon(1); out.tbSwitch = tk() - t1;
+      t1 = tk(); g.toggleDraw(); out.tbDraw = tk() - t1; if (G.drawn) g.toggleDraw();
+      G.hpMax = 300; G.hp = 100; invSet({ medkit_a: 1, herb_k: 1 });
+      t1 = tk(); g.useItem("medkit_a"); out.tbHeavy = tk() - t1;
+      G.hp = 100; t1 = tk(); g.useItem("herb_k"); out.tbLight = tk() - t1;
+      S.turnBased = 0; we.charge = 0; G.weapons = [we]; G.wi = 0; t1 = tk(); g.reload(); out.rtReload = tk() - t1; S.turnBased = 1;
+      /* бросок гранаты — ход; у каждой гранаты свой взрыв */
+      G.inv.gren_frag = 1; G.hpMax = 5000; G.hp = 5000; t1 = tk(); C.throwGrenade("gren_frag"); out.tbThrow = tk() - t1;
+      await wait(1100); /* граната рванула — дальше без неё */
+      out.kinds = Object.keys(LAB.ITEMS).filter(k => LAB.ITEMS[k].fx && LAB.ITEMS[k].fx.gren).map(k => k + ":" + C.grenKind(LAB.ITEMS[k].fx.gren)).join(",");
+      /* удар вдогонку: враг вплотную готов к удару — отходите, он бьёт */
+      const open = (x, y) => LAB.inb(x, y) && fl.t[y * W + x] === LAB.T.CORR && !LAB.solidAt(fl, x, y) && !busy(x, y);
+      let spot = null;
+      for (let y = 2; y < LAB.H - 2 && !spot; y++) for (let x = 2; x < W - 2 && !spot; x++) {
+        if (!open(x, y)) continue;
+        for (const [dx, dy, dir] of [[1, 0, "W"], [-1, 0, "E"], [0, 1, "N"], [0, -1, "S"]]) if (open(x + dx, y + dy) && open(x - dx, y - dy) && open(x - 2 * dx, y - 2 * dy)) { spot = { x, y, ex: x + dx, ey: y + dy, dir }; break; }
+      }
+      const mel = Object.keys(LAB.FOES).find(k => { const b = LAB.FOES[k]; return b.kind === "bio" && (b.rng || 1) <= 1 && !b.boss && b.beh.indexOf("stationary") < 0 && b.beh.indexOf("burrow") < 0 && b.beh.indexOf("phaseshift") < 0 && b.beh.indexOf("blink") < 0; }) || "rat";
+      out.spot = !!spot;
+      if (spot) {
+        G.x = spot.x; G.y = spot.y; G.hpMax = 5000; G.hp = 5000; G.drawn = false;
+        const f = C.spawnFoe(mel, spot.ex, spot.ey, {}); f.lvl = 1; f.state = "hunt"; f.lastKnown = { x: G.x, y: G.y }; f.at = f.acd; f.confused = 0; f.frozen = 0;
+        SPOKEN.length = 0; if (g.lastMoveReset) g.lastMoveReset();
+        const moved = g.tryMove(spot.dir, false);
+        out.aoo = moved && SPOKEN.some(t => /бьёт вдогонку/.test(t)) && f.at <= 1;
+        /* не готов к удару — вдогонку не бьёт */
+        G.x = spot.x; G.y = spot.y; f.x = spot.ex; f.y = spot.ey; f.at = 0; f.state = "hunt"; SPOKEN.length = 0; if (g.lastMoveReset) g.lastMoveReset();
+        g.tryMove(spot.dir, false);
+        out.aooReady = !SPOKEN.some(t => /бьёт вдогонку/.test(t));
+        /* за вами гонятся, а вы молчите пятнадцать секунд — мир делает ход сам */
+        G.x = spot.x; G.y = spot.y; f.x = spot.ex; f.y = spot.ey; f.state = "hunt"; f.lastKnown = { x: G.x, y: G.y };
+        out.hunted = C.hunted();
+        C._idleBack(C.idleMs() + 1000); t1 = tk(); SPOKEN.length = 0; C.idleTurn();
+        out.idle = tk() - t1 === 1 && SPOKEN.some(t => /не ждут дольше пятнадцати секунд/.test(t));
+        C._idleBack(5000); t1 = tk(); C.idleTurn(); out.idleWait = tk() - t1 === 0;
+        f.dead = true; C._idleBack(C.idleMs() + 1000); t1 = tk(); C.idleTurn(); out.idleCalm = tk() - t1 === 0;
+      }
+    } catch (e) { out.err = String(e && e.stack || e).slice(0, 400); }
+    Math.random = rnd;
+    S.difficulty = d0; S.turnBased = tb0;
+    G.hp = hp0; G.hpMax = hpm0; G.credits = cr0; G.inv = JSON.parse(inv0); G.ammo = JSON.parse(ammo0); G.weapons = w0; G.wi = wi0; G.drawn = drawn0; G.st = JSON.parse(st0); G.body = JSON.parse(body0);
+    C.foes().forEach(f => { f.dead = true; });
+    fresh(1, 3);
+    LAB.ui.closeAll();
+    return out;
+  });
+  ok(!v26.err && v26.vend && v26.batNear && v26.piles > 10, "у капсулы прибытия — аптечный автомат и энергобатареи, в комнатах — лечебные припасы (" + JSON.stringify({ v: v26.vend, b: v26.batNear, p: v26.piles, e: v26.err }) + ")");
+  ok(v26.batN && v26.batN[4] === 7 && v26.batN[1] === 5 && v26.batN[2] === 4 && v26.batN[3] === 3, "энергобатарей у капсулы прибытия по режиму: 7, 5, 4, 3 (" + JSON.stringify(v26.batN) + ")");
+  ok(v26.medOk && v26.medSum && v26.medSum[4] > v26.medSum[1] && v26.medSum[1] > v26.medSum[2] && v26.medSum[2] >= v26.medSum[3], "лечебных припасов в комнатах по режиму: в лёгком больше, в сложных меньше (" + JSON.stringify(v26.medSum) + ")");
+  ok(v26.vendTitle === "Аптечный автомат" && v26.vendOnly && v26.vendBuy, "аптечный автомат продаёт только аптечки и энергобатареи, покупка работает (" + JSON.stringify({ t: v26.vendTitle, o: v26.vendOnly, b: v26.vendBuy, k: v26.kitsDeep }) + ")");
+  ok(v26.vendDepth && v26.vendMode && /^medkit_s,/.test(v26.kitsDeep || "") && /medkit_i/.test(v26.kitsDeep || ""), "у автомата глубже и в трудном режиме дороже, а аптечки сильнее (" + JSON.stringify({ d: v26.vendDepth, m: v26.vendMode, k: v26.kitsDeep }) + ")");
+  ok(v26.chCap && v26.chLvl && v26.chDepth && v26.chMode && v26.chPart, "зарядка в капсуле дороже у ёмкого и более высокого оружия, глубже и в трудном режиме; за полузаряд — дешевле (" + JSON.stringify({ c: v26.chCap, l: v26.chLvl, d: v26.chDepth, m: v26.chMode, p: v26.chPart }) + ")");
+  ok(v26.stTitle === "Зарядная станция" && v26.stCharge && v26.stBat && v26.stPoor, "зарядная станция в комнате заряжает за кредиты по ценам капсулы, батарею — по цене автомата, даром — нет (" + JSON.stringify({ t: v26.stTitle, c: v26.stCharge, b: v26.stBat, p: v26.stPoor, l: v26.stLines }) + ")");
+  ok(v26.chOk && v26.chPoor && v26.chPhys && v26.capItem, "зарядка за кредиты работает, без кредитов — нет, патроны не заряжаются, пункт есть в меню капсулы (" + JSON.stringify({ o: v26.chOk, p: v26.chPoor, f: v26.chPhys, i: v26.capItem }) + ")");
+  ok(v26.corr4 === "0,0,0,1,1,1,1,2" && v26.corr3 === "0,0,1,1,1,2" && v26.corr6 === "0,0,0,0,0,1" && v26.corrBat && v26.corrHint, "в коридоре — энергобатарея с каждого четвёртого робота, в лёгком — с третьего, в очень сложном — с шестого (" + JSON.stringify({ n: v26.corr4, e: v26.corr3, v: v26.corr6, b: v26.corrBat, h: v26.corrHint, m: v26.mech, c: v26.cells }) + ")");
+  ok(v26.corrSkip, "робот в комнате и присланный ОКО батарею не приносят");
+  ok(v26.roomNoBat === 0 && v26.corrOnly === 3, "с роботов в комнате энергобатарей нет вовсе, в коридоре — ровно с каждого четвёртого (" + JSON.stringify({ r: v26.roomNoBat, c: v26.corrOnly }) + ")");
+  ok(v26.sndBank === "все" && /explosion_frag/.test(v26.sFrag) && /explosion_shrapnel/.test(v26.sFrag) && /debris/.test(v26.sFrag) && /^mine_click,explosion_small/.test(v26.sMine || "") && /^wire_snap,grenade_land,explosion_frag/.test(v26.sWire || "") && /explosion_fire/.test(v26.sFire) && /explosion_flash/.test(v26.sFlash) && /explosion_ring/.test(v26.sFlash) && /explosion_cryo/.test(v26.sCryo) && (v26.sClus || "").split(",").filter(x => x === "explosion_small").length >= 4 && v26.sFar === "explosion_far" && v26.sThrow === "grenade_pin,grenade_throw,grenade_land" && v26.sLure === "grenade_throw,grenade_land", "звуки: чека, бросок и падение гранаты; у каждого взрыва свои слои — осколки, осыпь, щелчок взрывателя, рывок проволоки, звон в ушах; издалека — глухой раскат (" + JSON.stringify({ b: v26.sndBank, f: v26.sFrag, m: v26.sMine, w: v26.sWire, c: v26.sClus, far: v26.sFar, t: v26.sThrow, l: v26.sLure }) + ")");
+  ok(v26.prof === "meddroid,medic,hive,keeper" && v26.healDepth && v26.healMode && v26.altDepth, "целители: свои на глубинах; лечение глубже и в трудном режиме дороже — и кредитами, и иначе (" + JSON.stringify({ p: v26.prof, d: v26.healDepth, m: v26.healMode, a: v26.altDepth }) + ")");
+  ok(v26.healFull && v26.healBat && v26.healTime && v26.healNerve && v26.surgRad && v26.healTitle, "лечат за кредиты, энергобатареи, время и покой; «Скальпель» выводит облучение (" + JSON.stringify({ f: v26.healFull, b: v26.healBat, t: v26.healTime, n: v26.healNerve, r: v26.surgRad, w: v26.healTitle }) + ")");
+  ok(v26.pickBleed && v26.pickLow && v26.pickSmall && v26.pickCure, "аптечка подбирает лекарство: бинт при кровотечении, сильное при малом здоровье, малое на малую рану, снимающее яд при отравлении (" + JSON.stringify({ b: v26.pickBleed, l: v26.pickLow, s: v26.pickSmall, c: v26.pickCure }) + ")");
+  ok(v26.tbReload === 2 && (v26.tbPos === undefined || v26.tbPos === 3) && v26.tbSwitch === 1 && v26.tbDraw === 1 && v26.tbHeavy === 2 && v26.tbLight === 1 && v26.rtReload === 0, "пошаговый режим: перезарядка — два хода, позитронная — три, смена и выхват оружия — ход, большая аптечка — два (" + JSON.stringify({ r: v26.tbReload, p: v26.tbPos, s: v26.tbSwitch, d: v26.tbDraw, h: v26.tbHeavy, l: v26.tbLight, rt: v26.rtReload }) + ")");
+  ok(v26.tbThrow === 1 && ["gren_frag:frag", "g_firebomb:fire", "k_netbomb:net", "k_acidbomb:acid", "o_flashbang:flash", "o_cryobomb:cryo", "o_chimebomb:sonic", "m_stickyemp:emp", "m_cluster:cluster", "i_dawnbomb:positron", "i_vortexbomb:grav"].every(k => (v26.kinds || "").split(",").indexOf(k) >= 0), "пошаговый режим: бросок гранаты — ход; у каждой гранаты свой взрыв (" + JSON.stringify({ t: v26.tbThrow, k: v26.kinds }) + ")");
+  ok(v26.spot && v26.aoo && v26.aooReady, "пошаговый режим: отступили от готового к удару врага — он бьёт вдогонку, не готов — нет (" + JSON.stringify({ s: v26.spot, a: v26.aoo, r: v26.aooReady }) + ")");
+  ok(v26.hunted && v26.idle && v26.idleWait && v26.idleCalm, "пошаговый режим: в бою враги не ждут дольше пятнадцати секунд, вне боя — ждут (" + JSON.stringify({ h: v26.hunted, i: v26.idle, w: v26.idleWait, c: v26.idleCalm }) + ")");
 
   console.log("Уход в фон: звук выключен или приглушён, окно компьютера сворачивается (2.2)");
   const bgt = await page.evaluate(async () => {

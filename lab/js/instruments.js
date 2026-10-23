@@ -259,7 +259,6 @@ function scrH() { return window.innerHeight || 400; }
 function white(base, i) { return base + 12 * Math.floor(i / 7) + SEMI[i % 7]; }
 /* за белой клавишей i есть чёрная — у до, ре, фа, соль и ля */
 function hasBlack(i) { var k = i % 7; return k !== 2 && k !== 6; }
-var NAMES12 = ["до", "до-диез", "ре", "ре-диез", "ми", "фа", "фа-диез", "соль", "соль-диез", "ля", "ля-диез", "си"];
 var OCT_NAMES = { 1: "контроктава", 2: "большая", 3: "малая", 4: "первая", 5: "вторая", 6: "третья", 7: "четвёртая" };
 var OCT_GEN = { 2: "большой", 3: "малой", 4: "первой", 5: "второй", 6: "третьей", 7: "четвёртой" };
 function octOf(m) { return Math.floor(m / 12) - 1; }

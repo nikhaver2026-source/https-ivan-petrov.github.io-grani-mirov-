@@ -1,8 +1,9 @@
 /* ════════════════════════════════════════════════════════════════════
    «Подземная лаборатория» — экраны и окна.
    Пролог (вправо — дальше, влево — назад, вверх — пропустить), главное
-   меню (Начать игру, Пролог, Загрузить игру, Руководство, Настройки), настройки
-   (синтезатор, сложность, громкость музыки — свайп вверх и вниз), окно
+   меню (Начать игру — с выбора режима сложности, Пролог, Загрузить игру,
+   Руководство, Настройки), настройки (синтезатор, громкость музыки — свайп
+   вверх и вниз), окно
    персонажа (три пальца вверх: здоровье, заряд, «Сохранить игру» на три
    слота, «Выход»), инвентарь (три пальца вниз, по разделам), мастерская,
    импланты, записки, финал. В окнах: свайп вправо и влево — пункты,
@@ -367,13 +368,32 @@ function startGame() {
   var hasAuto = !!gm().slotInfo("auto");
   if (hasAuto) {
     menu("Начать новую игру?", [
-      { label: "Да, начать сначала. Автозапись заменится, слоты 1, 2 и 3 останутся", fn: function () { prologue("new"); } },
+      { label: "Да, начать сначала. Автозапись заменится, слоты 1, 2 и 3 останутся", fn: function () { diffMenu(); } },
       { label: "Продолжить с автозаписи: " + gm().slotText("auto").replace("Автозапись: ", ""), fn: function () { gm().loadSlot("auto"); } },
       { label: "Отмена", fn: function () { reopenMain(); } }
     ]);
     return;
   }
-  prologue("new");
+  diffMenu();
+}
+/* (2.6) Режим сложности выбирают только здесь — в начале новой игры, один раз
+   на всю игру: во время игры его не сменить. Сохранение помнит свой режим;
+   другой режим — только новой игрой. Выбор — с подробностями и подтверждением. */
+function diffMenu() {
+  var order = LAB.DIFF_ORDER || [1, 2, 3], cur = order.indexOf(S.difficulty || 1);
+  menu("Новая игра: режим сложности", order.map(function (k) {
+    return { label: LAB.DIFF[k].n + ": " + (LAB.DIFF[k].tag || ""), fn: function () { diffConfirm(k); } };
+  }).concat([{ label: "Назад", fn: function () {} }]), {
+    focus: cur >= 0 ? cur : 0,
+    intro: "Режим выбирают сейчас, один раз на всю игру: во время игры его не сменить. Сохранение помнит режим, в котором его сделали; чтобы сыграть в другом режиме, начните новую игру."
+  });
+}
+function diffConfirm(k) {
+  var d = LAB.DIFF[k];
+  menu("Режим «" + d.n + "»", [
+    { label: "Начать игру в этом режиме", fn: function () { S.difficulty = k; LAB.saveSettings(); prologue("new"); } },
+    { label: "Выбрать другой режим", close: true, fn: function () {} }
+  ], { intro: d.desc });
 }
 function reopenMain() { if (screen === "menu" && !top()) mainMenu(true); else if (top()) say(top().title + ". " + itemText(top().items[top().i])); }
 
@@ -413,14 +433,18 @@ function settingsMenu() {
     { kind: "choice", label: "Синтезатор речи", options: ttsOpts, get: function () { return S.tts; }, set: function (v) { S.tts = v; LAB.saveSettings(); Sp.choose(); } },
     { label: function () { return "Голос синтезатора: " + (S.tts === "espeak" ? "встроенный eSpeak" : S.voice || autoVoiceName()); }, fn: voiceMenu },
     { kind: "slider", label: "Скорость речи", min: 0, max: 100, step: 5, get: function () { return S.ratePct == null ? 50 : +S.ratePct; }, set: function (v) { S.ratePct = v; S.rate = LAB.rateFromPct(v); LAB.saveSettings(); }, fmt: function (v) { return Math.round(v) + " процентов" + (v === 50 ? ", обычная" : ""); } },
-    { kind: "choice", label: "Режим сложности", options: (LAB.DIFF_ORDER || [1, 2, 3]).map(function (k) { return { v: k, label: LAB.DIFF[k].n }; }), get: function () { return S.difficulty || 1; }, set: function (v) { S.difficulty = v; LAB.saveSettings(); }, descOf: function (v) { return LAB.DIFF[v] ? LAB.DIFF[v].desc : ""; } },
+    /* (2.6) режим сложности выбирают только в начале новой игры (diffMenu); здесь — какой он у этой игры */
+    { label: function () { return gm() && gm().entered ? "Режим сложности этой игры: " + LAB.dk().n.toLowerCase() + ". Он выбран в начале игры и не меняется" : "Режим сложности выбирают в начале новой игры: «Начать игру» в главном меню"; }, info: true, fn: function () {
+      if (gm() && gm().entered) say(LAB.dk().n + ". " + LAB.dk().desc + " Во время игры режим не меняется: чтобы сыграть в другом, начните новую игру. Сохранение помнит режим, в котором его сделали.");
+      else say("Режим сложности выбирают, когда начинают новую игру, — один раз на всю игру. Сохранение помнит режим, в котором его сделали.");
+    } },
     vol("Громкость музыки", "musicVol"),
     vol("Громкость звуков", "fxVol"),
     vol("Громкость атмосферы", "ambVol"),
     vol("Громкость маяков", "beaconVol"),
     vol("Громкость речи", "voiceVol"),
     tog("Вибрация", "haptics"),
-    tog("Пошаговый режим: враги ходят только после вас", "turnBased"),
+    tog("Пошаговый режим: враги ходят только после вас, а перезарядка, смена оружия, лечение, обыск, броски и импланты стоят ходов", "turnBased"),
     tog("Двери без замка открываются сами", "autoDoors"),
     tog("Читать записки сразу", "autoRead"),
     tog("Голос робота у машин", "robotVoice"),
@@ -976,6 +1000,7 @@ LAB.ui = {
   menu: menu, closeTop: closeTop, closeAll: closeAll, layer: layer, gesture: gesture, refresh: refresh, render: render,
   note: note, craft: craft, ending: ending, levelBanner: levelBanner, showGame: showGame, mainMenu: mainMenu, prologue: prologue, pages: pages,
   character: character, inventory: inventory, implants: implants, settings: settingsMenu, loadMenu: loadMenu, saveMenu: saveMenu,
-  navMenu: navMenu, screen: function () { return screen; }, setScreen: setScreen, top: top, activate: activate, move: move
+  navMenu: navMenu, screen: function () { return screen; }, setScreen: setScreen, top: top, activate: activate, move: move,
+  startGame: startGame, diffMenu: diffMenu
 };
 })();

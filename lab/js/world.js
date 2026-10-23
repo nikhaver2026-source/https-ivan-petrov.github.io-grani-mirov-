@@ -162,6 +162,8 @@ LAB.isBlaster = function (b) { return !!b && (b.cls === "blaster" || /бласт
    патрона. Прежде тяжёлое оружие делало два-восемь выстрелов, а лишь у
    бластеров было плюс восемь за ступень. */
 var PHYS_AMMO = { none: 1, slug: 1, buckshot: 1, k_needle: 1, g_gascan: 1 };
+/* (2.6) патроны, иглы и баллоны капсула не заряжает: только батареи и заряды */
+LAB.physAmmo = function (a) { return !!PHYS_AMMO[a]; };
 LAB.chargeGun = function (b) { return !!b && b.cap > 0 && (b.rng || 1) > 1 && !PHYS_AMMO[b.ammo]; };
 function shotPower(b) {
   var k = 1 + (b.pierce ? 0.25 : 0) + (b.area ? 0.25 : 0) + (b.noarmor ? 0.3 : 0) + 0.1 * (b.chain || 0) + (b.freeze || b.slow || b.mark || b.stunMech || b.knock ? 0.1 : 0);
@@ -706,6 +708,19 @@ function genFloor(seed, L, F, attempt) {
     objCell[idx(o.x, o.y)] = 1;
     fl.objs.push(o); fl.objAt[idx(o.x, o.y)] = o;
     return o;
+  }
+  /* (2.6) Переставить предмет обстановки или жителя в другое помещение:
+     на свободную клетку, не загородив проходы (medic.js — в помещении с
+     капсулой остаются только аптечные автоматы). */
+  function moveTo(t, s2, npc) {
+    var k0 = idx(t.x, t.y);
+    objCell[k0] = 0;
+    var c5 = freeCell(s2);
+    if (!c5) { objCell[k0] = 1; return false; }
+    if (!npc && fl.objAt[k0] === t) delete fl.objAt[k0];
+    t.x = c5[0]; t.y = c5[1]; t.room = s2; objCell[idx(t.x, t.y)] = 1;
+    if (!npc) fl.objAt[idx(t.x, t.y)] = t;
+    return true;
   }
   var itemSeq = 0;
   function addItem(it, s2, cell) {
@@ -1276,6 +1291,10 @@ function genFloor(seed, L, F, attempt) {
   if (LAB.garrison && LAB.garrison.placeCams) LAB.garrison.placeCams({ fl: fl, L: L, F: F, seed: seed, attempt: attempt, makeFoe: makeFoe });
   /* 23. (2.5) Отряды тварей: своры, семьи, звенья, ульи, банды (mutants.js) — своим потоком. */
   if (LAB.mutants && LAB.mutants.place) LAB.mutants.place({ fl: fl, L: L, F: F, seed: seed, attempt: attempt, makeFoe: makeFoe });
+  /* 24. (2.6) Лечение и снабжение (medic.js): аптечный автомат у каждой капсулы, энергобатареи у
+     капсулы прибытия, лечебные припасы в каждой второй комнате, целитель своей глубины —
+     последними, своим потоком случайностей. */
+  if (LAB.medic && LAB.medic.place) LAB.medic.place({ fl: fl, L: L, F: F, seed: seed, attempt: attempt, U: U, addObj: addObj, addItem: addItem, freeCell: freeCell, moveTo: moveTo });
 
   fl.sample = d0;
   fl.turrets = turrets;
@@ -1286,7 +1305,8 @@ function makeSurvivor(r, L, F, s, rm) {
   var female = r.chance(0.5);
   var first = r.pick(female ? LAB.NAMES.f : LAB.NAMES.m);
   var last = r.pick(female ? LAB.NAMES.sf : LAB.NAMES.sm);
-  var profs = Object.keys(LAB.PROFS).filter(function (p) { var b = LAB.PROFS[p].block; return !b || b === LAB.blockOf(L); });
+  /* (2.6) целители глубин (nosurv) встают на этаже сами — среди случайных выживших их нет */
+  var profs = Object.keys(LAB.PROFS).filter(function (p) { var b = LAB.PROFS[p].block; return !LAB.PROFS[p].nosurv && (!b || b === LAB.blockOf(L)); });
   var own = profs.filter(function (p) { return LAB.PROFS[p].block === LAB.blockOf(L); });
   var prof = own.length && r.chance(0.6) ? r.pick(own) : r.pick(profs);
   var c = [r.int(rm.x0, rm.x1), r.int(rm.y0, rm.y1)];

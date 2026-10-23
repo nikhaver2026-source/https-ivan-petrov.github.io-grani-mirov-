@@ -32,7 +32,7 @@ var TICK = 500;
 var foes = [];
 var timer = null, tickN = 0;
 var hold = null;
-var reloadUntil = 0, lastShot = 0, lastEmpty = 0, lastHurtSay = 0, lastSpot = 0;
+var reloadUntil = 0, lastShot = 0, lastEmpty = 0, lastSpot = 0;
 var hpMark = 100;
 var graceT = 0, dangerT = 0, calmT = 0;
 /* (2.1) Безопасное пробуждение: в новой игре, пока носитель в капсульном
@@ -556,11 +556,70 @@ function start() {
 function stop() { if (timer) { clearInterval(timer); timer = null; } stopFire(); }
 function realTick() {
   var g = gm();
-  if (!g || !g.entered || g.paused || G().done || G().dead) return;
-  if (LAB.bg) return;                          /* игра в фоне — мир стоит */
-  if (LAB.ui && LAB.ui.layer()) return;      /* открыто окно — мир ждёт */
-  if (LAB.mini && LAB.mini.active && LAB.mini.active()) return;
-  if (S.turnBased) return;                     /* по ходам: мир движется после действий героя */
+  if (!g || !g.entered || g.paused || G().done || G().dead) { idleAt = 0; return; }
+  if (LAB.bg) { idleAt = 0; return; }          /* игра в фоне — мир стоит */
+  if (LAB.ui && LAB.ui.layer()) { idleAt = 0; return; } /* открыто окно — мир ждёт */
+  if (LAB.mini && LAB.mini.active && LAB.mini.active()) { idleAt = 0; return; }
+  if (S.turnBased) { idleTurn(); return; }     /* по ходам: мир движется после действий героя */
+  tick();
+}
+/* ════════ ПОШАГОВЫЙ РЕЖИМ (2.6) ════════
+   Мир ходит после ваших действий, и в любом режиме сложности здесь свои
+   строгости:
+   • действия стоят ходов (spendTurns): перезарядка — два хода, позитронная —
+     три; достать, убрать или сменить оружие — ход; большая аптечка — два
+     хода; обыск — ход; пока вы заняты, враги ходят;
+   • удар вдогонку (partingBlows): отступили от врага, что бьёт вплотную и
+     готов к удару, — он бьёт в спину, прежде чем вы уйдёте;
+   • в бою враги не ждут бесконечно (idleTurn): за вами гонятся, а вы
+     медлите дольше пятнадцати секунд после того, как «Эхо» договорило, —
+     мир делает ход сам. Открытое окно, пауза и фон — не в счёт. */
+var IDLE_MS = 15000, idleAt = 0;
+var TURN_WHY = {
+  reload: "перезарядка — два хода, позитронная — три",
+  "switch": "сменить оружие — ход",
+  draw: "достать или убрать оружие — ход",
+  heal: "большая аптечка — два хода",
+  search: "обыск — ход",
+  "throw": "бросок — ход",
+  trap: "поставить ловушку или мину — ход",
+  implant: "имплант — ход"
+};
+function spendTurns(n, why) {
+  if (!S.turnBased) return;
+  var g = gm();
+  if (!g || G().dead || G().done) return;
+  idleAt = 0;
+  for (var i = 0; i < (n || 1); i++) { tick(); if (G().dead || G().done) return; }
+  if (why && TURN_WHY[why] && danger() && !G().tut["tb_" + why]) { G().tut["tb_" + why] = 1; sayq("Пошаговый режим: " + TURN_WHY[why] + ". Пока вы заняты, враги ходят."); }
+}
+function partingBlows(from) {
+  var g = G(), nx = g.x, ny = g.y, n = 0;
+  for (var i = 0; i < foes.length && n < 2; i++) {
+    var f = foes[i];
+    if (!hostile(f) || f.state !== "hunt" || (f.rng || 1) > 1 || f.frozen > 0 || f.confused > 0 || f.burrowed || f.phased) continue;
+    if (has(f, "stationary") || has(f, "camera") || has(f, "observer") || has(f, "indirect") || f.task === "repair") continue;
+    if (Math.abs(f.x - from[0]) + Math.abs(f.y - from[1]) !== 1 || Math.abs(f.x - nx) + Math.abs(f.y - ny) <= 1) continue;
+    if (f.at < f.acd) continue;
+    f.at = 0; n++;
+    sayOnce("aoo" + f.id, f.name.split(",")[0] + " бьёт вдогонку!", 2500, "urgent");
+    /* удар — по клетке, с которой вы уходите: вплотную, как в обычном бою */
+    g.x = from[0]; g.y = from[1];
+    try { attack(f, true); } finally { g.x = nx; g.y = ny; }
+    if (g.dead) return n;
+  }
+  if (n && !g.tut.tbParting) { g.tut.tbParting = 1; sayq("Пошаговый режим: отступать от врага, который бьёт вплотную, опасно — он успевает ударить вдогонку. Сначала оглушите, заморозьте или добейте его."); }
+  return n;
+}
+function idleTurn() {
+  var sp = LAB.Speech, now = Date.now();
+  if (G().stair || sheltered() || !hunted()) { idleAt = 0; return; }
+  if (sp && (sp.speaking || (sp.queue && sp.queue.length))) { idleAt = 0; return; } /* отсчёт — с конца речи */
+  if (!idleAt) { idleAt = now; return; }
+  if (now - idleAt < IDLE_MS) return;
+  idleAt = 0;
+  if (!G().tut.tbIdle) { G().tut.tbIdle = 1; LAB.say("Пошаговый режим: в бою враги не ждут дольше пятнадцати секунд. Вы медлите — и они делают ход.", { prio: "urgent" }); }
+  else sayOnce("tbidle", "Вы медлите: враги сделали ход.", 12000, "urgent");
   tick();
 }
 /* (2.0) Подробность мира. Машин на этаже сотни, а слышно и видно только
@@ -599,6 +658,7 @@ function tickBudget(ms) {
 /* Один такт мира. В пошаговом режиме зовётся после каждого действия героя. */
 function tick() {
   if (G().stair) return; /* игрок на лестнице: этаж ждёт */
+  idleAt = 0;
   /* установки глубин: прессы «Подножия»; навигатор, сбитый «Отражением», оживает */
   if (G().st.navjam > 0 && --G().st.navjam === 0) say("Навигатор снова видит этаж.");
   if (LAB.depths) LAB.safe(function () { LAB.depths.tick(); });
@@ -2200,6 +2260,7 @@ function damageFoe(f, raw, dt, o) {
   return true;
 }
 var killTimes = [];
+var corrHint = 0, NTH_W = { 2: "второго", 3: "третьего", 4: "четвёртого", 5: "пятого", 6: "шестого", 7: "седьмого", 8: "восьмого" };
 function kill(f, quiet) {
   if (f.dead) return;
   f.dead = true;
@@ -2240,8 +2301,17 @@ function kill(f, quiet) {
   if (!f.spawned) {
     if (f.kind === "mech") {
       if (r() < 0.6 * dk) drops.push({ kind: "item", item: LAB.partAt({ pick: function (a) { return a[Math.floor(r() * a.length)]; }, chance: function (p) { return r() < p; } }, L), n: 1 });
-      if (r() < 0.25 * dk) drops.push({ kind: "ammo", ammo: L >= 3 && r() < 0.3 ? "magnetron" : "energy", n: 1 });
+      /* (2.6) энергобатарея с робота — только в коридоре, с каждого N-го (ниже);
+         прежнее случайное выпадение где угодно убрано, магнетронный заряд — как был */
+      if (L >= 3 && r() < 0.075 * dk) drops.push({ kind: "ammo", ammo: "magnetron", n: 1 });
       if (f.aff && r() < 0.35) drops.push({ kind: "item", item: L >= 5 && r() < 0.4 ? "supercond" : L >= 3 ? "ceramic" : "chip", n: 1 });
+      /* (2.6) в коридоре — энергобатарея с каждого N-го уничтоженного робота
+         (N — по режиму: bat): бой в коридорах кормит оружие, в комнатах — нет */
+      if (!f.ally && !has(f, "camera") && !has(f, "stationary") && CUR().fl.t[idx(f.x, f.y)] === LAB.T.CORR) {
+        var nth = diff().bat || 4;
+        g.corrBots = (g.corrBots || 0) + 1;
+        if (g.corrBots % nth === 0) { drops.push({ kind: "ammo", ammo: "energy", n: 1, corr26: 1 }); if (!g.tut.corrBat) { g.tut.corrBat = 1; corrHint = nth; } }
+      }
     } else if (f.kind === "anom") {
       if (r() < 0.45 * dk) drops.push({ kind: "item", item: LAB.partAt({ pick: function (a) { return a[Math.floor(r() * a.length)]; }, chance: function (p) { return r() < p; } }, L), n: 1 });
       if (r() < 0.12 * dk) drops.push({ kind: "item", item: "energy_d", n: 1 });
@@ -2274,6 +2344,7 @@ function kill(f, quiet) {
     var verb = f.kind === "mech" ? (f.g === "f" ? "уничтожена" : "уничтожен") : f.kind === "anom" ? (f.g === "f" ? "развеяна" : "развеян") : (f.g === "f" ? "убита" : "убит");
     sayq(f.name.split(",")[0] + " " + verb + "." + (drops.length ? " Что-то упало." : ""));
   }
+  if (corrHint) { sayq("«Эхо»: в коридорах с каждого " + (NTH_W[corrHint] || corrHint + "-го") + " уничтоженного робота падает энергобатарея. В комнатах — нет: за батареями — в коридоры."); corrHint = 0; }
   if (f.boss) {
     LAB.UI.fanfare();
     sayq("Страж повержен: " + LAB.BOSSES[f.boss].n + ".");
@@ -2590,7 +2661,8 @@ function throwNoise() {
     if (t === LAB.T.WALL || (t === LAB.T.DOOR && CUR().fs.doors[CUR().fl.doorAt[idx(nx, ny)].id] !== 2)) break;
     x = nx; y = ny;
   }
-  A("grenade", x, y);
+  A("grenade", x, y, { noPin: true, fuse: 600 });
+  spendTurns(1, "throw");
   setTimeout(function () { var n = noiseLure(x, y); say("Приманка " + LAB.DIRTO[g.face] + " лязгает и пищит." + (n ? " Слышно, как враги идут к ней: " + n + "." : "")); UIx("refresh"); }, 600);
 }
 function calmAll() { foes.forEach(function (f) { if (f.state !== "idle") { f.state = "idle"; f.lastKnown = null; f.aim = false; } }); shells = []; hpMark = 100; }
@@ -2603,7 +2675,12 @@ function reloadPause(ms) { reloadUntil = Date.now() + ms; stopFire(); }
 function afterPlayerMove(from) {
   /* (1.5) ловушки и мины: свои и чужие — все в traps.js */
   if (LAB.traps) LAB.safe(LAB.traps.playerStep);
-  if (S.turnBased) tick();
+  if (S.turnBased) {
+    /* (2.6) отступили от врага, что бьёт вплотную, — удар вдогонку */
+    if (from && !G().dead) partingBlows(from);
+    if (G().dead) return;
+    tick();
+  }
 }
 /* Описание врага для сканера и окна персонажа. */
 function describe(f) {
@@ -2656,6 +2733,7 @@ function useImplant(id, free) {
   }
   if (IM && !free) IM.used(id, cost);
   UIx("refresh");
+  if (!free) spendTurns(1, "implant"); /* (2.6) пошаговый режим: имплант — ход */
 }
 function echoText() {
   var g = G(), out = [];
@@ -2704,7 +2782,8 @@ function throwEmp() {
     if (t === LAB.T.WALL || (t === LAB.T.DOOR && CUR().fs.doors[CUR().fl.doorAt[idx(nx, ny)].id] !== 2) || foeAtCell(nx, ny)) { if (foeAtCell(nx, ny)) { x = nx; y = ny; } break; }
     x = nx; y = ny;
   }
-  A("grenade", x, y);
+  A("grenade", x, y, { fuse: 700 });
+  spendTurns(1, "throw");
   var n = 0;
   setTimeout(function () {
     foes.forEach(function (f) {
@@ -2801,13 +2880,28 @@ function flight(range) {
   }
   return { x: x, y: y };
 }
+/* (2.6) Какой звук у взрыва этой гранаты (atmos.js, EXPL). */
+function grenKind(q) {
+  if (q.emp) return "emp";
+  if (q.dt === "thermo" || q.burn) return "fire";
+  if (q.dt === "acid") return "acid";
+  if (q.gas) return "gas";
+  if (q.dt === "cryo" || q.freeze) return "cryo";
+  if (q.dt === "sonic") return (q.dmg || 0) > 0 ? "sonic" : "flash";
+  if (q.dt === "positron") return "positron";
+  if (q.dt === "grav") return "grav";
+  if (q.slow && q.stun && (q.dmg || 0) <= 5) return "net";
+  if (q.knock && (q.r || 1) >= 2) return "cluster";
+  return (q.dmg || 0) >= 60 ? "big" : "frag";
+}
 function throwGrenade(id) {
   var g = G(), d = LAB.ITEMS[id], q = d && d.fx && d.fx.gren;
   if (!q || !(g.inv[id] > 0)) { say("Нет: " + (d ? d.n : id) + "."); return false; }
   g.inv[id]--;
   havenFight(); /* (2.3) бой из безопасной зоны у капсулы */
   var p = flight(q.range || 5), dirW = LAB.DIRTO[g.face] || "";
-  A("grenade", p.x, p.y);
+  A("grenade", p.x, p.y, { fuse: Math.max(250, q.fuse || 700) });
+  spendTurns(1, "throw"); /* (2.6) пошаговый режим: бросок — ход */
   var k = 1 + 0.12 * (LAB.foeLevel(g.L, g.F) - 1), dmg = Math.round((q.dmg || 0) * k), r = q.r == null ? 1 : q.r;
   setTimeout(function () {
     LAB.safe(function () {
@@ -2837,7 +2931,7 @@ function throwGrenade(id) {
       /* огонь и пар — от урона гранаты первого уровня: глубину зона добавляет сама (traps.tick) */
       if (q.burn && LAB.traps && LAB.traps.addZone) LAB.traps.addZone("fire", p.x, p.y, Math.max(1, r), q.burn, Math.max(4, Math.round((q.dmg || 0) * 0.3)), 1);
       if (q.gas && LAB.traps && LAB.traps.addZone) LAB.traps.addZone("gas", p.x, p.y, Math.max(1, r), q.gas, Math.max(4, Math.round((q.dmg || 0) * 0.25)), 1);
-      A("explosion", p.x, p.y, q.emp ? "emp" : q.dt === "acid" || q.gas ? "acid" : dmg >= 60 ? "shell" : "mine");
+      A("explosion", p.x, p.y, grenKind(q));
       noise(q.loud == null ? 10 : q.loud);
       var self = q.self !== false && dmg > 0 && cheb(heroPos(), p) <= r;
       if (self) hurtPlayer(Math.round(dmg * 0.5), q.dt === "thermo" ? "therm" : "phys", null);
@@ -2855,7 +2949,9 @@ LAB.combat = {
   throwQuick: throwQuick, pickGrenade: pickGrenade, throwGrenade: throwGrenade, throwables: throwables,
   loadFoes: loadFoes, syncFoes: syncFoes, wake: start, start: start, stop: stop, tick: tick,
   danger: danger, hunted: hunted, visibleFoes: visibleFoes, nearestFoe: nearestFoe, aliveCount: aliveCount, jammed: jammed,
-  afterPlayerMove: afterPlayerMove, noise: noise, turretsOff: turretsOff, turretsOurs: turretsOurs, turretsHostile: turretsHostile, turretsLeft: turretsLeft,
+  afterPlayerMove: afterPlayerMove, spendTurns: spendTurns, partingBlows: partingBlows, idleTurn: idleTurn,
+  /* для проверок: будто вы молчите уже ms миллисекунд */
+  _idleBack: function (ms) { idleAt = Date.now() - ms; }, idleMs: function () { return IDLE_MS; }, grenKind: grenKind, noise: noise, turretsOff: turretsOff, turretsOurs: turretsOurs, turretsHostile: turretsHostile, turretsLeft: turretsLeft,
   robotsCalm: robotsCalm, calmAll: calmAll, chaser: chaser, alertMech: alertMech, sendSquad: sendSquad, deployTurret: deployTurret, noiseLure: noiseLure, throwNoise: throwNoise,
   dispatch: dispatch, replacePatrol: replacePatrol, refillRoom: refillRoom, okoPoint: okoPoint, patrols: patrols, sappers: sappers, minePoints: minePoints, drones: drones, repairers: repairers, guards: guards, sendCheck: sendCheck, reroute: reroute, dismiss: dismiss, despawn: despawn,
   lastSquad: function () { return lastSquad; }, tickN: function () { return tickN; }, wakeSafe: function () { return safeHero; }, sheltered: sheltered, refuge: function () { return refugeId; },

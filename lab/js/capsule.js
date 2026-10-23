@@ -135,6 +135,11 @@ function later(t) { setTimeout(function () { LAB.safe(function () { sayq(t); });
 function menuItems() {
   var items = [], o = inCap.o, bp = bindPrice(G().L, G().F);
   if (o && !boundHere(o)) items.push({ label: "Привязаться к капсуле, чтобы возрождаться здесь: " + bp + " " + pl(bp, "кредит", "кредита", "кредитов") + " (у вас " + (G().credits || 0) + ")", keep: true, fn: bind });
+  var need = G().weapons.filter(function (w) { return chargeable(w) && w.charge < w.cap; });
+  /* (2.6) в тесном помещении аптечному автомату места не нашлось — аптечный отсек есть в самой капсуле */
+  var fl = CUR() && CUR().fl, vendHere = !!(o && fl && fl.objs.some(function (x) { return x.type === "medvend" && x.room === o.room; }));
+  if (o && !vendHere && LAB.medic) items.push({ label: "Аптечный отсек капсулы: аптечки и энергобатареи", fn: function () { LAB.medic.vendMenu(null); } });
+  items.push({ label: need.length ? "Зарядить оружие за кредиты: " + (need.length === 1 ? cr(chargePrice(need[0])) : "от " + cr(Math.min.apply(null, need.map(chargePrice)))) : "Зарядить оружие за кредиты: всё заряжено", fn: chargeMenu });
   items.push({ label: "Спать", fn: sleepMenu });
   if (playing) items.push({ label: "Остановить музыку: «" + playing.t.n + "»", keep: true, fn: function () { stopTrack(false); } });
   items.push({ label: "Послушать музыку", fn: musicMenu });
@@ -162,6 +167,62 @@ function leave(byClose) {
   gm().autosave();
   UIx("refresh");
 }
+
+/* ── (2.6) зарядка оружия от капсулы — за кредиты ──
+   Капсула питается от сети этажа и заряжает оружие на батареях и зарядах
+   (энергетическое, магнетронное, позитронное и другие), но не патроны.
+   Платите только за недостающий заряд. Полная зарядка дороже, чем больше
+   ёмкость оружия и чем выше его ступень и уровень (марка); с глубиной и по
+   режиму сложности цена растёт, как у прилавков (priceK). У маленького
+   бластера первых уровней полная зарядка чуть дешевле энергобатареи, у
+   мощного оружия глубин — дороже: батарея всегда даёт полный заряд. */
+function cr(n) { return n + " " + pl(n, "кредит", "кредита", "кредитов"); }
+function chargeable(w) { return !!w && !!w.ammo && w.ammo !== "none" && !!LAB.AMMO[w.ammo] && !(LAB.physAmmo && LAB.physAmmo(w.ammo)) && w.cap > 0; }
+function chargeFull(w) {
+  var a = LAB.AMMO[w.ammo], mark = LAB.weaponMark ? LAB.weaponMark(w.rank, w.lvl) : 1 + (w.rank || 0);
+  return (a.price || 30) * (gm().priceK ? gm().priceK() : 1) * 0.85 * Math.sqrt(w.cap / 30) * (1 + 0.015 * (mark - 1));
+}
+function chargePrice(w) { var miss = Math.max(0, w.cap - (w.charge || 0)); return miss ? Math.max(2, Math.round(chargeFull(w) * miss / w.cap)) : 0; }
+function chargeOne(w, quiet) {
+  var g = G(), p = chargePrice(w);
+  if (!p) { if (!quiet) say(capital(w.name) + ": заряд и так полный."); return 0; }
+  if ((g.credits || 0) < p) { LAB.UI.error(); say("Не хватает кредитов: зарядка — " + cr(p) + ", у вас " + (g.credits || 0) + "."); return -1; }
+  g.credits -= p; w.charge = w.cap;
+  if (!quiet) { A("play", w.ammo === "magnetron" ? "w_reload_m" : w.ammo === "positron" ? "w_reload_p" : "w_reload_e"); say(capital(w.name) + (w.g === "f" ? " заряжена" : w.g === "n" ? " заряжено" : " заряжен") + " полностью: " + w.cap + " " + pl(w.cap, "выстрел", "выстрела", "выстрелов") + ". Списано " + cr(p) + ", осталось " + g.credits + "."); }
+  return p;
+}
+function chargeAll() {
+  var g = G(), need = g.weapons.filter(function (w) { return chargeable(w) && w.charge < w.cap; });
+  var tot = need.reduce(function (s2, w) { return s2 + chargePrice(w); }, 0);
+  if (!need.length) { say("Всё оружие заряжено."); return; }
+  if ((g.credits || 0) < tot) { LAB.UI.error(); say("Не хватает кредитов: зарядить всё — " + cr(tot) + ", у вас " + (g.credits || 0) + ". Зарядите что-то одно."); return; }
+  need.forEach(function (w) { chargeOne(w, true); });
+  A("play", "w_reload_e");
+  say("Заряжено оружие: " + need.length + ". Списано " + cr(tot) + ", осталось " + g.credits + ".");
+}
+/* st — зарядная станция в комнате: тот же обработчик и те же цены, что у
+   капсулы, и ещё зарядка энергобатареи по цене аптечного автомата. */
+function chargeItems(st) {
+  var g = G(), items = [], all = g.weapons.filter(chargeable), need = all.filter(function (w) { return w.charge < w.cap; });
+  var who = st ? "станция" : "капсула";
+  items.push({ label: "У вас " + cr(g.credits || 0) + ". Платите только за недостающий заряд.", info: true, keep: true, fn: function () { say("У вас " + cr(G().credits || 0) + "."); } });
+  need.forEach(function (w) { items.push({ label: capital(gm().weaponLine(w)) + ". Зарядить полностью — " + cr(chargePrice(w)), keep: true, fn: function () { chargeOne(w); refreshTop(); } }); });
+  if (need.length > 1) items.push({ label: "Зарядить всё оружие — " + cr(need.reduce(function (s2, w) { return s2 + chargePrice(w); }, 0)), keep: true, fn: function () { chargeAll(); refreshTop(); } });
+  if (!need.length) items.push({ label: all.length ? "Всё оружие заряжено" : "Оружия на батареях нет: " + who + " заряжает только его, не патроны", info: true, keep: true, fn: function () { say(all.length ? "Всё оружие заряжено." : capital(who) + " заряжает только оружие на батареях."); } });
+  if (st && LAB.medic && LAB.medic.vendPrice) {
+    var pb = LAB.medic.vendPrice("ammo:energy");
+    items.push({ label: "Зарядить энергобатарею — " + cr(pb) + ". Батарей у вас: " + (g.ammo.energy || 0), keep: true, fn: function () { gm().buy("ammo:energy", pb); refreshTop(); } });
+  }
+  items.push({ label: "Назад", fn: function () {} });
+  return items;
+}
+function chargeMenu(st) {
+  var build = function () { return chargeItems(st); };
+  UIx("menu", st ? "Зарядная станция" : "Зарядка оружия", build(), { keep: true, rebuild: build, intro: st
+    ? "Станция заряжает оружие от сети этажа по тем же ценам, что и капсула: чем мощнее и ёмче оружие и чем глубже этаж, тем дороже."
+    : "Капсула заряжает оружие от сети этажа: чем мощнее и ёмче оружие и чем глубже этаж, тем дороже." });
+}
+function capital(t) { t = String(t || ""); return t.charAt(0).toUpperCase() + t.slice(1); }
 
 /* ── сон: варианты и сны-истории ── */
 var SLEEP = [
@@ -323,6 +384,7 @@ function reader(title, text, opts) {
 function reset() { stopTrack(true); inCap.o = null; }
 LAB.capsule = {
   menu: enter, inside: function () { return !!inCap.o; }, leave: function () { leave(false); }, reset: reset, bindPrice: bindPrice, boundHere: boundHere, bind: bind,
+  chargeable: chargeable, chargePrice: chargePrice, chargeOne: chargeOne, chargeAll: chargeAll, chargeMenu: chargeMenu, chargeItems: chargeItems,
   _sleep: function (i) { sleep(SLEEP[i]); }, _shelf: shelf, _open: open, _selection: selection, _tracks: tracks, _playing: function () { return playing; }, _state: function () { return inCap; }
 };
 })();

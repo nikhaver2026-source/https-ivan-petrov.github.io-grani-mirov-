@@ -898,20 +898,20 @@
 
 # «Подземная лаборатория», заход 8 (2.6), часть 3: нажимная пластина, рывок струны, мышеловка,
 # отскок металла, рикошеты, подземный и тоннельный взрыв, «Big Boom» (Freesound, CC0).
-lab_fsM https://cdn.freesound.org/previews/138/138098_2527354-hq.ogg
-lab_fsM https://cdn.freesound.org/previews/667/667382_14357477-hq.ogg
-lab_fsM https://cdn.freesound.org/previews/537/537084_6652872-hq.ogg
-lab_fsM https://cdn.freesound.org/previews/560/560094_12128104-hq.ogg
-lab_fsM https://cdn.freesound.org/previews/466/466272_4135289-hq.ogg
-lab_fsM https://cdn.freesound.org/previews/422/422870_6613468-hq.ogg
-lab_fsM https://cdn.freesound.org/previews/181/181115_1591616-hq.ogg
-lab_fsM https://cdn.freesound.org/previews/389/389188_7268131-hq.ogg
-lab_fsM https://cdn.freesound.org/previews/587/587443_5487341-hq.ogg
-lab_fsM https://cdn.freesound.org/previews/329/329033_4361321-hq.ogg
-lab_fsM https://cdn.freesound.org/previews/30/30932_15696-hq.ogg
-lab_fsM https://cdn.freesound.org/previews/148/148840_2676248-hq.ogg
-lab_fsM https://cdn.freesound.org/previews/703/703070_1431924-hq.ogg
-lab_fsM https://cdn.freesound.org/previews/505/505807_181941-hq.ogg
-lab_fsM https://cdn.freesound.org/previews/189/189779_1038806-hq.ogg
-lab_fsM https://cdn.freesound.org/previews/826/826213_13332713-hq.ogg
-lab_fsM https://cdn.freesound.org/previews/512/512215_10756146-hq.ogg
+# (заход 8 скачан) lab_fsM https://cdn.freesound.org/previews/138/138098_2527354-hq.ogg
+# (заход 8 скачан) lab_fsM https://cdn.freesound.org/previews/667/667382_14357477-hq.ogg
+# (заход 8 скачан) lab_fsM https://cdn.freesound.org/previews/537/537084_6652872-hq.ogg
+# (заход 8 скачан) lab_fsM https://cdn.freesound.org/previews/560/560094_12128104-hq.ogg
+# (заход 8 скачан) lab_fsM https://cdn.freesound.org/previews/466/466272_4135289-hq.ogg
+# (заход 8 скачан) lab_fsM https://cdn.freesound.org/previews/422/422870_6613468-hq.ogg
+# (заход 8 скачан) lab_fsM https://cdn.freesound.org/previews/181/181115_1591616-hq.ogg
+# (заход 8 скачан) lab_fsM https://cdn.freesound.org/previews/389/389188_7268131-hq.ogg
+# (заход 8 скачан) lab_fsM https://cdn.freesound.org/previews/587/587443_5487341-hq.ogg
+# (заход 8 скачан) lab_fsM https://cdn.freesound.org/previews/329/329033_4361321-hq.ogg
+# (заход 8 скачан) lab_fsM https://cdn.freesound.org/previews/30/30932_15696-hq.ogg
+# (заход 8 скачан) lab_fsM https://cdn.freesound.org/previews/148/148840_2676248-hq.ogg
+# (заход 8 скачан) lab_fsM https://cdn.freesound.org/previews/703/703070_1431924-hq.ogg
+# (заход 8 скачан) lab_fsM https://cdn.freesound.org/previews/505/505807_181941-hq.ogg
+# (заход 8 скачан) lab_fsM https://cdn.freesound.org/previews/189/189779_1038806-hq.ogg
+# (заход 8 скачан) lab_fsM https://cdn.freesound.org/previews/826/826213_13332713-hq.ogg
+# (заход 8 скачан) lab_fsM https://cdn.freesound.org/previews/512/512215_10756146-hq.ogg

@@ -461,7 +461,7 @@ function tick() {
     if (gr.key !== CUR().key) { grenades.splice(i, 1); continue; }
     if (--gr.t > 0) { sndAt("turret_lock", gr.x, gr.y, { gain: 0.9 }); continue; }
     grenades.splice(i, 1);
-    A("explosion", gr.x, gr.y, "mine");
+    A("explosion", gr.x, gr.y, "frag"); /* (2.6) граната на растяжке — осколочная */
     if (C) {
       var kk = 1 + 0.165 * (LAB.foeLevel(g.L, g.F) - 1);
       C.foes().forEach(function (f) { if (!f.dead && !f.ally && cheb(f.x, f.y, gr.x, gr.y) <= 1) C.damageFoe(f, Math.round(45 * kk), "kinetic", { noarmor: true, quiet: true }); });

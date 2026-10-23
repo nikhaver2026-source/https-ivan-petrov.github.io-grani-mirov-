@@ -37,14 +37,6 @@ function pct(x) { return Math.round(x * 100); }
 function ev(name, n) { if (LAB.ach) LAB.ach.ev(name, n == null ? 1 : n); }
 function spend(min) { if (min > 0) gm().advanceTime(min); }
 function nowMin() { return (G().day || 0) * 1440 + (G().min || 0); }
-/* Тексты по глубине: свои у каждой глубины, и чаще — у этого предмета свои. */
-function poolFor(list, salt, n) {
-  var e = era(), all = (list || []).filter(function (q) { return !q.era || q.era.indexOf(e) >= 0; });
-  if (!all.length) all = (list || []).slice();
-  var r = LAB.Rng(G().seed, "atxt:" + salt), out = all.slice();
-  r.shuffle(out);
-  return out.slice(0, Math.max(1, Math.min(n, out.length)));
-}
 
 /* ════════ ОСОБЫЕ ЗОНЫ: ИЗЛУЧЕНИЕ И ГАЗ ════════
    Фон 1–5: доза облучения за шаг (минуту по часам комплекса) и, слабее,

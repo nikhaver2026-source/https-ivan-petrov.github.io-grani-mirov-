@@ -52,13 +52,13 @@ jobs:
           - bits: '64'
             arch: x64
             electron: '44.5.1'
-            appdir: Подземная лаборатория Альфа 2.5
-            zip: Podzemnaya-laboratoriya-Alfa-2.5-windows.zip
+            appdir: Подземная лаборатория Альфа 2.6
+            zip: Podzemnaya-laboratoriya-Alfa-2.6-windows.zip
           - bits: '32'
             arch: ia32
             electron: '22.3.27'
-            appdir: Подземная лаборатория Альфа 2.5 (32 бит)
-            zip: Podzemnaya-laboratoriya-Alfa-2.5-windows-32bit.zip
+            appdir: Подземная лаборатория Альфа 2.6 (32 бит)
+            zip: Podzemnaya-laboratoriya-Alfa-2.6-windows-32bit.zip
     defaults:
       run:
         shell: bash
@@ -132,7 +132,7 @@ jobs:
           ICONARG=""; [ -n "$ICON" ] && ICONARG="--icon=$ICON"
           npx @electron/packager . lab --platform=win32 --arch=$ARCH --electron-version=$ELECTRON --out=out --overwrite \
             --executable-name="${EXE%.exe}" --app-version=1.0.0 --build-version=1.0.0.${GITHUB_RUN_NUMBER} \
-            --win32metadata.ProductName="Подземная лаборатория" --win32metadata.FileDescription="Подземная лаборатория Альфа 2.5" \
+            --win32metadata.ProductName="Подземная лаборатория" --win32metadata.FileDescription="Подземная лаборатория Альфа 2.6" \
             --win32metadata.CompanyName="Грани Миров" \
             --extra-resource=sapi --extra-resource=sr \
             --ignore='^/out(/|$)' --ignore='icon\.ico' --ignore='sapi-build\.js' --ignore='^/sapi(/|$)' --ignore='^/sr(/|$)' $ICONARG
@@ -288,8 +288,8 @@ jobs:
         working-directory: dist
         env:
           GH_TOKEN: ${{ github.token }}
-          Z64: Podzemnaya-laboratoriya-Alfa-2.5-windows.zip
-          Z32: Podzemnaya-laboratoriya-Alfa-2.5-windows-32bit.zip
+          Z64: Podzemnaya-laboratoriya-Alfa-2.6-windows.zip
+          Z32: Podzemnaya-laboratoriya-Alfa-2.6-windows-32bit.zip
         run: |
           ls -la
           gh release delete lab-windows-latest --cleanup-tag -y --repo "$GITHUB_REPOSITORY" || true
@@ -301,7 +301,7 @@ jobs:
           for i in $(seq 1 12); do git ls-remote --exit-code --tags "https://github.com/$GITHUB_REPOSITORY" "refs/tags/lab-windows-latest" > /dev/null 2>&1 || break; sleep 5; done
           S64=$(stat -c %s "$Z64"); S32=$(stat -c %s "$Z32")
           cat > "$RUNNER_TEMP/notes.md" <<EOF
-          «Подземная лаборатория» Альфа 2.5 для Windows — звуковая игра. Сборка ${GITHUB_RUN_NUMBER} из ${GITHUB_REF_NAME} (${GITHUB_SHA}).
+          «Подземная лаборатория» Альфа 2.6 для Windows — звуковая игра. Сборка ${GITHUB_RUN_NUMBER} из ${GITHUB_REF_NAME} (${GITHUB_SHA}).
 
           Две полные сборки — выберите свою:
           - $Z64 (${S64} байт) — 64 бит: Windows 10 и 11, 64-битные.
@@ -316,7 +316,7 @@ jobs:
           Проверено: обе сборки запускаются и проходят самопроверку на Windows — со встроенным eSpeak и с голосами, поставленными как у игрока.
           EOF
           gh release create lab-windows-latest "$Z64" "$Z32" --prerelease --target "$GITHUB_SHA" --repo "$GITHUB_REPOSITORY" \
-            --title "Подземная лаборатория Альфа 2.5 для Windows (сборка ${GITHUB_RUN_NUMBER})" \
+            --title "Подземная лаборатория Альфа 2.6 для Windows (сборка ${GITHUB_RUN_NUMBER})" \
             --notes-file "$RUNNER_TEMP/notes.md"
           for i in $(seq 1 6); do
             sleep 10

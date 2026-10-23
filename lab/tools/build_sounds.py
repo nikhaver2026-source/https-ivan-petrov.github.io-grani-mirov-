@@ -7,10 +7,16 @@
 lab/js/sounds.js (что звучит и откуда) и lab/sounds/CREDITS.md (авторы и
 лицензии каждой записи). Записи под CC BY-SA и GPL не берутся.
 
-Запуск: python3 lab/tools/build_sounds.py <exA> <exB> <exC> <exD> [шаблоны id]
+Запуск: python3 lab/tools/build_sounds.py [--merge] <exA> <exB> <exC> <exD> [шаблоны id]
 (распакованные архивы заходов 1–4; заход 4 — живые записи Freesound, CC0,
 авторы и названия — tools/sfx-fetch/fs_lab.tsv; записи следующих заходов
 Freesound — заход 6 и др. — кладутся в ту же папку lab_fsD). Нужны ffmpeg (libvorbis) и numpy.
+
+(2.6) --merge с шаблонами id: собрать только эти записи и вписать их в
+готовые lab/js/sounds.js и lab/sounds/CREDITS.md — остальное не трогается.
+Так доводятся новые звуки, когда исходников прежних заходов под рукой нет
+(служебный выпуск sfx-inbox хранит только последний заход): прежние записи
+остаются как были, их авторы — в CREDITS.md как были.
 """
 import sys, os, glob, fnmatch, subprocess, json, re, hashlib
 import numpy as np
@@ -557,7 +563,6 @@ E("chair_sit", "sfx", [FS(503634, start=0.45, dur=1.2), FS(147759, start=0.2, du
 E("chair_up", "sfx", [FS(503634, start=2.25, dur=1.2), FS(431857, start=0.4, dur=1.1)], n=2, mx=1.3, v=0.75)
 E("pc_boot", "sfx", [FS(415594, dur=2.6), FS(52050, start=0.6, dur=2.4)], n=2, mx=2.7, v=0.7)
 E("pc_click", "sfx", [SPL(347544, 3), FS(79388, start=0.16, dur=0.5)], n=4, mx=0.6, v=0.6)
-E("pc_type", "sfx", [FS(79388, start=0.16, dur=1.3), FS(331656, start=2.0, dur=1.3)], n=2, mx=1.4, v=0.6)
 E("pc_ok", "sfx", [FS(250104)], n=1, mx=0.3, v=0.6)
 E("pc_error", "mixv", [[L(FS(250104, af=PITCH(0.72))), L(FS(250104, af=PITCH(0.72)), 0.2, 0.9)]], mx=0.6, v=0.7)
 E("bcn_pc", "bcn", [FS(250104, af=PITCH(1.25))], bus="beacon", v=0.45)
@@ -765,17 +770,66 @@ E("impact_wave", "sfx", [S(A, "lab_git_es", "ion impact.flac")], mx=0.9)
 E("swing_miss", "sfx", [SPL(427979, 3, start=6.0, dur=8.0, min_len=0.08)], n=3, mx=0.5)
 E("swing_by", "sfx", [FS(507466), FS(562191)], n=2, mx=0.5)
 E("bullet_by", "mixv", [[L(FS(855248)), L(FS(507466), 0.0, 0.35)]], mx=0.5)
-E("explosion_small", "sfx", [FS(336011), S(A, "lab_git_es", "explosion small.flac")], n=2, mx=1.5)
-E("explosion_big", "sfx", [FS(490266), S(A, "lab_git_es", "explosion large.flac")], n=2, mx=2.6)
 E("emp_blast", "sfx", [S(A, "lab_git_es", "ion impact.flac"), S(A, "lab_electric_deathboom*", "*.flac")], n=2, mx=2.0)
 E("acid_burst", "sfx", [S(A, "lab_squish8*", "impactsplat05*")], mx=1.5)
-E("grenade_throw", "sfx", [S(B, "lab_rpg80*", "blade_01.ogg")])
-E("grenade_land", "sfx", [S(A, "lab_metalwood*", "metal_hit_04.ogg")])
 E("shell_whistle", "sfx", [S(A, "lab_git_es", "rocket.flac")], mx=1.6)
-E("mine_set", "sfx", [S(A, "lab_git_es", "mine deploy.flac")])
 E("mine_beep", "bcn", [S(B, "lab_pingpong*", "*peeeeeep*")], bus="beacon")
 E("loot_drop", "sfx", [S(A, "lab_interface*", "drop_00[23].ogg")], n=2, v=0.7)
-E("debris", "sfx", [S(A, "lab_metalwood*", "metal_falling_02.ogg"), S(B, "lab_rpg80*", "stones_04.ogg")], n=2)
+
+# ═════ (2.6) ГРАНАТЫ, МИНЫ, ВЗРЫВЫ ═════
+# Заход 8: живые записи Freesound (CC0; четыре — CC BY 4.0: CGEffex,
+# ryanconway, EvanBoyerman, knova) и BigSoundBank (CC0). Взрыв сведён
+# слоями: тело (низ), хлопок (середина и верх — его слышно и на динамике
+# телефона) и хвост. Осколки, осыпь, щелчок взрывателя, рывок проволоки —
+# отдельные записи: их накладывает atmos.js (EXPL), у каждого вида — свои.
+# Прежние записи взрывов, броска и мины (Endless Sky, rubberduck) заменены.
+BOOM = "highpass=f=28,equalizer=f=1600:t=q:w=1.2:g=3"
+def BSB8(pk, pat, **o): return S("D", pk, pat, **o)
+E("grenade_pin", "sfx", [FS(161622, dur=0.17), SPL(209645, 3, min_len=0.04, max_len=0.35)], n=4, mx=0.45, v=0.8)
+E("grenade_throw", "sfx", [SPL(463763, 3, min_len=0.15, max_len=0.5), FS(611613, dur=0.75), FS(346373)], n=4, mx=0.8, v=0.85)
+E("grenade_land", "mixv", [[L(FS(259553, start=0.1, dur=0.9)), L(FS(329033, dur=1.2), 0.3, 0.35)], [L(FS(181115, start=0.15, dur=1.2))],
+                           [L(FS(93839, start=0.6, dur=0.6))], [L(FS(93839, start=4.73, dur=0.65))], [L(FS(874472, start=0.05, dur=1.4))]], mx=1.5, v=0.9)
+E("explosion_frag", "mixv", [[L(FS(609587, dur=1.9)), L(FS(516914, start=0.27, dur=2.4), 0.0, 0.7)],
+                             [L(FS(398283, dur=2.4)), L(FS(523365, dur=1.2), 0.0, 0.45)],
+                             [L(FS(129281, start=0.07, dur=2.6)), L(FS(609587, dur=0.7), 0.0, 0.45)],
+                             [L(FS(560510, dur=1.4)), L(FS(563010, start=0.26, dur=2.2), 0.0, 0.65)],
+                             [L(FS(753843, start=0.06, dur=1.0)), L(FS(172334, dur=1.6), 0.02, 0.6), L(FS(523365, dur=0.6), 0.0, 0.4)],
+                             [L(FS(161622, start=1.79, dur=2.4)), L(FS(523365, dur=0.8), 0.0, 0.4)]], mx=2.8, tgt=-15.0, post=BOOM)
+E("explosion_small", "mixv", [[L(FS(402006, dur=1.0)), L(FS(523089, dur=1.2), 0.0, 0.55)],
+                              [L(FS(620229, dur=1.4)), L(BSB8("bsb_lab_expl", "1807_*"), 0.0, 0.9)],
+                              [L(FS(523089, dur=1.24)), L(BSB8("bsb_lab_expl", "1808_*"), 0.0, 0.6)],
+                              [L(FS(560510, start=3.0, dur=1.6))],
+                              [L(FS(753843, start=0.06, dur=0.95))]], mx=1.6, tgt=-15.0, post=BOOM)
+E("explosion_big", "mixv", [[L(FS(235968, start=0.38, dur=4.0)), L(FS(255111, dur=3.4), 0.0, 0.55)],
+                            [L(FS(220062, start=0.07, dur=3.8)), L(FS(665094, start=0.47, dur=2.7), 0.0, 0.55)],
+                            [L(FS(505807, dur=4.0)), L(FS(189779, dur=3.5), 0.0, 0.5)],
+                            [L(FS(165808, start=2.16, dur=4.0)), L(FS(609587, dur=0.8), 0.0, 0.45)]], mx=4.0, tgt=-14.5, post=BOOM)
+# далёкий взрыв глухой, но и на динамике телефона его слышно: подъём середины
+E("explosion_far", "sfx", [FS(324277, start=0.08, dur=3.5), FS(372086, dur=3.0), BSB8("bsb_lab_expl", "1023_*", dur=3.5), FS(826213, dur=3.0)], n=4, mx=3.5, tgt=-17.0, v=0.9,
+  post="highpass=f=60,equalizer=f=900:t=q:w=1.2:g=8,treble=g=3:f=4000")
+E("explosion_shrapnel", "sfx", [SPL(587443, 3, min_len=0.6, max_len=1.8), FS(333988, start=0.95, dur=1.6), FS(389188, start=0.06, dur=0.9)], n=4, mx=1.8, v=0.8)
+E("debris", "sfx", [FS(703247, dur=2.6), FS(703248, dur=2.7), FS(550342, dur=2.8), FS(550342, start=4.88, dur=2.8), FS(132929, start=2.9, dur=2.6)], n=5, mx=2.8, v=0.85)
+E("explosion_fire", "mixv", [[L(FS(260554, dur=1.6), 0.0, 0.6), L(FS(242721, start=0.15, dur=2.4), 0.05, 1.0)],
+                             [L(FS(244926, start=0.09, dur=2.4)), L(BSB8("bsb_lab_fire", "2856_*", start=12.0, dur=2.4), 0.25, 0.5)],
+                             [L(FS(483322, dur=2.4)), L(FS(186374, start=1.3, dur=0.6), 0.0, 0.7)]], mx=2.8, tgt=-15.5, post=BOOM)
+E("explosion_flash", "mixv", [[L(FS(737326, dur=2.0)), L(FS(523365, dur=0.6), 0.0, 0.5)],
+                              [L(FS(734095, dur=2.5)), L(FS(402006, dur=0.6), 0.0, 0.75)],
+                              [L(FS(752628, dur=2.6))]], mx=2.6, tgt=-14.5, post=BOOM)
+E("explosion_ring", "sfx", [FS(27879, start=0.4, dur=3.2)], mx=3.2, v=0.5, tgt=-22.0, post="afade=t=out:st=0.5:d=2.7")
+E("explosion_cryo", "mixv", [[L(FS(685253, start=0.07, dur=2.2)), L(FS(452645, start=0.06, dur=2.0), 0.05, 0.75)],
+                             [L(FS(418194, dur=0.4)), L(FS(342546, start=0.45, dur=2.0), 0.05, 0.85)],
+                             [L(FS(422623, start=0.2, dur=2.2)), L(BSB8("bsb_lab_ice", "2205_*", dur=1.9), 0.0, 0.7)]], mx=2.4, tgt=-16.0)
+E("explosion_gas", "mixv", [[L(FS(551429, dur=2.6))], [L(FS(800740, dur=0.5)), L(FS(398077, start=0.5, dur=2.0), 0.06, 0.85)],
+                            [L(FS(800740, dur=0.5), 0.0, 0.8), L(FS(406089, start=0.48, dur=2.2), 0.05, 0.8)]], mx=2.6, tgt=-17.0)
+E("explosion_net", "mixv", [[L(FS(800740, dur=0.5)), L(FS(719638, start=0.04, dur=1.6), 0.03, 0.8)],
+                            [L(FS(346373)), L(FS(719638, start=0.3, dur=1.3), 0.0, 0.8)]], mx=1.8, tgt=-16.5)
+E("explosion_zap", "sfx", [FS(438494, start=0.37, dur=1.2), FS(367458, start=0.5, dur=1.2)], n=2, mx=1.3, v=0.85)
+E("acid_sizzle", "sfx", [FS(202094, start=0.05, dur=2.0), FS(382313, start=0.3, dur=2.2), FS(382313, start=10.4, dur=2.2)], n=3, mx=2.2, v=0.8)
+E("mine_click", "sfx", [FS(466272, dur=0.45), FS(332671), FS(422870, dur=0.6)], n=3, mx=0.5, v=0.9, post="highpass=f=120,equalizer=f=2500:t=q:w=1.0:g=6")
+E("mine_set", "sfx", [FS(418329, start=3.2, dur=0.3), FS(418329, start=6.62, dur=0.3), FS(720888, start=1.83, dur=0.2)], n=3, mx=0.5, v=0.9)
+E("mine_arm", "sfx", [FS(349662, start=0.1, dur=0.8), FS(138108, dur=1.0)], n=2, mx=1.0, v=0.75)
+E("wire_snap", "sfx", [FS(138098), FS(667382), SPL(537084, 2, min_len=0.05, max_len=0.5), FS(560094, start=1.9, dur=0.4)], n=4, mx=0.6, v=0.9)
+E("trap_snap", "sfx", [FS(560094, start=1.9, dur=0.45), BSB8("bsb_lab_trap", "1234_*", dur=1.2)], n=2, mx=1.2, v=0.95)
 
 # ═════ ГЕРОЙ ═════
 E("hurt_phys", "sfx", [S(A, "lab_hits37*", "hit0[1-6]*")], n=6, mx=0.8)
@@ -1305,19 +1359,72 @@ def write_credits(used):
     with open(os.path.join(OUT, "CREDITS.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
 
+def read_js():
+    """(2.6) Что уже собрано: LAB.SND из lab/js/sounds.js (порядок записей сохраняется)."""
+    for line in open(os.path.join(LAB, "js", "sounds.js"), encoding="utf-8"):
+        if line.startswith("LAB.SND = "):
+            return json.loads(line[len("LAB.SND = "):].rstrip().rstrip(";"))
+    raise SystemExit("в sounds.js нет LAB.SND")
+
+def merge_credits(used):
+    """(2.6) Дописать авторов новых записей в готовый CREDITS.md: раздел набора
+    (по странице источника) пополняется файлами, нового набора — встаёт по алфавиту."""
+    path = os.path.join(OUT, "CREDITS.md")
+    text = open(path, encoding="utf-8").read()
+    head, rest = text.split("\n## ", 1)
+    body, tail = rest.split("\n## Лицензии\n", 1)
+    secs = ["## " + x for x in ("\n" + body).split("\n## ")[1:]]
+    def key(sec): return sec.split("\n", 1)[0][3:].strip().lower()
+    for pk, files in used.items():
+        name, author, lic, url = PACKS.get(pk, (pk, "?", "?", ""))
+        names = sorted(os.path.basename(f) for f in files)
+        hit = [i for i, sec in enumerate(secs) if url and ("Источник: %s\n" % url) in sec + "\n"]
+        if hit:
+            i = hit[0]
+            m = re.search(r"Файлы: (.*)", secs[i])
+            have = m.group(1) if m else ""
+            more = re.search(r" и ещё (\d+)$", have)
+            add = [n for n in names if "`%s`" % n not in have]
+            if not add: continue
+            if more: line = have[: more.start()] + " и ещё %d" % (int(more.group(1)) + len(add))
+            else: line = have + ", " + ", ".join("`%s`" % n for n in add)
+            secs[i] = secs[i].replace("Файлы: " + have, "Файлы: " + line) if m else secs[i]
+        else:
+            sec = "## %s\n\nАвтор: %s. Лицензия: %s. Источник: %s\n\nФайлы: %s\n" % (name, author, lic, url, ", ".join("`%s`" % n for n in names[:60]) + (" и ещё %d" % (len(names) - 60) if len(names) > 60 else ""))
+            secs.append(sec)
+    secs = [x.rstrip("\n") + "\n" for x in secs]
+    secs.sort(key=key)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(head + "\n" + "\n".join(secs) + "\n## Лицензии\n" + tail)
+
 if __name__ == "__main__":
-    if len(sys.argv) < 5:
+    MERGE = "--merge" in sys.argv
+    ARGV = [a for a in sys.argv if a != "--merge"]
+    if len(ARGV) < 5:
         print(__doc__); sys.exit(2)
-    ROOTS.update({"A": os.path.abspath(sys.argv[1]), "B": os.path.abspath(sys.argv[2]), "C": os.path.abspath(sys.argv[3]), "D": os.path.abspath(sys.argv[4])})
-    only = sys.argv[5:] if len(sys.argv) > 5 else None
+    ROOTS.update({"A": os.path.abspath(ARGV[1]), "B": os.path.abspath(ARGV[2]), "C": os.path.abspath(ARGV[3]), "D": os.path.abspath(ARGV[4])})
+    only = ARGV[5:] if len(ARGV) > 5 else None
+    if MERGE and not only: raise SystemExit("--merge: нужны шаблоны id")
     if only:
         for k in list(SPEC):
             if not any(fnmatch.fnmatch(k, p) for p in only): del SPEC[k]
     else:
         for d in ("ui", "step", "bcn", "amb", "mus", "fx", "inst"):
             for f in glob.glob(os.path.join(OUT, d, "*.ogg")): os.remove(f)
+    old = read_js() if MERGE else None
+    if MERGE:
+        # прежние варианты пересобираемых записей — долой: новых может быть меньше
+        for k in SPEC:
+            for f in (old.get(k) or {}).get("f", []):
+                fp = os.path.join(OUT, f)
+                if os.path.exists(fp): os.remove(fp)
     defs, used, total = build()
-    if not only:
+    if MERGE:
+        if MISSING: raise SystemExit("НЕ НАЙДЕНО — sounds.js не тронут:\n  " + "\n  ".join(MISSING))
+        for k, d in defs.items(): old[k] = d
+        write_js(old)
+        merge_credits(used)
+    elif not only:
         write_js(defs)
         write_credits(used)
     print("записей: %d, файлов: %d, %.1f МБ" % (len(defs), sum(len(d["f"]) for d in defs.values()), total / 1e6))

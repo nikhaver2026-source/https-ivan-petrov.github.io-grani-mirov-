@@ -121,7 +121,7 @@ function gateSeal() { play("gate_seal", { gain: 1 }); LAB.vib([120, 60, 220]); }
 function elevRide(ms) { play("elev_ride", { gain: 0.9 }); setTimeout(function () { play("elev_ding"); }, Math.max(800, ms - 400)); }
 function rest() { play("capsule_close"); setTimeout(function () { play("capsule_hum", { gain: 0.6 }); }, 600); }
 function death() { play("player_death"); stopTension(); }
-function npcHello(n) { if (n.robot) play("robot_hello", { gain: 0.8 }); else play("npc_hello", { gain: 0.7 }); }
+function npcHello(n) { if (n.robot && !(LAB.ROBOT_NPC && LAB.ROBOT_NPC[n.type] && LAB.ROBOT_NPC[n.type].alive)) play("robot_hello", { gain: 0.8 }); else play("npc_hello", { gain: 0.7 }); }
 function navPing(x, y) { at("nav_ping", x, y, { bus: "ui", gain: 0.9 }); }
 function navStart(path) {
   if (!path || !path.length) return;
@@ -142,7 +142,7 @@ function setEvent(id) {
 var beaconT = null, nextPing = {};
 var OBJ_BEACON = { stairs_down: "bcn_stairs", stairs_up: "bcn_stairs_up", elevator: "bcn_elevator", gate_down: "bcn_gate", reactor: "bcn_reactor",
   terminal: "bcn_terminal", magnetron: "bcn_magnetron", positron: "bcn_positron", capsule: "bcn_capsule", vending: "bcn_vending", workbench: "bcn_workbench",
-  medst: "bcn_medst", charger: "bcn_charger", implantlab: "bcn_implantlab", hq: "bcn_hq", safe: "bcn_safe",
+  medst: "bcn_medst", medvend: "bcn_medst", charger: "bcn_charger", implantlab: "bcn_implantlab", hq: "bcn_hq", safe: "bcn_safe",
   pc: "bcn_pc", coffee: "bcn_coffee", drinks: "bcn_drinks", snacks: "bcn_snacks", radio: "bcn_radio", okoterm: "bcn_oko", puzzle: "bcn_puzzle",
   powergrid: "bcn_powergrid", incubator: "bcn_incubator", mirrorterm: "bcn_mirrorterm", syncgate: "bcn_syncgate", ancient: "bcn_ancient" };
 var OBJ_BEACON_FB = { bcn_radio: ["bcn_pc", 0.75], bcn_oko: ["bcn_terminal", 1.35], bcn_puzzle: ["bcn_vending", 1.25], bcn_snacks: ["bcn_drinks", 0.82],
@@ -549,13 +549,64 @@ function shot(w, dir, burst) {
 function shotWall(w, x, y) { var cls = LAB.WEAPONS[w.base].cls; at(cls === "positron" ? "impact_positron" : cls === "magnetron" ? "impact_wave" : "impact_wall", x, y, { gain: 0.8 }); }
 function shotMiss(w, f) { at("impact_wall", f.x + (Math.random() < 0.5 ? 1 : -1), f.y, { gain: 0.7 }); }
 function swingMiss(w) { play("swing_miss", { gain: 0.8 }); }
+/* ── (2.6) Гранаты, мины и взрывы: у каждого вида — свой звук ──
+   Взрыв звучит слоями: сам удар, осколки и звон металла, осыпь; у мины —
+   щелчок взрывателя перед ударом, у растяжки — рывок проволоки и звяк
+   упавшей гранаты; у зажигательной — вспышка и треск огня, у светошумовой —
+   хлопок, у звуковой — хлопок с гулом и звоном, у крио — лёд, у газовой и
+   кислотной — шипение, у кассетной — россыпь малых разрывов вокруг. Слой:
+   [запись, громкость, задержка (с), отзвук, высота]. Далеко — глуше. */
+var EXPL = {
+  frag: [["explosion_frag", 1.2, 0, 0.6], ["explosion_shrapnel", 0.55, 0.1, 0.45], ["debris", 0.5, 0.45, 0.5]],
+  mine: [["mine_click", 0.8, 0, 0.15], ["explosion_small", 1.2, 0.1, 0.6], ["debris", 0.5, 0.5, 0.5]],
+  claymore: [["mine_click", 0.7, 0, 0.15], ["explosion_frag", 1.2, 0.08, 0.6], ["explosion_shrapnel", 0.75, 0.12, 0.45]],
+  wire: [["wire_snap", 0.9, 0, 0.2], ["grenade_land", 0.7, 0.08, 0.3], ["explosion_frag", 1.2, 0.35, 0.6], ["debris", 0.45, 0.8, 0.5]],
+  charge: [["mine_beep", 0.6, 0, 0.1], ["explosion_big", 1.2, 0.15, 0.7], ["debris", 0.6, 0.7, 0.5]],
+  big: [["explosion_big", 1.25, 0, 0.7], ["explosion_shrapnel", 0.5, 0.12, 0.45], ["debris", 0.7, 0.6, 0.5]],
+  bot: [["explosion_small", 1.1, 0, 0.6], ["explosion_shrapnel", 0.45, 0.08, 0.4], ["debris", 0.45, 0.4, 0.5]],
+  fire: [["explosion_fire", 1.2, 0, 0.5]],
+  net: [["explosion_net", 1.0, 0, 0.3]],
+  acid: [["acid_burst", 1.1, 0, 0.5], ["acid_sizzle", 0.7, 0.1, 0.3]],
+  gas: [["explosion_gas", 1.0, 0, 0.3]],
+  flash: [["explosion_flash", 1.3, 0, 0.7]],
+  sonic: [["explosion_flash", 1.1, 0, 0.8, 0.78], ["ev_ring_whine", 0.5, 0.15, 0.6]],
+  cryo: [["explosion_cryo", 1.15, 0, 0.5]],
+  emp: [["emp_blast", 1.2, 0, 0.6], ["explosion_zap", 0.75, 0, 0.4]],
+  positron: [["explosion_flash", 0.9, 0, 0.6, 1.25], ["impact_positron", 0.9, 0.02, 0.5]],
+  grav: [["explosion_big", 0.9, 0, 0.8, 0.72], ["ev_phase", 0.6, 0.06, 0.5]],
+  cluster: [["explosion_frag", 1.15, 0, 0.6], ["explosion_shrapnel", 0.5, 0.1, 0.45]]
+};
+EXPL.shell = EXPL.big;
+/* где гремит, а не шипит и не звенит: издалека слышно одно глухое «бум» */
+var BLAST = { frag: 1, mine: 1, claymore: 1, wire: 1, charge: 1, big: 1, shell: 1, bot: 1, cluster: 1 };
 function explosion(x, y, kind) {
-  var id = kind === "emp" ? "emp_blast" : kind === "acid" ? "acid_burst" : kind === "mine" ? "explosion_small" : kind === "shell" ? "explosion_big" : "explosion_small";
-  at(id, x, y, { gain: 1.2, reverb: 0.6 });
-  var g = G();
-  if (g && Math.max(Math.abs(x - g.x), Math.abs(y - g.y)) <= 2) LAB.vib([60, 40, 120]);
+  var g = G(), d = g ? Math.max(Math.abs(x - g.x), Math.abs(y - g.y)) : 6, far = d >= 14;
+  var lay = EXPL[kind] || EXPL.frag;
+  /* далеко: от взрыва — глухой раскат, осколки и осыпь не слышны; прочее — только главный слой, приглушённый */
+  if (far) lay = BLAST[kind] && has("explosion_far") ? [["explosion_far", 1.1, 0, 0.8]] : lay.slice(0, 1);
+  lay.forEach(function (l) {
+    at(l[0], x, y, { gain: l[1] * (far ? 0.85 : 1), delay: l[2], reverb: Math.min(1, l[3] + (far ? 0.2 : 0)), rate: l[4] || 1, lp: far ? 1600 : null });
+  });
+  /* светошумовая и звуковая рядом — звон в ушах */
+  if ((kind === "flash" || kind === "sonic") && d <= 3 && has("explosion_ring")) play("explosion_ring", { gain: 0.6, delay: 0.25, bus: "fx" });
+  /* кассетная: малые заряды рассыпаются вокруг и рвутся один за другим */
+  if (kind === "cluster" && !far) for (var i = 0; i < 4; i++) {
+    var an = i * Math.PI / 2 + 0.6;
+    at("explosion_small", Math.round(x + Math.cos(an) * 2), Math.round(y + Math.sin(an) * 2), { gain: 0.9, delay: 0.28 + i * 0.16 + Math.random() * 0.07, reverb: 0.55 });
+  }
+  if (g && d <= 2) LAB.vib(kind === "big" || kind === "shell" || kind === "charge" || kind === "cluster" ? [90, 50, 160] : [60, 40, 120]);
 }
-function grenade(x, y) { play("grenade_throw"); at("grenade_land", x, y, { delay: 0.45 }); }
+/* Бросок: чека и замах — у вас в руках, падение на металл пола — там, где
+   граната легла, через время полёта (не позже, чем она рванёт: fuse, мс). */
+function grenade(x, y, o) {
+  o = o || {};
+  var g = G(), d = g ? Math.max(Math.abs(x - g.x), Math.abs(y - g.y)) : 3, t = 0;
+  if (!o.noPin && has("grenade_pin")) { play("grenade_pin", { gain: 0.85, ch: "weap" }); t = 0.16; }
+  play("grenade_throw", { delay: t, gain: 0.9, ch: "weap" });
+  var land = t + 0.2 + 0.04 * d;
+  if (o.fuse) land = Math.max(0.1, Math.min(land, o.fuse / 1000 - 0.12));
+  at("grenade_land", x, y, { delay: land });
+}
 function shellIncoming(x, y) { at("shell_whistle", x, y, { gain: 1.1 }); sub("Свист снаряда!"); }
 function mineBeep(x, y) { at("mine_beep", x, y, { gain: 0.8, bus: "ui" }); }
 function dropLoot(x, y) { at("loot_drop", x, y, { gain: 0.7 }); }
@@ -721,6 +772,7 @@ var FB = {
   w_blaster_s: function (s) { s.laser(1400, 0.18); }, w_melee: function (s) { s.swing(0); }, w_empty: function (s) { s.note(2000, 0, 0.02, "square", 0.05); },
   hit_metal: function (s) { s.clang(600); }, hit_flesh: function (s) { s.thump(0, 0.5); }, impact_wall: function (s) { s.tink(2400); },
   explosion_small: function (s) { s.boom(0.6); }, explosion_big: function (s) { s.boom(1); }, emp_blast: function (s) { s.zap(); s.boom(0.4); },
+  explosion_frag: function (s) { s.boom(0.75); }, explosion_flash: function (s) { s.boom(0.5); s.note(3200, 0.05, 1.2, "sine", 0.02); }, mine_click: function (s) { s.note(1800, 0, 0.03, "square", 0.05); },
   robot_alert: function (s) { s.chirp([700, 1400, 700]); }, mutant_alert: function (s) { s.roar(); }, robot_attack: function (s) { s.zap(); }, mutant_attack: function (s) { s.growl(); },
   robot_death: function (s) { s.zap(); s.clang(200); }, mutant_death: function (s) { s.screech(); }, robot_step: function (s) { s.servo(Math.random() < 0.5); }, mutant_step: function (s) { s.footstep(0); },
   foe_aim: function (s) { s.charge(0.4); }, hurt_phys: function (s) { s.thump(0, 0.6); }, implant: function (s) { s.charge(0.5); },

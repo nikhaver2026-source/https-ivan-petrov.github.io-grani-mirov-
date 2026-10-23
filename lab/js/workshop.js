@@ -957,7 +957,8 @@ function throwDevice(id) {
   if (!d || !(g.inv[id] > 0)) { say("Нет: " + (d ? d.n.toLowerCase() : id) + "."); return false; }
   g.inv[id]--;
   var p = landing(), dir = LAB.DIRTO ? LAB.DIRTO[g.face] : "";
-  A("grenade", p.x, p.y);
+  A("grenade", p.x, p.y, { noPin: true, fuse: 600 });
+  if (LAB.combat && LAB.combat.spendTurns) LAB.combat.spendTurns(1, "throw"); /* (2.6) пошаговый режим: бросок — ход */
   gm().later(function () {
     if (d.fx.decoy) {
       A("mineBeep", p.x, p.y); A("noiseLure", p.x, p.y);

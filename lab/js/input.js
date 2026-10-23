@@ -298,7 +298,6 @@ var KEY_LAT = { "ц": "w", "ф": "a", "ы": "s", "в": "d", "к": "r", "й": "q"
   "п": "g", "л": "k", "ю": ".", "б": ",", "и": "b", "д": "l", "з": "p", "щ": "o", "н": "y" };
 var WASD = { w: "N", a: "W", s: "S", d: "E" };
 var ARROW = { ArrowUp: "N", ArrowDown: "S", ArrowLeft: "W", ArrowRight: "E" };
-var GAME2SCR = { N: "U", S: "D", W: "L", E: "R" };
 var keyHold = null; /* клавиша, которую держат: ходьба или очередь */
 function keyName(e) {
   var k = e.key || "";

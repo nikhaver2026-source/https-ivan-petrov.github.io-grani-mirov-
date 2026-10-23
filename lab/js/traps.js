@@ -49,11 +49,11 @@ var LAB = (typeof window !== "undefined" ? window.LAB : globalThis.LAB);
    верстака (bp — нужна схема). */
 var T = {
   /* ── «Ковчег»: самоделки из того, что под рукой ── */
-  jaw: { n: "капкан", g: "m", depth: 1, price: 30, trig: "step", who: "walk", dmg: 20, dt: "kinetic", hold: 8, uses: 6, rearm: true, loud: 3, stealth: 0.3, cue: "tick", snd: "hit_metal",
+  jaw: { n: "капкан", g: "m", depth: 1, price: 30, trig: "step", who: "walk", dmg: 20, dt: "kinetic", hold: 8, uses: 6, rearm: true, loud: 3, stealth: 0.3, cue: "tick", snd: "trap_snap",
     pd: 0.14, ph: 6, need: { scrap: 4, wire: 1 }, cls: "base",
     d: "Стальной капкан на тугой пружине. Кто наступит — того челюсти схватят за ногу или за колесо: тварь или робот несколько секунд бьётся на месте и не может ни идти, ни нападать. Сработавший капкан можно взвести снова. Дронов не ловит: они летают.",
     hit: "Под ногой лязгнуло: капкан защёлкнулся на ноге!" },
-  spikes: { n: "шипы", g: "p", depth: 1, price: 18, trig: "step", who: "walk", dmg: 8, dt: "kinetic", slow: 10, bleed: 8, uses: 5, loud: 0, stealth: 0.6, cue: "tick", snd: "debris",
+  spikes: { n: "шипы", g: "p", depth: 1, price: 18, trig: "step", who: "walk", dmg: 8, dt: "kinetic", slow: 10, bleed: 8, uses: 5, loud: 0, stealth: 0.6, cue: "tick", snd: "trap_snap",
     pd: 0.05, ps: 8, pb: 6, need: { scrap: 3 }, cls: "base",
     d: "Горсть стальных ежей из гнутой арматуры: рассыпьте по полу — твари режут лапы и кровят, роботы сбивают колёса и ползут медленнее. Тихо, без шума; хватает на несколько проходов.",
     hit: "Под ногами хрустнули шипы: ноги изранены!" },
@@ -322,11 +322,11 @@ function nextId() { var fs = CUR().fs; fs.trapSeq = (fs.trapSeq || 0) + 1; retur
 
 /* ── звук ── */
 function sndAt(id, x, y, o) { if (LAB.atmos && LAB.atmos.at) A("at", id, x, y, o || {}); else A("play", id, o || {}); }
+/* (2.6) взрывные ловушки и мины — свои взрывы (atmos.js, EXPL): щелчок
+   взрывателя, рывок проволоки, осколки, огонь, лёд, газ */
+var BOOM = { wire: "wire", mine: "mine", claymore: "claymore", remote: "charge", drill: "big", emp: "emp", fire: "fire", cryo: "cryo", gas: "gas", acid: "acid" };
 function fireSound(d, x, y) {
-  if (d.snd === "boom") { A("explosion", x, y, "mine"); return; }
-  if (d.snd === "boom_big") { A("explosion", x, y, "shell"); return; }
-  if (d.snd === "emp") { A("explosion", x, y, "emp"); return; }
-  if (d.id === "wire") { sndAt("grenade_land", x, y); return; }
+  if (BOOM[d.id]) { A("explosion", x, y, BOOM[d.id]); return; }
   sndAt(d.snd || "hit_metal", x, y, { gain: 1, rate: d.id === "bonebell" ? 0.7 : 1 });
 }
 
@@ -354,7 +354,6 @@ function fire(tp, who, at) {
   }
   if (d.alarm) { alarmFire(tp, d, who, x, y); if (who && who.hero) applyHero(tp, d); return finish(tp, d); }
   fireSound(d, x, y);
-  if (d.boom) setTimeout(function () { LAB.safe(function () { A("play", "debris", { gain: 0.6 }); }); }, 260);
   if (d.loud && cb()) cb().noise(d.loud);
   /* враги */
   var killed = 0, mech = 0, caught = [];
@@ -649,11 +648,13 @@ function place(k, where) {
   g.inv[item]--;
   list().push(tp);
   A("play", "mine_set");
+  if (d.mine) A("play", "mine_arm", { delay: 0.35 }); /* (2.6) мина взведена: короткие писки взрывателя */
   if (cb()) cb().noise(2);
   ev("trap_set", 1);
   var where2 = where === "front" ? LAB.DIRN[g.face] : "под ногами";
   var extra = d.trig === "wire" && tp.cells.length > 1 ? " Проволока натянута поперёк, на " + tp.cells.length + " " + pl(tp.cells.length, "шаг", "шага", "шагов") + "." : d.trig === "cone" ? " Веер смотрит " + LAB.DIRTO[g.face] + "." : "";
   var how = d.trig === "remote" ? " Подорвать — окно «Ловушки и мины», «Ваши ловушки на этаже»." : d.trig === "lure" ? " Запищит, когда отойдёте." : tp.st === "wait" ? " Взведётся, когда вы отойдёте." : " Взведётся через пару секунд.";
+  if (cb() && cb().spendTurns) cb().spendTurns(1, "trap"); /* (2.6) пошаговый режим: поставить — ход */
   say(cap1(d.n) + " " + gv(d, "поставлен", "поставлена", "поставлены") + " " + where2 + "." + extra + how + (g.tut.trap ? "" : " Наступите сами — сработает и на вас. Снять — подойдите вплотную, " + LAB.K("двойное касание", "Enter") + "."));
   g.tut.trap = 1;
   UIx("refresh");

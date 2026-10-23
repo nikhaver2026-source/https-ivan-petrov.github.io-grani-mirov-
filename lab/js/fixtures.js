@@ -556,6 +556,8 @@ function doSearch(o, def, label, p) {
   if (LAB.stash && LAB.stash.guard(o, function () { doSearch(o, def, label, p); })) return;
   s["s_" + label] = 1;
   spend(2); snd("search", "pickup");
+  /* (2.6) пошаговый режим: обыск — ход, враги не ждут */
+  if (LAB.combat && LAB.combat.spendTurns) { LAB.combat.spendTurns(1, "search"); if (G().dead) return; }
   var r = rng(o, "search:" + label), L = G().L, F = G().F, loot = [];
   if (risk(p.risk, r)) return;
   var tag = TAGMAP[p.tag] || "store";

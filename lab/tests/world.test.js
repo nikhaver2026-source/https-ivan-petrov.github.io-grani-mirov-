@@ -16,7 +16,7 @@ const ROOT = path.resolve(__dirname, "..");
 const ctx = { console, Math, JSON, Object, Array, String, Number, Uint8Array, Int8Array, Int16Array, Int32Array, Float64Array, Error, Date, RegExp };
 ctx.globalThis = ctx;
 vm.createContext(ctx);
-for (const f of ["js/data.js", "js/texts.js", "js/lore.js", "js/b1.js", "js/b2.js", "js/b3.js", "js/b4.js", "js/b5.js", "js/world.js", "js/mutants.js", "js/depths.js", "js/goods.js", "js/arms.js", "js/traps.js", "js/puzzles.js", "js/puzzles2.js", "js/annex_rooms.js", "js/annex_var.js", "js/annex_frag.js", "js/annex_gen.js", "js/fixtures_data.js", "js/annex.js", "js/garrison.js", "js/workshop.js", "js/repair.js", "js/implants.js", "js/arsenal.js"]) {
+for (const f of ["js/data.js", "js/texts.js", "js/lore.js", "js/b1.js", "js/b2.js", "js/b3.js", "js/b4.js", "js/b5.js", "js/world.js", "js/mutants.js", "js/depths.js", "js/goods.js", "js/medic.js", "js/arms.js", "js/traps.js", "js/puzzles.js", "js/puzzles2.js", "js/annex_rooms.js", "js/annex_var.js", "js/annex_frag.js", "js/annex_gen.js", "js/fixtures_data.js", "js/annex.js", "js/garrison.js", "js/workshop.js", "js/repair.js", "js/implants.js", "js/arsenal.js"]) {
   const p = path.join(ROOT, f);
   if (fs.existsSync(p)) vm.runInContext(fs.readFileSync(p, "utf8"), ctx, { filename: f });
 }
@@ -173,6 +173,47 @@ for (let si = 0; si < seeds; si++) {
         }
         for (const f of fl.foes) { const b = LAB.FOES[f.type]; if (b && b.kind === "bio") { stat.bio = (stat.bio || 0) + 1; const st = f.evo != null ? f.evo : LAB.mutants.stage0(b, LAB.depth(L, F), f.id, 0); stat.evo = stat.evo || [0, 0, 0, 0]; stat.evo[st]++; } }
       }
+      /* (2.6) лечение и снабжение (medic.js): аптечный автомат у капсул, энергобатареи
+         у капсулы прибытия, лечебные припасы в каждой второй комнате, целители */
+      if (LAB.medic) {
+        const md = stat.med26 = stat.med26 || { capRooms: 0, vend: 0, piles: 0, pileN: {}, pileB: {}, pileBN: {}, healers: {}, arrBat: 0, floors: 0 };
+        md.floors++;
+        const capR = {};
+        for (const o of fl.objs) if ((o.type === "capsule" || o.type === "wake") && o.room >= 0) capR[o.room] = 1;
+        for (const rid in capR) { md.capRooms++; if (fl.objs.some(o => o.type === "medvend" && o.room === +rid)) md.vend++; }
+        if (fl.objs.some(o => o.type === "medvend" && !capR[o.room])) err(`${at}: аптечный автомат не у капсулы`);
+        /* в помещении с капсулой — только аптечные автоматы: прочие торговые точки переходят в соседние помещения */
+        const shopIn = fl.objs.filter(o => capR[o.room] && ["vending", "coffee", "snacks", "drinks"].indexOf(o.type) >= 0).map(o => o.type)
+          .concat(fl.npcs.filter(n => capR[n.room] && (n.robot ? (LAB.ROBOT_NPC[n.type] || {}).trade === "ammo" : !!(LAB.PROFS[n.prof] || {}).trade)).map(n => "торговец"));
+        if (shopIn.length) err(`${at}: в помещении с капсулой — другая торговая точка: ${shopIn.join(", ")}`);
+        for (const o of fl.objs) if (fl.objAt[o.y * LAB.W + o.x] !== o) err(`${at}: предмет обстановки ${o.type} не на своей клетке`);
+        const bat = fl.items.filter(i => i.cap26);
+        if (!(L === 1 && F === 1)) {
+          const capU = fl.objs.find(o => o.type === "capsule" && o.room === fl.U);
+          if (capU && !bat.some(i => i.kind === "ammo" && i.ammo === "energy" && Math.max(Math.abs(i.x - capU.x), Math.abs(i.y - capU.y)) <= 2)) err(`${at}: у капсулы прибытия нет энергобатарей`);
+          if (bat.length) md.arrBat++;
+        } else if (bat.length) err(`${at}: на первом этаже — лишние батареи у капсулы (там свой набор)`);
+        const B = LAB.blockOf(L);
+        for (const it of fl.items) {
+          if (!it.med26) continue;
+          const d = LAB.ITEMS[it.item];
+          if (!d || d.kind !== "use" || !(d.heal > 0)) { err(`${at}: лечебный припас ${it.item} — не лекарство`); continue; }
+          if ((d.depth || 1) > L) err(`${at}: ${it.item} лежит выше своей глубины (${d.depth})`);
+          if (!(it.n0 >= 1 && it.n0 <= 7)) err(`${at}: в комнате ${it.n0} шт. ${it.item}`);
+          if (fl.t[it.y * LAB.W + it.x] !== LAB.T.ROOM) err(`${at}: припас ${it.item} не в комнате`);
+          if (capR[fl.room[it.y * LAB.W + it.x]]) err(`${at}: припас ${it.item} в помещении с капсулой`);
+          md.piles++; md.pileN[it.n0] = (md.pileN[it.n0] || 0) + 1;
+          md.pileB[B] = (md.pileB[B] || 0) + it.n0; md.pileBN[B] = (md.pileBN[B] || 0) + 1;
+        }
+        for (const n of fl.npcs) {
+          if (!n.heal) continue;
+          const P = LAB.medic.HEALERS[n.heal];
+          if (!P) { err(`${at}: целитель неизвестного вида ${n.heal}`); continue; }
+          if (n.robot ? !LAB.ROBOT_NPC[n.type] : !LAB.PROFS[n.prof]) err(`${at}: целитель ${n.heal} без описания`);
+          if (fl.t[n.y * LAB.W + n.x] !== LAB.T.ROOM) err(`${at}: целитель ${n.heal} стоит не в комнате`);
+          md.healers[n.heal] = (md.healers[n.heal] || 0) + 1;
+        }
+      }
     }
     LAB.clearFloorCache();
   }
@@ -221,5 +262,16 @@ if (LAB.mutants) {
   const nb = Object.keys(LAB.FOES).filter(id => LAB.FOES[id].kind === "bio").length;
   console.log(`твари: видов ${nb}, новых ${M.ids.length}; отрядов на этаж ${((stat.packs || 0) / floors).toFixed(2)} (в них ${((stat.packFoes || 0) / floors).toFixed(1)}), тварей на этаж ${((stat.bio || 0) / floors).toFixed(1)}; ступени развития: ${(stat.evo || []).join("/")}`);
   if (nb < 100) err(`тварей меньше сотни: ${nb}`);
+}
+/* (2.6) лечение и снабжение */
+if (stat.med26) {
+  const md = stat.med26, share = md.capRooms ? md.vend / md.capRooms : 1;
+  const avgB = Object.keys(md.pileB).map(b => [+b, md.pileB[b] / md.pileBN[b]]);
+  console.log(`аптечные автоматы у капсул: ${md.vend} из ${md.capRooms} (${(100 * share).toFixed(0)} %); батареи у капсулы прибытия — на ${md.arrBat} этажах; лечебных припасов на этаж ${(md.piles / md.floors).toFixed(1)}, по числу в стопке:`, JSON.stringify(md.pileN));
+  console.log("в среднем в стопке по блокам:", avgB.map(a => a[0] + ": " + a[1].toFixed(2)).join(", "), "; целители:", JSON.stringify(md.healers));
+  if (share < 0.8) err(`аптечных автоматов у капсул мало: ${(100 * share).toFixed(0)} %`);
+  if (md.piles / md.floors < 20) err(`лечебных припасов мало: ${(md.piles / md.floors).toFixed(1)} на этаж`);
+  for (let i = 1; i < avgB.length; i++) if (avgB[i][1] + 0.05 < avgB[i - 1][1]) err(`глубже по блокам припасов меньше: блок ${avgB[i][0]}`);
+  if (!Object.keys(md.healers).length) err("целителей на этажах нет");
 }
 process.exit(fails ? 1 : 0);
