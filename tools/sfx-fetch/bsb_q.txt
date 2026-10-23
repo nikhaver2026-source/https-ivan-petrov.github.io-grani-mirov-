@@ -91,3 +91,18 @@
 # (заход 6 скачан) bsb_lab_parking parking ~ (parking|garage|underground) ~ 1
 # (заход 6 скачан) bsb_lab_engine engine room ~ (engine|room|ship|boat) ~ 1
 
+
+# «Подземная лаборатория», заход 8 (2.6): гранаты, мины, взрывы, огонь, лёд, газ, растяжки.
+bsb_lab_expl explosion ~ (explos|blast|bomb|deton|boom) ~ 6
+bsb_lab_gren grenade ~ (grenad|pin) ~ 3
+bsb_lab_bomb bomb ~ (bomb|explos|blast) ~ 3
+bsb_lab_fcrk firecracker ~ (firecrack|petard|banger|cracker|firework) ~ 3
+bsb_lab_fire fire ~ (fire|flame|ignit|blaze|whoosh|burn) ~ 3
+bsb_lab_gas gas ~ (gas|hiss|valve|leak|spray|aerosol) ~ 3
+bsb_lab_ice ice ~ (ice|frozen|crack|glacier) ~ 2
+bsb_lab_wire wire ~ (wire|cable|twang|string|spring) ~ 2
+bsb_lab_trap trap ~ (trap|mousetrap|snap|spring) ~ 3
+bsb_lab_debris debris ~ (debris|rubble|stone|gravel|fall|collapse) ~ 3
+bsb_lab_glass glass ~ (glass|shatter|break|smash) ~ 2
+bsb_lab_beep beep ~ (beep|bip|timer|alarm) ~ 2
+bsb_lab_metal metal ~ (metal|clang|clank|bounce|drop) ~ 3

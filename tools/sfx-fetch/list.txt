@@ -770,3 +770,38 @@
 # (заход 7 скачан) lab_fsIpg https://freesound.org/search/?f=pack_grouping%3A%2231477_Cellini+Accordion%22&s=Date+added+%28newest+first%29&g=1&page=6#p31477_6.html
 # (заход 7 скачан) lab_fsIpg https://freesound.org/search/?f=pack_grouping%3A%2219724_MusicalBoxSingleNotes%22&s=Date+added+%28newest+first%29&g=1&page=1#p19724_1.html
 # (заход 7 скачан) lab_fsIpg https://freesound.org/search/?f=pack_grouping%3A%2221054_VSCO+2+CE++-+Percussion+-+Tubular+Bells%22&s=Date+added+%28newest+first%29&g=1&page=1#p21054_1.html
+
+# «Подземная лаборатория» (lab/), заход 8 (2.6): гранаты, мины, взрывы, растяжки —
+# страницы поиска Freesound (CC0 и CC BY, больше всего скачиваний); по ним отбираются записи.
+lab_fsKpg https://freesound.org/search/?q=grenade+explosion&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_gexp.html
+lab_fsKpg https://freesound.org/search/?q=grenade+explosion&f=license%3A%22Attribution%22&s=Downloads+%28most+first%29&g=1&page=1#k_gexpb.html
+lab_fsKpg https://freesound.org/search/?q=grenade+pin&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_gpin.html
+lab_fsKpg https://freesound.org/search/?q=grenade+pin&f=license%3A%22Attribution%22&s=Downloads+%28most+first%29&g=1&page=1#k_gpinb.html
+lab_fsKpg https://freesound.org/search/?q=grenade+throw&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_gthr.html
+lab_fsKpg https://freesound.org/search/?q=grenade+bounce&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_gbnc.html
+lab_fsKpg https://freesound.org/search/?q=flashbang&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_flash.html
+lab_fsKpg https://freesound.org/search/?q=stun+grenade&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_stun.html
+lab_fsKpg https://freesound.org/search/?q=landmine+explosion&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_mine.html
+lab_fsKpg https://freesound.org/search/?q=mine+click&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_minec.html
+lab_fsKpg https://freesound.org/search/?q=explosion&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_expl.html
+lab_fsKpg https://freesound.org/search/?q=explosion&f=license%3A%22Attribution%22&s=Downloads+%28most+first%29&g=1&page=1#k_explb.html
+lab_fsKpg https://freesound.org/search/?q=explosion+indoor&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_expin.html
+lab_fsKpg https://freesound.org/search/?q=explosion+debris&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_expdeb.html
+lab_fsKpg https://freesound.org/search/?q=debris+falling&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_deb.html
+lab_fsKpg https://freesound.org/search/?q=shrapnel+metal&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_shrap.html
+lab_fsKpg https://freesound.org/search/?q=molotov+fire&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_molo.html
+lab_fsKpg https://freesound.org/search/?q=fire+whoosh&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_fwoosh.html
+lab_fsKpg https://freesound.org/search/?q=ice+crack&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_ice.html
+lab_fsKpg https://freesound.org/search/?q=freeze+ice+spell&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_frz.html
+lab_fsKpg https://freesound.org/search/?q=gas+hiss&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_gas.html
+lab_fsKpg https://freesound.org/search/?q=smoke+grenade&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_smoke.html
+lab_fsKpg https://freesound.org/search/?q=tripwire&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_wire.html
+lab_fsKpg https://freesound.org/search/?q=wire+twang&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_twang.html
+lab_fsKpg https://freesound.org/search/?q=bomb+beep&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_beep.html
+lab_fsKpg https://freesound.org/search/?q=detonator&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_deton.html
+lab_fsKpg https://freesound.org/search/?q=metal+can+bounce&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_clink.html
+lab_fsKpg https://freesound.org/search/?q=throw+whoosh&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_throw.html
+lab_fsKpg https://freesound.org/search/?q=multiple+explosions&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_clus.html
+lab_fsKpg https://freesound.org/search/?q=electric+discharge&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_emp.html
+lab_fsKpg https://freesound.org/search/?q=acid+sizzle&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_acid.html
+lab_fsKpg https://freesound.org/search/?q=net+launcher&f=license%3A%22Creative+Commons+0%22&s=Downloads+%28most+first%29&g=1&page=1#k_net.html
