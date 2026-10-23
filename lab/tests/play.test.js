@@ -3890,12 +3890,16 @@ LAB.ui.closeAll();
       const bomb = spawn("u_bomber", cAdj, {}); bomb.state = "hunt"; bomb.lastKnown = { x: G.x, y: G.y };
       const hpA = G.hp; tickUntil(() => bomb.dead, 4);
       out.bomber = bomb.dead && G.hp < hpA;
-      /* 6. рабочая каста бежит и поднимает тревогу */
-      const cW = cellAt((x, y, r) => r === 2 && los(x, y));
+      /* 6. рабочая каста бежит и поднимает тревогу. Клетка — с запасом, чтобы было куда
+         отступить: загнанная в угол тварь по замыслу отбивается, а этаж всякий раз новый */
+      const md = (x, y) => Math.abs(x - G.x) + Math.abs(y - G.y), DV4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      const away = (x, y) => DV4.some(v => { const ax = x + v[0], ay = y + v[1]; return free(ax, ay) && md(ax, ay) > md(x, y) && DV4.some(u => free(ax + u[0], ay + u[1]) && md(ax + u[0], ay + u[1]) > md(ax, ay)); });
+      const cW = cellAt((x, y, r) => r === 2 && los(x, y) && away(x, y)) || cellAt((x, y, r) => r === 2 && los(x, y));
       const wk = spawn("u_cworker", cW, {}); wk.state = "hunt"; wk.lastKnown = { x: G.x, y: G.y };
       SPOKEN.length = 0; const dW = Math.abs(wk.x - G.x) + Math.abs(wk.y - G.y);
       for (let i = 0; i < 6; i++) C.tick();
       out.worker = Math.abs(wk.x - G.x) + Math.abs(wk.y - G.y) > dW && SPOKEN.some(t => /поднимает тревогу/.test(t));
+      if (!out.worker) out.workerDiag = { from: dW, to: Math.abs(wk.x - G.x) + Math.abs(wk.y - G.y), roomy: !!(cW && away(cW[0], cW[1])), dead: wk.dead, st: wk.state, said: SPOKEN.slice(-3).join(" | ") };
       wk.dead = true;
       /* 7. развитие: ступень — прочнее, злее, имя со ступенью; помнится на этаже */
       const cE = cellAt((x, y, r) => r >= 8 && r <= 14);
@@ -3968,7 +3972,7 @@ LAB.ui.closeAll();
   ok(mut.cells && mut.packAlert, "отряд: заметил один — знают все, даже тот, кто за стеной (" + JSON.stringify({ c: mut.cells, a: mut.packAlert }) + ")");
   ok(mut.heir && mut.scatter, "пал вожак: жрец подхватывает командование, а свора без жреца разбегается (" + JSON.stringify({ h: mut.heir, s: mut.scatter }) + ")");
   ok(mut.seer, "провидец видит носителя сквозь стены и подсказывает отряду; маскировка его сбивает");
-  ok(mut.bomber && mut.worker, "трутень лопается вплотную; рабочая каста убегает и поднимает тревогу (" + JSON.stringify({ b: mut.bomber, w: mut.worker }) + ")");
+  ok(mut.bomber && mut.worker, "трутень лопается вплотную; рабочая каста убегает и поднимает тревогу (" + JSON.stringify({ b: mut.bomber, w: mut.worker, wd: mut.workerDiag }) + ")");
   ok(mut.evolve && mut.evoSaved && mut.evoGain && mut.feeder, "твари растут: ступень прочнее и злее, звучит в имени и помнится; опыт поднимает ступень; падальщик крепнет, съев павшего (" + JSON.stringify({ e: mut.evolve, s: mut.evoSaved, g: mut.evoGain, f: mut.feeder }) + ")");
   ok(mut.hive && mut.hiveForget, "улей глубин привыкает к оружию носителя, а сменили оружие — привычка уходит (" + JSON.stringify({ h: mut.hive, f: mut.hiveForget }) + ")");
   ok(mut.weaver === true && mut.grewAway, "ткач ставит ловушки поперёк проходов; пока носителя долго нет, разумные твари этажа крепнут (" + JSON.stringify({ w: mut.weaver, g: mut.grewAway }) + ")");
