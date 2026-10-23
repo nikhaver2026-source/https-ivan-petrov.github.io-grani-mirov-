@@ -68,8 +68,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const m=Object.assign({},MONSTERS.find(z=>z.id==="goblin")||MONSTERS[0],{hp:300,dmg:1,lvl:1,xp:5,gold:1});safeFn(()=>startCombat({x:G.x,y:G.y,monster:m}));
   return {на,бой:!!G.inCombat};});
  for(let i=0;i<3;i++){await p.keyboard.press("Enter");await p.waitForTimeout(400);}
- const лест2=await p.evaluate(()=>({бой:!!G.inCombat,марш:!!G.flight,сказано:window.__said.join(" | ").slice(-300)}));
- check('6. в бою на лестнице марш не начинается и сказано, что сначала — отбиться',лест.на==="<"&&лест.бой&&!лест2.марш&&/В бою по лестнице не уйти/.test(лест2.сказано)&&!/Марш лестницы/.test(лест2.сказано),{лест,лест2});
+ /* сказанное проверяется целиком: под нагрузкой после ответа успевает прозвучать длинный рассказ, и хвост строки его вытесняет */
+ const лест2=await p.evaluate(()=>({бой:!!G.inCombat,марш:!!G.flight,отбиться:window.__said.some(t=>/В бою по лестнице не уйти/.test(t)),
+  маршСказан:window.__said.some(t=>/Марш лестницы/.test(t)),сказано:window.__said.join(" | ").slice(-300)}));
+ check('6. в бою на лестнице марш не начинается и сказано, что сначала — отбиться',лест.на==="<"&&лест.бой&&!лест2.марш&&лест2.отбиться&&!лест2.маршСказан,{лест,лест2});
 
  /* 6б. (23 октября) отказ самой шахты в бою звучит, как прежде: у дна — «Глубже хода нет», а не «в бою не уйти» */
  const дно=await p.evaluate(()=>{const pl=G.place;const было=window.maxDepthHere;window.maxDepthHere=()=>pl.depth;
