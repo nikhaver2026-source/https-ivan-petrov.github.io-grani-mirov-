@@ -86,6 +86,19 @@ function kitHere() {
   return "";
 }
 function blastOk() { return !!(LAB.chem && LAB.chem.blastOk && LAB.chem.blastOk()); }
+/* Идущий подход этой игры: подход прежней игры или прерванный загрузкой забыт. */
+function busy() { if (work && (work.g !== G() || Date.now() - work.t > 15000)) work = null; return !!work; }
+/* Горит ли запал этой игры: запал прежней игры гаснет. */
+function burning(k) { var f = fuse[k]; if (f && f.g !== G()) { clearTimeout(f.t); delete fuse[k]; f = null; } return !!f; }
+/* Можно ли сейчас работать у завала; если нельзя — говорит почему. */
+function canWork(o) {
+  if (busy()) { say("Вы уже разбираете завал."); return false; }
+  if (!blocked(o)) { say("Проход и так свободен."); return false; }
+  if (burning(key(o))) { say("Запал горит — отойдите!"); return false; }
+  var c = cb(), ch = c && c.chaser && c.chaser();
+  if (ch) { say("Не до завала: вплотную " + ch.name.split(",")[0].toLowerCase() + " " + gm().relDir(ch.x, ch.y) + "."); return false; }
+  return true;
+}
 
 /* ── окно у завала ── */
 function title(o) { return (o.type === "stairs_down" ? "Лестница вниз" : "Лестница вверх") + " завалена"; }
@@ -104,8 +117,8 @@ function items(o) {
   var s = peek(o) || { p: 0 }, out = [];
   out.push({ label: infoLine(o), info: true, keep: true, fn: function () { say(infoLine(o)); } });
   if (s.jack) out.push({ label: "Качать домкрат дальше: тихо", fn: function () { stage(o, "jack"); } });
-  else if (G().inv.rub_jack > 0) out.push({ label: "Поставить гидравлический домкрат: два подхода, почти тихо", fn: function () { setJack(o); } });
-  if (s.armed && !fuse[key(o)]) out.push({ label: "Поджечь запал заложенного заряда: шесть секунд, отойдите", fn: function () { arm(o, true); } });
+  else if (!s.armed && G().inv.rub_jack > 0) out.push({ label: "Поставить гидравлический домкрат: два подхода, почти тихо", fn: function () { setJack(o); } });
+  if (s.armed && !burning(key(o))) out.push({ label: "Поджечь запал заложенного заряда: шесть секунд, отойдите", fn: function () { arm(o, true); } });
   else if (!s.armed && blastOk()) out.push({ label: "Заложить подрывной заряд: сразу, но на весь этаж; шесть секунд — отойдите", fn: function () { arm(o, false); } });
   if (!s.armed) {
     var how = tool(), n = left(o, how);
@@ -126,12 +139,8 @@ function menu(o, opts) {
 
 /* ── подход: руками, монтировкой, домкратом ── */
 function stage(o, how) {
-  var g = G(), c = cb();
-  if (work && (work.g !== g || Date.now() - work.t > 15000)) work = null; /* подход прежней игры или прерванный загрузкой */
-  if (work) { say("Вы уже разбираете завал."); return false; }
-  if (!blocked(o)) { say("Проход и так свободен."); return false; }
-  var ch = c && c.chaser && c.chaser();
-  if (ch) { say("Не до завала: вплотную " + ch.name.split(",")[0].toLowerCase() + " " + gm().relDir(ch.x, ch.y) + "."); return false; }
+  var g = G();
+  if (!canWork(o)) return false;
   var s = st(o), first = !s.p && !s.started;
   s.started = 1;
   LAB.ui.closeAll();
@@ -147,7 +156,7 @@ function stage(o, how) {
 function stageEnd(o) {
   var w = work; work = null;
   var g = G();
-  if (!w || !gm().entered || g !== w.g || g.dead) return;
+  if (!w || !gm().entered || g !== w.g || g.dead || !blocked(o)) return;
   if (g.L !== w.L || g.F !== w.F || g.x !== w.x || g.y !== w.y) { sayq("Вы бросили разбирать завал: отошли от него."); return; }
   if (g.hp < w.hp) { sayq("Вас ранили — разбор завала прерван. Отбейтесь и возвращайтесь."); return; }
   var s = st(o), how = w.how;
@@ -186,7 +195,7 @@ function okoWaves(o, s) {
 function setJack(o) {
   var g = G();
   if (!(g.inv.rub_jack > 0)) { say("Домкрата нет."); return false; }
-  if (work && work.g === g && Date.now() - work.t <= 15000) { say("Вы уже разбираете завал."); return false; }
+  if (!canWork(o)) return false;
   g.inv.rub_jack--; if (!g.inv.rub_jack) delete g.inv.rub_jack;
   st(o).jack = 1;
   return stage(o, "jack");
@@ -195,8 +204,8 @@ function setJack(o) {
 /* ── подрывной заряд ── */
 function arm(o, relight) {
   var g = G(), s = st(o), k = key(o);
-  if (fuse[k] && fuse[k].g !== g) delete fuse[k];
-  if (fuse[k]) { say("Запал уже горит — отойдите!"); return false; }
+  if (burning(k)) { say("Запал уже горит — отойдите!"); return false; }
+  if (busy()) { say("Вы ещё разбираете завал."); return false; } /* иначе подход закончит разбор раньше взрыва, и заряд пропадёт */
   if (!relight) {
     var c = LAB.chem && LAB.chem.useBlast ? LAB.chem.useBlast() : null;
     if (!c) { say("Подрывного заряда нет."); return false; }
@@ -212,7 +221,8 @@ function arm(o, relight) {
 function burn(k, x, y, done) {
   var t0 = Date.now(), g0 = G();
   var beep = function () {
-    if (!fuse[k]) return;
+    var f = fuse[k];
+    if (!f || f.g !== g0) return; /* запал погашен или на его месте запал другой игры */
     if (G() !== g0) { delete fuse[k]; return; } /* новая игра или загрузка: запал прежней игры гаснет */
     var rest = FUSE_MS - (Date.now() - t0);
     if (rest <= 0) { delete fuse[k]; done(); return; }
@@ -340,7 +350,7 @@ function dropFar(L, F, o, k) {
 function blastDoor(d) {
   var g = G(), fs = CUR().fs, k = "door:" + g.L + "-" + g.F, L = g.L, F = g.F;
   if (fs.rubble) { say("Проход и так расчищен."); return false; }
-  if (fuse[k]) { say("Запал уже горит — отойдите!"); return false; }
+  if (burning(k)) { say("Запал уже горит — отойдите!"); return false; }
   var c = LAB.chem && LAB.chem.useBlast ? LAB.chem.useBlast() : null;
   if (!c) { say("Подрывного заряда нет."); return false; }
   LAB.ui.closeAll();
@@ -382,7 +392,7 @@ function use(id) {
     var s = peek(o);
     return s && s.jack ? stage(o, "jack") : setJack(o);
   }
-  if (o) { var s2 = peek(o); return arm(o, !!(s2 && s2.armed && !fuse[key(o)])); }
+  if (o) { var s2 = peek(o); return arm(o, !!(s2 && s2.armed && !burning(key(o)))); }
   var dr = doorNear();
   if (dr) return blastDoor(dr);
   say("Подрывной заряд закладывают под завал — на лестнице или в проходе. Подойдите к нему.");

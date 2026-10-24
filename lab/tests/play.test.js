@@ -4577,6 +4577,8 @@ LAB.ui.closeAll();
       const wake0 = G.body.wake, min0 = G.min + G.day * 1440, slog0 = (g.CUR.fs.slog || []).length;
       SPOKEN.length = 0;
       out.started = R.stage(st, "hands"); out.busy = R._busy(); out.twice = R.stage(st, "hands") === false;
+      /* во время подхода заряд не закладывается: подход закончил бы разбор раньше взрыва, и заряд пропал бы */
+      G.inv.c_blast = 1; out.noArmWork = R.arm(st, false) === false && G.inv.c_blast === 1 && !G.rub[k1].armed; delete G.inv.c_blast;
       await wait(3100);
       out.p1 = Math.round(G.rub[k1].p);
       out.reopen = LAB.ui.top() ? LAB.ui.top().title : "";
@@ -4638,6 +4640,12 @@ LAB.ui.closeAll();
       G.inv.c_blast = 1; g.CUR.fs.waves = []; const heat0 = (G.oko && G.oko.heat) || 0, hp0 = G.hp, dr1 = g.CUR.fs.drops.length;
       SPOKEN.length = 0;
       out.armUse = g.useItem("c_blast"); out.armLeft = G.inv.c_blast || 0; out.armed = !!G.rub[k3].armed; out.fuse = R._fuse();
+      /* пока горит запал, у завала не работают: ни руками, ни домкратом */
+      G.inv.rub_jack = 1;
+      out.noWorkBurn = R.stage(st, "hands") === false && !R._busy() && /Запал горит/.test(SPOKEN.join(" | "));
+      g.objMenu(st); const wb = LAB.ui.top();
+      out.burnMenu = wb ? wb.items.map(label).filter(l => /^(Поставить гидравлический домкрат|Разбирать завал|Поджечь запал|Заложить подрывной заряд)/.test(l)).length : -1;
+      LAB.ui.closeAll(); delete G.inv.rub_jack;
       await wait(6800);
       out.blastDone = !R.blocked(st) && /Грохот/.test(SPOKEN.join(" | "));
       out.blastHurt = G.hp < hp0 && /Вас задело обломками/.test(SPOKEN.join(" | "));
@@ -4681,6 +4689,7 @@ LAB.ui.closeAll();
     ok(rb.title === "Лестница вниз завалена" && /Где-то на этом этаже лежит (гидравлический домкрат|подрывной заряд)/.test(rb.items[0]) && rb.items.some(l => /^Разбирать завал (руками|монтировкой)/.test(l)) && rb.items.some(l => l === "Осмотреть завал"), "окно у завала: первым — что с завалом и что лежит на этаже, дальше — разбирать (" + (rb.items || []).join(" / ") + ")");
     ok(rb.modes === "4/2 6/4 8/5 10/6" && rb.digW === "0 1 2 3", "завал по режимам: подходов руками и монтировкой — лёгкий 4/2, обычный 6/4, сложный 8/5, очень сложный 10/6; машин на шум — 0/1/2/3 (" + rb.modes + "; " + rb.digW + ")");
     ok(rb.started && rb.busy && rb.twice && rb.p1 === 17 && /Разобрано на 17 процентов/.test(rb.reopen) && rb.wake && rb.time, "подход руками: разобрано на шестую часть, бодрость и время уходят, окно открывается снова (" + rb.p1 + ", " + rb.reopen + ")");
+    ok(rb.noArmWork, "во время подхода заряд не закладывается и не тратится");
     ok(rb.heard && rb.okoSaid, "ОКО слышит разбор завала: запись акустических датчиков в журнале и реплика по громкой связи");
     ok(rb.moved, "отошли от завала — подход не засчитан");
     ok(rb.wave === 1, "в обычном режиме ОКО шлёт машины на шум, когда разобрано за половину (" + rb.wave + ")");
@@ -4690,6 +4699,7 @@ LAB.ui.closeAll();
     ok(rb.jackUse && rb.jackLeft === 0 && rb.jackSet && rb.jackP === 50 && /Качать домкрат дальше/.test(rb.jackNext) && rb.jackDone, "домкрат: два подхода почти без шума, остаётся держать плиту (" + rb.jackP + ", " + rb.jackNext + ")");
     ok(rb.rc && rb.notShop && rb.brewed === 1, "подрывной заряд делают на химическом столе (пиротехника, без журнала); домкрата и заряда нет на прилавках (" + rb.brewed + ")");
     ok(rb.armUse && rb.armLeft === 0 && rb.armed && rb.fuse === 1 && rb.blastDone && rb.blastHurt && rb.blastWave >= 1 && rb.blastHeat && rb.blastLoot >= 1, "заряд: шесть секунд запала, взрыв разносит завал, рядом задевает, ОКО шлёт машины, находки — у лестницы (" + JSON.stringify({ use: rb.armUse, left: rb.armLeft, armed: rb.armed, fuse: rb.fuse, done: rb.blastDone, hurt: rb.blastHurt, w: rb.blastWave, heat: rb.blastHeat, l: rb.blastLoot }) + ")");
+    ok(rb.noWorkBurn && rb.burnMenu === 0, "пока горит запал, у завала не работают: ни руками, ни домкратом, и второго заряда не заложить (" + rb.burnMenu + ")");
     if (rb.tbTurns != null) ok(rb.tbTurns === 2, "пошаговый бой: подход к завалу — два хода (" + rb.tbTurns + ")");
     if (!rb.doorNone) ok(rb.doorItem && rb.doorBlast && rb.doorOpen && rb.doorLoot >= 1, "завал в проходе сносит и подрывной заряд — с находками на месте завала");
   }
