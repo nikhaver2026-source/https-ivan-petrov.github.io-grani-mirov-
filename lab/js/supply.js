@@ -37,7 +37,7 @@ function catOf(id) {
   return "gadget";
 }
 LAB.itemCat = catOf;
-var CAT_N = { implant: "Чипы имплантов", food: "Еда и напитки", med: "Лекарства", protect: "Защита", tool: "Инструменты", valuable: "Ценности", part: "Детали", wmodule: "Модули оружия", gadget: "Устройства и гранаты", trap: "Ловушки и мины", ammo: "Батареи и боеприпасы", weapon: "Оружие", armor: "Броня и комбинезоны" };
+var CAT_N = { chem: "Химия: сырьё", implant: "Чипы имплантов", food: "Еда и напитки", med: "Лекарства", protect: "Защита", tool: "Инструменты", valuable: "Ценности", part: "Детали", wmodule: "Модули оружия", gadget: "Устройства и гранаты", trap: "Ловушки и мины", ammo: "Батареи и боеприпасы", weapon: "Оружие", armor: "Броня и комбинезоны" };
 LAB.CAT_N = CAT_N;
 /* Не продаются: то, без чего не пройти (ключи, пропуска — не вещи рюкзака), и образцы «Колыбели». */
 function sellable(id) { var d = LAB.ITEMS[id]; return !!d && d.price > 0 && !d.nosell; }

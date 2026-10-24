@@ -143,14 +143,15 @@ var beaconT = null, nextPing = {};
 var OBJ_BEACON = { stairs_down: "bcn_stairs", stairs_up: "bcn_stairs_up", elevator: "bcn_elevator", gate_down: "bcn_gate", reactor: "bcn_reactor",
   terminal: "bcn_terminal", magnetron: "bcn_magnetron", positron: "bcn_positron", capsule: "bcn_capsule", vending: "bcn_vending", workbench: "bcn_workbench",
   medst: "bcn_medst", medvend: "bcn_medst", charger: "bcn_charger", implantlab: "bcn_implantlab", hq: "bcn_hq", safe: "bcn_safe",
-  pc: "bcn_pc", coffee: "bcn_coffee", drinks: "bcn_drinks", snacks: "bcn_snacks", radio: "bcn_radio", okoterm: "bcn_oko", puzzle: "bcn_puzzle",
+  chemlab: "bcn_chemlab", pc: "bcn_pc", coffee: "bcn_coffee", drinks: "bcn_drinks", snacks: "bcn_snacks", radio: "bcn_radio", okoterm: "bcn_oko", puzzle: "bcn_puzzle",
   powergrid: "bcn_powergrid", incubator: "bcn_incubator", mirrorterm: "bcn_mirrorterm", syncgate: "bcn_syncgate", ancient: "bcn_ancient" };
-var OBJ_BEACON_FB = { bcn_radio: ["bcn_pc", 0.75], bcn_oko: ["bcn_terminal", 1.35], bcn_puzzle: ["bcn_vending", 1.25], bcn_snacks: ["bcn_drinks", 0.82],
+var OBJ_BEACON_FB = { bcn_chemlab: ["bcn_workbench", 1.3], bcn_radio: ["bcn_pc", 0.75], bcn_oko: ["bcn_terminal", 1.35], bcn_puzzle: ["bcn_vending", 1.25], bcn_snacks: ["bcn_drinks", 0.82],
   /* установки глубин: свои маяки, пока нет записей — знакомые маяки на другой высоте */
   bcn_powergrid: ["bcn_magnetron", 0.7], bcn_incubator: ["bcn_capsule", 1.3], bcn_mirrorterm: ["bcn_terminal", 0.8], bcn_syncgate: ["bcn_gate", 1.2], bcn_ancient: ["bcn_reactor", 0.6] };
 var OBJ_RANGE = { stairs_down: 16, stairs_up: 10, gate_down: 18, elevator: 12, reactor: 20, workbench: 14 }; /* (2.0) станки мастерской слышно из коридора */
 function beaconTick() {
   var g = G(), cur = CUR();
+  if (LAB.bg) return; /* (3.0) игра в фоне: мир стоит — маяки молчат */
   if (!g || !LAB.game.entered || LAB.game.paused || g.stair || !cur || !cur.fl || !S.beacons || !S.effects) return;
   if (LAB.ui && LAB.ui.layer()) return;
   var jam = LAB.combat && LAB.combat.jammed();
@@ -368,7 +369,7 @@ function scheduleEvent() {
     evTimer = null;
     if (!worldOn) return;
     var g2 = G();
-    if (g2 && LAB.game.entered && !LAB.game.paused && !(LAB.ui && LAB.ui.layer())) {
+    if (g2 && LAB.game.entered && !LAB.game.paused && !LAB.bg && !(LAB.ui && LAB.ui.layer())) {
       var pool = levelEvents(g2.L);
       var id = pool[Math.floor(Math.random() * pool.length)];
       var ang = Math.random() * Math.PI * 2, dist = 6 + Math.random() * 10;
@@ -686,6 +687,9 @@ function musicVolume() { AE.applyVolumes(); if (!S.music) stopMusic(); else if (
 function genMusic(theme, L) {
   var s = new LAB.SFX(AE.music);
   mus.s = s;
+  /* (3.0) устройство спит (игра в фоне без звука) — аккорды, скрежет и удары не заказываются:
+     иначе за долгий фон они копились бы сотнями и грянули разом при возвращении */
+  s.live = function () { return s.ctx.state === "running" && !(LAB.bgMuted && LAB.bgMuted()); };
   var c = s.ctx, t0 = c.currentTime;
   var deep = theme === "game" ? (depthL(L) - 1) / 9 : theme === "menu" ? 0.6 : 0.4;
   var root = theme === "game" ? LAB.LEVELS[L].root / 4 : theme === "menu" ? 41.2 : theme === "ending" ? 55 : 46.25;
@@ -705,7 +709,7 @@ function genMusic(theme, L) {
     : [[2, 2.828, 3.0, 4.237], [2, 2.119, 2.996, 4.0], [1.888, 2.67, 2.83, 4.0], [2, 2.38, 2.828, 3.775]];
   var ci = 0;
   var chord = function () {
-    if (s.stopped) return;
+    if (s.stopped || !s.live()) return;
     var t = c.currentTime + 0.05, ch = chords[ci % chords.length]; ci++;
     ch.forEach(function (m, i) { pad(s, root * m, t, 13, [0.03, 0.022, 0.018, 0.012][i] * (theme === "ending" ? 1.3 : 1), theme === "ending" ? 1400 : 520 + deep * 120); });
   };
@@ -714,7 +718,7 @@ function genMusic(theme, L) {
   /* 3. Скрежет металла в глубине: резонанс шума с длинным хвостом */
   if (theme !== "ending") {
     var groan = function () {
-      if (s.stopped) return;
+      if (s.stopped || !s.live()) return;
       var t = c.currentTime + 0.05;
       var n = s.noise("white", 3, false), bp = s.filter("bandpass", 260 + Math.random() * 700, 28), g = s.gain(0.0001);
       n.connect(bp); bp.connect(g); g.connect(s.out()); s.send(g, 0.9);
@@ -728,7 +732,7 @@ function genMusic(theme, L) {
   /* 4. Сердце комплекса: тяжёлый удар, на глубине — чаще */
   var beatGap = theme === "ending" ? 0 : Math.round(9000 - deep * 4500);
   if (beatGap) mus.timers.push(setInterval(function () {
-    if (s.stopped) return;
+    if (s.stopped || !s.live()) return;
     var t = c.currentTime + 0.05, o = s.osc("sine", 52), g = s.gain(0.0001);
     o.connect(g); g.connect(s.out()); s.send(g, 0.5);
     o.frequency.setValueAtTime(70, t); o.frequency.exponentialRampToValueAtTime(34, t + 0.9);
@@ -738,7 +742,7 @@ function genMusic(theme, L) {
   }, beatGap));
   /* 5. Тонкий звон под потолком: нерв */
   mus.timers.push(setInterval(function () {
-    if (s.stopped || Math.random() < 0.45) return;
+    if (s.stopped || !s.live() || Math.random() < 0.45) return;
     var t = c.currentTime + 0.05, f = theme === "ending" ? 880 * (Math.random() < 0.5 ? 1.5 : 2) : 1700 + Math.random() * 900;
     var o = s.osc("sine", f), g = s.gain(0.0001);
     o.connect(g); g.connect(s.out()); s.send(g, 0.8);

@@ -268,7 +268,15 @@ function sit(o) {
   snd("chair_sit", "bump_furniture");
   setTimeout(function () { snd("pc_boot", "term_on"); }, 400);
   if (o.locked && !st.hacked) {
-    UIx("menu", "Компьютер заблокирован", [
+    /* (3.0) первым пунктом — есть ли записка с паролем в документах; коротко */
+    var lockItems = [];
+    if (o.pin) {
+      lockItems.push({ label: gm().codeHint(o.pin, "pc"), info: true, keep: true, fn: function () { say(gm().codeHint(o.pin, "pc")); } });
+      lockItems.push({ label: "Ввести пароль", fn: function () { pinEntry(o); } });
+      var pn = gm().noteForCode && gm().noteForCode(o.pin);
+      if (pn) lockItems.push({ label: "Перечитать записку с паролем", keep: true, fn: function () { say(gm().noteFull(pn).x || pn.t, { read: true }); } });
+    } else lockItems.push({ label: "Пароля у вас нет. Взломайте вход.", info: true, keep: true, fn: function () { say("Пароля у вас нет. Взломайте вход."); } });
+    UIx("menu", "Компьютер заблокирован", lockItems.concat([
       { label: "Взломать вход (повторите сигналы)", fn: function () {
         UIx("closeAll");
         LAB.mini.hack(gm().hackLength(1 + Math.floor(G().L / 3)), function (ok) {
@@ -277,11 +285,25 @@ function sit(o) {
         }, { title: "Взлом входа" });
       } },
       { label: "Встать из-за стола", fn: function () { snd("chair_up", "bump_furniture"); } }
-    ]);
+    ]));
     say("Вы садитесь за стол. На экране — окно входа: «" + d.owner + ". Введите пароль».");
     return;
   }
   desk(o, true);
+}
+/* (3.0) Пароль компьютера набирают сами, как код сейфа: четыре цифры из записки. */
+function pinEntry(o) {
+  UIx("closeAll");
+  if (!LAB.mini) return;
+  LAB.mini.code(function (c) {
+    if (!c) return;
+    var st = gm().objState(o);
+    if (c === o.pin) { st.hacked = true; snd("pc_ok", "term_ok"); desk(o, true); return; }
+    st.fails = (st.fails || 0) + 1;
+    snd("pc_error", "term_err");
+    say("Неверный пароль." + (st.fails >= 3 ? " Компьютер громко пищит." : " Сверьтесь с запиской."));
+    if (LAB.combat) LAB.combat.noise(st.fails >= 3 ? 8 : 3);
+  }, { title: "Окно входа", pin: true });
 }
 /* Рабочий стол компьютера: почта, журнал, документы, камеры. */
 function desk(o, first) {

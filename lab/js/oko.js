@@ -75,6 +75,11 @@ var BASE = {
   backup: ["Резервный контур оборонной сети запущен.", "Турели переведены на резервное питание.", "Оборонная сеть снова под током. Резервный контур."],
   post: ["Пост не отвечает. Высылаю смену.", "Ещё один пост пуст. Я поставлю новый.", "Охрана поста уничтожена. Смена уже идёт.", "Вы снимаете мои посты, носитель. Я ставлю их снова."],
   check: ["Шум в секторе. Патруль, проверить.", "Слышу выстрелы. Единицы этажа — к источнику.", "Громко, носитель. Очень громко."],
+  /* (3.0) мясорубка: ОКО больше не кормит её поштучно */
+  grinder: ["Хватит. Я больше не буду присылать их по одной. Я подожду, носитель.", "Вы устроили здесь мясорубку. Я сменю тактику.", "Каждая машина, которую я вам посылаю, делает вас сильнее. Больше не пошлю. Пошлю других.", "Замена отозвана. С нижних уровней поднимается ударная группа."],
+  grinder_more: ["Группа уничтожена. Следующая будет тяжелее.", "Вы сломали карателей. Я пришлю тех, кого сломать труднее.", "Мясорубка работает в обе стороны, носитель."],
+  strike_go: ["Ударная группа, хватит ждать. Носитель — ваш.", "Вы не идёте к ним. Значит, они пойдут к вам.", "Каратели, на перехват."],
+  strike_recall: ["Ударная группа отозвана. Замена — в штатном режиме.", "Тишина. Я верну карателей вниз. Пока.", "Вы затихли. Я тоже подожду."],
   taunt: ["Вы считаете шаги, носитель? Я считаю ваши вдохи.", "Росток слышит вас. Не шумите.", "Люди закрывают глаза, когда слушают. Вам это не нужно.", "Я не враг. Я садовник. Садовник выпалывает лишнее.", "Вентиляция общая для всех уровней. Я слышу, как вы дышите.", "Носитель номер семь. Вы — ключ. Ключ не должен поворачиваться сам."]
 };
 /* (2.0) Реплики сверх основных — oko_lines_a.js и oko_lines_b.js: на каждой
@@ -108,6 +113,35 @@ function canShoot() { return (G().weapons || []).some(function (w) { return w &&
 /* Недавние реплики каждого вида не повторяются: ОКО помнит последние
    несколько и выбирает из остальных. */
 var lastLine = {};
+/* (3.0) Пока идёт головоломка, взлом или кодовый замок, ОКО не перебивает:
+   его реплики и сообщения ждут и звучат после — не больше двух, самые
+   свежие, и через полторы секунды, чтобы первым прозвучал итог. */
+var held = [], holdT = null;
+function hushed() { return !!(LAB.mini && LAB.mini.active && LAB.mini.active()) || !!(LAB.ui && LAB.ui.puzzleOpen && LAB.ui.puzzleOpen()); }
+function voice(t, opts, chime) {
+  if (hushed()) {
+    held = held.filter(function (h) { return h.t !== t; });
+    held.push({ t: t, o: opts, chime: chime });
+    if (held.length > 2) held.shift();
+    if (!holdT) holdT = setTimeout(release, 600);
+    return false;
+  }
+  if (chime) { A("okoChime"); setTimeout(function () { LAB.say(t, opts); }, 450); } else LAB.say(t, opts);
+  return true;
+}
+function release() {
+  holdT = null;
+  if (!held.length) return;
+  if (!LAB.game.entered || G().dead) { held = []; return; }
+  if (hushed()) { holdT = setTimeout(release, 600); return; }
+  holdT = setTimeout(function () {
+    holdT = null;
+    if (!LAB.game.entered || G().dead) { held = []; return; }
+    if (hushed()) { holdT = setTimeout(release, 600); return; } /* следом началась новая головоломка — ждём и её */
+    var list = held; held = [];
+    list.forEach(function (h, i) { if (i === 0 && h.chime) { A("okoChime"); setTimeout(function () { LAB.say(h.t, h.o); }, 450); } else LAB.say(h.t, h.o); });
+  }, 1500);
+}
 function speak(kind, force, data) {
   var o = st(), now = Date.now();
   if (!force && now - o.lastSay < 6000) return false;
@@ -129,9 +163,8 @@ function speak(kind, force, data) {
   while (recent.length > Math.min(6, Math.max(1, arr.length - 1))) recent.shift();
   var t = line.replace(/\{L\}/g, String(G().L)).replace(/\{F\}/g, String(G().F)).replace(/\{room\}/g, data && data.room ? data.room : "");
   o.lastSay = now;
-  A("okoChime");
-  if (LAB.tutor) LAB.tutor.ev("oko");
-  setTimeout(function () { LAB.say("ОКО по громкой связи: «" + t + "»", { prio: "event", keep: true }); }, 450);
+  if (LAB.tutor && !hushed()) LAB.tutor.ev("oko");
+  voice("ОКО по громкой связи: «" + t + "»", { prio: "event", keep: true }, true);
   if (LAB.game.journal && (kind === "turret_hack" || kind === "robots" || kind === "boss")) LAB.game.journal("ОКО: «" + t + "»");
   return true;
 }
@@ -153,7 +186,7 @@ var REACT = {
   trap_set: { p: 0.4, cd: 120 }, trap_kill: { p: 0.6, cd: 90 }, oko_trap: { p: 0.85, cd: 40 }, oko_trap_off: { p: 0.7, cd: 60 },
   mines_order: { p: 0.75, cd: 60, always: true }, grenade: { p: 0.35, cd: 90 },
   quiet: { p: 0.9, cd: 300 }, idle: { p: 0.8, cd: 240 }, secret: { p: 0.9, cd: 60 }, zone: { p: 0.6, cd: 120 }, vault: { p: 0.5, cd: 90 },
-  floor: { p: 0.55, cd: 60, always: true }, weapon: { p: 0.5, cd: 120 }, implant: { p: 0.8, cd: 60 }, survivor: { p: 0.7, cd: 120 }, patrol_slip: { p: 0.6, cd: 180 }
+  floor: { p: 0.55, cd: 60, always: true }, mutate: { p: 0.9, cd: 300, always: true }, weapon: { p: 0.5, cd: 120 }, implant: { p: 0.8, cd: 60 }, survivor: { p: 0.7, cd: 120 }, patrol_slip: { p: 0.6, cd: 180 }
 };
 function react(kind, data) {
   var g = G(), f = fs();
@@ -175,7 +208,7 @@ function react(kind, data) {
 function heard(got, lead, noName) {
   if (!got || !got.length || !LAB.game.relDir) return;
   var p = got[0], nm = p.name.split(",")[0];
-  LAB.say(lead + ": " + (noName ? "" : nm + (got.length > 1 ? " и ещё " + (got.length - 1) : "") + ", ") + LAB.game.relDir(p.x, p.y) + ".", { prio: "event", keep: true });
+  voice(lead + ": " + (noName ? "" : nm + (got.length > 1 ? " и ещё " + (got.length - 1) : "") + ", ") + LAB.game.relDir(p.x, p.y) + ".", { prio: "event", keep: true });
 }
 function heat(n) {
   var o = st(), dk = LAB.dk();
@@ -279,7 +312,7 @@ function sealRoom(p) {
     if (f.doors[d.id] === 2) { f.doors[d.id] = 1; A("doorClose", d); }
   });
   f.sealUsed = (f.sealUsed || 0) + 1;
-  if (n) { log("Аварийная блокировка: дверей — " + n + ", " + place(p.x, p.y) + "."); A("play", "door_locked"); LAB.say("Двери помещения заблокированы ОКО на сорок секунд. Замок можно взломать у двери.", { prio: "urgent" }); }
+  if (n) { log("Аварийная блокировка: дверей — " + n + ", " + place(p.x, p.y) + "."); A("play", "door_locked"); voice("Двери помещения заблокированы ОКО на сорок секунд. Замок можно взломать у двери.", { prio: "urgent" }); }
 }
 /* Прочёсывание: патрули и машины рядом проверяют последнее место и маршруты возле него. */
 function searchAt(p) {
@@ -631,6 +664,7 @@ function lost(data) {
   if (!f.repl) f.repl = [];
   var n = lossEsc(f);
   f.lossN = n + 1; f.lossT = T();
+  if (f.pun) return; /* (3.0) мясорубка: замену ОКО отозвало — вместо неё каратели (punTick) */
   if (f.repl.length >= 40) return;
   var at = data.x != null ? { x: data.x, y: data.y } : null;
   if (data.beat && data.beat.length) {
@@ -650,7 +684,7 @@ function lost(data) {
 }
 function replTick() {
   var f = fs(), cb = C(), g = G();
-  if (!f || !f.repl || !f.repl.length || !cb || !cb.replacePatrol) return;
+  if (!f || f.pun || !f.repl || !f.repl.length || !cb || !cb.replacePatrol) return;
   if (f.okoBlind || f.netCut || (g.st && g.st.jam > 0)) return;
   var now = T();
   for (var i = f.repl.length - 1; i >= 0; i--) {
@@ -670,6 +704,63 @@ function replTick() {
   }
 }
 function o0() { return st(); }
+
+/* ── (3.0, просьба автора) МЯСОРУБКА ──
+   Стоять на одном месте и качаться на замене ОКО не выйдет. Счёт этажа — сколько
+   присланных и призванных врагов вы здесь уничтожили (combat.js, grind; тает со
+   временем). Опыт за присланных тает вместе с ростом счёта, а на пороге режима
+   (LAB.DIFF: grind) ОКО перестаёт кормить мясорубку поштучно: замена на этаже
+   отозвана, а через punPrep тактов с нижних уровней выходит ударная группа —
+   каратели. Они тяжелее здешних машин (на punLvl ступеней), встают засадой в
+   коридоре на вашем пути вниз и молчат; не дождавшись (punWait), идут на вас
+   сами. Каратель при гибели сгорает: ни добычи, ни опыта — и взрывается рядом.
+   Разбили группу, а счёт ещё высок — следующая больше и тяжелее. Затихли на
+   punCalm тактов и за вами никто не гонится — ОКО отзывает карателей и
+   возвращается к обычной замене, но помнит: счёт остаётся на половине порога.
+   Гибель героя — каратели снова в засаде, отсчёт заново. Режимы сложности:
+   лёгкий терпит дольше и карает мягче, очень сложный — почти сразу и жёстко. */
+function punTick(f, now) {
+  var cb = C(), dk = LAB.dk(), g = G();
+  if (!cb || !cb.grind || !cb.strike) return;
+  var gr = cb.grind(), lim = dk.grind || 12;
+  if (!f.pun) {
+    /* каратели без дела (группу отозвали, а этаж загрузили заново) — уходят */
+    if (cb.strikers().length) cb.strikeRecall();
+    if (gr < lim || f.netCut) return;
+    f.pun = 1; f.punWave = (f.punWave || 0) + 1; f.punAt = now + (dk.punPrep || 80); f.punGo = 0;
+    f.repl = []; /* замена отозвана */
+    speak(f.punWave > 1 ? "grinder_more" : "grinder", true);
+    log("Замена отозвана: на этаже мясорубка. Готовится ударная группа.");
+    if (!g.tut.grind) { g.tut.grind = 1; voice("«Эхо»: ОКО перестало присылать машины по одной. За присланных опыта больше нет, а с нижних уровней идёт ударная группа — засада у вас на пути вниз. Уходите с этажа или затихните: тогда ОКО её отзовёт.", { prio: "event", keep: true }); }
+    return;
+  }
+  var alive = cb.strikers();
+  if (f.pun === 1) {
+    if (now < f.punAt) return;
+    if (f.okoBlind || (g.st && g.st.jam > 0)) { f.punAt = now + 20; return; } /* ослеплённое и заглушённое ОКО ждёт */
+    var w = f.punWave || 1, n = Math.min(8, (dk.pun || 3) + (w - 1)), up = (dk.punLvl || 4) + 2 * (w - 1);
+    var got = cb.strike(n, up);
+    if (!got.length) { f.punAt = now + 20; return; }
+    f.pun = 2; f.punGo = now + (dk.punWait || 240); f.punCalmT = now;
+    log("Ударная группа: " + got.length + " " + LAB.game.plural(got.length, "машина", "машины", "машин") + " в засаде.");
+    return;
+  }
+  /* засада стоит */
+  if (!alive.length) {
+    if (gr >= lim / 2) { f.pun = 1; f.punWave = (f.punWave || 1) + 1; f.punAt = now + (dk.punPrep || 80); speak("grinder_more", true); log("Ударная группа уничтожена. Готовится следующая."); }
+    else { f.pun = 0; f.punGo = 0; log("Ударная группа уничтожена."); }
+    return;
+  }
+  if (!f.punGo && alive.some(function (q) { return q.ambush; })) f.punGo = now + (dk.punWait || 240); /* после гибели героя и загрузки этажа — снова отсчёт */
+  if (f.punGo && now >= f.punGo) { f.punGo = 0; if (cb.strikeGo()) speak("strike_go", true); }
+  /* затихли, и никто за вами не гонится — ОКО отзывает карателей */
+  var quietT = now - Math.max(f.grindLast || 0, f.punCalmT || 0);
+  if (quietT >= (dk.punCalm || 600) && !cb.hunted()) {
+    cb.strikeRecall();
+    f.pun = 0; f.punGo = 0; f.grind = Math.min(cb.grind(), Math.ceil(lim / 2)); f.grindT = now;
+    speak("strike_recall", true); log("Ударная группа отозвана.");
+  }
+}
 
 /* Смена караула: патрули получают новые маршруты; иногда один уходит со
    смены, а из дальней двери выходит другой; патрульных не меньше, чем
@@ -725,13 +816,13 @@ function tick() {
   /* (2.2) отсечённый терминал снова в оборонной сети */
   if (f.isoT && f.isoT.length && f.isoT.some(function (t) { return now >= t; })) {
     f.isoT = f.isoT.filter(function (t) { return now < t; });
-    log("Сегмент сети терминала возвращён."); LAB.say("«Эхо»: «ОКО вернуло терминал в оборонную сеть: камеры, турели и тревога снова доступны с него».", { prio: "event", keep: true });
+    log("Сегмент сети терминала возвращён."); voice("«Эхо»: «ОКО вернуло терминал в оборонную сеть: камеры, турели и тревога снова доступны с него».", { prio: "event", keep: true });
   }
   /* петля камер кончилась, чужая прошивка стёрта проверкой — ОКО снова видит */
   if (cb.camExpire && tickN % 2 === 0) {
     var ce = cb.camExpire();
-    if (ce.loopSoon && !ce.loop) LAB.say("Петля записи камер кончится секунд через десять: ОКО скоро снова увидит коридоры.", { prio: "event" });
-    if (ce.oursSoon && !ce.ours) LAB.say("Ваша прошивка камер продержится ещё секунд десять: ОКО заканчивает проверку целостности.", { prio: "event" });
+    if (ce.loopSoon && !ce.loop) voice("Петля записи камер кончится секунд через десять: ОКО скоро снова увидит коридоры.", { prio: "event" });
+    if (ce.oursSoon && !ce.ours) voice("Ваша прошивка камер продержится ещё секунд десять: ОКО заканчивает проверку целостности.", { prio: "event" });
     if (ce.loop) { heat(3); speak("cam_loop_found", true); log("Петля видеозаписи найдена: камер " + ce.loop + " перезапущено."); }
     if (ce.ours) { heat(5); speak("cam_flash_found", true); log("Проверка целостности: прошивка камер восстановлена (" + ce.ours + ")."); }
   }
@@ -770,8 +861,8 @@ function tick() {
       else { speak("squad"); heard(gotW, "Отряд ОКО"); }
     }
   }
-  /* замена потерь: новые патрули, машины в опустевшие кабинеты, смена постов */
-  if (tickN % 2 === 0) replTick();
+  /* замена потерь: новые патрули, машины в опустевшие кабинеты, смена постов; (3.0) мясорубка */
+  if (tickN % 2 === 0) { replTick(); punTick(f, now); }
   /* перепрошитый этаж: ОКО шлёт новые машины, пока роботы этажа не его */
   if (f.robots && f.flashNext && now >= f.flashNext) {
     f.flashNext = now + rnd(220, 320);
@@ -818,6 +909,7 @@ function tick() {
 LAB.oko = {
   event: event, tick: tick, speak: speak, alarm: alarm, difficulty: difficulty, heat: heat,
   state: st, lines: lines, wave: wave, shift: shift, react: react, minesOrder: minesOrder, minesLater: minesLater, REACT: REACT,
-  report: report, level: level, levelName: function () { return SEC[level()]; }, setLevel: setLevel, sec: sec, log: log, logText: logText, T: T
+  report: report, level: level, levelName: function () { return SEC[level()]; }, setLevel: setLevel, sec: sec, log: log, logText: logText, T: T,
+  hushed: hushed
 };
 })();

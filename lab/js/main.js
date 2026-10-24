@@ -70,7 +70,10 @@ function boot() {
       LAB.safe(function () { var Sp = LAB.Speech; if (!Sp) return; if (viaReader()) { Sp.queue = []; Sp.later = []; Sp.held = []; } else if (Sp.hush) Sp.hush(); });
       LAB.safe(function () { if (AE.setBgDim) AE.setBgDim(dim); });
       if (!dim) { try { if (AE.ctx) AE.ctx.suspend(); } catch (e) { /* */ } }
+      /* (3.0) компьютер: без звука в фоне окно засыпает — таймеры страницы редеют, кадры не рисуются */
+      if (!dim) LAB.safe(function () { if (window.LabDesktop && window.LabDesktop.bgThrottle) window.LabDesktop.bgThrottle(true); });
     } else {
+      LAB.safe(function () { if (window.LabDesktop && window.LabDesktop.bgThrottle) window.LabDesktop.bgThrottle(false); });
       LAB.safe(function () { if (AE.setBgDim) AE.setBgDim(false); });
       try { if (AE.ctx) AE.ctx.resume(); } catch (e) { /* */ }
       if (resume0) LAB.safe(resume0);
@@ -96,7 +99,7 @@ function boot() {
   }
   /* нажали клавишу или коснулись — игра на экране, что бы ни сказали события окна */
   ["pointerdown", "keydown"].forEach(function (ev) { window.addEventListener(ev, function () { if ((why.blur || why.min) && !document.hidden) { delete why.min; bgSet("blur", false); } }, true); });
-  window.labPause = function () { bgSet("pause", true); };
+  window.labPause = function () { bgSet("pause", true); return LAB.settings.bgDim || LAB.selftesting ? 1 : 0; };
   window.labResume = function () { delete why.blur; bgSet("pause", false); };
   /* для проверок: в приложении — отметка в журнале устройства */
   window.LAB_READY = true;

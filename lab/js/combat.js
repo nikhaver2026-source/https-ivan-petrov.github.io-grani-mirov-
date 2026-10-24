@@ -171,6 +171,8 @@ function makeRuntime(def, st) {
     burrowT: 0, burrowed: false, confused: 0, healT: 0, splitGen: def.splitGen || 0, from: def.from || null, task: def.task || null,
     /* машины ОКО: стражи постов, отряды, патрули смены, дроны слежения */
     guard: def.guard || null, post: def.post ? { x: def.post[0], y: def.post[1] } : null, oko: !!(def.oko || def.squad || def.guard), squad: !!def.squad, fresh: !!def.fresh,
+    /* (3.0) каратель ОКО — ударная группа против мясорубки (oko.js, punTick) */
+    punisher: !!def.punisher,
     route: null, ri: 0, stuck: 0, exit: null, repT: 0, fixT: 0, heatN: 0, over: 0, nodeT: 0,
     /* (2.0) участок обхода патруля, рабочая машина кабинета, сапёр ОКО */
     beat: def.beat || null, bi: def.bi || 0, bdir: 1, work: !!def.work, garrison: def.garrison || null, sapper: !!def.sapper || base.beh.indexOf("mines") >= 0,
@@ -190,6 +192,7 @@ function makeRuntime(def, st) {
     f.mx = !!(f.pack || f.caste || MX.some(function (k) { return f.beh.indexOf(k) >= 0; }));
   }
   f.hp = f.maxhp; f.shield = f.shieldMax;
+  if (f.punisher) f.ambush = true; /* (3.0) каратель после загрузки этажа — снова в засаде (oko.js пошлёт его снова) */
   if (aff(f, "fast")) { f.spd = Math.max(1, f.spd - 1); f.acd = Math.max(1, f.acd - 1); }
   if (aff(f, "sniper")) f.rng += 3;
   f.name = foeName(base, f);
@@ -215,7 +218,8 @@ function makeRuntime(def, st) {
    номеру врага, он один и тот же при каждом входе, поэтому этаж не «пляшет»;
    смена режима действует со следующего входа на этаж. Напарник встаёт рядом,
    в том же помещении или коридоре, и считается присланным: опыта за него
-   меньше, добычи нет. */
+   меньше, добычи нет. (3.0) Но в мясорубку ОКО он не идёт — это житель этажа,
+   а не замена, — и энергобатарею в счёт даёт, как любой враг. */
 function countable(def) {
   var b = LAB.FOES[def.type];
   /* (2.5) вожак и матка отряда тварей выходят всегда: без них отряд — не отряд */
@@ -385,6 +389,7 @@ function sees(f) {
   if (G().st.cloak > 0 && !has(f, "heat")) return false;
   if (has(f, "deaf") && !(has(f, "heat") && dist(f, heroPos()) <= 3)) return false;
   var d = dist(f, heroPos());
+  if (LAB.chem && LAB.chem.repels(f, d)) return false; /* (3.0) репеллент: тварь без разума не чует дальше шага */
   if (d > detOf(f)) return false;
   return losTo(f);
 }
@@ -393,6 +398,7 @@ function hears(f) {
   if (refugeId >= 0 && !inRefuge(f.x, f.y)) return false; /* (2.2) убежище */
   if (havenId >= 0 && !inHaven(f.x, f.y)) return false; /* (2.3) безопасная зона у капсулы */
   if (f.deafT > 0) return false; /* (1.5) оглушён ловушкой */
+  if (LAB.chem && LAB.chem.repels(f, dist(f, heroPos()))) return false; /* (3.0) репеллент */
   var n = G().noise;
   if (gm().armorSpecial("stealth")) n = Math.round(n * 0.6);
   if (LAB.ach && LAB.ach.has("quiet")) n -= 1;
@@ -470,10 +476,14 @@ function foeOpens(f, d) {
 function stepToward(f, tx, ty, opts) {
   opts = opts || {};
   var fl = CUR().fl, fs = CUR().fs, occ = occFor(f), W0 = LAB.W;
+  /* (3.0) цель — только клетка, где можно стоять: на рамку досмотра, аквариум
+     или стол не встают (прежде машина вставала на них — и её добыча падала туда,
+     откуда её не поднять); если цель сама занята обстановкой — подойти вплотную */
+  var solidT = LAB.solidAt(fl, tx, ty);
   var path = LAB.bfs(fl, fs, f.x, f.y, function (x, y) {
     /* клетка рядом с целью, занятая героем или другой машиной, — не цель: иначе машина идёт к ней и упирается */
-    if (opts.near) return Math.max(Math.abs(x - tx), Math.abs(y - ty)) === 1 && occ[y * W0 + x] !== 1; /* любая из восьми соседних клеток */
-    if (opts.adjacent) return Math.abs(x - tx) + Math.abs(y - ty) === 1 && occ[y * W0 + x] !== 1;
+    if (opts.near) return Math.max(Math.abs(x - tx), Math.abs(y - ty)) === 1 && occ[y * W0 + x] !== 1 && !LAB.solidAt(fl, x, y); /* любая из восьми соседних клеток */
+    if (opts.adjacent || solidT) return Math.abs(x - tx) + Math.abs(y - ty) === 1 && occ[y * W0 + x] !== 1 && !LAB.solidAt(fl, x, y);
     return x === tx && y === ty;
   }, {
     passDoor: function (d) { return foeOpens(f, d); },
@@ -499,6 +509,7 @@ function stepToward(f, tx, ty, opts) {
   return true;
 }
 function moveFoe(f, nx, ny) {
+  if (LAB.solidAt(CUR().fl, nx, ny)) return; /* (3.0) на обстановку и на жителей враг не встаёт никогда */
   if ((inSafeRoom(nx, ny) || inRefuge(nx, ny) || havenAt(nx, ny)) && !f.ally) return; /* (2.2) в капсульный отсек при пробуждении и в убежище, (2.3) в безопасную зону у капсулы не входят */
   var px = f.x, py = f.y;
   f.x = nx; f.y = ny;
@@ -828,7 +839,6 @@ function camExpire() {
   });
   return out;
 }
-function camCount(kind) { return cams().filter(function (f) { return camState(f) === kind; }).length; }
 /* (2.2, просьба игрока) Разбить камеру вплотную — монтировкой, прикладом,
    чем угодно: сразу и навсегда (ремонтнику ОКО чинить нечего), но удар
    слышно по коридору, а ОКО заметит, что камера замолчала. */
@@ -1099,14 +1109,40 @@ function despawn(f) {
   if (f.spawned) { f.gone = true; fs.spawned = fs.spawned.filter(function (sd) { return sd.id !== f.id; }); delete fs.foes[f.id]; }
   else fs.foes[f.id] = { dead: true };
 }
+/* (3.0) Куда упадёт добыча: на клетку, где может встать герой. Если враг
+   стоял в проёме двери или (по старой ошибке) на обстановке — на ближайшую
+   свободную клетку пола рядом; ищем по кольцам, не дальше четырёх шагов. */
+function lootCell(x, y) {
+  var fl = CUR().fl;
+  var ok = function (cx, cy) { if (!LAB.inb(cx, cy)) return false; var t = fl.t[idx(cx, cy)]; return t !== LAB.T.WALL && t !== LAB.T.DOOR && !LAB.solidAt(fl, cx, cy); };
+  if (ok(x, y)) return [x, y];
+  for (var r = 1; r <= 4; r++) {
+    var best = null, bd = 1e9;
+    for (var dy = -r; dy <= r; dy++) for (var dx = -r; dx <= r; dx++) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) !== r || !ok(x + dx, y + dy)) continue;
+      var d = Math.abs(dx) + Math.abs(dy); if (d < bd && LAB.los(fl, CUR().fs, x, y, x + dx, y + dy)) { bd = d; best = [x + dx, y + dy]; }
+    }
+    if (best) return best;
+  }
+  return [x, y];
+}
+/* Добыча, что уже лежит на обстановке (записи прежних версий), — рядом, на пол. */
+function fixDrops() {
+  var fs = CUR().fs, n = 0;
+  (fs.drops || []).forEach(function (it) {
+    if (fs.taken[it.id]) return;
+    var c = lootCell(it.x, it.y);
+    if (c[0] !== it.x || c[1] !== it.y) { it.x = c[0]; it.y = c[1]; n++; }
+  });
+  return n;
+}
 /* Всё, что машина несёт (ключи, пропуска, ключ-карта, подобранное), — на
    пол у её ног: когда её уводят с этажа или перепрошивают. */
 function dropCarry(f) {
   var fs = CUR().fs, its = (f.carry || []).slice().concat(f.bag || []);
   f.carry = null; f.bag = []; f.noCarry = true;
   if (!its.length) return 0;
-  var cx = f.x, cy = f.y;
-  if (CUR().fl.t[idx(cx, cy)] === LAB.T.DOOR) { var c = freeCellNear(cx, cy, null); if (c) { cx = c[0]; cy = c[1]; } }
+  var lc = lootCell(f.x, f.y), cx = lc[0], cy = lc[1];
   its.forEach(function (it0) { var it = JSON.parse(JSON.stringify(it0)); it.id = "d" + (fs.dseq = (fs.dseq || 0) + 1); it.x = cx; it.y = cy; fs.drops.push(it); });
   A("dropLoot", cx, cy);
   return its.length;
@@ -1491,6 +1527,7 @@ function foeTick(f, spotted) {
   if (has(f, "charge") && f.state === "hunt" && canMove && (f.x === G().x || f.y === G().y) && d >= 2 && d <= 5 && losTo(f)) { f.mv = 0; chargeAt(f); return; }
 
   if (f.state === "idle") {
+    if (f.punisher && f.ambush) return; /* (3.0) каратели в засаде: молчат и ждут, пока вы выйдете на них */
     /* (2.0) машина рядом с носителем — в одном помещении или в нескольких
        шагах — слышна: жужжит, щёлкает приводами (ящик-ловушка и засада молчат) */
     if (f.kind === "mech" && !f.disguised && !f.ambush && !f.burrowed && !aff(f, "cloak") && Math.random() < 0.3 && nearHero(f)) A("foeSound", f, "idle");
@@ -1650,12 +1687,13 @@ function spawnFoe(type, x, y, extra) {
   var base = LAB.FOES[type];
   if (!(extra && extra.ally) && inRefuge(x, y)) return null; /* (2.2) в убежище ОКО никого не выводит */
   var L = G().L, F = G().F, d0 = LAB.depth(L, F);
-  var lvl = LAB.foeLevel(L, F), sc = LAB.scaleFoe(base, lvl);
+  var lvl = LAB.foeLevel(L, F) + ((extra && extra.lvlUp) || 0), sc = LAB.scaleFoe(base, lvl); /* (3.0) lvlUp — каратели тяжелее здешних */
   var fs = CUR().fs;
   var miq = LAB.mutants ? LAB.mutants.iqFor(base, d0) : null;
   var def = { id: "s" + (fs.sseq = (fs.sseq || 0) + 1), type: type, x: x, y: y, lvl: lvl, hp: sc.hp, maxhp: sc.hp, dmg: sc.dmg, arm: sc.arm, room: CUR().fl.room[idx(x, y)], iq: miq != null ? miq : LAB.foeIQ(base.kind, d0, 0), spawned: true };
   if (fs.spawned.length > 60) fs.spawned = fs.spawned.filter(function (sd) { return !(fs.foes[sd.id] && fs.foes[sd.id].dead); });
   if (extra) for (var k in extra) def[k] = extra[k];
+  if (def.aff && def.aff.indexOf("armored") >= 0) def.arm = Math.round(def.arm * 1.6) + 3; /* как у машин этажа (world.js) */
   fs.spawned.push(def);
   var f = makeRuntime(def, null);
   foes.push(f);
@@ -1953,6 +1991,7 @@ function hurtPlayer(dmg, adt, src, opts) {
   if (LAB.repair) LAB.repair.armorHit(raw, fin); /* (2.0) броня изнашивается от ударов, которые держит */
   g.hp -= fin;
   g.lastHurt = Date.now();
+  if (LAB.chem && src && fin > 0) LAB.chem.onBite(src); /* (3.0) укус ядовитой твари — немного мутагена */
   A("hurt", adt, fin, src);
   LAB.vib(fin > g.hpMax * 0.15 ? [80, 40, 80] : 40);
   if (g.hp <= 0) { g.hp = 0; UIx("refresh"); gm().die(); return fin; }
@@ -2016,6 +2055,7 @@ function statusTick(onlyTimers) {
   if (st.radBlock > 0) { st.radBlock--; if (!st.radBlock) sayq("Йодид калия больше не защищает от облучения."); }
   if (LAB.zones && LAB.zones.tick) LAB.zones.tick(); /* облучение и газ, пока стоите в особой зоне (1.5) */
   if (LAB.implants) LAB.implants.tick(); /* (2.0) действие имплантов во времени, чип регенерации */
+  if (LAB.chem) LAB.chem.tick(); /* (3.0) химия: регенерация, репеллент, токсиколог */
   if (st.haste > 0) { st.haste--; if (!st.haste) sayq("Ускорение закончилось."); }
   if (st.cloak > 0) { st.cloak--; if (!st.cloak) { sayq("Маскировка спала."); A("play", "cloak_off"); } }
   if (st.shieldT > 0) { st.shieldT--; if (!st.shieldT && !gm().armorSpecial("regshield")) st.shield = 0; }
@@ -2163,10 +2203,13 @@ function shoot(w, f, perp, along, burst, melee) {
   var crit = Math.random() < 0.05 + (g.agi - 10) * 0.008 + (wf(w, "crit") || 0);
   if (crit) dmg *= 1.75;
   if (LAB.workshop) dmg *= LAB.workshop.dmgK(w, f);
+  var chx = LAB.chem ? LAB.chem.onShot(w, f, melee) : null; /* (3.0) смазка и перегрузочная капсула */
+  if (chx) dmg *= chx.k;
   var wb = LAB.WEAPONS[w.base] || {};
-  var done = damageFoe(f, dmg, dt, { noarmor: !!wf(w, "noarmor"), crit: crit, melee: melee, burst: burst, freeze: wf(w, "freeze"), apierce: LAB.workshop ? LAB.workshop.pierce(w) : 0, stunMech: wb.stunMech || 0 });
+  damageFoe(f, dmg, dt, { noarmor: !!wf(w, "noarmor") || !!(chx && chx.noarmor), crit: crit, melee: melee, burst: burst, freeze: wf(w, "freeze"), apierce: LAB.workshop ? LAB.workshop.pierce(w) : 0, stunMech: wb.stunMech || 0 });
   if (wf(w, "area")) foes.forEach(function (o) { if (o !== f && !o.dead && !o.calm && cheb(o, f) <= 1) damageFoe(o, dmg * 0.6, dt, { noarmor: true, quiet: true }); });
   afterHit(w, f, dmg, dt);
+  if (LAB.chem) LAB.chem.afterHit(w, f, dmg);
   return 1;
 }
 /* (1.5) Свойства нового оружия (arms.js): кровотечение, метка, замедление,
@@ -2278,7 +2321,10 @@ function kill(f, quiet) {
   A("foeDeath", f);
   LAB.vib(30);
   var xp = Math.round((f.base.xp || 10) * (1 + 0.1 * (f.lvl - 1)) * (f.aff ? 1 + 0.25 * f.aff.length : 1) * (f.boss ? 6 : 1));
-  if (f.spawned) xp = Math.round(xp * 0.4);
+  /* (3.0) присланные и призванные: опыта меньше, а на этаже-мясорубке — всё меньше, до нуля;
+     каратели сгорают — ни опыта, ни добычи */
+  /* напарник из режима сложности (twin) — житель этажа, а не замена: в мясорубку не идёт */
+  if (f.spawned) { xp = f.punisher ? 0 : Math.round(xp * 0.4 * grindK()); if (!f.ally && !f.twin) grindAdd(); }
   /* добыча падает на клетку врага */
   var drops = (f.carry || []).slice().concat(f.bag || []);
   if (f.kind === "mech" && !f.ally && !has(f, "camera")) { if (!fs.wrecks) fs.wrecks = []; fs.wrecks.push({ x: f.x, y: f.y }); if (fs.wrecks.length > 12) fs.wrecks.shift(); }
@@ -2298,36 +2344,38 @@ function kill(f, quiet) {
     if (lost && !quiet) sayq("Роботы рядом потеряли начальника и растерялись.");
   }
   var r = Math.random, L = g.L, dk = diff().loot;
-  if (!f.spawned) {
+  /* (3.0) добыча — со всех, и с машин, присланных ОКО на замену, тоже; не роняют
+     только те, кого призвали сами враги (рой улья, кладки, двойники, половинки) */
+  var looty = (!f.spawned || !!f.oko) && !f.punisher;
+  if (looty) {
     if (f.kind === "mech") {
       if (r() < 0.6 * dk) drops.push({ kind: "item", item: LAB.partAt({ pick: function (a) { return a[Math.floor(r() * a.length)]; }, chance: function (p) { return r() < p; } }, L), n: 1 });
-      /* (2.6) энергобатарея с робота — только в коридоре, с каждого N-го (ниже);
-         прежнее случайное выпадение где угодно убрано, магнетронный заряд — как был */
+      /* энергобатарея — только с каждого N-го врага (ниже); магнетронный заряд — как был */
       if (L >= 3 && r() < 0.075 * dk) drops.push({ kind: "ammo", ammo: "magnetron", n: 1 });
       if (f.aff && r() < 0.35) drops.push({ kind: "item", item: L >= 5 && r() < 0.4 ? "supercond" : L >= 3 ? "ceramic" : "chip", n: 1 });
-      /* (2.6) в коридоре — энергобатарея с каждого N-го уничтоженного робота
-         (N — по режиму: bat): бой в коридорах кормит оружие, в комнатах — нет */
-      if (!f.ally && !has(f, "camera") && !has(f, "stationary") && CUR().fl.t[idx(f.x, f.y)] === LAB.T.CORR) {
-        var nth = diff().bat || 4;
-        g.corrBots = (g.corrBots || 0) + 1;
-        if (g.corrBots % nth === 0) { drops.push({ kind: "ammo", ammo: "energy", n: 1, corr26: 1 }); if (!g.tut.corrBat) { g.tut.corrBat = 1; corrHint = nth; } }
-      }
     } else if (f.kind === "anom") {
       if (r() < 0.45 * dk) drops.push({ kind: "item", item: LAB.partAt({ pick: function (a) { return a[Math.floor(r() * a.length)]; }, chance: function (p) { return r() < p; } }, L), n: 1 });
       if (r() < 0.12 * dk) drops.push({ kind: "item", item: "energy_d", n: 1 });
     } else {
       if (r() < 0.35 * dk) drops.push({ kind: "item", item: r() < 0.6 ? "gel" : "reagent", n: 1 });
       if (r() < 0.12 * dk) drops.push({ kind: "item", item: "medkit_s", n: 1 });
-      if (r() < 0.15 * dk) drops.push({ kind: "ammo", ammo: "energy", n: 1 }); /* батарея из кармана бывшего сотрудника */
     }
     if (LAB.workshop) LAB.workshop.drops(f, drops, r, dk);
+    if (LAB.chem) LAB.chem.drops(f, drops, r, dk); /* (3.0) сырьё химии: ткани тварей, жидкости машин */
     if (r() < 0.3) drops.push({ kind: "credits", n: LAB.credits(4 + r() * 12, L, g.F) });
     /* служебный ключ ОКО: у начальника смены, изредка — у стража поста */
     if (f.kind === "mech" && (has(f, "commander") ? r() < 0.45 * dk : f.guard && LAB.depth(L, g.F) >= 6 && r() < 0.08 * dk)) drops.push({ kind: "item", item: "okokey", n: 1 });
   }
+  /* (3.0) энергобатарея — с каждого N-го уничтоженного врага, робота или твари,
+     где бы он ни пал (N по режиму: bat; камеры и турели не в счёт). Напарник из
+     режима сложности добычи не несёт, но враг есть враг — он в счёт идёт. */
+  if ((looty || f.twin) && !f.punisher && !f.ally && !has(f, "camera") && !has(f, "stationary")) {
+    var nth = diff().bat || 4;
+    g.batKills = (g.batKills || 0) + 1;
+    if (g.batKills % nth === 0) { drops.push({ kind: "ammo", ammo: "energy", n: 1, nth27: 1 }); if (!g.tut.batNth) { g.tut.batNth = 1; corrHint = nth; } }
+  }
   if (drops.length) {
-    var cx = f.x, cy = f.y;
-    if (CUR().fl.t[idx(cx, cy)] === LAB.T.DOOR) { var c = freeCellNear(cx, cy, null); if (c) { cx = c[0]; cy = c[1]; } }
+    var lc = lootCell(f.x, f.y), cx = lc[0], cy = lc[1];
     drops.forEach(function (it) { it.id = "d" + (fs.dseq = (fs.dseq || 0) + 1); it.x = cx; it.y = cy; fs.drops.push(it); });
     A("dropLoot", cx, cy);
   }
@@ -2342,9 +2390,9 @@ function kill(f, quiet) {
   }
   if (!quiet) {
     var verb = f.kind === "mech" ? (f.g === "f" ? "уничтожена" : "уничтожен") : f.kind === "anom" ? (f.g === "f" ? "развеяна" : "развеян") : (f.g === "f" ? "убита" : "убит");
-    sayq(f.name.split(",")[0] + " " + verb + "." + (drops.length ? " Что-то упало." : ""));
+    sayq(f.name.split(",")[0] + " " + verb + "." + (f.punisher ? " Каратель сгорает изнутри: ОКО стёрло его начинку." : drops.length ? " Что-то упало." : ""));
   }
-  if (corrHint) { sayq("«Эхо»: в коридорах с каждого " + (NTH_W[corrHint] || corrHint + "-го") + " уничтоженного робота падает энергобатарея. В комнатах — нет: за батареями — в коридоры."); corrHint = 0; }
+  if (corrHint) { sayq("«Эхо»: с каждого " + (NTH_W[corrHint] || corrHint + "-го") + " уничтоженного врага падает энергобатарея."); corrHint = 0; }
   if (f.boss) {
     LAB.UI.fanfare();
     sayq("Страж повержен: " + LAB.BOSSES[f.boss].n + ".");
@@ -2412,11 +2460,6 @@ function visibleFoes(r) {
     return LAB.los(CUR().fl, CUR().fs, G().x, G().y, f.x, f.y);
   }).map(function (f) { return f; });
 }
-function nearestFoe(r) {
-  var v = visibleFoes(r || 10).filter(function (f) { return !f.calm; });
-  v.sort(function (a, b) { return dist(a, heroPos()) - dist(b, heroPos()); });
-  return v[0] || null;
-}
 function aliveCount() { return foes.filter(function (f) { return hostile(f); }).length; }
 function jammed() { return foes.some(function (f) { return !f.dead && !f.calm && aff(f, "jammer") && cheb(f, heroPos()) <= 6; }); }
 function jammer() { var b = null, bd = 99; foes.forEach(function (f) { if (!f.dead && !f.calm && aff(f, "jammer") && cheb(f, heroPos()) <= 6 && cheb(f, heroPos()) < bd) { bd = cheb(f, heroPos()); b = f; } }); return b; }
@@ -2460,7 +2503,7 @@ function okoPoint(o) {
   dm[s0] = 0;
   while (qi < q.length) {
     var u = q[qi++], x = u % W, y = (u / W) | 0;
-    if (u !== s0 && fl.t[u] !== LAB.T.DOOR && canStand(null, x, y) && !inRefuge(x, y) && !havenAt(x, y)) {
+    if (u !== s0 && fl.t[u] !== LAB.T.DOOR && canStand(null, x, y) && !inRefuge(x, y) && !havenAt(x, y) && (!o.corr || fl.corrAt[u] >= 0)) { /* (3.0) corr — только в коридоре */
       var dh = Math.abs(x - hp.x) + Math.abs(y - hp.y);
       if (dh >= minH && (o.hidden === false || !LAB.los(fl, fs, x, y, hp.x, hp.y))) {
         any.push([x, y, dm[u]]);
@@ -2508,7 +2551,6 @@ function okoPool(mode) {
    смены; drone — дрон слежения; post — смена на опустевший пост (at — пост
    и его вид). Двери отряду открывает ОКО; кто вас не нашёл — остаётся на
    этаже патрулём. Возвращает вышедших. */
-var lastSquad = null;
 function dispatch(n, mode, at) {
   var fs = CUR().fs, hp = heroPos(), pool = okoPool(mode), got = [];
   /* куда идти, ОКО знает только из донесений (at); без них отряд прочёсывает этаж.
@@ -2548,10 +2590,8 @@ function dispatch(n, mode, at) {
     var dn = doorNear(p[0], p[1]);
     if (dn) A("doorOpen", dn, true);
   }
-  lastSquad = got.length ? { x: p[0], y: p[1], n: got.length, mode: mode } : null;
   return got;
 }
-function sendSquad(n, mode) { return dispatch(n, mode).length; }
 /* (2.0) Замена потерь (oko.js). Новый патрульный выходит на участок погибшего
    из дальней от вас точки обхода — не у вас на глазах. Пусто — место на виду,
    ОКО подождёт. При большом нажиме (q.n от трёх) идут тяжёлые машины и сразу
@@ -2613,6 +2653,87 @@ function doorNear(x, y) {
   for (var k = 0; k < 4; k++) { var v = DIRV[["N", "S", "W", "E"][k]], nx = x + v[0], ny = y + v[1]; if (LAB.inb(nx, ny) && fl.t[idx(nx, ny)] === LAB.T.DOOR) return fl.doorAt[idx(nx, ny)]; }
   return null;
 }
+/* ════════ (3.0, просьба автора) МЯСОРУБКА ════════
+   Счёт этажа: сколько присланных и призванных врагов вы здесь уничтожили (замена ОКО,
+   отряды, ремонтники, дроны, выводки). Он тает: по очку за grindDec тактов этажа (по
+   ходам — ходов). Опыт за присланных — 40 % обычного и тает вместе с ростом счёта: на
+   пороге режима (grind) — ноль. Что делает ОКО на пороге — oko.js, punTick. */
+function grindNow() {
+  var fs = CUR().fs, t = fs.okoT || 0, per = diff().grindDec || 240;
+  if (!fs.grind) return 0;
+  var k = Math.floor((t - (fs.grindT || 0)) / per);
+  if (k > 0) { fs.grind = Math.max(0, fs.grind - k); fs.grindT = (fs.grindT || 0) + k * per; }
+  return fs.grind;
+}
+function grindAdd() { var fs = CUR().fs; if (!grindNow()) fs.grindT = fs.okoT || 0; fs.grind = (fs.grind || 0) + 1; fs.grindLast = fs.okoT || 0; }
+function grindK() { var fs = CUR().fs; if (fs.pun) return 0; return Math.max(0, 1 - grindNow() / (diff().grind || 12)); }
+/* Каратели: тяжёлые машины уровнем-двумя глубже (самые крепкие из них), а на дне комплекса — здешние. */
+function strikePool() {
+  var L = G().L, out = [], bad = ["stationary", "cleaner", "mimic", "camera", "turret", "swarm", "stalker", "mines"];
+  for (var l = Math.min(LAB.LEVELS_N, L + 1); l <= Math.min(LAB.LEVELS_N, L + 2); l++) (LAB.LEVELS[l].foes || []).forEach(function (id) {
+    var b = LAB.FOES[id];
+    if (b && b.kind === "mech" && bad.every(function (k) { return b.beh.indexOf(k) < 0; }) && out.indexOf(id) < 0) out.push(id);
+  });
+  if (L >= LAB.LEVELS_N || !out.length) out = out.concat(okoPool("hunt").filter(function (id) { return out.indexOf(id) < 0; }));
+  out.sort(function (a, b) { var A0 = LAB.FOES[a], B0 = LAB.FOES[b]; return B0.hp * B0.dmg - A0.hp * A0.dmg || (a < b ? -1 : 1); });
+  return out.slice(0, 3);
+}
+/* Где встать засаде: в коридоре на вашем пути вниз, в 9–44 шагах и не у вас на виду;
+   пути нет — где-нибудь рядом, но тоже не на виду. */
+function ambushPoint() {
+  var fl = CUR().fl, fs = CUR().fs, hp = heroPos();
+  var ex = fl.objs.filter(function (o) { return o.type === "stairs_down" || o.type === "gate_down" || o.type === "reactor"; })[0];
+  /* путь вниз — сквозь любые двери, кроме потайных; засада — до первой двери, которую ОКО своим не откроет */
+  var path = ex ? LAB.bfs(fl, fs, hp.x, hp.y, [ex.x, ex.y], { passDoor: function (d) { return !(d.lock && d.lock.type === "secret"); }, npcs: false }) : null;
+  if (path) for (var i = 0; i < Math.min(path.length - 2, 45); i++) {
+    var c = path[i], j = idx(c[0], c[1]);
+    if (fl.t[j] === LAB.T.DOOR) { if (!okoPass(fl.doorAt[j])) break; continue; }
+    if (i < 9 || fl.corrAt[j] < 0 || !canStand(null, c[0], c[1]) || havenAt(c[0], c[1]) || inRefuge(c[0], c[1])) continue;
+    if (Math.abs(c[0] - hp.x) + Math.abs(c[1] - hp.y) < 9 || LAB.los(fl, fs, hp.x, hp.y, c[0], c[1])) continue;
+    return [c[0], c[1]];
+  }
+  return okoPoint({ to: hp, minHero: 12, dmin: 10, dmax: 30, corr: true }) || okoPoint({ to: hp, minHero: 12, dmin: 10, dmax: 30 });
+}
+/* Клетка рядом с точкой засады, которой герой не видит и до которой не меньше семи шагов. */
+function hiddenNear(p) {
+  var fl = CUR().fl, fs = CUR().fs, hp = heroPos();
+  for (var r = 1; r <= 3; r++) {
+    var best = null, bd = 1e9;
+    for (var dy = -r; dy <= r; dy++) for (var dx = -r; dx <= r; dx++) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+      var x = p[0] + dx, y = p[1] + dy;
+      if (!canStand(null, x, y) || Math.abs(x - hp.x) + Math.abs(y - hp.y) < 7 || LAB.los(fl, fs, hp.x, hp.y, x, y)) continue;
+      var d = Math.abs(dx) + Math.abs(dy);
+      if (d < bd) { bd = d; best = [x, y]; }
+    }
+    if (best) return best;
+  }
+  return null;
+}
+function strike(n, up) {
+  var pool = strikePool(), p = ambushPoint(), got = [], hard = diff().punLvl >= 6;
+  if (!p || !pool.length) return got;
+  for (var i = 0; i < n; i++) {
+    /* вся группа — не на виду: рядом с точкой засады, за углом или за дверью */
+    var c = i === 0 && canStand(null, p[0], p[1]) ? p : (hiddenNear(p) || freeCellNear(p[0], p[1], null));
+    if (!c) break;
+    /* при гибели каратель сгорает — и взрывается; в тяжёлых режимах ещё и бронирован */
+    var sp = spawnFoe(pool[i % pool.length], c[0], c[1], { oko: true, squad: true, punisher: true, lvlUp: up, aff: hard ? ["volatile", "armored"] : ["volatile"] });
+    if (!sp) break;
+    sp.state = "idle"; sp.route = null; sp.patrol = false; sp.ambush = true; sp.lastKnown = null;
+    got.push(sp);
+  }
+  return got;
+}
+/* Засада не дождалась — каратели идут на вас. */
+function strikeGo() {
+  var n = 0, hp = heroPos();
+  foes.forEach(function (f) { if (f.punisher && !f.dead) { f.ambush = false; f.state = "hunt"; f.lastKnown = { x: hp.x, y: hp.y }; f.lost = 0; n++; } });
+  return n;
+}
+function strikers() { return foes.filter(function (f) { return f.punisher && !f.dead && f.task !== "leave"; }); }
+/* Отозванные каратели уходят с этажа: из засады — к выходу ОКО. */
+function strikeRecall() { var n = 0; strikers().forEach(function (f) { f.ambush = false; if (f.state !== "idle") { f.state = "idle"; f.lastKnown = null; } if (dismiss(f)) n++; }); return n; }
 /* Живые машины ОКО на этаже: патрули, ремонтники, дроны, стражи. */
 function patrols() { return foes.filter(function (f) { return hostile(f) && f.kind === "mech" && !f.guard && !f.boss && !f.sapper && !(f.carry && f.carry.length) && !has(f, "stalker") && f.task !== "repair" && f.task !== "leave" && f.task !== "mine" && (f.route || f.patrol); }); }
 function drones() { return foes.filter(function (f) { return hostile(f) && has(f, "stalker"); }); }
@@ -2665,7 +2786,7 @@ function throwNoise() {
   spendTurns(1, "throw");
   setTimeout(function () { var n = noiseLure(x, y); say("Приманка " + LAB.DIRTO[g.face] + " лязгает и пищит." + (n ? " Слышно, как враги идут к ней: " + n + "." : "")); UIx("refresh"); }, 600);
 }
-function calmAll() { foes.forEach(function (f) { if (f.state !== "idle") { f.state = "idle"; f.lastKnown = null; f.aim = false; } }); shells = []; hpMark = 100; }
+function calmAll() { foes.forEach(function (f) { if (f.state !== "idle") { f.state = "idle"; f.lastKnown = null; f.aim = false; } if (f.punisher && !f.dead && f.task !== "leave") f.ambush = true; }); shells = []; hpMark = 100; }
 function areaDamage(x, y, r, dmg, dt) {
   var n = 0;
   foes.forEach(function (f) { if (!f.dead && !f.calm && Math.max(Math.abs(f.x - x), Math.abs(f.y - y)) <= r) { if (damageFoe(f, dmg, dt, { noarmor: true, quiet: true })) n++; } });
@@ -2882,6 +3003,7 @@ function flight(range) {
 }
 /* (2.6) Какой звук у взрыва этой гранаты (atmos.js, EXPL). */
 function grenKind(q) {
+  if (q.smoke) return "gas"; /* (3.0) дымовая шашка шипит, а не рвётся */
   if (q.emp) return "emp";
   if (q.dt === "thermo" || q.burn) return "fire";
   if (q.dt === "acid") return "acid";
@@ -2903,6 +3025,7 @@ function throwGrenade(id) {
   A("grenade", p.x, p.y, { fuse: Math.max(250, q.fuse || 700) });
   spendTurns(1, "throw"); /* (2.6) пошаговый режим: бросок — ход */
   var k = 1 + 0.12 * (LAB.foeLevel(g.L, g.F) - 1), dmg = Math.round((q.dmg || 0) * k), r = q.r == null ? 1 : q.r;
+  if (LAB.chem) r += LAB.chem.radiusBonus(id); /* (3.0) пиротехник: свои химические гранаты — на шаг шире */
   setTimeout(function () {
     LAB.safe(function () {
       if (!gm().entered || G().dead) return;
@@ -2912,6 +3035,7 @@ function throwGrenade(id) {
         var was = f.dead;
         hit++;
         if (dmg > 0) damageFoe(f, dmg, q.dt || "kinetic", { noarmor: !!q.noarmor, quiet: true, stunMech: q.stunMech || 0 });
+        if (LAB.chem && !f.dead) LAB.chem.grenHit(q, f); /* (3.0) ингибитор гасит мутаген в тварях */
         if (f.dead) { if (!was) killed++; return; }
         if (q.emp && f.kind === "mech" && !aff(f, "hardened")) f.shield = 0;
         if (q.freeze && !f.boss) f.frozen = Math.max(f.frozen || 0, q.freeze);
@@ -2933,7 +3057,7 @@ function throwGrenade(id) {
       if (q.gas && LAB.traps && LAB.traps.addZone) LAB.traps.addZone("gas", p.x, p.y, Math.max(1, r), q.gas, Math.max(4, Math.round((q.dmg || 0) * 0.25)), 1);
       A("explosion", p.x, p.y, grenKind(q));
       noise(q.loud == null ? 10 : q.loud);
-      var self = q.self !== false && dmg > 0 && cheb(heroPos(), p) <= r;
+      var self = q.self !== false && dmg > 0 && cheb(heroPos(), p) <= r && !(LAB.chem && LAB.chem.safeGrenades()); /* (3.0) пиротехника не задевает пиротехника */
       if (self) hurtPlayer(Math.round(dmg * 0.5), q.dt === "thermo" ? "therm" : "phys", null);
       say(d.n + " " + dirW + ". " + (hit ? "Задето целей: " + hit + (killed ? ", уничтожено: " + killed : "") + "." : "Рядом с местом падения никого.") + (self ? " Вас задело: слишком близко." : "") + " Осталось: " + (G().inv[id] || 0) + ".");
       if (LAB.ach) LAB.ach.ev("grenade", 1);
@@ -2944,26 +3068,28 @@ function throwGrenade(id) {
 }
 
 LAB.combat = {
+  lootCell: lootCell, fixDrops: fixDrops, canStand: canStand, /* (3.0) добыча — только на клетки, куда можно встать */
+  grind: grindNow, grindK: grindK, strike: strike, strikeGo: strikeGo, strikers: strikers, strikeRecall: strikeRecall, ambushPoint: ambushPoint, /* (3.0) мясорубка */
   /* для проверок: подсказку о патруле — заново */
   _cueReset: function () { cueAt = 0; foes.forEach(function (f) { f.cueT = 0; }); },
   throwQuick: throwQuick, pickGrenade: pickGrenade, throwGrenade: throwGrenade, throwables: throwables,
   loadFoes: loadFoes, syncFoes: syncFoes, wake: start, start: start, stop: stop, tick: tick,
-  danger: danger, hunted: hunted, visibleFoes: visibleFoes, nearestFoe: nearestFoe, aliveCount: aliveCount, jammed: jammed,
+  danger: danger, hunted: hunted, visibleFoes: visibleFoes, aliveCount: aliveCount, jammed: jammed,
   afterPlayerMove: afterPlayerMove, spendTurns: spendTurns, partingBlows: partingBlows, idleTurn: idleTurn,
   /* для проверок: будто вы молчите уже ms миллисекунд */
   _idleBack: function (ms) { idleAt = Date.now() - ms; }, idleMs: function () { return IDLE_MS; }, grenKind: grenKind, noise: noise, turretsOff: turretsOff, turretsOurs: turretsOurs, turretsHostile: turretsHostile, turretsLeft: turretsLeft,
-  robotsCalm: robotsCalm, calmAll: calmAll, chaser: chaser, alertMech: alertMech, sendSquad: sendSquad, deployTurret: deployTurret, noiseLure: noiseLure, throwNoise: throwNoise,
+  robotsCalm: robotsCalm, calmAll: calmAll, chaser: chaser, alertMech: alertMech, deployTurret: deployTurret, noiseLure: noiseLure, throwNoise: throwNoise,
   dispatch: dispatch, replacePatrol: replacePatrol, refillRoom: refillRoom, okoPoint: okoPoint, patrols: patrols, sappers: sappers, minePoints: minePoints, drones: drones, repairers: repairers, guards: guards, sendCheck: sendCheck, reroute: reroute, dismiss: dismiss, despawn: despawn,
-  lastSquad: function () { return lastSquad; }, tickN: function () { return tickN; }, wakeSafe: function () { return safeHero; }, sheltered: sheltered, refuge: function () { return refugeId; },
+  tickN: function () { return tickN; }, wakeSafe: function () { return safeHero; }, sheltered: sheltered, refuge: function () { return refugeId; },
   haven: function () { return havenId; }, havenAt: havenAt,
-  lodR: lodR, lodLevel: lodLevel, tickMs: function () { return tickEma; }, search: search, netUp: netUp, camFacing: camFacing,
+  lodR: lodR, lodLevel: lodLevel, search: search, netUp: netUp, camFacing: camFacing,
   quietTurret: quietTurret, jammer: jammer, freeCellNear: freeCellNear, spawnFoe: spawnFoe, damageFoe: damageFoe, unmask: unmask, dropCarry: dropCarry, _relayCall: function (f) { relayCall(f); }, _cleanerTick: function (f) { cleanerTick(f); }, isTurret: isTurret, cutTurret: cutTurret, mineTurret: mineTurret, unmineTurrets: unmineTurrets, flankCell: flankCell,
-  mineCount: function () { return foes.filter(function (f) { return isNetTurret(f) && f.mine; }).length; }, cutCount: function () { return foes.filter(function (f) { return (isNetTurret(f) && f.cut) || (isCam(f) && f.camOff); }).length; },
-  cams: cams, camState: camState, camSet: camSet, camExpire: camExpire, camCount: camCount, isCam: isCam, smashCam: smashCam, camsBroken: camsBroken,
+  cutCount: function () { return foes.filter(function (f) { return (isNetTurret(f) && f.cut) || (isCam(f) && f.camOff); }).length; },
+  cams: cams, camState: camState, camSet: camSet, camExpire: camExpire, isCam: isCam, smashCam: smashCam, camsBroken: camsBroken,
   areaDamage: areaDamage, throwEmp: throwEmp, reloadPause: reloadPause, fire: fire, startFire: startFire, stopFire: stopFire,
   useImplant: useImplant, useImplantFree: function (id) { useImplant(id, true); }, describe: describe, hurtPlayer: hurtPlayer, foes: function () { return foes; },
   /* (2.5) мир мутантов — для проверок */
-  _evolve: evolve, _gainEvo: gainEvo, _bodies: function () { return bodies; }, graceEnd: function () { return graceT; },
+  _evolve: evolve, _gainEvo: gainEvo, _bodies: function () { return bodies; },
   /* для проверок, что подменяют часы: забыть время прошлого выстрела */
   _shotReset: function () { lastShot = 0; reloadUntil = 0; }
 };

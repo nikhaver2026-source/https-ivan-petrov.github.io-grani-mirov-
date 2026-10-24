@@ -243,11 +243,18 @@ public class MainActivity extends Activity {
                 v -> { if (!"1".equals(v)) moveTaskToBack(true); });
     }
 
-    /* Уход в фон: игра записывает себя (автозапись). */
+    /* Уход в фон: игра записывает себя (автозапись). (3.0) Если звук в фоне
+       выключен (игра отвечает 0), страница засыпает целиком: таймеры, раскладка
+       и анимации стоят, процессор телефона отдыхает. Приглушённый звук в фоне
+       играет дальше — тогда страница не засыпает. */
+    private boolean paused = false, timersPaused = false;
     @Override
     protected void onPause() {
         super.onPause();
-        if (web != null) web.evaluateJavascript("try{window.labPause&&window.labPause();}catch(e){}", null);
+        paused = true;
+        if (web != null) web.evaluateJavascript("(function(){try{return window.labPause?window.labPause():1;}catch(e){return 1;}})()", v -> {
+            if (paused && !timersPaused && "0".equals(v) && web != null) { timersPaused = true; web.onPause(); web.pauseTimers(); }
+        });
     }
 
     /* Возврат на экран: единые обработчики звука и речи будят звук и повторяют
@@ -255,6 +262,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        paused = false;
+        if (web != null && timersPaused) { timersPaused = false; web.resumeTimers(); web.onResume(); }
         if (web != null) web.evaluateJavascript("try{window.labResume&&window.labResume();}catch(e){}", null);
     }
 

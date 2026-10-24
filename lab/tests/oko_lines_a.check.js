@@ -123,7 +123,7 @@ const BIG = ["alarm", "suspect", "lost", "normal", "door", "check", "kill", "tau
 const NEW = ["kill_mech", "kill_bio", "kill_many", "hurt", "low_hp", "heal", "eat", "drink", "rest", "capsule", "bind", "revive",
   "note", "mail", "safe", "pick", "hack_ok", "puzzle_ok", "puzzle_fail", "music", "craft", "buy", "sell", "trap_set", "trap_kill",
   "oko_trap", "oko_trap_off", "mines_order", "grenade", "quiet", "idle", "secret", "zone", "vault", "floor", "weapon", "implant",
-  "survivor", "turret_kill", "patrol_slip"];
+  "survivor", "turret_kill", "patrol_slip", "mutate"]; /* (3.0) mutate — носитель мутирует */
 if (REACT) {
   Object.keys(REACT).forEach(function (k) { if (NEW.indexOf(k) < 0) err("вид реакции «" + k + "» из REACT (oko.js) не покрыт проверкой"); });
   NEW.forEach(function (k) { if (!REACT[k]) warn("вид «" + k + "» есть в проверке, но не в REACT (oko.js)"); });

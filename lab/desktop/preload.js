@@ -19,10 +19,12 @@ const log = m => ipcRenderer.send('lab-log', String(m));
 const quit = () => ipcRenderer.send('lab-quit');
 
 contextBridge.exposeInMainWorld('LabDesktop', {
-  version: 'Альфа 2.6', platform: process.platform,
+  version: 'Альфа 3.0', platform: process.platform,
   exit: quit, log: log,
   // (2.2) окно без фокуса, а звук в фоне выключен — свернуть окно
   minimize: () => ipcRenderer.send('lab-minimize'),
+  // (3.0) игра в фоне без звука — окну можно спать: Chromium редит таймеры и не рисует кадры
+  bgThrottle: on => ipcRenderer.send('lab-bg-throttle', !!on),
   // Голоса компьютера: почему не видно голосов и повторная попытка.
   ttsDiag: () => String(tts.diag || ''),
   ttsRestart: () => ipcRenderer.invoke('lab-tts-restart')

@@ -30,10 +30,7 @@ function G() { return LAB.game.G; }
 function CUR() { return LAB.game.CUR; }
 function A(name) { var a = LAB.atmos; if (a && typeof a[name] === "function") { var args = Array.prototype.slice.call(arguments, 1); try { return a[name].apply(a, args); } catch (e) { console.warn(e); } } return null; }
 function say(t, o) { LAB.say(t, o); }
-function sayq(t) { LAB.say(t, { interrupt: false }); }
 function menu(title, items, opts) { return LAB.ui.menu(title, items, opts); }
-function rnd(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
-function steps(n) { return n + " " + gm().plural(n, "шаг", "шага", "шагов"); }
 function T() { var fs = CUR().fs; return fs ? (fs.okoT || 0) : 0; }
 
 /* Номер глубины: 0 — «Ковчег» (уровни 1–10), 1–5 — глубины под Ядром. */
@@ -666,15 +663,10 @@ function objMenu(o) {
   }
   return false;
 }
-/* Краткое описание глубины: где игрок и что здесь главное. */
-function depthLine(L) {
-  var d = depthOf(L);
-  return ["", "«Подножие»: прессы и распределительные щиты", "«Колыбель»: инкубаторы с образцами", "«Отражение»: журналы и сбитые сигналы", "«Механизм»: синхронные затворы", "«Исток»: древние узлы"][d] || "";
-}
 
 LAB.depths = {
   depthOf: depthOf, names: NAMES, world: W, ventOn: ventOn, place: place, tick: tick, hazardAt: hazardAt, objMenu: objMenu, noteText: noteText,
-  epilogue: epilogue, sensorsDeaf: sensorsDeaf, navJam: navJam, nodeSeq: nodeSeq, nodeHints: nodeHints, mirrorPuzzle: mirrorPuzzle, activity: activity, depthLine: depthLine,
+  epilogue: epilogue, sensorsDeaf: sensorsDeaf, navJam: navJam, nodeSeq: nodeSeq, nodeHints: nodeHints, mirrorPuzzle: mirrorPuzzle, activity: activity,
   _slam: slam, _setGrid: setGrid, _openIncub: openIncub, _sterilize: sterilize, _checkMirror: checkMirror, _openGate: openGate, _nodeResult: nodeResult
 };
 })();

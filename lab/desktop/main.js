@@ -27,7 +27,7 @@ protocol.registerSchemesAsPrivileged([{
 // Звук с первой секунды, без щелчка мышью: игроку нечем «разрешить» звук.
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
-const VERSION = 'Альфа 2.6';
+const VERSION = 'Альфа 3.0';
 const TITLE = 'Подземная лаборатория ' + VERSION;
 // Самопроверка (сборка на серверах GitHub): игра проходит все этажи, пишет
 // итог в журнал и закрывается с кодом 0 (всё хорошо) или 1.
@@ -270,6 +270,10 @@ ipcMain.handle('lab-tts-restart', async () => {
 ipcMain.on('lab-log', (e, m) => log(m));
 ipcMain.on('lab-quit', () => app.quit());
 // (2.2) Игра ушла в фон без звука: окно сворачивается — если фокус к нему так и не вернулся.
+// (3.0) Окно в фоне без звука спит как обычная вкладка: таймеры редеют, кадры
+// не рисуются, процессор отдыхает. Вернулось на экран — снова без сбережения
+// (иначе Chromium сам притормозит речь и звук, когда окно чем-то закрыто).
+ipcMain.on('lab-bg-throttle', (e, on) => { if (!SELFTEST && win && !win.isDestroyed()) { try { win.webContents.setBackgroundThrottling(!!on); } catch (_) { } } });
 ipcMain.on('lab-minimize', () => { if (!SELFTEST && win && !win.isDestroyed() && !win.isFocused() && !win.isMinimized()) win.minimize(); });
 
 const single = SELFTEST || app.requestSingleInstanceLock();
@@ -290,6 +294,18 @@ else {
     // (2.0) этажи плотнее (сотни машин), обход всех уровней дольше — запас по времени больше
     if (SELFTEST) setTimeout(() => { log('selftest FAIL: нет итога за 240 с'); app.exit(2); }, 240000);
   });
-  app.on('window-all-closed', () => app.quit());
-  app.on('will-quit', () => { if (sapi) sapi.quit(); });
+  // (3.0) Выход — целиком. Мосты голосов (процессы PowerShell) снимаются сразу:
+  // прежде их добивал таймер, которого после выхода уже не было, и после Alt+F4
+  // процессы оставались висеть в диспетчере задач. Не закрылась игра за три
+  // секунды — выход силой.
+  // Закрытый мост голосов не поднимает снова (onExit), а то поднял бы его
+  // посреди выхода — и новый процесс остался бы сиротой.
+  const killBridges = () => {
+    if (!sapi) return;
+    for (const p of (sapi.procs || [])) p.onExit = null;
+    try { sapi.quit(); } catch (_) { }
+    for (const p of (sapi.procs || [])) { try { if (p.proc && p.proc.exitCode === null) p.proc.kill(); } catch (_) { } }
+  };
+  app.on('window-all-closed', () => { killBridges(); app.quit(); setTimeout(() => app.exit(0), 3000); });
+  app.on('will-quit', killBridges);
 }

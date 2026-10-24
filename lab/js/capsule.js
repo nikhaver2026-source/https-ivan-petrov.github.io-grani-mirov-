@@ -249,7 +249,7 @@ function sleep(s) {
   G().stats.sleeps = (G().stats.sleeps || 0) + 1;
   ev("sleep", s.min);
   A("play", "capsule_hum", { gain: 0.45 });
-  var wake = "Вы просыпаетесь. Прошло " + hm(s.min) + ". " + statusLine();
+  var wake = "Вы просыпаетесь. Прошло " + hm(s.min) + ". " + statusLine() + (LAB.chem ? LAB.chem.capsuleSleep(s.min) : ""); /* (3.0) капсула фильтрует мутаген */
   if (!dream) { refreshTop(); say("Вы засыпаете без снов. " + wake); return; }
   (G().dreams = G().dreams || {})[dream.id] = 1;
   ev("dream", 1);
@@ -383,7 +383,7 @@ function reader(title, text, opts) {
 /* Игра закончилась или ушли в главное меню — музыка капсулы стихает. */
 function reset() { stopTrack(true); inCap.o = null; }
 LAB.capsule = {
-  menu: enter, inside: function () { return !!inCap.o; }, leave: function () { leave(false); }, reset: reset, bindPrice: bindPrice, boundHere: boundHere, bind: bind,
+  menu: enter, leave: function () { leave(false); }, reset: reset, bindPrice: bindPrice, boundHere: boundHere, bind: bind,
   chargeable: chargeable, chargePrice: chargePrice, chargeOne: chargeOne, chargeAll: chargeAll, chargeMenu: chargeMenu, chargeItems: chargeItems,
   _sleep: function (i) { sleep(SLEEP[i]); }, _shelf: shelf, _open: open, _selection: selection, _tracks: tracks, _playing: function () { return playing; }, _state: function () { return inCap; }
 };

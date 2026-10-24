@@ -47,7 +47,7 @@ function menu(title, items, opts) {
   /* то же окно уже открыто ниже (пункт «Назад» открывает родителя заново) —
      заменяем его, а не копим: «назад» и пункт «Назад» ведут в одно место */
   for (var si = stack.length - 1; si >= 0; si--) if (stack[si].title === title && !stack[si].root) { stack.splice(si); break; }
-  var w = { title: title, items: items, i: Math.max(0, Math.min(items.length - 1, opts.focus || 0)), keep: !!opts.keep, root: !!opts.root, rebuild: opts.rebuild || null, onClose: opts.onClose || null, onFocus: opts.onFocus || null, silentOpen: !!opts.silent, intro: opts.intro || "" };
+  var w = { title: title, items: items, i: Math.max(0, Math.min(items.length - 1, opts.focus || 0)), keep: !!opts.keep, root: !!opts.root, rebuild: opts.rebuild || null, onClose: opts.onClose || null, onFocus: opts.onFocus || null, silentOpen: !!opts.silent, intro: opts.intro || "", puzzle: !!opts.puzzle };
   stack.push(w);
   if (LAB.input && LAB.input.stopAll) LAB.input.stopAll(); /* ходьба и очередь с удержания — стоп */
   LAB.UI.open();
@@ -307,14 +307,17 @@ function mainMenu(silentIntro) {
   A("music", "menu");
   $("pageTitle").textContent = LAB.TITLE;
   $("pageText").textContent = LAB.SUBTITLE;
-  menu(LAB.TITLE + ". Главное меню", [
+  var mm = [
     { label: "Начать игру", fn: startGame },
     { label: "Пролог", fn: function () { prologue("menu"); } },
     { label: "Загрузить игру", fn: function () { loadMenu(); } },
     { label: "Руководство", fn: function () { if (LAB.guide) LAB.guide.open(); } },
     { label: "Что нового?", fn: function () { if (LAB.news) LAB.news.open(); } },
     { label: "Настройки", fn: function () { settingsMenu(); } }
-  ], { root: true, intro: freshNote(), keep: false });
+  ];
+  /* (3.0) в приложении (Android, компьютер) — закрыть его; вкладку браузера закрывают сами */
+  if (window.LabTTS && window.LabTTS.exitApp) mm.push({ label: "Выход", fn: function () { LAB.safe(function () { LAB.Speech.stop && LAB.Speech.stop(); }); try { window.LabTTS.exitApp(); } catch (e) { /* */ } } });
+  menu(LAB.TITLE + ". Главное меню", mm, { root: true, intro: freshNote(), keep: false });
 }
 /* Первый запуск новой версии, после которой старые записи стёрты, — сказать об этом один раз;
    (2.0) так же — когда сборка начинает прохождение заново. */
@@ -390,11 +393,15 @@ function diffMenu() {
 }
 function diffConfirm(k) {
   var d = LAB.DIFF[k];
+  /* (3.0) и тут же — как идёт бой: обычный или пошаговый; тоже на всю игру */
+  var go = function (tb) { return function () { S.difficulty = k; S.turnBased = tb ? 1 : 0; LAB.saveSettings(); prologue("new"); }; };
   menu("Режим «" + d.n + "»", [
-    { label: "Начать игру в этом режиме", fn: function () { S.difficulty = k; LAB.saveSettings(); prologue("new"); } },
+    { label: "Начать игру: обычный бой — враги действуют сами, не дожидаясь вас", fn: go(false) },
+    { label: "Начать игру: пошаговый бой — враги ходят только после вас, а всё дороже", fn: go(true) },
     { label: "Выбрать другой режим", close: true, fn: function () {} }
-  ], { intro: d.desc });
+  ], { intro: d.desc + " " + TB_INTRO, focus: S.turnBased ? 1 : 0 });
 }
+var TB_INTRO = "Бой выбирают здесь же, на всю игру. Пошаговый бой: враги ходят только после ваших действий, а перезарядка, смена оружия, лечение, обыск, броски и импланты стоят ходов. Зато всё дороже: цены выше на четверть, скупка, кредиты, добыча и лечебные припасы скромнее, энергобатарея падает с врага на одного позже, у капсулы прибытия их на одну меньше.";
 function reopenMain() { if (screen === "menu" && !top()) mainMenu(true); else if (top()) say(top().title + ". " + itemText(top().items[top().i])); }
 
 function loadMenu() {
@@ -444,7 +451,10 @@ function settingsMenu() {
     vol("Громкость маяков", "beaconVol"),
     vol("Громкость речи", "voiceVol"),
     tog("Вибрация", "haptics"),
-    tog("Пошаговый режим: враги ходят только после вас, а перезарядка, смена оружия, лечение, обыск, броски и импланты стоят ходов", "turnBased"),
+    /* (3.0) пошаговый бой, как и режим сложности, выбирают в начале новой игры; здесь — какой он у этой игры */
+    { label: function () { return gm() && gm().entered ? "Бой в этой игре: " + (S.turnBased ? "пошаговый" : "обычный") + ". Выбран в начале игры и не меняется" : "Пошаговый или обычный бой выбирают в начале новой игры, вместе с режимом сложности"; }, info: true, fn: function () {
+      say(gm() && gm().entered ? (S.turnBased ? "Пошаговый бой: враги ходят только после ваших действий, а всё дороже." : "Обычный бой: враги действуют сами, не дожидаясь вас.") + " Сменить нельзя: для другого боя начните новую игру." : TB_INTRO);
+    } },
     tog("Двери без замка открываются сами", "autoDoors"),
     tog("Читать записки сразу", "autoRead"),
     tog("Голос робота у машин", "robotVoice"),
@@ -587,6 +597,7 @@ function inventory(focus) {
     { label: "Защита и инструменты: " + cnt(catIds("protect").concat(catIds("tool"))), fn: toolsMenu },
     { label: "Ценности: " + cnt(catIds("valuable")), fn: valuablesMenu },
     { label: "Детали: " + cnt(LAB.PARTS), fn: partsMenu },
+    { label: "Химия: сырьё: " + (LAB.chem ? LAB.chem.matCount() : 0), fn: function () { if (LAB.chem) LAB.chem.invMenu(); } }, /* (3.0) */
     { label: "Модули оружия в запасе: " + cnt(modIds()), fn: modsMenu },
     { label: "Пропуска и ключи", fn: passesMenu },
     { label: "Архив документов: " + g.noteList.length, fn: notesMenu },
@@ -855,7 +866,7 @@ function note(title, text, after, opts) {
   if (opts.extra) items = items.concat(opts.extra);
   items.push({ label: opts.closeLabel || "Закрыть", fn: function () { LAB.Speech.endNote(); if (after) after(); else if (!top() && screen === "game") say("Игра."); } });
   A("play", "paper");
-  var w = menu(title, items, { silent: true });
+  var w = menu(title, items, { silent: true, puzzle: !!opts.puzzle });
   if (w) w.note = true;
   say(title + ". " + text, { interrupt: !opts.queue, read: true, note: true });
 }
@@ -1001,6 +1012,8 @@ LAB.ui = {
   note: note, craft: craft, ending: ending, levelBanner: levelBanner, showGame: showGame, mainMenu: mainMenu, prologue: prologue, pages: pages,
   character: character, inventory: inventory, implants: implants, settings: settingsMenu, loadMenu: loadMenu, saveMenu: saveMenu,
   navMenu: navMenu, screen: function () { return screen; }, setScreen: setScreen, top: top, activate: activate, move: move,
-  startGame: startGame, diffMenu: diffMenu
+  startGame: startGame, diffMenu: diffMenu,
+  /* (3.0) открыта ли головоломка (её окно или окно внутри неё): ОКО тогда молчит */
+  puzzleOpen: function () { return stack.some(function (w) { return w.puzzle; }); }
 };
 })();

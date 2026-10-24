@@ -78,8 +78,6 @@ function person(seed, L, F, local, post, opt) {
   if (old) sp = (fem ? NM.om : NM.of)[(hk >>> 5) % 64];
   return { g: g, f: fem, first: first, pat: pat, sur: sur, io: first + " " + pat, fio: first + " " + pat + " " + sur, sign: first.charAt(0) + ". " + sur, kid: kid, kidF: kidF, spouse: sp, post: post || "", era: era };
 }
-/* Должность в женском роде, если она другая. */
-function postFor(v, fem) { return fem && v && v.postf ? v.postf : v ? v.post : ""; }
 
 /* ════════ КОЛОДЫ ════════
    Перестановка набора — одна на уровень; этаж берёт своё окно в ней:
@@ -440,6 +438,6 @@ function corpse(seed, L, F, o) {
 
 LAB.agen = {
   Gen: Gen, person: person, personByG: personByG, render: render, noteText: noteText, timeWords: timeWords,
-  eraOf: eraOf, postFor: postFor, corpse: corpse, fitsRoom: fitsRoom, tagsOf: tagsOf, feistel20: feistel20, NAMES: NM, femSur: femSur, DAYS: DAYS
+  eraOf: eraOf, corpse: corpse, fitsRoom: fitsRoom, tagsOf: tagsOf, feistel20: feistel20, NAMES: NM, femSur: femSur, DAYS: DAYS
 };
 })();

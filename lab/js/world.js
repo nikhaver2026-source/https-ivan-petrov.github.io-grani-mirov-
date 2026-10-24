@@ -469,6 +469,41 @@ function genFloor(seed, L, F, attempt) {
       if (r.chance(0.3)) edges.push({ a: s, b: n, child: r.chance(0.5) ? n : s, tree: false });
     });
   }
+  /* (3.0) Сколько помещений пройти по коридорам этажа от помещения a (тайные ходы не в счёт). */
+  var hopsMemo = {};
+  function hopsFrom(a) {
+    if (hopsMemo[a]) return hopsMemo[a];
+    var dist = [], q = [a], k;
+    for (k = 0; k < NS; k++) dist[k] = -1;
+    dist[a] = 0;
+    while (q.length) {
+      var u = q.shift();
+      for (k = 0; k < edges.length; k++) {
+        var e0 = edges[k], v = e0.secret ? -1 : e0.a === u ? e0.b : e0.b === u ? e0.a : -1;
+        if (v >= 0 && dist[v] < 0) { dist[v] = dist[u] + 1; q.push(v); }
+      }
+    }
+    return (hopsMemo[a] = dist);
+  }
+  /* (3.0, просьба автора) Записки с кодами и всё, что нужно для замков, — не рядом с замком
+     и не в одном помещении друг с другом: из дальней половины доступных помещений. Пусть
+     игрок обходит комплекс, а не находит всё за порогом. */
+  var reqAt = {};
+  function farSpot(pool, from) {
+    var dist = hopsFrom(from);
+    var c = pool.filter(function (n) { return n !== from && !reqAt[n]; });
+    if (!c.length) c = pool.filter(function (n) { return n !== from; });
+    if (!c.length) c = pool.slice();
+    c.sort(function (a, b) { return dist[b] - dist[a] || a - b; });
+    var n = r.pick(c.slice(0, Math.max(1, Math.ceil(c.length / 2))));
+    reqAt[n] = 1;
+    return n;
+  }
+  /* (3.0) Пароль компьютера — рядом: в соседнем по коридору помещении (а нет такого — в том же). */
+  function nearSpot(pool, from) {
+    var dist = hopsFrom(from), c = pool.filter(function (n) { return dist[n] === 1; });
+    return c.length ? r.pick(c) : from;
+  }
   /* Тайная комната: потайная дверь в стене одного помещения, коридор к
      тайнику и второй коридор — к другому помещению той же зоны; со стороны
      этого помещения дверь тоже потайная, а изнутри коридора её видно. */
@@ -768,13 +803,13 @@ function genFloor(seed, L, F, attempt) {
   if (!(L === 1 && F === 1)) addObj("capsule", U);
 
   /* 10. Всё, что нужно для замков, — до замка. */
-  var cardHidden = false, needSec = false;
+  var cardHidden = false;
   for (var li2 = 0; li2 < lockList.length; li2++) {
     var lc = lockList[li2], lock = locks[lc];
     var spots = keySpots(lc).filter(function (n) { return n !== secret; });
     if (!spots.length) return null;
     var same = spots.filter(function (n) { return zone[n] === zone[parent[lc]] && n !== U; });
-    var pickSpot = function () { return (same.length && r.chance(0.7)) ? r.pick(same) : r.pick(spots); };
+    var pickSpot = function () { return farSpot(same.length >= 3 && r.chance(0.7) ? same : spots, parent[lc]); };
     var door2 = null;
     for (var di = 0; di < doors.length; di++) if (doors[di].lockChild === lc) door2 = doors[di];
     if (!door2) return null;
@@ -906,9 +941,11 @@ function genFloor(seed, L, F, attempt) {
       if (o2 && ot === "puzzle") pz17(o2, seed, L, F, o2.id, stationKinds());
       if (o2 && (ot === "crate" || ot === "locker" || ot === "safe" || ot === "desk" || ot === "corpse")) o2.loot = genLoot(r, L, F, ot, def.loot);
       if (o2 && (ot === "pc" || ot === "puzzle")) o2.loot = genLoot(r, L, F, "desk", def.loot);
+      /* (3.0) у запертого компьютера — пароль из четырёх цифр; записка с ним — в соседнем помещении */
+      if (o2 && ot === "pc" && o2.locked) { o2.pin = String(r.int(1000, 9999)); addItem({ kind: "note", note: "pcpin", code: o2.pin, room: rm4.name }, nearSpot(keySpotsForRoom(s), s)); }
       if (o2 && ot === "safe") {
         /* код сейфа — в записке где-то на этаже, достижимой без замков после сейфа */
-        var ss = keySpotsForRoom(s), sPick = r.pick(ss);
+        var ss = keySpotsForRoom(s), sPick = farSpot(ss, s);
         /* иногда код сейфа — в письме на компьютере, а не на бумаге */
         var spc = r.chance(0.35) ? addObj("pc", sPick, { own: r.int(0, 99999), safeCode: o2.code, safeRoom: rm4.name }) : null;
         if (!spc) addItem({ kind: "note", note: "safe", code: o2.code, room: rm4.name }, sPick);
@@ -1189,7 +1226,11 @@ function genFloor(seed, L, F, attempt) {
     if (L >= 26 && shopRoom >= 0) addObj("charger", shopRoom);
   }
   /* компьютер с почтой сотрудников — почти на каждом этаже; кофе или напитки — на многих */
-  if (!hasObj("pc") && svcRooms.length && r.chance(0.85)) addObj("pc", r.pick(svcRooms), { own: r.int(0, 99999), locked: r.chance(0.15) });
+  if (!hasObj("pc") && svcRooms.length && r.chance(0.85)) {
+    var pcLock = r.chance(0.15), pcRm = r.pick(svcRooms), pcO = addObj("pc", pcRm, { own: r.int(0, 99999), locked: pcLock });
+    /* (3.0) у запертого компьютера — пароль из четырёх цифр, а записка с ним — в соседнем помещении */
+    if (pcO && pcLock) { pcO.pin = String(r.int(1000, 9999)); addItem({ kind: "note", note: "pcpin", code: pcO.pin, room: rooms[pcRm].name }, nearSpot(keySpotsForRoom(pcRm), pcRm)); }
+  }
   if (!hasObj("coffee") && !hasObj("drinks") && svcRooms.length && r.chance(0.6)) addObj(r.chance(0.55) ? "coffee" : "drinks", r.pick(svcRooms), { broken: r.chance(0.1) });
   /* турели этажа отключаются и взламываются с терминала безопасности: он есть, если есть турели */
   if (turrets && !fl.objs.some(function (o) { return o.type === "terminal" && o.sub === "sec"; })) addSvc("terminal", { sub: "sec" }, startZone);
@@ -1295,6 +1336,9 @@ function genFloor(seed, L, F, attempt) {
      капсулы прибытия, лечебные припасы в каждой второй комнате, целитель своей глубины —
      последними, своим потоком случайностей. */
   if (LAB.medic && LAB.medic.place) LAB.medic.place({ fl: fl, L: L, F: F, seed: seed, attempt: attempt, U: U, addObj: addObj, addItem: addItem, freeCell: freeCell, moveTo: moveTo });
+  /* 25. (3.0) Химия (chem.js): химические столы, сырьё в хранилищах лабораторий,
+     медпунктов, складов и мастерских, склянки и журналы с рецептурами — своим потоком. */
+  if (LAB.chem && LAB.chem.place) LAB.chem.place({ fl: fl, L: L, F: F, seed: seed, attempt: attempt, U: U, addObj: addObj, addItem: addItem });
 
   fl.sample = d0;
   fl.turrets = turrets;

@@ -52,9 +52,9 @@ function run(name, cond, build, cb) {
     items.push({ label: "Отойти от задачи", fn: function () { if (!state.done) { state.done = true; say("Вы отходите. Задача ждёт."); if (cb) setTimeout(function () { cb(false); }, 30); } } });
     return items;
   };
-  var open = function () { UIx("menu", name, menuItems(), { intro: "", rebuild: menuItems }); };
+  var open = function () { UIx("menu", name, menuItems(), { intro: "", rebuild: menuItems, puzzle: true }); };
   UIx("closeAll");
-  UIx("note", name, cond, open, { closeLabel: "К решению" });
+  UIx("note", name, cond, open, { closeLabel: "К решению", puzzle: true });
   return state;
 }
 
@@ -200,7 +200,6 @@ function dosim(seed, cb, opts) {
   for (x = 0; x < n; x++) { var s2 = 0; for (y = 0; y < n; y++) s2 += val(x, y); cols.push(s2); }
   var cond = (opts && opts.title ? opts.title + ". " : "") + "Склад контейнеров: " + n + " " + pl(n, "ряд", "ряда", "рядов") + " по " + n + ", ряды считаются от двери, места в ряду — слева направо. Один контейнер горячий: источник даёт дозиметру 10, соседние с ним по стороне — по 3, остальные молчат. " +
     "Замеры по рядам: " + rows.map(function (v, k) { return "ряд " + (k + 1) + " — " + v; }).join(", ") + ". По столбцам: " + cols.map(function (v, k) { return "место " + (k + 1) + " — " + v; }).join(", ") + ". Какой контейнер горячий?";
-  var pr = 0;
   run("Дозиметр и контейнеры", cond, function (st, finish, fail, items) {
     var out = [];
     for (var yy = 0; yy < n; yy++) (function (yy) {
@@ -386,11 +385,11 @@ function chess(cb, opts) {
     });
     items.push({ label: "Позиция ещё раз", keep: true, fn: function () { say(cond, { read: true }); } });
     items.push({ label: "Отойти от доски", fn: function () { if (!done) { done = true; say("Вы отходите: партия ждёт."); if (cb) setTimeout(function () { cb(false); }, 30); } } });
-    UIx("menu", name, items);
+    UIx("menu", name, items, { puzzle: true });
   };
   UIx("closeAll");
   A("play", "paper");
-  UIx("note", name, cond, open, { closeLabel: "К доске" });
+  UIx("note", name, cond, open, { closeLabel: "К доске", puzzle: true });
 }
 
 var FN = { breaker: breaker, decon: decon, labels: labels, dosim: dosim, shifts: shifts, tally: tally };

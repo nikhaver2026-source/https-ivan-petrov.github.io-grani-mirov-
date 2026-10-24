@@ -15,7 +15,7 @@
    ════════════════════════════════════════════════════════════════════ */
 (function () {
 "use strict";
-var LAB = window.LAB, S = LAB.settings;
+var LAB = window.LAB;
 var pad = null;
 var pts = {};          /* активные касания */
 var gest = null;       /* текущий жест */

@@ -62,7 +62,7 @@ LAB.restartRun = (function () {
 
 /* ── НАСТРОЙКИ ── */
 var DEF = {
-  speech: 1, effects: 1, music: 1, ambience: 1, subtitles: 1, explore: 1, haptics: 1,
+  speech: 1, effects: 1, music: 1, ambience: 1, subtitles: 1, haptics: 1,
   rate: 1, ratePct: 50, voiceVol: 1, fxVol: 1, musicVol: 0.6, ambVol: 0.8, beaconVol: 1,
   voice: "", tts: "auto", robotVoice: 1,
   difficulty: 1, turnBased: 0, autoDoors: 0, autoRead: 1, beacons: 1, verbose: 1, doorsV: 2, musV: 2,
@@ -183,10 +183,11 @@ var AE = {
   },
   /* Облегчённый режим: отзвук помещений (свёртка — самый дорогой узел
      звука) отключён от выхода — устройство его не считает, а сами звуки
-     в отзвук не посылаются. */
+     в отзвук не посылаются. (3.0) И в фоне со звуком: мир стоит, а отзвук
+     втрое дороже всего остального звука вместе. */
   applyLite: function () {
     if (!this.ctx || !this.conv) return;
-    var off = !!settings.lite;
+    var off = !!settings.lite || this.bgK < 1;
     if (off === this.convOff) return;
     this.convOff = off;
     try { if (off) this.conv.disconnect(); else this.conv.connect(this.wet); } catch (e) { /* */ }
@@ -235,6 +236,7 @@ var AE = {
   setBgDim: function (on) {
     this.bgK = on ? BG_DIM : 1;
     if (this.ctx && this.master) { try { this.master.gain.setTargetAtTime(0.95 * this.bgK, this.ctx.currentTime, 0.15); } catch (e) { /* */ } }
+    this.applyLite();
   },
   /* головоломка началась или кончилась (зовёт minigames.js) */
   setPuzzle: function (on) { on = on ? 1 : 0; if (this.pduck === on) return; this.pduck = on; this.applyVolumes(); },

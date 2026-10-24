@@ -33,7 +33,7 @@ var START_KIT = 2;
 function newState(seed) {
   var suit = LAB.makeArmor("suit", 1, 1, "a_start_suit");
   return {
-    v: 1, worldV: WORLD_V, seed: seed, diff: LAB.DIFF[S.difficulty] ? S.difficulty : 1, L: 1, F: 1, x: 0, y: 0, face: "N",
+    v: 1, worldV: WORLD_V, seed: seed, diff: LAB.DIFF[S.difficulty] ? S.difficulty : 1, tb: S.turnBased ? 1 : 0, L: 1, F: 1, x: 0, y: 0, face: "N",
     hp: 100, hpMax: 100, str: 10, agi: 10, mind: 10, cha: 10,
     en: 30, enMax: 30, lvl: 1, xp: 0, credits: 40,
     weapons: [LAB.makeWeapon("crowbar", 1, 0, 1, "w_start_crowbar"), LAB.makeWeapon("spark", 1, 0, 1, "w_start_spark")], wi: 1, drawn: false,
@@ -161,6 +161,7 @@ function enterFloor(L, F, how, silent) {
   CUR.seen = decodeSeen(fs.seen);
   if (LAB.medic) LAB.medic.enterFloor(fl); /* (2.6) лечебные припасы и батареи у капсулы — по режиму */
   if (LAB.combat) LAB.combat.loadFoes();
+  if (LAB.combat && LAB.combat.fixDrops) LAB.combat.fixDrops(); /* (3.0) добыча на обстановке — рядом, на пол */
   if (LAB.traps) LAB.traps.enterFloor();
   if (LAB.stash) LAB.stash.enterFloor();
   var spot = null, o;
@@ -359,6 +360,8 @@ function noteText(it, L, F) {
   if (it.note === "staff") return staffNote(it, h, L, F);
   if (it.note === "code") return LAB.codeNote(it.code, it.room, h);
   if (it.note === "safe") return LAB.safeNote(it.code, it.room, h);
+  if (it.note === "pcpin" && LAB.pinNote) return LAB.pinNote(it.code, it.room, h);
+  if (it.note === "formula" && LAB.chem) return LAB.chem.noteText(it, h); /* (3.0) лабораторный журнал с рецептурой */
   if (it.note === "secret") return LAB.secretNote(it.room, it.side, h);
   if (it.note === "depth" && LAB.depths) return LAB.depths.noteText(it, L, F);
   if (it.note === "agen" && LAB.agen) return LAB.agen.noteText(it); /* записки кабинетов: из частей, с людьми этажа (1.5) */
@@ -704,7 +707,7 @@ function bodyStatus() {
   if (G.st.trapHeld > 0) st.push("нога в ловушке");
   if (LAB.stash) st = st.concat(LAB.stash.status()); /* (2.5) клещ, метка улья */
   var hpw = G.hp >= G.hpMax * 0.8 ? "в порядке" : G.hp >= G.hpMax * 0.5 ? "ранены" : G.hp >= G.hpMax * 0.25 ? "тяжело ранены" : "при смерти";
-  say("Здоровье " + G.hp + " из " + G.hpMax + ": " + hpw + (G.st.shield ? ", щит " + G.st.shield : "") + ". Бодрость " + Math.round(b.wake) + ": " + bodyWord("wake") + ". Сытость " + Math.round(b.food) + ": " + bodyWord("food") + ". Токсины " + Math.round(b.tox) + ": " + bodyWord("tox") + ". Нейронагрузка " + Math.round(b.neuro) + ": " + bodyWord("neuro") + ". Облучение " + Math.round(b.rad) + ": " + bodyWord("rad") + ". Энергия имплантов " + G.en + " из " + G.enMax + "." + (G.armor ? " Броня: " + armorWord() + "." : "") + (st.length ? " Состояние: " + st.join(", ") + "." : ""));
+  say("Здоровье " + G.hp + " из " + G.hpMax + ": " + hpw + (G.st.shield ? ", щит " + G.st.shield : "") + ". Бодрость " + Math.round(b.wake) + ": " + bodyWord("wake") + ". Сытость " + Math.round(b.food) + ": " + bodyWord("food") + ". Токсины " + Math.round(b.tox) + ": " + bodyWord("tox") + ". Нейронагрузка " + Math.round(b.neuro) + ": " + bodyWord("neuro") + ". Облучение " + Math.round(b.rad) + ": " + bodyWord("rad") + "." + (LAB.chem && LAB.chem.mut() >= 1 ? " " + LAB.chem.mutLine() : "") + " Энергия имплантов " + G.en + " из " + G.enMax + "." + (G.armor ? " Броня: " + armorWord() + "." : "") + (st.length ? " Состояние: " + st.join(", ") + "." : ""));
 }
 game.bodyStatus = bodyStatus;
 function armorWord() { var a = G.armor; return a ? a.name + ", защита " + LAB.armorDef(a) : ""; }
@@ -813,10 +816,11 @@ function giveItem(it, quiet) {
         /* ссылка на текст — само описание записки (без места на полу): по нему текст собирается заново */
         var src = JSON.parse(JSON.stringify(it)); delete src.x; delete src.y; delete src.kind;
         var dcat = docCat(src, nt);
-        G.noteList.push({ id: nid, src: src, t: nt.t, a: nt.a || "", story: !!nt.story, L: G.L, F: G.F, code: it.note === "safe" ? it.code : undefined, pl: placeName(G.x, G.y), cat: dcat });
+        G.noteList.push({ id: nid, src: src, t: nt.t, a: nt.a || "", story: !!nt.story, L: G.L, F: G.F, code: it.note === "safe" || it.note === "pcpin" || it.note === "code" ? it.code : undefined, pl: placeName(G.x, G.y), cat: dcat });
         G.stats.notes++; gainXP(4);
         if (LAB.ach) LAB.ach.ev("note", 1);
         if (LAB.workshop) LAB.workshop.fromDoc(nid, dcat);
+        if (LAB.chem) LAB.chem.fromNote(it); /* (3.0) рецептура из лабораторного журнала */
         /* записок из кабинетов — тысячи: в архиве хранятся последние шестьсот, чтобы запись игры не разрасталась */
         if (it.note === "agen") {
           var agn = 0; for (var qi = G.noteList.length - 1; qi >= 0; qi--) if (G.noteList[qi].src && G.noteList[qi].src.note === "agen" && ++agn > 600) G.noteList.splice(qi, 1);
@@ -1522,11 +1526,18 @@ function doorMenu(d, dir) {
         else { A("play", "term_err"); say("Сигналы сбились. Блокировка держится."); if (LAB.oko) LAB.oko.report("door", d.x, d.y, "seen"); }
       }, { title: "Замок двери" });
     } });
-    if (lk && lk.type === "code") items.push({ label: "Набрать код", fn: function () { codeEntry(d); } });
+    if (lk && lk.type === "code" && why) {
+      var dh = codeHint(lk.code, "door"); /* (3.0) первым пунктом — есть ли код в документах */
+      items.unshift({ label: dh, info: true, keep: true, fn: function () { say(codeHint(lk.code, "door")); } });
+      items.push({ label: "Набрать код", fn: function () { codeEntry(d); } });
+      var dn = safeNoteFor(lk.code); if (dn) items.push({ label: "Перечитать записку с кодом", keep: true, fn: function () { say(noteFull(dn).x || dn.t, { read: true }); } });
+    } else if (lk && lk.type === "code") items.push({ label: "Набрать код", fn: function () { codeEntry(d); } });
     if (lk && lk.type === "riddle" && why) items.push({ label: "Выслушать загадку замка", fn: function () { riddleDoor(d); } });
     if (lk && lk.type === "circuit" && why) items.push({ label: "Погасить схему реле (головоломка)", fn: function () { circuitDoor(d); } });
     if (lk && lk.type === "logic" && why) items.push({ label: "Решить задачу замка: " + (LAB.puzzles ? LAB.puzzles.nameOf(lk.kind) : "головоломка"), fn: function () { logicDoor(d); } });
     if (lk && lk.type === "melody" && why) items.push({ label: G.melodies[melKey(d.id)] ? "Сыграть мелодию" : "Сыграть мелодию — сначала найдите её на радиоприёмнике", fn: function () { melodyDoor(d); } });
+    /* (3.0) термит прожигает замок под ключ, код, пропуск и блокировку охраны — громко */
+    if (lk && why && ["key", "card", "code", "lockdown"].indexOf(lk.type) >= 0 && LAB.chem && LAB.chem.thermiteOk()) items.push({ label: "Прожечь замок термитом. Громко: ОКО услышит", fn: function () { LAB.chem.burnDoor(d, function () { CUR.fs.doors[d.id] = 1; openDoor(d); }); } });
     /* отмычка под цвет помещения (1.6): под ключ, код, пропуск и блокировку охраны */
     if (lk && why && ["key", "card", "code", "lockdown"].indexOf(lk.type) >= 0) {
       var pk0 = pickFor(d), havePk = G.inv[pk0] || 0;
@@ -1716,6 +1727,7 @@ function objMenu(o) {
       items.push({ label: "Подняться на поверхность", fn: function () { UIx("ending", true); } });
       break;
     case "workbench": UIx("craft", o); return;
+    case "chemlab": if (LAB.chem) { LAB.chem.open(o); return; } break; /* (3.0) химический стол */
     case "vending": vendingMenu(o); return;
     case "medst": medMenu(o); return;
     case "medvend": if (LAB.medic) { LAB.medic.vendMenu(o); return; } break; /* (2.6) у капсулы: аптечки и энергобатареи */
@@ -2451,10 +2463,13 @@ function containerMenu(o) {
   if (st.open) { say(name + ": пусто."); return; }
   if (o.type === "safe") {
     /* Сейф открывается только кодом, который игрок набирает сам; код — в записке. */
+    /* (3.0) первым пунктом — есть ли код в документах; коротко */
+    items.push({ label: codeHint(o.code, "safe"), info: true, keep: true, fn: function () { say(codeHint(o.code, "safe")); } });
     items.push({ label: "Набрать код", fn: function () { safeCode(o); } });
     var sn = safeNoteFor(o.code);
-    if (sn) items.push({ label: "Перечитать записку с кодом: «" + sn.t + "»", keep: true, fn: function () { say(sn.x, { read: true }); } });
-    else items.push({ label: "Код неизвестен", keep: true, fn: function () { say("Код сейфа хозяин обычно записывает. Ищите записку на этом этаже: в ней помещение и четыре цифры."); } });
+    if (sn) items.push({ label: "Перечитать записку с кодом", keep: true, fn: function () { say(noteFull(sn).x || sn.t, { read: true }); } });
+    /* (3.0) термит прожигает и сейф: громко, а жар портит часть бумаг и кредитов */
+    if (LAB.chem && LAB.chem.thermiteOk()) items.push({ label: "Прожечь замок сейфа термитом. Громко, часть бумаг сгорит", fn: function () { LAB.chem.burnSafe(o, function () { openContainer(o); }); } });
   } else if (o.type === "locker" && o.locked && !st.forced) {
     items.push({ label: "Вскрыть шкафчик силой", fn: function () {
       var hasBar = G.weapons.some(function (w) { return w.base === "crowbar"; });
@@ -2483,6 +2498,16 @@ function safeCode(o) {
     if (LAB.combat) LAB.combat.noise(st.fails >= 3 ? 8 : 3);
   }, { title: "Сейф" });
 }
+/* (3.0) Подсказка у кодового замка — коротко: есть ли код в документах.
+   what: "door" — дверь (можно взломать), "safe" — сейф, "pc" — пароль компьютера (можно взломать). */
+function codeHint(code, what) {
+  var n = code ? safeNoteFor(code) : null, pass = what === "pc";
+  if (n) return (pass ? "Записка с паролем" : "Записка с кодом") + " — в ваших документах: «" + n.t + "». Сверьтесь с ней и " + (pass ? "введите пароль." : "наберите код.");
+  if (what === "door" && code && G.codes[code]) return "Код этой двери вы знаете: он в ваших документах. Сверьтесь и наберите код.";
+  return (pass ? "Пароля" : "Кода") + " у вас нет. Найдите записку с ним" + (what === "safe" ? " и приходите снова." : " — или взломайте.");
+}
+game.codeHint = codeHint;
+game.noteForCode = function (code) { return code ? safeNoteFor(code) : null; };
 /* Записка с кодом этого сейфа, если игрок её подобрал. */
 function safeNoteFor(code) {
   var sp = String(code).split("").join(" ");
@@ -3101,6 +3126,7 @@ function useItem(id) {
   if (LAB.repair && LAB.repair.isKit(id)) return LAB.repair.use(id); /* (2.0) походные ремкомплекты */
   if (d.kind === "implant" && LAB.implants) return LAB.implants.useChip(id); /* (2.0) чип импланта — вживить */
   if (d.kind === "trap" && LAB.traps) return LAB.traps.use(id);
+  if (d.chem && LAB.chem) return LAB.chem.use(id); /* (3.0) составы химии: смазки, капсулы, мази, культуры, приманка */
   if (d.kind === "throw") {
     if (d.fx && d.fx.gren && LAB.combat) return LAB.combat.throwGrenade(id);
     if (id === "emp") { if (LAB.combat) LAB.combat.throwEmp(); return true; }
@@ -3129,14 +3155,16 @@ function useItem(id) {
   var msg = [];
   /* несвежая еда — токсины */
   if (food && d.stale && Math.random() < d.stale) { msg.push("Несвежее: подташнивает."); bodyApply({ tox: 15 }, msg); }
-  var od = d.overdose && body().tox >= 70; /* передозировка: стимулятор не лечит, а бьёт по сердцу */
+  var od = d.overdose && body().tox >= 70 && !(LAB.chem && LAB.chem.noOverdose()); /* передозировка: стимулятор не лечит, а бьёт по сердцу; (3.0) фармакологу не грозит */
   var hv = d.cup ? Math.round(d.heal * (1 + (G.L - 1) * 0.15)) : d.heal; /* стакан из автомата лечит, как сам автомат: с глубиной больше */
-  if (d.heal && !od) { var before = G.hp; G.hp = Math.min(G.hpMax, G.hp + (/^medkit|^bandage/.test(id) && LAB.ach && LAB.ach.has("medic") ? Math.round(d.heal * 1.17) : hv)); if (G.hp > before || !food) msg.push("Здоровье плюс " + (G.hp - before) + ", теперь " + G.hp + " из " + G.hpMax + "."); }
+  if (hv && LAB.chem) hv = Math.round(hv * LAB.chem.healK(id, d)); /* (3.0) фармакология: лекарства в умелых руках лечат сильнее */
+  if (d.heal && !od) { var before = G.hp; G.hp = Math.min(G.hpMax, G.hp + (/^medkit|^bandage/.test(id) && LAB.ach && LAB.ach.has("medic") ? Math.round(hv * 1.17) : hv)); if (G.hp > before || !food) msg.push("Здоровье плюс " + (G.hp - before) + ", теперь " + G.hp + " из " + G.hpMax + "."); }
   if (d.en) { var e0 = G.en; G.en = Math.min(G.enMax, G.en + d.en); msg.push("Энергия имплантов " + G.en + (G.en > e0 ? "" : ", и так полная") + "."); }
   if (d.cure && G.st.poison) { G.st.poison = 0; msg.push("Отравление снято."); }
   if (LAB.stash) { var pc = LAB.stash.cure(id); if (pc) msg.push(pc); } /* (2.5) клещ из хранилища */
   if (d.unslow) { G.st.slow = 0; G.st.web = 0; }
   bodyApply(d, msg);
+  if (LAB.chem) LAB.chem.afterUse(id); /* (3.0) мутагенные составы, сыворотка из взвеси, фармаколог */
   if (food) eatSound(d.eat);
   else A("play", /^bandage|^coagulant$/.test(id) ? "bandage_tear" : /^herb_/.test(id) ? "eat_chew" : id === "sorbent" || id === "neuroblock" ? "pills_rattle" : id === "antidote" || id === "stim" || id === "energy_d" ? "inject" : "heal");
   say((food ? (sip ? "Вы выпили: " : "Вы съели: ") + d.n.charAt(0).toLowerCase() + d.n.slice(1) + ". " : d.n + ". ") + (d.x ? d.x + " " : "") + msg.join(" ") + " Осталось: " + (G.inv[id] || 0) + ".");
@@ -3159,7 +3187,7 @@ function useFx(id, d) {
   if (fx.shield) { G.st.shield = Math.max(G.st.shield, fx.shield); G.st.shieldT = 40; msg.push("Щит: " + G.st.shield + "."); }
   if (fx.haste) { G.st.haste = Math.max(G.st.haste, fx.haste); msg.push("Ускорение."); }
   if (fx.cloak) { G.st.cloak = Math.max(G.st.cloak, fx.cloak); msg.push("Маскировка."); }
-  if (fx.heal) { var b = G.hp; G.hp = Math.min(G.hpMax, G.hp + fx.heal); msg.push("Здоровье плюс " + (G.hp - b) + ", теперь " + G.hp + " из " + G.hpMax + "."); }
+  if (fx.heal) { var b = G.hp; G.hp = Math.min(G.hpMax, G.hp + Math.round(fx.heal * (LAB.chem ? LAB.chem.healK(id, d) : 1))); msg.push("Здоровье плюс " + (G.hp - b) + ", теперь " + G.hp + " из " + G.hpMax + "."); }
   if (fx.en) { G.en = Math.min(G.enMax, G.en + fx.en); msg.push("Энергия " + G.en + "."); }
   if (fx.cure && G.st.poison) { G.st.poison = 0; msg.push("Отравление снято."); }
   if (fx.unslow) { G.st.slow = 0; G.st.web = 0; }
@@ -3168,6 +3196,7 @@ function useFx(id, d) {
   if (fx.cure) bodyApply({ detox: 25 }, msg);
   bodyApply(fx, msg);
   G.inv[id]--;
+  if (LAB.chem) LAB.chem.afterUse(id); /* (3.0) мутация от составов на мутагене, антимутагенное действие */
   A("play", fx.heal ? "heal" : fx.map ? "scan" : "inject");
   say(d.n + ". " + msg.join(" ") + " Осталось: " + (G.inv[id] || 0) + ".");
   UIx("refresh");
@@ -3363,7 +3392,7 @@ var SLOT_KEYS = { 1: "lab_slot1", 2: "lab_slot2", 3: "lab_slot3", auto: "lab_aut
 function snapshot() {
   syncFloorState();
   G.stats.ms += Date.now() - (game.t0 || Date.now()); game.t0 = Date.now();
-  return JSON.stringify({ meta: { ver: LAB.VERSION, L: G.L, F: G.F, diff: G.diff, lvl: G.lvl, hp: G.hp, hpMax: G.hpMax, ms: G.stats.ms, date: Date.now(), samples: Object.keys(G.samples).length }, g: G });
+  return JSON.stringify({ meta: { ver: LAB.VERSION, L: G.L, F: G.F, diff: G.diff, tb: G.tb ? 1 : 0, lvl: G.lvl, hp: G.hp, hpMax: G.hpMax, ms: G.stats.ms, date: Date.now(), samples: Object.keys(G.samples).length }, g: G });
 }
 function saveSlot(n) {
   if (!game.entered || game.loading) return false;
@@ -3410,16 +3439,18 @@ function slotText(n, bak) {
   var mins = Math.round((m.ms || 0) / 60000), h = Math.floor(mins / 60), mm = mins % 60;
   var dt = new Date(m.date);
   var dd = dt.getDate() + "." + (dt.getMonth() + 1 < 10 ? "0" : "") + (dt.getMonth() + 1) + ", " + dt.getHours() + ":" + (dt.getMinutes() < 10 ? "0" : "") + dt.getMinutes();
-  var md = LAB.DIFF[m.diff] ? ", " + LAB.DIFF[m.diff].n.toLowerCase() + " режим" : "";
+  var md = (LAB.DIFF[m.diff] ? ", " + LAB.DIFF[m.diff].n.toLowerCase() + " режим" : "") + (m.tb ? ", пошаговый бой" : "");
   return name + ": уровень " + m.L + ", этаж " + m.F + md + ", герой " + m.lvl + "-го уровня, здоровье " + m.hp + ", в игре " + (h ? h + " ч " : "") + mm + " мин, записано " + dd;
 }
 game.slotText = slotText;
 /* (2.6) Режим сложности — свой у каждой игры: его выбирают в начале новой
    игры (ui.js, diffMenu), и он хранится в ней (G.diff). Во время игры его не
-   сменить; загрузка записи возвращает режим, в котором её сохранили. */
+   сменить; загрузка записи возвращает режим, в котором её сохранили.
+   (3.0) Так же — пошаговый бой (G.tb): выбирают вместе с режимом. */
 function applyDiff() {
   if (!LAB.DIFF[G.diff]) G.diff = LAB.DIFF[S.difficulty] ? S.difficulty : 1;
-  if (S.difficulty !== G.diff) { S.difficulty = G.diff; LAB.saveSettings(); }
+  G.tb = G.tb ? 1 : 0;
+  if (S.difficulty !== G.diff || (S.turnBased ? 1 : 0) !== G.tb) { S.difficulty = G.diff; S.turnBased = G.tb; LAB.saveSettings(); }
 }
 function loadSlot(n, fromBak) {
   var key = SLOT_KEYS[n] + (fromBak ? "_bak" : "");
@@ -3428,7 +3459,7 @@ function loadSlot(n, fromBak) {
   var d = validSave(raw);
   if (!d) { LAB.UI.error(); say("Запись повреждена или не подходит этой версии игры." + (!fromBak && LAB.store.get(SLOT_KEYS[n] + "_bak") ? " Есть резервная копия: «Загрузить игру», пункт «Резервная копия»." : "")); return false; }
   /* загрузка с откатом: если запись не поднимется, прежняя игра остаётся как была */
-  var prevG = G, prevEntered = game.entered, prevCUR = { fl: CUR.fl, fs: CUR.fs, key: CUR.key, seen: CUR.seen }, prevDiff = S.difficulty;
+  var prevG = G, prevEntered = game.entered, prevCUR = { fl: CUR.fl, fs: CUR.fs, key: CUR.key, seen: CUR.seen }, prevDiff = S.difficulty, prevTB = S.turnBased;
   game.loading = true;
   try {
     G = migrate(d.g);
@@ -3448,7 +3479,7 @@ function loadSlot(n, fromBak) {
     console.warn(e);
     game.loading = false;
     G = prevG; game.entered = prevEntered; CUR.fl = prevCUR.fl; CUR.fs = prevCUR.fs; CUR.key = prevCUR.key; CUR.seen = prevCUR.seen;
-    if (S.difficulty !== prevDiff) { S.difficulty = prevDiff; LAB.saveSettings(); } /* режим прежней игры — тоже прежний */
+    if (S.difficulty !== prevDiff || S.turnBased !== prevTB) { S.difficulty = prevDiff; S.turnBased = prevTB; LAB.saveSettings(); } /* режим прежней игры — тоже прежний */
     LAB.clearFloorCache();
     if (prevEntered && CUR.fl && LAB.combat) { try { LAB.combat.loadFoes(); } catch (e2) { /* */ } }
     if (!prevEntered) UIx("mainMenu");
@@ -3567,8 +3598,9 @@ function characterText() {
   if (G.st.poison) st.push("отравление"); if (G.st.bleed) st.push("кровотечение"); if (G.st.slow) st.push("замедление"); if (G.st.deaf) st.push("звон в ушах"); if (G.st.antitox) st.push("фильтр противогаза"); if (G.st.shield) st.push("силовой щит " + G.st.shield); if (G.st.haste) st.push("ускорение"); if (G.st.cloak) st.push("маскировка"); if (LAB.stash) st = st.concat(LAB.stash.status());
   if (st.length) lines.push("Состояние: " + st.join(", ") + ".");
   lines.push("Энергия имплантов " + G.en + " из " + G.enMax + ". Уровень героя " + G.lvl + ", опыт " + G.xp + " из " + LAB.xpNeed(G.lvl) + ". Сила " + G.str + ", ловкость " + G.agi + ", интеллект " + G.mind + ", харизма " + G.cha + ". Кредиты " + G.credits + ".");
+  if (LAB.chem) lines.push(LAB.chem.line()); /* (3.0) ступени химии */
   lines.push("Комплекс: уровень " + G.L + " «" + LAB.LEVELS[G.L].name + "», этаж " + G.F + ". Пропуск: " + (G.tier ? LAB.TIERS[G.tier].n.toLowerCase() : "нет") + ". Лифт этажей: " + (G.elev[G.L] ? "есть пропуск" : "нет пропуска") + ". " + (!LAB.isReactorLevel(G.L) ? "Шлюзовая ключ-карта уровня " + G.L + ": " + (G.gate[G.L] ? "есть" : "нет") : "Ключ доступа к «Истоку»: " + (hasCore(G.L) ? "есть" : "нет")) + ".");
-  lines.push("Образцов " + Object.keys(G.samples).length + ", тайников " + G.stats.secrets + ", записок " + G.stats.notes + ", побеждено врагов " + G.stats.kills + ". Режим сложности: " + LAB.dk().n.toLowerCase() + ".");
+  lines.push("Образцов " + Object.keys(G.samples).length + ", тайников " + G.stats.secrets + ", записок " + G.stats.notes + ", побеждено врагов " + G.stats.kills + ". Режим сложности: " + LAB.dk().n.toLowerCase() + (S.turnBased ? ", бой пошаговый" : "") + ".");
   if (G.faction) lines.push("Фракция: " + LAB.FACTIONS[G.faction].n + ".");
   return lines;
 }

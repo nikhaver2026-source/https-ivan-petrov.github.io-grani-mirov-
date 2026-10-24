@@ -26,7 +26,6 @@ function A(name) { var a = LAB.atmos; if (a && typeof a[name] === "function") { 
 function say(t, o) { LAB.say(t, o); }
 function sayq(t) { LAB.say(t, { interrupt: false }); }
 function low(s) { s = String(s || ""); return s.charAt(0).toLowerCase() + s.slice(1); }
-function pl(n, a, b, c) { return gm().plural(n, a, b, c); }
 
 /* Что умеет каждый набор: uses — ремонтов в наборе, w и a — прибавка
    оружию и броне, cap — предел, cool — остужает ствол, bench — чинит

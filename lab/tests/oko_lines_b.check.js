@@ -107,7 +107,7 @@ const BIG = ["alarm", "suspect", "lost", "door", "check", "taunt"];
 const NEW = ["kill_mech", "kill_bio", "kill_many", "hurt", "low_hp", "heal", "eat", "drink", "rest", "capsule", "bind", "revive",
   "note", "mail", "safe", "pick", "hack_ok", "puzzle_ok", "puzzle_fail", "music", "craft", "buy", "sell", "trap_set", "trap_kill",
   "oko_trap", "oko_trap_off", "mines_order", "grenade", "quiet", "idle", "secret", "zone", "vault", "floor", "weapon", "implant",
-  "survivor", "turret_kill", "patrol_slip"];
+  "survivor", "turret_kill", "patrol_slip", "mutate"]; /* (3.0) mutate — носитель мутирует */
 function range(b, k) {
   if (NEW.indexOf(k) >= 0) return [5, 6];
   if (BIG.indexOf(k) >= 0) return [8, 10];

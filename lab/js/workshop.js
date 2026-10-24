@@ -436,9 +436,9 @@ function beforeShot(w, now) {
 function afterShot(w, burst, now) {
   if (!w) return;
   now = now || Date.now();
-  if (heats(w)) {
+  if (heats(w) && !(LAB.chem && LAB.chem.chilled(w))) { /* (3.0) охлаждающий гель: не греется */
     cooled(w, now);
-    w.heat = (w.heat || 0) + (HEAVY[wcls(w)] ? 1.4 : 1) * (burst ? 0.7 : 1) * (1 - (LAB.implants ? Math.min(0.6, LAB.implants.stat("cool")) : 0));
+    w.heat = (w.heat || 0) + (HEAVY[wcls(w)] ? 1.4 : 1) * (burst ? 0.7 : 1) * (1 - (LAB.implants ? Math.min(0.6, LAB.implants.stat("cool")) : 0)) * (LAB.chem ? LAB.chem.heatK(w) : 1); /* (3.0) энергохимик */
     w.heatT = now;
     var mx = hmax(w);
     if (w.heat >= mx) {
@@ -976,7 +976,7 @@ function throwDevice(id) {
 
 /* ════════ ДОБЫЧА С МАШИН ════════ */
 function drops(f, list, r, dk) {
-  if (!f || f.kind !== "mech" || f.spawned) return;
+  if (!f || f.kind !== "mech" || (f.spawned && !f.oko)) return; /* (3.0) присланные ОКО — как обычные */
   var L = G().L, beh = behOf(f);
   var avail = ["relay", "cell", "servo", "optic"].filter(function (k) { return (LAB.PART_DEPTH[k] || 1) <= L; });
   if (beh.indexOf("camera") >= 0) { if (r() < 0.55 * dk && L >= 2) list.push({ kind: "item", item: "optic", n: 1 }); return; }

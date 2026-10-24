@@ -388,6 +388,13 @@ function reserve(fl, s) {
   rm.doors.push(door.id);
   (s.c.annex = s.c.annex || []).push(door.id);
 }
+/* (3.0, просьба автора) Записка с кодом — в дальней половине помещений этажа, считая от
+   кабинета: пусть игрок обходит комплекс. Случайный выбор один, как раньше. */
+function farMain(r, fl, mains, rm) {
+  var d = function (i) { var m = fl.rooms[i]; return Math.abs(m.cx - rm.cx) + Math.abs(m.cy - rm.cy); };
+  var c = mains.slice().sort(function (a, b) { return d(b) - d(a) || a - b; });
+  return r.pick(c.slice(0, Math.max(1, Math.ceil(c.length / 2))));
+}
 /* Замок режимного помещения: код (в записке или письме на этаже), ключ
    (у кого-то на этаже) или пропуск на ступень старше вашего — его не
    найти, но замок взламывают, а декодер открывает. */
@@ -397,7 +404,7 @@ function lockFor(ctx, r, s, rm) {
   var mains = fl.rooms.filter(function (m, i) { return m && i < 12 && i !== fl.secret && i !== fl.U; }).map(function (m) { return m.id; });
   if (!mains.length) mains = [fl.U];
   if (q < 0.5) {
-    var code = String(r.int(1000, 9999)), sp = r.pick(mains), cw = r.next();
+    var code = String(r.int(1000, 9999)), sp = farMain(r, fl, mains, rm), cw = r.next();
     rm.codeAt = sp;
     if (cw < 0.35) ctx.addObj("pc", sp, { own: r.int(0, 99999), codeFor: "", codeRoom: rm.name, code: code }) || ctx.addItem({ kind: "note", note: "code", code: code, room: rm.name }, sp);
     else ctx.addItem({ kind: "note", note: "code", code: code, room: rm.name }, sp);
@@ -457,7 +464,7 @@ function furnish(ctx, r, s, rm, def, v, gen) {
     if (LAB.CONTAINERS.indexOf(ot) >= 0) o.loot = special || ot === "safe" || r.chance(0.9) ? annexLoot(r, L, F, lootTag, ot, !special) : [];
     if (ot === "safe") {
       var mains = fl.rooms.filter(function (m, i) { return m && i < 12 && i !== fl.secret; }).map(function (m) { return m.id; });
-      ctx.addItem({ kind: "note", note: "safe", code: o.code, room: rm.name }, r.pick(mains));
+      ctx.addItem({ kind: "note", note: "safe", code: o.code, room: rm.name }, farMain(r, fl, mains, rm));
     }
     if (ot === "comp" && extra.kind === "main") o.loot = annexLoot(r, L, F, "classified", "desk");
   }

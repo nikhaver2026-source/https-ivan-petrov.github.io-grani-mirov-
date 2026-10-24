@@ -32,7 +32,6 @@ function era() { return LAB.annexEra(G().L); }
 function cap(s) { s = String(s || ""); return s.charAt(0).toUpperCase() + s.slice(1); }
 function low(s) { s = String(s || ""); return s.charAt(0).toLowerCase() + s.slice(1); }
 function snd(id, fb) { if (LAB.Bank && LAB.Bank.has && LAB.Bank.has(id)) A("play", id); else if (fb) A("play", fb); }
-function minW(n) { return n + " " + pl(n, "минута", "минуты", "минут"); }
 function pct(x) { return Math.round(x * 100); }
 function ev(name, n) { if (LAB.ach) LAB.ach.ev(name, n == null ? 1 : n); }
 function spend(min) { if (min > 0) gm().advanceTime(min); }
@@ -83,7 +82,8 @@ function minutes(min) {
   var c = carried(); if (c) addRad(c * min);
 }
 /* Вытяжка, включённая на пару часов, выгоняет газ из помещения (fixtures.js). */
-function vented(rm) { var v = CUR().fs.vented; return !!(v && v[rm.id] > (G().day || 0) * 1440 + (G().min || 0)); }
+/* Проветрено ли помещение: вытяжка выгнала газ (и туман мутагена — chem.js) до этой минуты игры. */
+function vented(rm) { var v = CUR().fs && CUR().fs.vented; return !!(rm && v && v[rm.id] > (G().day || 0) * 1440 + (G().min || 0)); }
 var tickN = 0;
 function tick() {
   if (!G() || !CUR() || !CUR().fl || G().dead) return;
@@ -316,7 +316,7 @@ function deconMenu(o) {
       var was = b.rad || 0;
       spend(5);
       b.rad = Math.max(0, (b.rad || 0) - 15); b.tox = Math.max(0, b.tox - 5); gm().bodyWarn();
-      say("Форсунки шипят, вода с раствором смывает пыль с кожи и одежды, решётка слива булькает." + (was > 0.5 ? " Облучение было " + Math.round(was) + ", стало " + Math.round(b.rad) + "." : " Облучения на вас и не было.") + " Душ смывает только то, что осело снаружи: то, что уже внутри, выводят антирадин и раствор «Чистота».");
+      say("Форсунки шипят, вода с раствором смывает пыль с кожи и одежды, решётка слива булькает." + (was > 0.5 ? " Облучение было " + Math.round(was) + ", стало " + Math.round(b.rad) + "." : " Облучения на вас и не было.") + (LAB.chem ? LAB.chem.decon() : "") + " Душ смывает только то, что осело снаружи: то, что уже внутри, выводят антирадин и раствор «Чистота», а мутаген — антимутаген.");
       ev("decon", 1);
     } },
     { label: "Осмотреть", fn: function () { say(LAB.OBJ.decon.desc); } }
@@ -402,6 +402,9 @@ function compLock(o) {
       }, { title: compName(o) });
     } });
   }
+  /* (3.0) первым пунктом — коротко: пароля нет, что остаётся */
+  var hint = d.rank >= 3 ? "Пароля у вас нет. Защиту проходят тремя задачами подряд." : items.length > 1 ? "Пароля у вас нет. Поищите стикер или взломайте вход." : "Пароля у вас нет. Взломайте вход.";
+  items.unshift({ label: hint, info: true, keep: true, fn: function () { say(hint); } });
   items.push({ label: "Отойти", fn: function () {} });
   UIx("menu", compName(o) + ": вход по паролю", items);
 }
@@ -428,7 +431,7 @@ var COMP_ITEMS = {
   },
   dosimetry: function (o, s) {
     return [
-      { label: "Карта фона этажа", fn: function () { spend(1); var z = zonesList(); CUR().fs.zonesKnown = 1; A("play", "scan_soft"); say(z.length ? "Опасные зоны этажа: " + z.map(function (q) { return "«" + q.name + "» " + gm().relDir(q.cx, q.cy) + ": " + (q.rad ? "фон " + q.rad + " из пяти, " + RAD_N[q.rad] : "") + (q.rad && q.gas ? ", " : "") + (q.gas ? "газ" : ""); }).join("; ") + "." : "Фон по всему этажу в норме."); ev("radmap", 1); } },
+      { label: "Карта фона этажа", fn: function () { spend(1); var z = zonesList(); CUR().fs.zonesKnown = 1; A("play", "scan_soft"); say(z.length ? "Опасные зоны этажа: " + z.map(function (q) { return "«" + q.name + "» " + gm().relDir(q.cx, q.cy) + ": " + (q.rad ? "фон " + q.rad + " из пяти, " + RAD_N[q.rad] : "") + (q.rad && q.gas ? ", " : "") + (q.gas ? "газ" : "") + ((q.rad || q.gas) && q.fog ? ", " : "") + (q.fog ? "мутагенный туман" : ""); }).join("; ") + "." : "Фон по всему этажу в норме."); ev("radmap", 1); } },
       { label: "Ваш дозиметрический контроль", fn: function () { var b = G().body || {}; say("Накопленное облучение — " + Math.round(b.rad || 0) + " из ста. " + advice(b)); } },
       { label: "Справка о защите", fn: function () { say("Свинцовый фартук гасит треть излучения, комбинезон «Свинец» — шестьдесят процентов, изолирующий костюм «Барьер» — половину и защищает от газа, скафандр реакторщика — восемьдесят пять. Йодид калия, принятый заранее, вдвое ослабляет облучение на три минуты. Выводят облучение антирадин, раствор «Чистота», наноаптечка, дезактивационный душ и сон в капсуле. В горячие камеры санпропускник пускает с защитой не меньше половины."); } }
     ];
@@ -532,7 +535,7 @@ function protBlueprint() {
 }
 function zonesList() {
   var fl = CUR().fl;
-  return fl.rooms.filter(function (r) { return r && (r.rad || r.gas) && !r.hidden; });
+  return fl.rooms.filter(function (r) { return r && (r.rad || r.gas || r.fog) && !r.hidden; }); /* (3.0) и мутагенный туман */
 }
 function advice(b) {
   var t = [];
@@ -719,7 +722,7 @@ function corridorNote(cor) {
 
 LAB.zones = {
   objMenu: objMenu, minutes: minutes, tick: tick, hazardBlock: hazardBlock, useItem: useItem, corridorNote: corridorNote,
-  roomHere: roomHere, protRad: protRad, geiger: geiger, zonesList: zonesList, compName: compName,
+  roomHere: roomHere, protRad: protRad, geiger: geiger, zonesList: zonesList, compName: compName, vented: vented,
   _personnelFile: personnelFile, _reset: function () { zoneKey = ""; }
 };
 })();

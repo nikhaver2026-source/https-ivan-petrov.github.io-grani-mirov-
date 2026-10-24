@@ -323,7 +323,10 @@ function run(o, def, kind, p, label, withId) {
     }
     case "vent": {
       spend(2); snd("fan_on", "power_up");
-      if (rm && rm.gas) { var fs = CUR().fs; fs.vented = fs.vented || {}; fs.vented[rm.id] = nowMin() + 120; say("Вытяжка загудела, сквозняк потянул воздух в решётку: газ уходит. Часа два здесь можно дышать."); ev("vent", 1); }
+      /* (3.0) вытяжка выгоняет и туман мутагена: он тяжёлый и стекает снова — тем скорее, чем гуще; вентиль на трубе тумана не держит */
+      var fogV = rm && rm.fog && o.fx !== "valves";
+      if (rm && (rm.gas || fogV)) { var fs = CUR().fs; fs.vented = fs.vented || {}; fs.vented[rm.id] = nowMin() + (fogV ? Math.round(120 / rm.fog) : 120); say(rm.gas ? "Вытяжка загудела, сквозняк потянул воздух в решётку: газ уходит. Часа два здесь можно дышать." + (fogV ? " Туман мутагена тянется следом." : "") : "Вытяжка загудела: сладковатый туман мутагена тянется в решётку. Он тяжелее воздуха и стечёт сюда снова — " + (rm.fog >= 3 ? "минут через сорок." : rm.fog >= 2 ? "примерно через час." : "часа через два.")); ev("vent", 1); }
+      else if (rm && rm.fog) say("Вентиль перекрыт, но туман мутагена идёт не из трубы, а из вентиляции. Его выгоняет только вытяжка.");
       else say("Вентилятор загудел, воздух посвежел. Газа здесь нет, но дышать стало легче.");
       noise(2);
       return;
@@ -422,7 +425,7 @@ function run(o, def, kind, p, label, withId) {
     }
     case "hoop": {
       spend(1);
-      var sh = s.hoop = (s.hoop || 0) + 1, ok2 = r.chance(Math.min(0.75, 0.3 + (G().agi || 10) * 0.012));
+      var ok2 = r.chance(Math.min(0.75, 0.3 + (G().agi || 10) * 0.012));
       snd(ok2 ? "ball_net" : "ball_bounce", "bump");
       s.streak = ok2 ? (s.streak || 0) + 1 : 0;
       say(ok2 ? "Мяч шуршит сеткой: попали!" + (s.streak >= 3 ? " " + s.streak + " подряд!" : "") : "Мяч звонко отскакивает от кольца.");
