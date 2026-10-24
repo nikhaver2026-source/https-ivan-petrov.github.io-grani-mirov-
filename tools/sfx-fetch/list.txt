@@ -915,3 +915,20 @@
 # (заход 8 скачан) lab_fsM https://cdn.freesound.org/previews/189/189779_1038806-hq.ogg
 # (заход 8 скачан) lab_fsM https://cdn.freesound.org/previews/826/826213_13332713-hq.ogg
 # (заход 8 скачан) lab_fsM https://cdn.freesound.org/previews/512/512215_10756146-hq.ogg
+# «Подземная лаборатория», заход 9 (3.0): чайник — кипение электрического чайника со
+# щелчками включения и выключения, налив кипятка в кружку, ложка в кружке, набор воды
+# из крана, разорванный пакетик сахара (Freesound, только CC0).
+lab_fsN https://cdn.freesound.org/previews/212/212179_140737-hq.ogg
+lab_fsN https://cdn.freesound.org/previews/126/126039_2258946-hq.ogg
+lab_fsN https://cdn.freesound.org/previews/256/256154_2437010-hq.ogg
+lab_fsN https://cdn.freesound.org/previews/239/239005_1149179-hq.ogg
+lab_fsN https://cdn.freesound.org/previews/740/740116_14631530-hq.ogg
+lab_fsN https://cdn.freesound.org/previews/788/788304_12262933-hq.ogg
+lab_fsN https://cdn.freesound.org/previews/459/459462_7872308-hq.ogg
+lab_fsN https://cdn.freesound.org/previews/181/181716_3153523-hq.ogg
+lab_fsN https://cdn.freesound.org/previews/239/239006_1149179-hq.ogg
+lab_fsN https://cdn.freesound.org/previews/455/455009_9257855-hq.ogg
+lab_fsN https://cdn.freesound.org/previews/433/433539_1030167-hq.ogg
+lab_fsN https://cdn.freesound.org/previews/469/469121_4996003-hq.ogg
+lab_fsN https://cdn.freesound.org/previews/503/503559_1287465-hq.ogg
+lab_fsN https://cdn.freesound.org/previews/513/513901_1887294-hq.ogg
