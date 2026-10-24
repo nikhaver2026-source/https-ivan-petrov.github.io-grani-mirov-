@@ -4706,6 +4706,138 @@ LAB.ui.closeAll();
     if (!rb.doorNone) ok(rb.doorItem && rb.doorBlast && rb.doorOpen && rb.doorLoot >= 1, "завал в проходе сносит и подрывной заряд — с находками на месте завала");
   }
 
+  console.log("Альфа 3.0: кухня — в холодильниках то, что держат в холоде; чайник: вскипятить, заварить, сахар, молоко, запасы сотрудников, вода, лапша");
+  const kt = await page.evaluate(async () => {
+    const g = LAB.game, C = LAB.combat, K = LAB.kitchen, S = LAB.settings, out = {};
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const label = i => typeof i.label === "function" ? i.label() : i.label;
+    let G = g.G;
+    C.stop(); LAB.ui.closeAll(); K._reset();
+    const tb0 = S.turnBased;
+    try {
+      /* холодильники первых уровней этого зерна: только еда и напитки, в лабораториях — ещё реактивы и ткани */
+      const OK = new Set(); Object.values(K.COLD).forEach(t => t.forEach(e => { if (e[0][0] !== "@") OK.add(e[0]); }));
+      const good = it => it.kind === "note" || (it.kind === "item" && (OK.has(it.item) || (LAB.ITEMS[it.item] && LAB.ITEMS[it.item].cat === "med") || /^c_(blood|gland|venom|chitin|spores|enzyme|stab|activ)/.test(it.item)));
+      let fr = 0, bad = [], ket0 = null, fr0 = null, cold0 = null;
+      for (let L = 1; L <= 4; L++) for (let F = 1; F <= 20; F++) {
+        const fl = LAB.getFloor(G.seed, L, F);
+        fl.objs.forEach(o => {
+          if (o.type === "fx" && o.fx === "kettle" && !ket0) ket0 = [L, F, o.id];
+          if (o.type === "fx" && o.fx === "coldroom" && !cold0) cold0 = [L, F, o.id];
+          if (o.type !== "fridge") return;
+          fr++;
+          if (!fr0 && o.loot && o.loot.length) fr0 = [L, F, o.id];
+          (o.loot || []).forEach(it => { if (!good(it)) bad.push(it.kind === "item" ? it.item : it.kind); });
+        });
+      }
+      out.fridges = fr; out.bad = bad.slice(0, 6).join(",");
+      out.items = !!(LAB.ITEMS.milk && LAB.ITEMS.milk.cold && !LAB.srcOk(LAB.ITEMS.milk, "buy") && LAB.ITEMS.teabag.kit && LAB.ITEMS.sugar.kit);
+      out.snd = ["kettle_boil", "kettle_pour", "kettle_stir", "kettle_fill"].every(k => LAB.SND && LAB.SND[k]);
+      const go = (L, F, id) => {
+        g.enterFloor(L, F, "down", true); C.stop(); G = g.G; C.foes().forEach(f => { f.dead = true; });
+        const o = g.CUR.fl.objs.find(q => q.id === id);
+        const c = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]].map(d => [o.x + d[0], o.y + d[1]]).find(q => g.passable(q[0], q[1]));
+        G.x = c[0]; G.y = c[1]; G.dead = false;
+        return o;
+      };
+      if (ket0) {
+        const o = go(ket0[0], ket0[1], ket0[2]), s = K.state(o);
+        s.kw = 3; s.tea = 2; s.cof = 1; s.sug = 2; s.kt = null; s.cup = null; s.drankAt = null;
+        ["teabag", "instcoffee", "sugar", "milk", "lemon", "noodles", "water"].forEach(k => { delete G.inv[k]; });
+        g.objMenu(o); let w = LAB.ui.top();
+        out.title = w ? w.title : ""; out.menu = w ? w.items.map(label) : [];
+        LAB.ui.closeAll(); SPOKEN.length = 0;
+        /* вскипятить: запись кипения, через десять секунд щёлкает автомат — окно открывается снова */
+        out.boil = K.boil(o) && K._boiling(o);
+        await wait(K.BOIL_MS + 400);
+        w = LAB.ui.top(); out.boiled = w ? w.title : ""; out.hot = !K._boiling(o) && w && w.items.some(i => label(i) === "Заварить чай");
+        LAB.ui.closeAll();
+        /* заварить чай, сахар и молоко в кружку — выпить */
+        G.inv.milk = 1; G.body.wake = 40;
+        out.brew = K.brew(o, "tea"); out.leftTea = s.tea; out.kw = s.kw;
+        await wait(2100);
+        w = LAB.ui.top(); out.cup = w ? w.title + ": " + w.items.map(label).join(" / ") : "";
+        if (w) { w.i = w.items.findIndex(i => /^Положить сахар/.test(label(i))); LAB.ui.activate(); }
+        w = LAB.ui.top(); if (w) { w.i = w.items.findIndex(i => /^Долить молока/.test(label(i))); LAB.ui.activate(); }
+        w = LAB.ui.top(); out.cup2 = w ? w.items.map(label).join(" / ") : "";
+        SPOKEN.length = 0;
+        if (w) { w.i = 0; LAB.ui.activate(); }
+        out.wake = Math.round(G.body.wake); out.sug = s.sug; out.milk = G.inv.milk || 0;
+        out.said = SPOKEN.join(" | ");
+        /* пьют не чаще раза в двадцать минут */
+        out.gap = K.brew(o, "water") && !K.drink(o) && !!s.cup;
+        s.cup = null; s.drankAt = null;
+        /* запасы сотрудников — с собой; пакетик из рюкзака заваривается у горячего чайника */
+        g.objMenu(o); w = LAB.ui.top(); w.i = w.items.findIndex(i => /^Забрать с собой/.test(label(i))); LAB.ui.activate();
+        out.taken = [G.inv.teabag || 0, G.inv.instcoffee || 0, G.inv.sugar || 0, s.tea, s.cof, s.sug].join(",");
+        LAB.ui.closeAll();
+        s.kw = 2; const bags = G.inv.teabag || 0;
+        out.useBag = g.useItem("teabag") && (G.inv.teabag || 0) === bags - 1 && s.cup && s.cup.b === "tea";
+        LAB.ui.closeAll(); s.cup = null;
+        /* холодная вода из бутылки остужает кипяток */
+        s.kw = 1; G.inv.water = 1;
+        g.objMenu(o); w = LAB.ui.top();
+        const wi = w.items.findIndex(i => /воду из бутылки|из-под крана/.test(label(i)));
+        if (wi >= 0) { w.i = wi; LAB.ui.activate(); }
+        out.fill = wi >= 0 && s.kw >= 3 && !(s.kt != null && G.min + G.day * 1440 < s.kt);
+        LAB.ui.closeAll();
+        /* лапша кипятком — сытнее, чем всухомятку */
+        K._boilNow(o); s.drankAt = null; G.inv.noodles = 1; G.body.food = 30;
+        g.objMenu(o); w = LAB.ui.top();
+        const ni = w.items.findIndex(i => /лапшу/.test(label(i)));
+        if (ni >= 0) { w.i = ni; LAB.ui.activate(); }
+        out.noodles = Math.round(G.body.food) - 30;
+        LAB.ui.closeAll();
+        /* пошаговый бой: включить чайник — ход */
+        S.turnBased = 1; s.kt = null; s.kw = 2; K._reset();
+        const t0 = C.tickN(); K.boil(o); out.tbTurns = C.tickN() - t0; K._reset(); S.turnBased = tb0;
+        LAB.ui.closeAll();
+        out.examine = LAB.fixtures.examine(o);
+      }
+      /* холодильник: открыть — только то, что держат в холоде */
+      if (fr0) {
+        const o = go(fr0[0], fr0[1], fr0[2]);
+        g.CUR.fs.ctrap = g.CUR.fs.ctrap || {}; g.CUR.fs.ctrap[o.id] = {}; /* без ловушки в хранилище — проверяется содержимое */
+        const inv0 = Object.assign({}, G.inv); SPOKEN.length = 0;
+        g.objMenu(o); const w = LAB.ui.top(); out.fridgeMenu = w ? w.items.map(label).join(" / ") : "";
+        if (w) { w.i = 0; LAB.ui.activate(); }
+        const got = Object.keys(G.inv).filter(k => (G.inv[k] || 0) > (inv0[k] || 0));
+        out.fridgeGot = got.join(","); out.fridgeOk = got.length > 0 && got.every(k => good({ kind: "item", item: k }));
+        LAB.ui.closeAll();
+      }
+      /* холодильная камера: «поискать съестное» — только еда */
+      if (cold0) {
+        const o = go(cold0[0], cold0[1], cold0[2]);
+        g.CUR.fs.ctrap = g.CUR.fs.ctrap || {}; g.CUR.fs.ctrap[o.id] = {};
+        const inv0 = Object.assign({}, G.inv);
+        g.objMenu(o); const w = LAB.ui.top(); const si = w ? w.items.findIndex(i => /съестное/.test(label(i))) : -1;
+        if (si >= 0) { w.i = si; LAB.ui.activate(); }
+        const got = Object.keys(G.inv).filter(k => (G.inv[k] || 0) > (inv0[k] || 0));
+        out.coldGot = got.join(","); out.coldOk = got.every(k => LAB.ITEMS[k] && LAB.ITEMS[k].cat === "food");
+        LAB.ui.closeAll();
+      } else out.coldNone = true;
+    } catch (e) { out.err = String(e && e.stack || e).slice(0, 400); }
+    finally { S.turnBased = tb0; K._reset(); LAB.ui.closeAll(); }
+    return out;
+  });
+  ok(!kt.err, "кухня: проверка без ошибок" + (kt.err ? " (" + kt.err + ")" : ""));
+  ok(kt.fridges > 0 && !kt.bad, "в холодильниках первых уровней — только еда, напитки, а в лабораториях реактивы и ткани: ни ценностей, ни кредитов, ни деталей (" + kt.fridges + (kt.bad ? "; не к месту: " + kt.bad : "") + ")");
+  ok(kt.items && kt.snd, "новые вещи кухни: молоко — только в холодильниках и не на прилавках, чай, кофе и сахар — только у чайников; записи кипения, налива, ложки и крана есть");
+  if (kt.title) {
+    ok(kt.title === "Чайник" && /^Чайник холодный: воды — на 3 кружки/.test(kt.menu[0]) && kt.menu.indexOf("Вскипятить чайник") >= 0 && kt.menu.some(l => /^Забрать с собой/.test(l)), "окно чайника: сколько воды, что оставили сотрудники, «Вскипятить» (" + kt.menu.join(" / ") + ")");
+    ok(kt.boil && kt.boiled === "Чайник вскипел" && kt.hot, "чайник кипит десять секунд, щёлкает автомат — окно открывается снова, и можно заваривать (" + kt.boiled + ")");
+    ok(kt.brew && kt.leftTea === 1 && kt.kw === 2 && /^Кружка готова: Выпить чай \/ Положить сахар \/ Долить молока из пакета/.test(kt.cup), "заварить чай: пакетик и кружка воды ушли, кружка готова — сахар и молоко (" + kt.cup + ")");
+    ok(/^Выпить чай с молоком и сахаром/.test(kt.cup2) && kt.sug === 1 && kt.milk === 0 && kt.wake > 40 && /Вы пьёте чай с молоком и сахаром/.test(kt.said), "в кружку — сахар и молоко, выпить: бодрость растёт (" + kt.wake + "; " + kt.cup2 + ")");
+    ok(kt.gap, "у чайника пьют не чаще раза в двадцать минут — кружка ждёт на столе");
+    ok(kt.taken === "1,1,1,0,0,0" && kt.useBag, "запасы сотрудников — в рюкзак, пакетик чая заваривается у горячего чайника (" + kt.taken + ")");
+    ok(kt.fill, "вода в чайник — из-под крана или из бутылки, холодная вода остужает кипяток");
+    ok(kt.noodles >= 30, "лапша, залитая кипятком, сытнее (сытость плюс " + kt.noodles + ")");
+    ok(kt.tbTurns === 1, "пошаговый бой: включить чайник — ход (" + kt.tbTurns + ")");
+    ok(/Рядом — /.test(kt.examine || ""), "«Осмотреть» чайник: что рядом и есть ли раковина");
+  }
+  if (kt.fridgeMenu != null) ok(/Открыть холодильник/.test(kt.fridgeMenu) && kt.fridgeOk, "открыли холодильник — внутри то, что держат в холоде (" + kt.fridgeGot + ")");
+  if (!kt.coldNone) ok(kt.coldOk, "в холодильной камере ищут съестное — и находят только еду (" + (kt.coldGot || "пусто") + ")");
+
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {
     const g = LAB.game, G = g.G, out = { floors: 0, err: [], want: 0 };

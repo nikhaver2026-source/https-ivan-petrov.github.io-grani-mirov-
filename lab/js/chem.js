@@ -1010,6 +1010,7 @@ var POOL = {
   arms: ["c_fuel", "c_phosphor", "c_oil"]
 };
 var CONT = { crate: 1, locker: 1, desk: 1, cabinet: 1, shelf: 1, fridge: 1, suitlocker: 1 };
+var COLD_FAM = { c_stab: 1, c_activ: 1 }; /* (3.0) в холодильнике лаборатории — ещё и это, кроме тканей (org) */
 function roomDef(rm) { return (LAB.ROOMS && LAB.ROOMS[rm.type]) || (LAB.ANNEX_ROOMS && LAB.ANNEX_ROOMS[rm.type]) || {}; }
 function roomTag(fl, rid) { var rm = fl.rooms[rid]; return rm ? roomDef(rm).loot || "" : ""; }
 function poolAt(tag, L) { return (POOL[tag] || []).filter(function (k) { return famOk(k, L); }); }
@@ -1060,9 +1061,14 @@ function place(ctx) {
   /* сырьё в хранилищах */
   fl.objs.forEach(function (o) {
     if (!CONT[o.type] || !o.loot || o.room == null || o.room < 0) return;
-    var pool = poolAt(roomTag(fl, o.room), L);
+    var tg = roomTag(fl, o.room), pool = poolAt(tg, L);
     if (!pool.length || !r.chance(0.32)) return;
-    o.loot.push(mat(r.pick(pool), o.room));
+    var fam = r.pick(pool), m = mat(fam, o.room);
+    /* (3.0) в холодильнике — только то, что держат в холоде: ткани, кровь и ферменты, стабилизатор
+       и активатор, и только в лабораториях; соли, кислоты и растворители — на полках (kitchen.js).
+       Поток случайностей тот же. */
+    if (o.type === "fridge" && !(CHEM_ROOMS[tg] && (FAM[fam].org || COLD_FAM[fam]))) return;
+    o.loot.push(m);
   });
   /* склянки на полу лабораторий, конденсат в тумане */
   good.slice(0, 3).forEach(function (rid) { var pool = poolAt(roomTag(fl, rid), L); if (pool.length && r.chance(0.5)) ctx.addItem(mat(r.pick(pool), rid), rid); });

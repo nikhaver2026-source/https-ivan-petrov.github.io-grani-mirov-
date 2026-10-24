@@ -191,11 +191,13 @@ function search(o) {
   if (s.open) { say(LAB.OBJ[o.type].n + ": пусто."); return; }
   spend(2);
   /* с набором инструментов обыск тщательнее: находится ещё что-нибудь */
-  if ((G().inv.toolkit || 0) > 0 && !s.tool) {
+  if ((G().inv.toolkit || 0) > 0 && !s.tool && o.type !== "fridge") { /* (3.0) в холодильнике деталей и кредитов не бывает (kitchen.js) */
     s.tool = 1;
     var r = LAB.Rng(G().seed, "tk:" + CUR().key + ":" + o.id);
     if (r.chance(0.5)) { o.loot = (o.loot || []).slice(); o.loot.push(r.chance(0.5) ? { kind: "item", item: LAB.partAt ? LAB.partAt(r, G().L) : "scrap", n: 1 } : { kind: "credits", n: LAB.credits(5 + r.int(0, 10), G().L, G().F) }); }
   }
+  /* (3.0) в холодильнике обычно не одна вещь: вторая кладётся при открытии (kitchen.js) */
+  if (o.type === "fridge" && !s.cold2 && LAB.kitchen) { s.cold2 = 1; var x2 = LAB.kitchen.fridgeExtra(o); if (x2) { o.loot = (o.loot || []).slice(); LAB.kitchen.addTo(o.loot, x2); } }
   gm().openContainer(o);
   ev("search", 1);
 }

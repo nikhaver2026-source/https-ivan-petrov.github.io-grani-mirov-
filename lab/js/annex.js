@@ -66,7 +66,7 @@ for (var rk in ROOMS) { ROOMS[rk].annex = true; if (!LAB.ROOMS[rk]) LAB.ROOMS[rk
    защита, инструменты, детали — смотря что за помещение. */
 function itemsOf(L, test) {
   var out = [];
-  for (var k in LAB.ITEMS) { var d = LAB.ITEMS[k]; if (!d.price || d.surf || d.nosell) continue; if ((d.depth || 1) > L) continue; if (test(d, k)) out.push(k); }
+  for (var k in LAB.ITEMS) { var d = LAB.ITEMS[k]; if (!d.price || d.surf || d.nosell || d.cold || d.kit) continue; if ((d.depth || 1) > L) continue; if (test(d, k)) out.push(k); } /* (3.0) cold — только холодильники, kit — только у чайника (kitchen.js) */
   return out;
 }
 function catPick(r, L, cat) {
@@ -78,12 +78,16 @@ function catPick(r, L, cat) {
 }
 function partPick(r, L) { return LAB.partAt ? LAB.partAt(r, L) : "scrap"; }
 function it(item, n) { return { kind: "item", item: item, n: n || 1 }; }
-function annexLoot(r, L, F, tag, ot, lean) {
+function annexLoot(r, L, F, tag, ot, lean, only) {
   var out = [], n = ot === "safe" ? 3 : lean ? r.int(1, ot === "crate" || ot === "shelf" ? 2 : 1) : ot === "crate" || ot === "shelf" ? r.int(1, 3) : r.int(1, 2);
   var add = function (x) { if (x) out.push(x); };
   var cr = function (b) { return { kind: "credits", n: LAB.credits(b + r.int(0, 12), L, F) }; };
+  /* (3.0) холодильник и холодильная камера — только то, что держат в холоде; котлы, печь,
+     бочки, коптильня, лотки раздачи — только съестное (kitchen.js). Вещь подменяется из уже
+     вынутого числа q: поток случайностей тот же, этажи прежних записей не меняются. */
+  var KI = LAB.kitchen, cold = KI && (only === "cold" || ot === "fridge"), cook = KI && only === "cooked";
   for (var i = 0; i < n; i++) {
-    var q = r.next();
+    var q = r.next(), k0 = out.length;
     switch (tag) {
       case "stash": add(q < 0.35 ? it(catPick(r, L, "valuable")) : q < 0.55 ? cr(30) : q < 0.75 ? it(catPick(r, L, "med")) : q < 0.9 ? { kind: "ammo", ammo: "energy", n: 2 } : it(catPick(r, L, "tool"))); break;
       case "hot": add(q < 0.35 ? it(r.chance(0.5) ? "isotope" : "goldbar") : q < 0.6 ? it(catPick(r, L, "valuable")) : q < 0.8 ? it("lead", 2) : it(r.chance(0.5) ? "radaway" : "antirad")); break;
@@ -103,6 +107,9 @@ function annexLoot(r, L, F, tag, ot, lean) {
       case "arms": add(q < 0.5 ? { kind: "ammo", ammo: "energy", n: 1 } : q < 0.7 ? it(r.chance(0.5) ? "bandage" : "emp") : q < 0.85 ? it(catPick(r, L, "valuable")) : cr(10)); break;
       default: /* store, parts */ add(q < 0.5 ? it(partPick(r, L), r.chance(0.3) ? 2 : 1) : q < 0.65 ? it(catPick(r, L, "food")) : q < 0.78 ? it(r.chance(0.4) ? "tape" : r.chance(0.6) ? "rubber" : "fieldkit") : q < 0.9 ? it(catPick(r, L, "valuable")) : cr(8));
     }
+    /* число вещей — прежнее (по нему потом бросают жребий в разграбленных помещениях); негодная вещь так и остаётся негодной */
+    var x0 = out[k0];
+    if ((cold || cook) && x0 && (x0.kind !== "item" || (x0.item && LAB.ITEMS[x0.item]))) out[k0] = cold ? KI.coldItem(q, L, tag) : KI.cookedItem(q, L);
   }
   /* сейф — ценное наверняка; оружейная стойка — ствол; шкаф спецодежды — костюм от излучения */
   if (ot === "safe") out.push(r.chance(0.5) ? it(catPick(r, L, "valuable") || "watch") : { kind: "credits", n: LAB.credits(35, L, F) });

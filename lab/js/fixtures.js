@@ -196,6 +196,7 @@ function logText(r, n, o, sub) {
 function menu(o) {
   var def = fxDef(o);
   if (!def) return false;
+  if (o.fx === "kettle" && LAB.kitchen) return LAB.kitchen.menu(o); /* (3.0) чайник — своё меню: вскипятить, заварить, сахар (kitchen.js) */
   var s = st(o), items = [];
   def.a.forEach(function (a) { var it = actionItem(o, def, a, s); if (!it) return; if (Array.isArray(it)) items.push.apply(items, it); else items.push(it); });
   if (o.notes && o.notes.length && !s.notes && !def.a.some(function (a) { return a[0] === "search"; })) items.push({ label: "Взять записку", fn: function () { takeNotes(o); } });
@@ -551,6 +552,7 @@ function cookMenu(o) {
 }
 
 /* ── обыскать, разобрать, собрать урожай ── */
+var COOKFX = { serving: 1, cauldron: 1, oven: 1, barrels: 1, smoker: 1 };
 var TAGMAP = { cushion: "smoke", top: "store", under: "smoke", med: "med", mattress: "stash", drawer: "paper", guard: "arms", food: "food", home: "home", bread: "food", smoked: "food", barrel: "food", soil: "herbs", seeds: "herbs", bio: "bio", lab: "chem", rad: "rad", arms: "armory", pockets: "smoke", parcel: "tech", cash: "smoke", ore: "parts", tools: "tech", janitor: "janitor", mail: "paper", lost: "smoke", expedition: "protect", laundry: "home" };
 function doSearch(o, def, label, p) {
   var s = st(o);
@@ -564,9 +566,11 @@ function doSearch(o, def, label, p) {
   var r = rng(o, "search:" + label), L = G().L, F = G().F, loot = [];
   if (risk(p.risk, r)) return;
   var tag = TAGMAP[p.tag] || "store";
+  /* (3.0) холодильная камера — как холодильник; котлы, печь, бочки, коптильня, лотки — только съестное */
+  var only = o.fx === "coldroom" ? "cold" : COOKFX[o.fx] ? "cooked" : null;
   /* (2.5, просьба игрока) в тумбочке, под матрасом, в ящике — почти всегда что-то есть, бывает и две вещи */
   var n = p.tag === "mattress" || p.tag === "cash" ? 2 : r.chance(LAB.ach && LAB.ach.has("searcher") ? 0.97 : 0.88) ? (r.chance(0.25) ? 2 : 1) : 0;
-  if (n && LAB.annexLoot) loot = LAB.annexLoot(r, L, F, tag, n > 1 ? "crate" : "desk", true).slice(0, n).filter(function (x) { return x.kind !== "weapon" && x.kind !== "armor"; });
+  if (n && LAB.annexLoot) loot = LAB.annexLoot(r, L, F, tag, n > 1 ? "crate" : "desk", true, only).slice(0, n).filter(function (x) { return x.kind !== "weapon" && x.kind !== "armor"; });
   if (p.tag === "cash" || (p.tag === "cushion" && r.chance(0.5))) loot.push({ kind: "credits", n: LAB.credits(p.tag === "cash" ? 20 : 3 + r.int(0, 6), L, F) });
   if (p.tag === "lost" && r.chance(0.6)) { var vv = ["watch", "ring", "pen", "harmonica"].filter(function (k) { return LAB.ITEMS[k]; }); if (vv.length) loot.push({ kind: "item", item: r.pick(vv), n: 1 }); }
   /* записки, что лежали здесь с самого начала (annex.js) */
@@ -654,6 +658,7 @@ function examine(o) {
   var s = st(o), rm = roomOf(o), out = [];
   if (o.type === "fx") {
     var def = fxDef(o); if (!def) return "Вещь обстановки.";
+    if (o.fx === "kettle" && LAB.kitchen) return LAB.kitchen.examine(o);
     out.push(def.n + ". " + def.d);
     var w = wearOf(o); if (w) out.push(w);
     if (s.salv) out.push("Её уже разобрали на детали: остался остов.");

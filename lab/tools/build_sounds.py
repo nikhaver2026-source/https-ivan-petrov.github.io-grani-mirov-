@@ -1081,6 +1081,17 @@ for _inst, _d in NOTES.items():
     for _m, (_id, _c) in sorted(_d["n"].items()):
         E("ins_%s_%d" % (_inst, _m), "note", [FS(_id, af=PITCH(2 ** (-_c / 1200.0)) if abs(_c) >= 3 else None)], v=_d["v"], mx=_d["mx"], bus="puzzle", loop=_d.get("loop", False))
 
+# ═════ (3.0) ЧАЙНИК ═════
+# Заход 9: живые записи Freesound (CC0). Кипение — куски одной записи подряд
+# (splicev): щелчок выключателя, нагрев, кипение, щелчок автомата и затихание —
+# около двенадцати секунд, щелчок выключения — на десятой (kitchen.js ждёт его).
+E("kettle_boil", "splicev", [[L(FS(212179, start=0.0, dur=1.0)), L(FS(212179, start=4.2, dur=5.0), 0.4), L(FS(212179, start=91.5, dur=7.3), 0.8)],
+                             [L(FS(239005, start=0.0, dur=1.2)), L(FS(239005, start=3.0, dur=5.0), 0.4), L(FS(239005, start=39.6, dur=7.6), 0.8)]], v=0.8, tgt=-19.0)
+E("kettle_pour", "sfx", [FS(740116, start=0.4, dur=4.4), FS(788304, dur=4.0)], n=2, mx=4.6, v=0.85)
+E("kettle_stir", "sfx", [FS(181716, start=0.4, dur=3.4), FS(239006, start=0.5, dur=3.0), FS(433539, start=0.9, dur=3.2)], n=3, mx=3.6, v=0.8)
+E("kettle_fill", "splicev", [[L(FS(469121, start=0.8, dur=3.8)), L(FS(469121, start=8.7, dur=1.3), 0.25)],
+                             [L(FS(503559, start=0.6, dur=4.2))]], v=0.8, tgt=-19.0)
+
 # ═════ СИНТЕЗ: звуки, которых нет в наборах ═════
 def gen(name):
     t = np.arange(int(1.6 * SR)) / SR
@@ -1098,7 +1109,7 @@ def gen(name):
     raise SystemExit("нет синтеза " + name)
 
 # ═════ СБОРКА ═════
-GROUP = {"ui": "ui", "step": "step", "bcn": "bcn", "loop": "amb", "music": "mus", "voice": "fx", "sfx": "fx", "mix": "fx", "mixv": "fx", "seq": "fx", "gen": "fx", "note": "inst"}
+GROUP = {"ui": "ui", "step": "step", "bcn": "bcn", "loop": "amb", "music": "mus", "voice": "fx", "sfx": "fx", "mix": "fx", "mixv": "fx", "splicev": "fx", "seq": "fx", "gen": "fx", "note": "inst"}
 MISSING = []
 def resolve(src):
     _, R, pack, pat, o = src
@@ -1186,6 +1197,27 @@ def build():
                 if sp["mx"]: mix = cap(mix, sp["mx"])
                 mix = ffx(mix, o.get("post"))
                 outs.append(fade(loudnorm(mix, o.get("tgt", TARGET["sfx"])), 0.003, 0.2))
+        elif kind == "splicev":
+            # (3.0) куски записей подряд, с перекрёстным затуханием (L: источник, длина
+            # перехода от прежнего куска, громкость) — без выравнивания каждого куска,
+            # тишину не срезая: нарастание остаётся нарастанием, щелчок — на месте
+            for var in sp["srcs"]:
+                out = None
+                for layer, xf, g in var:
+                    fs = resolve(layer)
+                    if not fs: MISSING.append(id_ + ": " + str(layer[1:4])); continue
+                    path, lo = fs[0]
+                    use(path)
+                    a = decode(path, lo.get("start", 0), lo.get("dur"), ch=1, af=lo.get("af")) * g
+                    if out is None: out = a; continue
+                    k = min(int(xf * SR), len(out), len(a))
+                    if k > 0:
+                        t = np.linspace(0, np.pi / 2, k, dtype=np.float32)
+                        out[-k:] = out[-k:] * np.cos(t) + a[:k] * np.sin(t)
+                    out = np.concatenate([out, a[k:]])
+                if out is None: continue
+                out = ffx(out, o.get("post"))
+                outs.append(fade(loudnorm(out, o.get("tgt", TARGET["sfx"])), 0.003, o.get("fo", 0.3)))
         elif kind == "mix":
             mix = None
             for layer, off, g in sp["srcs"]:
@@ -1373,7 +1405,8 @@ def merge_credits(used):
     text = open(path, encoding="utf-8").read()
     head, rest = text.split("\n## ", 1)
     body, tail = rest.split("\n## Лицензии\n", 1)
-    secs = ["## " + x for x in ("\n" + body).split("\n## ")[1:]]
+    # (3.0) первый раздел — тоже раздел: прежде он терялся при каждой дозаписи
+    secs = ["## " + x for x in body.split("\n## ")]
     def key(sec): return sec.split("\n", 1)[0][3:].strip().lower()
     for pk, files in used.items():
         name, author, lic, url = PACKS.get(pk, (pk, "?", "?", ""))

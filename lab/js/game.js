@@ -3136,6 +3136,7 @@ function useItem(id) {
   if (d.kind === "trap" && LAB.traps) return LAB.traps.use(id);
   if (d.chem && LAB.chem) return LAB.chem.use(id); /* (3.0) составы химии: смазки, капсулы, мази, культуры, приманка */
   if (d.rubble && LAB.rubble) return LAB.rubble.use(id); /* (3.0) домкрат — под завал на лестнице */
+  if (d.brew && LAB.kitchen) return LAB.kitchen.useItem(id); /* (3.0) чайный пакетик и кофе — у чайника (kitchen.js) */
   if (d.kind === "throw") {
     if (d.fx && d.fx.gren && LAB.combat) return LAB.combat.throwGrenade(id);
     if (id === "emp") { if (LAB.combat) LAB.combat.throwEmp(); return true; }

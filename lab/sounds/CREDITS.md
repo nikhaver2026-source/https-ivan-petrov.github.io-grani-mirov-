@@ -7,6 +7,18 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 часть — замедлена или ускорена, петли сведены с перекрёстным затуханием;
 сборщик — lab/tools/build_sounds.py.
 
+## 00_d5.flac
+
+Автор: rbnuser. Лицензия: CC0 1.0. Источник: https://freesound.org/s/347414/
+
+Файлы: `347414_4551235-hq.ogg`
+
+## 01-g5.flac
+
+Автор: rbnuser. Лицензия: CC0 1.0. Источник: https://freesound.org/s/347413/
+
+Файлы: `347413_4551235-hq.ogg`
+
 ## 02_a5.flac
 
 Автор: rbnuser. Лицензия: CC0 1.0. Источник: https://freesound.org/s/347412/
@@ -781,6 +793,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `153290_2358240-hq.ogg`
 
+## Coffee Pour and Stir
+
+Автор: RealSquink. Лицензия: CC0 1.0. Источник: https://freesound.org/s/788304/
+
+Файлы: `788304_12262933-hq.ogg`
+
 ## Coffee sip
 
 Автор: giddster. Лицензия: CC0 1.0. Источник: https://freesound.org/s/360475/
@@ -1194,6 +1212,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: mrmayo. Лицензия: CC0 1.0. Источник: https://freesound.org/s/74915/
 
 Файлы: `74915_271213-hq.ogg`
+
+## Filling_kettle_with_water_running_tap.wav
+
+Автор: nickmaysoundmusic. Лицензия: CC0 1.0. Источник: https://freesound.org/s/503559/
+
+Файлы: `503559_1287465-hq.ogg`
 
 ## Fire Burst.wav
 
@@ -1681,6 +1705,18 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `32088_114160-hq.ogg`
 
+## Kettle Boil
+
+Автор: OwlStorm. Лицензия: CC0 1.0. Источник: https://freesound.org/s/212179/
+
+Файлы: `212179_140737-hq.ogg`
+
+## kettle boiling.wav
+
+Автор: squashy555. Лицензия: CC0 1.0. Источник: https://freesound.org/s/239005/
+
+Файлы: `239005_1149179-hq.ogg`
+
 ## keyboard_typing
 
 Автор: j1987. Лицензия: CC0 1.0. Источник: https://freesound.org/s/79388/
@@ -2136,6 +2172,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: mahecic. Лицензия: CC0 1.0. Источник: https://freesound.org/s/803497/
 
 Файлы: `803497_16571147-hq.ogg`
+
+## pouring boiling water into large cup 1
+
+Автор: FOSSarts. Лицензия: CC0 1.0. Источник: https://freesound.org/s/740116/
+
+Файлы: `740116_14631530-hq.ogg`
 
 ## Pressure Plate
 
@@ -2707,6 +2749,24 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `398077_6996854-hq.ogg`
 
+## stir tea in cup.wav
+
+Автор: cupido-1. Лицензия: CC0 1.0. Источник: https://freesound.org/s/433539/
+
+Файлы: `433539_1030167-hq.ogg`
+
+## stiring coffee.wav
+
+Автор: squashy555. Лицензия: CC0 1.0. Источник: https://freesound.org/s/239006/
+
+Файлы: `239006_1149179-hq.ogg`
+
+## stirring coffee.wav
+
+Автор: keweldog. Лицензия: CC0 1.0. Источник: https://freesound.org/s/181716/
+
+Файлы: `181716_3153523-hq.ogg`
+
 ## Store Public Addess Chimes2.wav
 
 Автор: nigelcoop. Лицензия: CC0 1.0. Источник: https://freesound.org/s/238428/
@@ -2742,6 +2802,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: KieranKeegan. Лицензия: CC0 1.0. Источник: https://freesound.org/s/418881/
 
 Файлы: `418881_6616210-hq.ogg`
+
+## Tap_Filling_Kettle
+
+Автор: Manim8. Лицензия: CC0 1.0. Источник: https://freesound.org/s/469121/
+
+Файлы: `469121_4996003-hq.ogg`
 
 ## Taser/High Voltage discharge
 
