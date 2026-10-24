@@ -1339,6 +1339,25 @@ function genFloor(seed, L, F, attempt) {
   /* 25. (3.0) Химия (chem.js): химические столы, сырьё в хранилищах лабораторий,
      медпунктов, складов и мастерских, склянки и журналы с рецептурами — своим потоком. */
   if (LAB.chem && LAB.chem.place) LAB.chem.place({ fl: fl, L: L, F: F, seed: seed, attempt: attempt, U: U, addObj: addObj, addItem: addItem });
+  /* 26. (3.0) Заваленная лестница вниз (rubble.js): на этом же этаже — гидравлический
+     домкрат или подрывной заряд, там, куда можно дойти, не открывая других замков,
+     кроме тех, что и так стоят на пути к лестнице; не в тайной комнате, не у самой
+     лестницы и не у прибытия. Последним шагом и своим потоком: прежние вещи этажа,
+     их места и номера не сдвигаются — записи «Альфа 3.0» продолжаются, а у тех, кто
+     застрял у завала, домкрат или заряд появится на этаже. */
+  if (sl.downBlocked) {
+    var rr = Rng(seed, "rubble30:" + L + ":" + F + ":" + attempt);
+    var kitPool = keySpots(D).filter(function (n) { return n !== secret && n !== D && n !== U; });
+    if (!kitPool.length) kitPool = keySpots(D).filter(function (n) { return n !== secret; });
+    var kitIt = LAB.ITEMS.c_blast && rr.chance(0.5) ? "c_blast" : "rub_jack";
+    /* комната — случайная из подходящих; нет в ней свободной клетки — следующая */
+    var kitRooms = rr.shuffle(kitPool.length ? kitPool.slice() : [U]);
+    for (var kq = 0; kq < kitRooms.length; kq++) {
+      var krm = rooms[kitRooms[kq]], kcells = [];
+      for (var ky = krm.y0; ky <= krm.y1; ky++) for (var kx = krm.x0; kx <= krm.x1; kx++) if (!objCell[idx(kx, ky)] && !itemCell[idx(kx, ky)]) kcells.push([kx, ky]);
+      if (kcells.length) { addItem({ kind: "item", item: kitIt, n: 1, rub: 1 }, kitRooms[kq], rr.pick(kcells)); break; }
+    }
+  }
 
   fl.sample = d0;
   fl.turrets = turrets;
@@ -1668,6 +1687,7 @@ LAB.solve = function (fl, have) {
       if (it.kind === "note" && it.code && !codes[it.code]) { codes[it.code] = 1; changed = true; }
       if (it.kind === "elevpass") got.elevpass = true;
       if (it.kind === "sample") got.sample = true;
+      if (it.rub) got.rubbleKit = true; /* (3.0) домкрат или заряд для завала на лестнице */
     };
     fl.items.forEach(function (it) { if (reach[idx(it.x, it.y)]) take(it); });
     fl.foes.forEach(function (f) { if (reach[idx(f.x, f.y)] && f.carry) f.carry.forEach(take); });
@@ -1688,7 +1708,7 @@ LAB.solve = function (fl, have) {
     start: [startX, startY],
     down: !!downObj && near(downObj),
     elev: !!elevObj && near(elevObj),
-    tier: tier, gatepass: gatepass, elevpass: !!got.elevpass, sample: !!got.sample,
+    tier: tier, gatepass: gatepass, elevpass: !!got.elevpass, sample: !!got.sample, rubbleKit: !!got.rubbleKit,
     reach: reach
   };
 };

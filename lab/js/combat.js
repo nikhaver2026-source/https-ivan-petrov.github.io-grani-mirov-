@@ -594,7 +594,8 @@ var TURN_WHY = {
   search: "обыск — ход",
   "throw": "бросок — ход",
   trap: "поставить ловушку или мину — ход",
-  implant: "имплант — ход"
+  implant: "имплант — ход",
+  dig: "подход к завалу — два хода, домкрат и закладка заряда — ход" /* (3.0) rubble.js */
 };
 function spendTurns(n, why) {
   if (!S.turnBased) return;

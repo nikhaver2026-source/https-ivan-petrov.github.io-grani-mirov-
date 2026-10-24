@@ -210,12 +210,15 @@ function objName0(o) {
   if (o.type === "hq") return "Штаб: " + LAB.FACTIONS[o.faction].n;
   if (o.type === "comp" && LAB.COMPS) return (LAB.COMPS[o.kind] || LAB.COMPS.archive).n;
   if (o.type === "fx" && LAB.FIX && LAB.FIX.T[o.fx]) return LAB.FIX.T[o.fx].n;
-  if (o.type === "stairs_down" && o.blocked) return "Лестница вниз (завалена)";
-  if (o.type === "stairs_up" && o.blocked) return "Лестница вверх (завалена)";
+  if (o.type === "stairs_down" && stairBlocked(o)) return "Лестница вниз (завалена)";
+  if (o.type === "stairs_up" && stairBlocked(o)) return "Лестница вверх (завалена)";
   if (o.type === "reactor" && (G.done || (!o.final && G.cores && G.cores["used" + G.L]))) return "Пульт реактора (ключ повёрнут)";
   return LAB.OBJ[o.type] ? LAB.OBJ[o.type].n : o.type;
 }
 game.objName = objName;
+/* (3.0) Завал на лестнице: разобран — лестница как лестница (rubble.js). */
+function stairBlocked(o) { return !!(o && o.blocked) && (!LAB.rubble || LAB.rubble.blocked(o)); }
+game.stairBlocked = stairBlocked;
 function npcName(n) { return n.robot ? n.n : n.prof + " " + n.n; }
 game.npcName = npcName;
 
@@ -1536,6 +1539,8 @@ function doorMenu(d, dir) {
     if (lk && lk.type === "circuit" && why) items.push({ label: "Погасить схему реле (головоломка)", fn: function () { circuitDoor(d); } });
     if (lk && lk.type === "logic" && why) items.push({ label: "Решить задачу замка: " + (LAB.puzzles ? LAB.puzzles.nameOf(lk.kind) : "головоломка"), fn: function () { logicDoor(d); } });
     if (lk && lk.type === "melody" && why) items.push({ label: G.melodies[melKey(d.id)] ? "Сыграть мелодию" : "Сыграть мелодию — сначала найдите её на радиоприёмнике", fn: function () { melodyDoor(d); } });
+    /* (3.0) завал в проходе сносит и подрывной заряд — вместо позитронной установки (rubble.js) */
+    if (lk && why && lk.type === "rubble" && LAB.rubble && LAB.chem && LAB.chem.blastOk()) items.push({ label: "Подорвать завал подрывным зарядом: шесть секунд, отойдите; слышно на весь этаж", fn: function () { LAB.rubble.blastDoor(d); } });
     /* (3.0) термит прожигает замок под ключ, код, пропуск и блокировку охраны — громко */
     if (lk && why && ["key", "card", "code", "lockdown"].indexOf(lk.type) >= 0 && LAB.chem && LAB.chem.thermiteOk()) items.push({ label: "Прожечь замок термитом. Громко: ОКО услышит", fn: function () { LAB.chem.burnDoor(d, function () { CUR.fs.doors[d.id] = 1; openDoor(d); }); } });
     /* отмычка под цвет помещения (1.6): под ключ, код, пропуск и блокировку охраны */
@@ -1695,6 +1700,7 @@ function objMenu(o) {
   if (o.type === "corpse" && LAB.fixtures) { LAB.fixtures.corpseMenu(o); return; } /* тело: осмотреть, карманы, одежда, жетон */
   switch (o.type) {
     case "stairs_down": case "stairs_up": {
+      if (stairBlocked(o) && LAB.rubble) { LAB.rubble.menu(o); return; } /* (3.0) завал: разобрать руками, домкратом или зарядом */
       var down = o.type === "stairs_down";
       items.push({ label: down ? "Спуститься по лестнице на этаж " + (G.F + 1) : "Подняться по лестнице на этаж " + (G.F - 1), fn: function () { useStairs(o); } });
       items.push({ label: "Прислушаться к пролёту", fn: function () { listenStairs(o); } });
@@ -1838,7 +1844,7 @@ function listenStairs(o) {
   if (F < 1 || F > LAB.FLOORS_N) { say("Тишина."); return; }
   var fl = LAB.getFloor(G.seed, L, F);
   var n = fl.foes.length, txt;
-  if (o.blocked) txt = "Пролёт завален: сквозь обломки едва слышен гул.";
+  if (stairBlocked(o)) txt = "Пролёт завален: сквозь обломки едва слышен гул.";
   else if (!n) txt = "Снизу тихо, только вентиляция.";
   else txt = n > 8 ? "Оттуда слышно много шагов и голосов тварей. Там опасно." : n > 4 ? "Слышно движение и рык. Там кто-то есть." : "Еле слышны редкие шорохи.";
   A("play", "draft");
@@ -1850,7 +1856,8 @@ function listenStairs(o) {
    на этаж. Два пролёта и площадка между ними; сколько ступеней — не
    говорится. Пока игрок на лестнице, этажи ждут: враги не ходят. */
 function useStairs(o) {
-  if (o.blocked) { A("play", "rubble_hit"); say("Лестница завалена: обломки не сдвинуть. Воспользуйтесь лифтом уровня" + (G.elev[G.L] ? "." : " — пропуск лифта лежит на втором этаже уровня.")); return; }
+  /* (3.0) лифт возит только туда, где вы уже были: завал разбирают на месте (rubble.js) */
+  if (stairBlocked(o)) { A("play", "rubble_hit"); if (LAB.rubble) LAB.rubble.menu(o); else say("Лестница завалена."); return; }
   var ch = LAB.combat && LAB.combat.chaser();
   if (ch) { say("За вами гонятся вплотную: " + ch.name.split(",")[0].toLowerCase() + " " + relDir(ch.x, ch.y) + ". На лестнице догонит — сначала оторвитесь или отбейтесь."); return; }
   var down = o.type === "stairs_down";
@@ -2438,6 +2445,7 @@ function positronMenu(o) {
   } else {
     if (CUR.fl.needRubble && !CUR.fs.rubble) items.push({ label: "Аннигиляционный импульс: снести завал", fn: function () {
       CUR.fs.rubble = true; A("play", "pos_pulse"); say("Вспышка без света, удар без звука — и далёкий грохот осыпающихся обломков. Завал на этаже расчищен."); gainXP(15);
+      if (LAB.rubble) LAB.rubble.doorLoot("pulse"); /* (3.0) из-под обломков — находки */
     } });
     items.push({ label: "Синтезировать позитронный заряд", fn: function () {
       if (st.cool && st.cool > G.min + G.day * 1440) { say("Ловушка восстанавливается. Позже."); return; }
@@ -2867,7 +2875,7 @@ function navTargets() {
   var list = [];
   var down = findObj("stairs_down") || findObj("gate_down") || findObj("reactor");
   var el = findObj("elevator"), up = findObj("stairs_up");
-  if (down) list.push({ n: down.type === "stairs_down" ? (down.blocked ? "лестница вниз (завалена)" : "лестница вниз") : down.type === "gate_down" ? "гермошлюз на уровень ниже" : "пульт реактора", o: down, main: true });
+  if (down) list.push({ n: down.type === "stairs_down" ? (stairBlocked(down) ? "лестница вниз (завалена)" : "лестница вниз") : down.type === "gate_down" ? "гермошлюз на уровень ниже" : "пульт реактора", o: down, main: true });
   if (el && known(el)) list.push({ n: "лифт этажей", o: el });
   if (up && known(up)) list.push({ n: "лестница вверх", o: up });
   var gc = floorItems().filter(function (it) { return it.kind === "gatepass" && CUR.seen && CUR.seen[idx(it.x, it.y)]; })[0];
@@ -3127,6 +3135,7 @@ function useItem(id) {
   if (d.kind === "implant" && LAB.implants) return LAB.implants.useChip(id); /* (2.0) чип импланта — вживить */
   if (d.kind === "trap" && LAB.traps) return LAB.traps.use(id);
   if (d.chem && LAB.chem) return LAB.chem.use(id); /* (3.0) составы химии: смазки, капсулы, мази, культуры, приманка */
+  if (d.rubble && LAB.rubble) return LAB.rubble.use(id); /* (3.0) домкрат — под завал на лестнице */
   if (d.kind === "throw") {
     if (d.fx && d.fx.gren && LAB.combat) return LAB.combat.throwGrenade(id);
     if (id === "emp") { if (LAB.combat) LAB.combat.throwEmp(); return true; }

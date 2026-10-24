@@ -715,7 +715,7 @@ function armorItem(i) {
 }
 /* Устройства: гранаты, пластины, самоделки мастерской и вещи блоков. */
 function gadgetIds() {
-  var ids = ["emp", "plate", "decoder", "fieldkit", "wrepair", "repairkit", "engkit", "noise", "turret_kit", "jammer", "lockpick", "filter", "sonar", "okokey", "decoy_e", "disruptor", "turret_kit2"];
+  var ids = ["emp", "plate", "decoder", "fieldkit", "wrepair", "repairkit", "engkit", "noise", "turret_kit", "jammer", "lockpick", "filter", "sonar", "okokey", "decoy_e", "disruptor", "turret_kit2", "rub_jack"]; /* (3.0) домкрат — без depth, поэтому здесь явно */
   for (var k in LAB.ITEMS) { var d = LAB.ITEMS[k]; if (d.kind !== "part" && !d.cat && d.depth && ids.indexOf(k) < 0) ids.push(k); }
   return ids;
 }

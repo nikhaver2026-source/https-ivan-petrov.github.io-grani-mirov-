@@ -9,6 +9,9 @@
    и на каждом третьем — мастерская с верстаком недалеко от прибытия, без
    замков на пути и без охраны внутри; если на этаже есть турели — есть и
    терминал безопасности, а у звукового замка — радиоприёмник с мелодией.
+   (3.0) На этаже с заваленной лестницей вниз лежит гидравлический домкрат
+   или подрывной заряд — там, куда можно дойти, не открывая лишних замков,
+   не в тайной комнате и не у самой лестницы.
    Запуск: node lab/tests/world.test.js [число зёрен] [шаг по уровням] */
 "use strict";
 const fs = require("fs"), path = require("path"), vm = require("vm");
@@ -44,7 +47,18 @@ for (let si = 0; si < seeds; si++) {
       if (!res.down) err(`${at}: выход вниз недостижим`);
       if (!res.elev) err(`${at}: лифт недостижим`);
       if (res.elevpass) elevpass[L] = true;
-      if (fl.downBlocked && !elevpass[L]) err(`${at}: лестница завалена, а пропуска лифта уровня ${L} ещё нет`);
+      /* (3.0) лифт возит только туда, где вы уже были: завал разбирают на месте — домкрат или заряд на этом же этаже */
+      if (fl.downBlocked) {
+        const kits = fl.items.filter(it => it.rub);
+        if (kits.length !== 1 || ["rub_jack", "c_blast"].indexOf(kits[0].item) < 0) err(`${at}: лестница завалена, а домкрата или заряда на этаже нет (${kits.map(k => k.item).join(", ")})`);
+        else {
+          const kr = fl.room[kits[0].y * LAB.W + kits[0].x];
+          if (!res.rubbleKit) err(`${at}: домкрат или заряд для завала недостижим`);
+          if (kr === fl.secret) err(`${at}: домкрат или заряд — в тайной комнате`);
+          if (fl.objs.some(o => o.type === "stairs_down" && fl.room[o.y * LAB.W + o.x] === kr) && fl.rooms.filter(rm => rm && !rm.hidden).length > 3) err(`${at}: домкрат или заряд — у самой лестницы`);
+          stat.kits = stat.kits || {}; stat.kits[kits[0].item] = (stat.kits[kits[0].item] || 0) + 1;
+        }
+      } else if (fl.items.some(it => it.rub)) err(`${at}: домкрат или заряд для завала там, где завала нет`);
       tier = Math.max(tier, res.tier);
       if (tier < LAB.LEVELS[L].tier) err(`${at}: уровень доступа ${tier} ниже уровня ${LAB.LEVELS[L].tier}`);
       if (F === LAB.FLOORS_N && !res.gatepass) err(`${at}: шлюзовую ключ-карту не добыть`);
@@ -224,7 +238,7 @@ console.log("замки:", JSON.stringify(stat.locks));
 console.log(`охрана на этаж: патрулей ${((stat.patrols || 0) / floors).toFixed(1)}, машин в кабинетах ${((stat.guards || 0) / floors).toFixed(1)}, сапёров ${((stat.sappers || 0) / floors).toFixed(2)}; стендов с задачами ${((stat.pz || 0) / floors).toFixed(2)}`);
 console.log(`мастерских: ${stat.shopN || 0} (при лифтовом холле или у прибытия: ${stat.shopLift || 0}), путь от прибытия в среднем ${stat.shopN ? Math.round(stat.shopD / stat.shopN) : 0}, самый длинный ${stat.shopMax || 0} шагов`);
 console.log(`стартовый набор у капсулы (аптечки и энергобатареи в двух шагах): ${stat.kitNear || 0}`);
-console.log(`на этаж: врагов ${(stat.foes / floors).toFixed(1)}, турелей ${(stat.turrets / floors).toFixed(2)}, камер ${(stat.cams / floors).toFixed(2)}, вещей ${(stat.items / floors).toFixed(1)}, выживших ${(stat.npcs / floors).toFixed(2)}, тайных комнат ${(stat.secrets / floors).toFixed(2)}, заваленных лестниц ${stat.blocked}; коридоры от ${stat.corrMin} до ${stat.corrMax} шагов`);
+console.log(`на этаж: врагов ${(stat.foes / floors).toFixed(1)}, турелей ${(stat.turrets / floors).toFixed(2)}, камер ${(stat.cams / floors).toFixed(2)}, вещей ${(stat.items / floors).toFixed(1)}, выживших ${(stat.npcs / floors).toFixed(2)}, тайных комнат ${(stat.secrets / floors).toFixed(2)}, заваленных лестниц ${stat.blocked} (домкратов ${(stat.kits || {}).rub_jack || 0}, зарядов ${(stat.kits || {}).c_blast || 0}); коридоры от ${stat.corrMin} до ${stat.corrMax} шагов`);
 console.log("обстановка:", JSON.stringify(stat.objs));
 console.log("прессов «Подножия»:", stat.press || 0);
 console.log(`броня на полу: ${(stat.armor / floors).toFixed(2)} на этаж; модификации роботов:`, JSON.stringify(stat.aff));

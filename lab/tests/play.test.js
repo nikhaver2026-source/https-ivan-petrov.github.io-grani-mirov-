@@ -4536,6 +4536,164 @@ LAB.ui.closeAll();
 
   await page.evaluate(() => { LAB.ui.closeAll(); });
 
+  console.log("Альфа 3.0: завал на лестнице — руками, монтировкой, домкратом, зарядом; ОКО слышит; находки; заряд из химии");
+  const rb = await page.evaluate(async () => {
+    const g = LAB.game, C = LAB.combat, S = LAB.settings, R = LAB.rubble, O = LAB.oko, CH = LAB.chem, out = {};
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const label = i => typeof i.label === "function" ? i.label() : i.label;
+    let G = g.G;
+    C.stop(); LAB.ui.closeAll(); R._reset();
+    const d0 = S.difficulty, tb0 = S.turnBased, rnd = Math.random, wp0 = G.weapons;
+    S.difficulty = 1; S.turnBased = 0;
+    try {
+      /* этажи с заваленной лестницей вниз — по плану этого зерна */
+      const p = LAB.plan(G.seed), found = [];
+      for (let L = 1; L <= Math.min(10, LAB.LEVELS_N) && found.length < 4; L++) for (let F = 1; F < LAB.FLOORS_N && found.length < 4; F++) if (p.blocked[L][F]) found.push([L, F]);
+      out.found = found.length;
+      if (found.length < 2) return out;
+      const go = (L, F) => {
+        delete G.fs[L + "-" + F]; if (G.rub) delete G.rub[L + "-" + F];
+        g.enterFloor(L, F, "down", true); C.stop(); G = g.G;
+        C.foes().forEach(f => { f.dead = true; });
+        const st = g.CUR.fl.objs.find(o => o.type === "stairs_down");
+        const c = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(d => [st.x + d[0], st.y + d[1]]).find(q => g.passable(q[0], q[1]));
+        G.x = c[0]; G.y = c[1]; G.hp = G.hpMax = 1e6; G.dead = false; G.st.jam = 0; g.CUR.fs.okoBlind = false; G.str = 10;
+        delete G.inv.rub_jack; Object.keys(G.inv).forEach(k => { if (/^c_blast/.test(k)) delete G.inv[k]; });
+        return st;
+      };
+      /* А. Окно у завала, лифт не выручает, домкрат или заряд — на этом же этаже */
+      const [L1, F1] = found[0], k1 = L1 + "-" + F1;
+      let st = go(L1, F1);
+      out.name = g.objName(st);
+      out.kits = g.CUR.fl.items.filter(it => it.rub).map(it => it.item).join(",");
+      out.liftNo = !g.liftOk(L1, F1 + 1);
+      g.objMenu(st); let w = LAB.ui.top();
+      out.title = w.title; out.items = w.items.map(label);
+      LAB.ui.closeAll();
+      out.modes = [4, 1, 2, 3].map(k => { S.difficulty = k; return R.stages("hands") + "/" + R.stages("bar"); }).join(" ");
+      out.digW = [4, 1, 2, 3].map(k => LAB.DIFF[k].digW).join(" ");
+      S.difficulty = 1;
+      /* Б. Подход руками: долго и шумно — ОКО слышит, бодрость и время уходят, окно открывается снова */
+      const wake0 = G.body.wake, min0 = G.min + G.day * 1440, slog0 = (g.CUR.fs.slog || []).length;
+      SPOKEN.length = 0;
+      out.started = R.stage(st, "hands"); out.busy = R._busy(); out.twice = R.stage(st, "hands") === false;
+      await wait(3100);
+      out.p1 = Math.round(G.rub[k1].p);
+      out.reopen = LAB.ui.top() ? LAB.ui.top().title : "";
+      out.wake = G.body.wake < wake0; out.time = G.min + G.day * 1440 > min0;
+      out.heard = (g.CUR.fs.slog || []).slice(slog0).some(e => /удары на лестничной клетке/.test(e.t));
+      out.okoSaid = /ОКО по громкой связи/.test(SPOKEN.join(" | "));
+      /* отошли — подход не засчитан */
+      LAB.ui.closeAll(); R.stage(st, "hands"); const gx = G.x; G.x = gx + (g.passable(gx + 1, G.y) ? 1 : -1);
+      SPOKEN.length = 0; await wait(3100);
+      out.moved = Math.round(G.rub[k1].p) === out.p1 && /бросили разбирать/.test(SPOKEN.join(" | ")); G.x = gx;
+      /* машины на шум: в обычном режиме — один раз, когда разобрано за половину */
+      LAB.ui.closeAll(); G.rub[k1].p = 45; g.CUR.fs.waves = [];
+      R.stage(st, "hands"); await wait(3100);
+      out.wave = (g.CUR.fs.waves || []).filter(q => q.tag === "rubble").length;
+      /* разобрано: лестница свободна, находки — только полезное, под ноги и в рюкзак */
+      LAB.ui.closeAll(); G.weapons = wp0; SPOKEN.length = 0;
+      const dr0 = g.CUR.fs.drops.length;
+      R._finish(st, "hands");
+      await wait(1200);
+      const dropsNew = g.CUR.fs.drops.slice(dr0);
+      out.done = !R.blocked(st) && g.objName(st) === "Лестница вниз" && G.rub[k1].done === 1;
+      out.loot = dropsNew.length; out.lootTaken = dropsNew.every(it => g.CUR.fs.taken[it.id]);
+      out.lootKinds = dropsNew.map(it => it.kind === "item" ? it.item : it.kind).join(",");
+      out.lootUseful = dropsNew.length > 0 && dropsNew.every(it => ["item", "ammo", "credits", "note"].indexOf(it.kind) >= 0 && (it.kind !== "item" || (LAB.ITEMS[it.item] && LAB.ITEMS[it.item].kind !== "junk")));
+      out.doneSaid = /пролёт свободен/.test(SPOKEN.join(" | ")) && /Из-под обломков/.test(SPOKEN.join(" | "));
+      g.objMenu(st); out.menuDown = LAB.ui.top().items.some(i => /^Спуститься по лестнице/.test(label(i))); LAB.ui.closeAll();
+      /* находки — своим потоком от зерна: те же при повторе */
+      out.same = JSON.stringify(R._findings("st:9-9", "hands").items) === JSON.stringify(R._findings("st:9-9", "hands").items);
+      /* запись помнит разобранный завал */
+      g.saveSlot(3); g.loadSlot(3); await wait(300); C.stop(); G = g.G;
+      st = g.CUR.fl.objs.find(o => o.type === "stairs_down");
+      out.saved = !!(G.rub && G.rub[k1] && G.rub[k1].done) && !R.blocked(st);
+
+      /* В. Домкрат: два подхода почти без шума, домкрат остаётся держать плиту */
+      const [L2, F2] = found[1], k2 = L2 + "-" + F2;
+      st = go(L2, F2);
+      G.inv.rub_jack = 1; SPOKEN.length = 0;
+      out.jackUse = g.useItem("rub_jack"); out.jackLeft = G.inv.rub_jack || 0; out.jackSet = !!G.rub[k2].jack;
+      await wait(3300);
+      out.jackP = Math.round(G.rub[k2].p);
+      w = LAB.ui.top(); out.jackNext = w ? w.items.map(label).filter(l => /домкрат/i.test(l)).join(" / ") : "";
+      if (w) { w.i = w.items.findIndex(i => /^Качать домкрат/.test(label(i))); if (w.i >= 0) LAB.ui.activate(); }
+      await wait(3300);
+      out.jackDone = !R.blocked(st) && /Домкрат поднял плиту/.test(SPOKEN.join(" | "));
+
+      /* Г. Подрывной заряд: из химии (пиротехника), закладка, шесть секунд, взрыв — на весь этаж */
+      out.rc = CH.RC.some(rc => rc.id === "p_blast" && rc.out === "c_blast" && rc.br === "pyro" && !rc.f);
+      out.notShop = !LAB.srcOk(LAB.ITEMS.c_blast, "buy") && !LAB.srcOk(LAB.ITEMS.rub_jack, "buy");
+      Math.random = () => 0.99;
+      const lab = { id: "t30", type: "chemlab", x: G.x, y: G.y, good: 1 };
+      g.CUR.fs.chemSt = g.CUR.fs.chemSt || {}; g.CUR.fs.chemSt.t30 = { tier: 1, dirty: false };
+      G.inv.c_salt = 2; G.inv.c_oil = 1; G.inv.wire = 1;
+      CH.brew("p_blast", lab); out.brewed = G.inv.c_blast || 0;
+      Math.random = rnd;
+      const [L3, F3] = found[2] || found[0], k3 = L3 + "-" + F3;
+      st = go(L3, F3);
+      /* прежние проверки оставили щиты, импланты и подозрение ОКО под сотню — для взрыва с чистого листа */
+      const imp0 = G.implants; G.implants = []; G.st.shield = 0; G.st.shieldT = 0; G.st.phaseT = 0; if (G.oko) G.oko.heat = 0;
+      G.inv.c_blast = 1; g.CUR.fs.waves = []; const heat0 = (G.oko && G.oko.heat) || 0, hp0 = G.hp, dr1 = g.CUR.fs.drops.length;
+      SPOKEN.length = 0;
+      out.armUse = g.useItem("c_blast"); out.armLeft = G.inv.c_blast || 0; out.armed = !!G.rub[k3].armed; out.fuse = R._fuse();
+      await wait(6800);
+      out.blastDone = !R.blocked(st) && /Грохот/.test(SPOKEN.join(" | "));
+      out.blastHurt = G.hp < hp0 && /Вас задело обломками/.test(SPOKEN.join(" | "));
+      out.blastWave = (g.CUR.fs.waves || []).filter(q => q.tag === "rubble").length;
+      out.blastHeat = (G.oko.heat || 0) > heat0;
+      out.blastLoot = g.CUR.fs.drops.length - dr1; G.implants = imp0;
+
+      /* Д. Пошаговый бой: подход — два хода */
+      S.turnBased = 1;
+      if (found[3]) {
+        st = go(found[3][0], found[3][1]);
+        const t0 = C.tickN(); R.stage(st, "hands"); out.tbTurns = C.tickN() - t0; R._reset();
+      }
+      S.turnBased = 0;
+
+      /* Е. Завал в проходе: подрывной заряд вместо позитронной установки, находки на месте завала */
+      let dl = null;
+      for (let L = 3; L <= Math.min(8, LAB.LEVELS_N) && !dl; L++) for (let F = 1; F < LAB.FLOORS_N && !dl; F++) {
+        const fl0 = LAB.getFloor(G.seed, L, F);
+        if (fl0.needRubble) { delete G.fs[L + "-" + F]; g.enterFloor(L, F, "down", true); C.stop(); G = g.G; dl = g.CUR.fl.doors.find(d => d.lock && d.lock.type === "rubble"); }
+      }
+      if (dl) {
+        C.foes().forEach(f => { f.dead = true; }); G.hp = G.hpMax = 1e6;
+        const side = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(d => [dl.x + d[0], dl.y + d[1]]).find(q => g.passable(q[0], q[1]));
+        G.x = side[0]; G.y = side[1]; G.inv.c_blast = 1;
+        g.doorMenu(dl); out.doorItem = LAB.ui.top().items.some(i => /^Подорвать завал подрывным зарядом/.test(label(i))); LAB.ui.closeAll();
+        const dr2 = g.CUR.fs.drops.length;
+        out.doorBlast = R.blastDoor(dl);
+        await wait(6800);
+        out.doorOpen = !!g.CUR.fs.rubble && g.doorBlock(dl) === "";
+        out.doorLoot = g.CUR.fs.drops.length - dr2;
+      } else out.doorNone = true;
+    } catch (e) { out.err = String(e && e.stack || e).slice(0, 400); }
+    finally { Math.random = rnd; S.difficulty = d0; S.turnBased = tb0; G.weapons = wp0; R._reset(); LAB.ui.closeAll(); }
+    return out;
+  });
+  if (rb.found < 2) ok(true, "завал на лестнице: в первых уровнях этого зерна меньше двух заваленных лестниц — проверка пропущена (" + rb.found + ")");
+  else {
+    ok(!rb.err, "завал на лестнице: проверка без ошибок" + (rb.err ? " (" + rb.err + ")" : ""));
+    ok(rb.name === "Лестница вниз (завалена)" && rb.liftNo && /^(rub_jack|c_blast)$/.test(rb.kits), "завал: лестница завалена, лифт на нижний этаж не везёт, а домкрат или заряд лежит на этом же этаже (" + rb.kits + ")");
+    ok(rb.title === "Лестница вниз завалена" && /Где-то на этом этаже лежит (гидравлический домкрат|подрывной заряд)/.test(rb.items[0]) && rb.items.some(l => /^Разбирать завал (руками|монтировкой)/.test(l)) && rb.items.some(l => l === "Осмотреть завал"), "окно у завала: первым — что с завалом и что лежит на этаже, дальше — разбирать (" + (rb.items || []).join(" / ") + ")");
+    ok(rb.modes === "4/2 6/4 8/5 10/6" && rb.digW === "0 1 2 3", "завал по режимам: подходов руками и монтировкой — лёгкий 4/2, обычный 6/4, сложный 8/5, очень сложный 10/6; машин на шум — 0/1/2/3 (" + rb.modes + "; " + rb.digW + ")");
+    ok(rb.started && rb.busy && rb.twice && rb.p1 === 17 && /Разобрано на 17 процентов/.test(rb.reopen) && rb.wake && rb.time, "подход руками: разобрано на шестую часть, бодрость и время уходят, окно открывается снова (" + rb.p1 + ", " + rb.reopen + ")");
+    ok(rb.heard && rb.okoSaid, "ОКО слышит разбор завала: запись акустических датчиков в журнале и реплика по громкой связи");
+    ok(rb.moved, "отошли от завала — подход не засчитан");
+    ok(rb.wave === 1, "в обычном режиме ОКО шлёт машины на шум, когда разобрано за половину (" + rb.wave + ")");
+    ok(rb.done && rb.menuDown && rb.doneSaid, "завал разобран: лестница свободна, «Спуститься» снова в окне лестницы");
+    ok(rb.loot >= 1 && rb.lootTaken && rb.lootUseful && rb.same, "из-под обломков — только полезное, сразу в рюкзак, и те же находки при повторе (" + rb.lootKinds + ")");
+    ok(rb.saved, "запись игры помнит разобранный завал");
+    ok(rb.jackUse && rb.jackLeft === 0 && rb.jackSet && rb.jackP === 50 && /Качать домкрат дальше/.test(rb.jackNext) && rb.jackDone, "домкрат: два подхода почти без шума, остаётся держать плиту (" + rb.jackP + ", " + rb.jackNext + ")");
+    ok(rb.rc && rb.notShop && rb.brewed === 1, "подрывной заряд делают на химическом столе (пиротехника, без журнала); домкрата и заряда нет на прилавках (" + rb.brewed + ")");
+    ok(rb.armUse && rb.armLeft === 0 && rb.armed && rb.fuse === 1 && rb.blastDone && rb.blastHurt && rb.blastWave >= 1 && rb.blastHeat && rb.blastLoot >= 1, "заряд: шесть секунд запала, взрыв разносит завал, рядом задевает, ОКО шлёт машины, находки — у лестницы (" + JSON.stringify({ use: rb.armUse, left: rb.armLeft, armed: rb.armed, fuse: rb.fuse, done: rb.blastDone, hurt: rb.blastHurt, w: rb.blastWave, heat: rb.blastHeat, l: rb.blastLoot }) + ")");
+    if (rb.tbTurns != null) ok(rb.tbTurns === 2, "пошаговый бой: подход к завалу — два хода (" + rb.tbTurns + ")");
+    if (!rb.doorNone) ok(rb.doorItem && rb.doorBlast && rb.doorOpen && rb.doorLoot >= 1, "завал в проходе сносит и подрывной заряд — с находками на месте завала");
+  }
+
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {
     const g = LAB.game, G = g.G, out = { floors: 0, err: [], want: 0 };

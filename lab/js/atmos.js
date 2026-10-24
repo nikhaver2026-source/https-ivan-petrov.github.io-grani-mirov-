@@ -612,6 +612,29 @@ function shellIncoming(x, y) { at("shell_whistle", x, y, { gain: 1.1 }); sub("С
 function mineBeep(x, y) { at("mine_beep", x, y, { gain: 0.8, bus: "ui" }); }
 function dropLoot(x, y) { at("loot_drop", x, y, { gain: 0.7 }); }
 function implant(id) { play("implant_" + id, { fb: FB.implant }); }
+/* (3.0) Завал на лестнице (rubble.js): подход — три удара по бетону с осыпью
+   (монтировкой — звон металла и рывок), домкрат — шипение гидравлики, стон
+   плиты и шорох; проход свободен — осыпь и глухой удар упавшей плиты. */
+function rubbleWork(x, y, how) {
+  if (how === "jack") {
+    at("ev_steam", x, y, { gain: 0.45, rate: 0.8 });
+    at("ev_metal_groan", x, y, { gain: 0.7, delay: 0.9 });
+    at("debris", x, y, { gain: 0.45, delay: 1.9, rate: 0.9 });
+    return;
+  }
+  var bar = how === "bar";
+  for (var i = 0; i < 3; i++) {
+    at(bar ? "hit_metal" : "rubble_hit", x, y, { gain: 0.85, delay: i * 0.8, rate: 0.9 + Math.random() * 0.2 });
+    at("debris", x, y, { gain: 0.5, delay: i * 0.8 + 0.25, rate: 0.85 + Math.random() * 0.3 });
+  }
+  if (bar) at("pry", x, y, { gain: 0.7, delay: 2.0 });
+}
+function rubbleClear(x, y, how) {
+  if (how === "blast") { at("debris", x, y, { gain: 0.9, delay: 0.9, rate: 0.75, reverb: 0.7 }); return; }
+  at("debris", x, y, { gain: 1, rate: 0.8, reverb: 0.6 });
+  at("bump_wall_thud", x, y, { gain: 0.8, delay: 0.35 });
+  at("debris", x, y, { gain: 0.7, delay: 0.7, rate: 1.1 });
+}
 /* ОКО: позывной громкой связи, тревога, приманка. */
 function okoChime() { play("oko_chime", { gain: 0.9, bus: "fx", reverb: 0.6, fb: FB.oko_chime }); }
 function okoAlarm() {
@@ -828,7 +851,7 @@ LAB.atmos = {
   navPing: navPing, navStart: navStart, pickup: pickup,
   foeSound: foeSound, foeStep: foeStep, foeHit: foeHit, foeDeath: foeDeath, foeMiss: foeMiss, hurt: hurt,
   shot: shot, shotWall: shotWall, shotMiss: shotMiss, swingMiss: swingMiss, explosion: explosion, grenade: grenade, shellIncoming: shellIncoming,
-  mineBeep: mineBeep, dropLoot: dropLoot, implant: implant, combatLevel: combatLevel, okoChime: okoChime, okoAlarm: okoAlarm, noiseLure: noiseLure, deafen: deafen,
+  mineBeep: mineBeep, dropLoot: dropLoot, implant: implant, rubbleWork: rubbleWork, rubbleClear: rubbleClear, combatLevel: combatLevel, okoChime: okoChime, okoAlarm: okoAlarm, noiseLure: noiseLure, deafen: deafen,
   alarmLayer: alarmLayer, camTurn: camTurn, mimicHum: mimicHum, turretHot: turretHot,
   music: music, stopMusic: stopMusic, musicVolume: musicVolume, musicNow: musicNow, preloadLevel: preloadLevel, idsFor: idsFor
 };

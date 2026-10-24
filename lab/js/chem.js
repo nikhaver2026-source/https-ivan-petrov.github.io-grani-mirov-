@@ -133,6 +133,9 @@ var PROD = {
   c_napalm:    { n: "Напалм", icon: "🔥", kind: "throw", br: "pyro", price: 90, depth: 4, mods: ["long", "strong", "clean"], desc: "Огонь на два шага вокруг, и пол горит ещё долго. Бросайте подальше.",
     gren: { dmg: 24, r: 2, dt: "thermo", burn: 16, self: true, range: 5, fuse: 900, loud: 9 } },
   c_thermite:  { n: "Термитный заряд", icon: "🧨", kind: "use", br: "pyro", ce: "thermite", price: 80, depth: 4, mods: [], desc: "Прожигает замок запертой двери под ключ, код или пропуск — и замок сейфа. Громко: ОКО услышит." },
+  /* (3.0) подрывной заряд: соли-окислитель, масло-горючее, провод запала. Только у химического
+     стола и на этаже с заваленной лестницей (world.js, шаг 26): в прилавках его нет (src) */
+  c_blast:     { n: "Подрывной заряд", icon: "💥", kind: "use", br: "pyro", ce: "blast", price: 50, depth: 1, mods: [], src: "craft", desc: "Шашка горноспасателей: разносит завал на лестнице или в проходе. Запал горит шесть секунд — отойдите: на два шага вокруг заденет. Слышно на весь этаж." },
   c_salve:     { n: "Хитиновая мазь", icon: "🐚", kind: "use", br: "bio", ce: "salve", price: 45, depth: 2, mods: ["long", "strong"], mut: 1, desc: "Схватывается на коже коркой: щит на 30 урона, держится полминуты." },
   c_bait:      { n: "Феромонная приманка", icon: "🍖", kind: "use", br: "bio", ce: "bait", price: 30, depth: 1, mods: ["long"], desc: "Бросьте — твари поблизости пойдут на запах, а вы в другую сторону. Машинам всё равно." },
   c_culture:   { n: "Культура регенерации", icon: "🧫", kind: "use", cat: "med", br: "bio", ce: "regen2", price: 90, depth: 4, mods: ["long", "strong"], mut: 1, desc: "Две с половиной минуты здоровье понемногу возвращается — до сотни." },
@@ -283,6 +286,7 @@ var RC = [
   { id: "p_cryo", out: "c_cryo", br: "pyro", lv: 2, st: 2, need: { c_coolant: 2, c_salt: 1, scrap: 1 } },
   { id: "p_flash", out: "c_flash", br: "pyro", lv: 2, st: 2, f: 1, need: { c_phosphor: 1, c_salt: 1, cap: 1 } },
   { id: "p_thermite", out: "c_thermite", br: "pyro", lv: 3, st: 3, f: 1, need: { c_phosphor: 1, c_fuel: 1, scrap: 2 } },
+  { id: "p_blast", out: "c_blast", br: "pyro", lv: 0, st: 1, need: { c_salt: 2, c_oil: 1, wire: 1 } }, /* (3.0) завалы: rubble.js */
   { id: "p_napalm", out: "c_napalm", br: "pyro", lv: 4, st: 3, f: 1, need: { c_fuel: 2, c_phosphor: 1, c_solvent: 1 } },
   { id: "b_bait", out: "c_bait", br: "bio", lv: 0, st: 1, need: { c_gland: 1, c_blood: 1 } },
   { id: "b_salve", out: "c_salve", br: "bio", lv: 1, st: 2, need: { c_chitin: 2, gel: 1 } },
@@ -832,6 +836,7 @@ function use(id) {
       w.cond = Math.min(90, c0 + Math.round(20 * k.mag * potK("energy"))); msg = "Смазка легла ровно: состояние оружия " + Math.round(w.cond) + " из 100."; break;
     case "bait": return throwBait(id, k);
     case "thermite": say("Термит прожигает замки: встаньте у запертой двери или сейфа и выберите «Прожечь замок термитом»."); return false;
+    case "blast": return LAB.rubble ? LAB.rubble.use(id) : false; /* (3.0) подрывной заряд — у завала (rubble.js) */
     default: return false;
   }
   g.inv[id]--; if (!g.inv[id]) delete g.inv[id];
@@ -915,6 +920,17 @@ function grenHit(q, f) {
 /* ════════ ТЕРМИТ: двери и сейфы ════════ */
 function thermiteOk() { var g = G(); return Object.keys(g.inv).some(function (k) { return g.inv[k] > 0 && (k === "c_thermite" || (PV[k] && PV[k].b === "c_thermite")); }); }
 function useThermite() { var g = G(); for (var k in g.inv) if (g.inv[k] > 0 && (k === "c_thermite" || (PV[k] && PV[k].b === "c_thermite"))) { g.inv[k]--; if (!g.inv[k]) delete g.inv[k]; return true; } return false; }
+/* (3.0) Подрывной заряд (rubble.js): есть ли и взять один — младшего сорта; сорт — сила взрыва. */
+function blastIds() { var g = G(); return Object.keys(g.inv).filter(function (k) { return g.inv[k] > 0 && (k === "c_blast" || (PV[k] && PV[k].b === "c_blast")); }); }
+function blastOk() { return blastIds().length > 0; }
+function useBlast() {
+  var ids = blastIds().sort(function (a, b) { return ((PV[a] && PV[a].g) || 1) - ((PV[b] && PV[b].g) || 1); });
+  if (!ids.length) return null;
+  var g = G(), id = ids[0], d = LAB.ITEMS[id];
+  g.inv[id]--; if (!g.inv[id]) delete g.inv[id];
+  gain("pyro", 5);
+  return { id: id, n: d.n, mag: (d.vk && d.vk.mag) || 1 };
+}
 function burnDoor(d, openFn) {
   if (!useThermite()) return false;
   A("play", "hurt_burn"); A("explosion", d.x, d.y, "fire");
@@ -1076,7 +1092,7 @@ LAB.chem = {
   open: open, place: place, drops: drops, use: use, afterUse: afterUse, tick: tick, repels: repels, onShot: onShot, afterHit: afterHit, chilled: chilled, heatK: heatK,
   safeGrenades: safeGrenades, radiusBonus: radiusBonus, grenHit: grenHit, onBite: onBite,
   healK: healK, noOverdose: noOverdose, potK: potK, line: line, invMenu: invMenu, matCount: matCount, noteText: noteText, fromNote: fromNote,
-  thermiteOk: thermiteOk, burnDoor: burnDoor, burnSafe: burnSafe, capsuleSleep: capsuleSleep, decon: decon,
+  thermiteOk: thermiteOk, burnDoor: burnDoor, burnSafe: burnSafe, capsuleSleep: capsuleSleep, decon: decon, blastOk: blastOk, useBlast: useBlast,
   mut: mut, stage: stage, addMut: addMut, cutMut: cutMut, mutLine: mutLine, fogHere: fogHere, fogPlan: fogPlan, matId: matId, prodId: prodId, gradeAt: gradeAt,
   level: level, brLv: brLv, gain: gain, spec: spec, rank: rank, known: known, learn: learn, station: station,
   brew: function (id, o) { return brew(RCBY[id], o || null); }, forecast: function (id, o) { return forecast(RCBY[id], o ? station(o) : null); }, why: function (id, o) { return why(RCBY[id], o ? station(o) : null); },
