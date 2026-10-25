@@ -3980,12 +3980,15 @@ LAB.ui.closeAll();
       S.difficulty = 4;
       C.foes().forEach(f => { f.dead = true; });
       G.hpMax = 100; G.hp = 20; G.lastHurt = 0; G.st.poison = 0; G.st.bleed = 0;
+      /* облучение, токсины и мутаген, набранные в прежних проверках, сами отнимают здоровье
+         (лучевая болезнь от 90 — минус 2 каждые четыре такта) или прибавляют его — здесь их нет */
+      G.body.rad = 0; G.body.tox = 0; G.body.mut = 0;
       /* ОКО после прежних проверок могло прислать отряд — на время проверки этаж пуст */
       const quiet = () => { C.foes().forEach(f => { f.dead = true; }); if (LAB.oko && LAB.oko.state) LAB.oko.state().heat = 0; g.CUR.fs.alarmUntil = 0; };
       const t0r = C.tickN();
       for (let i = 0; i < 60; i++) { quiet(); C.tick(); }
       out.regen = G.hp > 20 && G.hp <= 60;
-      if (!out.regen) out.regenDiag = { hp: G.hp, stair: !!G.stair, dang: C.danger(), ticks: C.tickN() - t0r, poison: G.st.poison, bleed: G.st.bleed, par: G.st.parasite, d: S.difficulty, rg: LAB.dk().regen, dead: G.dead };
+      if (!out.regen) out.regenDiag = { hp: G.hp, stair: !!G.stair, dang: C.danger(), ticks: C.tickN() - t0r, poison: G.st.poison, bleed: G.st.bleed, par: G.st.parasite, rad: Math.round(G.body.rad || 0), tox: Math.round(G.body.tox || 0), mut: Math.round(G.body.mut || 0), d: S.difficulty, rg: LAB.dk().regen, dead: G.dead };
       G.hp = 70; for (let i = 0; i < 30; i++) { quiet(); C.tick(); }
       out.regenCap = G.hp === 70;
     } catch (e) { out.err = String(e && e.stack || e).slice(0, 300); }
