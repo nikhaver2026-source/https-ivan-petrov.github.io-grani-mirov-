@@ -173,6 +173,8 @@ function makeRuntime(def, st) {
     guard: def.guard || null, post: def.post ? { x: def.post[0], y: def.post[1] } : null, oko: !!(def.oko || def.squad || def.guard), squad: !!def.squad, fresh: !!def.fresh,
     /* (3.0) каратель ОКО — ударная группа против мясорубки (oko.js, punTick) */
     punisher: !!def.punisher,
+    /* (3.0) номер волны ОКО: разбита целиком — передышка (oko.js, waveDown) */
+    wv: def.wv || 0,
     route: null, ri: 0, stuck: 0, exit: null, repT: 0, fixT: 0, heatN: 0, over: 0, nodeT: 0,
     /* (2.0) участок обхода патруля, рабочая машина кабинета, сапёр ОКО */
     beat: def.beat || null, bi: def.bi || 0, bdir: 1, work: !!def.work, garrison: def.garrison || null, sapper: !!def.sapper || base.beh.indexOf("mines") >= 0,
@@ -2337,7 +2339,7 @@ function kill(f, quiet) {
     foes.forEach(function (o) { if (o !== f && hostile(o) && o.kind === "mech" && (o.oko || o.patrol || o.route || o.guard)) o.confused = Math.max(o.confused || 0, 12); });
   }
   if (LAB.oko && f.kind === "mech" && !f.ally) LAB.oko.event("kill", { task: f.task, stalker: has(f, "stalker"), camera: has(f, "camera"), guard: f.guard, post: f.post, oko: f.oko, x: f.x, y: f.y,
-    beat: f.beat && !f.sapper ? f.beat : null, corr: f.corr, room: f.room, type: f.type, garrison: f.garrison });
+    beat: f.beat && !f.sapper ? f.beat : null, corr: f.corr, room: f.room, type: f.type, garrison: f.garrison, wv: f.wv });
   if (LAB.oko && f.boss) LAB.oko.event("boss");
   if (f.kind === "bio") mutantDeath(f, quiet); /* (2.5) отряд без вожака, павший для падальщиков */
   if (has(f, "commander")) {
@@ -2552,8 +2554,9 @@ function okoPool(mode) {
    камеру, шум); repair — ремонтник к турелям; patrol — патрульный новой
    смены; drone — дрон слежения; post — смена на опустевший пост (at — пост
    и его вид). Двери отряду открывает ОКО; кто вас не нашёл — остаётся на
-   этаже патрулём. Возвращает вышедших. */
-function dispatch(n, mode, at) {
+   этаже патрулём. more — что ещё записать машинам (номер волны). Возвращает
+   вышедших. */
+function dispatch(n, mode, at, more) {
   var fs = CUR().fs, hp = heroPos(), pool = okoPool(mode), got = [];
   /* куда идти, ОКО знает только из донесений (at); без них отряд прочёсывает этаж.
      Точка выхода — вне вашего поля зрения: так честнее для игрока. */
@@ -2572,6 +2575,7 @@ function dispatch(n, mode, at) {
     var type = mode === "repair" && i > 0 ? okoPool("hunt")[Math.floor(Math.random() * okoPool("hunt").length)] : pool[Math.floor(Math.random() * pool.length)];
     if (!LAB.FOES[type]) type = "patrolbot";
     var ex = { squad: true, oko: true, fresh: !!fs.robots, task: mode === "repair" && i === 0 ? "repair" : null, patrol: mode === "patrol" };
+    if (more) for (var mk in more) ex[mk] = more[mk];
     if (mode === "post") { ex.guard = to.kind || "post"; ex.post = [to.x, to.y]; }
     var sp = spawnFoe(type, c[0], c[1], ex);
     if (!sp) break;
@@ -2613,7 +2617,7 @@ function replacePatrol(q) {
     if (!c) break;
     var type = !heavy && i === 0 && q.type && LAB.FOES[q.type] ? q.type : pool[Math.floor(Math.random() * pool.length)];
     if (!LAB.FOES[type]) type = "patrolbot";
-    var sp = spawnFoe(type, c[0], c[1], { patrol: true, beat: q.beat, corr: q.corr, oko: true, squad: q.n > 1 });
+    var sp = spawnFoe(type, c[0], c[1], { patrol: true, beat: q.beat, corr: q.corr, oko: true, squad: q.n > 1, wv: q.wv || 0 });
     if (!sp) break;
     if (heavy && q.at) { sp.state = "alert"; sp.lastKnown = { x: q.at.x, y: q.at.y }; sp.lost = 0; } else sp.state = "idle";
     got.push(sp);

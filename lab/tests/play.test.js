@@ -980,6 +980,18 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     const live = () => C.foes().filter(f => !f.dead);
     const dH = f => Math.abs(f.x - G.x) + Math.abs(f.y - G.y);
     const god = () => { G.hp = G.hpMax = 99999; G.dead = false; };
+    /* (3.0) волны ОКО выжидают, пока герой в помещении: выйти в коридор (без передышки и ожидания) */
+    const outside = () => {
+      const fl = g.CUR.fl, W = LAB.W, fs = g.CUR.fs; let best = null, bd = 1e9;
+      for (let i = 0; i < fl.t.length; i++) {
+        if (fl.corrAt[i] < 0 || fl.room[i] >= 0 || fl.t[i] === LAB.T.DOOR) continue;
+        const x = i % W, y = (i / W) | 0;
+        if (!g.passable(x, y) || C.foes().some(f => !f.dead && f.x === x && f.y === y)) continue;
+        const d = Math.abs(x - G.x) + Math.abs(y - G.y); if (d < bd) { bd = d; best = [x, y]; }
+      }
+      if (best) { G.x = best[0]; G.y = best[1]; }
+      fs.wIn = false; fs.wOut = 0; fs.wHoldT = 0; fs.wReady = 0;
+    };
     const posts = { lift: 0, stairs: 0, office: 0, inRoom: true };
     for (let L = 1; L <= 12; L++) for (let F = 3; F <= 19; F += 4) {
       const fl = LAB.getFloor(G.seed, L, F);
@@ -1011,7 +1023,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
       }
     }
     /* перепрошивка: новые машины с другого этажа идут на вас */
-    g.enterFloor(2, 8, "down", true); god();
+    g.enterFloor(2, 8, "down", true); god(); outside();
     g.CUR.fs.robots = true; C.robotsCalm();
     LAB.oko.event("robots", { x: G.x, y: G.y }); /* в игре — с координатами терминала, у которого стоит герой */
     let fresh = [];
@@ -1021,7 +1033,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     out.fresh = { n: fresh.length, d0: fd0, d1: Math.min.apply(null, fresh.filter(f => !f.dead).map(dH).concat([999])) };
     /* неудачный взлом: проверка идёт к терминалу */
     g.enterFloor(2, 9, "down", true); god();
-    live().forEach(f => { f.dead = true; });
+    live().forEach(f => { f.dead = true; }); outside();
     const term = g.CUR.fl.objs.find(o => o.type === "terminal") || { x: G.x, y: G.y };
     LAB.oko.event("hack_fail", { x: term.x, y: term.y });
     let sq = [];
@@ -3241,8 +3253,20 @@ LAB.ui.closeAll();
     const repl = () => g.CUR.fs.repl || [];
     /* этаж — заново, как в новой игре: прежние проверки здесь всех уже победили */
     const fresh = (L, F) => { g.enterFloor(L, F === 1 ? 2 : F - 1, "down", true); delete G.fs[L + "-" + F]; g.enterFloor(L, F, "down", true); };
+    /* (3.0) волны ОКО выжидают, пока герой в помещении: выйти в коридор (без передышки и ожидания) */
+    const outside = () => {
+      const fl = g.CUR.fl, W = LAB.W, fs = g.CUR.fs; let best = null, bd = 1e9;
+      for (let i = 0; i < fl.t.length; i++) {
+        if (fl.corrAt[i] < 0 || fl.room[i] >= 0 || fl.t[i] === LAB.T.DOOR) continue;
+        const x = i % W, y = (i / W) | 0;
+        if (!g.passable(x, y) || C.foes().some(f => !f.dead && f.x === x && f.y === y)) continue;
+        const d = Math.abs(x - G.x) + Math.abs(y - G.y); if (d < bd) { bd = d; best = [x, y]; }
+      }
+      if (best) { G.x = best[0]; G.y = best[1]; }
+      fs.wIn = false; fs.wOut = 0; fs.wHoldT = 0; fs.wReady = 0;
+    };
     fresh(2, 4);
-    G.hp = G.hpMax = 1e7; G.st.cloak = 1e6;
+    G.hp = G.hpMax = 1e7; G.st.cloak = 1e6; outside();
     /* убили патрульного — ОКО шлёт нового на тот же участок, не у вас на глазах */
     /* (2.2) не сапёр: его участок ОКО не возобновляет (у сапёра свой приказ) */
     const pat = live().filter(f => f.beat && f.kind === "mech" && !f.boss && !f.sapper).sort((a, b) => hero(b) - hero(a))[0];
@@ -4837,6 +4861,146 @@ LAB.ui.closeAll();
   }
   if (kt.fridgeMenu != null) ok(/Открыть холодильник/.test(kt.fridgeMenu) && kt.fridgeOk, "открыли холодильник — внутри то, что держат в холоде (" + kt.fridgeGot + ")");
   if (!kt.coldNone) ok(kt.coldOk, "в холодильной камере ищут съестное — и находят только еду (" + (kt.coldGot || "пусто") + ")");
+
+  console.log("Альфа 3.0: передышка между волнами ОКО — по одной, после разбитой волны, пока вы в помещении, после выхода в коридор; по режимам");
+  const wvp = await page.evaluate(async () => {
+    const g = LAB.game, C = LAB.combat, O = LAB.oko, S = LAB.settings, out = {};
+    const G = g.G;
+    C.stop(); LAB.ui.closeAll();
+    const d0 = S.difficulty, tb0 = S.turnBased, hp0 = G.hp, hpm0 = G.hpMax, cl0 = G.st.cloak, rnd0 = Math.random, heat0 = O.state().heat;
+    try {
+      S.difficulty = 1; S.turnBased = 0; O.state().heat = 0;
+      /* режимы: чем сложнее, тем короче передышка, промежуток, задержка в коридоре и ожидание в помещении; в лёгком ОКО ждёт сколько угодно */
+      const D = [4, 1, 2, 3].map(k => LAB.DIFF[k]);
+      out.modes = D.map(d => [d.wRest, d.wGap, d.wOut, d.wHold].join("/")).join(" ");
+      const dec = k => D.every((d, i) => i === 0 || d[k] < D[i - 1][k]);
+      out.modesOk = dec("wRest") && dec("wGap") && dec("wOut") && D[0].wHold === 0 && D.slice(1).every((d, i) => d.wHold > 0 && (i === 0 || d.wHold < D[i].wHold)) && D.every(d => d.wRest > d.wGap && d.wRest >= 60);
+      out.descOk = D.every(d => /волн/.test(d.desc));
+      /* этаж с чистого листа и без врагов: волны выпускаем сами */
+      g.enterFloor(3, 11, "down", true); delete G.fs["3-12"]; g.enterFloor(3, 12, "down", true);
+      const fs = g.CUR.fs, fl = g.CUR.fl, W = LAB.W;
+      G.hp = G.hpMax = 1e7; G.st.cloak = 1e6;
+      const reset = () => { C.foes().forEach(f => { f.dead = true; }); fs.waves = []; fs.repl = []; fs.droneAt = 0; fs.shiftAt = 1e9; fs.repairAt = 0; fs.pun = 0; fs.grind = 0; fs.mineNext = 1e9; fs.wReady = 0; fs.wHoldT = 0; fs.wOut = 0; };
+      const pats = C.foes().filter(f => f.beat && f.beat.length > 2 && f.kind === "mech" && !f.spawned && !f.sapper);
+      reset(); fs.wIn = false;
+      const cells = want => { const a = []; for (let i = 0; i < fl.t.length; i++) { const x = i % W, y = (i / W) | 0; if (fl.t[i] === LAB.T.DOOR || !g.passable(x, y)) continue; if (want === "room" ? fl.room[i] >= 0 : fl.corrAt[i] >= 0 && fl.room[i] < 0) a.push([x, y]); } return a; };
+      const corrs = cells("corr"), rooms = cells("room"), cC = corrs[Math.floor(corrs.length / 2)], cR = rooms[Math.floor(rooms.length / 2)];
+      const at = c => { G.x = c[0]; G.y = c[1]; };
+      const live = () => C.foes().filter(f => !f.dead && f.wv > 0);
+      const until = (fn, max) => { for (let i = 1; i <= max; i++) { C.tick(); if (fn()) return i; } return -1; };
+      const slog = () => (fs.slog || []).map(e => e.t).join(" | ");
+      at(cC); C.tick();
+      const tgt = { x: G.x, y: G.y }, gap = O.wsec("wGap"), rest = O.wsec("wRest"), outT = O.wsec("wOut"), cap = O.wsec("wHold");
+      out.ticks = [rest, gap, outT, cap].join("/");
+      out.secOk = rest === LAB.DIFF[1].wRest * 2 && cap === LAB.DIFF[1].wHold * 2;
+
+      /* А. В коридоре две волны разом — выходят по одной: вторая — через промежуток wGap */
+      O.wave(1, 2, "hunt", tgt); O.wave(1, 1, "hunt", tgt);
+      const nA = fs.waves[0].n;
+      const t1 = until(() => live().length > 0, 20), wA = live(), idA = wA.length ? wA[0].wv : 0;
+      out.countA = nA + "/" + wA.length;
+      const t2 = until(() => live().some(f => f.wv !== idA), gap + 20);
+      out.gapT = [t1, t2, gap].join("/");
+      out.gapOk = t1 >= 1 && t1 <= 3 && t2 >= gap - 1 && t2 <= gap + 2;
+
+      /* Б. Пала первая машина волны — передышки ещё нет; пала последняя — следующая волна не раньше чем через wRest */
+      live().forEach(f => { if (f.wv !== idA) f.dead = true; });
+      O.wave(1, 1, "check", tgt);
+      const r0 = O.pace().ready, A0 = live().filter(f => f.wv === idA);
+      delete G.tut.wave; SPOKEN.length = 0;
+      C.damageFoe(A0[0], 1e9, "kinetic", { quiet: true });
+      out.half = A0.length < 2 || O.pace().ready === r0;
+      A0.slice(1).forEach(f => C.damageFoe(f, 1e9, "kinetic", { quiet: true }));
+      const tK = O.T();
+      out.restSet = O.pace().ready >= tK + rest - 1;
+      out.tut = /Волна машин ОКО разбита/.test(SPOKEN.join(" | ")) && !!G.tut.wave;
+      out.restLog = /Волна единиц потеряна/.test(slog());
+      const t3 = until(() => live().some(f => f.wv > idA + 1), rest + 20);
+      out.restT = [t3, rest].join("/");
+      out.restOk = t3 >= rest - 2 && t3 <= rest + 2;
+
+      /* В. Носитель в помещении — ОКО выжидает; вышел в коридор — волна выходит через wOut */
+      reset(); at(cR); C.tick(); out.inRoom = O.pace().inRoom;
+      O.state().lastSay = 0; O.state().waitSaid = 0; SPOKEN.length = 0;
+      O.wave(1, 1, "hunt", tgt);
+      Math.random = () => 0.01; C.tick(); C.tick(); Math.random = rnd0;
+      const tIn = until(() => live().length > 0, 120);
+      out.held = tIn < 0 && O.pace().hold > 0 && fs.waves.length === 1;
+      out.heldLog = /Выход единиц отложен: носитель в помещении/.test(slog());
+      await new Promise(r => setTimeout(r, 700));
+      const wl = O.lines("wait");
+      out.waitSaid = SPOKEN.filter(t => /ОКО по громкой связи/.test(t) && wl.some(l => t.indexOf(l) >= 0)).join(" | ");
+      out.waitOk = !!out.waitSaid;
+      at(cC);
+      const tOut = until(() => live().length > 0, outT + 20);
+      out.outT = [tOut, outT].join("/");
+      out.outOk = tOut >= outT - 1 && tOut <= outT + 2;
+
+      /* Г. Шагнуть за порог и обратно — ожидание не сбрасывается; дольше wHold ОКО не ждёт и шлёт волну в помещение */
+      reset(); at(cR); C.tick();
+      O.wave(1, 1, "hunt", tgt); C.tick(); C.tick();
+      const h0 = O.pace().hold;
+      at(cC); for (let i = 0; i < 10; i++) C.tick();
+      at(cR); C.tick();
+      out.holdKept = h0 > 0 && O.pace().hold === h0 && live().length === 0;
+      const tCap = until(() => live().length > 0, cap + 20);
+      out.capT = [tCap > 0 ? O.T() - h0 : -1, cap].join("/");
+      out.capOk = tCap > 0 && O.pace().inRoom && O.T() - h0 >= cap - 1 && O.T() - h0 <= cap + 2 && /Ожидание прекращено/.test(slog());
+
+      /* Д. Смена караула и машины на шум у завала — в свой срок, хоть носитель в помещении и идёт передышка */
+      reset(); at(cR); C.tick();
+      fs.wReady = O.T() + 1000;
+      O.wave(1, 1, "patrol", null, "shift"); O.wave(1, 1, "check", tgt, "rubble");
+      for (let i = 0; i < 6; i++) C.tick();
+      const sp = C.foes().filter(f => !f.dead && f.spawned);
+      out.own = sp.some(f => f.patrol && !f.wv) && sp.some(f => f.wv > 0) && fs.waves.length === 0;
+
+      /* Е. Замена павшего патрульного — тоже волна: ждёт, пока носитель в помещении */
+      reset(); at(cR); C.tick();
+      const hp = c => Math.min.apply(null, c.beat.map(p => Math.abs(p[0] - cC[0]) + Math.abs(p[1] - cC[1])));
+      const pb = pats.slice().sort((a, b) => hp(b) - hp(a))[0];
+      if (pb) {
+        const bk = JSON.stringify(pb.beat);
+        fs.repl.push({ k: "patrol", t: O.T() + 1, beat: pb.beat, corr: pb.corr, type: pb.type, n: 1, at: null });
+        const isR = () => C.foes().some(f => !f.dead && f.spawned && f.wv > 0 && JSON.stringify(f.beat) === bk);
+        const rIn = until(isR, 60);
+        at(cC);
+        const rOut = until(isR, outT + 60);
+        out.repl = [rIn, rOut, outT].join("/");
+        out.replOk = rIn < 0 && rOut >= outT - 1;
+      }
+
+      /* Ж. Очередь переполнилась — машины встают в последнюю волну того же вида: их не меньше */
+      reset();
+      for (let i = 0; i < 12; i++) fs.waves.push({ t: O.T() + 999, n: 1, mode: "hunt", at: null, tag: "" });
+      const sum0 = fs.waves.reduce((s, w) => s + w.n, 0);
+      O.wave(5, 2, "hunt", tgt);
+      out.merge = fs.waves.length === 12 && fs.waves.reduce((s, w) => s + w.n, 0) === sum0 + Math.round(2 * LAB.dk().repl);
+
+      /* З. Лёгкий режим: в помещении ОКО ждёт сколько угодно */
+      S.difficulty = 4; reset(); at(cR); C.tick();
+      O.wave(1, 1, "hunt", tgt);
+      out.easy = O.wsec("wHold") === 0 && until(() => live().length > 0, 900) < 0 && fs.waves.length === 1;
+    } catch (e) { out.err = String(e && e.stack || e).slice(0, 400); }
+    finally {
+      Math.random = rnd0; S.difficulty = d0; S.turnBased = tb0; G.hp = hp0; G.hpMax = hpm0; G.st.cloak = cl0; O.state().heat = heat0;
+      const fs = g.CUR.fs; C.foes().forEach(f => { if (f.spawned) f.dead = true; }); fs.waves = []; fs.repl = []; fs.wReady = 0; fs.wHoldT = 0; fs.wOut = 0;
+    }
+    return out;
+  });
+  ok(!wvp.err, "передышка между волнами: проверка без ошибок" + (wvp.err ? " (" + wvp.err + ")" : ""));
+  ok(wvp.modesOk && wvp.descOk && wvp.secOk, "по режимам (лёгкий, обычный, сложный, очень сложный — передышка/промежуток/коридор/ожидание, с): " + wvp.modes + "; в описании режимов — о передышке");
+  ok(wvp.gapOk && wvp.countA && wvp.countA.split("/")[0] === wvp.countA.split("/")[1], "две волны разом выходят по одной, вторая — через промежуток (" + wvp.gapT + " тактов); машин в волне — сколько назначено (" + wvp.countA + ")");
+  ok(wvp.half && wvp.restSet && wvp.restOk && wvp.restLog, "пала последняя машина волны — следующая выходит не раньше чем через передышку (" + wvp.restT + " тактов)");
+  ok(wvp.tut, "в первый раз «Эхо» объясняет передышку и что ОКО выжидает, пока вы в помещении");
+  ok(wvp.inRoom && wvp.held && wvp.heldLog, "носитель в помещении — волна ждёт (журнал: выход отложен)");
+  ok(wvp.waitOk, "ОКО говорит, что подождёт: " + (wvp.waitSaid || "—"));
+  ok(wvp.outOk, "вышли в коридор — волна выходит через задержку режима (" + wvp.outT + " тактов)");
+  ok(wvp.holdKept && wvp.capOk, "шагнуть за порог и обратно мало; дольше срока режима ОКО не ждёт — волна выходит, хоть вы и в помещении (" + wvp.capT + " тактов)");
+  ok(wvp.own, "смена караула и машины на шум у завала выходят в свой срок — без передышки и ожидания");
+  if (wvp.repl) ok(wvp.replOk, "замена павшего патрульного тоже ждёт, пока вы в помещении, и выходит после коридора (" + wvp.repl + ")");
+  ok(wvp.merge, "очередь волн переполнилась — машины добавляются к последней волне того же вида, их число не теряется");
+  ok(wvp.easy, "лёгкий режим: пока вы в помещении, ОКО ждёт сколько угодно");
 
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {

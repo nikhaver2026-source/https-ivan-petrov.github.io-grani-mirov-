@@ -82,6 +82,8 @@ var BASE = {
   strike_recall: ["Ударная группа отозвана. Замена — в штатном режиме.", "Тишина. Я верну карателей вниз. Пока.", "Вы затихли. Я тоже подожду."],
   /* (3.0) завал на лестнице: ОКО слышит, как его разбирают или подрывают (rubble.js) */
   rubble: ["Шум на лестничной клетке. Единицы этажа — к завалу.", "Носитель роется в завале. Датчики пролёта, слушать.", "Этот пролёт закрыт, носитель. Закрыт не мной, но стерегу его я."],
+  /* (3.0) передышка между волнами: волне пора, а носитель в помещении — ОКО выжидает (canSend) */
+  wait: ["Носитель в помещении. Единицы подождут в коридоре.", "Я подожду, носитель. Коридор никуда не денется.", "Выход единиц отложен. Рано или поздно вы выйдете, носитель."],
   taunt: ["Вы считаете шаги, носитель? Я считаю ваши вдохи.", "Росток слышит вас. Не шумите.", "Люди закрывают глаза, когда слушают. Вам это не нужно.", "Я не враг. Я садовник. Садовник выпалывает лишнее.", "Вентиляция общая для всех уровней. Я слышу, как вы дышите.", "Носитель номер семь. Вы — ключ. Ключ не должен поворачиваться сам."]
 };
 /* (2.0) Реплики сверх основных — oko_lines_a.js и oko_lines_b.js: на каждой
@@ -224,8 +226,77 @@ function wave(delay, n, mode, at, tag) {
   /* (2.2) режим сложности: отряды больше или меньше (repl) и быстрее или медленнее (replT) */
   n = Math.max(1, Math.round(n * (dk.repl || 1))); delay = Math.max(1, Math.round(delay * (dk.replT || 1)));
   if (!f.waves) f.waves = [];
-  if (f.waves.length > 6) return;
+  /* (3.0) волны ждут передышки, и очередь бывает длинной; переполнилась —
+     машины встают в последнюю волну того же вида: их число не теряется */
+  if (f.waves.length >= 12) {
+    for (var i = f.waves.length - 1; i >= 0; i--) {
+      var q = f.waves[i];
+      if (q.mode === mode && !noWait(q) && q.n < 6) { q.n = Math.min(6, q.n + n); if (at) q.at = { x: at.x, y: at.y }; return; }
+    }
+    return;
+  }
   f.waves.push({ t: T() + delay, n: n, mode: mode, at: at ? { x: at.x, y: at.y } : null, tag: tag || "" });
+}
+
+/* ── (3.0, просьба игрока) ПЕРЕДЫШКА МЕЖДУ ВОЛНАМИ ──
+   Машины, которых ОКО присылает, — отряды на ваш след, проверки, новые
+   машины после перепрошивки, сапёры, замена павших патрульных и стражей
+   постов — выходят волнами, по одной, и между волнами у носителя есть время
+   (сроки — по режиму, LAB.DIFF: wRest, wGap, wOut, wHold, в секундах):
+   • разбили волну целиком — следующая выйдет не раньше чем через wRest:
+     можно дойти до помещения и перевести дух;
+   • две волны подряд — не чаще, чем через wGap;
+   • пока носитель в помещении, ОКО выжидает: волна, которой пора, ждёт его
+     в коридоре; в лёгком — сколько угодно, в остальных — до wHold, потом ОКО
+     шлёт её всё равно; вышел в коридор — волна выйдет через wOut. Шагнуть
+     за порог и обратно мало: ожидание считается, пока вы не пробудете в
+     коридоре все wOut.
+   Сколько машин в волне — не меняется: ОКО лишь ждёт. Смена караула (один
+   патрульный уходит, другой приходит), ремонтники турелей, дроны слежения,
+   заселение пустых помещений и каратели мясорубки — по своим срокам. Машины
+   на шум у завала (rubble.js) ОКО шлёт сразу, не дожидаясь: носитель вот-вот
+   уйдёт вниз; но и они — волна, и разбить их — тоже передышка. */
+function rota(w) { return w.tag === "shift" && !w.at; }
+function noWait(w) { return rota(w) || w.tag === "rubble"; }
+function wsec(k) { var v = LAB.dk()[k]; return Math.round((v != null ? v : (LAB.DIFF[1][k] || 0)) * 2); } /* секунды режима → такты */
+function heroInRoom() { var g = G(), fl = CUR().fl; return !!fl && LAB.inb(g.x, g.y) && fl.room[g.y * LAB.W + g.x] >= 0; }
+/* такт: носитель вышел из помещения в коридор — волна выйдет через wOut */
+function paceTick(now) {
+  var f = fs(), r = heroInRoom();
+  if (f.wIn && !r) f.wOut = now + wsec("wOut");
+  f.wIn = r;
+  if (!r && now >= (f.wOut || 0)) f.wHoldT = 0; /* носитель в коридоре — ОКО больше не ждёт */
+}
+/* Можно ли выпустить волну, которой пора. */
+function canSend(now) {
+  var f = fs();
+  if (now < (f.wReady || 0)) return false; /* передышка после разбитой волны или промежуток между волнами */
+  if (!f.wIn && now >= (f.wOut || 0)) { f.wHoldT = 0; return true; }
+  /* носитель в помещении (или только что вышел) — ОКО выжидает */
+  if (!f.wHoldT) {
+    f.wHoldT = now;
+    log("Выход единиц отложен: носитель " + (f.wIn ? "в помещении" : "у выхода из помещения") + ".");
+    var o = st(), ms = Date.now();
+    if (f.wIn && !f.okoBlind && !(G().st && G().st.jam > 0) && ms - (o.waitSaid || 0) > 150000 && Math.random() < 0.7) { o.waitSaid = ms; speak("wait"); }
+  }
+  var cap = wsec("wHold");
+  return cap > 0 && now - f.wHoldT >= cap; /* ОКО не дождалось */
+}
+/* Волна вышла: следующая — не раньше чем через wGap. */
+function sent(now) {
+  var f = fs();
+  if (f.wHoldT) log("Ожидание прекращено: единицы выходят."); /* вышла, хотя носитель ещё не в коридоре */
+  f.wReady = Math.max(f.wReady || 0, now + wsec("wGap")); f.wHoldT = 0;
+}
+function waveId() { var f = fs(); f.wN = (f.wN || 0) + 1; return f.wN; }
+/* Пала машина волны: если живых из неё не осталось — передышка wRest. */
+function waveDown(id) {
+  var f = fs(), cb = C(), g = G();
+  if (!id || !f || !cb) return;
+  if (cb.foes().some(function (q) { return q.wv === id && !q.dead && !q.calm && !q.ally; })) return;
+  f.wReady = Math.max(f.wReady || 0, T() + wsec("wRest"));
+  log("Волна единиц потеряна. Перегруппировка.");
+  if (!g.tut.wave) { g.tut.wave = 1; voice("«Эхо»: «Волна машин ОКО разбита. Следующую ОКО вышлет не сразу — успеете дойти до помещения и перевести дух. Пока вы в помещении, ОКО выжидает; выйдете в коридор — пришлёт снова, но не в ту же секунду».", { prio: "event", keep: true }); }
 }
 
 /* ════════ СИСТЕМА БЕЗОПАСНОСТИ ════════
@@ -595,6 +666,8 @@ function event(kind, data) {
       if (data.task === "repair") { heat(3); f.repairLost = 1; }
       /* (2.0) потеря: участок обхода, кабинет, пост — ОКО пришлёт замену */
       lost(data);
+      /* (3.0) пала последняя машина волны — передышка до следующей */
+      if (data.wv) waveDown(data.wv);
       if (data.stalker) { heat(4); f.droneAt = T() + rnd(240, 400); if (Math.random() < 0.6) speakLater("drone_lost", 1500); }
       if (data.camera) {
         heat(5);
@@ -694,10 +767,16 @@ function replTick() {
     if (now < q.t) continue;
     /* (2.3) пост в безопасной зоне у капсулы — смены не будет */
     if (q.k === "post" && cb.havenAt && cb.havenAt(q.post[0], q.post[1])) { f.repl.splice(i, 1); continue; }
-    var got = q.k === "patrol" ? cb.replacePatrol(q) : q.k === "room" ? cb.refillRoom(q) : cb.dispatch(q.n, "post", { x: q.post[0], y: q.post[1], kind: q.kind });
+    /* (3.0) замена патрульных и стражей постов — волна: ждёт передышки (canSend);
+       пустое помещение ОКО заселяет по своему сроку */
+    var wv = q.k !== "room";
+    if (wv && !canSend(now)) continue;
+    if (wv && !q.wv) q.wv = waveId();
+    var got = q.k === "patrol" ? cb.replacePatrol(q) : q.k === "room" ? cb.refillRoom(q) : cb.dispatch(q.n, "post", { x: q.post[0], y: q.post[1], kind: q.kind }, { wv: q.wv });
     if (got === null) { f.repl.splice(i, 1); continue; }
     if (!got.length) { q.t = now + 20; continue; } /* место у вас на виду — позже */
     f.repl.splice(i, 1);
+    if (wv) sent(now);
     f.replN = (f.replN || 0) + 1;
     if (got.length >= 3) { speak("squad"); heard(got, "ОКО стягивает машины"); }
     else if (q.k === "patrol") { if (o0().heat >= 40 || Math.random() < 0.5) heard(got, "Новый патруль ОКО"); }
@@ -788,6 +867,19 @@ function shift() {
   if (changed && (o.heat >= 40 || Math.random() < 0.35)) speak("shift");
 }
 
+/* Выпустить волну из очереди: машины выходят из дальней двери, ОКО говорит, кто и откуда. */
+function sendWave(w) {
+  var cb = C(), o = st(), id = rota(w) ? 0 : waveId();
+  var gotW = cb.dispatch(w.n, w.mode, w.at, id ? { wv: id } : null);
+  if (!gotW.length) return false;
+  if (w.tag === "fresh") { speak("fresh", true); heard(gotW, "Новые машины ОКО"); }
+  else if (w.mode === "patrol") { if (o.heat >= 40 || Math.random() < 0.4) heard(gotW, "Новый патруль ОКО"); }
+  else if (w.mode === "check") heard(gotW, "ОКО шлёт проверку");
+  else if (w.mode === "sapper") { log("Сапёр вышел: " + place(gotW[0].x, gotW[0].y) + "."); heard(gotW, "Сапёр ОКО вышел"); }
+  else { speak("squad"); heard(gotW, "Отряд ОКО"); }
+  return true;
+}
+
 /* Такт этажа (полсекунды, из боя; по ходам — ход): ремонтники, контрвзлом,
    отряды по расписанию, смена караула, дроны, слух ОКО, подозрение. */
 var tickN = 0;
@@ -848,27 +940,25 @@ function tick() {
     log("Ключ техника отозван.");
     if (nk) { A("play", "term_err"); speak("key_revoked", true); }
   }
-  /* отряды по расписанию */
+  /* отряды по расписанию: смена караула и машины на шум у завала — в свой срок,
+     остальные — волнами, по одной и с передышкой (3.0, canSend); первой
+     выходит та, что ждёт дольше */
+  paceTick(now);
   if (f.waves && f.waves.length) {
-    for (var i = f.waves.length - 1; i >= 0; i--) {
-      var w = f.waves[i];
-      if (now < w.t) continue;
-      f.waves.splice(i, 1);
-      var gotW = cb.dispatch(w.n, w.mode, w.at);
-      if (!gotW.length) continue;
-      if (w.tag === "fresh") { speak("fresh", true); heard(gotW, "Новые машины ОКО"); }
-      else if (w.mode === "patrol") { if (o.heat >= 40 || Math.random() < 0.4) heard(gotW, "Новый патруль ОКО"); }
-      else if (w.mode === "check") heard(gotW, "ОКО шлёт проверку");
-      else if (w.mode === "sapper") { log("Сапёр вышел: " + place(gotW[0].x, gotW[0].y) + "."); heard(gotW, "Сапёр ОКО вышел"); }
-      else { speak("squad"); heard(gotW, "Отряд ОКО"); }
-    }
+    var due = f.waves.filter(function (w) { return now >= w.t && noWait(w); });
+    if (due.length) { f.waves = f.waves.filter(function (w) { return due.indexOf(w) < 0; }); due.forEach(function (w) { sendWave(w); }); }
+    var next = null;
+    f.waves.forEach(function (w) { if (now >= w.t && (!next || w.t < next.t)) next = w; });
+    if (next && canSend(now)) { f.waves.splice(f.waves.indexOf(next), 1); if (sendWave(next)) sent(now); }
   }
   /* замена потерь: новые патрули, машины в опустевшие кабинеты, смена постов; (3.0) мясорубка */
   if (tickN % 2 === 0) { replTick(); punTick(f, now); }
-  /* перепрошитый этаж: ОКО шлёт новые машины, пока роботы этажа не его */
+  /* перепрошитый этаж: ОКО шлёт новые машины, пока роботы этажа не его
+     (и те, что ещё ждут выхода, — в счёт) */
   if (f.robots && f.flashNext && now >= f.flashNext) {
     f.flashNext = now + rnd(220, 320);
-    if (cb.patrols().filter(function (p) { return p.fresh; }).length < 3) wave(0, 1, "patrol", null, "fresh");
+    var fq = (f.waves || []).reduce(function (s0, w) { return s0 + (w.tag === "fresh" ? w.n : 0); }, 0);
+    if (cb.patrols().filter(function (p) { return p.fresh; }).length + fq < 3) wave(0, 1, "patrol", null, "fresh");
   }
   /* дрон слежения */
   if (f.droneAt && now >= f.droneAt) {
@@ -912,6 +1002,8 @@ LAB.oko = {
   event: event, tick: tick, speak: speak, alarm: alarm, difficulty: difficulty, heat: heat,
   state: st, lines: lines, wave: wave, shift: shift, react: react, minesOrder: minesOrder, minesLater: minesLater, REACT: REACT,
   report: report, level: level, levelName: function () { return SEC[level()]; }, setLevel: setLevel, sec: sec, log: log, logText: logText, T: T,
-  hushed: hushed
+  hushed: hushed,
+  /* (3.0) передышка между волнами — для проверок */
+  pace: function () { var f = fs(); return { ready: f.wReady || 0, hold: f.wHoldT || 0, out: f.wOut || 0, inRoom: !!f.wIn, n: f.wN || 0 }; }, wsec: wsec
 };
 })();
