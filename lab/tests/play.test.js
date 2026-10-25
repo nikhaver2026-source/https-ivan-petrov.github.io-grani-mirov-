@@ -1039,8 +1039,10 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     let sq = [];
     for (let i = 0; i < 40 && !sq.length; i++) { C.tick(); sq = live().filter(f => f.squad); }
     const toT = () => Math.min.apply(null, sq.filter(f => !f.dead).map(f => Math.abs(f.x - term.x) + Math.abs(f.y - term.y)).concat([999]));
-    const c0 = toT(); for (let i = 0; i < 60; i++) C.tick();
-    out.check = { n: sq.length, c0, c1: toT() };
+    /* (3.0) дойдя, проверка обыскивает всё в 14 шагах вокруг (combat.js, search): в конце она может
+       оказаться и дальше, чем вышла, — поэтому важно, что она подошла к терминалу, а не где кончила */
+    const c0 = toT(); let cmin = c0; for (let i = 0; i < 60; i++) { C.tick(); cmin = Math.min(cmin, toT()); }
+    out.check = { n: sq.length, c0, c1: toT(), cmin };
     /* дрон слежения: догоняет, держит дистанцию, стреляет */
     g.enterFloor(3, 5, "down", true); god();
     live().forEach(f => { f.dead = true; });
@@ -1082,7 +1084,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(!oko.repair || oko.repair.t2 >= 0, "ремонтник дошёл и починил: сеть снова у ОКО (тактов: " + (oko.repair && oko.repair.t2) + ")" + (oko.repair && oko.repair.diag ? " — " + oko.repair.diag : ""));
   ok(oko.fresh.n >= 1 && oko.fresh.d1 < oko.fresh.d0, "перепрошили роботов — новые машины ОКО идут к вам (" + oko.fresh.n + ", " + oko.fresh.d0 + " → " + oko.fresh.d1 + " шагов)");
   /* появилась у самого терминала — обыскивает место рядом и ближе может не подойти */
-  ok(oko.check.n >= 1 && (oko.check.c1 < oko.check.c0 || oko.check.c1 <= 8), "неудачный взлом — проверка идёт к терминалу (" + oko.check.c0 + " → " + oko.check.c1 + ")");
+  ok(oko.check.n >= 1 && (oko.check.cmin < oko.check.c0 || oko.check.cmin <= 2), "неудачный взлом — проверка идёт к терминалу (" + oko.check.c0 + " → ближе всего " + oko.check.cmin + ", в конце " + oko.check.c1 + ")");
   ok(oko.drone.n === 1 && oko.drone.close >= 20 && oko.drone.near >= 2 && oko.drone.hurt > 0, "дрон слежения вылетел к месту, где вас видела камера, нашёл вас, держится на расстоянии (не ближе " + oko.drone.near + " шагов) и стреляет");
   ok(oko.patrol.n0 >= 3 && oko.patrol.n >= 2 && oko.patrol.changed, "патрули смены: на этаже " + oko.patrol.n0 + " → " + oko.patrol.n + ", маршруты меняются");
   ok(!oko.guard || (oko.guard.back && oko.guard.state === "idle"), "страж у лифта вернулся на пост");
