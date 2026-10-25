@@ -918,17 +918,33 @@
 # «Подземная лаборатория», заход 9 (3.0): чайник — кипение электрического чайника со
 # щелчками включения и выключения, налив кипятка в кружку, ложка в кружке, набор воды
 # из крана, разорванный пакетик сахара (Freesound, только CC0).
-lab_fsN https://cdn.freesound.org/previews/212/212179_140737-hq.ogg
-lab_fsN https://cdn.freesound.org/previews/126/126039_2258946-hq.ogg
-lab_fsN https://cdn.freesound.org/previews/256/256154_2437010-hq.ogg
-lab_fsN https://cdn.freesound.org/previews/239/239005_1149179-hq.ogg
-lab_fsN https://cdn.freesound.org/previews/740/740116_14631530-hq.ogg
-lab_fsN https://cdn.freesound.org/previews/788/788304_12262933-hq.ogg
-lab_fsN https://cdn.freesound.org/previews/459/459462_7872308-hq.ogg
-lab_fsN https://cdn.freesound.org/previews/181/181716_3153523-hq.ogg
-lab_fsN https://cdn.freesound.org/previews/239/239006_1149179-hq.ogg
-lab_fsN https://cdn.freesound.org/previews/455/455009_9257855-hq.ogg
-lab_fsN https://cdn.freesound.org/previews/433/433539_1030167-hq.ogg
-lab_fsN https://cdn.freesound.org/previews/469/469121_4996003-hq.ogg
-lab_fsN https://cdn.freesound.org/previews/503/503559_1287465-hq.ogg
-lab_fsN https://cdn.freesound.org/previews/513/513901_1887294-hq.ogg
+# (заход 9 скачан) lab_fsN https://cdn.freesound.org/previews/212/212179_140737-hq.ogg
+# (заход 9 скачан) lab_fsN https://cdn.freesound.org/previews/126/126039_2258946-hq.ogg
+# (заход 9 скачан) lab_fsN https://cdn.freesound.org/previews/256/256154_2437010-hq.ogg
+# (заход 9 скачан) lab_fsN https://cdn.freesound.org/previews/239/239005_1149179-hq.ogg
+# (заход 9 скачан) lab_fsN https://cdn.freesound.org/previews/740/740116_14631530-hq.ogg
+# (заход 9 скачан) lab_fsN https://cdn.freesound.org/previews/788/788304_12262933-hq.ogg
+# (заход 9 скачан) lab_fsN https://cdn.freesound.org/previews/459/459462_7872308-hq.ogg
+# (заход 9 скачан) lab_fsN https://cdn.freesound.org/previews/181/181716_3153523-hq.ogg
+# (заход 9 скачан) lab_fsN https://cdn.freesound.org/previews/239/239006_1149179-hq.ogg
+# (заход 9 скачан) lab_fsN https://cdn.freesound.org/previews/455/455009_9257855-hq.ogg
+# (заход 9 скачан) lab_fsN https://cdn.freesound.org/previews/433/433539_1030167-hq.ogg
+# (заход 9 скачан) lab_fsN https://cdn.freesound.org/previews/469/469121_4996003-hq.ogg
+# (заход 9 скачан) lab_fsN https://cdn.freesound.org/previews/503/503559_1287465-hq.ogg
+# (заход 9 скачан) lab_fsN https://cdn.freesound.org/previews/513/513901_1887294-hq.ogg
+# «Подземная лаборатория», заход 10 (3.0): полы — шаги в обуви по бетону (коридоры, лестничные
+# клетки, склады), по деревянному полу (кабинеты, библиотеки, каюты) и скрип половиц
+# (Freesound, только CC0).
+lab_fsO https://cdn.freesound.org/previews/813/813622_16752880-hq.ogg
+lab_fsO https://cdn.freesound.org/previews/459/459964_6253486-hq.ogg
+lab_fsO https://cdn.freesound.org/previews/546/546827_2247456-hq.ogg
+lab_fsO https://cdn.freesound.org/previews/554/554380_12197305-hq.ogg
+lab_fsO https://cdn.freesound.org/previews/727/727367_15517073-hq.ogg
+lab_fsO https://cdn.freesound.org/previews/119/119914_1990698-hq.ogg
+lab_fsO https://cdn.freesound.org/previews/164/164315_2407533-hq.ogg
+lab_fsO https://cdn.freesound.org/previews/766/766000_15681096-hq.ogg
+lab_fsO https://cdn.freesound.org/previews/546/546362_12222745-hq.ogg
+lab_fsO https://cdn.freesound.org/previews/575/575898_3283195-hq.ogg
+lab_fsO https://cdn.freesound.org/previews/822/822745_9250976-hq.ogg
+lab_fsO https://cdn.freesound.org/previews/124/124289_296888-hq.ogg
+lab_fsO https://cdn.freesound.org/previews/406/406620_6068748-hq.ogg
