@@ -84,8 +84,8 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     LAB.ui.closeTop(true); LAB.ui.closeAll(); LAB.ui.mainMenu(true);
     return out;
   });
-  ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.ver === "Альфа 3.0" && news.items.some(l => /^Альфа 2\.6$/.test(l)) && news.items.some(l => /^Альфа 2\.5$/.test(l)) && news.items.some(l => /^Альфа 2\.2$/.test(l)) && news.items.some(l => /^Альфа 2\.1$/.test(l)) && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
-  ok(/Что нового: /.test(news.note) && /химический стол/.test(news.text) && /Мутагенный туман/.test(news.text) && /качаться/.test(news.text) && /с каждого четвёртого уничтоженного врага/.test(news.text) && /Пошаговый бой выбирают в начале игры/.test(news.text) && /Записки с кодами/.test(news.text) && /ОКО молчит/.test(news.text) && /«Выход»/.test(news.text) && /настройки остались прежними/.test(news.text) && !/аптечный автомат/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
+  ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.ver === "Альфа 3.1" && news.items.some(l => /^Альфа 3\.0$/.test(l)) && news.items.some(l => /^Альфа 2\.6$/.test(l)) && news.items.some(l => /^Альфа 2\.5$/.test(l)) && news.items.some(l => /^Альфа 2\.2$/.test(l)) && news.items.some(l => /^Альфа 2\.1$/.test(l)) && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
+  ok(/Что нового: /.test(news.note) && /выходят волнами/.test(news.text) && /Заваленную лестницу/.test(news.text) && /деревянный пол/.test(news.text) && /половицы/.test(news.text) && /стены звучат как прежде/.test(news.text) && /У чайника/.test(news.text) && /В холодильниках/.test(news.text) && /настройки остались прежними/.test(news.text) && !/Мутагенный туман/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
 
   console.log("Настройки");
   await page.evaluate(() => { LAB.ui.top().i = 0; });
@@ -4565,7 +4565,7 @@ LAB.ui.closeAll();
 
   await page.evaluate(() => { LAB.ui.closeAll(); });
 
-  console.log("Альфа 3.0: завал на лестнице — руками, монтировкой, домкратом, зарядом; ОКО слышит; находки; заряд из химии");
+  console.log("Альфа 3.1: завал на лестнице — руками, монтировкой, домкратом, зарядом; ОКО слышит; находки; заряд из химии");
   const rb = await page.evaluate(async () => {
     const g = LAB.game, C = LAB.combat, S = LAB.settings, R = LAB.rubble, O = LAB.oko, CH = LAB.chem, out = {};
     const wait = ms => new Promise(r => setTimeout(r, ms));
@@ -4735,7 +4735,7 @@ LAB.ui.closeAll();
     if (!rb.doorNone) ok(rb.doorItem && rb.doorBlast && rb.doorOpen && rb.doorLoot >= 1, "завал в проходе сносит и подрывной заряд — с находками на месте завала");
   }
 
-  console.log("Альфа 3.0: кухня — в холодильниках то, что держат в холоде; чайник: вскипятить, заварить, сахар, молоко, запасы сотрудников, вода, лапша");
+  console.log("Альфа 3.1: кухня — в холодильниках то, что держат в холоде; чайник: вскипятить, заварить, сахар, молоко, запасы сотрудников, вода, лапша");
   const kt = await page.evaluate(async () => {
     const g = LAB.game, C = LAB.combat, K = LAB.kitchen, S = LAB.settings, out = {};
     const wait = ms => new Promise(r => setTimeout(r, ms));
@@ -4867,7 +4867,7 @@ LAB.ui.closeAll();
   if (kt.fridgeMenu != null) ok(/Открыть холодильник/.test(kt.fridgeMenu) && kt.fridgeOk, "открыли холодильник — внутри то, что держат в холоде (" + kt.fridgeGot + ")");
   if (!kt.coldNone) ok(kt.coldOk, "в холодильной камере ищут съестное — и находят только еду (" + (kt.coldGot || "пусто") + ")");
 
-  console.log("Альфа 3.0: передышка между волнами ОКО — по одной, после разбитой волны, пока вы в помещении, после выхода в коридор; по режимам");
+  console.log("Альфа 3.1: передышка между волнами ОКО — по одной, после разбитой волны, пока вы в помещении, после выхода в коридор; по режимам");
   const wvp = await page.evaluate(async () => {
     const g = LAB.game, C = LAB.combat, O = LAB.oko, S = LAB.settings, out = {};
     const G = g.G;
@@ -5007,7 +5007,7 @@ LAB.ui.closeAll();
   ok(wvp.merge, "очередь волн переполнилась — машины добавляются к последней волне того же вида, их число не теряется");
   ok(wvp.easy, "лёгкий режим: пока вы в помещении, ОКО ждёт сколько угодно");
 
-  console.log("Альфа 3.0: полы — бетонные и металлические коридоры, деревянные и бетонные помещения; звук стены прежний");
+  console.log("Альфа 3.1: полы — бетонные и металлические коридоры, деревянные и бетонные помещения; звук стены прежний");
   const flr = await page.evaluate(() => {
     const g = LAB.game, C = LAB.combat, P = LAB.floors, out = {};
     const G = g.G;
