@@ -1086,9 +1086,11 @@ function announceNear() {
 }
 game.announceNear = announceNear;
 
-/* Под ногами — пол уровня: у каждого уровня свой. */
+/* Под ногами — пол уровня: у каждого уровня свой металл; (3.0) часть коридоров —
+   бетонные, в части помещений — деревянный или бетонный пол (floors.js). */
 function surfaceAt(x, y) {
-  return LAB.LEVELS[G.L].surf;
+  var own = LAB.floors && CUR.fl ? LAB.floors.at(CUR.fl, x, y) : null;
+  return own || LAB.LEVELS[G.L].surf;
 }
 game.surfaceAt = surfaceAt;
 

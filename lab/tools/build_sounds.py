@@ -494,6 +494,15 @@ E("step_deck", "step", [("slice", FS(148462, af=PITCH(0.96) + "," + BRIGHT2), 5)
 E("step_grate", "step", [SPL(398937, 10, min_len=0.08, af="highpass=f=50,treble=g=3:f=4000")], n=8, mx=0.4)
 # Отзвук шага от стены рядом: короткий высокий щелчок — тише и выше самого шага.
 E("step_echo", "step", [SPL(208101, 4, af="highpass=f=1100,treble=g=4:f=5000", min_len=0.05)], n=4, mx=0.18, v=0.8)
+# (3.0) Полы (заход 10, Freesound, CC0): бетон — коридоры у лестниц и технических помещений,
+# лестничные клетки, склады, бункеры (floors.js); деревянный пол — кабинеты, архивы, библиотеки,
+# каюты; скрип половиц изредка звучит под шагом по дереву. Обувь, как у металлических шагов.
+CONC_AF = "highpass=f=60,lowshelf=f=140:g=-2,equalizer=f=2400:t=q:w=1.2:g=4,treble=g=3:f=5500"
+CONC_AF2 = "highpass=f=60,lowshelf=f=140:g=-2,equalizer=f=2400:t=q:w=1.2:g=3,lowpass=f=6500"  # шершавый бетон: без песочного призвука
+WOOD_AF = "highpass=f=55,equalizer=f=1800:t=q:w=1.1:g=4,treble=g=3:f=5000"
+E("step_concrete", "step", [SPL(813622, 5, af=CONC_AF, min_len=0.06), SPL(546827, 8, af=CONC_AF2, dur=20.0, min_len=0.06), SPL(459964, 4, af=CONC_AF, min_len=0.06)], n=10, mx=0.4)
+E("step_wood", "step", [SPL(164315, 8, af=WOOD_AF, min_len=0.06), SPL(575898, 4, af=WOOD_AF, min_len=0.08), SPL(119914, 3, af=WOOD_AF, min_len=0.06)], n=10, mx=0.4)
+E("floor_creak", "step", [SPL(822745, 6, min_len=0.15, max_len=1.2), SPL(124289, 4, min_len=0.15, max_len=1.0)], n=8, mx=1.0, v=0.8)
 E("door_threshold", "step", [S(A, "lab_metalsteps*", "metal_steps_1[3-6].flac", af="asetrate=44100*0.7,aresample=44100")], n=3, v=0.6)
 
 # ═════ СТЕНЫ И СТОЛКНОВЕНИЯ ═════

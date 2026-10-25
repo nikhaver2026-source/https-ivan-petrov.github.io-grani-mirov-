@@ -74,6 +74,8 @@ function step(surf, run, door) {
   var sd = LAB.SURF[surf] || {}, base = sd.base || surf || "plate", rate = sd.rate || 1;
   var id = "step_" + base;
   play(has(id) ? id : "step_plate", { gain: run ? 1 : 0.88, rate: (run ? 1.04 : 1) * rate, pan: stepN % 2 ? -0.12 : 0.12, reverb: 0.16, bus: "fx" });
+  /* (3.0) деревянный пол: изредка скрипит половица — чаще, когда идёте, а не бежите */
+  if (sd.creak && has("floor_creak") && Math.random() < sd.creak * (run ? 0.6 : 1)) play("floor_creak", { gain: 0.55, delay: 0.05 + Math.random() * 0.08, pan: stepN % 2 ? -0.1 : 0.1, reverb: 0.12, bus: "fx" });
   if (door) play("door_threshold", { gain: 0.5 });
   wallEcho(id, rate);
 }
@@ -277,7 +279,7 @@ function idsFor(L) {
     if (m && sets[m[1]]) out.push(id);
   });
   var sf = LAB.SURF[lev.surf] || {};
-  out.push("step_" + (sf.base || lev.surf), "step_echo");
+  out.push("step_" + (sf.base || lev.surf), "step_echo", "step_concrete", "step_wood", "floor_creak"); /* (3.0) бетон и дерево — на любом уровне */
   levelEvents(L).forEach(function (id) { out.push(id); });
   return out;
 }

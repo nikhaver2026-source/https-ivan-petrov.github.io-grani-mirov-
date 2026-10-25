@@ -19,7 +19,7 @@ const ROOT = path.resolve(__dirname, "..");
 const ctx = { console, Math, JSON, Object, Array, String, Number, Uint8Array, Int8Array, Int16Array, Int32Array, Float64Array, Error, Date, RegExp };
 ctx.globalThis = ctx;
 vm.createContext(ctx);
-for (const f of ["js/data.js", "js/texts.js", "js/lore.js", "js/b1.js", "js/b2.js", "js/b3.js", "js/b4.js", "js/b5.js", "js/world.js", "js/mutants.js", "js/depths.js", "js/goods.js", "js/medic.js", "js/arms.js", "js/traps.js", "js/puzzles.js", "js/puzzles2.js", "js/annex_rooms.js", "js/annex_var.js", "js/annex_frag.js", "js/annex_gen.js", "js/fixtures_data.js", "js/annex.js", "js/garrison.js", "js/workshop.js", "js/repair.js", "js/implants.js", "js/arsenal.js", "js/chem.js", "js/kitchen.js"]) {
+for (const f of ["js/data.js", "js/texts.js", "js/lore.js", "js/b1.js", "js/b2.js", "js/b3.js", "js/b4.js", "js/b5.js", "js/world.js", "js/mutants.js", "js/depths.js", "js/goods.js", "js/medic.js", "js/arms.js", "js/traps.js", "js/puzzles.js", "js/puzzles2.js", "js/annex_rooms.js", "js/annex_var.js", "js/annex_frag.js", "js/annex_gen.js", "js/fixtures_data.js", "js/annex.js", "js/garrison.js", "js/workshop.js", "js/repair.js", "js/implants.js", "js/arsenal.js", "js/chem.js", "js/kitchen.js", "js/floors.js"]) {
   const p = path.join(ROOT, f);
   if (fs.existsSync(p)) vm.runInContext(fs.readFileSync(p, "utf8"), ctx, { filename: f });
 }
@@ -92,6 +92,24 @@ for (let si = 0; si < seeds; si++) {
         if (wdt !== LAB.CORR_W) err(`${at}: коридор ${c.id} шириной ${wdt}`);
         if (c.len < 10) err(`${at}: коридор ${c.id} длиной ${c.len}`);
         stat.corrMin = Math.min(stat.corrMin, c.len); stat.corrMax = Math.max(stat.corrMax, c.len);
+      }
+      /* (3.0) полы (floors.js): лестничная клетка и тайный ход — бетон; помещения — дерево, бетон или
+         металл уровня; ответ одинаков при повторной постройке этажа */
+      if (LAB.floors) {
+        const blk = L <= 10 ? 0 : Math.min(5, LAB.blockOf(L)), P = LAB.floors;
+        const s3 = stat.fl3 || (stat.fl3 = { corr: [0, 0, 0, 0, 0, 0], conc: [0, 0, 0, 0, 0, 0], rooms: 0, wood: 0, rconc: 0, types: {} });
+        const cs = fl.corrs.map((c, ci) => P.corr(fl, ci)), rs = fl.rooms.map((rm, ri) => rm ? P.room(fl, ri) : null);
+        cs.forEach(v => { s3.corr[blk]++; if (v === "concrete") s3.conc[blk]++; else if (v !== null) err(`${at}: коридор с полом «${v}»`); });
+        fl.rooms.forEach((rm, ri) => { if (!rm) return; s3.rooms++; if (rs[ri] === "wood") { s3.wood++; s3.types[rm.type] = 1; } else if (rs[ri] === "concrete") s3.rconc++; });
+        [fl.U, fl.D].forEach(ri => { const rm = fl.rooms[ri]; if (rm && rm.type === "stair" && rs[ri] !== "concrete") err(`${at}: лестничная клетка не бетонная`); });
+        fl.corrs.forEach((c, ci) => { const d = fl.doors.find(x => x.id === c.door); if (d && d.lock && d.lock.type === "secret" && cs[ci] !== "concrete") err(`${at}: тайный ход ${ci} не бетонный`); });
+        const probe = fl.corrs.length ? fl.corrs[0] : null;
+        if (probe && P.at(fl, probe.x0, probe.y0) !== cs[0]) err(`${at}: пол клетки коридора не совпадает с полом коридора`);
+        if (F === 7) {
+          LAB.clearFloorCache();
+          const fl2 = LAB.getFloor(seed, L, F);
+          if (fl2.corrs.some((c, ci) => P.corr(fl2, ci) !== cs[ci]) || fl2.rooms.some((rm, ri) => rm && P.room(fl2, ri) !== rs[ri])) err(`${at}: полы при повторной постройке этажа другие`);
+        }
       }
       /* тайная комната — два потайных выхода в разные помещения */
       if (fl.secret >= 0) {
@@ -276,6 +294,18 @@ if (LAB.mutants) {
   const nb = Object.keys(LAB.FOES).filter(id => LAB.FOES[id].kind === "bio").length;
   console.log(`твари: видов ${nb}, новых ${M.ids.length}; отрядов на этаж ${((stat.packs || 0) / floors).toFixed(2)} (в них ${((stat.packFoes || 0) / floors).toFixed(1)}), тварей на этаж ${((stat.bio || 0) / floors).toFixed(1)}; ступени развития: ${(stat.evo || []).join("/")}`);
   if (nb < 100) err(`тварей меньше сотни: ${nb}`);
+}
+/* (3.0) полы: доля бетонных коридоров по глубине — в «Подножии» больше всего, в «Отражении» меньше всего;
+   в части помещений — дерево; таблицы полов — только известные помещения */
+if (LAB.floors && stat.fl3) {
+  const s3 = stat.fl3, sh = s3.corr.map((n, i) => n ? s3.conc[i] / n : null);
+  console.log("полы: бетонных коридоров по глубине (Ковчег, Подножие, Колыбель, Отражение, Механизм, Исток):", sh.map(v => v == null ? "—" : (100 * v).toFixed(0) + " %").join(", ") +
+    `; помещений с деревянным полом ${(100 * s3.wood / s3.rooms).toFixed(1)} %, с бетонным ${(100 * s3.rconc / s3.rooms).toFixed(1)} %; деревянных видов на этажах: ${Object.keys(s3.types).length}`);
+  ["WOOD", "CONC"].forEach(t => Object.keys(LAB.floors[t]).forEach(k => { if (!LAB.ROOMS[k]) err(`полы: в таблице ${t} неизвестное помещение ${k}`); if (t === "WOOD" && LAB.floors.CONC[k]) err(`полы: ${k} и деревянное, и бетонное`); }));
+  if (sh[0] != null && (sh[0] < 0.2 || sh[0] > 0.75)) err(`полы: бетонных коридоров «Ковчега» ${(100 * sh[0]).toFixed(0)} %`);
+  if (sh[1] != null && sh[3] != null && !(sh[1] > sh[3])) err("полы: в «Подножии» бетона не больше, чем в «Отражении»");
+  if (sh[1] != null && sh[1] < 0.5) err(`полы: в штольнях «Подножия» бетонных коридоров ${(100 * sh[1]).toFixed(0)} %`);
+  if (s3.wood / s3.rooms < 0.04) err(`полы: помещений с деревянным полом мало: ${(100 * s3.wood / s3.rooms).toFixed(1)} %`);
 }
 /* (2.6) лечение и снабжение */
 if (stat.med26) {

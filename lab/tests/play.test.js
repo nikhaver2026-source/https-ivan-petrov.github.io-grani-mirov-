@@ -5002,6 +5002,101 @@ LAB.ui.closeAll();
   ok(wvp.merge, "очередь волн переполнилась — машины добавляются к последней волне того же вида, их число не теряется");
   ok(wvp.easy, "лёгкий режим: пока вы в помещении, ОКО ждёт сколько угодно");
 
+  console.log("Альфа 3.0: полы — бетонные и металлические коридоры, деревянные и бетонные помещения; звук стены прежний");
+  const flr = await page.evaluate(() => {
+    const g = LAB.game, C = LAB.combat, P = LAB.floors, out = {};
+    const G = g.G;
+    C.stop(); LAB.ui.closeAll();
+    const rnd0 = Math.random, sp0 = LAB.Sound.play, hp0 = G.hp, hpm0 = G.hpMax, cl0 = G.st.cloak;
+    try {
+      out.snd = ["step_concrete", "step_wood", "floor_creak"].every(k => LAB.SND[k] && LAB.SND[k].f.length >= 8);
+      out.surf = !!(P && LAB.SURF.concrete && LAB.SURF.wood && LAB.SURF.wood.creak);
+      /* этаж, где есть всё: деревянное помещение, лестничная клетка, бетонный и металлический коридоры */
+      const secret = (fl, c) => { const d = fl.doors.find(x => x.id === c.door); return !!(d && d.lock && d.lock.type === "secret"); };
+      let found = null;
+      for (let L = 1; L <= 3 && !found; L++) for (let F = 2; F <= 20 && !found; F++) {
+        const fl = LAB.getFloor(G.seed, L, F);
+        const wr = fl.rooms.findIndex((rm, ri) => rm && !rm.annex && P.room(fl, ri) === "wood");
+        const cr = fl.rooms.findIndex(rm => rm && rm.type === "stair");
+        const cc = fl.corrs.findIndex((c, ci) => P.corr(fl, ci) === "concrete" && !secret(fl, c));
+        const mc = fl.corrs.findIndex((c, ci) => P.corr(fl, ci) === null && !secret(fl, c));
+        if (wr >= 0 && cr >= 0 && cc >= 0 && mc >= 0) found = { L, F, wr, cr, cc, mc };
+      }
+      out.found = !!found;
+      if (!found) return out;
+      g.enterFloor(found.L, found.F, "down", true);
+      G.hp = G.hpMax = 1e7; G.st.cloak = 1e6; G.stair = null;
+      C.foes().forEach(f => { f.dead = true; });
+      const fl = g.CUR.fl, W = LAB.W, DV = { N: [0, -1], S: [0, 1], W: [-1, 0], E: [1, 0] };
+      const wallBy = (x, y) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(v => fl.t[(y + v[1]) * W + x + v[0]] === LAB.T.WALL);
+      /* шаг внутри участка: что прозвучало и какой пол под ногами */
+      const stepIn = (area, rnd) => {
+        for (let i = 0; i < fl.t.length; i++) {
+          if (!area(i)) continue;
+          const x = i % W, y = (i / W) | 0;
+          if (!g.passable(x, y) || fl.t[i] === LAB.T.DOOR) continue;
+          for (const k of ["N", "S", "W", "E"]) {
+            const nx = x + DV[k][0], ny = y + DV[k][1], j = ny * W + nx;
+            if (!LAB.inb(nx, ny) || !area(j) || !g.passable(nx, ny) || fl.t[j] === LAB.T.DOOR) continue;
+            G.x = x; G.y = y; LAB.ui.closeAll();
+            const ids = [];
+            LAB.Sound.play = function (id) { ids.push(id); return sp0.apply(this, arguments); };
+            if (rnd) Math.random = rnd;
+            const moved = g.tryMove(k);
+            Math.random = rnd0; LAB.Sound.play = sp0;
+            return { moved, ids, surf: g.surfaceAt(nx, ny), wall: wallBy(nx, ny) };
+          }
+        }
+        return null;
+      };
+      const lev = LAB.LEVELS[found.L].surf, lb = "step_" + ((LAB.SURF[lev] || {}).base || lev);
+      out.lev = lev;
+      const wood = stepIn(i => fl.room[i] === found.wr), stair = stepIn(i => fl.room[i] === found.cr);
+      const conc = stepIn(i => fl.corrAt[i] === found.cc), metal = stepIn(i => fl.corrAt[i] === found.mc);
+      out.woodRoom = fl.rooms[found.wr].type; out.at = found.L + "-" + found.F;
+      out.wood = !!wood && wood.moved && wood.surf === "wood" && wood.ids.indexOf("step_wood") >= 0;
+      out.stair = !!stair && stair.moved && stair.surf === "concrete" && stair.ids.indexOf("step_concrete") >= 0;
+      out.conc = !!conc && conc.moved && conc.surf === "concrete" && conc.ids.indexOf("step_concrete") >= 0;
+      out.metal = !!metal && metal.moved && metal.surf === lev && metal.ids.indexOf(lb) >= 0 && metal.ids.indexOf("step_concrete") < 0;
+      out.ids = [wood, stair, conc, metal].map(r => r ? r.ids.filter(id => /^step_|creak/.test(id)).join("+") : "—").join(" | ");
+      /* у стены шаг отдаётся тем же коротким эхом, что и на металле */
+      const echo = [wood, conc, metal].filter(r => r && r.moved && r.wall);
+      out.echo = echo.length > 0 && echo.every(r => r.ids.indexOf("step_echo") >= 0);
+      /* по дереву изредка скрипят половицы (здесь — всегда: случайность подменена) */
+      const creak = stepIn(i => fl.room[i] === found.wr, () => 0.01);
+      out.creak = !!creak && creak.ids.indexOf("floor_creak") >= 0;
+      /* звук стены не изменился: в деревянном помещении — тот же удар о сталь */
+      let bump = null;
+      for (let i = 0; i < fl.t.length && !bump; i++) {
+        if (fl.room[i] !== found.wr) continue;
+        const x = i % W, y = (i / W) | 0;
+        if (!g.passable(x, y)) continue;
+        for (const k of ["N", "S", "W", "E"]) {
+          const nx = x + DV[k][0], ny = y + DV[k][1];
+          if (fl.t[ny * W + nx] !== LAB.T.WALL) continue;
+          G.x = x; G.y = y; LAB.ui.closeAll();
+          const ids = []; LAB.Sound.play = function (id) { ids.push(id); return sp0.apply(this, arguments); };
+          g.tryMove(k); LAB.Sound.play = sp0;
+          bump = ids; break;
+        }
+      }
+      out.bump = !!bump && bump.indexOf("bump_wall") >= 0 && !bump.some(id => /^step_|creak/.test(id));
+    } catch (e) { out.err = String(e && e.stack || e).slice(0, 400); }
+    finally { Math.random = rnd0; LAB.Sound.play = sp0; G.hp = hp0; G.hpMax = hpm0; G.st.cloak = cl0; LAB.ui.closeAll(); }
+    return out;
+  });
+  ok(!flr.err, "полы: проверка без ошибок" + (flr.err ? " (" + flr.err + ")" : ""));
+  ok(flr.snd && flr.surf, "новые записи шагов: по бетону, по деревянному полу и скрип половиц (Freesound, CC0)");
+  ok(flr.found, "на первых уровнях есть деревянные помещения, лестничные клетки, бетонные и металлические коридоры");
+  if (flr.found) {
+    ok(flr.wood, "в деревянном помещении («" + flr.woodRoom + "», этаж " + flr.at + ") шаги по дереву");
+    ok(flr.stair, "лестничная клетка — бетонный колодец: шаги по бетону");
+    ok(flr.conc && flr.metal, "коридоры: где бетон — шаги по бетону, где металл — прежний металл уровня (" + flr.lev + "): " + flr.ids);
+    ok(flr.echo, "у стены шаг отдаётся прежним коротким эхом — и на дереве, и на бетоне");
+    ok(flr.creak, "по деревянному полу изредка скрипят половицы");
+    ok(flr.bump, "звук стены прежний: удар о сталь, без звука шага");
+  }
+
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {
     const g = LAB.game, G = g.G, out = { floors: 0, err: [], want: 0 };
