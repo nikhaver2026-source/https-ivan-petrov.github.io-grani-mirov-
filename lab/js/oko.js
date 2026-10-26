@@ -124,16 +124,27 @@ var lastLine = {};
    свежие, и через полторы секунды, чтобы первым прозвучал итог. */
 var held = [], holdT = null;
 function hushed() { return !!(LAB.mini && LAB.mini.active && LAB.mini.active()) || !!(LAB.ui && LAB.ui.puzzleOpen && LAB.ui.puzzleOpen()); }
-function voice(t, opts, chime) {
+function voice(t, opts, chime, gap) {
   if (hushed()) {
     held = held.filter(function (h) { return h.t !== t; });
-    held.push({ t: t, o: opts, chime: chime });
+    held.push({ t: t, o: opts, chime: chime, gap: gap });
     if (held.length > 2) held.shift();
     if (!holdT) holdT = setTimeout(release, 600);
     return false;
   }
-  if (chime) { A("okoChime"); setTimeout(function () { LAB.say(t, opts); }, 450); } else LAB.say(t, opts);
+  chimeSay(t, opts, chime, gap);
   return true;
+}
+/* (3.1) Сигнал облика ОКО (okoforms.js: прежний, из-под земли, колокола Садовника,
+   далёкий и зеркальный в Отражении, разумы города) — и слова через gap мс:
+   в Отражении слова настоящего ОКО доходят поздно. true — сигнал этой глубины. */
+function chimeSay(t, opts, chime, gap) {
+  if (!chime) { LAB.say(t, opts); return; }
+  var F = LAB.okoForms, key = chime === true ? (F ? F.frame("check").chime : "oko") : chime;
+  if (key) A("okoChime", key, F ? F.cur().t : 0);
+  /* слова — только если носитель ещё на этом этаже: поздние слова не догоняют его на другом */
+  var L0 = G().L, F0 = G().F;
+  setTimeout(function () { var g = G(); if (!LAB.game.entered || !g || g.L !== L0 || g.F !== F0) return; LAB.say(t, opts); }, gap == null ? 450 : gap);
 }
 function release() {
   holdT = null;
@@ -145,11 +156,12 @@ function release() {
     if (!LAB.game.entered || G().dead) { held = []; return; }
     if (hushed()) { holdT = setTimeout(release, 600); return; } /* следом началась новая головоломка — ждём и её */
     var list = held; held = [];
-    list.forEach(function (h, i) { if (i === 0 && h.chime) { A("okoChime"); setTimeout(function () { LAB.say(h.t, h.o); }, 450); } else LAB.say(h.t, h.o); });
+    list.forEach(function (h, i) { if (i === 0 && h.chime) chimeSay(h.t, h.o, h.chime, h.gap); else LAB.say(h.t, h.o); });
   }, 1500);
 }
 function speak(kind, force, data) {
   var o = st(), now = Date.now();
+  if (LAB.okoForms && LAB.okoForms.silent()) return false; /* (3.1) простилось и молчит */
   if (!force && now - o.lastSay < 6000) return false;
   var arr = lines(kind);
   /* реплика с названием помещения — только когда оно известно */
@@ -170,7 +182,8 @@ function speak(kind, force, data) {
   var t = line.replace(/\{L\}/g, String(G().L)).replace(/\{F\}/g, String(G().F)).replace(/\{room\}/g, data && data.room ? data.room : "");
   o.lastSay = now;
   if (LAB.tutor && !hushed()) LAB.tutor.ev("oko");
-  voice("ОКО по громкой связи: «" + t + "»", { prio: "event", keep: true }, true);
+  var fr = LAB.okoForms ? LAB.okoForms.frame(kind) : { lead: "ОКО по громкой связи", chime: true, gap: 450 };
+  voice(fr.lead + ": «" + t + "»", { prio: "event", keep: true }, fr.chime, fr.gap);
   if (LAB.game.journal && (kind === "turret_hack" || kind === "robots" || kind === "boss")) LAB.game.journal("ОКО: «" + t + "»");
   return true;
 }
@@ -204,7 +217,7 @@ function react(kind, data) {
   var o = st(), now = Date.now();
   if (!o.react) o.react = {};
   if (now - (o.react[kind] || 0) < rule.cd * 1000) return false;
-  if (Math.random() > rule.p * (soft() ? 0.5 : 1)) return false;
+  if (Math.random() > rule.p * (soft() ? 0.5 : 1) * (LAB.okoForms ? LAB.okoForms.chatty() : 1)) return false;
   if (!lines(kind).length) return false;
   if (!speak(kind, false, data)) return false;
   o.react[kind] = now;
@@ -238,6 +251,7 @@ function wave(delay, n, mode, at, tag) {
     return;
   }
   f.waves.push({ t: T() + delay, n: n, mode: mode, at: at ? { x: at.x, y: at.y } : null, tag: tag || "" });
+  if (LAB.okoForms && tag !== "shift") LAB.okoForms.offerDeal(); /* (3.1) Счетовод: время продаётся */
 }
 
 /* ── (3.0, просьба игрока) ПЕРЕДЫШКА МЕЖДУ ВОЛНАМИ ──
@@ -543,9 +557,11 @@ function event(kind, data) {
   switch (kind) {
     case "enter":
       if (!o.levelSaid || o.levelSaid < g.L) { o.levelSaid = g.L; setTimeout(function () { speak("enter", true); }, 5200); }
+      if (LAB.okoForms) LAB.okoForms.entered(); /* (3.1) новый облик — «Эхо» объяснит */
       break;
     case "floor":
       floorIn(data.how);
+      if (LAB.okoForms) LAB.okoForms.floorIn();
       break;
     case "turret_off":
       o.hacks++; heat(10); speak("turret_off", true);
@@ -876,6 +892,9 @@ function sendWave(w) {
   var cb = C(), o = st(), id = rota(w) ? 0 : waveId();
   var gotW = cb.dispatch(w.n, w.mode, w.at, id ? { wv: id } : null);
   if (!gotW.length) return false;
+  /* (3.1) в журнале безопасности — только настоящий выход: так проверяют Зрачка */
+  if (w.mode !== "sapper") log("Выход единиц: " + gotW.length + ", " + place(gotW[0].x, gotW[0].y) + ".");
+  if (LAB.okoForms) LAB.okoForms.dispatched(gotW, w);
   if (w.tag === "fresh") { speak("fresh", true); heard(gotW, "Новые машины ОКО"); }
   else if (w.mode === "patrol") { if (o.heat >= 40 || Math.random() < 0.4) heard(gotW, "Новый патруль ОКО"); }
   else if (w.mode === "check") heard(gotW, "ОКО шлёт проверку");
@@ -995,8 +1014,9 @@ function tick() {
     if (!f.cutHold) { f.turretMode = "on"; cb.turretsHostile(); A("play", "power_on"); speak("backup", true); log("Резервный контур: турели под током."); }
   }
   /* иногда ОКО говорит просто так — когда рядом тихо */
-  var nowMs = Date.now();
-  if (nowMs - (o.lastTaunt || 0) > 240000 + Math.random() * 180000 && !cb.danger()) {
+  if (LAB.okoForms) LAB.safe(LAB.okoForms.tick); /* (3.1) облики ОКО: ложь Зрачка, шёпот Истока */
+  var nowMs = Date.now(), chat = LAB.okoForms ? LAB.okoForms.chatty() : 1;
+  if (nowMs - (o.lastTaunt || 0) > (240000 + Math.random() * 180000) / Math.max(0.25, chat) && !cb.danger()) {
     o.lastTaunt = nowMs;
     if (tickN > 200) speak("taunt");
   }
@@ -1006,7 +1026,9 @@ LAB.oko = {
   event: event, tick: tick, speak: speak, alarm: alarm, difficulty: difficulty, heat: heat,
   state: st, lines: lines, wave: wave, shift: shift, react: react, minesOrder: minesOrder, minesLater: minesLater, REACT: REACT,
   report: report, level: level, levelName: function () { return SEC[level()]; }, setLevel: setLevel, sec: sec, log: log, logText: logText, T: T,
-  hushed: hushed,
+  hushed: hushed, voice: voice,
+  /* (3.1) последние записи журнала безопасности строками — для «Записи тревог поста» (zones.js) */
+  logLines: function (n) { var f = fs(), L = (f && f.slog) || [], pad = function (v) { return (v < 10 ? "0" : "") + v; }; return L.slice(-(n || 5)).map(function (e) { return pad(e.h) + ":" + pad(e.mi) + ". " + e.t; }); },
   /* (3.0) передышка между волнами — для проверок */
   pace: function () { var f = fs(); return { ready: f.wReady || 0, hold: f.wHoldT || 0, out: f.wOut || 0, inRoom: !!f.wIn, n: f.wN || 0 }; }, wsec: wsec
 };

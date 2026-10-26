@@ -280,6 +280,7 @@ function idsFor(L) {
   });
   var sf = LAB.SURF[lev.surf] || {};
   out.push("step_" + (sf.base || lev.surf), "step_echo", "step_concrete", "step_wood", "floor_creak"); /* (3.0) бетон и дерево — на любом уровне */
+  if (LAB.okoForms) LAB.okoForms.sounds(L).forEach(function (id) { out.push(id); }); /* (3.1) сигналы облика ОКО этой глубины */
   levelEvents(L).forEach(function (id) { out.push(id); });
   return out;
 }
@@ -638,7 +639,55 @@ function rubbleClear(x, y, how) {
   at("debris", x, y, { gain: 0.7, delay: 0.7, rate: 1.1 });
 }
 /* ОКО: позывной громкой связи, тревога, приманка. */
-function okoChime() { play("oko_chime", { gain: 0.9, bus: "fx", reverb: 0.6, fb: FB.oko_chime }); }
+/* Сигнал перед словами ОКО. (3.1) У каждого облика свой (okoforms.js); t — сколько
+   пройдено в блоке: чем глубже, тем сильнее меняется. */
+function okoChime(kind, t) {
+  t = t || 0;
+  var C0 = { bus: "fx", fb: FB.oko_chime };
+  function ch(o) { var q = {}; for (var k in C0) q[k] = C0[k]; for (var k2 in o) q[k2] = o[k2]; play("oko_chime", q); }
+  switch (kind) {
+    case "far": /* «Подножие»: из-под земли — ниже, глуше, сквозь треск старых динамиков «Око-0» */
+      ch({ gain: 0.78 - 0.22 * t, rate: 0.9 - 0.16 * t, lp: Math.round(2600 - 1500 * t), reverb: 0.85 + 0.1 * t });
+      play("radio", { gain: 0.1 + 0.28 * t, rate: 0.8, lp: 2600, bus: "fx", reverb: 0.3 });
+      return;
+    case "garden": /* «Колыбель»: Садовник — два тихих колокола, и сигнал тонет */
+      play("ins_bell_72", { gain: 0.42 - 0.14 * t, bus: "fx", reverb: 0.75 });
+      play("ins_bell_77", { gain: 0.34 - 0.12 * t, delay: 0.22, bus: "fx", reverb: 0.8 });
+      return;
+    case "far3": /* «Отражение»: настоящее ОКО далеко — глухо, с отзвуком; рядом передразнивает Зрачок */
+      ch({ gain: 0.55 - 0.25 * t, rate: 0.94, lp: Math.round(2000 - 800 * t), reverb: 0.95 });
+      ch({ gain: 0.26, rate: 1.06, pan: -0.6, delay: 0.09, reverb: 0.15 });
+      return;
+    case "pupil": /* Зрачок вплотную: тот же сигнал, но зеркально — слева, потом справа, и звон стекла */
+      ch({ gain: 0.8, rate: 1.06, pan: -0.7, reverb: 0.1 });
+      ch({ gain: 0.6, rate: 1.06, pan: 0.7, delay: 0.14, reverb: 0.1 });
+      play("ev_glass", { gain: 0.22, delay: 0.05, rate: 1.3, bus: "fx", reverb: 0.2 });
+      return;
+    case "m_guard": /* «Механизм»: Сторож — низкий удар */
+      ch({ gain: 0.95, rate: 0.7, reverb: 0.5 });
+      return;
+    case "m_count": /* Счетовод — счёты */
+      play("pc_click", { gain: 0.5, bus: "fx", reverb: 0.2 });
+      play("pc_click", { gain: 0.5, delay: 0.09, rate: 1.2, bus: "fx", reverb: 0.2 });
+      play("pc_click", { gain: 0.5, delay: 0.18, rate: 1.4, bus: "fx", reverb: 0.2 });
+      ch({ gain: 0.45, rate: 1.3, delay: 0.24, reverb: 0.3 });
+      return;
+    case "m_garden": /* Садовник города — колокол и мягкий сигнал */
+      play("ins_bell_67", { gain: 0.4, bus: "fx", reverb: 0.7 });
+      ch({ gain: 0.45, rate: 1.1, delay: 0.15, reverb: 0.6 });
+      return;
+    case "m_tale": /* Сказочник — музыкальная шкатулка */
+      play("ins_lullaby_86", { gain: 0.4, bus: "fx", reverb: 0.5 });
+      play("ins_lullaby_93", { gain: 0.35, delay: 0.2, bus: "fx", reverb: 0.5 });
+      play("ins_lullaby_98", { gain: 0.3, delay: 0.4, bus: "fx", reverb: 0.5 });
+      return;
+    case "whole": /* ОКО целиком — ниже и шире, с подголоском на октаву ниже */
+      ch({ gain: 1, rate: 0.85, reverb: 0.8 });
+      ch({ gain: 0.35, rate: 0.425, delay: 0.05, reverb: 0.9 });
+      return;
+  }
+  ch({ gain: 0.9, reverb: 0.6 });
+}
 function okoAlarm() {
   if (has("oko_alarm")) play("oko_alarm", { gain: 0.8, reverb: 0.5 });
   else play("ev_alarm_start", { gain: 0.8, reverb: 0.5 });

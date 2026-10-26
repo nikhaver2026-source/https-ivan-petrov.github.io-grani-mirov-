@@ -2060,6 +2060,8 @@ function terminalMenu(o) {
   var iso = st.isoUntil && st.isoUntil > (CUR.fs.okoT || 0) ? Math.ceil((st.isoUntil - (CUR.fs.okoT || 0)) / 2) : 0;
   items.push({ label: "Журналы и сообщения", fn: function () { terminalLogs(o); } });
   if (o.sub === "sec") items.push({ label: "Журнал безопасности ОКО: режим этажа — " + (LAB.oko ? LAB.oko.levelName() : "?"), fn: function () { UIx("note", "Журнал безопасности ОКО", "Режим этажа: " + (LAB.oko ? LAB.oko.levelName() : "?") + ". " + (LAB.oko ? LAB.oko.logText(14) : "")); } });
+  /* (3.1) «Механизм»: Счетовод ОКО торгуется — передышка от волн или забытое подозрение за кредиты */
+  if (o.sub === "sec" && LAB.okoForms && LAB.okoForms.dealsOpen()) items.push({ label: "Сделка со Счетоводом ОКО", fn: function () { LAB.okoForms.dealMenu(); } });
   /* карта этажа — только в терминалах безопасности и научных */
   if (o.sub === "sec" || o.sub === "sci") items.push({ label: CUR.fs.mapped ? "Карта этажа (уже загружена)" : "Загрузить карту этажа в навигатор", fn: function () {
     if (CUR.fs.mapped) { say("Карта этажа уже в «Эхо»: навигатор ведёт до лестниц и шлюза."); return; }

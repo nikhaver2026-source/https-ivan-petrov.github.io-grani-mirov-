@@ -85,7 +85,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     return out;
   });
   ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.ver === "Альфа 3.1" && news.items.some(l => /^Альфа 3\.0$/.test(l)) && news.items.some(l => /^Альфа 2\.6$/.test(l)) && news.items.some(l => /^Альфа 2\.5$/.test(l)) && news.items.some(l => /^Альфа 2\.2$/.test(l)) && news.items.some(l => /^Альфа 2\.1$/.test(l)) && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
-  ok(/Что нового: /.test(news.note) && /выходят волнами/.test(news.text) && /Заваленную лестницу/.test(news.text) && /деревянный пол/.test(news.text) && /половицы/.test(news.text) && /стены звучат как прежде/.test(news.text) && /У чайника/.test(news.text) && /В холодильниках/.test(news.text) && /настройки остались прежними/.test(news.text) && !/Мутагенный туман/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
+  ok(/Что нового: /.test(news.note) && /выходят волнами/.test(news.text) && /Заваленную лестницу/.test(news.text) && /деревянный пол/.test(news.text) && /половицы/.test(news.text) && /стены звучат как прежде/.test(news.text) && /У чайника/.test(news.text) && /В холодильниках/.test(news.text) && /ОКО меняется с глубиной/.test(news.text) && /«Облики ОКО»/.test(news.text) && /Шаги по бетону и дереву звучат чище/.test(news.text) && /перезарядка — (касание двумя пальцами|Alt\+R или F)/.test(news.text) && /настройки остались прежними/.test(news.text) && !/Мутагенный туман/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
 
   console.log("Настройки");
   await page.evaluate(() => { LAB.ui.top().i = 0; });
@@ -4547,7 +4547,8 @@ LAB.ui.closeAll();
     LAB.guide.open(); out.root = LAB.ui.top().items.map(label);
     const sec = LAB.guide.sections.find(s => s.t === "Комплекс и исследование");
     out.depth1 = sec.ch.filter(c => !c.when || c.when()).some(c => c.t === "Глубины под Ядром");
-    const all = LAB.guide.chapters.filter(c => c.t !== "Глубины под Ядром").map(c => c.x.map(p => typeof p === "string" ? p : p.join(" ")).join(" ")).join(" ");
+    /* главы, которые собираются по глубине (xf), — только когда видны: «Облики ОКО» на первом уровне закрыта */
+    const all = LAB.guide.chapters.filter(c => c.t !== "Глубины под Ядром").map(c => (c.x || (c.when && !c.when() ? [] : c.xf())).map(p => typeof p === "string" ? p : p.join(" ")).join(" ")).join(" ");
     out.spoil = ["Подножи", "Колыбел", "Отражени", "Механизм"].filter(w => all.indexOf("«" + w) >= 0 || all.indexOf(" " + w) >= 0);
     out.len = all.length;
     LAB.guide.section(LAB.guide.sections[0]); out.first = LAB.ui.top().items.map(label);
@@ -5134,6 +5135,134 @@ LAB.ui.closeAll();
   ok(/Заряд пуст\. Перезарядка — касание двумя пальцами/.test(hint31.empty) && !/влево и сразу вправо/.test(hint31.empty), "пустой заряд: «Перезарядка — касание двумя пальцами», а не жест гранаты (" + hint31.empty + ")");
   ok(/Сменить оружие — двойное касание двумя пальцами/.test(hint31.pick) && !/вверх и сразу вниз/.test(hint31.pick), "новое оружие: сменить — двойное касание двумя пальцами (" + hint31.pick + ")");
   ok(hint31.guide, "руководство: список дверей коридора — в списке целей навигатора, четыре пальца вверх");
+
+  console.log("Альфа 3.1: облики ОКО — голос и сигнал меняются с глубиной; Зрачок лжёт, Счетовод торгуется, Исток шепчет");
+  const okf = await page.evaluate(async () => {
+    const g = LAB.game, C = LAB.combat, O = LAB.oko, F = LAB.okoForms, S = LAB.settings, out = {};
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const chimes = [], ch0 = LAB.atmos.okoChime, rnd0 = Math.random, st0 = window.setTimeout, d0 = S.difficulty, tb0 = S.turnBased;
+    /* таймеры, заведённые одним вызовом, — без ожидания (поправка Зрачка через 6–10 с, слово «Эхо» через 11 с) */
+    const fast = fn => { window.setTimeout = (f, ms) => st0(f, Math.min(ms || 0, 30)); try { return fn(); } finally { window.setTimeout = st0; } };
+    let G = g.G;
+    const keep = { L: G.L, F: G.F, x: G.x, y: G.y, cr: G.credits, hp: G.hp, hpm: G.hpMax, cl: G.st.cloak };
+    LAB.atmos.okoChime = function (k, t) { chimes.push(k); };
+    const fresh = (L, Fl) => { g.enterFloor(L, Fl === 1 ? 2 : Fl - 1, "down", true); delete G.fs[L + "-" + Fl]; g.enterFloor(L, Fl, "down", true); C.stop(); G = g.G; };
+    async function say(L, Fl, kind) {
+      fresh(L, Fl); SPOKEN.length = 0; chimes.length = 0; O.state().lastSay = 0;
+      const fr = F.frame(kind), okk = O.speak(kind, true);
+      await sleep(200); const early = SPOKEN.filter(t => !/^Обучение, шаг/.test(t)).length;
+      await sleep((fr.gap || 0) + 500);
+      const oko = SPOKEN.filter(t => !/^Обучение, шаг/.test(t));
+      return { ok: okk, said: oko.join(" | ").slice(0, 200), chime: chimes.join(","), form: F.cur().id, gap: fr.gap, early: early };
+    }
+    try {
+      S.difficulty = 1; S.turnBased = 0; LAB.ui.closeAll(); C.stop();
+      out.base = await say(5, 3, "taunt");
+      out.far1 = await say(12, 2, "taunt");
+      out.far2 = await say(19, 10, "taunt");
+      out.garden = await say(30, 5, "taunt");
+      out.twin = await say(55, 5, "taunt");
+      out.guard = await say(65, 5, "squad");
+      out.gardenM = await say(65, 5, "heal");
+      out.count = await say(68, 5, "buy");
+      out.tale = await say(72, 5, "idle");
+      out.whole = await say(79, 5, "squad");
+      out.whisper = await say(85, 5, "taunt");
+      out.silent = await say(100, 3, "taunt");
+      out.chatty = [5, 81, 90, 99].map(L => { G.L = L; G.F = 1; return +F.chatty().toFixed(2); });
+      out.snd = [5, 12, 30, 45, 70, 90].map(L => F.sounds(L).length).join(" ");
+      /* Зрачок: объявляет отряд, которого нет, — машин не прибавилось, в журнале безопасности пусто; настоящее ОКО поправляет издалека */
+      fresh(45, 4); SPOKEN.length = 0; chimes.length = 0;
+      G.hp = G.hpMax = 1e7; G.st.cloak = 1e6;
+      const n0 = C.foes().filter(f => !f.dead).length, lg0 = (g.CUR.fs.slog || []).length;
+      Math.random = () => 0.01;
+      out.fakeOk = fast(() => F.pupilFake("test"));
+      Math.random = rnd0;
+      await sleep(2600); /* поправка настоящего ОКО: слова доходят поздно */
+      out.fake = SPOKEN.join(" | ").slice(0, 300); out.fakeChime = chimes.join(",");
+      out.fakeFoes = C.foes().filter(f => !f.dead).length - n0; out.fakeLog = (g.CUR.fs.slog || []).length - lg0;
+      /* настоящий выход — в журнале безопасности; носитель в коридоре, чтобы ОКО не выжидало */
+      const fl = g.CUR.fl, fs = g.CUR.fs, W = LAB.W, corr = [];
+      for (let i = 0; i < fl.t.length; i++) { const x = i % W, y = (i / W) | 0; if (fl.t[i] !== LAB.T.DOOR && g.passable(x, y) && fl.corrAt[i] >= 0 && fl.room[i] < 0) corr.push([x, y]); }
+      const cc = corr[Math.floor(corr.length / 2)]; G.x = cc[0]; G.y = cc[1];
+      C.foes().forEach(f => { f.dead = true; }); fs.waves = []; fs.repl = []; fs.wReady = 0; fs.wHoldT = 0; fs.wOut = 0; fs.wIn = false;
+      C.tick(); O.wave(0, 2, "squad", { x: G.x, y: G.y }, "test");
+      for (let i = 0; i < 40 && !(fs.slog || []).some(e => /^Выход единиц: \d+/.test(e.t)); i++) C.tick();
+      out.realLog = (fs.slog || []).filter(e => /^Выход единиц: \d+/.test(e.t)).map(e => e.t).join(" | ");
+      out.term = typeof O.logText === "function" && /Выход единиц: \d+/.test(O.logText(14));
+      /* Счетовод: торг у терминала безопасности — с 66-го уровня по 78-й */
+      out.deals = [62, 66, 70, 78, 79, 85].map(L => { G.L = L; G.F = 5; return F.dealsOpen() ? 1 : 0; }).join("");
+      fresh(70, 5); G.credits = 1000; SPOKEN.length = 0;
+      const T0 = O.T(), pr = F.price("rest");
+      F.dealMenu(); const top = LAB.ui.top();
+      out.dealItems = top ? top.items.map(i => typeof i.label === "function" ? i.label() : i.label) : [];
+      if (top) { top.i = 0; LAB.ui.activate(); }
+      await sleep(1000);
+      out.deal = { paid: 1000 - G.credits, pr: pr, ready: (g.CUR.fs.wReady || 0) - T0, n: g.CUR.fs.dealRest, log: (g.CUR.fs.slog || []).some(e => /Счетовод: выход единиц отложен/.test(e.t)), said: SPOKEN.join(" | ") };
+      out.pr2 = F.price("rest");
+      LAB.ui.closeAll();
+      /* Исток: шёпотом предупреждает о машине, что идёт из-за стены */
+      fresh(85, 5); F._reset(); SPOKEN.length = 0; chimes.length = 0;
+      G.hp = G.hpMax = 1e7; G.st.cloak = 1e6;
+      const fl2 = g.CUR.fl, fs2 = g.CUR.fs; let spot = null;
+      for (let dy = -8; dy <= 8 && !spot; dy++) for (let dx = -8; dx <= 8 && !spot; dx++) {
+        const x = G.x + dx, y = G.y + dy, d = Math.max(Math.abs(dx), Math.abs(dy));
+        if (d < 4 || d > 8 || !g.passable(x, y)) continue;
+        if (!LAB.los(fl2, fs2, G.x, G.y, x, y)) spot = [x, y];
+      }
+      const q = C.foes().find(f => !f.dead && f.kind === "mech" && (f.beh || []).indexOf("camera") < 0 && (f.beh || []).indexOf("stationary") < 0);
+      C.foes().forEach(f => { if (f !== q) f.dead = true; });
+      if (spot && q) {
+        q.x = spot[0]; q.y = spot[1]; q.state = "hunt"; q.ally = false; q.calm = false; q.neutral = false; q.disguised = false;
+        Math.random = () => 0.01; F.warnTick(); Math.random = rnd0;
+        await sleep(200);
+        out.warn = SPOKEN.join(" | ").slice(0, 200); out.warnName = String(q.name || "").split(",")[0]; out.warnChime = chimes.length;
+      } else out.warn = "нет места за стеной: " + !!spot + "/" + !!q;
+      /* на краю Истока ОКО простилось и молчит */
+      G.L = 99; G.F = 20; out.silent99 = F.silent(); G.L = 99; G.F = 19; out.talk99 = !F.silent();
+      /* каждую перемену «Эхо» объясняет один раз — при входе на уровень */
+      fresh(41, 2); SPOKEN.length = 0; O.state().formSaid = null; const j0 = G.journal.length;
+      fast(() => F.entered()); await sleep(300);
+      out.stage = SPOKEN.join(" | ").slice(0, 200); out.stageJ = G.journal.length > j0;
+      SPOKEN.length = 0; fast(() => F.entered()); await sleep(300); out.stageOnce = SPOKEN.length === 0;
+      /* руководство: глава «Облики ОКО» — только о тех глубинах, где игрок уже был */
+      const ch = LAB.guide.chapters.find(c => c.t === "Облики ОКО");
+      out.guide = !!ch;
+      if (ch) {
+        G.L = 5; out.guide5 = !!ch.when();
+        G.L = 45; out.guide45 = ch.when() ? ch.xf().join(" ") : "";
+      }
+    } catch (e) { out.err = String(e && e.stack || e).slice(0, 400); }
+    Math.random = rnd0; window.setTimeout = st0; LAB.atmos.okoChime = ch0; S.difficulty = d0; S.turnBased = tb0;
+    LAB.ui.closeAll(); C.stop();
+    g.enterFloor(keep.L, keep.F, "down", true); C.stop(); G = g.G;
+    G.x = keep.x; G.y = keep.y; G.credits = keep.cr; G.hp = keep.hp; G.hpMax = keep.hpm; G.st.cloak = keep.cl;
+    return out;
+  });
+  ok(!okf.err, "облики ОКО: проверка без ошибок" + (okf.err ? " — " + okf.err : ""));
+  if (!okf.err) {
+    const lead = (r, re, chime) => r.ok && re.test(r.said) && r.chime === chime;
+    ok(lead(okf.base, /^ОКО по громкой связи: «/, "oko"), "«Ковчег»: ОКО по громкой связи, прежний сигнал (" + okf.base.said.slice(0, 60) + " · " + okf.base.chime + ")");
+    ok(lead(okf.far1, /^ОКО издалека: «/, "far") && lead(okf.far2, /^ОКО из-под земли: «/, "far"), "«Подножие»: голос уходит под землю — издалека, потом из-под земли (" + okf.far1.chime + ")");
+    ok(lead(okf.garden, /^Садовник ОКО: «/, "garden"), "«Колыбель»: говорит Садовник, сигнал — колокола (" + okf.garden.chime + ")");
+    ok(lead(okf.twin, /^ОКО издалека: «/, "far3") && okf.twin.early === 0 && okf.twin.gap > 1500, "«Отражение»: настоящее ОКО далеко — слова приходят с опозданием (" + okf.twin.gap + " мс)");
+    ok(lead(okf.guard, /^ОКО, голосом города: «/, "m_guard") && okf.gardenM.chime === "m_garden" && okf.count.chime === "m_count" && okf.tale.chime === "m_tale", "«Механизм»: у города разумы — Сторож, Садовник, Счетовод, Сказочник (" + [okf.guard.chime, okf.gardenM.chime, okf.count.chime, okf.tale.chime].join(" ") + ")");
+    ok(lead(okf.whole, /^ОКО, одним голосом: «/, "whole"), "с 79-го голоса сходятся: ОКО, одним голосом (" + okf.whole.chime + ")");
+    ok(okf.whisper.ok && /^ОКО, шёпотом, прямо в ухо: «/.test(okf.whisper.said) && okf.whisper.chime === "", "«Исток»: шёпотом, прямо в ухо, без сигнала громкой связи");
+    ok(okf.silent.ok === false && okf.silent.said === "" && okf.silent99 && okf.talk99, "на краю Истока ОКО простилось и молчит");
+    ok(okf.chatty[0] === 1 && okf.chatty[1] === 1 && okf.chatty[2] < 1 && okf.chatty[3] < okf.chatty[2] && okf.chatty[3] >= 0.25, "в Истоке ОКО заговаривает всё реже (" + okf.chatty.join(" ") + ")");
+    ok(okf.snd === "1 2 2 2 6 0", "звуки сигналов грузятся с уровнем: свои на каждой глубине (" + okf.snd + ")");
+    ok(okf.fakeOk && /^Зрачок, вплотную: «/.test(okf.fake) && okf.fakeChime.split(",")[0] === "pupil" && okf.fakeFoes === 0 && okf.fakeLog === 0, "Зрачок объявляет отряд, которого нет: машин не прибавилось, журнал безопасности молчит (" + okf.fake.slice(0, 90) + ")");
+    ok(/ОКО издалека: «[^»]*(не я|Не верьте|Зрачок|пусто)/.test(okf.fake), "настоящее ОКО поправляет Зрачка издалека");
+    ok(/^Выход единиц: \d+/.test(okf.realLog) && okf.term, "настоящий выход машин — в журнале безопасности терминала (" + okf.realLog.slice(0, 80) + ")");
+    ok(okf.deals === "011100", "Счетовод торгуется с 66-го по 78-й уровень (" + okf.deals + ")");
+    ok(okf.dealItems.length === 3 && /^Передышка: Сторож подождёт три минуты — \d+ кредитов$/.test(okf.dealItems[0]) && /^Забыть подозрение/.test(okf.dealItems[1]), "сделка со Счетоводом: передышка, забытое подозрение, отказ (" + okf.dealItems.join(" / ").slice(0, 120) + ")");
+    ok(okf.deal.paid === okf.deal.pr && okf.deal.ready >= 360 && okf.deal.n === 1 && okf.deal.log && /Счетовод ОКО: «(Сделка|Оплачено|Договорились)/.test(okf.deal.said), "передышка куплена: кредиты списаны, Сторож ждёт три минуты, в журнале — договор (" + okf.deal.paid + " кр., " + okf.deal.ready + " тактов)");
+    ok(okf.pr2 > okf.deal.pr, "вторая передышка на этаже дороже (" + okf.deal.pr + " → " + okf.pr2 + ")");
+    ok(/^ОКО, шёпотом, прямо в ухо: «/.test(okf.warn) && okf.warn.indexOf(okf.warnName) >= 0 && okf.warnChime === 0, "Исток: ОКО шёпотом предупреждает о машине из-за стены (" + okf.warn.slice(0, 100) + ")");
+    ok(/^«Эхо»: голос ОКО двоится/.test(okf.stage) && okf.stageJ && okf.stageOnce, "при входе в «Отражение» «Эхо» один раз объясняет, что ОКО изменилось");
+    ok(okf.guide && !okf.guide5 && /«Подножие»/.test(okf.guide45) && /«Колыбель»/.test(okf.guide45) && /«Отражение»/.test(okf.guide45) && !/«Механизм»/.test(okf.guide45), "руководство: «Облики ОКО» — только о глубинах, где игрок уже был");
+  }
 
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {
