@@ -336,7 +336,7 @@ function fuseMenu(o) {
     LAB.mini.relays(5 + Math.min(2, Math.floor(G().L / 25)), function (ok) {
       if (!ok) { A("play", "alarm_short"); say("Автомат выбило с треском: схема не сошлась. Шум слышно по коридору."); if (cb) cb.noise(8); return; }
       cb.cams().forEach(function (f) { if (cb.camState(f) !== "off") cb.camSet(f, "off"); });
-      A("play", "power_down"); A("play", "term_ok");
+      A("play", "power_off"); A("play", "term_ok");
       say("Рубильники камер опущены: камеры этажа ослепли. ОКО заметит обрыв и пришлёт ремонтника — он поднимет рубильники по одной камере.");
       if (LAB.oko) LAB.oko.event("cam_cut", { all: true, x: o.x, y: o.y });
       gm().gainXP && gm().gainXP(10);
@@ -697,7 +697,7 @@ function useItem(id, d) {
     if (cb.camState(f) === "off") { say("Эта камера и так обесточена."); return false; }
     G().inv.tape--;
     cb.camSet(f, "off");
-    A("play", "tape_rip"); A("play", "pick_part");
+    A("play", "bandage_tear"); A("play", "pick_part");
     say("Вы заклеили объектив изолентой: камера ослепла. ОКО увидит чёрный кадр и пришлёт ремонтника — он отклеит ленту.");
     if (LAB.oko) LAB.oko.event("cam_cut", { x: f.x, y: f.y });
     ev("tape", 1);
@@ -725,6 +725,6 @@ function corridorNote(cor) {
 LAB.zones = {
   objMenu: objMenu, minutes: minutes, tick: tick, hazardBlock: hazardBlock, useItem: useItem, corridorNote: corridorNote,
   roomHere: roomHere, protRad: protRad, geiger: geiger, zonesList: zonesList, compName: compName, vented: vented,
-  _personnelFile: personnelFile, _reset: function () { zoneKey = ""; }
+  _reset: function () { zoneKey = ""; }
 };
 })();

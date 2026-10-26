@@ -60,7 +60,6 @@ var MIND_OF = {
   quiet: "tale", idle: "tale", note: "tale", mail: "tale", music: "tale", puzzle_ok: "tale", puzzle_fail: "tale",
   secret: "tale", floor: "tale", taunt: "tale", weapon: "tale", implant: "tale"
 };
-var MIND_N = { guard: "Сторож", garden: "Садовник", count: "Счетовод", tale: "Сказочник" };
 function minds(L) {
   if (L < 61 || L >= 79) return [];
   var m = ["guard", "garden"];
@@ -139,7 +138,7 @@ function emptyDir() {
   return pick(free.length ? free : DIRS);
 }
 function fakeChance(t) { return 0.15 + 0.35 * t; }
-function pupilFake(why) {
+function pupilFake() {
   var g = G(), f = cur();
   if (!g || g.dead || f.id !== "twin" || silent()) return false;
   if (LAB.oko && LAB.oko.hushed && LAB.oko.hushed()) return false;
@@ -166,7 +165,7 @@ function dispatched(got) {
   if (f.id !== "twin" || !got || !got.length) return;
   if (Math.random() >= fakeChance(f.t)) return;
   var L0 = G().L, F0 = G().F;
-  setTimeout(function () { var g = G(); if (LAB.game.entered && g && g.L === L0 && g.F === F0) pupilFake("after"); }, 3000 + Math.round(Math.random() * 5000));
+  setTimeout(function () { var g = G(); if (LAB.game.entered && g && g.L === L0 && g.F === F0) pupilFake(); }, 3000 + Math.round(Math.random() * 5000));
 }
 
 /* ── СЧЕТОВОД: ТОРГ У ТЕРМИНАЛА (Механизм, 66–78) ── */
@@ -257,7 +256,7 @@ function tick() {
     if (!nextFake) nextFake = now + (240 - 120 * f.t) * 1000;
     if (now >= nextFake) {
       nextFake = now + (240 - 120 * f.t + Math.random() * 120) * 1000;
-      if (!(C() && C().danger && C().danger()) && Math.random() < 0.5 + 0.4 * f.t) pupilFake("calm");
+      if (!(C() && C().danger && C().danger()) && Math.random() < 0.5 + 0.4 * f.t) pupilFake();
     }
   } else nextFake = 0;
   warnTick();
@@ -310,9 +309,9 @@ function guideLines(maxL) {
 }
 
 LAB.okoForms = {
-  form: form, cur: cur, frame: frame, chatty: chatty, silent: silent, sounds: sounds, mind: mind, minds: minds, MIND_N: MIND_N,
-  dispatched: dispatched, pupilFake: pupilFake, fakeChance: fakeChance, dealsOpen: dealsOpen, dealMenu: dealMenu, price: price, offerDeal: offerDeal,
-  tick: tick, warnTick: warnTick, entered: entered, floorIn: floorIn, stageOf: stageOf, guideLines: guideLines,
+  cur: cur, frame: frame, chatty: chatty, silent: silent, sounds: sounds,
+  dispatched: dispatched, pupilFake: pupilFake, dealsOpen: dealsOpen, dealMenu: dealMenu, price: price, offerDeal: offerDeal,
+  tick: tick, warnTick: warnTick, entered: entered, floorIn: floorIn, guideLines: guideLines,
   _reset: function () { nextFake = 0; lastWarn = 0; }
 };
 })();

@@ -450,7 +450,7 @@ var GENERIC = {
    сверх прежнего столько, сколько велит GROW.fx (world.js). */
 var DEEP_FX = {
   O: ["mirrorwall", "glasschime", "backclock", "twinchairs", "prism", "mirrorlog", "mirror", "metronome", "clock", "armchair"],
-  M: ["punchclock", "gearwall", "tubehub", "perfocards", "boiler", "sealer", "stamps", "typewriter", "counting", "abacus", "queue"],
+  M: ["punchclock", "gearwall", "tubes", "perfocards", "boiler", "sealer", "stamps", "typewriter", "counting", "abacus", "queue"],
   I: ["spring", "berrybush", "nest", "rootbench", "sprout", "warmstone", "moss", "mechflowers", "beehive", "roots", "lanterns"]
 };
 function deepFx(r, era, rm, n, have, ctx) {

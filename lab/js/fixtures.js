@@ -128,7 +128,7 @@ var PHOTO = {
 };
 var SLEEP = ["Испытуемому снилась вода.", "Сон тревожный: пульс выше нормы.", "Фаза быстрого сна длинная, как у ребёнка.", "Во сне человек считал вслух до десяти.", "Под утро улыбался.", "Снились шаги. Опять шаги."];
 /* (3.2) заголовки текстов вещей нижних глубин */
-var TITLE31 = { backclock: "Часы, идущие назад", mirrorlog: "Журнал отражений", punch: "Табельные карточки", tubes31: "Адреса на капсулах", perfo: "Перфокарта", sprout: "Табличка под колпаком" };
+var TX_TITLE = { backclock: "Часы, идущие назад", mirrorlog: "Журнал отражений", punch: "Табельные карточки", tubes: "Адреса на капсулах", perfo: "Перфокарта", sprout: "Табличка под колпаком" };
 function gen(kind, o, r, sub) {
   var c = ctxFor(r), e = era(), out, i, fromPool = picker(o, sub);
   switch (kind) {
@@ -182,7 +182,7 @@ function gen(kind, o, r, sub) {
     case "seismo": { return { t: "Ленты самописцев", x: "Зубцы ровные, потом " + r.int(2, 9) + " волн подряд, отметка дежурного: «" + LAB.agen.timeWords(c.tm) + "». " + fromPool("tx:seismo", LAB.FIX.TX.seismo) }; }
   }
   out = LAB.FIX.TX[kind];
-  return { t: TITLE31[kind] || "Запись", x: fromPool("tx:" + kind, out) || "Текст выцвел." };
+  return { t: TX_TITLE[kind] || "Запись", x: fromPool("tx:" + kind, out) || "Текст выцвел." };
 }
 /* Журнал смены — строки глубины с людьми, номерами и временем этажа. */
 function logText(r, n, o, sub) {
@@ -252,7 +252,7 @@ function run(o, def, kind, p, label, withId) {
       /* здоровье — доля от полного, но не меньше пяти единиц: даже стул и скамья дают передохнуть телу */
       if (p.hp) { var hv = Math.max(5, Math.round(G().hpMax * p.hp)); G().hp = Math.min(G().hpMax, G().hp + hv); m.push("Здоровье " + G().hp + "."); }
       if (p.unslow && G().st.slow) { G().st.slow = 0; m.push("Ноги снова слушаются."); }
-      snd("cloth", null);
+      snd("chair_sit", null);
       if (withId && LAB.ITEMS[withId] && G().inv[withId] > 0) {
         /* отдых с напитком: сначала глоток (своя фраза), потом покой — и в покое напиток действует лучше */
         var dd = LAB.ITEMS[withId], bonus = { neuro: -5 }, bm = [];
@@ -287,7 +287,7 @@ function run(o, def, kind, p, label, withId) {
       return;
     }
     case "phone": {
-      snd("phone_pick", "term_beep");
+      snd("term_beep", null);
       var q = r.next(), line;
       if (q < 0.35) { var rr = lines("rumor", 1, r, picker(o, (s.n_phone || 0) % 4)); line = rr.length ? "В трубке — чужой разговор на параллельной линии: «" + rr[0] + "» Щелчок, гудки." : "Длинный гудок. Никто не берёт."; }
       else if (q < 0.55) line = "Гудок, щелчок — и автоответчик: «Абонент на смене. Перезвоните после карантина». Потом тишина.";
@@ -323,13 +323,13 @@ function run(o, def, kind, p, label, withId) {
     }
     case "wish": {
       if (G().credits < 1) { say("Монетки нет: кредитов ноль."); return; }
-      G().credits--; snd("coin", "pickup");
+      G().credits--; snd("vend_coin", null);
       say("Монетка звякает о дно. " + r.pick(WISH));
       if (!s.wished) { s.wished = 1; ev("wish", 1); }
       return;
     }
     case "vent": {
-      spend(2); snd("fan_on", "power_up");
+      spend(2); snd("ev_vent_rattle", null);
       /* (3.0) вытяжка выгоняет и туман мутагена: он тяжёлый и стекает снова — тем скорее, чем гуще; вентиль на трубе тумана не держит */
       var fogV = rm && rm.fog && o.fx !== "valves";
       if (rm && (rm.gas || fogV)) { var fs = CUR().fs; fs.vented = fs.vented || {}; fs.vented[rm.id] = nowMin() + (fogV ? Math.round(120 / rm.fog) : 120); say(rm.gas ? "Вытяжка загудела, сквозняк потянул воздух в решётку: газ уходит. Часа два здесь можно дышать." + (fogV ? " Туман мутагена тянется следом." : "") : "Вытяжка загудела: сладковатый туман мутагена тянется в решётку. Он тяжелее воздуха и стечёт сюда снова — " + (rm.fog >= 3 ? "минут через сорок." : rm.fog >= 2 ? "примерно через час." : "часа через два.")); ev("vent", 1); }
@@ -358,7 +358,7 @@ function run(o, def, kind, p, label, withId) {
     }
     case "aim": {
       if (!gm().curWeapon || !gm().curWeapon()) { say("Нужно оружие: достаньте его."); return; }
-      spend(10); snd("shot_energy", "term_beep"); noise(5);
+      spend(10); snd("term_beep", null); noise(5);
       var tr = G().train = G().train || {};
       tr.aim = (tr.aim || 0) + 1;
       say("Мишени щёлкают одна за другой. «Эхо» подсказывает поправку." + (tr.aim % 3 === 0 && tr.aim <= 15 ? " Рука твёрже: меткость немного выросла." : " Ещё пара заходов — и рука станет твёрже."));
@@ -368,7 +368,7 @@ function run(o, def, kind, p, label, withId) {
     case "plate": {
       var inv = G().inv;
       if ((inv.scrap || 0) < 3) { say("Нужно три куска металлолома: пресс выправляет пластину из лома."); return; }
-      inv.scrap -= 3; inv.plate = (inv.plate || 0) + 1; spend(10); snd("press_hit", "pry"); noise(8);
+      inv.scrap -= 3; inv.plate = (inv.plate || 0) + 1; spend(10); snd("pry", null); noise(8);
       say("Пресс ухает, лом сминается в ровный лист. Бронепластина готова: её вставляют в надетую броню.");
       return;
     }
@@ -406,7 +406,7 @@ function run(o, def, kind, p, label, withId) {
       return;
     }
     case "echo": {
-      spend(1); noise(6); snd("shout_echo", null);
+      spend(1); noise(6);
       say("Голос уходит под потолок и возвращается " + (rm ? ((rm.x1 - rm.x0 + 1) * (rm.y1 - rm.y0 + 1) > 30 ? "не сразу: помещение большое" : "быстро: помещение тесное") : "издалека") + ". " + echoLine(rm));
       return;
     }
@@ -433,7 +433,7 @@ function run(o, def, kind, p, label, withId) {
     case "hoop": {
       spend(1);
       var ok2 = r.chance(Math.min(0.75, 0.3 + (G().agi || 10) * 0.012));
-      snd(ok2 ? "ball_net" : "ball_bounce", "bump");
+      snd(ok2 ? "paper" : "bump_rail", null);
       s.streak = ok2 ? (s.streak || 0) + 1 : 0;
       say(ok2 ? "Мяч шуршит сеткой: попали!" + (s.streak >= 3 ? " " + s.streak + " подряд!" : "") : "Мяч звонко отскакивает от кольца.");
       if (s.streak === 5) { ev("hoop5", 1); gm().gainXP(5); }
@@ -449,7 +449,7 @@ function run(o, def, kind, p, label, withId) {
       tr2.str = (tr2.str || 0) + 1;
       var up = tr2.str % 3 === 0 && G().str < 30;
       if (up) G().str++;
-      snd("gym", "cloth");
+      snd("hit_metal", null);
       say("Двадцать минут на тренажёре: мышцы гудят." + (up ? " Сила выросла: теперь " + G().str + "." : " Ещё немного — и сила вырастет.") + " " + m.join(" "));
       ev("train", 1);
       return;
@@ -458,7 +458,7 @@ function run(o, def, kind, p, label, withId) {
       if (s.nAt && nowMin() - s.nAt < 60) { say("Кресло ещё остывает: подождите час."); return; }
       s.nAt = nowMin(); spend(10);
       gm().bodyApply({ neuro: -35, wake: -5 }, m);
-      snd("hum", null);
+      snd("mag_hum_short", null);
       say("Электроды холодят виски, в ушах — ровный низкий гул. Мысли раскладываются по полкам. " + m.join(" "));
       return;
     }
@@ -466,23 +466,18 @@ function run(o, def, kind, p, label, withId) {
   say("Ничего не происходит.");
 }
 var WISH = ["Вы загадываете выйти наверх. Вода отвечает тихим плеском.", "Вы загадываете, чтобы группа у лифта дождалась. Где-то наверху гудит вентиляция — будто в ответ.", "Вы загадываете снова увидеть свет. «Эхо» молчит, но как-то по-доброму.", "Вы ничего не загадываете: просто слушаете, как монетка ложится к другим.", "Вы загадываете тишины для тех, кто здесь остался."];
-var REST31 = {
-  twinchairs: "Вы садитесь, и кресло напротив словно садится вместе с вами. Минуты идут ровно, спина отдыхает.",
-  boiler: "От котла идёт сухое тепло, манометр тихо постукивает. Руки отогреваются, плечи опускаются.",
-  rootbench: "Корни под вами тёплые и чуть подаются, как живые. Где-то в глубине по ним течёт вода — слышно, если затаить дыхание.",
-  warmstone: "Камень греет спину, одеяло пахнет шерстью и дымом. Вы почти засыпаете — и тело говорит спасибо."
-};
 function restLine(o, r) {
-  var L0 = { sofa: "Пружины скрипят, подушки пахнут пылью и чужим одеколоном. Вы сидите, слушая, как гудит вентиляция.", bunk: "Сетка койки прогибается. Вы лежите, глядя в темноту, которой нет разницы, открыты глаза или нет.", couch: "Клеёнка кушетки холодит спину, потом теплеет.", armchair: "Кресло принимает вас, как своего.", pillows: "Подушки мягкие, тишина вокруг густая, как одеяло.", moss: "Мох пружинит и тепло пахнет землёй. Звуки гаснут, будто их кто-то накрыл ладонью.", rocking: "Качалка поскрипывает, как часы.", sauna: "Жар обнимает, пот смывает усталость.", rain: "Тёплые капли стучат по плечам. Дышится легко.", stars: "Над вами щёлкают проекторы, «Эхо» вполголоса называет созвездия.", oven: "Печь греет спину, как живая.", mats: "Маты пахнут резиной и потом. Вы растягиваетесь во весь рост." };
-  return L0[o.fx] || REST31[o.fx] || r.pick(["Вы сидите, переводя дух.", "Минуты идут медленно, и это хорошо.", "Дыхание выравнивается."]);
+  var L0 = { sofa: "Пружины скрипят, подушки пахнут пылью и чужим одеколоном. Вы сидите, слушая, как гудит вентиляция.", bunk: "Сетка койки прогибается. Вы лежите, глядя в темноту, которой нет разницы, открыты глаза или нет.", couch: "Клеёнка кушетки холодит спину, потом теплеет.", armchair: "Кресло принимает вас, как своего.", pillows: "Подушки мягкие, тишина вокруг густая, как одеяло.", moss: "Мох пружинит и тепло пахнет землёй. Звуки гаснут, будто их кто-то накрыл ладонью.", rocking: "Качалка поскрипывает, как часы.", sauna: "Жар обнимает, пот смывает усталость.", rain: "Тёплые капли стучат по плечам. Дышится легко.", stars: "Над вами щёлкают проекторы, «Эхо» вполголоса называет созвездия.", oven: "Печь греет спину, как живая.", mats: "Маты пахнут резиной и потом. Вы растягиваетесь во весь рост." , twinchairs: "Вы садитесь, и кресло напротив словно садится вместе с вами. Минуты идут ровно, спина отдыхает.", boiler: "От котла идёт сухое тепло, манометр тихо постукивает. Руки отогреваются, плечи опускаются.", rootbench: "Корни под вами тёплые и чуть подаются, как живые. Где-то в глубине по ним течёт вода — слышно, если затаить дыхание.", warmstone: "Камень греет спину, одеяло пахнет шерстью и дымом. Вы почти засыпаете — и тело говорит спасибо." };
+  return L0[o.fx] || r.pick(["Вы сидите, переводя дух.", "Минуты идут медленно, и это хорошо.", "Дыхание выравнивается."]);
 }
+/* Звук к действию «послушать»: только записи, что есть в игре (sounds.js); где своей
+   записи нет — тишина и слова «Эхо». */
 function listenSound(o) {
-  var M = { aquarium: "ev_bubbles", pond: "ev_bubbles", dewar: "ev_steam", vats: "ev_bubbles", turnstile: "turnstile", forklift: "horn", winch: "winch", minecart: "cart", speaker: "hum", coils: "hum", turbine: "hum", bell: "bell", stamps: "stamp", beehive: "buzz", birdcage: "birds", drone: "drone_fly", metronome: "tick", pendulum: "tick" };
+  var M = { aquarium: "ev_bubbles", pond: "ev_bubbles", dewar: "ev_steam", vats: "ev_bubbles", turnstile: "pc_click", forklift: "ev_factory_clank", winch: "ev_metal_groan", minecart: "bump_rail", speaker: "room_hum", coils: "mag_hum_short", turbine: "reactor_hum_short", bell: "ins_bell_67", stamps: "paper", beehive: "drone_idle", drone: "drone_idle",
+    /* (3.2) вещи нижних глубин — звуками, что уже есть в игре */
+    glasschime: "ev_glass", prism: "ev_glass", mirrorwall: "ev_glass", gearwall: "ev_servo", punchclock: "pc_click", sealer: "pc_click", boiler: "ev_steam", spring: "ev_drip", sprout: "ev_whisper" };
   if (M[o.fx]) snd(M[o.fx], null);
-  else if (SND31[o.fx]) snd(SND31[o.fx], null);
 }
-/* (3.2) звуки вещей нижних глубин — из тех, что уже есть в игре */
-var SND31 = { glasschime: "ev_glass", prism: "ev_glass", mirrorwall: "ev_glass", gearwall: "ev_servo", punchclock: "pc_click", sealer: "pc_click", boiler: "ev_steam", spring: "ev_drip", sprout: "ev_whisper" };
 function echoLine(rm) {
   if (!rm) return "";
   var n = (rm.doors || []).length;
@@ -556,7 +551,7 @@ function cookMenu(o) {
     var d = LAB.ITEMS[k];
     return { label: d.n + " (" + g.inv[k] + ")", fn: function () {
       g.inv[k]--; if (g.inv[k] <= 0) delete g.inv[k];
-      spend(6); snd("sizzle", "eat_chew");
+      spend(6); snd("kettle_stir", null);
       var m = []; gm().bodyApply({ food: Math.round((d.food || 0) * 1.3), detox: d.detox || 0, wake: 4 }, m);
       if (d.heal) { g.hp = Math.min(g.hpMax, g.hp + d.heal + 2); m.push("Здоровье " + g.hp + "."); }
       if (d.en) { g.en = Math.min(g.enMax, g.en + d.en); }
@@ -575,7 +570,7 @@ function doSearch(o, def, label, p) {
   /* (2.5) пакость: игла в ящике тумбочки, клещ под матрасом (stash.js) */
   if (LAB.stash && LAB.stash.guard(o, function () { doSearch(o, def, label, p); })) return;
   s["s_" + label] = 1;
-  spend(2); snd("search", "pickup");
+  spend(2); snd("search_body", null);
   /* (2.6) пошаговый режим: обыск — ход, враги не ждут */
   if (LAB.combat && LAB.combat.spendTurns) { LAB.combat.spendTurns(1, "search"); if (G().dead) return; }
   var r = rng(o, "search:" + label), L = G().L, F = G().F, loot = [];
@@ -617,11 +612,11 @@ function risk(kind, r) {
   if (kind === "shock") {
     if ((g.inv.rubber || 0) > 0 || (a && /insulated|exo|bastion/.test(g.armor.base))) return false;
     if (!r.chance(0.45)) return false;
-    var dm = r.int(5, 11); g.hp = Math.max(1, g.hp - dm); snd("zap", "shock"); say("Искра бьёт в пальцы! Минус " + dm + " здоровья. С прорезиненной тканью на руках было бы безопасно."); return false;
+    var dm = r.int(5, 11); g.hp = Math.max(1, g.hp - dm); snd("hurt_shock", null); say("Искра бьёт в пальцы! Минус " + dm + " здоровья. С прорезиненной тканью на руках было бы безопасно."); return false;
   }
-  if (kind === "spark") { if (!r.chance(0.35)) return false; var d2 = r.int(3, 6); g.hp = Math.max(1, g.hp - d2); snd("zap", "shock"); say("Обломок искрит и жалит руку. Минус " + d2 + " здоровья."); return false; }
+  if (kind === "spark") { if (!r.chance(0.35)) return false; var d2 = r.int(3, 6); g.hp = Math.max(1, g.hp - d2); snd("hurt_shock", null); say("Обломок искрит и жалит руку. Минус " + d2 + " здоровья."); return false; }
   if (kind === "cut") { if ((g.inv.rubber || 0) > 0 || !r.chance(0.4)) return false; var d3 = r.int(2, 4); g.hp = Math.max(1, g.hp - d3); say("Острый край режет палец. Минус " + d3 + " здоровья."); return false; }
-  if (kind === "bite") { if ((res.bio || 0) >= 0.3 || !r.chance(0.4)) return false; var d4 = r.int(4, 8); g.hp = Math.max(1, g.hp - d4); snd("bite", "hit"); say("Что-то в клетке кусает за руку! Минус " + d4 + " здоровья."); return false; }
+  if (kind === "bite") { if ((res.bio || 0) >= 0.3 || !r.chance(0.4)) return false; var d4 = r.int(4, 8); g.hp = Math.max(1, g.hp - d4); snd("hit_flesh", null); say("Что-то в клетке кусает за руку! Минус " + d4 + " здоровья."); return false; }
   if (kind === "tox") { gm().bodyApply({ tox: 6 }, m); if (m.length) say("Пары раствора щиплют горло. " + m.join(" ")); return false; }
   if (kind === "sting") { if ((res.bio || 0) >= 0.3 || !r.chance(0.5)) return false; var d5 = r.int(2, 4); g.hp = Math.max(1, g.hp - d5); say("Пчела-машина жалит разрядом. Минус " + d5 + " здоровья."); return false; }
   return false;
@@ -631,7 +626,7 @@ function doSalvage(o, def, p) {
   if (danger()) { say("Не время возиться с отвёрткой: рядом опасность."); return; }
   var r = rng(o, "salv");
   risk(p.risk, r);
-  s.salv = 1; spend(5); snd("salvage", "pry"); noise(4);
+  s.salv = 1; spend(5); snd("pry", null); noise(4);
   var loot = [];
   for (var k in (p.parts || {})) if (LAB.ITEMS[k]) loot.push({ kind: "item", item: k, n: p.parts[k] });
   if (!loot.length) loot.push({ kind: "item", item: "scrap", n: 1 });
@@ -641,7 +636,7 @@ function doSalvage(o, def, p) {
 function doHarvest(o, def, p) {
   var s = st(o), r = rng(o, "harv:" + nowMin());
   if (risk(p.risk, r)) return;
-  s.harvAt = nowMin(); spend(2); snd("leaves", "pickup");
+  s.harvAt = nowMin(); spend(2); snd("paper", null);
   var it = { kind: "item", item: LAB.ITEMS[p.item] ? p.item : "apple", n: r.chance(0.3) ? 2 : 1 };
   say("Собрано: " + gm().giveItem(it));
   ev("harvest", 1);
@@ -662,7 +657,7 @@ function doStrip(o, def, s) {
 /* ════════ ОСМОТРЕТЬ ════════
    Подробно — для любой вещи: что это, какая она, что с ней уже сделали,
    есть ли в ней что-нибудь. */
-var FXCLASS = { sofa: "soft", armchair: "soft", couch: "soft", bunk: "soft", pillows: "soft", rocking: "wood", chair: "wood", bench: "wood", table: "wood", nightstand: "wood", counter: "wood", ledger: "paper", menu: "paper", dutydesk: "wood", kettle: "kitchen", samovar: "kitchen", stove: "kitchen", oven: "kitchen", cauldron: "kitchen", serving: "kitchen", coldroom: "metal", smoker: "kitchen", barrels: "wood", plants: "plant", appletree: "plant", mushrooms: "plant", herbs: "plant", moss: "plant", roots: "plant", palm: "plant", seedjars: "plant", beehive: "wood", mechflowers: "device", birdcage: "metal", drone: "device", microscope: "device", turnstile: "metal", frame: "device", forklift: "metal", conveyor: "metal", robotwreck: "metal", generator: "device", transformer: "device", cables: "metal", coils: "device", gears: "metal", lanterns: "device", lamprack: "metal", glass: "device", magnifier: "device", typewriter: "device", copier: "device", screens: "device", gauges: "device", projector: "device", headphones: "device", phone: "device", clock: "device", thermometer: "device", poster: "paper", graffiti: "paper", drawings: "paper", awards: "paper", notes: "paper", inkblots: "paper", memorial: "metal", piano: "wood", guitar: "wood", accordion: "wood", bell: "metal", chess: "wood", gym: "metal", targets: "metal", press: "metal", sewing: "device", scales: "metal", queue: "device", stamps: "wood", tubes: "metal", register: "device", minecart: "metal", cores: "metal", toolwall: "metal", ladder: "metal", cart: "metal", mailbag: "soft", boxlost: "wood", optable: "metal", expgear: "soft", washer: "device", hangers: "soft", mannequin: "soft", abacus: "wood", counting: "device", complaints: "paper", seismograph: "device", phonograph: "device", mirror: "metal", lamp: "device", stars: "device", aquarium: "device", globe: "device", metronome: "wood", pendulum: "metal", speaker: "device", sauna: "wood", rain: "device", shower: "metal", fountain: "metal", well: "wood", pond: "plant", eyewash: "metal", cage: "metal", labbench: "metal", hood: "metal", gloves: "metal", tank: "metal", cryopods: "device", gunrack: "metal", lightbox: "device", trays: "kitchen", dewar: "metal", redlamp: "device", vats: "metal", horns: "metal", toys: "wood", riftwindow: "device", ringpipe: "metal", turbine: "device", valves: "metal", vent: "metal", xray: "device", monitors: "device", scheme: "paper", soundmap: "paper", echo: "metal", stage: "wood", cradle: "wood", testbooth: "device", hoop: "metal", neurochair: "device", blackboard: "wood", sensorbed: "device", loom: "wood", wheel: "wood", mats: "soft", barricade: "wood" };
+var FXCLASS = { sofa: "soft", armchair: "soft", couch: "soft", bunk: "soft", pillows: "soft", rocking: "wood", chair: "wood", bench: "wood", table: "wood", nightstand: "wood", counter: "wood", ledger: "paper", menu: "paper", dutydesk: "wood", kettle: "kitchen", samovar: "kitchen", stove: "kitchen", oven: "kitchen", cauldron: "kitchen", serving: "kitchen", coldroom: "metal", smoker: "kitchen", barrels: "wood", plants: "plant", appletree: "plant", mushrooms: "plant", herbs: "plant", moss: "plant", roots: "plant", palm: "plant", seedjars: "plant", beehive: "wood", mechflowers: "device", birdcage: "metal", drone: "device", microscope: "device", turnstile: "metal", frame: "device", forklift: "metal", conveyor: "metal", robotwreck: "metal", generator: "device", transformer: "device", cables: "metal", coils: "device", gears: "metal", lanterns: "device", lamprack: "metal", glass: "device", magnifier: "device", typewriter: "device", copier: "device", screens: "device", gauges: "device", projector: "device", headphones: "device", phone: "device", clock: "device", thermometer: "device", poster: "paper", graffiti: "paper", drawings: "paper", awards: "paper", notes: "paper", inkblots: "paper", memorial: "metal", piano: "wood", guitar: "wood", accordion: "wood", bell: "metal", chess: "wood", gym: "metal", targets: "metal", press: "metal", sewing: "device", scales: "metal", queue: "device", stamps: "wood", tubes: "metal", register: "device", minecart: "metal", cores: "metal", toolwall: "metal", ladder: "metal", cart: "metal", mailbag: "soft", boxlost: "wood", optable: "metal", expgear: "soft", washer: "device", hangers: "soft", mannequin: "soft", abacus: "wood", counting: "device", complaints: "paper", seismograph: "device", phonograph: "device", mirror: "metal", lamp: "device", stars: "device", aquarium: "device", globe: "device", metronome: "wood", pendulum: "metal", speaker: "device", sauna: "wood", rain: "device", shower: "metal", fountain: "metal", well: "wood", pond: "plant", eyewash: "metal", cage: "metal", labbench: "metal", hood: "metal", gloves: "metal", tank: "metal", cryopods: "device", gunrack: "metal", lightbox: "device", trays: "kitchen", dewar: "metal", redlamp: "device", vats: "metal", horns: "metal", toys: "wood", riftwindow: "device", ringpipe: "metal", turbine: "device", valves: "metal", vent: "metal", xray: "device", monitors: "device", scheme: "paper", soundmap: "paper", echo: "metal", stage: "wood", cradle: "wood", testbooth: "device", hoop: "metal", neurochair: "device", blackboard: "wood", sensorbed: "device", loom: "wood", wheel: "wood", mats: "soft", barricade: "wood" , twinchairs: "soft", rootbench: "wood", backclock: "device", prism: "device", punchclock: "device", gearwall: "metal", boiler: "metal", sealer: "metal", mirrorlog: "paper", perfocards: "paper", berrybush: "plant", sprout: "plant" };
 function wearOf(o) {
   var fr = FR(), cls = FXCLASS[o.fx];
   if (!fr || !fr.fxwear || !cls || !fr.fxwear[cls] || !fr.fxwear[cls].length) return "";
@@ -735,7 +730,7 @@ function pockets(o, id) {
   /* (2.5) граната под телом, клещ в складках одежды (stash.js) */
   if (LAB.stash && LAB.stash.guard(o, function () { pockets(o, id); })) return;
   s.pockets = 1;
-  spend(1); snd("cloth", "pickup");
+  spend(1); snd("search_body", null);
   var r = rng(o, "pockets"), L = G().L, F = G().F, loot = [];
   if (r.chance(0.55)) loot.push({ kind: "credits", n: LAB.credits(3 + r.int(0, 10), L, F) });
   if (r.chance(0.45) && LAB.annexLoot) { var x = LAB.annexLoot(r, L, F, r.pick(["smoke", "food", "home"]), "floor", true)[0]; if (x && x.kind !== "weapon" && x.kind !== "armor") loot.push(x); }
@@ -748,7 +743,7 @@ function pockets(o, id) {
 }
 function stripBody(o, id) {
   var s = st(o); if (s.stripped) return; s.stripped = 1;
-  spend(3); snd("cloth", null);
+  spend(3); snd("armor_off", null);
   var r = rng(o, "strip"), a = LAB.makeArmor(id.outfit[2], LAB.foeLevel(G().L, G().F), r.chance(0.6) ? 0 : 1);
   say("Вы осторожно снимаете " + id.outfit[0] + ". " + gm().giveItem({ kind: "armor", a: a }));
 }
@@ -758,7 +753,7 @@ function takeBadge(o, id) {
   g.inv.badge = (g.inv.badge || 0) + 1;
   g.badges = g.badges || [];
   if (g.badges.length < 200) g.badges.push({ n: id.p.fio, p: id.post, L: g.L, F: g.F });
-  snd("pickup", null);
+  snd("pick_part", null);
   say("Жетон «" + id.p.fio + "» у вас. Выжившие передадут имя наверх. Жетонов: " + g.inv.badge + ".");
   ev("badge", 1);
 }

@@ -85,7 +85,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     return out;
   });
   ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.ver === "Альфа 3.2" && news.items.some(l => /^Альфа 3\.1$/.test(l)) && news.items.some(l => /^Альфа 3\.0$/.test(l)) && news.items.some(l => /^Альфа 2\.6$/.test(l)) && news.items.some(l => /^Альфа 2\.5$/.test(l)) && news.items.some(l => /^Альфа 2\.2$/.test(l)) && news.items.some(l => /^Альфа 2\.1$/.test(l)) && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
-  ok(/Что нового: /.test(news.note) && /ОКО меняется с глубиной/.test(news.text) && /«Облики ОКО»/.test(news.text) && /Шаги по бетону и дереву звучат чище/.test(news.text) && /Чем ниже блок, тем просторнее/.test(news.text) && /в пять, шесть и семь шагов/.test(news.text) && /перезарядка — (касание двумя пальцами|Alt\+R или F)/.test(news.text) && /настройки остались прежними/.test(news.text) && !/Мутагенный туман/.test(news.text) && !/выходят волнами/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
+  ok(/Что нового: /.test(news.note) && /ОКО меняется с глубиной/.test(news.text) && /«Облики ОКО»/.test(news.text) && /Шаги по бетону и дереву звучат чище/.test(news.text) && /Тишины меньше/.test(news.text) && /Чем ниже блок, тем просторнее/.test(news.text) && /в пять, шесть и семь шагов/.test(news.text) && /перезарядка — (касание двумя пальцами|Alt\+R или F)/.test(news.text) && /настройки остались прежними/.test(news.text) && !/Мутагенный туман/.test(news.text) && !/выходят волнами/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
 
   console.log("Настройки");
   await page.evaluate(() => { LAB.ui.top().i = 0; });
@@ -2748,7 +2748,7 @@ LAB.ui.closeAll();
     /* растяжка с гранатой: поперёк коридора, на все четыре шага */
     put(4); G.inv.tr_wire = 1; T.place("wire", "front");
     const wr = T.list().find(t => t.t === "wire");
-    out.wireAcross = !!wr && wr.cells.length === LAB.CORR_W;
+    out.wireAcross = !!wr && wr.cells.length === LAB.corrW(cor);
     T.list().length = 0;
     /* заряд на радиосигнале: подрыв по команде задевает врага рядом */
     put(4); G.inv.tr_remote = 1; T.place("remote", "front");
@@ -5294,7 +5294,7 @@ LAB.ui.closeAll();
       /* выше третьего блока — прежние четыре шага */
       go(30, 3); const c30 = g.CUR.fl.corrs[0]; out.text30 = g.corridorText(c30, true);
       /* вещи своей глубины и вход в помещение: при входе — ближние, остальное — «Осмотреться» */
-      const DEEP = { O: ["mirrorwall", "glasschime", "backclock", "twinchairs", "prism", "mirrorlog"], M: ["punchclock", "gearwall", "tubehub", "perfocards", "boiler", "sealer"], I: ["spring", "berrybush", "nest", "rootbench", "sprout", "warmstone"] };
+      const DEEP = { O: ["mirrorwall", "glasschime", "backclock", "twinchairs", "prism", "mirrorlog"], M: ["punchclock", "gearwall", "perfocards", "boiler", "sealer"], I: ["spring", "berrybush", "nest", "rootbench", "sprout", "warmstone"] };
       out.deepN = {}; out.deep30 = 0;
       [[45, "O"], [65, "M"], [85, "I"]].forEach(q => { const fl2 = LAB.getFloor(G.seed, q[0], 4); out.deepN[q[1]] = fl2.objs.filter(o => o.type === "fx" && DEEP[q[1]].indexOf(o.fx) >= 0).length; });
       [10, 30].forEach(L => { const fl2 = LAB.getFloor(G.seed, L, 4); out.deep30 += fl2.objs.filter(o => o.type === "fx" && [].concat(DEEP.O, DEEP.M, DEEP.I).indexOf(o.fx) >= 0).length; });

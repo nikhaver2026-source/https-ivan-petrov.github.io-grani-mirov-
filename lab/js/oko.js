@@ -796,7 +796,7 @@ function replTick() {
     if (got === null) { f.repl.splice(i, 1); continue; }
     if (!got.length) { q.t = now + 20; continue; } /* место у вас на виду — позже */
     f.repl.splice(i, 1);
-    if (wv) sent(now);
+    if (wv) { sent(now); exitLog(got); }
     f.replN = (f.replN || 0) + 1;
     if (got.length >= 3) { speak("squad"); heard(got, "ОКО стягивает машины"); }
     else if (q.k === "patrol") { if (o0().heat >= 40 || Math.random() < 0.5) heard(got, "Новый патруль ОКО"); }
@@ -887,13 +887,15 @@ function shift() {
   if (changed && (o.heat >= 40 || Math.random() < 0.35)) speak("shift");
 }
 
+/* (3.2) В журнале безопасности — каждый настоящий выход машин, волной или на замену:
+   так проверяют Зрачка, который объявляет отряды, которых нет (okoforms.js). */
+function exitLog(got) { if (got && got.length) log("Выход единиц: " + got.length + ", " + place(got[0].x, got[0].y) + "."); }
 /* Выпустить волну из очереди: машины выходят из дальней двери, ОКО говорит, кто и откуда. */
 function sendWave(w) {
   var cb = C(), o = st(), id = rota(w) ? 0 : waveId();
   var gotW = cb.dispatch(w.n, w.mode, w.at, id ? { wv: id } : null);
   if (!gotW.length) return false;
-  /* (3.2) в журнале безопасности — только настоящий выход: так проверяют Зрачка */
-  if (w.mode !== "sapper") log("Выход единиц: " + gotW.length + ", " + place(gotW[0].x, gotW[0].y) + ".");
+  if (w.mode !== "sapper") exitLog(gotW);
   if (LAB.okoForms) LAB.okoForms.dispatched(gotW, w);
   if (w.tag === "fresh") { speak("fresh", true); heard(gotW, "Новые машины ОКО"); }
   else if (w.mode === "patrol") { if (o.heat >= 40 || Math.random() < 0.4) heard(gotW, "Новый патруль ОКО"); }

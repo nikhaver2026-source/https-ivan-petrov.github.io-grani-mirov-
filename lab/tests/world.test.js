@@ -113,7 +113,7 @@ for (let si = 0; si < seeds; si++) {
         });
         z.fx += fl.objs.filter(o => o.type === "fx").length;
         if (gw) {
-          const deep = fl.objs.filter(o => o.type === "fx" && ["mirrorwall", "glasschime", "backclock", "twinchairs", "prism", "mirrorlog", "punchclock", "gearwall", "tubehub", "perfocards", "boiler", "sealer", "spring", "berrybush", "nest", "rootbench", "sprout", "warmstone"].indexOf(o.fx) >= 0);
+          const deep = fl.objs.filter(o => o.type === "fx" && ["mirrorwall", "glasschime", "backclock", "twinchairs", "prism", "mirrorlog", "punchclock", "gearwall", "perfocards", "boiler", "sealer", "spring", "berrybush", "nest", "rootbench", "sprout", "warmstone"].indexOf(o.fx) >= 0);
           stat.deepFx = (stat.deepFx || 0) + deep.length;
           deep.forEach(o => { if (!LAB.FIX.T[o.fx]) err(`${at}: вещь ${o.fx} без описания`); });
         }

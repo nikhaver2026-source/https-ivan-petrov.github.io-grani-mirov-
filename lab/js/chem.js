@@ -529,7 +529,7 @@ function brew(rc, o) {
     gain(rc.br, 3);
     var msg = "Реакция ушла в осадок: часть сырья пропала.";
     if (level() < 7) {
-      if (rc.br === "pyro") { var bd = 4 + Math.floor(Math.random() * 7); g.hp = Math.max(1, g.hp - bd); A("play", "hurt_burn"); msg += " Вспышка обожгла руки: здоровье минус " + bd + "."; }
+      if (rc.br === "pyro") { var bd = 4 + Math.floor(Math.random() * 7); g.hp = Math.max(1, g.hp - bd); A("play", "hurt_therm"); msg += " Вспышка обожгла руки: здоровье минус " + bd + "."; }
       else if (!(g.st.antitox > 0)) { if (gm().bodyApply) gm().bodyApply({ tox: 8 }, []); A("play", "hurt_chem"); msg += " Едкие пары: токсины плюс 8."; }
       if (fc.sat && !(g.st.antitox > 0)) { addMut(3, "пары"); msg += " Пары с мутагеном: мутация плюс 3."; }
     }
@@ -933,7 +933,7 @@ function useBlast() {
 }
 function burnDoor(d, openFn) {
   if (!useThermite()) return false;
-  A("play", "hurt_burn"); A("explosion", d.x, d.y, "fire");
+  A("play", "acid_sizzle"); A("explosion", d.x, d.y, "fire");
   if (LAB.combat && LAB.combat.noise) LAB.combat.noise(12);
   if (LAB.oko && LAB.oko.report) LAB.oko.report("door", d.x, d.y, "seen", "прожжён замок");
   gain("pyro", 6);
@@ -943,7 +943,7 @@ function burnDoor(d, openFn) {
 }
 function burnSafe(o, openFn) {
   if (!useThermite()) return false;
-  A("play", "hurt_burn"); A("explosion", o.x, o.y, "fire");
+  A("play", "acid_sizzle"); A("explosion", o.x, o.y, "fire");
   if (LAB.combat && LAB.combat.noise) LAB.combat.noise(12);
   gain("pyro", 6);
   var lost = 0;

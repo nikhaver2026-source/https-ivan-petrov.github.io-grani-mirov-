@@ -21,7 +21,6 @@ function pl(n, a, b, c) { return gm().plural(n, a, b, c); }
 function cr(n) { return n + " " + pl(n, "кредит", "кредита", "кредитов"); }
 function now() { var g = G(); return g.min + g.day * 1440; }
 function era() { return LAB.SUPPLY[LAB.supplyEra(G().L)]; }
-function snd(id) { if (LAB.Bank && LAB.Bank.has && LAB.Bank.has(id)) A("play", id); }
 
 /* ════════ ЧТО ЕСТЬ ЧТО ════════ */
 /* Раздел вещи: еда, лекарства, защита, инструменты, ценности, детали, модули, устройства. */
@@ -280,7 +279,7 @@ function linePrice(e, prof) {
 }
 function postName(o) { return era().n; }
 function postMenu(o) {
-  snd("vend");
+  A("play", "vend");
   var st = stockOf(o), prof = st.prof, P = LAB.SUPPLY_PROFILES[prof];
   if (LAB.ach) LAB.ach.ev("post", 1);
   var build = function () {
@@ -390,7 +389,7 @@ function orderMenu(o) {
         G().credits -= p;
         var q = { id: "q" + Date.now().toString(36) + Math.floor(Math.random() * 1e4), name: nm, item: e.id || null, ammo: e.ammo || null, armor: e.armor || null, due: now() + deliveryMins(), st: "way", era: LAB.supplyEra(G().L) };
         (G().orders = G().orders || []).push(q);
-        snd("pneumo_send"); A("play", "term_ok");
+        A("play", "term_ok");
         say(era().ord + " " + nm + ": " + cr(p) + " списано, доставка " + deliveryText() + ". Забрать — в любом пункте снабжения.");
         if (LAB.ach) LAB.ach.ev("order", 1);
         gm().autosaveSoon();
@@ -413,7 +412,7 @@ function pickup(o) {
   });
   g.orders = (g.orders || []).filter(function (q) { return q.st !== "done"; });
   if (!got.length) { say("Прибывших капсул нет."); return; }
-  A("play", "pickup"); snd("pneumo_open");
+  A("play", "open_locker");
   say("Вы открыли капсулу. " + got.join(" "));
   if (LAB.ach) LAB.ach.ev("delivered", got.length);
   gm().autosaveSoon();
@@ -437,7 +436,6 @@ function tick() {
   });
   if (arrived.length) {
     var e = LAB.SUPPLY[(g.orders.filter(function (q) { return q.st === "ready"; })[0] || {}).era || LAB.supplyEra(g.L)] || era();
-    snd("pneumo_arrive");
     say(e.arrive + " Заказ прибыл: " + arrived.join(", ") + ". Забрать — в любом пункте снабжения.", { prio: "event" });
   }
 }
