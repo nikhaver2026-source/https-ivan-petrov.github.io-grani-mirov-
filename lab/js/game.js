@@ -23,7 +23,7 @@ var DIRS = LAB.DIRS;
 /* ════════ СОСТОЯНИЕ ════════ */
 /* Версия мира: этажи построены заново (широкие коридоры, тайные комнаты с
    двумя выходами, турели у дверей) — старые записи этажей к ним не подходят. */
-var WORLD_V = 3;
+var WORLD_V = 4; /* (3.2) четвёртый выпуск мира: с третьего блока этажи просторнее (world.js, GROW) */
 /* (2.1) Стартовый набор — с ним носитель выходит из капсулы: монтировка и
    заряженный бластер «Искра» (выбран он), надетый защитный комбинезон
    «Ковчег», бинт, походный ремнабор, сухпаёк и кредиты на первую покупку.
@@ -1006,7 +1006,7 @@ function passableRoute(x, y, sd, k) {
   for (var i = 1; i <= k; i++) if (!passable(x + q[0] * i, y + q[1] * i)) return false;
   return true;
 }
-/* Коридоры прямые, в четыре шага шириной. Входя в коридор, «Эхо» говорит,
+/* Коридоры прямые, в четыре шага шириной (3.2: с третьего блока — шире). Входя в коридор, «Эхо» говорит,
    куда он ведёт и что в конце; в самом коридоре — где вы поперёк него. */
 function corridorTurn(dir) {
   var cor = LAB.corrOf(CUR.fl, G.x, G.y);
@@ -1027,7 +1027,9 @@ function corridorText(cor, entering) {
   var hsteps = function (x, y) { return cor.axis === "h" ? Math.abs(x - G.x) : Math.abs(y - G.y); };
   var across = cor.axis === "h" ? G.y - cor.y0 : G.x - cor.x0;
   var sideA = cor.axis === "h" ? "N" : "W", sideB = cor.axis === "h" ? "S" : "E";
-  parts.push(entering ? "Коридор, шириной в четыре шага." : "Коридор.");
+  /* (3.2) с третьего блока коридоры шире (world.js, GROW) */
+  var cw = LAB.corrW ? LAB.corrW(cor) : LAB.CORR_W;
+  parts.push(entering ? "Коридор, шириной в " + ({ 4: "четыре шага", 5: "пять шагов", 6: "шесть шагов", 7: "семь шагов", 8: "восемь шагов" }[cw] || cw + " шагов") + "." : "Коридор.");
   var cap = function (t) { return t.replace(/^./, function (c) { return c.toUpperCase(); }); };
   var doorDir = null;
   if (e.door && !(e.door.lock && e.door.lock.type === "secret" && !secretFound(e.door))) {
@@ -1043,7 +1045,9 @@ function corridorText(cor, entering) {
   }
   /* (1.5) двери кабинетов в стенах коридора */
   if (cor.annex && cor.annex.length && LAB.zones) { var an = LAB.zones.corridorNote(cor); if (an) parts.push(an); }
-  if (!entering) parts.push(across === 0 ? "Вы у стены " + LAB.DIRN[sideA] + "." : across === LAB.CORR_W - 1 ? "Вы у стены " + LAB.DIRN[sideB] + "." : "Вы посередине.");
+  /* в широком коридоре — ещё «ближе к стене»: середина там — одна клетка или две */
+  var midLo = (cw - 1) >> 1, midHi = cw >> 1;
+  if (!entering) parts.push(across === 0 ? "Вы у стены " + LAB.DIRN[sideA] + "." : across === cw - 1 ? "Вы у стены " + LAB.DIRN[sideB] + "." : cw <= 4 || (across >= midLo && across <= midHi) ? "Вы посередине." : "Вы ближе к стене " + LAB.DIRN[across < midLo ? sideA : sideB] + ".");
   return parts.join(" ");
 }
 game.corridorText = corridorText;
@@ -1123,7 +1127,7 @@ function roomCheck(full, run, mute) {
     var ex = roomExits(r);
     if (ex) parts.push(ex);
   }
-  var stuff = roomStuff(r, !(first || full));
+  var stuff = roomStuff(r, !(first || full), false, !full && LAB.floorGrow && LAB.floorGrow(G.L) ? 8 : 0);
   if (stuff) parts.push(stuff);
   if (run && !first) parts = [parts[0]];
   sayq(parts.join(" "));
@@ -1151,8 +1155,15 @@ function roomExits(r) {
   });
   return out.length ? "Выходы: " + out.join("; ") + "." : "";
 }
-function roomStuff(r, brief, itemsFirst) {
-  var objs = brief ? [] : CUR.fl.objs.filter(function (o) { return o.room === r.id; }).map(function (o) { return objName(o) + " " + relDir(o.x, o.y); });
+function roomStuff(r, brief, itemsFirst, capN) {
+  var objs = brief ? [] : CUR.fl.objs.filter(function (o) { return o.room === r.id; });
+  /* (3.2) в просторных помещениях нижних глубин вещей много: при входе — ближние, остальное — «Осмотреться» */
+  var more = 0;
+  if (capN && objs.length > capN + 2) {
+    objs = objs.slice().sort(function (a, b) { return Math.max(Math.abs(a.x - G.x), Math.abs(a.y - G.y)) - Math.max(Math.abs(b.x - G.x), Math.abs(b.y - G.y)); });
+    more = objs.length - capN; objs = objs.slice(0, capN);
+  }
+  objs = objs.map(function (o) { return objName(o) + " " + relDir(o.x, o.y); });
   var npcs = CUR.fl.npcs.filter(function (n) { return n.room === r.id; }).map(function (n) { return npcName(n) + " " + relDir(n.x, n.y); });
   var seenF = LAB.combat ? LAB.combat.visibleFoes(8) : [], camF = LAB.combat && LAB.combat.isCam ? seenF.filter(LAB.combat.isCam) : [];
   var foes = seenF.filter(function (f) { return camF.indexOf(f) < 0; }).map(function (f) { return f.name + " " + relDir(f.x, f.y); });
@@ -1162,7 +1173,7 @@ function roomStuff(r, brief, itemsFirst) {
   var s = [], floor = items.length ? "На полу: " + items.slice(0, 5).join(", ") + (items.length > 5 ? " и ещё " + (items.length - 5) : "") + "." : "";
   /* «Осмотреться»: сначала что лежит на полу, потом что стоит в помещении */
   if (itemsFirst && floor) s.push(floor);
-  if (objs.length) s.push("Здесь: " + objs.join(", ") + ".");
+  if (objs.length) s.push("Здесь: " + objs.join(", ") + (more ? " и ещё " + more + " " + plural(more, "вещь", "вещи", "вещей") + " — " + LAB.K("осмотритесь: два пальца вверх", "осмотритесь: Tab") : "") + ".");
   var trapsL = LAB.traps ? LAB.traps.lookList(function (x, y) { var rr = roomAt(x, y); return rr && rr.id === r.id; }) : "";
   if (trapsL) s.push(trapsL);
   if (npcs.length) s.push("Живые: " + npcs.join(", ") + ".");
@@ -2060,7 +2071,7 @@ function terminalMenu(o) {
   var iso = st.isoUntil && st.isoUntil > (CUR.fs.okoT || 0) ? Math.ceil((st.isoUntil - (CUR.fs.okoT || 0)) / 2) : 0;
   items.push({ label: "Журналы и сообщения", fn: function () { terminalLogs(o); } });
   if (o.sub === "sec") items.push({ label: "Журнал безопасности ОКО: режим этажа — " + (LAB.oko ? LAB.oko.levelName() : "?"), fn: function () { UIx("note", "Журнал безопасности ОКО", "Режим этажа: " + (LAB.oko ? LAB.oko.levelName() : "?") + ". " + (LAB.oko ? LAB.oko.logText(14) : "")); } });
-  /* (3.1) «Механизм»: Счетовод ОКО торгуется — передышка от волн или забытое подозрение за кредиты */
+  /* (3.2) «Механизм»: Счетовод ОКО торгуется — передышка от волн или забытое подозрение за кредиты */
   if (o.sub === "sec" && LAB.okoForms && LAB.okoForms.dealsOpen()) items.push({ label: "Сделка со Счетоводом ОКО", fn: function () { LAB.okoForms.dealMenu(); } });
   /* карта этажа — только в терминалах безопасности и научных */
   if (o.sub === "sec" || o.sub === "sci") items.push({ label: CUR.fs.mapped ? "Карта этажа (уже загружена)" : "Загрузить карту этажа в навигатор", fn: function () {

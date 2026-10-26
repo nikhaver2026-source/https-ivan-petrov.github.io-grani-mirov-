@@ -490,7 +490,7 @@ function stepToward(f, tx, ty, opts) {
   }, {
     passDoor: function (d) { return foeOpens(f, d); },
     block: function (x, y) { return occ[y * W0 + x] === 1; },
-    maxLen: 6000
+    maxLen: bfsCap()
   });
   f.pathLen = path ? path.length : 9999;
   if (!path || !path.length) return false;
@@ -510,6 +510,8 @@ function stepToward(f, tx, ty, opts) {
   moveFoe(f, nx, ny);
   return true;
 }
+/* (3.2) предел поиска пути: с третьего блока этажи просторнее — и путь ищется дальше */
+function bfsCap() { var gw = LAB.floorGrow ? LAB.floorGrow(G().L) : null; return gw ? 6000 + 1500 * (LAB.blockOf(G().L) - 2) : 6000; }
 function moveFoe(f, nx, ny) {
   if (LAB.solidAt(CUR().fl, nx, ny)) return; /* (3.0) на обстановку и на жителей враг не встаёт никогда */
   if ((inSafeRoom(nx, ny) || inRefuge(nx, ny) || havenAt(nx, ny)) && !f.ally) return; /* (2.2) в капсульный отсек при пробуждении и в убежище, (2.3) в безопасную зону у капсулы не входят */

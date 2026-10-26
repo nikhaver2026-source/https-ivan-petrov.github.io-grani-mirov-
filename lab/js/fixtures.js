@@ -43,6 +43,8 @@ function fxDef(o) { return LAB.FIX && LAB.FIX.T[o.fx]; }
 var NEW_ITEMS = {
   mushroom: { n: "Грибы с грибницы", icon: "🍄", kind: "food", cat: "food", desc: "Горсть плотных грибов, пахнущих лесом. Сытость плюс 8, немного здоровья. Разогретые на плите — сытнее.", food: 8, heal: 5, price: 4, eat: "crunch", depth: 3 },
   herbtea: { n: "Травяной сбор", icon: "🌿", kind: "food", cat: "food", desc: "Пучок сушёных трав: мята, чабрец и что-то незнакомое, пахнущее мёдом. Если заварить — бодрит, успокаивает и выводит токсины.", food: 5, wake: 6, neuro: -10, detox: 6, price: 6, eat: "sip", depth: 1 },
+  /* (3.2) ягодный куст Истока (fixtures_data.js, berrybush) */
+  berries: { n: "Ягоды Истока", icon: "🫐", kind: "food", cat: "food", desc: "Горсть тёплых тёмных ягод с куста у трубы реактора. Сытость плюс 8, немного здоровья, выводит немного токсинов.", food: 8, heal: 4, detox: 4, price: 6, eat: "crunch" },
   badge: { n: "Жетон погибшего", icon: "🏷️", kind: "misc", cat: "valuable", nosell: true, price: 0, desc: "Металлический жетон с именем и должностью. Выжившие собирают жетоны погибших: отдайте им — родные наверху узнают, что случилось." }
 };
 for (var ik in NEW_ITEMS) if (!LAB.ITEMS[ik]) LAB.ITEMS[ik] = NEW_ITEMS[ik];
@@ -125,6 +127,8 @@ var PHOTO = {
   cap: ["«Последний пикник перед сменой»", "«Мы вернёмся летом»", "«Это я, когда ещё видел солнце»", "«Папе на работу»", "«Не грусти там, внизу»", "«Наш первый снег»", "«Ждём тебя»", "«С днём рождения, {имя}»", "«{кому_имя} и я»", "«Помни, как пахнет море»"]
 };
 var SLEEP = ["Испытуемому снилась вода.", "Сон тревожный: пульс выше нормы.", "Фаза быстрого сна длинная, как у ребёнка.", "Во сне человек считал вслух до десяти.", "Под утро улыбался.", "Снились шаги. Опять шаги."];
+/* (3.2) заголовки текстов вещей нижних глубин */
+var TITLE31 = { backclock: "Часы, идущие назад", mirrorlog: "Журнал отражений", punch: "Табельные карточки", tubes31: "Адреса на капсулах", perfo: "Перфокарта", sprout: "Табличка под колпаком" };
 function gen(kind, o, r, sub) {
   var c = ctxFor(r), e = era(), out, i, fromPool = picker(o, sub);
   switch (kind) {
@@ -178,7 +182,7 @@ function gen(kind, o, r, sub) {
     case "seismo": { return { t: "Ленты самописцев", x: "Зубцы ровные, потом " + r.int(2, 9) + " волн подряд, отметка дежурного: «" + LAB.agen.timeWords(c.tm) + "». " + fromPool("tx:seismo", LAB.FIX.TX.seismo) }; }
   }
   out = LAB.FIX.TX[kind];
-  return { t: "Запись", x: fromPool("tx:" + kind, out) || "Текст выцвел." };
+  return { t: TITLE31[kind] || "Запись", x: fromPool("tx:" + kind, out) || "Текст выцвел." };
 }
 /* Журнал смены — строки глубины с людьми, номерами и временем этажа. */
 function logText(r, n, o, sub) {
@@ -311,6 +315,8 @@ function run(o, def, kind, p, label, withId) {
       spend(p.m || 1);
       if (p.neuro || p.tox || p.wake) gm().bodyApply({ neuro: p.neuro || 0, tox: p.tox || 0, wake: p.wake || 0 }, m);
       if (p.noise) noise(p.noise);
+      /* (3.2) табельные часы Механизма: отметка — и ОКО подозревает меньше, раз на вещь */
+      if (p.heat && !s.heatDone && LAB.oko && LAB.oko.heat) { s.heatDone = 1; LAB.oko.heat(p.heat); m.push(p.heatT || "ОКО подозревает вас меньше."); }
       listenSound(o);
       say(p.t + (m.length ? " " + m.join(" ") : ""));
       return;
@@ -460,14 +466,23 @@ function run(o, def, kind, p, label, withId) {
   say("Ничего не происходит.");
 }
 var WISH = ["Вы загадываете выйти наверх. Вода отвечает тихим плеском.", "Вы загадываете, чтобы группа у лифта дождалась. Где-то наверху гудит вентиляция — будто в ответ.", "Вы загадываете снова увидеть свет. «Эхо» молчит, но как-то по-доброму.", "Вы ничего не загадываете: просто слушаете, как монетка ложится к другим.", "Вы загадываете тишины для тех, кто здесь остался."];
+var REST31 = {
+  twinchairs: "Вы садитесь, и кресло напротив словно садится вместе с вами. Минуты идут ровно, спина отдыхает.",
+  boiler: "От котла идёт сухое тепло, манометр тихо постукивает. Руки отогреваются, плечи опускаются.",
+  rootbench: "Корни под вами тёплые и чуть подаются, как живые. Где-то в глубине по ним течёт вода — слышно, если затаить дыхание.",
+  warmstone: "Камень греет спину, одеяло пахнет шерстью и дымом. Вы почти засыпаете — и тело говорит спасибо."
+};
 function restLine(o, r) {
   var L0 = { sofa: "Пружины скрипят, подушки пахнут пылью и чужим одеколоном. Вы сидите, слушая, как гудит вентиляция.", bunk: "Сетка койки прогибается. Вы лежите, глядя в темноту, которой нет разницы, открыты глаза или нет.", couch: "Клеёнка кушетки холодит спину, потом теплеет.", armchair: "Кресло принимает вас, как своего.", pillows: "Подушки мягкие, тишина вокруг густая, как одеяло.", moss: "Мох пружинит и тепло пахнет землёй. Звуки гаснут, будто их кто-то накрыл ладонью.", rocking: "Качалка поскрипывает, как часы.", sauna: "Жар обнимает, пот смывает усталость.", rain: "Тёплые капли стучат по плечам. Дышится легко.", stars: "Над вами щёлкают проекторы, «Эхо» вполголоса называет созвездия.", oven: "Печь греет спину, как живая.", mats: "Маты пахнут резиной и потом. Вы растягиваетесь во весь рост." };
-  return L0[o.fx] || r.pick(["Вы сидите, переводя дух.", "Минуты идут медленно, и это хорошо.", "Дыхание выравнивается."]);
+  return L0[o.fx] || REST31[o.fx] || r.pick(["Вы сидите, переводя дух.", "Минуты идут медленно, и это хорошо.", "Дыхание выравнивается."]);
 }
 function listenSound(o) {
   var M = { aquarium: "ev_bubbles", pond: "ev_bubbles", dewar: "ev_steam", vats: "ev_bubbles", turnstile: "turnstile", forklift: "horn", winch: "winch", minecart: "cart", speaker: "hum", coils: "hum", turbine: "hum", bell: "bell", stamps: "stamp", beehive: "buzz", birdcage: "birds", drone: "drone_fly", metronome: "tick", pendulum: "tick" };
   if (M[o.fx]) snd(M[o.fx], null);
+  else if (SND31[o.fx]) snd(SND31[o.fx], null);
 }
+/* (3.2) звуки вещей нижних глубин — из тех, что уже есть в игре */
+var SND31 = { glasschime: "ev_glass", prism: "ev_glass", mirrorwall: "ev_glass", gearwall: "ev_servo", punchclock: "pc_click", sealer: "pc_click", boiler: "ev_steam", spring: "ev_drip", sprout: "ev_whisper" };
 function echoLine(rm) {
   if (!rm) return "";
   var n = (rm.doors || []).length;

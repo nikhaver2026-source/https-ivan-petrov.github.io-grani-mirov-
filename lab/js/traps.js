@@ -249,7 +249,7 @@ function onCells(tp, x, y) {
 function wireCells(x, y, face) {
   var fl = CUR().fl, cor = cellT(x, y) === LAB.T.CORR ? LAB.corrOf(fl, x, y) : null, out = [];
   if (cor) {
-    for (var k = 0; k < LAB.CORR_W; k++) {
+    for (var k = 0; k < (LAB.corrW ? LAB.corrW(cor) : LAB.CORR_W); k++) {
       var cx = cor.axis === "h" ? x : cor.x0 + k, cy = cor.axis === "h" ? cor.y0 + k : y;
       if (floorOk(cx, cy) || (cx === x && cy === y)) out.push([cx, cy]);
     }
@@ -941,6 +941,6 @@ LAB.traps = {
   okoTrap: okoTrap, okoKinds: okoKinds, okoCount: okoCount, at: function (x, y) { return trapOn(x, y); }, enterFloor: enterFloor, count: count, list: function () { return list(); },
   nameOf: nameOf, stateWord: stateWord, effLine: effLine, ids: ORDER, T: T,
   use: function (id) { var k = LAB.ITEMS[id] && LAB.ITEMS[id].trap; if (k) itemMenu(k); return false; },
-  _fire: fire, _zones: function () { return zones; }, _worldGen: worldGen
+  _fire: fire, _zones: function () { return zones; }, _worldGen: worldGen, _wireCells: wireCells
 };
 })();

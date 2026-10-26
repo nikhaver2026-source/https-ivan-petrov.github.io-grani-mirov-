@@ -84,8 +84,8 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     LAB.ui.closeTop(true); LAB.ui.closeAll(); LAB.ui.mainMenu(true);
     return out;
   });
-  ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.ver === "Альфа 3.1" && news.items.some(l => /^Альфа 3\.0$/.test(l)) && news.items.some(l => /^Альфа 2\.6$/.test(l)) && news.items.some(l => /^Альфа 2\.5$/.test(l)) && news.items.some(l => /^Альфа 2\.2$/.test(l)) && news.items.some(l => /^Альфа 2\.1$/.test(l)) && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
-  ok(/Что нового: /.test(news.note) && /выходят волнами/.test(news.text) && /Заваленную лестницу/.test(news.text) && /деревянный пол/.test(news.text) && /половицы/.test(news.text) && /стены звучат как прежде/.test(news.text) && /У чайника/.test(news.text) && /В холодильниках/.test(news.text) && /ОКО меняется с глубиной/.test(news.text) && /«Облики ОКО»/.test(news.text) && /Шаги по бетону и дереву звучат чище/.test(news.text) && /перезарядка — (касание двумя пальцами|Alt\+R или F)/.test(news.text) && /настройки остались прежними/.test(news.text) && !/Мутагенный туман/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
+  ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.ver === "Альфа 3.2" && news.items.some(l => /^Альфа 3\.1$/.test(l)) && news.items.some(l => /^Альфа 3\.0$/.test(l)) && news.items.some(l => /^Альфа 2\.6$/.test(l)) && news.items.some(l => /^Альфа 2\.5$/.test(l)) && news.items.some(l => /^Альфа 2\.2$/.test(l)) && news.items.some(l => /^Альфа 2\.1$/.test(l)) && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
+  ok(/Что нового: /.test(news.note) && /ОКО меняется с глубиной/.test(news.text) && /«Облики ОКО»/.test(news.text) && /Шаги по бетону и дереву звучат чище/.test(news.text) && /Чем ниже блок, тем просторнее/.test(news.text) && /в пять, шесть и семь шагов/.test(news.text) && /перезарядка — (касание двумя пальцами|Alt\+R или F)/.test(news.text) && /настройки остались прежними/.test(news.text) && !/Мутагенный туман/.test(news.text) && !/выходят волнами/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
 
   console.log("Настройки");
   await page.evaluate(() => { LAB.ui.top().i = 0; });
@@ -5103,7 +5103,7 @@ LAB.ui.closeAll();
     ok(flr.bump, "звук стены прежний: удар о сталь, без звука шага");
   }
 
-  console.log("Альфа 3.1: подсказки о жестах — как в игре (перезарядка, смена оружия, повтор фразы, двери коридора)");
+  console.log("Альфа 3.2: подсказки о жестах — как в игре (перезарядка, смена оружия, повтор фразы, двери коридора)");
   const hint31 = await page.evaluate(() => {
     const out = {}, km = LAB.keysMode, g = LAB.game, C = LAB.combat, G = g.G;
     const keep = { drawn: G.drawn, tutW: G.tut.weapon, nW: G.weapons.length, wi: G.wi };
@@ -5136,7 +5136,7 @@ LAB.ui.closeAll();
   ok(/Сменить оружие — двойное касание двумя пальцами/.test(hint31.pick) && !/вверх и сразу вниз/.test(hint31.pick), "новое оружие: сменить — двойное касание двумя пальцами (" + hint31.pick + ")");
   ok(hint31.guide, "руководство: список дверей коридора — в списке целей навигатора, четыре пальца вверх");
 
-  console.log("Альфа 3.1: облики ОКО — голос и сигнал меняются с глубиной; Зрачок лжёт, Счетовод торгуется, Исток шепчет");
+  console.log("Альфа 3.2: облики ОКО — голос и сигнал меняются с глубиной; Зрачок лжёт, Счетовод торгуется, Исток шепчет");
   const okf = await page.evaluate(async () => {
     const g = LAB.game, C = LAB.combat, O = LAB.oko, F = LAB.okoForms, S = LAB.settings, out = {};
     const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -5150,10 +5150,11 @@ LAB.ui.closeAll();
     async function say(L, Fl, kind) {
       fresh(L, Fl); SPOKEN.length = 0; chimes.length = 0; O.state().lastSay = 0;
       const fr = F.frame(kind), okk = O.speak(kind, true);
-      await sleep(200); const early = SPOKEN.filter(t => !/^Обучение, шаг/.test(t)).length;
+      /* слова ОКО — строки «вводные слова: «…»»; прочее (обучение, вести этажа) не в счёт */
+      const okoLines = () => SPOKEN.filter(t => /^(ОКО|Садовник ОКО|Зрачок|Счетовод ОКО)[^«]{0,40}: «/.test(t));
+      await sleep(200); const early = okoLines().length;
       await sleep((fr.gap || 0) + 500);
-      const oko = SPOKEN.filter(t => !/^Обучение, шаг/.test(t));
-      return { ok: okk, said: oko.join(" | ").slice(0, 200), chime: chimes.join(","), form: F.cur().id, gap: fr.gap, early: early };
+      return { ok: okk, said: okoLines().join(" | ").slice(0, 200), chime: chimes.join(","), form: F.cur().id, gap: fr.gap, early: early };
     }
     try {
       S.difficulty = 1; S.turnBased = 0; LAB.ui.closeAll(); C.stop();
@@ -5179,7 +5180,7 @@ LAB.ui.closeAll();
       out.fakeOk = fast(() => F.pupilFake("test"));
       Math.random = rnd0;
       await sleep(2600); /* поправка настоящего ОКО: слова доходят поздно */
-      out.fake = SPOKEN.join(" | ").slice(0, 300); out.fakeChime = chimes.join(",");
+      out.fake = SPOKEN.find(t => /^Зрачок, вплотную: «/.test(t)) || ""; out.fix = SPOKEN.find(t => /^ОКО издалека: «/.test(t)) || ""; out.fakeChime = chimes.join(",");
       out.fakeFoes = C.foes().filter(f => !f.dead).length - n0; out.fakeLog = (g.CUR.fs.slog || []).length - lg0;
       /* настоящий выход — в журнале безопасности; носитель в коридоре, чтобы ОКО не выжидало */
       const fl = g.CUR.fl, fs = g.CUR.fs, W = LAB.W, corr = [];
@@ -5216,15 +5217,15 @@ LAB.ui.closeAll();
         q.x = spot[0]; q.y = spot[1]; q.state = "hunt"; q.ally = false; q.calm = false; q.neutral = false; q.disguised = false;
         Math.random = () => 0.01; F.warnTick(); Math.random = rnd0;
         await sleep(200);
-        out.warn = SPOKEN.join(" | ").slice(0, 200); out.warnName = String(q.name || "").split(",")[0]; out.warnChime = chimes.length;
+        out.warn = SPOKEN.find(t => /^ОКО, шёпотом, прямо в ухо: «/.test(t)) || SPOKEN.join(" | ").slice(0, 200); out.warnName = String(q.name || "").split(",")[0]; out.warnChime = chimes.length;
       } else out.warn = "нет места за стеной: " + !!spot + "/" + !!q;
       /* на краю Истока ОКО простилось и молчит */
       G.L = 99; G.F = 20; out.silent99 = F.silent(); G.L = 99; G.F = 19; out.talk99 = !F.silent();
       /* каждую перемену «Эхо» объясняет один раз — при входе на уровень */
       fresh(41, 2); SPOKEN.length = 0; O.state().formSaid = null; const j0 = G.journal.length;
       fast(() => F.entered()); await sleep(300);
-      out.stage = SPOKEN.join(" | ").slice(0, 200); out.stageJ = G.journal.length > j0;
-      SPOKEN.length = 0; fast(() => F.entered()); await sleep(300); out.stageOnce = SPOKEN.length === 0;
+      out.stage = SPOKEN.find(t => /^«Эхо»: голос ОКО двоится/.test(t)) || SPOKEN.join(" | ").slice(0, 200); out.stageJ = G.journal.length > j0;
+      SPOKEN.length = 0; fast(() => F.entered()); await sleep(300); out.stageOnce = !SPOKEN.some(t => /^«Эхо»: голос ОКО двоится/.test(t));
       /* руководство: глава «Облики ОКО» — только о тех глубинах, где игрок уже был */
       const ch = LAB.guide.chapters.find(c => c.t === "Облики ОКО");
       out.guide = !!ch;
@@ -5252,8 +5253,8 @@ LAB.ui.closeAll();
     ok(okf.silent.ok === false && okf.silent.said === "" && okf.silent99 && okf.talk99, "на краю Истока ОКО простилось и молчит");
     ok(okf.chatty[0] === 1 && okf.chatty[1] === 1 && okf.chatty[2] < 1 && okf.chatty[3] < okf.chatty[2] && okf.chatty[3] >= 0.25, "в Истоке ОКО заговаривает всё реже (" + okf.chatty.join(" ") + ")");
     ok(okf.snd === "1 2 2 2 6 0", "звуки сигналов грузятся с уровнем: свои на каждой глубине (" + okf.snd + ")");
-    ok(okf.fakeOk && /^Зрачок, вплотную: «/.test(okf.fake) && okf.fakeChime.split(",")[0] === "pupil" && okf.fakeFoes === 0 && okf.fakeLog === 0, "Зрачок объявляет отряд, которого нет: машин не прибавилось, журнал безопасности молчит (" + okf.fake.slice(0, 90) + ")");
-    ok(/ОКО издалека: «[^»]*(не я|Не верьте|Зрачок|пусто)/.test(okf.fake), "настоящее ОКО поправляет Зрачка издалека");
+    ok(okf.fakeOk && /^Зрачок, вплотную: «/.test(okf.fake) && okf.fakeChime.split(",").indexOf("pupil") >= 0 && okf.fakeFoes === 0 && okf.fakeLog === 0, "Зрачок объявляет отряд, которого нет: машин не прибавилось, журнал безопасности молчит (" + okf.fake.slice(0, 90) + ")");
+    ok(/ОКО издалека: «[^»]*(не я|Не верьте|Зрачок|пусто|поздно)/.test(okf.fix), "настоящее ОКО поправляет Зрачка издалека" + (okf.fix ? "" : " (поправки не было)"));
     ok(/^Выход единиц: \d+/.test(okf.realLog) && okf.term, "настоящий выход машин — в журнале безопасности терминала (" + okf.realLog.slice(0, 80) + ")");
     ok(okf.deals === "011100", "Счетовод торгуется с 66-го по 78-й уровень (" + okf.deals + ")");
     ok(okf.dealItems.length === 3 && /^Передышка: Сторож подождёт три минуты — \d+ кредитов$/.test(okf.dealItems[0]) && /^Забыть подозрение/.test(okf.dealItems[1]), "сделка со Счетоводом: передышка, забытое подозрение, отказ (" + okf.dealItems.join(" / ").slice(0, 120) + ")");
@@ -5262,6 +5263,108 @@ LAB.ui.closeAll();
     ok(/^ОКО, шёпотом, прямо в ухо: «/.test(okf.warn) && okf.warn.indexOf(okf.warnName) >= 0 && okf.warnChime === 0, "Исток: ОКО шёпотом предупреждает о машине из-за стены (" + okf.warn.slice(0, 100) + ")");
     ok(/^«Эхо»: голос ОКО двоится/.test(okf.stage) && okf.stageJ && okf.stageOnce, "при входе в «Отражение» «Эхо» один раз объясняет, что ОКО изменилось");
     ok(okf.guide && !okf.guide5 && /«Подножие»/.test(okf.guide45) && /«Колыбель»/.test(okf.guide45) && /«Отражение»/.test(okf.guide45) && !/«Механизм»/.test(okf.guide45), "руководство: «Облики ОКО» — только о глубинах, где игрок уже был");
+  }
+
+  console.log("Альфа 3.2: с третьего блока — просторнее: шире коридоры, больше помещения и кабинеты, вещи своей глубины");
+  const grow = await page.evaluate(async () => {
+    const g = LAB.game, C = LAB.combat, out = {}, label = i => typeof i.label === "function" ? i.label() : i.label;
+    let G = g.G;
+    const keep = { L: G.L, F: G.F, x: G.x, y: G.y, inv: JSON.stringify(G.inv), hp: G.hp };
+    const km = LAB.keysMode; LAB.keysMode = false;
+    const go = (L, F) => { g.enterFloor(L, F, "down", true); C.stop(); G = g.G; C.foes().forEach(f => { f.dead = true; }); };
+    try {
+      LAB.ui.closeAll(); C.stop();
+      /* ширина коридоров по блокам: 4 выше, 5, 6, 7 — в «Отражении», «Механизме», «Истоке» */
+      out.cw = [5, 30, 45, 65, 85].map(L => { const fl = LAB.getFloor(G.seed, L, 3); const ws = {}; fl.corrs.forEach(c => { ws[c.axis === "h" ? c.y1 - c.y0 + 1 : c.x1 - c.x0 + 1] = 1; }); return Object.keys(ws).join("/"); }).join(" ");
+      /* помещения и кабинеты: средняя площадь растёт по блокам */
+      const area = L => { const fl = LAB.getFloor(G.seed, L, 5), m = [], a = []; fl.rooms.forEach(r => { if (!r) return; const s = (r.x1 - r.x0 + 1) * (r.y1 - r.y0 + 1); (r.annex ? a : m).push(s); }); const avg = q => q.reduce((x, y) => x + y, 0) / Math.max(1, q.length); return [Math.round(avg(m)), Math.round(avg(a))]; };
+      out.area = [30, 45, 65, 85].map(area);
+      /* коридор «Отражения»: «Эхо» называет ширину, в широком — ещё «ближе к стене» */
+      go(45, 3);
+      const fl = g.CUR.fl, cor = fl.corrs.find(c => !c.hidden && c.len >= 14);
+      out.enterText = g.corridorText(cor, true);
+      const h = cor.axis === "h", mid = Math.floor((h ? cor.x0 + cor.x1 : cor.y0 + cor.y1) / 2);
+      const at = k => { G.x = h ? mid : cor.x0 + k; G.y = h ? cor.y0 + k : mid; };
+      at(0); out.wall = g.corridorText(cor, false);
+      at(1); out.near = g.corridorText(cor, false);
+      at(2); out.mid = g.corridorText(cor, false);
+      at(LAB.corrW(cor) - 1); out.wall2 = g.corridorText(cor, false);
+      /* растяжка — от стены до стены коридора любой ширины */
+      at(2); out.wire = LAB.traps._wireCells(G.x, G.y, h ? "E" : "N").length;
+      /* выше третьего блока — прежние четыре шага */
+      go(30, 3); const c30 = g.CUR.fl.corrs[0]; out.text30 = g.corridorText(c30, true);
+      /* вещи своей глубины и вход в помещение: при входе — ближние, остальное — «Осмотреться» */
+      const DEEP = { O: ["mirrorwall", "glasschime", "backclock", "twinchairs", "prism", "mirrorlog"], M: ["punchclock", "gearwall", "tubehub", "perfocards", "boiler", "sealer"], I: ["spring", "berrybush", "nest", "rootbench", "sprout", "warmstone"] };
+      out.deepN = {}; out.deep30 = 0;
+      [[45, "O"], [65, "M"], [85, "I"]].forEach(q => { const fl2 = LAB.getFloor(G.seed, q[0], 4); out.deepN[q[1]] = fl2.objs.filter(o => o.type === "fx" && DEEP[q[1]].indexOf(o.fx) >= 0).length; });
+      [10, 30].forEach(L => { const fl2 = LAB.getFloor(G.seed, L, 4); out.deep30 += fl2.objs.filter(o => o.type === "fx" && [].concat(DEEP.O, DEEP.M, DEEP.I).indexOf(o.fx) >= 0).length; });
+      /* этаж Истока, где есть помещение больше чем с десятком вещей */
+      let busy = null, fl3 = null;
+      for (let F = 4; F <= 20 && busy == null; F++) {
+        const fq = LAB.getFloor(G.seed, 85, F), cq = {};
+        fq.objs.forEach(o => { cq[o.room] = (cq[o.room] || 0) + 1; });
+        const b = Object.keys(cq).map(Number).filter(id => cq[id] > 10 && fq.rooms[id] && !fq.rooms[id].hidden).sort((a, c) => cq[c] - cq[a])[0];
+        if (b != null) { go(85, F); fl3 = g.CUR.fl; busy = b; }
+      }
+      if (!fl3) { go(85, 4); fl3 = g.CUR.fl; }
+      const cnt = {}; fl3.objs.forEach(o => { cnt[o.room] = (cnt[o.room] || 0) + 1; });
+      if (busy != null) {
+        const rm = fl3.rooms[busy]; let cell = null;
+        for (let y = rm.y0; y <= rm.y1 && !cell; y++) for (let x = rm.x0; x <= rm.x1 && !cell; x++) if (g.passable(x, y)) cell = [x, y];
+        G.x = cell[0]; G.y = cell[1]; delete g.CUR.fs.objs["room" + busy]; g.CUR.room = -1;
+        SPOKEN.length = 0; g.roomCheck(false); out.entry = SPOKEN.join(" | ");
+        out.busyN = cnt[busy];
+        SPOKEN.length = 0; g.roomCheck(true); out.look = SPOKEN.join(" | ");
+      } else out.entry = "нет помещения с десятком вещей";
+      /* вещи Истока в деле: родник, ягодный куст */
+      const pick = fx => fl3.objs.find(o => o.type === "fx" && o.fx === fx) || null;
+      const use = (o, re) => { LAB.ui.closeAll(); LAB.fixtures.menu(o); const w = LAB.ui.top(); const k = w ? w.items.findIndex(i => re.test(label(i))) : -1; if (k < 0) return "нет пункта: " + (w ? w.items.map(label).join(" / ") : "нет окна"); SPOKEN.length = 0; w.i = k; LAB.ui.activate(); return SPOKEN.join(" | "); };
+      const spring = pick("spring") || { id: "t_spring", type: "fx", fx: "spring", x: G.x, y: G.y, room: g.CUR.room };
+      G.hp = Math.max(1, G.hpMax - 30); const hp0 = G.hp;
+      out.spring = use(spring, /^Напиться из родника/); out.springHp = G.hp > hp0;
+      const bush = pick("berrybush") || { id: "t_bush", type: "fx", fx: "berrybush", x: G.x, y: G.y, room: g.CUR.room };
+      const b0 = G.inv.berries || 0; out.bush = use(bush, /^Собрать ягод/); out.berries = (G.inv.berries || 0) > b0 && !!LAB.ITEMS.berries;
+      LAB.ui.closeAll();
+      /* «Отражение»: часы, идущие назад, — своя запись */
+      go(45, 4);
+      const clock = g.CUR.fl.objs.find(o => o.type === "fx" && o.fx === "backclock") || { id: "t_clock", type: "fx", fx: "backclock", x: G.x, y: G.y, room: g.CUR.room };
+      LAB.ui.closeAll(); LAB.fixtures.menu(clock); const wc = LAB.ui.top(); const kc = wc.items.findIndex(i => /^Сверить часы/.test(label(i)));
+      wc.i = kc; LAB.ui.activate(); out.clockTitle = LAB.ui.top() ? LAB.ui.top().title : "";
+      LAB.ui.closeAll();
+      /* «Механизм»: стена шестерён разбирается на детали */
+      go(65, 4);
+      const gear = g.CUR.fl.objs.find(o => o.type === "fx" && o.fx === "gearwall") || { id: "t_gear", type: "fx", fx: "gearwall", x: G.x, y: G.y, room: g.CUR.room };
+      const sv0 = G.inv.servo || 0; out.gear = use(gear, /^Снять пару малых шестерён/); out.servo = (G.inv.servo || 0) > sv0;
+      /* табельные часы: отметка — ОКО считает своим на смене, раз на часы */
+      const pc = g.CUR.fl.objs.find(o => o.type === "fx" && o.fx === "punchclock") || { id: "t_punch", type: "fx", fx: "punchclock", x: G.x, y: G.y, room: g.CUR.room };
+      LAB.oko.state().heat = 50; out.punch = use(pc, /^Пробить отметку/); const h1 = LAB.oko.state().heat;
+      use(pc, /^Пробить отметку/); out.punchHeat = [50, h1, LAB.oko.state().heat].join("→");
+      LAB.oko.state().heat = 0;
+      LAB.ui.closeAll();
+      /* запись прежнего выпуска мира: этажи построены заново, носитель — у входа на свой этаж */
+      const dn = JSON.parse(JSON.stringify(G)); dn.worldV = 3; dn.L = 50; dn.F = 5; dn.fs = { "50-5": { objs: { k: 1 } } }; dn.relocate = false;
+      const m2 = g._migrate(dn); out.migDown = m2.worldV === 4 && m2.relocate === true && !m2.fs["50-5"];
+    } catch (e) { out.err = String(e && e.stack || e).slice(0, 400); }
+    LAB.keysMode = km; LAB.ui.closeAll(); C.stop();
+    g.enterFloor(keep.L, keep.F, "down", true); C.stop(); G = g.G;
+    G.x = keep.x; G.y = keep.y; G.inv = JSON.parse(keep.inv); G.hp = keep.hp;
+    return out;
+  });
+  ok(!grow.err, "просторные глубины: проверка без ошибок" + (grow.err ? " — " + grow.err : ""));
+  if (!grow.err) {
+    ok(grow.cw === "4 4 5 6 7", "ширина коридоров по блокам: четыре шага выше, пять, шесть и семь ниже (" + grow.cw + ")");
+    ok(grow.area.every((a, i) => i === 0 || (a[0] > grow.area[i - 1][0] && a[1] >= grow.area[i - 1][1])) && grow.area[1][1] > grow.area[0][1], "чем ниже блок, тем больше помещения и кабинеты (" + grow.area.map(a => a.join("/")).join(" ") + ")");
+    ok(/^Коридор, шириной в пять шагов\./.test(grow.enterText) && /^Коридор, шириной в четыре шага\./.test(grow.text30), "«Эхо» называет ширину коридора: пять шагов в «Отражении», четыре — выше");
+    ok(/Вы у стены/.test(grow.wall) && /Вы ближе к стене/.test(grow.near) && /Вы посередине/.test(grow.mid) && /Вы у стены/.test(grow.wall2), "в широком коридоре: у стены, ближе к стене, посередине");
+    ok(grow.wire === 5, "растяжка — от стены до стены коридора в пять шагов (" + grow.wire + ")");
+    ok(grow.deepN.O > 0 && grow.deepN.M > 0 && grow.deepN.I > 0 && grow.deep30 === 0, "у каждой нижней глубины свои вещи обстановки, выше их нет (" + JSON.stringify(grow.deepN) + ")");
+    ok(/и ещё \d+ (вещь|вещи|вещей) — осмотритесь: два пальца вверх/.test(grow.entry) && !/и ещё \d+ (вещь|вещи|вещей) — осмотритесь/.test(grow.look || ""), "при входе в помещение, где больше десятка вещей, — ближние, остальное — «Осмотреться» (" + grow.busyN + " вещей)");
+    ok(/Вода тёплая/.test(grow.spring) && grow.springHp, "тёплый родник Истока лечит (" + grow.spring.slice(0, 60) + ")");
+    ok(grow.berries && /Собрано: /.test(grow.bush), "ягодный куст: ягоды Истока в рюкзак");
+    ok(grow.clockTitle === "Часы, идущие назад", "часы, идущие назад: своя запись (" + grow.clockTitle + ")");
+    ok(grow.servo, "стену шестерён Механизма разбирают на детали");
+    ok(/своим на смене/.test(grow.punch) && grow.punchHeat === "50→42→42", "табельные часы: отметка — ОКО подозревает меньше, один раз (" + grow.punchHeat + ")");
+    ok(grow.migDown, "запись прежнего выпуска мира: этаж строится заново, носитель — у входа");
   }
 
   console.log("Обход этажей одного зерна: вход, такты, осмотр");

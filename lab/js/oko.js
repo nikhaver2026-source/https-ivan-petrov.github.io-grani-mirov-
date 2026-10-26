@@ -135,7 +135,7 @@ function voice(t, opts, chime, gap) {
   chimeSay(t, opts, chime, gap);
   return true;
 }
-/* (3.1) Сигнал облика ОКО (okoforms.js: прежний, из-под земли, колокола Садовника,
+/* (3.2) Сигнал облика ОКО (okoforms.js: прежний, из-под земли, колокола Садовника,
    далёкий и зеркальный в Отражении, разумы города) — и слова через gap мс:
    в Отражении слова настоящего ОКО доходят поздно. true — сигнал этой глубины. */
 function chimeSay(t, opts, chime, gap) {
@@ -161,7 +161,7 @@ function release() {
 }
 function speak(kind, force, data) {
   var o = st(), now = Date.now();
-  if (LAB.okoForms && LAB.okoForms.silent()) return false; /* (3.1) простилось и молчит */
+  if (LAB.okoForms && LAB.okoForms.silent()) return false; /* (3.2) простилось и молчит */
   if (!force && now - o.lastSay < 6000) return false;
   var arr = lines(kind);
   /* реплика с названием помещения — только когда оно известно */
@@ -251,7 +251,7 @@ function wave(delay, n, mode, at, tag) {
     return;
   }
   f.waves.push({ t: T() + delay, n: n, mode: mode, at: at ? { x: at.x, y: at.y } : null, tag: tag || "" });
-  if (LAB.okoForms && tag !== "shift") LAB.okoForms.offerDeal(); /* (3.1) Счетовод: время продаётся */
+  if (LAB.okoForms && tag !== "shift") LAB.okoForms.offerDeal(); /* (3.2) Счетовод: время продаётся */
 }
 
 /* ── (3.0, просьба игрока) ПЕРЕДЫШКА МЕЖДУ ВОЛНАМИ ──
@@ -557,7 +557,7 @@ function event(kind, data) {
   switch (kind) {
     case "enter":
       if (!o.levelSaid || o.levelSaid < g.L) { o.levelSaid = g.L; setTimeout(function () { speak("enter", true); }, 5200); }
-      if (LAB.okoForms) LAB.okoForms.entered(); /* (3.1) новый облик — «Эхо» объяснит */
+      if (LAB.okoForms) LAB.okoForms.entered(); /* (3.2) новый облик — «Эхо» объяснит */
       break;
     case "floor":
       floorIn(data.how);
@@ -892,7 +892,7 @@ function sendWave(w) {
   var cb = C(), o = st(), id = rota(w) ? 0 : waveId();
   var gotW = cb.dispatch(w.n, w.mode, w.at, id ? { wv: id } : null);
   if (!gotW.length) return false;
-  /* (3.1) в журнале безопасности — только настоящий выход: так проверяют Зрачка */
+  /* (3.2) в журнале безопасности — только настоящий выход: так проверяют Зрачка */
   if (w.mode !== "sapper") log("Выход единиц: " + gotW.length + ", " + place(gotW[0].x, gotW[0].y) + ".");
   if (LAB.okoForms) LAB.okoForms.dispatched(gotW, w);
   if (w.tag === "fresh") { speak("fresh", true); heard(gotW, "Новые машины ОКО"); }
@@ -1014,7 +1014,7 @@ function tick() {
     if (!f.cutHold) { f.turretMode = "on"; cb.turretsHostile(); A("play", "power_on"); speak("backup", true); log("Резервный контур: турели под током."); }
   }
   /* иногда ОКО говорит просто так — когда рядом тихо */
-  if (LAB.okoForms) LAB.safe(LAB.okoForms.tick); /* (3.1) облики ОКО: ложь Зрачка, шёпот Истока */
+  if (LAB.okoForms) LAB.safe(LAB.okoForms.tick); /* (3.2) облики ОКО: ложь Зрачка, шёпот Истока */
   var nowMs = Date.now(), chat = LAB.okoForms ? LAB.okoForms.chatty() : 1;
   if (nowMs - (o.lastTaunt || 0) > (240000 + Math.random() * 180000) / Math.max(0.25, chat) && !cb.danger()) {
     o.lastTaunt = nowMs;
@@ -1027,7 +1027,7 @@ LAB.oko = {
   state: st, lines: lines, wave: wave, shift: shift, react: react, minesOrder: minesOrder, minesLater: minesLater, REACT: REACT,
   report: report, level: level, levelName: function () { return SEC[level()]; }, setLevel: setLevel, sec: sec, log: log, logText: logText, T: T,
   hushed: hushed, voice: voice,
-  /* (3.1) последние записи журнала безопасности строками — для «Записи тревог поста» (zones.js) */
+  /* (3.2) последние записи журнала безопасности строками — для «Записи тревог поста» (zones.js) */
   logLines: function (n) { var f = fs(), L = (f && f.slog) || [], pad = function (v) { return (v < 10 ? "0" : "") + v; }; return L.slice(-(n || 5)).map(function (e) { return pad(e.h) + ":" + pad(e.mi) + ". " + e.t; }); },
   /* (3.0) передышка между волнами — для проверок */
   pace: function () { var f = fs(); return { ready: f.wReady || 0, hold: f.wHoldT || 0, out: f.wOut || 0, inRoom: !!f.wIn, n: f.wN || 0 }; }, wsec: wsec

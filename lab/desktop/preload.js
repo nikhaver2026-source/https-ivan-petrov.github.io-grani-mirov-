@@ -19,7 +19,7 @@ const log = m => ipcRenderer.send('lab-log', String(m));
 const quit = () => ipcRenderer.send('lab-quit');
 
 contextBridge.exposeInMainWorld('LabDesktop', {
-  version: 'Альфа 3.1', platform: process.platform,
+  version: 'Альфа 3.2', platform: process.platform,
   exit: quit, log: log,
   // (2.2) окно без фокуса, а звук в фоне выключен — свернуть окно
   minimize: () => ipcRenderer.send('lab-minimize'),

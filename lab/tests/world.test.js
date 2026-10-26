@@ -4,7 +4,8 @@
    уровней доступа и пропуск лифта лежат там, где нужны; шлюзовая ключ-карта
    добывается на последнем этаже (у стража или спрятана), шлюз наверх на
    первом этаже запечатан; у роботов модификации растут с глубиной.
-   Коридоры — прямые, в четыре шага шириной и от десяти в длину; у тайной
+   Коридоры — прямые, в четыре шага шириной (3.2: с третьего блока — пять,
+   шесть и семь, а помещения, кабинеты и обстановка — больше) и от десяти в длину; у тайной
    комнаты — два потайных выхода в разные коридоры; на первом этаже уровня
    и на каждом третьем — мастерская с верстаком недалеко от прибытия, без
    замков на пути и без охраны внутри; если на этаже есть турели — есть и
@@ -86,12 +87,36 @@ for (let si = 0; si < seeds; si++) {
       for (const o of fl.objs) if (o.type === "puzzle" && (!LAB.puzzles.has(o.kind) && ["sort", "relays", "bulls", "riddle"].indexOf(o.kind) < 0 || [0, 1, 2].indexOf(o.diff) < 0)) err(`${at}: стенд с неизвестной задачей ${o.kind}/${o.diff}`);
       for (const d of fl.doors) if (d.lock && d.lock.type === "logic" && (!LAB.puzzles.has(d.lock.kind) || [0, 1, 2].indexOf(d.lock.diff) < 0)) err(`${at}: логический замок с неизвестной задачей ${d.lock.kind}/${d.lock.diff}`);
       stat.pz = (stat.pz || 0) + fl.objs.filter(o => o.type === "puzzle").length;
-      /* коридоры: прямые, ширина 4, длина от 10 */
+      /* коридоры: прямые, ширина 4 (3.2: с третьего блока — шире, GROW.cw), длина от 10 */
+      const gw = LAB.floorGrow(L), cwWant = gw ? gw.cw : LAB.CORR_W;
       for (const c of fl.corrs) {
         const wdt = c.axis === "h" ? c.y1 - c.y0 + 1 : c.x1 - c.x0 + 1;
-        if (wdt !== LAB.CORR_W) err(`${at}: коридор ${c.id} шириной ${wdt}`);
+        if (wdt !== cwWant || LAB.corrW(c) !== wdt) err(`${at}: коридор ${c.id} шириной ${wdt} (ждали ${cwWant})`);
         if (c.len < 10) err(`${at}: коридор ${c.id} длиной ${c.len}`);
+        /* проход в помещение — посередине полосы, в общем отрезке обоих помещений; у дверного конца — дверь в стене */
+        if (c.mouth.length !== (gw ? 3 : 2) && !(gw && c.mouth.length === 2)) err(`${at}: у коридора ${c.id} проход в ${c.mouth.length} клетки`);
         stat.corrMin = Math.min(stat.corrMin, c.len); stat.corrMax = Math.max(stat.corrMax, c.len);
+        const sw = stat.cwBy || (stat.cwBy = {}); sw[wdt] = (sw[wdt] || 0) + 1;
+      }
+      /* (3.2) чем ниже блок, тем просторнее: помещения, кабинеты и вещи обстановки */
+      {
+        const blk = L <= 10 ? 0 : Math.min(5, LAB.blockOf(L)), sz = stat.sz || (stat.sz = {});
+        const z = sz[blk] || (sz[blk] = { n: 0, main: 0, mainA: 0, ann: 0, annA: 0, fx: 0, maxSide: 0, minSide: 99 });
+        z.n++;
+        fl.rooms.forEach(rm => {
+          if (!rm) return;
+          const w = rm.x1 - rm.x0 + 1, h = rm.y1 - rm.y0 + 1;
+          if (rm.annex) { z.ann++; z.annA += w * h; return; }
+          z.main++; z.mainA += w * h;
+          if (rm.type !== "secret" && rm.type !== "gate" && rm.type !== "reactor") { z.maxSide = Math.max(z.maxSide, w, h); z.minSide = Math.min(z.minSide, w, h); }
+          if (gw && rm.type !== "secret" && rm.type !== "gate" && rm.type !== "reactor" && (Math.max(w, h) > gw.room[1] || Math.min(w, h) < Math.min(gw.room[0], gw.sp[0]))) err(`${at}: помещение ${rm.id} ${w}×${h} вне ${gw.room.join("–")}`);
+        });
+        z.fx += fl.objs.filter(o => o.type === "fx").length;
+        if (gw) {
+          const deep = fl.objs.filter(o => o.type === "fx" && ["mirrorwall", "glasschime", "backclock", "twinchairs", "prism", "mirrorlog", "punchclock", "gearwall", "tubehub", "perfocards", "boiler", "sealer", "spring", "berrybush", "nest", "rootbench", "sprout", "warmstone"].indexOf(o.fx) >= 0);
+          stat.deepFx = (stat.deepFx || 0) + deep.length;
+          deep.forEach(o => { if (!LAB.FIX.T[o.fx]) err(`${at}: вещь ${o.fx} без описания`); });
+        }
       }
       /* (3.0) полы (floors.js): лестничная клетка и тайный ход — бетон; помещения — дерево, бетон или
          металл уровня; ответ одинаков при повторной постройке этажа */
@@ -250,6 +275,27 @@ for (let si = 0; si < seeds; si++) {
     LAB.clearFloorCache();
   }
 }
+/* (3.2) Этажи «Ковчега», «Подножия» и «Колыбели» не меняются: их состояние лежит в
+   сохранениях (game.js, WORLD_V). Отпечаток — клетки, помещения, вещи, предметы и
+   враги этажа. Изменили этажи выше 41-го уровня нарочно — поднимите WORLD_V и
+   обновите отпечатки; ненарочно — верните прежний поток случайностей генератора. */
+{
+  const crypto = require("crypto");
+  const FP = { "fpA 1-1": "f03f88aae83208ea", "fpA 10-13": "2ade3cfc804c0754", "fpB 20-20": "be43eb88146375f7", "fpB 21-7": "61ce87f747db77b0", "fpC 30-2": "e7d356f206b034d8", "fpC 40-13": "545d6af8c7eb5b3b" };
+  for (const k in FP) {
+    const m = k.match(/^(\S+) (\d+)-(\d+)$/), fl = LAB.getFloor(m[1], +m[2], +m[3]), h = crypto.createHash("sha1");
+    h.update(Buffer.from(fl.t.buffer)); h.update(Buffer.from(fl.room.buffer)); h.update(Buffer.from(fl.corrAt.buffer));
+    h.update(JSON.stringify(fl.objs.map(o => [o.type, o.x, o.y, o.room, o.fx || "", o.loot ? o.loot.length : -1])));
+    h.update(JSON.stringify(fl.items.map(i => [i.x, i.y, i.item || i.kind || ""])));
+    h.update(JSON.stringify(fl.foes.map(f => [f.type, f.x, f.y, f.room])));
+    h.update(JSON.stringify(fl.rooms.map(r => r ? [r.type, r.x0, r.y0, r.x1, r.y1, r.name] : null)));
+    h.update(JSON.stringify((fl.npcs || []).map(n => [n.x, n.y, n.type || ""])));
+    const got = h.digest("hex").slice(0, 16);
+    if (got !== FP[k]) err(`этаж ${k} изменился (${got}): прежние этажи и сохранения расходятся`);
+  }
+  LAB.clearFloorCache();
+  console.log("этажи блоков 1–2 прежние: проверено " + Object.keys(FP).length + " отпечатков");
+}
 const ms = Date.now() - t0;
 console.log(`уровней: ${LAB.LEVELS_N}, этажей: ${floors}, ошибок: ${fails}, время: ${ms} мс (${(ms / floors).toFixed(1)} мс на этаж)`);
 console.log("замки:", JSON.stringify(stat.locks));
@@ -258,6 +304,16 @@ console.log(`мастерских: ${stat.shopN || 0} (при лифтовом �
 console.log(`стартовый набор у капсулы (аптечки и энергобатареи в двух шагах): ${stat.kitNear || 0}`);
 console.log(`на этаж: врагов ${(stat.foes / floors).toFixed(1)}, турелей ${(stat.turrets / floors).toFixed(2)}, камер ${(stat.cams / floors).toFixed(2)}, вещей ${(stat.items / floors).toFixed(1)}, выживших ${(stat.npcs / floors).toFixed(2)}, тайных комнат ${(stat.secrets / floors).toFixed(2)}, заваленных лестниц ${stat.blocked} (домкратов ${(stat.kits || {}).rub_jack || 0}, зарядов ${(stat.kits || {}).c_blast || 0}); коридоры от ${stat.corrMin} до ${stat.corrMax} шагов`);
 console.log("обстановка:", JSON.stringify(stat.objs));
+/* (3.2) чем ниже блок, тем просторнее */
+if (stat.sz) {
+  const B = Object.keys(stat.sz).map(Number).sort((a, b) => a - b);
+  console.log("просторность по блокам:", B.map(b => { const z = stat.sz[b]; return `${b}: помещения ${(z.mainA / z.main).toFixed(0)} кл. (${z.minSide}–${z.maxSide}), кабинетов ${(z.ann / z.n).toFixed(0)} по ${(z.annA / z.ann).toFixed(1)} кл., обстановки ${(z.fx / z.n).toFixed(0)}`; }).join("; "), "; ширина коридоров:", JSON.stringify(stat.cwBy), "; вещей нижних глубин:", stat.deepFx || 0);
+  for (let i = 1; i < B.length; i++) {
+    const a = stat.sz[B[i - 1]], b = stat.sz[B[i]];
+    if (B[i] >= 3 && !(b.mainA / b.main > a.mainA / a.main && b.annA / b.ann > a.annA / a.ann)) err(`блок ${B[i]}: помещения и кабинеты не больше, чем в блоке ${B[i - 1]}`);
+  }
+  if (B.some(b => b >= 3) && !(stat.deepFx > 0)) err("в нижних глубинах нет их вещей обстановки");
+}
 console.log("прессов «Подножия»:", stat.press || 0);
 console.log(`броня на полу: ${(stat.armor / floors).toFixed(2)} на этаж; модификации роботов:`, JSON.stringify(stat.aff));
 console.log("роботы по уровням (доля с модификациями, средний ум):", Object.keys(stat.mechByL).map(L => `${L}: ${(100 * (stat.affByL[L] || 0) / stat.mechByL[L]).toFixed(0)}%, ${(stat.iqByL[L] / stat.mechByL[L]).toFixed(1)}`).join("; "));

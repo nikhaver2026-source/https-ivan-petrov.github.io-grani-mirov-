@@ -280,7 +280,7 @@ function idsFor(L) {
   });
   var sf = LAB.SURF[lev.surf] || {};
   out.push("step_" + (sf.base || lev.surf), "step_echo", "step_concrete", "step_wood", "floor_creak"); /* (3.0) бетон и дерево — на любом уровне */
-  if (LAB.okoForms) LAB.okoForms.sounds(L).forEach(function (id) { out.push(id); }); /* (3.1) сигналы облика ОКО этой глубины */
+  if (LAB.okoForms) LAB.okoForms.sounds(L).forEach(function (id) { out.push(id); }); /* (3.2) сигналы облика ОКО этой глубины */
   levelEvents(L).forEach(function (id) { out.push(id); });
   return out;
 }
@@ -639,7 +639,7 @@ function rubbleClear(x, y, how) {
   at("debris", x, y, { gain: 0.7, delay: 0.7, rate: 1.1 });
 }
 /* ОКО: позывной громкой связи, тревога, приманка. */
-/* Сигнал перед словами ОКО. (3.1) У каждого облика свой (okoforms.js); t — сколько
+/* Сигнал перед словами ОКО. (3.2) У каждого облика свой (okoforms.js); t — сколько
    пройдено в блоке: чем глубже, тем сильнее меняется. */
 function okoChime(kind, t) {
   t = t || 0;

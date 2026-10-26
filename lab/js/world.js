@@ -25,6 +25,22 @@ LAB.W = W; LAB.H = H; LAB.COLS = COLS; LAB.ROWS = ROWS; LAB.CORR_W = CW;
 var T_WALL = 0, T_ROOM = 1, T_CORR = 2, T_DOOR = 3;
 LAB.T = { WALL: T_WALL, ROOM: T_ROOM, CORR: T_CORR, DOOR: T_DOOR };
 
+/* (3.2, просьба игрока) Чем ниже блок, тем просторнее — с третьего
+   («Отражение», с 41-го уровня): помещения больше (room — от и до, cap —
+   предел для каждого третьего), коридоры шире (cw) с проходом в три шага,
+   кабинеты у коридоров шире (aw) и глубже (ad, залы — hall), вещей
+   обстановки больше (fx — сверх прежнего). Сетка этажа та же. Выше
+   третьего блока — всё как прежде, тем же потоком случайностей: этажи
+   «Ковчега», «Подножия» и «Колыбели» не меняются. */
+var GROW = {
+  3: { room: [7, 12], cap: 10, sp: [7, 10], cw: 5, aw: [4, 6], ad: [3, 7], hall: [6, 9], fx: 1 },
+  4: { room: [8, 14], cap: 11, sp: [8, 11], cw: 6, aw: [5, 7], ad: [4, 8], hall: [8, 10], fx: 2 },
+  5: { room: [9, 16], cap: 12, sp: [9, 12], cw: 7, aw: [5, 8], ad: [5, 10], hall: [9, 12], fx: 3 }
+};
+LAB.floorGrow = function (L) { var b = LAB.blockOf ? LAB.blockOf(L) : 1; return b >= 3 ? GROW[Math.min(5, b)] : null; };
+/* Ширина коридора: у каждого своя (cor.w); у этажей прежних блоков — четыре шага. */
+LAB.corrW = function (c) { return (c && c.w) || CW; };
+
 /* ── случайные числа с зерном ── */
 function hash32(s) {
   var h = 2166136261 >>> 0;
@@ -523,14 +539,15 @@ function genFloor(seed, L, F, attempt) {
   for (i = 0; i < W * H; i++) { room[i] = -1; corrAt[i] = -1; }
   var rooms = [];
   var bossSlot = F === NF ? parent[D] : -1;
+  var gw = LAB.floorGrow(L); /* (3.2) с третьего блока — просторнее */
   for (s = 0; s < NS; s++) {
     if (!active[s]) continue;
     var special = s === U || s === D || s === E;
-    var w = r.int(5, 9), hh = r.int(5, 9);
-    if (r.chance(0.35)) { w = Math.min(w, 7); hh = Math.min(hh, 7); }
-    if (special) { w = Math.max(6, Math.min(8, w)); hh = Math.max(6, Math.min(8, hh)); }
-    if (s === secret) { w = 5; hh = 5; }
-    if (s === bossSlot) { w = 9 + r.int(0, 1); hh = 9 + r.int(0, 1); }
+    var w = gw ? r.int(gw.room[0], gw.room[1]) : r.int(5, 9), hh = gw ? r.int(gw.room[0], gw.room[1]) : r.int(5, 9);
+    if (r.chance(0.35)) { w = Math.min(w, gw ? gw.cap : 7); hh = Math.min(hh, gw ? gw.cap : 7); }
+    if (special) { w = Math.max(gw ? gw.sp[0] : 6, Math.min(gw ? gw.sp[1] : 8, w)); hh = Math.max(gw ? gw.sp[0] : 6, Math.min(gw ? gw.sp[1] : 8, hh)); }
+    if (s === secret) { w = gw ? 6 : 5; hh = gw ? 6 : 5; }
+    if (s === bossSlot) { w = (gw ? gw.room[1] - 1 : 9) + r.int(0, 1); hh = (gw ? gw.room[1] - 1 : 9) + r.int(0, 1); }
     if (F === NF && s === D) { w = reactor ? 10 : 8; hh = reactor ? 10 : 8; }
     var pr = placeRoom(r, s, w, hh);
     var rm = { id: s, x0: pr.x0, y0: pr.y0, x1: pr.x1, y1: pr.y1, zone: zone[s], doors: [], mouths: [] };
@@ -541,7 +558,8 @@ function genFloor(seed, L, F, attempt) {
 
   /* 7. Коридоры: прямая полоса в четыре шага между стенами соседних
      помещений; у помещения-ребёнка — дверь в одну клетку, у другого —
-     открытый проход в две клетки. */
+     открытый проход в две клетки. (3.2) С третьего блока коридор шире
+     (gw.cw), а проход — в три клетки, посередине полосы. */
   var doors = [], doorAt = {}, corrs = [];
   for (var ei = 0; ei < edges.length; ei++) {
     var e = edges[ei];
@@ -553,13 +571,17 @@ function genFloor(seed, L, F, attempt) {
     var i0 = horiz ? Math.max(lo.y0, hi.y0) : Math.max(lo.x0, hi.x0);
     var i1 = horiz ? Math.min(lo.y1, hi.y1) : Math.min(lo.x1, hi.x1);
     if (i1 - i0 < 1) return null;
-    var b0 = r.int(i0 - 1, i1 - 2);            /* первая клетка полосы поперёк */
+    /* ширина полосы bw, проход mw клеток со сдвигом mo от края полосы: проход
+       и дверь — в общем для обоих помещений отрезке i0..i1 */
+    var bw = gw ? gw.cw : CW, mw = gw && i1 - i0 >= 2 ? 3 : 2, mo = (bw - mw) >> 1;
+    var b0 = r.int(i0 - mo, i1 - mo - mw + 1); /* первая клетка полосы поперёк */
     var a0 = horiz ? lo.x1 + 2 : lo.y1 + 2;     /* первая клетка полосы вдоль */
     var a1 = horiz ? hi.x0 - 2 : hi.y0 - 2;
     if (a1 - a0 + 1 < 10) return null;
     var cor = { id: ei, a: e.a, b: e.b, axis: horiz ? "h" : "v", len: a1 - a0 + 1, door: null, mouth: [] };
-    cor.x0 = horiz ? a0 : b0; cor.x1 = horiz ? a1 : b0 + CW - 1;
-    cor.y0 = horiz ? b0 : a0; cor.y1 = horiz ? b0 + CW - 1 : a1;
+    if (gw) cor.w = bw;
+    cor.x0 = horiz ? a0 : b0; cor.x1 = horiz ? a1 : b0 + bw - 1;
+    cor.y0 = horiz ? b0 : a0; cor.y1 = horiz ? b0 + bw - 1 : a1;
     for (var ya = cor.y0; ya <= cor.y1; ya++) for (var xa = cor.x0; xa <= cor.x1; xa++) {
       var ii = idx(xa, ya);
       if (t[ii] !== T_WALL) return null; /* пересечение — строим заново */
@@ -568,10 +590,10 @@ function genFloor(seed, L, F, attempt) {
     /* концы: стена помещения lo — на a0 − 1, стена hi — на a1 + 1 */
     var childLo = rooms[e.child] === lo;
     var dAlong = childLo ? a0 - 1 : a1 + 1, mAlong = childLo ? a1 + 1 : a0 - 1;
-    var dAcross = b0 + 1 + (r.chance(0.5) ? 1 : 0);
+    var dAcross = gw ? b0 + mo + r.int(0, mw - 1) : b0 + 1 + (r.chance(0.5) ? 1 : 0);
     var dx = horiz ? dAlong : dAcross, dy = horiz ? dAcross : dAlong;
-    for (var mk = 1; mk <= 2; mk++) {
-      var mx = horiz ? mAlong : b0 + mk, my = horiz ? b0 + mk : mAlong;
+    for (var mk = 0; mk < mw; mk++) {
+      var mx = horiz ? mAlong : b0 + mo + mk, my = horiz ? b0 + mo + mk : mAlong;
       if (t[idx(mx, my)] !== T_WALL) return null;
       t[idx(mx, my)] = T_CORR; corrAt[idx(mx, my)] = ei;
       cor.mouth.push([mx, my]);
@@ -1089,7 +1111,7 @@ function genFloor(seed, L, F, attempt) {
     for (var y6 = cor.y0; y6 <= cor.y1; y6++) for (var x6 = cor.x0; x6 <= cor.x1; x6++) {
       if (!cellFree(x6, y6)) continue;
       var across = cor.axis === "h" ? y6 - cor.y0 : x6 - cor.x0;
-      if (edge && across !== 0 && across !== CW - 1) continue;
+      if (edge && across !== 0 && across !== LAB.corrW(cor) - 1) continue;
       var dd2 = dObj ? Math.abs(dObj.x - x6) + Math.abs(dObj.y - y6) : 0;
       if (nearDoor && dd2 > 3) continue;
       if (!nearDoor && dd2 < 3) continue;

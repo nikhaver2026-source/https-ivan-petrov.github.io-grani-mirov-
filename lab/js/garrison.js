@@ -153,12 +153,13 @@ function corrPoints(fl, c, lane, busy) {
   var lo = h ? c.x0 : c.y0, hi = h ? c.x1 : c.y1, acrossLo = h ? c.y0 : c.x0;
   var dpos = door ? (h ? door.x : door.y) : hi + 1;
   var endA = dpos < lo ? lo + 1 : hi - 1, mouthA = dpos < lo ? hi - 1 : lo + 1;
-  var ac = acrossLo + 1 + (lane % 2);
+  /* (3.2) полосы обхода — у середины коридора любой ширины */
+  var cw = LAB.corrW ? LAB.corrW(c) : 4, ac = acrossLo + ((cw - 2) >> 1) + (lane % 2);
   var pick = function (along) {
     for (var k = 0; k < 6; k++) {
       var aa = along + (dpos < lo ? 1 : -1) * (endA === along ? k : -k);
-      for (var j = 0; j < 4; j++) {
-        var cc = acrossLo + ((ac - acrossLo + j) % 4);
+      for (var j = 0; j < cw; j++) {
+        var cc = acrossLo + ((ac - acrossLo + j) % cw);
         var x = h ? aa : cc, y = h ? cc : aa;
         if (freeCell(fl, x, y, busy) && !nearDoor(fl, x, y)) return [x, y];
       }
@@ -196,7 +197,7 @@ function place(ctx) {
   var fl = ctx.fl, L = ctx.L, F = ctx.F;
   if (!fl || !ctx.makeFoe) return;
   var r = LAB.Rng(ctx.seed, "garrison:" + L + ":" + F + ":" + (ctx.attempt || 0));
-  var d0 = LAB.depth(L, F), busy = busyMap(fl), arr = arrivals(fl), W = LAB.W;
+  var d0 = LAB.depth(L, F), busy = busyMap(fl), arr = arrivals(fl), W = LAB.W, gw = LAB.floorGrow ? LAB.floorGrow(L) : null;
   var mark = function (x, y) { busy[y * W + x] = 1; };
   var stats = { patrols: 0, sappers: 0, rooms: 0 };
 
@@ -276,6 +277,8 @@ function place(ctx) {
     }
     if (!r.chance(pr)) { if (ci) stats.rooms++; continue; }
     var n = 1 + (r.chance(Math.min(0.85, cat.n2 + 0.1 + 0.025 * Math.min(L, 10) + d0 * 0.0003)) ? 1 : 0) + (d0 >= 40 && (cat.imp >= 2 || cells.length >= 20) && r.chance(Math.min(0.5, 0.05 + d0 * 0.0004)) ? 1 : 0);
+    /* (3.2) с третьего блока кабинеты больше, а их самих меньше: в просторном — машиной больше */
+    if (gw && cells.length >= 24 && r.chance(0.5)) n++;
     for (var q = 0; q < n && ci < cells.length; q++, ci++) {
       var role = q < cat.roles.length ? cat.roles[q] : "guard", pool = rolePool(role, L, F), fid2 = r.pick(pool), cc = cells[ci];
       var base = LAB.FOES[fid2];

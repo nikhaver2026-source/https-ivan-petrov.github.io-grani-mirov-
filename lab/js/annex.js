@@ -203,6 +203,8 @@ LAB.annex.place = function (ctx) {
   var era = eraOf(L), lev = LAB.LEVELS[L], secret = fl.secret, still = stillMap(fl);
   /* плотность уровня: где-то кабинеты теснятся, где-то стоят реже */
   var dens = 0.82 + 0.36 * LAB.Rng(ctx.seed, "adens:" + L).next();
+  /* (3.2) с третьего блока кабинеты шире и глубже, залы больше (world.js, GROW) */
+  var gw = LAB.floorGrow ? LAB.floorGrow(L) : null, aw0 = gw ? gw.aw[0] : 3, aw1 = gw ? gw.aw[1] : 5;
   /* 1. Ряды помещений вдоль стен коридоров */
   var spots = [], byCorr = {};
   fl.corrs.forEach(function (c) {
@@ -210,22 +212,22 @@ LAB.annex.place = function (ctx) {
     var hz = c.axis === "h", end0 = hz ? c.x0 : c.y0, end1 = hz ? c.x1 : c.y1;
     [0, 1].forEach(function (side) {
       var lo = end0 + 1, hi = end1 - 1, sp0 = hi - lo + 1;
-      var capN = Math.floor((sp0 + 1) / 4);
+      var capN = Math.floor((sp0 + 1) / (aw0 + 1));
       var want = wing ? r.int(1, 3) : Math.round(parseInt(r.weighted(COUNT_W), 10) * dens);
       var n = Math.max(0, Math.min(capN, want));
       if (n <= 0) return;
       var widths = [], k;
-      for (k = 0; k < n; k++) widths.push(3);
-      var extra = sp0 - (3 * n + (n - 1)), guard = 0;
+      for (k = 0; k < n; k++) widths.push(aw0);
+      var extra = sp0 - (aw0 * n + (n - 1)), guard = 0;
       /* большой зал на полстены — если вдоль стены есть запас */
-      if (extra >= 5 && !wing && r.chance(0.4)) { var q0 = r.int(0, n - 1), add = Math.min(extra - 1, r.int(3, 5)); widths[q0] += add; extra -= add; }
-      while (extra > 1 && guard++ < 60) { var q = r.int(0, n - 1); if (widths[q] < 5) { widths[q]++; extra--; } }
+      if (extra >= 5 && !wing && r.chance(0.4)) { var q0 = r.int(0, n - 1), add = Math.min(extra - 1, gw ? r.int(gw.hall[0], gw.hall[1]) - aw0 : r.int(3, 5)); widths[q0] += add; extra -= add; }
+      while (extra > 1 && guard++ < 60) { var q = r.int(0, n - 1); if (widths[q] < aw1) { widths[q]++; extra--; } }
       var pos = lo + r.int(0, Math.max(0, extra));
       for (k = 0; k < n; k++) {
         var a0 = pos, a1 = pos + widths[k] - 1;
         pos = a1 + 2;
         if (a1 > hi) break;
-        var big = widths[k] >= 6, h = big ? r.int(5, 7) : r.int(2, 6), g = null;
+        var big = widths[k] >= (gw ? gw.hall[0] : 6), h = gw ? (big ? r.int(gw.ad[0] + 2, gw.ad[1] + 2) : r.int(gw.ad[0], gw.ad[1])) : big ? r.int(5, 7) : r.int(2, 6), g = null;
         if (h === 2 && widths[k] > 3) h = 3;
         for (var hh = h; hh >= 2 && !g; hh--) g = fits(fl, c, side, a0, a1, hh);
         if (!g) continue;
@@ -444,8 +446,23 @@ var GENERIC = {
   M: ["stamps", "queue", "clock", "typewriter", "abacus", "scales", "poster", "speaker", "metronome", "counting"],
   I: ["moss", "plants", "roots", "beehive", "mechflowers", "birdcage", "drone", "bench", "lanterns", "appletree"]
 };
+/* (3.2) Вещи нижних глубин (fixtures_data.js): с третьего блока их в помещениях больше —
+   сверх прежнего столько, сколько велит GROW.fx (world.js). */
+var DEEP_FX = {
+  O: ["mirrorwall", "glasschime", "backclock", "twinchairs", "prism", "mirrorlog", "mirror", "metronome", "clock", "armchair"],
+  M: ["punchclock", "gearwall", "tubehub", "perfocards", "boiler", "sealer", "stamps", "typewriter", "counting", "abacus", "queue"],
+  I: ["spring", "berrybush", "nest", "rootbench", "sprout", "warmstone", "moss", "mechflowers", "beehive", "roots", "lanterns"]
+};
+function deepFx(r, era, rm, n, have, ctx) {
+  var pool = (DEEP_FX[era] || []).filter(function (q) { return LAB.FIX && LAB.FIX.T[q] && !have[q]; }), put = 0;
+  for (var i = 0; i < n && pool.length; i++) {
+    var q = pool.splice(r.int(0, pool.length - 1), 1)[0];
+    if (ctx.addObj("fx", rm.id, { fx: q, seed: r.int(1, 99999) })) { have[q] = 1; put++; }
+  }
+  return put;
+}
 function furnish(ctx, r, s, rm, def, v, gen) {
-  var fl = ctx.fl, L = ctx.L, F = ctx.F, special = !!def.kind, era = eraOf(L);
+  var fl = ctx.fl, L = ctx.L, F = ctx.F, special = !!def.kind, era = eraOf(L), gw = LAB.floorGrow ? LAB.floorGrow(L) : null, more = gw ? gw.fx : 0;
   if (def.kind === "supply") { ctx.addObj("supply", rm.id, { prof: null }); return; }
   if (def.kind === "trial") { ctx.addObj("trial", rm.id, { seed: r.int(1, 99999), prize: r.pick(["suit", "suit", "bp", "kit"]) }); return; }
   var area = (rm.x1 - rm.x0 + 1) * (rm.y1 - rm.y0 + 1), maxObj = Math.max(2, Math.floor(area / 3)), placed = 0;
@@ -483,7 +500,7 @@ function furnish(ctx, r, s, rm, def, v, gen) {
   if (rm.state === "barricade") fxs.barricade = 1;
   var have = {};
   if (LAB.FIX) for (fk in fxs) {
-    if (placed >= maxObj + 1) break;
+    if (placed >= maxObj + 1 + more) break;
     if (LAB.FIX.T[fk] && r.chance(fxs[fk])) { if (ctx.addObj("fx", rm.id, { fx: fk, seed: r.int(1, 99999) })) { placed++; have[fk] = 1; } }
   }
   /* одна-две вещи «откуда угодно» — у каждого помещения своя мелочь */
@@ -491,13 +508,17 @@ function furnish(ctx, r, s, rm, def, v, gen) {
   var nG = special ? 0 : (r.chance(0.6) ? 1 : 0) + (s.big && r.chance(0.6) ? 1 : 0);
   for (var gi = 0; gi < nG && gl.length && placed < maxObj + 1; gi++) {
     var gq = gl.splice(r.int(0, gl.length - 1), 1)[0];
-    if (ctx.addObj("fx", rm.id, { fx: gq, seed: r.int(1, 99999) })) placed++;
+    if (ctx.addObj("fx", rm.id, { fx: gq, seed: r.int(1, 99999) })) { placed++; have[gq] = 1; }
   }
+  /* (3.2) нижние глубины: ещё вещи своей глубины — в зале больше */
+  if (gw && def.kind !== "hazard" && def.kind !== "decon") placed += deepFx(r, era, rm, more + (s.big ? 1 : 0), have, ctx);
   if (!placed) { var o2 = ctx.addObj(def.kind === "hazard" ? "crate" : "shelf", rm.id, null); if (o2) o2.loot = annexLoot(r, L, F, lootTag, "shelf", !special); }
   /* состояние: обысканное — почти пустое; брошенное в спешке — с забытыми вещами */
   if (rm.state === "ransacked") fl.objs.forEach(function (q) { if (q.room === rm.id && q.loot && q.loot.length) q.loot = q.loot.filter(function () { return r.chance(0.5); }); });
   if (rm.state === "hurry" && r.chance(0.7)) { var hv = annexLoot(r, L, F, r.pick(["home", "smoke", "food", "paper"]), "floor", true)[0]; if (hv && hv.kind !== "weapon" && hv.kind !== "armor") ctx.addItem(hv, rm.id); }
   if (r.chance(special ? 0.4 : 0.15)) { var x = annexLoot(r, L, F, lootTag, "floor", !special)[0]; if (x && x.kind !== "weapon" && x.kind !== "armor") ctx.addItem(x, rm.id); }
+  /* (3.2) кабинетов в нижних глубинах меньше, зато они просторнее: находок на полу — чаще */
+  if (gw && r.chance(0.2 + 0.05 * more)) { var x2 = annexLoot(r, L, F, lootTag, "floor", !special)[0]; if (x2 && x2.kind !== "weapon" && x2.kind !== "armor") ctx.addItem(x2, rm.id); }
   var lev = LAB.LEVELS[L];
   if ((rm.rad >= 3 || def.kind === "locked") && r.chance(def.kind === "hazard" ? 0.7 : 0.4)) {
     var pool = (lev.foes || []).filter(function (fid) {
@@ -549,8 +570,11 @@ function placeMainFixtures(ctx, r, gen) {
     var rm = fl.rooms[s];
     if (!rm || rm.annex) continue;
     if (LAB.FIX && LAB.FIX.forRoom) {
-      var list = LAB.FIX.forRoom(rm.type, r);
-      for (var i = 0; i < list.length; i++) ctx.addObj("fx", rm.id, { fx: list[i], seed: r.int(1, 99999) });
+      var gw = LAB.floorGrow ? LAB.floorGrow(ctx.L) : null;
+      var list = LAB.FIX.forRoom(rm.type, r, gw ? 3 + gw.fx : 3), have = {};
+      for (var i = 0; i < list.length; i++) if (ctx.addObj("fx", rm.id, { fx: list[i], seed: r.int(1, 99999) })) have[list[i]] = 1;
+      /* (3.2) нижние глубины: в больших помещениях — и вещи своей глубины */
+      if (gw && rm.type !== "secret" && LAB.ROOMS[rm.type] && !LAB.ROOMS[rm.type].special) deepFx(r, eraOf(ctx.L), rm, gw.fx + 1, have, ctx);
     }
     if (gen && rm.type !== "secret" && LAB.ROOMS[rm.type]) {
       var dt = gen.mainDetail(rm, holds(fl, rm));
