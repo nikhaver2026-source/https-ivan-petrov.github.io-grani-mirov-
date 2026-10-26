@@ -8,10 +8,10 @@
    • движки, установленные на компьютере, игра должна видеть сама, без NVDA;
    • голоса Microsoft звучат плохо — убрать их из выбора.
 
-   1. Пакет внутри игры (resources/game/sounds/gvoice_pack) приложение считает
-      встроенным: не скачивает его второй раз и не открывает выбор файла.
-   2. Встроенный пакет — в настройках нет кнопки установки, пункт меню
-      говорит, что ставить ничего не нужно, выбор файла не открывается.
+   1. (26 октября) Отдельного голосового пакета нет: приложение для Windows его
+      не ставит и не качает — записи лежат в папке игры (resources/game/sounds).
+   2. В настройках нет кнопки и строки о пакете, команды установки нет, выбор
+      файла не открывается.
    3. Есть сторонние голоса — голосов Microsoft (SAPI с «Microsoft» в имени,
       голоса Windows 10/11, Speech Platform) в выборе нет; сохранённый голос
       Microsoft уступает стороннему.
@@ -35,27 +35,18 @@ const ГОЛОСА_ВСЕ=[
 const ПОДДЕЛКА=(голоса,пакет,сохранён)=>`(()=>{
  window.__ставили=0;
  window.graniDesktop={version:"9.0",platform:"win32",quit(){},
-  installVoicePack(){__ставили++;return Promise.resolve("cancel");},
-  voicePackInfo(){return ${JSON.stringify(пакет)};}};
+};
  try{Object.defineProperty(speechSynthesis,"getVoices",{value:()=>[]});}catch(_){}
  ${сохранён?`try{const k="graniSettings";const s=JSON.parse(localStorage.getItem(k)||"{}");s.voice=${JSON.stringify(сохранён)};localStorage.setItem(k,JSON.stringify(s));}catch(_){}`:""}
  window.GraniTTS={speak(t,r,v,id){setTimeout(()=>window.GraniTTSDone&&GraniTTSDone(id),30);},stop(){},isSpeaking(){return false;},setVoice(){},
   getVoices(){return JSON.stringify(${JSON.stringify(голоса)});}};
 })()`;
 (async()=>{
- /* ── 1 ── */
- const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'grani-vp-'));
- const root=path.join(tmp,'game');fs.mkdirSync(path.join(root,'sounds','gvoice_pack','m'),{recursive:true});
- fs.writeFileSync(path.join(root,'sounds','gvoice_pack','m','bank.js'),'//');
- const app={getPath:k=>path.join(tmp,k)};
- const {VoicePack}=require(path.join(R,'desktop','voicepack.js'));
- const vp=new VoicePack(app,root);const нашёл=vp.load();const info=vp.info();
- let сеть=0;const качает=vp.autoFetch({request(){сеть++;return {on(){},end(){}};}},()=>{});
+ /* ── 1 ── (26 октября) отдельного голосового пакета нет: ни установки, ни докачки */
  const main=fs.readFileSync(path.join(R,'desktop','main.js'),'utf8');
- check('1. пакет внутри игры — встроенный: не качается второй раз, выбор файла не открывается',
-  нашёл&&info.builtin&&info.installed&&!качает&&сеть===0&&/new VoicePack\(app, ROOT\)/.test(main)&&/voicePack\.builtin\) return 'builtin'/.test(main),{нашёл,info,качает,сеть});
- const vp2=new VoicePack(app,path.join(tmp,'нет'));vp2.load();
- check('1б. без пакета внутри — не встроенный (обычная сборка по-прежнему предлагает установку)',!vp2.info().builtin&&!vp2.info().installed,vp2.info());
+ const vpjs=fs.existsSync(path.join(R,'desktop','voicepack.js'));
+ check('1. приложение для Windows не ставит и не качает голосовой пакет: записи — в папке игры',
+  !vpjs&&!/VoicePack|voicepack|autoFetch/.test(main),{vpjs});
 
  const browser=await chromium.launch({args:['--autoplay-policy=no-user-gesture-required']});
  const errors=[];
@@ -66,12 +57,10 @@ const ПОДДЕЛКА=(голоса,пакет,сохранён)=>`(()=>{
 
  /* ── 2 ── */
  const p=await открыть(ГОЛОСА_ВСЕ,{installed:true,builtin:true});
- const ui=await p.evaluate(async()=>{gvPackUi();const b=document.getElementById("btnGvPack"),h=document.getElementById("gvPackHint");
-  const сказано=[];const s0=Speech.say;Speech.say=function(t,o){сказано.push(String(t));};
-  try{CMD.gvpack();}catch(e){сказано.push("ошибка "+e);}Speech.say=s0;
-  return {скрыта:!!(b&&b.hidden),подсказка:h?h.textContent:"",сказано,ставили:__ставили};});
- check('2. встроенный пакет: кнопки установки нет, пункт говорит «ставить ничего не нужно», выбор файла не открывается',
-  ui.скрыта&&/встроен/.test(ui.подсказка)&&ui.сказано.some(t=>/встроен.*ничего не нужно/.test(t))&&ui.ставили===0,ui);
+ const ui=await p.evaluate(()=>({кнопка:!!document.getElementById("btnGvPack"),строка:!!document.getElementById("gvPackHint"),
+  команда:typeof CMD==="object"&&typeof CMD.gvpack,ставили:__ставили}));
+ check('2. в настройках нет кнопки и строки о голосовом пакете, команды установки нет, выбор файла не открывается',
+  !ui.кнопка&&!ui.строка&&ui.команда==="undefined"&&ui.ставили===0,ui);
 
  /* ── 3 ── */
  const п3=await p.evaluate(()=>{const t=document.getElementById("setTtsEngine");t.value="device";t.dispatchEvent(new Event("change"));Speech.fillVoices();

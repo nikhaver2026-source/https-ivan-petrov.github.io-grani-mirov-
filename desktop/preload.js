@@ -5,9 +5,6 @@ contextBridge.exposeInMainWorld('graniDesktop', {
   version: '17.5', platform: process.platform,
   // «Выход» в меню действий: игра уже сохранилась — закрываем приложение.
   quit: () => ipcRenderer.send('grani-quit'),
-  // Голосовой пакет Gemini: выбрать скачанный файл и поставить.
-  installVoicePack: () => ipcRenderer.invoke('grani-voicepack-install'),
-  voicePackInfo: () => { try { return ipcRenderer.sendSync('grani-voicepack-info'); } catch (_) { return { installed: false }; } },
   // Голоса Windows: почему не подключились и повторная попытка.
   ttsDiag: () => { try { return String(ipcRenderer.sendSync('tts-diag') || ''); } catch (_) { return ''; } },
   ttsRestart: () => ipcRenderer.invoke('tts-restart')
