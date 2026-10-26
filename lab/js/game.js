@@ -804,7 +804,7 @@ function giveItem(it, quiet) {
       LAB.fixCap(it.w); /* (2.2) оружие из прежней записи — с новой ёмкостью */
       G.weapons.push(it.w);
       if (LAB.oko && LAB.oko.react) later(function () { LAB.oko.react("weapon"); }, 2500);
-      if (!G.tut.weapon && hintsOn()) { G.tut.weapon = 1; extra = LAB.K(" Выбрать оружие — свайп одним пальцем вверх и сразу вниз. Вынуть — касание тремя пальцами.", " Выбрать оружие — Q и E или цифры от 1 до 9. Достать — R."); }
+      if (!G.tut.weapon && hintsOn()) { G.tut.weapon = 1; extra = LAB.K(" Сменить оружие — двойное касание двумя пальцами. Вынуть — касание тремя пальцами."," Выбрать оружие — Q и E или цифры от 1 до 9. Достать — R."); }
       break;
     case "pass":
       if (it.tier > G.tier) { G.tier = it.tier; extra = " Теперь открываются двери с картридером " + LAB.TIERS[it.tier].short + (it.tier > 1 ? " и ниже." : "."); }
@@ -3249,7 +3249,7 @@ function quickStatus() {
   say("Здоровье " + G.hp + " из " + G.hpMax + (G.st.shield ? ", щит " + G.st.shield : "") + ". " + weaponLine(w) + "." + ammoTail(w) + (G.st.poison ? " Отравление." : "") + (al.length ? " Тело: " + al.join(", ") + "." : ""));
 }
 game.quickStatus = quickStatus;
-/* Три пальца вправо: окно целей навигатора. */
+/* Четыре пальца вверх (M на клавиатуре): окно целей навигатора. */
 function navMenu() {
   if (!game.entered) return;
   if (navJammed()) return;

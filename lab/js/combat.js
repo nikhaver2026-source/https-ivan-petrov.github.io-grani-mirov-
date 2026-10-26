@@ -2123,7 +2123,7 @@ function fire(dir, burst) {
   if (w.ammo !== "none" || w.cap) {
     if (w.charge <= 0) {
       A("play", "w_empty");
-      if (now - lastEmpty > 2500) { lastEmpty = now; say("Заряд пуст. Перезарядка — один палец влево и сразу вправо." + (g.ammo[w.ammo] > 0 ? "" : " Запаса нет: " + LAB.AMMO[w.ammo].n.toLowerCase() + " кончились.")); }
+      if (now - lastEmpty > 2500) { lastEmpty = now; say("Заряд пуст. Перезарядка — " + LAB.K("касание двумя пальцами", "Alt+R или F") + "." + (g.ammo[w.ammo] > 0 ? "" : " Запаса нет: " + LAB.AMMO[w.ammo].n.toLowerCase() + " кончились.")); }
       stopFire();
       return false;
     }

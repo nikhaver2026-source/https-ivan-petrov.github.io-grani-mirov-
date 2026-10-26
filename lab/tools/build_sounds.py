@@ -436,6 +436,53 @@ def segments(a, need, min_len=0.12, max_len=2.4, gap=0.10, thr_db=-30.0, skip=0)
     segs = sorted(segs[:need], key=lambda t: t[1])
     return [fade(a[s0:e0], 0.003, 0.06) for _, s0, e0 in segs]
 
+def clean_step(seg):
+    """(3.1, просьба игрока) Чистый шаг — один удар подошвы. Что не годится
+    (список причин; пустой — годен): шарканье подошвы перед ударом, второй
+    удар (двойной стук), песок и хруст после удара — два щелчка и больше или
+    один громкий, звучащая часть длиннее 0,3 с, слишком ярко (центр выше 3300 Гц).
+    Пороги сверены на вариантах захода 10 по их спектрограммам."""
+    w = int(0.005 * SR)
+    env = np.sqrt(np.convolve(seg ** 2, np.ones(w) / w, mode="same")) + 1e-9
+    edb = 20 * np.log10(env); ip = int(np.argmax(edb)); pk = edb[ip]
+    why = []
+    act = np.where(edb > pk - 35)[0]; ln = (act[-1] - act[0]) / SR if act.size else 0
+    if ln > 0.30: why.append("длинный")
+    pre = edb[max(0, ip - int(0.10 * SR)): max(0, ip - int(0.008 * SR))]
+    if pre.size and (pre > pk - 24).sum() / SR > 0.015: why.append("шарканье")
+    w2 = int(0.015 * SR); sm = np.convolve(edb, np.ones(w2) / w2, mode="same")
+    d4, st2 = int(0.004 * SR), int(0.002 * SR)
+    def peak_at(i): return sm[i] > pk - 12 and sm[i] >= sm[max(0, i - d4)] and sm[i] >= sm[min(len(sm) - 1, i + d4)]
+    hit = any(peak_at(i) and sm[i] - sm[ip:i].min() >= 6 for i in range(ip + int(0.06 * SR), len(sm) - 1, st2))
+    hit = hit or any(peak_at(i) and sm[i] - sm[i:ip].min() >= 6 for i in range(0, max(0, ip - int(0.06 * SR)), st2))
+    if hit: why.append("второй удар")
+    w1 = int(0.001 * SR)
+    p1 = np.array([np.max(np.abs(seg[i:i + w1])) for i in range(0, len(seg) - w1, w1)]) + 1e-9
+    k30 = int(0.03 * SR); e30 = np.convolve(np.abs(seg), np.ones(k30) / k30, mode="same")[::w1][:len(p1)] + 1e-9
+    clicks, last = [], -99
+    for i in range((ip + int(0.05 * SR)) // w1, len(p1)):
+        if 20 * np.log10(p1[i] / e30[i]) > 13 and 20 * np.log10(p1[i]) > pk - 30 and i - last > 8:
+            clicks.append(20 * np.log10(p1[i]) - pk); last = i
+    if len(clicks) >= 2 or (clicks and clicks[0] > -12): why.append("хруст")
+    sp = np.abs(np.fft.rfft(seg * np.hanning(len(seg)))); fr = np.fft.rfftfreq(len(seg), 1 / SR)
+    if (sp * fr).sum() / (sp.sum() + 1e-9) > 3300: why.append("ярко")
+    return why
+
+def creak_ok(seg):
+    """(3.1) Скрип половицы — низкий «вздох» доски, а не сухой треск: центр
+    не выше 1900 Гц и не больше 46 щелчков трения в секунду."""
+    w1 = int(0.001 * SR)
+    p1 = np.array([np.max(np.abs(seg[i:i + w1])) for i in range(0, len(seg) - w1, w1)]) + 1e-9
+    k30 = int(0.03 * SR); e30 = np.convolve(np.abs(seg), np.ones(k30) / k30, mode="same")[::w1][:len(p1)] + 1e-9
+    cl = int(((20 * np.log10(p1 / e30)) > 10).sum())
+    w = int(0.01 * SR); env = np.sqrt(np.convolve(seg ** 2, np.ones(w) / w, mode="same")) + 1e-9
+    edb = 20 * np.log10(env); act = np.where(edb > edb.max() - 30)[0]
+    ln = (act[-1] - act[0]) / SR if act.size else 0
+    sp = np.abs(np.fft.rfft(seg * np.hanning(len(seg)))); fr = np.fft.rfftfreq(len(seg), 1 / SR)
+    return (sp * fr).sum() / (sp.sum() + 1e-9) <= 1900 and cl / max(0.05, ln) <= 46
+
+KEEP = {"step": lambda a: not clean_step(a), "creak": creak_ok}
+
 def ffx(a, af):
     """Готовый звук через фильтр ffmpeg (яркость, насыщение) — без смены длины."""
     if not af: return a
@@ -498,11 +545,17 @@ E("step_echo", "step", [SPL(208101, 4, af="highpass=f=1100,treble=g=4:f=5000", m
 # лестничные клетки, склады, бункеры (floors.js); деревянный пол — кабинеты, архивы, библиотеки,
 # каюты; скрип половиц изредка звучит под шагом по дереву. Обувь, как у металлических шагов.
 CONC_AF = "highpass=f=60,lowshelf=f=140:g=-2,equalizer=f=2400:t=q:w=1.2:g=4,treble=g=3:f=5500"
-CONC_AF2 = "highpass=f=60,lowshelf=f=140:g=-2,equalizer=f=2400:t=q:w=1.2:g=3,lowpass=f=6500"  # шершавый бетон: без песочного призвука
 WOOD_AF = "highpass=f=55,equalizer=f=1800:t=q:w=1.1:g=4,treble=g=3:f=5000"
-E("step_concrete", "step", [SPL(813622, 5, af=CONC_AF, min_len=0.06), SPL(546827, 8, af=CONC_AF2, dur=20.0, min_len=0.06), SPL(459964, 4, af=CONC_AF, min_len=0.06)], n=10, mx=0.4)
-E("step_wood", "step", [SPL(164315, 8, af=WOOD_AF, min_len=0.06), SPL(575898, 4, af=WOOD_AF, min_len=0.08), SPL(119914, 3, af=WOOD_AF, min_len=0.06)], n=10, mx=0.4)
-E("floor_creak", "step", [SPL(822745, 6, min_len=0.15, max_len=1.2), SPL(124289, 4, min_len=0.15, max_len=1.0)], n=8, mx=1.0, v=0.8)
+# (3.1, просьба игрока: в шагах по бетону и дереву были лишние звуки) Только чистые
+# удары (clean="step", clean_step): кожаная подошва (546827) и ботинки (459964)
+# хрустели песком и шаркали, старый пол (575898) и комнатный (119914) шуршали и
+# стучали дважды — их нет. Бетон — студийная плита и ровный бетонный пол (554380),
+# дерево — деревянный настил (164315), его ровный проход с 39-й секунды: в начале
+# записи шаги с отзвуком второго стука. Скрип — низкие «вздохи» доски (clean="creak");
+# сухой треск и писк скрипучего пола (124289) убраны, а звучит скрип реже (floors.js).
+E("step_concrete", "step", [SPL(813622, 5, af=CONC_AF, min_len=0.06, clean="step"), SPL(554380, 7, af=CONC_AF, min_len=0.06, clean="step")], n=10, mx=0.4)
+E("step_wood", "step", [SPL(164315, 9, af=WOOD_AF, start=39.0, dur=6.0, min_len=0.06, clean="step")], n=9, mx=0.4)
+E("floor_creak", "step", [SPL(822745, 6, min_len=0.15, max_len=0.75, clean="creak")], n=6, mx=0.8, v=0.8)
 E("door_threshold", "step", [S(A, "lab_metalsteps*", "metal_steps_1[3-6].flac", af="asetrate=44100*0.7,aresample=44100")], n=3, v=0.6)
 
 # ═════ СТЕНЫ И СТОЛКНОВЕНИЯ ═════
@@ -1275,13 +1328,22 @@ def build():
             for s in sp["srcs"]:
                 if isinstance(s, tuple) and s[0] == "split":
                     _, src, k = s[:3]
-                    so = s[3] if len(s) > 3 else {}
+                    so = dict(s[3]) if len(s) > 3 else {}
+                    keep = KEEP.get(so.pop("clean", None))
                     fs = resolve(src)
                     if not fs: MISSING.append(id_ + " (split) " + str(src[1:4])); continue
                     path, lo = fs[0]
                     use(path)
                     a = decode(path, lo.get("start", 0), lo.get("dur", 60), ch=1, af=lo.get("af"))
-                    for seg in segments(a, k, **so): items.append(("arr", cap(seg, sp["mx"] if sp["mx"] is not None else DEF_MAX.get(kind))))
+                    mxv = sp["mx"] if sp["mx"] is not None else DEF_MAX.get(kind)
+                    parts = [cap(seg, mxv) for seg in segments(a, 999 if keep else k, **so)]
+                    if keep:
+                        # (3.1) только чистые: k самых громких из годных, по порядку во времени
+                        good = [g for g in parts if keep(g)]
+                        loud = sorted(range(len(good)), key=lambda q: -peak(good[q]))[:k]
+                        print("   %s: годных кусков %d из %d, взято %d" % (id_, len(good), len(parts), len(loud)))
+                        parts = [good[q] for q in sorted(loud)]
+                    for seg in parts: items.append(("arr", seg))
                     continue
                 if isinstance(s, tuple) and s[0] == "slice":
                     _, src, k = s

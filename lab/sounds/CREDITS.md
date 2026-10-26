@@ -835,6 +835,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `52050_533680-hq.ogg`
 
+## ConcreteFootsteps.wav
+
+Автор: JamGrif. Лицензия: CC0 1.0. Источник: https://freesound.org/s/554380/
+
+Файлы: `554380_12197305-hq.ogg`
+
 ## Controlled Chaos - no percussion
 
 Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Controlled_Chaos_-_no_percussion_(ISRC_USUAN1200060).mp3
@@ -1303,23 +1309,11 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `813622_16752880-hq.ogg`
 
-## Footsteps Leather Concrete
-
-Автор: Kinoton. Лицензия: CC0 1.0. Источник: https://freesound.org/s/546827/
-
-Файлы: `546827_2247456-hq.ogg`
-
 ## Footsteps Metallic Muffled Louder
 
 Автор: RutgerMuller. Лицензия: CC0 1.0. Источник: https://freesound.org/s/50724/
 
 Файлы: `50724_179538-hq.ogg`
-
-## Footsteps on concrete
-
-Автор: florianreichelt. Лицензия: CC0 1.0. Источник: https://freesound.org/s/459964/
-
-Файлы: `459964_6253486-hq.ogg`
 
 ## Footsteps on Metal
 
@@ -1332,12 +1326,6 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: IENBA. Лицензия: CC0 1.0. Источник: https://freesound.org/s/834029/
 
 Файлы: `834029_9616576-hq.ogg`
-
-## Footsteps on Wooden Floor.aif
-
-Автор: ftpalad. Лицензия: CC0 1.0. Источник: https://freesound.org/s/119914/
-
-Файлы: `119914_1990698-hq.ogg`
 
 ## Footsteps on wooden flooring.wav
 
@@ -2749,12 +2737,6 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `431857_2480355-hq.ogg`
 
-## squeaky-floor-loud.aif
-
-Автор: alienistcog. Лицензия: CC0 1.0. Источник: https://freesound.org/s/124289/
-
-Файлы: `124289_296888-hq.ogg`
-
 ## Squeezing a Slime Ball
 
 Автор: niittymaa. Лицензия: CC0 1.0. Источник: https://freesound.org/s/666969/
@@ -3006,12 +2988,6 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: MasterSuite. Лицензия: CC0 1.0. Источник: https://freesound.org/s/667382/
 
 Файлы: `667382_14357477-hq.ogg`
-
-## wooden floor, old, creaking, footsteps, walking.WAV
-
-Автор: VMan533. Лицензия: CC0 1.0. Источник: https://freesound.org/s/575898/
-
-Файлы: `575898_3283195-hq.ogg`
 
 ## zombie growl
 

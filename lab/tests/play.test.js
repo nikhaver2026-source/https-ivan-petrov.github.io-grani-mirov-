@@ -5014,7 +5014,7 @@ LAB.ui.closeAll();
     C.stop(); LAB.ui.closeAll();
     const rnd0 = Math.random, sp0 = LAB.Sound.play, hp0 = G.hp, hpm0 = G.hpMax, cl0 = G.st.cloak;
     try {
-      out.snd = ["step_concrete", "step_wood", "floor_creak"].every(k => LAB.SND[k] && LAB.SND[k].f.length >= 8);
+      out.snd = ["step_concrete", "step_wood"].every(k => LAB.SND[k] && LAB.SND[k].f.length >= 8) && LAB.SND.floor_creak && LAB.SND.floor_creak.f.length >= 4;
       out.surf = !!(P && LAB.SURF.concrete && LAB.SURF.wood && LAB.SURF.wood.creak);
       /* этаж, где есть всё: деревянное помещение, лестничная клетка, бетонный и металлический коридоры */
       const secret = (fl, c) => { const d = fl.doors.find(x => x.id === c.door); return !!(d && d.lock && d.lock.type === "secret"); };
@@ -5101,6 +5101,39 @@ LAB.ui.closeAll();
     ok(flr.creak, "по деревянному полу изредка скрипят половицы");
     ok(flr.bump, "звук стены прежний: удар о сталь, без звука шага");
   }
+
+  console.log("Альфа 3.1: подсказки о жестах — как в игре (перезарядка, смена оружия, повтор фразы, двери коридора)");
+  const hint31 = await page.evaluate(() => {
+    const out = {}, km = LAB.keysMode, g = LAB.game, C = LAB.combat, G = g.G;
+    const keep = { drawn: G.drawn, tutW: G.tut.weapon, nW: G.weapons.length, wi: G.wi };
+    LAB.keysMode = false; LAB.ui.closeAll(); C.stop();
+    try {
+      /* обучение: повтор фразы — долгое касание одним пальцем; касание двумя — перезарядка */
+      const tut = LAB.tutor.steps.map(s => s.t()).join(" | ");
+      out.tutRepeat = /повторить последнюю фразу — долгое касание одним пальцем/.test(tut) && !/фразу — касание двумя пальцами/.test(tut);
+      out.tutWeapon = /перезарядка — касание двумя пальцами/.test(tut) && /смена оружия — двойное касание двумя пальцами/.test(tut);
+      /* пустой заряд: подсказка — касание двумя пальцами, а не жест гранаты */
+      const w = G.weapons.find(x => x.ammo && x.ammo !== "none") || null;
+      if (w) {
+        G.wi = G.weapons.indexOf(w); G.drawn = true; const ch0 = w.charge; w.charge = 0;
+        SPOKEN.length = 0; C.fire("N", false);
+        out.empty = SPOKEN.join(" | ").slice(0, 200);
+        w.charge = ch0;
+      } else out.empty = "нет оружия с зарядом";
+      /* новое оружие: сменить — двойное касание двумя пальцами (вверх-вниз одним пальцем — ловушка) */
+      G.tut.weapon = 0;
+      out.pick = g.giveItem({ kind: "weapon", w: LAB.makeWeapon("spark", 1, 1, 2) }, true);
+      G.weapons.length = keep.nW;
+      /* руководство: список дверей коридора — в списке целей навигатора, четыре пальца вверх */
+      out.guide = /Список дверей коридора — в списке целей навигатора: четыре пальца вверх/.test(JSON.stringify(LAB.guide.chapters));
+    } catch (e) { out.err = String(e && e.stack || e).slice(0, 300); }
+    LAB.keysMode = km; G.drawn = keep.drawn; G.tut.weapon = keep.tutW; G.wi = keep.wi;
+    return out;
+  });
+  ok(!hint31.err && hint31.tutRepeat && hint31.tutWeapon, "обучение: повторить фразу — долгое касание одним пальцем, перезарядка — касание двумя, смена оружия — двойное касание двумя" + (hint31.err ? " (" + hint31.err + ")" : ""));
+  ok(/Заряд пуст\. Перезарядка — касание двумя пальцами/.test(hint31.empty) && !/влево и сразу вправо/.test(hint31.empty), "пустой заряд: «Перезарядка — касание двумя пальцами», а не жест гранаты (" + hint31.empty + ")");
+  ok(/Сменить оружие — двойное касание двумя пальцами/.test(hint31.pick) && !/вверх и сразу вниз/.test(hint31.pick), "новое оружие: сменить — двойное касание двумя пальцами (" + hint31.pick + ")");
+  ok(hint31.guide, "руководство: список дверей коридора — в списке целей навигатора, четыре пальца вверх");
 
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {

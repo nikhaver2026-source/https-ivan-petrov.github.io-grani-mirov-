@@ -24,7 +24,7 @@
 var LAB = (typeof window !== "undefined" ? window.LAB : globalThis.LAB); /* и в Node — для проверок мира */
 
 LAB.SURF.concrete = { n: "бетон", base: "concrete" };
-LAB.SURF.wood = { n: "деревянный пол", base: "wood", creak: 0.18 };
+LAB.SURF.wood = { n: "деревянный пол", base: "wood", creak: 0.07 }; /* (3.1) скрип — изредка: примерно на каждом пятнадцатом шаге, а не на пятом */
 
 function set(s) { var o = {}; s.split(/\s+/).forEach(function (k) { if (k) o[k] = 1; }); return o; }
 
