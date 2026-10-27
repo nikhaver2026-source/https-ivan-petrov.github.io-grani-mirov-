@@ -247,8 +247,8 @@ function sleepMenu() {
   UIx("menu", "Сон", items);
 }
 function sleep(s) {
-  /* (3.5) часы сна пролетают разом, а машины ОКО не ждут: в тревогу, под шагами
-     карателей и когда сюда идут машины — не уснуть (как и отдыхать на обстановке) */
+  /* (3.5) часы сна пролетают разом, а машины ОКО не ждут: в тревогу, пока ОКО её не
+     сняло, и под шагами карателей — не уснуть (как и отдыхать на обстановке) */
   var why = gm().restBlock ? gm().restBlock() : null;
   if (why) { LAB.UI.error(); say(why.replace("Не до отдыха", "Не до сна")); return; }
   UIx("closeTop", true);
@@ -256,7 +256,7 @@ function sleep(s) {
   var g = G(), b = g.body;
   var dream = pickDream();
   recover(s.min, true);
-  g.restAt = (g.day || 0) * 1440 + (g.min || 0); /* (3.5) только что выспались — стул после капсулы толку не даст */
+  g.restAt = (g.day || 0) * 1440 + (g.min || 0); /* (3.6) только что выспались — стул сразу после капсулы даст лишь долю отдыха (fixtures.js, restK) */
   if (s.min >= 240) { g.hp = g.hpMax; g.en = g.enMax; b.wake = 100; b.neuro = 0; g.st.poison = 0; g.st.bleed = 0; }
   if (s.min >= 480) g.st.restedMin = 360;
   if (s.min >= 720) { b.tox = 0; b.rad = Math.max(0, (b.rad || 0) - 30); }

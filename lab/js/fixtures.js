@@ -32,15 +32,21 @@ function spend(min) { if (min > 0) gm().advanceTime(min); }
 function era() { return LAB.agen ? LAB.agen.eraOf(G().L) : "K"; }
 function danger() { return !!(LAB.combat && LAB.combat.danger && LAB.combat.danger()); }
 function nowMin() { return (G().day || 0) * 1440 + (G().min || 0); }
-/* (3.5) Когда не до отдыха и тренировок: рядом враг, тревога, каратели, машины ОКО идут сюда (game.restBlock). */
+/* (3.6) Когда не до отдыха и тренировок: рядом враг, тревога, пока ОКО её не сняло, каратели на следу (game.restBlock). */
 function restBlock() { return gm().restBlock ? gm().restBlock() : (danger() ? "Не до отдыха: рядом опасность." : null); }
-/* (3.5) Отдых на обстановке — передышка, а не лечение. Польза — в меру того, сколько
-   герой подвигался с прошлого отдыха на любой вещи (шаг — минута): через час — полная,
-   раньше — часть, совсем рано — никакой, и тогда время и еда не тратятся. Сидеть на
-   стуле без конца и так восполнять здоровье и бодрость больше нельзя. */
+/* (3.6, просьба игрока) Сесть на стул, в кресло, прилечь можно когда угодно, но тело
+   восстанавливается не быстрее одного полного отдыха в час (шаг — минута): отдых даёт ту
+   долю полного, сколько времени прошло с конца прошлого отдыха — вместе с самим отдыхом
+   — из часа. Отдохнули час назад и раньше — в полную силу; через двадцать минут присели
+   на десять — наполовину; сидеть подряд без конца можно, но за час это даст не больше
+   одного полного отдыха. Так — всё, что даёт отдых: здоровье, бодрость, нейронагрузка, токсины,
+   радиация и напиток в покое. Растяжка на матах — тоже отдых, счёт у них общий; сон в
+   капсуле — тоже (capsule.js). */
 var REST_GAP = 60;
-function restK() { var t = G().restAt; return t == null ? 1 : Math.max(0, Math.min(1, (nowMin() - t) / REST_GAP)); }
-function restLeft() { var t = G().restAt; return t == null ? 0 : Math.max(1, Math.ceil(REST_GAP - (nowMin() - t))); }
+/* доля полного отдыха, если отдыхать m минут, начиная сейчас */
+function restK(m) { var t = G().restAt; return t == null ? 1 : Math.max(0, Math.min(1, (nowMin() + (m || 0) - t) / REST_GAP)); }
+/* через сколько минут отдых этой длины пойдёт в полную силу */
+function restLeft(m) { var t = G().restAt; return t == null ? 0 : Math.max(0, Math.ceil(REST_GAP - (m || 0) - (nowMin() - t))); }
 /* (3.5) Тренировки: тренажёры поднимают силу не больше чем на пять единиц за всю игру,
    и каждая следующая единица — дольше (3, 6, 9, 12, 15 тренировок); мышцам нужен
    перерыв — три часа. Тир так же: меткость — не больше пяти ступеней, перерыв — час.
@@ -55,7 +61,8 @@ function trainSt() {
 function sessW(n) { return n + " " + pl(n, "тренировка", "тренировки", "тренировок"); }
 function rng(o, tag) { return LAB.Rng(G().seed, "fx:" + tag + ":" + CUR().key + ":" + o.id); }
 /* (3.5) больше часа — часами и минутами: «через 2 часа 40 минут», а не «через 160 минут» */
-function minW(n) { n = Math.max(0, Math.round(n)); var h = Math.floor(n / 60), m = n % 60; return h ? h + " " + pl(h, "час", "часа", "часов") + (m ? " " + m + " " + pl(m, "минута", "минуты", "минут") : "") : n + " " + pl(n, "минута", "минуты", "минут"); }
+/* «через …», «ещё …» — винительный падеж: «через 21 минуту» */
+function minW(n) { n = Math.max(0, Math.round(n)); var h = Math.floor(n / 60), m = n % 60; return h ? h + " " + pl(h, "час", "часа", "часов") + (m ? " " + m + " " + pl(m, "минуту", "минуты", "минут") : "") : n + " " + pl(n, "минуту", "минуты", "минут"); }
 function roomOf(o) { var fl = CUR().fl; return o && o.room >= 0 ? fl.rooms[o.room] : null; }
 function noise(n) { if (LAB.combat && LAB.combat.noise) LAB.combat.noise(n); }
 function giveAll(list) { return list.map(function (it) { return gm().giveItem(it); }); }
@@ -266,20 +273,19 @@ function actionItem(o, def, a, s) {
     case "respect": return s.resp ? { label: "Вы уже почтили память", info: true, keep: true, fn: function () { say("Вы уже стояли здесь молча."); } } : { label: label, fn: function () { doRespect(o, s); } };
     case "strip": return s.strip ? null : { label: label, fn: function () { doStrip(o, def, s); } };
   }
-  var base = { label: label + fxNote(kind), fn: function () { run(o, def, kind, p, label); } };
+  var base = { label: label + fxNote(kind, p), fn: function () { run(o, def, kind, p, label); } };
   if (kind === "rest" && REST_DRINK[o.fx]) { var combos = drinkCombos(o, def, p, label); if (combos.length) return [base].concat(combos); }
   return base;
 }
-/* (3.5) Пункт сам говорит, будет ли от него толк сейчас: отдых — не отдыхали ли только что,
+/* (3.5) Пункт сам говорит, будет ли от него толк сейчас: отдых — в полную ли силу,
    тренажёр и тир — сколько прибавок из пяти уже взято и не рано ли снова. Чтобы не гадать,
    упёрлись ли в предел и не тратятся ли зря время и еда. */
 var FX_NOTE = { rest: 1, train: 1, aim: 1 };
-function fxNote(kind) {
+function fxNote(kind, p) {
   var t;
   if (kind === "rest") {
-    var rk = restK();
-    if (rk >= 1) return "";
-    return rk < 0.25 ? " — вы только что отдыхали: толку не будет ещё " + minW(Math.max(1, Math.ceil(REST_GAP * 0.25 - (nowMin() - G().restAt)))) : " — отдых будет неполным, в полную силу — через " + minW(restLeft());
+    var mR = (p && p.m) || 10, kR = restK(mR);
+    return kR >= 1 ? "" : " — вы недавно отдыхали: поможет на " + Math.max(1, Math.round(kR * 100)) + " процентов, в полную силу — через " + minW(restLeft(mR));
   }
   if (kind === "train") {
     t = trainSt();
@@ -302,7 +308,7 @@ function drinkCombos(o, def, p, label) {
   Object.keys(LAB.ITEMS).forEach(function (k) {
     var d = LAB.ITEMS[k];
     if (out.length >= 4 || !(g.inv[k] > 0) || d.kind !== "food" || !d.acc) return;
-    out.push({ label: base + " и выпить " + d.acc + fxNote("rest"), fn: function () { run(o, def, "rest", p, label, k); } });
+    out.push({ label: base + " и выпить " + d.acc + fxNote("rest", p), fn: function () { run(o, def, "rest", p, label, k); } });
   });
   return out;
 }
@@ -316,21 +322,23 @@ function run(o, def, kind, p, label, withId) {
     case "rest": {
       var whyR = restBlock();
       if (whyR) { LAB.UI.error && LAB.UI.error(); say(whyR); return; }
-      var rk = restK();
-      if (rk < 0.25) { LAB.UI.error && LAB.UI.error(); say("Вы отдыхали совсем недавно: сидеть ещё — только терять время и еду. Отдых снова поможет, когда вы подвигаетесь: в полную силу — через " + minW(restLeft()) + "."); return; }
       UIx("closeAll");
-      spend(p.m || 10);
+      var mR = p.m || 10, rk = restK(mR);
+      spend(mR);
       G().restAt = nowMin();
+      var leftR = restLeft(mR); /* когда такой же отдых снова пойдёт в полную силу — считая с этого */
+      /* (3.6) доля отдыха — по времени с прошлого (restK): польза меньше, вред — нет */
       var rs = function (v) { return v ? Math.round(v * rk) : 0; };
       gm().bodyApply({ wake: rs(p.wake), neuro: rs(p.neuro), detox: p.tox < 0 ? rs(-p.tox) : 0, tox: p.tox > 0 ? p.tox : 0, rad: p.rad < 0 ? rs(p.rad) : (p.rad || 0), stopBleed: !!p.stopBleed }, m);
       /* здоровье — доля от полного, но не меньше пяти единиц: даже стул и скамья дают передохнуть телу;
-         отдых неполный (отдыхали недавно) — и здоровья меньше */
+         отдыхали недавно — и здоровья та же доля, но хоть единица */
       if (p.hp) { var hv = Math.max(1, Math.round(Math.max(5, G().hpMax * p.hp) * rk)); G().hp = Math.min(G().hpMax, G().hp + hv); m.push("Здоровье " + G().hp + "."); }
-      if (rk < 1) m.push("Отдых вышел неполным: вы отдыхали недавно.");
+      if (rk < 1) m.push("Вы отдыхали недавно, и тело восстановилось лишь на " + Math.max(1, Math.round(rk * 100)) + " процентов: в полную силу отдых поможет через " + minW(leftR) + ".");
       if (p.unslow && G().st.slow) { G().st.slow = 0; m.push("Ноги снова слушаются."); }
       snd("chair_sit", null);
       if (withId && LAB.ITEMS[withId] && G().inv[withId] > 0) {
-        /* отдых с напитком: сначала глоток (своя фраза), потом покой — и в покое напиток действует лучше */
+        /* отдых с напитком: сначала глоток (своя фраза), потом покой — и в покое напиток действует лучше
+           (3.6: на ту же долю, что и сам отдых) */
         var dd = LAB.ITEMS[withId], bonus = { neuro: -Math.max(1, Math.round(5 * rk)) }, bm = [];
         if (dd.wake > 0) bonus.wake = Math.max(1, Math.round(Math.max(5, Math.ceil(dd.wake * 0.25)) * rk));
         gm().useItem(withId);

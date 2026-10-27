@@ -18,8 +18,8 @@ android {
         targetSdk 37
         /* Номер сборки растёт с каждым запуском рабочего процесса: новая
            версия ставится поверх прежней, сохранения остаются. */
-        versionCode(3500 + ((System.getenv('BUILD_NUMBER') ?: '0') as int))
-        versionName 'Альфа 3.5'
+        versionCode(3600 + ((System.getenv('BUILD_NUMBER') ?: '0') as int))
+        versionName 'Альфа 3.6'
     }
 
     /* Ключ подписи — только из окружения сборки: в репозитории ключей нет.

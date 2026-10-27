@@ -411,6 +411,8 @@ function cond(w) { return w && w.cond != null ? w.cond : 100; }
 function md(w, k) { return (w && w.mod && w.mod[k]) || 0; }
 function wcls(w) { return (LAB.WEAPONS[w.base] || {}).cls || ""; }
 function melee(w) { return (w.rng0 != null ? w.rng0 : w.rng) <= 1; }
+/* бластеры: «Искра», импульсный, тяжёлый, «Аркси» — и ионный бластер из своего класса */
+function blaster(w) { return wcls(w) === "blaster" || w.base === "ion"; }
 function battery(w) { return w.ammo && w.ammo !== "none"; }
 /* (3.5) греются только стволы на заряде: картечь, иглы и стальные пули — нет */
 function heats(w) { return battery(w) && !LAB.physAmmo(w.ammo) && !melee(w); }
@@ -450,7 +452,9 @@ function afterShot(w, burst, now) {
       if (LAB.combat && LAB.combat.stopFire) LAB.combat.stopFire();
     } else if (w.heat >= mx * 0.75) { A("play", "ev_steam", { gain: 0.25, rate: 1.5 }); sayOnce("warm", "Ствол горячий — дайте ему остыть.", 6000); }
   }
-  var c0 = cond(w), wear = (melee(w) ? 0.12 : 0.22) * (QK[w.qual] || 1) * (HEAVY[wcls(w)] ? 1.3 : 1) * Math.pow(0.45, md(w, "stab"));
+  /* (3.6, просьба игрока) бластеры изнашиваются на треть медленнее прочего стрелкового:
+     «Искра» доходит до половины износа примерно за 270 выстрелов, а не за 180 */
+  var c0 = cond(w), wear = (melee(w) ? 0.12 : blaster(w) ? 0.15 : 0.22) * (QK[w.qual] || 1) * (HEAVY[wcls(w)] ? 1.3 : 1) * Math.pow(0.45, md(w, "stab"));
   w.cond = Math.max(0, Math.round((c0 - wear) * 100) / 100);
   [50, 25, 10].forEach(function (lv) {
     if (c0 >= lv && w.cond < lv) sayq(lv === 50 ? "Оружие изнашивается: состояние " + lv + " из 100. Почините его у верстака." : lv === 25 ? "Оружие сильно изношено: состояние " + lv + " из 100, начнутся осечки." : "Оружие на пределе: почти каждый пятый выстрел — осечка.");

@@ -173,8 +173,9 @@ function makeRuntime(def, st) {
     guard: def.guard || null, post: def.post ? { x: def.post[0], y: def.post[1] } : null, oko: !!(def.oko || def.squad || def.guard), squad: !!def.squad, fresh: !!def.fresh,
     /* (3.0) каратель ОКО — ударная группа против мясорубки (oko.js, punTick) */
     punisher: !!def.punisher,
-    /* (3.0) номер волны ОКО: разбита целиком — передышка (oko.js, waveDown) */
-    wv: def.wv || 0,
+    /* (3.0) номер волны ОКО: разбита целиком — передышка (oko.js, waveDown);
+       (3.6) номер выдачи — одна волна в счёте опыта за присланных (waveNo) */
+    wv: def.wv || 0, grp: def.grp || null,
     route: null, ri: 0, stuck: 0, exit: null, repT: 0, fixT: 0, heatN: 0, over: 0, nodeT: 0,
     /* (2.0) участок обхода патруля, рабочая машина кабинета, сапёр ОКО */
     beat: def.beat || null, bi: def.bi || 0, bdir: 1, work: !!def.work, garrison: def.garrison || null, sapper: !!def.sapper || base.beh.indexOf("mines") >= 0,
@@ -2358,13 +2359,14 @@ function kill(f, quiet) {
   /* (3.0) присланные и призванные: опыта меньше, а на этаже-мясорубке — всё меньше, до нуля;
      каратели сгорают — ни опыта, ни добычи */
   /* напарник из режима сложности (twin) — житель этажа, а не замена: в мясорубку не идёт */
-  /* (3.5) и сверх мясорубки: присланных и призванных на этаже счёт не тает — чем больше
-     их сломано здесь, тем меньше с них и опыта, и добычи, до нуля (sentK); выжидать
-     бесполезно, время этого не лечит */
+  /* (3.6, просьба игрока) и сверх мясорубки: присланных и призванных счёт на этаже не тает —
+     каждая следующая разбитая здесь волна даёт на 2,5 % меньше и опыта, и добычи, чем
+     первая (waveK); выжидать бесполезно, время этого не лечит */
   var sk = 1;
-  if (f.spawned && !f.ally && !f.twin) {
-    sk = sentK(); fs.sentN = (fs.sentN || 0) + 1;
-    if (sentK() <= 0 && !fs.sentOut) { fs.sentOut = 1; sayq("«Эхо»: с машин и тварей, которых ОКО и улья присылают на этот этаж, больше ничего не взять — ни опыта, ни добычи. Их начинку вы уже знаете наизусть; новое — ниже."); }
+  if (f.spawned && !f.ally && !f.twin && !f.calm) { /* обезвреженные и так ничего не дают — волной не считаются */
+    var wn = waveNo(f);
+    sk = waveK(wn);
+    if (sk <= 0 && !fs.sentOut) { fs.sentOut = 1; sayq("«Эхо»: с машин и тварей, которых ОКО и улья присылают на этот этаж, больше ничего не взять — ни опыта, ни добычи. Их начинку вы уже знаете наизусть; новое — ниже."); }
   }
   if (f.spawned) { xp = f.punisher ? 0 : Math.round(xp * 0.4 * grindK() * sk); if (!f.ally && !f.twin) grindAdd(); }
   /* (3.5) свои (перехваченные, союзники) и обезвреженные (обесточенные, перепрошитые)
@@ -2418,7 +2420,7 @@ function kill(f, quiet) {
   /* (3.0) энергобатарея — с каждого N-го уничтоженного врага, робота или твари,
      где бы он ни пал (N по режиму: bat; камеры и турели не в счёт). Напарник из
      режима сложности добычи не несёт, но враг есть враг — он в счёт идёт. */
-  /* (3.5) присланные — в счёт с той же долей, что и их опыт и добыча (sentK) */
+  /* (3.5) присланные — в счёт с той же долей, что и их опыт и добыча (waveK) */
   if ((looty || (f.twin && !tame)) && !f.punisher && !f.ally && !has(f, "camera") && !has(f, "stationary") && (!f.spawned || f.twin || r() < sk)) {
     var nth = diff().bat || 4;
     g.batKills = (g.batKills || 0) + 1;
@@ -2501,12 +2503,6 @@ function chaser() {
   return best;
 }
 function hunted() { return !!chaser(); }
-/* (3.5) Машины ОКО идут сюда: присланные по тревоге или на проверку, и цель у них —
-   рядом с героем (до двенадцати шагов). Отдыхать в это время нельзя (game.restBlock). */
-function okoComing() {
-  var hp = heroPos();
-  return foes.some(function (f) { return hostile(f) && f.oko && (f.state === "hunt" || f.state === "alert") && f.lastKnown && dist(f.lastKnown, hp) <= 12; });
-}
 function visibleFoes(r) {
   return foes.filter(function (f) {
     if (f.dead || f.disguised || f.burrowed) return false;
@@ -2608,6 +2604,8 @@ function okoPool(mode) {
    и его вид). Двери отряду открывает ОКО; кто вас не нашёл — остаётся на
    этаже патрулём. more — что ещё записать машинам (номер волны). Возвращает
    вышедших. */
+/* (3.6) номер выдачи машин ОКО на этаже: машины одной выдачи — одна волна (waveNo) */
+function grpId() { var fs = CUR().fs; return "g" + (fs.gseq = (fs.gseq || 0) + 1); }
 function dispatch(n, mode, at, more) {
   var fs = CUR().fs, hp = heroPos(), pool = okoPool(mode), got = [];
   /* куда идти, ОКО знает только из донесений (at); без них отряд прочёсывает этаж.
@@ -2623,12 +2621,13 @@ function dispatch(n, mode, at, more) {
   }
   var p = okoPoint({ to: to || hp, minHero: mode === "drone" ? 9 : 12, dmin: mode === "check" || mode === "hunt" ? 8 : 10 });
   if (!p) return got;
+  var gid = grpId(); /* (3.6) одна выдача — одна волна (waveNo) */
   for (var i = 0; i < n; i++) {
     var c = i === 0 && canStand(null, p[0], p[1]) ? p : freeCellNear(p[0], p[1], null);
     if (!c) break;
     var type = mode === "repair" && i > 0 ? okoPool("hunt")[Math.floor(Math.random() * okoPool("hunt").length)] : pool[Math.floor(Math.random() * pool.length)];
     if (!LAB.FOES[type]) type = "patrolbot";
-    var ex = { squad: true, oko: true, fresh: !!fs.robots, task: mode === "repair" && i === 0 ? "repair" : null, patrol: mode === "patrol" };
+    var ex = { squad: true, oko: true, fresh: !!fs.robots, task: mode === "repair" && i === 0 ? "repair" : null, patrol: mode === "patrol", grp: gid };
     if (more) for (var mk in more) ex[mk] = more[mk];
     if (mode === "post") { ex.guard = to.kind || "post"; ex.post = [to.x, to.y]; }
     var sp = spawnFoe(type, c[0], c[1], ex);
@@ -2665,13 +2664,13 @@ function replacePatrol(q) {
     best = pt; bd = d;
   });
   if (!best) return [];
-  var heavy = q.n >= 3, pool = heavy ? okoPool("hunt") : (LAB.garrison ? LAB.garrison.patrolPool(G().L, G().F) : okoPool("patrol")), got = [];
+  var heavy = q.n >= 3, pool = heavy ? okoPool("hunt") : (LAB.garrison ? LAB.garrison.patrolPool(G().L, G().F) : okoPool("patrol")), got = [], gid = grpId();
   for (var i = 0; i < q.n; i++) {
     var c = i === 0 && canStand(null, best[0], best[1]) ? best : freeCellNear(best[0], best[1], null);
     if (!c) break;
     var type = !heavy && i === 0 && q.type && LAB.FOES[q.type] ? q.type : pool[Math.floor(Math.random() * pool.length)];
     if (!LAB.FOES[type]) type = "patrolbot";
-    var sp = spawnFoe(type, c[0], c[1], { patrol: true, beat: q.beat, corr: q.corr, oko: true, squad: q.n > 1, wv: q.wv || 0, fresh: !!fs.robots });
+    var sp = spawnFoe(type, c[0], c[1], { patrol: true, beat: q.beat, corr: q.corr, oko: true, squad: q.n > 1, wv: q.wv || 0, grp: gid, fresh: !!fs.robots });
     if (!sp) break;
     if (heavy && q.at) { sp.state = "alert"; sp.lastKnown = { x: q.at.x, y: q.at.y }; sp.lost = 0; } else sp.state = "idle";
     got.push(sp);
@@ -2693,13 +2692,13 @@ function refillRoom(q) {
   var cells = [];
   for (var y = rm.y0; y <= rm.y1; y++) for (var x = rm.x0; x <= rm.x1; x++) if (canStand(null, x, y)) cells.push([x, y]);
   for (var k = cells.length - 1; k > 0; k--) { var j = Math.floor(Math.random() * (k + 1)), t = cells[k]; cells[k] = cells[j]; cells[j] = t; }
-  var GR = LAB.garrison, cat = (GR && GR.CAT[q.cat]) || { roles: ["guard"] }, got = [];
+  var GR = LAB.garrison, cat = (GR && GR.CAT[q.cat]) || { roles: ["guard"] }, got = [], gid = grpId();
   for (var i = 0; i < q.n && i < cells.length; i++) {
     var role = q.n >= 3 ? "guard" : cat.roles[Math.min(i, cat.roles.length - 1)];
     var pool = GR ? GR.rolePool(role, G().L, G().F) : ["patrolbot"];
     var type = pool[Math.floor(Math.random() * pool.length)], base = LAB.FOES[type];
     if (!base) continue;
-    var ex = { garrison: q.cat, oko: true, fresh: !!CUR().fs.robots }; /* (3.5) на перепрошитом этаже новые — не перепрошиты */
+    var ex = { garrison: q.cat, oko: true, fresh: !!CUR().fs.robots, grp: gid }; /* (3.5) на перепрошитом этаже новые — не перепрошиты */
     if (!has(base, "cleaner") && !has(base, "mimic")) { ex.guard = "room"; ex.post = [cells[i][0], cells[i][1]]; }
     var sp = spawnFoe(type, cells[i][0], cells[i][1], ex);
     if (sp) { sp.state = "idle"; got.push(sp); }
@@ -2727,9 +2726,22 @@ function grindNow() {
 }
 function grindAdd() { var fs = CUR().fs; if (!grindNow()) fs.grindT = fs.okoT || 0; fs.grind = (fs.grind || 0) + 1; fs.grindLast = fs.okoT || 0; }
 function grindK() { var fs = CUR().fs; if (fs.pun) return 0; return Math.max(0, 1 - grindNow() / (diff().grind || 12)); }
-/* (3.5) Сколько ещё дают присланные на этом этаже: счёт сломанных (fs.sentN) не тает;
-   на двойном пороге мясорубки — ничего. */
-function sentK() { var fs = CUR().fs, lim = 2 * (diff().grind || 12); return Math.max(0, 1 - (fs.sentN || 0) / lim); }
+/* (3.6, просьба игрока) Сколько ещё дают присланные на этом этаже: их считают волнами —
+   отряд, замена патрульного или поста, проверка, новые машины в пустой кабинет (одна
+   выдача ОКО — одна волна, grp); призванный тварью или ловушкой — сам себе волна.
+   Первая разбитая здесь волна — в полную силу, каждая следующая — на 2,5 % меньше, с
+   сорок первой — ничего. Счёт волн этажа (fs.sentWN) не тает; номер волны помнят
+   последние шестнадцать волн (fs.sentWL) — машины одной волны гибнут рядом по времени. */
+var WAVE_CUT = 0.025;
+function waveNo(f) {
+  var fs = CUR().fs, key = f.wv ? "w" + f.wv : f.grp || "s" + f.id, L = fs.sentWL || (fs.sentWL = []);
+  for (var i = 0; i < L.length; i++) if (L[i][0] === key) return L[i][1];
+  if (fs.sentWN == null && fs.sentN) fs.sentWN = Math.ceil(fs.sentN / 2); /* запись 3.5: счёт сломанных — примерно по две на волну */
+  var n = fs.sentWN = (fs.sentWN || 0) + 1;
+  L.push([key, n]); if (L.length > 16) L.shift();
+  return n;
+}
+function waveK(n) { return Math.max(0, 1 - WAVE_CUT * ((n || 1) - 1)); }
 /* Каратели: тяжёлые машины уровнем-двумя глубже (самые крепкие из них), а на дне комплекса — здешние. */
 function strikePool() {
   var L = G().L, out = [], bad = ["stationary", "cleaner", "mimic", "camera", "turret", "swarm", "stalker", "mines"];
@@ -3135,12 +3147,12 @@ function throwGrenade(id) {
 
 LAB.combat = {
   lootCell: lootCell, fixDrops: fixDrops, canStand: canStand, /* (3.0) добыча — только на клетки, куда можно встать */
-  grind: grindNow, grindK: grindK, sentK: sentK, strike: strike, strikeGo: strikeGo, strikers: strikers, strikeRecall: strikeRecall, ambushPoint: ambushPoint, /* (3.0) мясорубка */
+  grind: grindNow, grindK: grindK, waveK: waveK, strike: strike, strikeGo: strikeGo, strikers: strikers, strikeRecall: strikeRecall, ambushPoint: ambushPoint, /* (3.0) мясорубка */
   /* для проверок: подсказку о патруле — заново */
   _cueReset: function () { cueAt = 0; foes.forEach(function (f) { f.cueT = 0; }); },
   throwQuick: throwQuick, pickGrenade: pickGrenade, throwGrenade: throwGrenade, throwables: throwables,
   loadFoes: loadFoes, syncFoes: syncFoes, wake: start, start: start, stop: stop, tick: tick,
-  danger: danger, hunted: hunted, okoComing: okoComing, visibleFoes: visibleFoes, aliveCount: aliveCount, jammed: jammed,
+  danger: danger, hunted: hunted, visibleFoes: visibleFoes, aliveCount: aliveCount, jammed: jammed,
   afterPlayerMove: afterPlayerMove, spendTurns: spendTurns, partingBlows: partingBlows, idleTurn: idleTurn,
   /* для проверок: будто вы молчите уже ms миллисекунд */
   _idleBack: function (ms) { idleAt = Date.now() - ms; }, idleMs: function () { return IDLE_MS; }, grenKind: grenKind, noise: noise, turretsOff: turretsOff, turretsOurs: turretsOurs, turretsHostile: turretsHostile, turretsLeft: turretsLeft,

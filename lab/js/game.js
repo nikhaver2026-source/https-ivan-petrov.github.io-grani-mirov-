@@ -561,17 +561,18 @@ function advanceTime(min, asleep) {
 }
 game.advanceTime = advanceTime;
 
-/* (3.5) Когда не до отдыха. Отдых, тренировка и прочие долгие дела пропускают время
-   одним махом, а машины ОКО в это время не стоят: рядом враг, на этаже тревога или
-   ОКО прочёсывает этаж, каратели идут по следу, сюда идут машины ОКО — отдыха нет.
+/* (3.6) Когда не до отдыха. Отдых, тренировка и прочие долгие дела пропускают время
+   одним махом: рядом враг — отдыха нет, как и прежде; на этаже тревога — тоже, пока ОКО
+   прочёсывает этаж и пока каратели идут по следу. Тревогу ОКО снимает само («Тревога
+   снята», «Замена — в штатном режиме»), и тогда отдыхать снова можно (просьба игрока:
+   «пока есть тревога, отдыхать нельзя; когда ОКО сменило патруль — можно»).
    Возвращает причину словами или null. */
 function restBlock() {
   var cb = LAB.combat, lv = LAB.oko && LAB.oko.level ? LAB.oko.level() : 0;
   if (cb && cb.danger && cb.danger()) return "Не до отдыха: рядом опасность.";
-  if (lv >= 2 && lv <= 5) return "Не до отдыха: на этаже тревога, машины ОКО ищут вас.";
-  if (lv === 6) return "Не до отдыха: ОКО потеряло вас из виду и прочёсывает этаж.";
-  if (cb && cb.strikers && cb.strikers().some(function (q) { return !q.ambush; })) return "Не до отдыха: каратели ОКО идут по вашему следу.";
-  if (cb && cb.okoComing && cb.okoComing()) return "Не до отдыха: сюда идут машины ОКО.";
+  if (lv >= 2 && lv <= 5) return "Не до отдыха: на этаже тревога — подождите, пока ОКО её снимет.";
+  if (lv === 6) return "Не до отдыха: ОКО прочёсывает этаж — тревога ещё не снята.";
+  if (cb && cb.strikers && cb.strikers().some(function (q) { return !q.ambush; })) return "Не до отдыха: каратели ОКО идут по вашему следу — подождите, пока ОКО их отзовёт.";
   return null;
 }
 game.restBlock = restBlock;
@@ -3833,8 +3834,9 @@ function validSave(raw) {
   try { d = typeof raw === "string" ? JSON.parse(raw) : raw; } catch (e) { return null; }
   var g = d && d.g;
   if (!g || typeof g !== "object") return null;
-  /* сохранение другой версии игры не загружается: каждую версию проходят заново */
-  if (!d.meta || d.meta.ver !== LAB.VERSION) return null;
+  /* сохранение другой версии игры не загружается: каждую версию проходят заново;
+     (3.6, просьба игрока) записи «Альфы 3.0» и новее загружаются — их переносит migrate */
+  if (!d.meta || !LAB.keepsSave(d.meta.ver)) return null;
   if (!(g.L >= 1 && g.L <= LAB.LEVELS_N && g.F >= 1 && g.F <= LAB.FLOORS_N)) return null;
   if (!Array.isArray(g.weapons) || !g.weapons.length || typeof g.seed !== "string") return null;
   if (typeof g.hp !== "number" || typeof g.hpMax !== "number" || !(g.hpMax > 0)) return null;
@@ -3912,8 +3914,8 @@ function loadSlot(n, fromBak) {
 }
 game.loadSlot = loadSlot;
 function migrate(g) {
-  /* (3.5) запись без стартового набора больше не встречается: записи прежних версий
-     сбрасываются при смене версии (engine.js), а новая игра набор выдаёт сразу */
+  /* (3.6) запись без стартового набора больше не встречается: переносятся только записи
+     «Альфы 3.0» и новее (engine.js, validSave), а набор в них уже есть */
   var base = newState(g.seed || "lab");
   for (var k in base) if (g[k] === undefined) g[k] = base[k];
   if (!g.st) g.st = base.st;
@@ -3931,6 +3933,11 @@ function migrate(g) {
   (g.weapons || []).forEach(function (w) { if (w && w.mods > 0 && !w.mod) w.mod = { power: w.mods }; });
   /* (2.2) ёмкость оружия — по новому правилу: «Искра» — тридцать, лучше оружие — больше */
   (g.weapons || []).forEach(function (w) { LAB.fixCap(w); });
+  /* (3.6) тренировки записей до «Альфы 3.3»: счёт тренировок без предела — каждые три
+     давали единицу; столько и засчитано из пяти, что дают тренажёр и тир (fixtures.js) */
+  var tr = g.train;
+  if (tr && tr.strPts == null && tr.str != null) tr.strPts = Math.min(5, Math.floor(tr.str / 3));
+  if (tr && tr.aimPts == null && tr.aim != null) tr.aimPts = Math.min(5, Math.floor(tr.aim / 3));
   /* надетая броня — та же запись, что в списке брони (после загрузки это были копии) */
   if (g.armor && g.armors) {
     var am = g.armors.filter(function (a) { return a && a.id === g.armor.id; })[0];
@@ -3946,6 +3953,9 @@ function migrate(g) {
     (g.noteList || []).forEach(function (n) { if (n.x == null && n.src) { try { var r = noteFull(n); n.t = r.t; n.x = r.x; n.a = r.a; } catch (e) { /* */ } } });
     G = G0; noteCache = {};
     g.fs = {}; g.keys = {}; g.codes = {}; g.decks = {}; g.noteIdx = {}; g.melodies = {};
+    /* (3.6) поручения выживших — про помещения, тела и вещи прежних этажей: снимаются,
+       главное остаётся; выжившие на новых этажах попросят о своём */
+    g.quests = (g.quests || []).filter(function (q) { return q && q.type === "main"; });
     g.worldV = WORLD_V; g.relocate = true;
   }
   return g;

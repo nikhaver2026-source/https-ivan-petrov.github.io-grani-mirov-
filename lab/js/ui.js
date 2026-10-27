@@ -215,33 +215,49 @@ function readAll() {
   say(w.title + ". " + w.items.map(function (it, i) { return (i + 1) + ". " + itemText(it); }).join(". "));
 }
 
-/* ════════ ОТРИСОВКА (для зрячих помощников) ════════ */
+/* ════════ ОТРИСОВКА (для зрячих помощников) ════════
+   (3.6) Страница меняется, только когда меняется то, что на ней: каждое изменение
+   страницы — работа для Chromium, а на компьютере с чтецом экрана — и для чтеца.
+   Прежде окно пересобиралось целиком, а строки состояния переписывались при каждом
+   обновлении, даже когда в них ничего не менялось. */
+var shown = { w: null, key: "", i: -1 };
+function setText(el, t) { if (el && el.textContent !== t) el.textContent = t; }
 function render() {
   var box = $("win"), list = $("winList"), tt = $("winTitle");
   if (!box) return;
   var w = top();
-  if (!w) { box.hidden = true; return; }
-  box.hidden = false;
-  tt.textContent = w.title;
-  list.innerHTML = "";
-  w.items.forEach(function (it, i) {
-    var li = document.createElement("li");
-    li.textContent = itemText(it);
-    if (i === w.i) li.className = "cur";
-    if (it.disabled) li.className += " off";
-    li.addEventListener("click", function () { w.i = i; render(); activate(); });
-    list.appendChild(li);
-  });
-  var cur = list.children[w.i];
-  if (cur && cur.scrollIntoView) { try { cur.scrollIntoView({ block: "nearest" }); } catch (e) { /* */ } }
+  if (!w) { if (!box.hidden) box.hidden = true; shown.w = null; return; }
+  if (box.hidden) box.hidden = false;
+  setText(tt, w.title);
+  var texts = w.items.map(function (it) { return itemText(it) + (it.disabled ? "\u0001" : ""); }), key = w.title + "\u0002" + texts.join("\u0003");
+  if (shown.w !== w || shown.key !== key || list.children.length !== w.items.length) {
+    list.innerHTML = "";
+    w.items.forEach(function (it, i) {
+      var li = document.createElement("li");
+      li.textContent = itemText(it);
+      if (it.disabled) li.className = "off";
+      li.addEventListener("click", function () { w.i = i; render(); activate(); });
+      list.appendChild(li);
+    });
+    shown.w = w; shown.key = key; shown.i = -1;
+  }
+  if (shown.i !== w.i) {
+    for (var k = 0; k < list.children.length; k++) {
+      var c = list.children[k], want = (k === w.i ? "cur" : "") + (w.items[k] && w.items[k].disabled ? (k === w.i ? " off" : "off") : "");
+      if (c.className !== want) c.className = want;
+    }
+    shown.i = w.i;
+    var cur = list.children[w.i];
+    if (cur && cur.scrollIntoView) { try { cur.scrollIntoView({ block: "nearest" }); } catch (e) { /* */ } }
+  }
 }
 function refresh() {
   if (screen !== "game" || !gm() || !gm().entered || !gm().CUR.fl) return;
   var g = G(), w = gm().curWeapon();
   var hp = $("hudHp"), wp = $("hudWeapon"), pl = $("hudPlace");
-  if (hp) { hp.textContent = "❤ " + g.hp + "/" + g.hpMax + (g.st.shield ? " 🛡" + g.st.shield : ""); hp.style.color = g.hp < g.hpMax * 0.3 ? "#ff6b6b" : ""; }
-  if (wp) wp.textContent = (g.drawn ? "⚔ " : "") + (w ? (w.ammo === "none" ? w.name : w.name + " " + w.charge + "/" + w.cap) : "—");
-  if (pl) pl.textContent = "Ур. " + g.L + " · эт. " + g.F + " · " + (gm().roomAt(g.x, g.y) ? gm().roomAt(g.x, g.y).name : "коридор");
+  if (hp) { setText(hp, "❤ " + g.hp + "/" + g.hpMax + (g.st.shield ? " 🛡" + g.st.shield : "")); var hc = g.hp < g.hpMax * 0.3 ? "#ff6b6b" : ""; if (hp.labColor !== hc) { hp.labColor = hc; hp.style.color = hc; } }
+  setText(wp, (g.drawn ? "⚔ " : "") + (w ? (w.ammo === "none" ? w.name : w.name + " " + w.charge + "/" + w.cap) : "—"));
+  setText(pl, "Ур. " + g.L + " · эт. " + g.F + " · " + (gm().roomAt(g.x, g.y) ? gm().roomAt(g.x, g.y).name : "коридор"));
   drawMapSoon();
   if (top()) render();
 }
@@ -387,6 +403,12 @@ function mainMenu(silentIntro) {
    (2.0) так же — когда сборка начинает прохождение заново. */
 function freshNote() {
   var fs0 = LAB.freshStart, rr = LAB.restartRun;
+  /* (3.6) записи прежней версии перенесены (engine.js): сказать, что изменится при загрузке */
+  if (fs0 && fs0.kept && !fs0.wiped && !fs0.said && !(rr && rr.wiped)) {
+    fs0.said = true;
+    if (LAB.verNum(fs0.from) >= LAB.WORLD_SINCE) return "Это новая версия игры — " + LAB.VERSION + ". Сохранения прежней версии остались: загрузите запись и играйте дальше с того же места. Настройки остались прежними. Что изменилось — в главном меню, в разделе «Что нового?».";
+    return "Это новая версия игры — " + LAB.VERSION + ". Сохранения прежней версии остались: загрузите запись — этажи построены заново, и вы начнёте у входа на свой этаж с прежним уровнем, оружием, бронёй, вещами, кредитами и пропусками; поручения выживших сняты. Настройки остались прежними. Что изменилось — в главном меню, в разделе «Что нового?».";
+  }
   if (fs0 && fs0.wiped && !fs0.said) {
     fs0.said = true;
     /* (2.2) сменилась и версия, и прохождение — хватит одного сообщения */

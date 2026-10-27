@@ -103,8 +103,11 @@ function boot() {
   }
   /* нажали клавишу или коснулись — игра на экране, что бы ни сказали события окна
      (3.5: и после паузы приложения — в фоне касаний не бывает; речь в фоне ждёт,
-     и застрявший фон оставил бы игру без голоса) */
-  ["pointerdown", "keydown"].forEach(function (ev) { window.addEventListener(ev, function () { if ((why.blur || why.min || why.pause) && !document.hidden) { delete why.min; delete why.pause; bgSet("blur", false); } }, true); });
+     и застрявший фон оставил бы игру без голоса). (3.6) Кроме свёрнутого окна на
+     компьютере: свёрнутое окно Windows может остаться активным и получать клавиши, и
+     нажатие будило звук в свёрнутой игре. Свёрнуто ли окно, знает главный процесс —
+     он сверяет это раз в секунду (labBgSet), а клавиши в свёрнутое окно не пускает. */
+  ["pointerdown", "keydown"].forEach(function (ev) { window.addEventListener(ev, function () { if ((why.blur || why.min || why.pause) && !document.hidden && !(LAB.desktop && why.min)) { delete why.min; delete why.pause; bgSet("blur", false); } }, true); });
   window.labPause = function () { bgSet("pause", true); return LAB.settings.bgDim || LAB.selftesting ? 1 : 0; };
   window.labResume = function () { delete why.blur; bgSet("pause", false); };
   /* для проверок: в приложении — отметка в журнале устройства */

@@ -27,7 +27,7 @@ protocol.registerSchemesAsPrivileged([{
 // Звук с первой секунды, без щелчка мышью: игроку нечем «разрешить» звук.
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
-const VERSION = 'Альфа 3.5';
+const VERSION = 'Альфа 3.6';
 const TITLE = 'Подземная лаборатория ' + VERSION;
 // Самопроверка (сборка на серверах GitHub): игра проходит все этажи, пишет
 // итог в журнал и закрывается с кодом 0 (всё хорошо) или 1.
@@ -161,6 +161,18 @@ async function serve(request) {
 
 let win = null;
 function js(code) { if (win && !win.isDestroyed()) win.webContents.executeJavaScript(code).catch(() => { }); }
+// (3.6) Что игра знает о своём окне: свёрнуто (или скрыто) и без фокуса. Сообщается
+// только перемена; force — сообщить снова, даже если игра уже знает.
+let bgTimer = null, bgSent = { min: null, blur: null };
+function bgSync(force) {
+  if (!win || win.isDestroyed()) { if (bgTimer) { clearInterval(bgTimer); bgTimer = null; } return; }
+  let min = false, blur = false;
+  try { min = win.isMinimized() || !win.isVisible(); blur = !win.isFocused(); } catch (_) { return; }
+  // свёрнутое окно может остаться в фокусе — в фоне оно всё равно
+  if (min) blur = true;
+  if (force || min !== bgSent.min) { bgSent.min = min; js(`window.labBgSet&&window.labBgSet('min',${min})`); }
+  if (force || blur !== bgSent.blur) { bgSent.blur = blur; js(`window.labBgSet&&window.labBgSet('blur',${blur})`); }
+}
 
 function createWindow() {
   const icon = path.join(ROOT, 'icon-512.png');
@@ -175,6 +187,11 @@ function createWindow() {
   // Клавиши приложения: F11 — во весь экран. Сочетания браузера (обновить
   // страницу, инструменты разработчика) отключены: они сбили бы игру.
   win.webContents.on('before-input-event', (event, input) => {
+    // (3.6) Свёрнутое окно Windows может остаться активным, если других окон нет, и
+    // получать клавиши. Игре они не нужны: прежде нажатие в свёрнутое окно будило в
+    // игре звук (страница считала, что её вернули на экран), а шаги и выстрелы шли
+    // вслепую. Свёрнутое окно клавиш не получает, а игра снова слышит, что свёрнута.
+    if (!SELFTEST && win.isMinimized()) { event.preventDefault(); bgSync(true); return; }
     if (input.type !== 'keyDown') return;
     if (input.key === 'F11') { win.setFullScreen(!win.isFullScreen()); event.preventDefault(); return; }
     const k = String(input.key || '').toLowerCase();
@@ -202,11 +219,19 @@ function createWindow() {
   // (2.2) Окно свернули, развернули, увели с него фокус — игра узнаёт отсюда:
   // со снятым backgroundThrottling страница сама не видит, что её свернули.
   // В самопроверке окно может быть без фокуса — ей это не мешает.
+  // (3.6) События окна приходят не всегда и не всегда по порядку (свернуть кнопкой на
+  // панели задач, Win+D, Win+M, свернуть единственное окно, сменить окно чтецом экрана),
+  // а пропущенное «свернули» оставляло игру звучать в наушниках. Поэтому главный процесс
+  // раз в секунду сам сверяет, свёрнуто ли окно и в фокусе ли оно, и сообщает игре
+  // перемену (bgSync); события окна — лишь чтобы сообщить её сразу.
   if (!SELFTEST) {
-    win.on('minimize', () => js("window.labBgSet&&window.labBgSet('min',true)"));
-    win.on('restore', () => js("window.labBgSet&&window.labBgSet('min',false)"));
-    win.on('blur', () => js("window.labBgSet&&window.labBgSet('blur',true)"));
-    win.on('focus', () => js("window.labBgSet&&window.labBgSet('blur',false)"));
+    win.on('minimize', () => bgSync());
+    win.on('restore', () => bgSync());
+    win.on('hide', () => bgSync());
+    win.on('show', () => bgSync());
+    win.on('blur', () => bgSync());
+    win.on('focus', () => bgSync());
+    bgTimer = setInterval(() => bgSync(), 1000);
   }
   win.once('ready-to-show', () => { win.show(); win.focus(); win.webContents.focus(); });
   // Закрытие окна (Alt+F4, «Закрыть приложение»): игра сперва пишет автозапись.
@@ -238,6 +263,7 @@ function createWindow() {
   win.webContents.on('did-finish-load', () => {
     pageOpened = true;
     pushTts();
+    if (!SELFTEST) { bgSent = { min: null, blur: null }; bgSync(); }
     // Страница открылась на запасной ступени — с неё и начинать в следующий раз.
     if (gpuStep > 0) { try { fs.writeFileSync(gpuStepFile, String(gpuStep), 'utf8'); } catch (_) { } }
     log('страница открыта; голоса: ' + ttsState + ', ' + voices().length + (sapi ? '; ' + sapi.diag() : ''));

@@ -26,16 +26,19 @@ LAB.store = store;
    Windows (у них то же хранилище страницы). Метка версии — «lab_ver»:
    другая или её нет — стираются слоты, автозапись и их запасные копии.
    (2.2, просьба игрока) Остаются настройки (речь, громкость, навигатор и
-   прочие), отметка о прологе и подсказка про облегчённый режим. */
+   прочие), отметка о прологе и подсказка про облегчённый режим.
+   (3.6, просьба игрока) Записи «Альфы 3.0» и новее не стираются: загрузка их переносит
+   (game.js, migrate) — уровень, оружие, броня, вещи, кредиты и пропуска остаются, этажи
+   строятся заново. Записи старше — с чистого листа, как прежде. */
 var VER_KEY = "lab_ver";
 LAB.freshStart = (function () {
-  var was = store.get(VER_KEY), out = { from: was || "", wiped: 0 };
+  var was = store.get(VER_KEY), out = { from: was || "", wiped: 0, kept: 0 };
   if (was === LAB.VERSION) return out;
   try {
     var keys = [];
     for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k && /^lab_(slot\d|auto)/.test(k)) keys.push(k); }
-    keys.forEach(function (k) { localStorage.removeItem(k); });
-    out.wiped = keys.length;
+    if (was && LAB.keepsSave(was)) out.kept = keys.length;
+    else { keys.forEach(function (k) { localStorage.removeItem(k); }); out.wiped = keys.length; }
   } catch (e) { /* хранилища нет — и стирать нечего */ }
   store.set(VER_KEY, LAB.VERSION);
   return out;
