@@ -285,7 +285,13 @@ safeFn(()=>{const e0=castCustomEffect;castCustomEffect=function(sp){
 const КанонБой={очередь:[],после(fn){this.очередь.push(fn);}};
 safeFn(()=>{const s0=startCombat;startCombat=function(c,opts){КанонБой.очередь=[];const r=s0.apply(this,arguments);const q=КанонБой.очередь;КанонБой.очередь=[];
  const cb=G.combat;if(cb&&G.inCombat)for(const fn of q)safeFn(()=>fn(cb));return r;};});
-safeFn(()=>{const s0=Undead.onStrike.bind(Undead);Undead.onStrike=function(m,mdmg){let d=s0(m,mdmg);
+/* ── КанонЦепь: одна обёртка на каждую общую функцию (Альфа 1.0) ──
+   Части канона (магия, твари, звери, вещи, умения) прежде оборачивали одни и те же функции заново, до пяти раз
+   подряд: удар твари и героя, начало боя, силу чар, встречу в мире и победу. Теперь каждая часть кладёт свой шаг
+   сюда, а обёртка у функции одна (в конце модуля). Шаги идут в прежнем порядке: что раньше вкладывалось глубже,
+   то и выполняется раньше. Сбой одного шага не роняет остальные. */
+const КанонЦепь={шаги:{onStrike:[],onHit:[],onStart:[],spellK:[],beastAt:[],victory:[]},шаг(где,f){this.шаги[где].push(f);}};
+КанонЦепь.шаг("onStrike",function(m,d,mdmg){
  try{const cb=G.combat;if(!cb||!(d>0))return d;const лог=t=>safeFn(()=>cbLog(t));
   if(cb.кнУзел){const u=cb.кнУзел;cb.кнУзел=null;cb.путы=(Number(cb.путы)||0)+1;d=Math.round(d*0.5);Канон.звук("oc_chain",{kind:"combat",gain:0.5});лог("Тварь шагнула в узел: удар вполсилы, и следующий ход она теряет.");}
   if(cb.кнОтброс){cb.кнОтброс=0;лог("Отброшенная тварь не достала.");return 0;}
@@ -300,9 +306,9 @@ safeFn(()=>{const s0=Undead.onStrike.bind(Undead);Undead.onStrike=function(m,mdm
    if(cb.hp<=0)setTimeout(()=>safeFn(()=>{if(G.inCombat&&G.combat===cb)victory();}),300);}
   if((Number(cb.кнКопья)||0)>0){cb.кнКопья--;const в=Math.max(1,Math.round(3+КанонОсобое.h()*0.5));cb.hp-=в;safeFn(()=>updateCombat());лог(`Тварь напоролась на копья: −${в}.`);}
  }catch(_){}
- return Math.max(0,d);};});
+ return Math.max(0,d);});
 /* ход героя: яд, жала, бесы — жгут тварь; вскрытие и боль — сильнее удар */
-safeFn(()=>{const h0=Undead.onHit.bind(Undead);Undead.onHit=function(m,dmg){let d=h0(m,dmg);
+КанонЦепь.шаг("onHit",function(m,d,dmg){
  try{const cb=G.combat;if(!cb)return d;let доп=0;const лог=t=>safeFn(()=>cbLog(t));
   if(cb.кнВскрытие&&d>0)d=Math.round(d*(1+cb.кнВскрытие));
   if((Number(cb.кнБоль)||0)>0&&d>0){d+=cb.кнБоль;cb.кнБоль=0;}
@@ -310,16 +316,16 @@ safeFn(()=>{const h0=Undead.onHit.bind(Undead);Undead.onHit=function(m,dmg){let 
   if((Number(cb.кнЖала)||0)>0){cb.кнЖала--;доп+=2;}
   if((Number(cb.кнБесы)||0)>0){cb.кнБесы--;доп+=3+Math.round(КанонОсобое.h()*0.4);}
   if(доп)лог(`Яд, жала и бесы: ещё −${доп}.`);d+=доп;}catch(_){}
- return d;};});
+ return d;});
 /* начало боя: узел и растяжка, поставленные заранее */
-safeFn(()=>{const s0=Undead.onStart.bind(Undead);Undead.onStart=function(m){const r=s0(m);
+КанонЦепь.шаг("onStart",function(m,r){
  try{КанонБой.после(cb=>{
   if(buffActive("кн_узел")){delete G.buffs["кн_узел"];cb.путы=(Number(cb.путы)||0)+1;setTimeout(()=>safeFn(()=>narrate("Тварь начинает бой в узле: первый ход она потеряла.",{interrupt:false,cat:"combat"})),1500);}
   if(buffActive("кн_растяжка")){delete G.buffs["кн_растяжка"];cb.путы=(Number(cb.путы)||0)+1;Канон.звук("kn_str_pluck",{kind:"combat",gain:0.55});
    setTimeout(()=>safeFn(()=>narrate("Струна-растяжка зазвенела: вы готовы раньше, чем тварь.",{interrupt:false,cat:"combat"})),1200);}});}catch(_){}
- return r;};});
+ return r;});
 /* заём и прочие цены чар */
-safeFn(()=>{const k0=Power.spellK.bind(Power);Power.spellK=function(sp){let k=k0(sp);if(buffActive("кн_долг"))k*=1.3;return k;};});
+КанонЦепь.шаг("spellK",function(sp,k){if(buffActive("кн_долг"))k*=1.3;return k;});
 /* бегство: узел невозврата не пускает; удавшийся побег нарушает зарок */
 safeFn(()=>{const f0=fight;fight=function(a){const cb=G.combat;
  if(a==="flee"&&cb&&(Number(cb.кнУзелБоя)||0)>0){cb.кнУзелБоя--;Канон.звук("oc_chain",{kind:"combat",gain:0.5});
@@ -379,14 +385,14 @@ const КанонТвари={
   return перв?`${m.n} — ${m.о.charAt(0).toLowerCase()+m.о.slice(1).replace(/\.$/,"")}.${ум.length?` Повадки: ${ум.join("; ")}.`:""}`
    :`${m.n}${ум.length?`: ${ум.join("; ")}`:""}.`;}};
 /* мир: изредка вместо здешнего зверя — тварь канона той же земли; в краях канона чаще (§12) */
-safeFn(()=>{const b0=beastAt;beastAt=function(x,y,c,доля){const m=b0.apply(this,arguments);
+КанонЦепь.шаг("beastAt",function(m,x,y,c,доля){
  if(!m||G.dark||m.нем||m.кн)return m;
  try{const t=c&&c.terrain&&c.terrain[0];let p=0.16;const край=safeFn(()=>Канон.край&&Канон.край(x,y),null);if(край)p=0.6;
   if(hashName(x,y,18011)>=p)return m;
   let cand=край&&край.твари&&край.твари.length?край.твари.map(id=>КАНОН_ТВАРЬ[id]).filter(Boolean):КанонТвари.подходят(t);
   if(!cand.length)return m;const пик=cand[Math.floor(hashName(x,y,18012)*cand.length)%cand.length];
   if(КанонТвари.есть(пик,"слепой")&&КанонТвари.тихо())return m;
-  return пик;}catch(_){return m;}};});
+  return пик;}catch(_){return m;}});
 /* подземелья: в пещерных ярусах изредка — пещерные твари канона; в подземельях канона — свои (§12) */
 safeFn(()=>{const d0=dungeonPool;dungeonPool=function(base){const r=d0.apply(this,arguments);
  try{const p=G.place;if(!p||G.dark)return r;const своё=safeFn(()=>Канон.подземелье&&Канон.подземелье(p),null);
@@ -399,16 +405,16 @@ safeFn(()=>{const p0=Undead.prep.bind(Undead);Undead.prep=function(m,depth){cons
    if(КанонТвари.есть(r,"держатель")){r.hp=Math.round(r.hp*1.6);r.dmg=Math.round((Number(r.dmg)||1)*1.2);r.xp=Math.round((Number(r.xp)||0)*1.8);r.gold=Math.round((Number(r.gold)||0)*1.6);}}}catch(_){}
  return r;};});
 /* начало боя: кто это; засада, слепота, мирный нрав, свет */
-safeFn(()=>{const s0=Undead.onStart.bind(Undead);Undead.onStart=function(m){const r=s0(m);
+КанонЦепь.шаг("onStart",function(m,r){
  try{if(m&&m.кн)КанонБой.после(cb=>{
   if(КанонТвари.есть(m,"засада")&&!buffActive("кн_растяжка")&&!КанонТвари.тихо())cb.кнЗасада=1;
   if(КанонТвари.есть(m,"роет"))cb.кнСнизу=1;
   if(КанонТвари.есть(m,"гасит_свет")&&!buffActive("свет"))cb.кнТьма=1;
   if(КанонТвари.есть(m,"морок"))cb.кнМорок=2;
   setTimeout(()=>safeFn(()=>{if(G.combat===cb)narrate(КанонТвари.слово(m),{interrupt:false,cat:"combat"});}),1900);});}catch(_){}
- return r;};});
+ return r;});
 /* удар героя оружием: панцирь, морок, тьма, сети, звон, реген, тревога */
-safeFn(()=>{const h0=Undead.onHit.bind(Undead);Undead.onHit=function(m,dmg){let d=h0(m,dmg);
+КанонЦепь.шаг("onHit",function(m,d,dmg){
  try{const cb=G.combat;if(!m||!m.кн||!cb||!(d>0))return d;const лог=t=>safeFn(()=>cbLog(t));
   if((Number(cb.кнМорок)||0)>0&&Math.random()<0.35){cb.кнМорок--;лог("Удар прошёл сквозь морок.");return 0;}
   if(cb.кнСетиГерой){cb.кнСетиГерой=0;d=Math.round(d*0.6);лог("Руки в сетях: удар слабее.");}
@@ -420,9 +426,9 @@ safeFn(()=>{const h0=Undead.onHit.bind(Undead);Undead.onHit=function(m,dmg){let 
   if(КанонТвари.есть(m,"тревога")){cb.кнУдаров=(Number(cb.кнУдаров)||0)+1;if(cb.кнУдаров===3&&cb.hp>(Number(m.hp)||1)*0.3){cb.hp=Math.round(cb.hp*1.25);Канон.звук("guard_shout",{kind:"combat",gain:0.5});лог(`${m.n} поднял тревогу: на шум пришли свои, тварь крепче.`);}}
   if(КанонТвари.есть(m,"трус")&&cb.hp-d>0&&cb.hp-d<(Number(m.hp)||1)*0.2&&Math.random()<0.3){cb.кнБегство=1;}
  }catch(_){}
- return d;};});
+ return d;});
 /* удар твари: засада, снизу, яд, кража, оглушение, огонь, пора, память, чары */
-safeFn(()=>{const s0=Undead.onStrike.bind(Undead);Undead.onStrike=function(m,mdmg){let d=s0(m,mdmg);
+КанонЦепь.шаг("onStrike",function(m,d,mdmg){
  try{const cb=G.combat;if(!m||!m.кн||!cb)return d;const лог=t=>safeFn(()=>cbLog(t));
   if(КанонТвари.есть(m,"мирный"))return 0;
   if(cb.кнЗасада){cb.кнЗасада=0;d=Math.round(d*1.8);лог(`${m.n} бьёт из засады!`);}
@@ -441,7 +447,7 @@ safeFn(()=>{const s0=Undead.onStrike.bind(Undead);Undead.onStrike=function(m,mdm
   if(cb.кнБегство){cb.кнБегство=0;setTimeout(()=>safeFn(()=>{if(G.inCombat&&G.combat===cb){endCombat();safeFn(()=>{refresh();resumeLocationMusic();});
     narrate(`${m.n} сбежала.`,{interrupt:false,cat:"combat"});}}),500);}
  }catch(_){}
- return d;};});
+ return d;});
 /* чары по твари: смена уязвимости, зеркало, звон ломает стекло; шёпот твари дороже чары */
 safeFn(()=>{const k0=bossDamageK;bossDamageK=function(kind,school){let k=k0.apply(this,arguments);
  try{const cb=G.combat,m=cb&&cb.m;if(!m||!m.кн||kind!=="spell")return k;
@@ -449,19 +455,19 @@ safeFn(()=>{const k0=bossDamageK;bossDamageK=function(kind,school){let k=k0.appl
   if(КанонТвари.есть(m,"звон_ломает")&&["bell","strings","sound","echo"].indexOf(school)>=0)k*=2;
   if(КанонТвари.есть(m,"смена")){const сх=["fire","crystal","light"][Math.floor((Number(cb.кнХод)||0)%3)];k*=(school===сх||(сх==="crystal"&&school==="water"))?1.6:0.7;}}catch(_){}
  return k;};});
-safeFn(()=>{const k0=Power.spellK.bind(Power);Power.spellK=function(sp){let k=k0(sp);const m=G.inCombat&&G.combat&&G.combat.m;if(m&&КанонТвари.есть(m,"путает_чары"))k*=1.2;return k;};});
+КанонЦепь.шаг("spellK",function(sp,k){const m=G.inCombat&&G.combat&&G.combat.m;if(m&&КанонТвари.есть(m,"путает_чары"))k*=1.2;return k;});
 /* ход боя: смена уязвимости вслух; украденное возвращается с победой */
 safeFn(()=>{const u0=updateCombat;updateCombat=function(){const r=u0.apply(this,arguments);
  try{const cb=G.combat,m=cb&&cb.m;if(m&&m.кн&&КанонТвари.есть(m,"смена")){const ход=Math.floor((Number(cb.кнШаги)||0)/2);cb.кнШаги=(Number(cb.кнШаги)||0)+1;
   if(ход!==(Number(cb.кнХод)||0)){cb.кнХод=ход;safeFn(()=>cbLog(`${m.n} меняется: теперь её берёт ${["огонь","лёд","свет"][ход%3]}.`));}}}catch(_){}
  return r;};});
-safeFn(()=>{const v0=victory;victory=function(){const m=G.combat&&G.combat.m;const r=v0.apply(this,arguments);
+КанонЦепь.шаг("victory",function(m,cb,r){
  try{if(m&&m.кн){const s=Канон.ст();const з=Number(s.украдено&&s.украдено[m.id])||0;if(з>0){s.украдено[m.id]=0;G.gold=(Number(G.gold)||0)+з;
    setTimeout(()=>safeFn(()=>narrate(`Украденное вернулось: ${з} золота.`,{interrupt:false})),1200);}
   /* пять побед над тварью канона — её повадки изучены: знание «слабость твари» */
   if(!s.твариПобед||typeof s.твариПобед!=="object")s.твариПобед={};s.твариПобед[m.id]=(Number(s.твариПобед[m.id])||0)+1;
   if(s.твариПобед[m.id]===5)safeFn(()=>Lore.add("weak",m.id,m.n,"пять побед: повадки изучены"));}}catch(_){}
- return r;};});
+ return r;});
 /* бестиарий: твари канона отдельным разделом, с голосом вида */
 CMD.knvoice=id=>{const m=КАНОН_ТВАРЬ[id];if(!m){narrate("Голос не найден.");return;}narrate(m.n);
  if(!safeFn(()=>foeProfileCue(m,"idle",{gain:0.7}),false))narrate(НЕТ_ЗАПИСИ,{interrupt:false});
@@ -483,11 +489,11 @@ safeFn(()=>{const r0=renderBestiary;renderBestiary=function(){const r=r0.apply(t
    страх, отражение возвращает порчу, закалка держит обвал, нить наследия ускоряет ремесло. */
 safeFn(()=>{const f0=Morpho.fleeK.bind(Morpho);Morpho.fleeK=function(m){let k=Number(f0(m))||0;
  if(buffActive("кн_след"))k+=0.5;k+=Number(safeFn(()=>КанонЗвери.бегство(),0))||0;return k;};});
-safeFn(()=>{const b0=beastAt;beastAt=function(x,y,c,доля){const m=b0.apply(this,arguments);if(!m)return m;
+КанонЦепь.шаг("beastAt",function(m,x,y,c,доля){if(!m)return m;
  try{if(buffActive("кн_убежище")&&Math.random()<0.85)return null;
   if(buffActive("кн_след")&&Math.random()<0.4)return null;
   if(КанонЗвери.есть("нежить_мимо","седло")&&/undead|spirit|bone/.test(String(safeFn(()=>foeFamily(m),""))))return null;}catch(_){}
- return m;};});
+ return m;});
 safeFn(()=>{const b0=buffSet;buffSet=function(id,ч){
  try{if(id==="страх"&&buffActive("кн_разум"))return false;
   if(["проклятие","слепота","страх","загрязнение"].indexOf(id)>=0&&КанонБаффы.отразить(id))return false;
@@ -652,7 +658,7 @@ Object.assign(КанонЗвери,{
   if(k("починка")){const r=safeFn(()=>Канон.починить(),null);if(r)return `${a.n} поработал:${r}`;return "";}
   return "";}});
 /* бой: чутьё, первый удар, заслон, крик, стая, слабые бегут */
-safeFn(()=>{const s0=Undead.onStart.bind(Undead);Undead.onStart=function(m){const r=s0(m);
+КанонЦепь.шаг("onStart",function(m,r){
  try{КанонБой.после(cb=>{const говор=[];
   if(buffActive("кн_засов")){delete G.buffs["кн_засов"];cb.путы=(Number(cb.путы)||0)+1;говор.push("Засов держит: тварь бьётся в запертое и теряет ход.");}
   const сем=String(safeFn(()=>foeFamily(m),"")||"");
@@ -670,26 +676,26 @@ safeFn(()=>{const s0=Undead.onStart.bind(Undead);Undead.onStart=function(m){cons
   if(КанонЗвери.есть("пугает_слабых")&&!m.boss&&(Number(m.lvl)||1)<=(Number(G.level)||1)-3&&Math.random()<0.5){const кто=КанонЗвери.кто("пугает_слабых");
    setTimeout(()=>safeFn(()=>{if(G.inCombat&&G.combat===cb){endCombat();safeFn(()=>{refresh();resumeLocationMusic();});narrate(`${кто} воет — и ${m.n} бежит без боя.`,{interrupt:false,cat:"combat"});}}),700);}
   if(говор.length)setTimeout(()=>safeFn(()=>{if(G.combat===cb)narrate(говор.join(" "),{interrupt:false,cat:"combat"});}),2600);});}catch(_){}
- return r;};});
-safeFn(()=>{const s0=Undead.onStrike.bind(Undead);Undead.onStrike=function(m,mdmg){let d=s0(m,mdmg);
+ return r;});
+КанонЦепь.шаг("onStrike",function(m,d,mdmg){
  try{const cb=G.combat;if(!cb||!(d>0))return d;const лог=t=>safeFn(()=>cbLog(t));
   if(cb.кнОтЯда&&buffActive("яд")){cb.кнОтЯда=0;delete G.buffs["яд"];G.poisoned=null;safeFn(()=>Hv.cure("poison",3));лог(`${КанонЗвери.кто("снять_яд")} снимает с вас яд.`);}
   if(cb.кнМимо){cb.кнМимо=0;лог(`${КанонЗвери.кто("промах_первого")} кричит — первый удар твари уходит мимо.`);return 0;}
   if(cb.кнЗаслон){cb.кнЗаслон=0;лог(`${КанонДары.кто("заслон1")} гасит удар твари.`);Канон.звук("oc_wood_hit",{kind:"combat",gain:0.45});return 0;}
   const ч=КанонЗвери.доля("часть_удара");if(ч>0)d=Math.max(1,Math.round(d*(1-Math.min(0.4,ч))));
   if(КанонЗвери.есть("стихии_слабее","седло")&&/spirit|fiend|dragon/.test(String(safeFn(()=>foeFamily(m),""))))d=Math.max(1,Math.round(d*0.7));}catch(_){}
- return d;};});
-safeFn(()=>{const h0=Undead.onHit.bind(Undead);Undead.onHit=function(m,dmg){let d=h0(m,dmg);
- try{const cb=G.combat;if(cb&&cb.кнЧуял&&d>0){cb.кнЧуял=0;d=Math.round(d*1.5);}}catch(_){}return d;};});
+ return d;});
+КанонЦепь.шаг("onHit",function(m,d,dmg){
+ try{const cb=G.combat;if(cb&&cb.кнЧуял&&d>0){cb.кнЧуял=0;d=Math.round(d*1.5);}}catch(_){}return d;});
 /* после победы: части, ядра, детали ловушек; удача — больше золота */
-safeFn(()=>{const v0=victory;victory=function(){const cb=G.combat;const m=cb&&cb.m;const r=v0.apply(this,arguments);
+КанонЦепь.шаг("victory",function(m,cb,r){
  try{if(!m)return r;const сем=String(safeFn(()=>foeFamily(m),"")||"");const t=[];
   const доб=(k,ok)=>{if(!ok||!КанонДары.есть(k)||Math.random()>=0.4)return;const L=safeFn(()=>Spoils.roll(m),[])||[];const рес=L[0]||(сем==="construct"?"шестерня Зодчих":"кость");
    КанонЗвери.дать(рес,1);t.push(`${КанонДары.кто(k)}: с поля подобрано — ${рес}.`);};
   доб("части",true);доб("детали",/construct|humanoid/.test(сем));доб("ядро",!/humanoid/.test(сем));
   if(КанонЗвери.есть("удача")){const з=Math.max(1,Math.round((Number(m.gold)||10)*0.15));G.gold=(Number(G.gold)||0)+з;t.push(`Сорока приносит удачу: ещё ${з} золота.`);}
   if(t.length)setTimeout(()=>safeFn(()=>narrate(t.join(" "),{interrupt:false})),1600);}catch(_){}
- return r;};});
+ return r;});
 /* сквозь стену, подкоп, завал: раз в сутки — через особое действие канона «сквозь стену» */
 Object.assign(КанонЗвери,{
  проход(){const ст=Канон.ст();if(ст.проходЗверя===G.day)return "Сегодня зверь уже водил вас сквозь камень.";
@@ -757,7 +763,7 @@ const КанонДары={
 safeFn(()=>{const d0=ART.describe.bind(ART);ART.describe=function(a,кратко){const r=d0(a,кратко);const x=a&&a.кн&&КАНОН_ВЕЩЬ[a.кн];
  return x&&x.дело?`${r} Дело: ${x.дело}.`:r;};});
 /* чары своей школы сильнее */
-safeFn(()=>{const k0=Power.spellK.bind(Power);Power.spellK=function(sp){let k=k0(sp);const v=КанонВещи.школа(sp&&sp.school);if(v)k*=1+v;return k;};});
+КанонЦепь.шаг("spellK",function(sp,k){const v=КанонВещи.школа(sp&&sp.school);if(v)k*=1+v;return k;});
 /* путь: тишина ночью и в лесу, добыча с промысла */
 safeFn(()=>{const mg=mountGift;mountGift=function(k){let v=mg(k);
  try{if(k==="скрытность"){let доп=0;if(КанонВещи.есть("тишина_ночь")&&safeFn(()=>isNight(),false))доп+=0.25;
@@ -765,24 +771,24 @@ safeFn(()=>{const mg=mountGift;mountGift=function(k){let v=mg(k);
   if(k==="добыча"){const д=КанонВещи.мои().filter(a=>КанонВещи.особ(a,"добыча")!=null).length;if(д)return Math.round((Number(v)||0)+д);}}catch(_){}
  return v;};});
 /* встречи: люди и звери реже, если вещь велит */
-safeFn(()=>{const b0=beastAt;beastAt=function(x,y,c,доля){const m=b0.apply(this,arguments);if(!m)return m;
+КанонЦепь.шаг("beastAt",function(m,x,y,c,доля){if(!m)return m;
  try{const сем=String(safeFn(()=>foeFamily(m),"")||"");if(КанонВещи.есть("люди_мимо")&&сем==="humanoid"&&Math.random()<0.5)return null;
-  if(КанонВещи.есть("звери_мирны")&&сем==="beast"&&Math.random()<0.4)return null;}catch(_){}return m;};});
+  if(КанонВещи.есть("звери_мирны")&&сем==="beast"&&Math.random()<0.4)return null;}catch(_){}return m;});
 safeFn(()=>{const a0=Hv.add.bind(Hv);Hv.add=function(id,stage,from,silent){if(id==="disease"&&КанонВещи.есть("без_мора"))return "";return a0(id,stage,from,silent);};});
 /* бегство: раз в сутки — наверняка */
 safeFn(()=>{const f0=Morpho.fleeK.bind(Morpho);Morpho.fleeK=function(m){let k=Number(f0(m))||0;if(КанонВещи.есть("бегство_раз")&&!КанонВещи.ст().бегство)k+=2;return k;};});
 safeFn(()=>{const o0=Director.onFlee.bind(Director);Director.onFlee=function(m){const r=o0(m);safeFn(()=>{if(КанонВещи.есть("бегство_раз")&&!КанонВещи.ст().бегство){КанонВещи.ст().бегство=1;
   narrate(`${КанонВещи.кто("бегство_раз")} унесла вас из боя.`,{interrupt:false});}});return r;};});
 /* удар героя: против нечисти и слияния, полнолуние, счёт побед */
-safeFn(()=>{const h0=Undead.onHit.bind(Undead);Undead.onHit=function(m,dmg){let d=h0(m,dmg);
+КанонЦепь.шаг("onHit",function(m,d,dmg){
  try{if(!(d>0)||!КанонВещи.мои().length)return d;const сем=String(safeFn(()=>foeFamily(m),"")||"");
   if(КанонВещи.есть("против_нечисти")&&/undead|spirit|fiend|bone/.test(сем))d=Math.round(d*1.33);
   if(КанонВещи.есть("против_слияния")&&m&&m.кн&&String(m.пакет||"")==="17")d=Math.round(d*1.33);
   if(КанонВещи.есть("полнолуние_сила")&&КанонЗвери.полнолуние())d=Math.round(d*1.2);
   if(КанонВещи.есть("урон_за_победы"))d+=Math.min(15,Math.floor((Number(КанонВещи.ст().побед)||0)/50));}catch(_){}
- return d;};});
+ return d;});
 /* удар твари: заряды, переигрыш, испуг побеждённых, раны, хрупкость, чары твари, мана из запаса */
-safeFn(()=>{const s0=Undead.onStrike.bind(Undead);Undead.onStrike=function(m,mdmg){let d=s0(m,mdmg);
+КанонЦепь.шаг("onStrike",function(m,d,mdmg){
  try{const cb=G.combat;if(!cb||!(d>0)||!КанонВещи.мои().length)return d;const s=КанонВещи.ст();const лог=t=>safeFn(()=>cbLog(t));const сем=String(safeFn(()=>foeFamily(m),"")||"");
   if(КанонВещи.есть("щит_заряды")){if(s.заряды==null)s.заряды=5;if(s.заряды>0){s.заряды--;лог(`${КанонВещи.кто("щит_заряды")}: заряд гасит удар, осталось ${s.заряды}.`);return 0;}}
   if(КанонВещи.есть("отражение")&&/spirit|fiend|dragon/.test(сем)&&Math.random()<0.1){лог(`${КанонВещи.кто("отражение")} гасит чары твари.`);return 0;}
@@ -794,9 +800,9 @@ safeFn(()=>{const s0=Undead.onStrike.bind(Undead);Undead.onStrike=function(m,mdm
   if(мало&&КанонВещи.есть("мана_раз")&&(Number(G.day)||1)>=(Number(s.манаРаз)||0)+3){s.манаРаз=Number(G.day)||1;G.mana=G.manaMax;лог(`${КанонВещи.кто("мана_раз")}: мана вернулась вся.`);}
   else if(мало&&КанонВещи.есть("мана_запас")&&!s.манаЗапас){s.манаЗапас=1;G.mana=Math.min(G.manaMax,(Number(G.mana)||0)+КанонВещи.доля("мана_запас"));лог(`${КанонВещи.кто("мана_запас")} отдаёт запас маны.`);}
   else if(мало&&КанонВещи.есть("мана_день")&&!s.манаДень){s.манаДень=1;G.mana=Math.min(G.manaMax,(Number(G.mana)||0)+КанонВещи.доля("мана_день"));лог(`${КанонВещи.кто("мана_день")}: сила рода — мана прибыла.`);}}catch(_){}
- return d;};});
+ return d;});
 /* победа: счёт павших (мана навсегда, копильник), побеждённые, вещь канона с хозяина места */
-safeFn(()=>{const v0=victory;victory=function(){const cb=G.combat;const m=cb&&cb.m;const r=v0.apply(this,arguments);
+КанонЦепь.шаг("victory",function(m,cb,r){
  try{if(!m)return r;const s=КанонВещи.ст();const t=[];s.побед=(Number(s.побед)||0)+1;if(!s.побеждено||typeof s.побеждено!=="object")s.побеждено={};
   if(m.id){s.побеждено[m.id]=(Number(s.побеждено[m.id])||0)+1;const ks=Object.keys(s.побеждено);if(ks.length>400)delete s.побеждено[ks[0]];}
   if(КанонВещи.есть("мана_за_павших")){s.павших=(Number(s.павших)||0)+1;if(s.павших%10===0&&(Number(s.маныДоб)||0)<20){s.маныДоб=(Number(s.маныДоб)||0)+1;G.manaMax=(Number(G.manaMax)||0)+1;t.push(`${КанонВещи.кто("мана_за_павших")}: мана навсегда +1.`);}}
@@ -805,7 +811,7 @@ safeFn(()=>{const v0=victory;victory=function(){const cb=G.combat;const m=cb&&cb
     const из=свои.length?свои:КАНОН_ВЕЩИ.filter(x=>!КанонВещи.есть_у(x.id));if(из.length){const x=из[Math.floor(Math.random()*из.length)];const a=КанонВещи.дать(x.id,m.n);
      if(a)t.push(`С твари — вещь из преданий: ${a.имя}. ${x.о}.${safeFn(()=>ART.works(a),true)?"":" Пока не слушается: ей нужен опыт посильнее."}`);}}}
   if(t.length)setTimeout(()=>safeFn(()=>narrate(t.join(" "),{interrupt:false})),2200);}catch(_){}
- return r;};});
+ return r;});
 
 /* ── 12. Края канона ──
    Каждый из 17 пакетов канона — край: земля со своими поселениями, зданиями, объектами, подземельями,
@@ -853,28 +859,28 @@ const КанонУмения={
 /* прибавки умений — в единый счёт характеристик */
 safeFn(()=>{const s0=ART.sum.bind(ART);ART.sum=function(stat){let v=s0(stat);const d=КанонУмения.стат(stat);if(d){v+=d;const st=ART_STAT_BY_ID[stat];if(st)v=Math.max(-st.предел,Math.min(st.предел,v));
   v=st&&st.ед==="доля"?Math.round(v*1000)/1000:Math.round(v);}return v;};});
-safeFn(()=>{const k0=Power.spellK.bind(Power);Power.spellK=function(sp){let k=k0(sp);const v=КанонУмения.школа(sp&&sp.school);if(v)k*=1+v;return k;};});
+КанонЦепь.шаг("spellK",function(sp,k){const v=КанонУмения.школа(sp&&sp.school);if(v)k*=1+v;return k;});
 safeFn(()=>{const x0=Zver.xp.bind(Zver);Zver.xp=function(a,n){if(КанонУмения.есть("питомцы_опыт"))n=Math.round((Number(n)||0)*1.25);return x0(a,n);};});
 /* умения в бою: отчаяние, палуба, камень; одиночка; переигрыш и раны — как у вещей */
-safeFn(()=>{const h0=Undead.onHit.bind(Undead);Undead.onHit=function(m,dmg){let d=h0(m,dmg);
+КанонЦепь.шаг("onHit",function(m,d,dmg){
  try{if(!(d>0)||!КанонУмения.мои().length)return d;const сем=String(safeFn(()=>foeFamily(m),"")||"");
   if(КанонУмения.есть("отчаяние")&&G.hp<G.hpMax/3)d=Math.round(d*1.25);if(КанонУмения.есть("палуба")&&G.ship)d=Math.round(d*1.15);
   if(КанонУмения.есть("против_камня")&&/construct|giant/.test(сем))d=Math.round(d*1.33);
-  if(КанонУмения.есть("полнолуние_сила")&&КанонЗвери.полнолуние())d=Math.round(d*1.2);}catch(_){}return d;};});
-safeFn(()=>{const s0=Undead.onStrike.bind(Undead);Undead.onStrike=function(m,mdmg){let d=s0(m,mdmg);
+  if(КанонУмения.есть("полнолуние_сила")&&КанонЗвери.полнолуние())d=Math.round(d*1.2);}catch(_){}return d;});
+КанонЦепь.шаг("onStrike",function(m,d,mdmg){
  try{if(!(d>0)||!КанонУмения.мои().length)return d;const s=Канон.ст();if(!s.ум||typeof s.ум!=="object")s.ум={};const st=s.ум;const лог=t=>safeFn(()=>cbLog(t));
   if(КанонУмения.есть("одиночка")&&!Zver.pets().length)d=Math.max(1,Math.round(d*0.9));
   if(КанонУмения.есть("испуг_побеждённых")&&m&&(Number(((КанонВещи.ст().побеждено)||{})[m.id])||0)>0)d=Math.max(1,Math.round(d*0.85));
   if(КанонУмения.есть("стойк_за_раны")){if(d>=(Number(G.hpMax)||100)*0.25)st.раны=(Number(st.раны)||0)+1;d=Math.max(1,d-Math.min(6,Math.floor((Number(st.раны)||0)/10)));}
   if(d>=G.hp&&КанонУмения.есть("переиграть")&&st.переиграть!==G.day){st.переиграть=G.day;d=Math.max(0,G.hp-1);лог(`${КанонУмения.кто("переиграть")}: смертельный удар прошёл вскользь.`);}}catch(_){}
- return d;};});
+ return d;});
 /* победа: новизна (первая победа над видом — опыт вдвое), мана за павших, дела людей края */
-safeFn(()=>{const v0=victory;victory=function(){const cb=G.combat;const m=cb&&cb.m;const было=m?(Number(((КанонВещи.ст().побеждено)||{})[m.id])||0):1;const r=v0.apply(this,arguments);
+КанонЦепь.шаг("victory",{до:function(m,cb){return m?(Number(((КанонВещи.ст().побеждено)||{})[m.id])||0):1;},после:function(m,cb,r,было){
  try{if(!m)return r;const t=[];
   if(КанонУмения.есть("новизна")&&было===0){const x=Math.max(1,Math.round(Number(m.xp)||((Number(m.lvl)||1)*4)));G.xp=(Number(G.xp)||0)+x;t.push(`Первопроход: новый вид — ещё ${x} опыта.`);safeFn(()=>checkLevelUp&&checkLevelUp());}
   if(КанонУмения.есть("мана_за_павших")){const s=Канон.ст();if(!s.ум)s.ум={};s.ум.павших=(Number(s.ум.павших)||0)+1;if(s.ум.павших%10===0&&(Number(s.ум.маныДоб)||0)<20){s.ум.маныДоб=(Number(s.ум.маныДоб)||0)+1;G.manaMax=(Number(G.manaMax)||0)+1;t.push("Жилы силы: мана навсегда +1.");}}
   const д=Канон.ст().дела||{};for(const [cid,z] of Object.entries(д))if(z&&!z.сделано&&z.тварь===m.id){z.сделано=1;const c=КАНОН_ЛЮДИ[cid];t.push(`Дело исполнено: ${z.n} повержен${/а$/.test(z.n.split(" ")[0])?"а":""}. Вернитесь к ${c?c.имя:"заказчику"} за наградой.`);}
-  if(t.length)setTimeout(()=>safeFn(()=>narrate(t.join(" "),{interrupt:false})),2600);}catch(_){}return r;};});
+  if(t.length)setTimeout(()=>safeFn(()=>narrate(t.join(" "),{interrupt:false})),2600);}catch(_){}return r;}});
 safeFn(()=>{const d0=defeat;defeat=function(){const r=d0.apply(this,arguments);try{if(КанонУмения.есть("удача_после_смерти"))Канон.ст().удачаДо=(Number(G.day)||1)+1;}catch(_){}return r;};});
 /* ── открытие края ── */
 const КанонКрай={
@@ -980,3 +986,19 @@ safeFn(()=>{const b0=Zver.beastView.bind(Zver);Zver.beastView=function(u){const 
  try{const a=this.byUid(u);if(a&&["сквозь","роет","завал"].some(k=>КанонЗвери.особ(a,k)!=null)){const box=document.getElementById("zvBody");
    if(box&&!box.querySelector('[data-cmd="knpass"]'))box.insertAdjacentHTML("afterbegin",`<button type="button" class="item" data-cmd="knpass" data-speak="Пройти сквозь камень со зверем: раз в сутки">Пройти сквозь камень со зверем</button>`);}}catch(_){}
  return r;};});
+
+/* ── КанонЦепь: обёртки — по одной на функцию ── */
+safeFn(()=>{const s0=Undead.onStrike.bind(Undead);Undead.onStrike=function(m,mdmg){let d=s0(m,mdmg);
+ for(const f of КанонЦепь.шаги.onStrike){try{d=f(m,d,mdmg);}catch(_){}}return d;};});
+safeFn(()=>{const h0=Undead.onHit.bind(Undead);Undead.onHit=function(m,dmg){let d=h0(m,dmg);
+ for(const f of КанонЦепь.шаги.onHit){try{d=f(m,d,dmg);}catch(_){}}return d;};});
+safeFn(()=>{const s0=Undead.onStart.bind(Undead);Undead.onStart=function(m){let r=s0(m);
+ for(const f of КанонЦепь.шаги.onStart){try{r=f(m,r);}catch(_){}}return r;};});
+safeFn(()=>{const k0=Power.spellK.bind(Power);Power.spellK=function(sp){let k=k0(sp);
+ for(const f of КанонЦепь.шаги.spellK){try{k=f(sp,k);}catch(_){}}return k;};});
+safeFn(()=>{const b0=beastAt;beastAt=function(x,y,c,доля){let m=b0.apply(this,arguments);
+ for(const f of КанонЦепь.шаги.beastAt){try{m=f(m,x,y,c,доля);}catch(_){}}return m;};});
+safeFn(()=>{const v0=victory;victory=function(){const cb=G.combat;const m=cb&&cb.m;const Ш=КанонЦепь.шаги.victory;
+ const до=Ш.map(h=>{try{return h.до?h.до(m,cb):undefined;}catch(_){return undefined;}});
+ const r=v0.apply(this,arguments);
+ Ш.forEach((h,i)=>{try{(h.после||h)(m,cb,r,до[i]);}catch(_){}});return r;};});

@@ -1,6 +1,6 @@
-# Сборка приложения «Грань Миров» 17.5 для Android на серверах GitHub.
+# Сборка приложения «Грань Миров» Альфа 1.0 для Android на серверах GitHub.
 #
-# Полная сборка: один APK grani-mirov-17.5-full.apk, в нём вся игра —
+# Полная сборка: один APK grani-mirov-alpha-1.0-full.apk, в нём вся игра —
 # index.html и все записи sounds с голосовым пакетом Gemini, без сжатия и без
 # потерь, сколько бы она ни весила. Игрок ставит один файл — и всё уже внутри,
 # сеть не нужна, докачивать и ставить отдельно нечего.
@@ -120,19 +120,41 @@ jobs:
 
       - name: Ключ подписи
         env:
+          # Постоянный ключ — из секретов репозитория (те же, что у «Подземной лаборатории»): ANDROID_KEYSTORE_B64
+          # (хранилище в base64), ANDROID_KEYSTORE_PASS, ANDROID_KEY_ALIAS, ANDROID_KEY_PASS; прежние имена
+          # ANDROID_KS_PASS и ANDROID_KS_ALIAS тоже читаются. Значения не печатаются.
           KS_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
-          KS_PASS_S: ${{ secrets.ANDROID_KS_PASS }}
-          KS_ALIAS_S: ${{ secrets.ANDROID_KS_ALIAS }}
+          KS_PASS_A: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          KS_PASS_B: ${{ secrets.ANDROID_KS_PASS }}
+          KS_ALIAS_A: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KS_ALIAS_B: ${{ secrets.ANDROID_KS_ALIAS }}
           KS_KEY_PASS_S: ${{ secrets.ANDROID_KEY_PASS }}
         run: |
           if [ -n "$KS_B64" ]; then
-            echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/upload.keystore"
+            KS="$RUNNER_TEMP/upload.keystore"; umask 077
+            # из секрета — самая длинная строка знаков base64: пробелы, переводы строк и кавычки при вставке не мешают
+            B64="$(printf '%s' "$KS_B64" | tr -d ' \t\r\n' | grep -oE '[A-Za-z0-9+/]{64,}={0,2}' | awk '{ if (length($0) > length(b)) b = $0 } END { print b }')"
+            [ -n "$B64" ] && echo "::add-mask::$B64"
+            if [ -z "$B64" ] || ! printf '%s' "$B64" | base64 -d > "$KS" 2>/dev/null; then
+              echo "::error title=Ключ подписи::Секрет ANDROID_KEYSTORE_B64 не раскодируется (длина значения ${#KS_B64})."; exit 1
+            fi
+            P="$(printf '%s' "${KS_PASS_A:-$KS_PASS_B}" | tr -d '\r\n')"
+            [ -n "$P" ] || { echo "::error title=Ключ подписи::Нет пароля хранилища: секрет ANDROID_KEYSTORE_PASS."; exit 1; }
+            echo "::add-mask::$P"
+            A="$(printf '%s' "${KS_ALIAS_A:-$KS_ALIAS_B}" | tr -d '\r\n')"
+            # псевдоним не задан — берётся единственный из хранилища
+            [ -n "$A" ] || A="$(keytool -list -v -keystore "$KS" -storepass "$P" 2>/dev/null | grep -m1 -E '^(Alias name|Имя псевдонима):' | sed 's/^[^:]*: *//')"
+            KP="$(printf '%s' "${KS_KEY_PASS_S:-$P}" | tr -d '\r\n')"; echo "::add-mask::$KP"
+            if ! keytool -list -keystore "$KS" -storepass "$P" -alias "$A" > /dev/null 2>&1; then
+              echo "::error title=Ключ подписи::Хранилище из секретов не открывается: не тот пароль или псевдоним (длина пароля ${#P})."; exit 1
+            fi
             {
-              echo "KS_FILE=$RUNNER_TEMP/upload.keystore"
-              echo "KS_PASS=$KS_PASS_S"
-              echo "KS_ALIAS=$KS_ALIAS_S"
-              echo "KS_KEY_PASS=$KS_KEY_PASS_S"
-              echo "KEY_NOTE=подписано ключом загрузки из секретов репозитория"
+              echo "KS_FILE=$KS"
+              echo "KS_PASS=$P"
+              echo "KS_ALIAS=$A"
+              echo "KS_KEY_PASS=$KP"
+              echo "KEY_KIND=permanent"
+              echo "KEY_NOTE=подписано постоянным ключом из секретов репозитория"
             } >> "$GITHUB_ENV"
           else
             D="$HOME/.grani-signing"; mkdir -p "$D"; chmod 700 "$D"
@@ -144,14 +166,18 @@ jobs:
                 -dname "CN=Grani Mirov, O=Grani Mirov, C=RU"
             fi
             P="$(cat "$D/pass")"; echo "::add-mask::$P"
+            echo "::warning::Секрет ANDROID_KEYSTORE_B64 не задан: APK подписан запасным ключом сборки из кэша."
             {
               echo "KS_FILE=$D/grani.keystore"
               echo "KS_PASS=$P"
               echo "KS_ALIAS=grani"
               echo "KS_KEY_PASS=$P"
+              echo "KEY_KIND=cache"
               echo "KEY_NOTE=подписано собственным ключом сборки"
             } >> "$GITHUB_ENV"
           fi
+          FP=$(keytool -list -v -keystore "$(grep '^KS_FILE=' "$GITHUB_ENV" | tail -1 | cut -d= -f2-)" -storepass "$(grep '^KS_PASS=' "$GITHUB_ENV" | tail -1 | cut -d= -f2-)" 2>/dev/null | grep -m1 "SHA256:" | sed 's/.*SHA256: *//')
+          echo "::notice title=Ключ подписи::SHA-256 сертификата: ${FP:-?}"
 
       # Полный APK: обычный APK игры (страница, код, ресурсы) + все записи без
       # сжатия в архиве ZIP64, подпись v1. Файл больше 2 ГиБ, а выпуск принимает
@@ -168,20 +194,20 @@ jobs:
           python3 android/full-apk.py "$SMALL" sounds "$RUNNER_TEMP/full-unsigned.apk"
           rm -rf android/app/build
           # Подпись v1: у ZIP64 подписи v2/v3 система не принимает (см. шапку).
-          SIGN="jarsigner -J-Xmx8g -keystore $KS_FILE -storepass:env KS_PASS -keypass:env KS_KEY_PASS -digestalg SHA-256 -signedjar grani-mirov-17.5-full.apk"
+          SIGN="jarsigner -J-Xmx8g -keystore $KS_FILE -storepass:env KS_PASS -keypass:env KS_KEY_PASS -digestalg SHA-256 -signedjar grani-mirov-alpha-1.0-full.apk"
           $SIGN -sigalg SHA256withRSA "$RUNNER_TEMP/full-unsigned.apk" "$KS_ALIAS" || $SIGN "$RUNNER_TEMP/full-unsigned.apk" "$KS_ALIAS"
           rm -f "$RUNNER_TEMP/full-unsigned.apk"
-          ls -la grani-mirov-17.5-full.apk
-          jarsigner -J-Xmx8g -verify grani-mirov-17.5-full.apk | grep "jar verified"
+          ls -la grani-mirov-alpha-1.0-full.apk
+          jarsigner -J-Xmx8g -verify grani-mirov-alpha-1.0-full.apk | grep "jar verified"
           # Разбор тем же кодом ZIP, что у Android (libziparchive в aapt2).
-          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging grani-mirov-17.5-full.apk | head -4
+          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging grani-mirov-alpha-1.0-full.apk | head -4
           df -h /
 
       - name: Полный APK — на страницу сборки
         id: art
         uses: actions/upload-artifact@v7
         with:
-          path: grani-mirov-17.5-full.apk
+          path: grani-mirov-alpha-1.0-full.apk
           archive: false
           compression-level: 0
           retention-days: 90
@@ -225,7 +251,7 @@ jobs:
       # её поверх («Приложение не установлено»), и выпуск останавливается.
       - name: Ключ подписи — тот же, что у прежней сборки
         run: |
-          python3 - "${PREV_APK:-}" grani-mirov-17.5-full.apk <<'PY'
+          python3 - "${PREV_APK:-}" grani-mirov-alpha-1.0-full.apk "$HOME/.grani-signing" <<'PY'
           import sys, zipfile, subprocess, re, os, tempfile
           def cert(apk):
               z = zipfile.ZipFile(apk)
@@ -234,14 +260,33 @@ jobs:
               out = subprocess.run(["keytool", "-printcert", "-file", f.name], capture_output=True, text=True).stdout
               os.unlink(f.name)
               return re.search(r"SHA256:\s*([0-9A-F:]+)", out).group(1)
+          def owner(apk):
+              z = zipfile.ZipFile(apk)
+              n = [i for i in z.namelist() if re.match(r"META-INF/[^/]+\.(RSA|EC|DSA)$", i, re.I)][0]
+              f = tempfile.NamedTemporaryFile(delete=False, suffix=".p7"); f.write(z.read(n)); f.close()
+              out = subprocess.run(["keytool", "-printcert", "-file", f.name], capture_output=True, text=True).stdout
+              os.unlink(f.name)
+              m = re.search(r"(?:Owner|Владелец):\s*(.+)", out); return m.group(1).strip() if m else ""
+          def cache_fp(d):
+              ks, pw = os.path.join(d, "grani.keystore"), os.path.join(d, "pass")
+              if not (os.path.exists(ks) and os.path.exists(pw)): return None
+              out = subprocess.run(["keytool", "-list", "-v", "-keystore", ks, "-storepass", open(pw).read().strip()], capture_output=True, text=True).stdout
+              m = re.search(r"SHA256:\s*([0-9A-F:]+)", out); return m.group(1) if m else None
           new = cert(sys.argv[2]); print("отпечаток ключа новой сборки:  ", new)
           if not sys.argv[1]: print("прежней сборки нет — сверять не с чем"); sys.exit(0)
           old = cert(sys.argv[1]); print("отпечаток ключа прежней сборки:", old)
-          if old != new:
-              print("::error::Ключ подписи сменился: новая сборка не встанет поверх прежней. Выпуск остановлен. "
-                    "Если ключ сборки в кэше Actions потерян, верните его или решите, что игрокам придётся переустановить игру.")
-              sys.exit(1)
-          print("ключ тот же — новая сборка встанет поверх прежней")
+          if old == new: print("ключ тот же — новая сборка встанет поверх прежней"); sys.exit(0)
+          # Единственная разрешённая смена: прежняя сборка подписана запасным ключом из кэша, новая — постоянным
+          # из секретов (по слову игрока). Тогда поверх прежней она не встанет: проверяется установка начисто,
+          # а в выпуске сказано, как перенести сохранение через файл.
+          # запасной ключ узнаётся по отпечатку из кэша, а если кэш уже истёк — по владельцу, которого ему давала сборка
+          было_запасным = cache_fp(sys.argv[3]) == old or owner(sys.argv[1]).startswith("CN=Grani Mirov, O=Grani Mirov")
+          if os.environ.get("KEY_KIND") == "permanent" and было_запасным:
+              print("::notice::Переход с запасного ключа сборки на постоянный: эта сборка ставится начисто, сохранения — через файл.")
+              with open(os.environ["GITHUB_ENV"], "a") as e: e.write("PREV_APK=\nKEY_SWITCH=1\n")
+              sys.exit(0)
+          print("::error::Ключ подписи сменился: новая сборка не встанет поверх прежней. Выпуск остановлен.")
+          sys.exit(1)
           PY
 
       # Проверка до выпуска: полный APK ставится и запускается на эмуляторах —
@@ -262,7 +307,7 @@ jobs:
           disk-size: 24G
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: bash android/update-check.sh "${PREV_APK:-}" grani-mirov-17.5-full.apk
+          script: bash android/update-check.sh "${PREV_APK:-}" grani-mirov-alpha-1.0-full.apk
 
       - name: Установка на Android 15
         uses: reactivecircus/android-emulator-runner@v2
@@ -273,7 +318,7 @@ jobs:
           disk-size: 16G
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: bash android/install-check.sh grani-mirov-17.5-full.apk
+          script: bash android/install-check.sh grani-mirov-alpha-1.0-full.apk
 
       # Android 16 — с Google Play, как у игроков.
       - name: Установка на Android 16
@@ -285,7 +330,7 @@ jobs:
           disk-size: 16G
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: bash android/install-check.sh grani-mirov-17.5-full.apk
+          script: bash android/install-check.sh grani-mirov-alpha-1.0-full.apk
 
       # Выпуск «android-latest» несёт ссылку на полный APK (он больше предела
       # выпуска в 2 ГиБ). Пробная сборка из ветки (Run workflow) выпуск не трогает.
@@ -297,14 +342,15 @@ jobs:
           gh release delete android-latest --cleanup-tag -y || true
           FULL="${{ steps.art.outputs.artifact-url }}"
           [ -n "$FULL" ] || FULL="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          SIZE=$(stat -c %s grani-mirov-17.5-full.apk)
+          SIZE=$(stat -c %s grani-mirov-alpha-1.0-full.apk)
           read -r GB NEED TOTAL < <(python3 -c "import math,sys; s=int(sys.argv[1])/1e9; print(f'{s:.2f}'.replace('.',','), math.ceil(2*s+1), math.ceil(3*s+1))" "$SIZE")
           UPD="Ставится поверх прежней версии, сохранения остаются."
           [ -n "${PREV_RUN:-}" ] && UPD="Ставится поверх прежней версии, сохранения остаются (проверено на Android 12: обновление со сборки ${PREV_RUN}); ставится и запускается на Android 12, 15 и 16."
+          [ -n "${KEY_SWITCH:-}" ] && UPD="Эта версия подписана постоянным ключом и поверх 17.5 не встанет. Перенос сохранения: в 17.5 — меню, «Сохранить в файл» (файл ляжет в «Загрузки»); удалите 17.5, на вопрос, оставить ли данные, ответьте «Нет»; поставьте Альфу 1.0 и в меню выберите «Загрузить из файла». Дальше обновления снова ставятся поверх."
           cat > "$RUNNER_TEMP/notes.md" <<EOF
           Свежая сборка из main ($GITHUB_SHA); ${KEY_NOTE}.
 
-          Полная сборка — один файл grani-mirov-17.5-full.apk (${GB} ГБ, ${SIZE} байт): вся игра и все голоса внутри, без сжатия и без потерь, докачивать и ставить отдельно ничего не нужно. Сеть игре не нужна.
+          Полная сборка — один файл grani-mirov-alpha-1.0-full.apk (${GB} ГБ, ${SIZE} байт): вся игра и все голоса внутри, без сжатия и без потерь, докачивать и ставить отдельно ничего не нужно. Сеть игре не нужна.
 
           Прямая ссылка на файл (скачивание начинается сразу, нужен вход в GitHub): $FULL
 
@@ -315,5 +361,5 @@ jobs:
           Скачанный файл должен весить ровно ${SIZE} байт; если меньше — загрузка оборвалась, скачайте заново.
           EOF
           gh release create android-latest --target "$GITHUB_SHA" \
-            --title "Грань Миров 17.5 для Android (сборка ${GITHUB_RUN_NUMBER})" \
+            --title "Грань Миров Альфа 1.0 для Android (сборка ${GITHUB_RUN_NUMBER})" \
             --notes-file "$RUNNER_TEMP/notes.md"

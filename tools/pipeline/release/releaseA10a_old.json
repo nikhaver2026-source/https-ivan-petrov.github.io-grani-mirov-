@@ -1,0 +1,45 @@
+{
+ "fn": {
+  "magicSlotSwipe": "function magicSlotSwipe(fingers,dir){\n const row=MAGIC_SLOT_MAP[fingers];if(!row||row[dir]===undefined)return false;\n const i=row[dir];const sp=SPELLS[i];\n safeFn(()=>UI.natStep(\"ui_select\",0.5,0.88+i*0.045));\n if(!sp){narrate(`Слот ${i+1} пуст.`,{interrupt:true});return true;}\n narrate(`Слот ${i+1}: ${sp.n}.`,{interrupt:true});\n safeFn(()=>castSpell(i));\n return true;}",
+  "safeOpenMagicPanel": "function safeOpenMagicPanel(){\n try{\n  let m=document.getElementById(\"magicPanel\");\n  if(!m){\n   m=document.createElement(\"div\");m.id=\"magicPanel\";m.className=\"overlay\";m.hidden=true;m.setAttribute(\"role\",\"dialog\");m.setAttribute(\"aria-modal\",\"true\");m.setAttribute(\"aria-label\",\"Панель магии\");\n   m.innerHTML='<div class=\"sheet\"><h2>Магия</h2><div id=\"magicSlots\" class=\"list\"></div><p>Двенадцать слотов по свайпам: один палец — 1–4, два пальца — 5–8, три пальца — 9–12 (вверх, вправо, влево, вниз). Двойное касание четырьмя пальцами — закрыть.</p><button type=\"button\" data-magic-close>Закрыть</button></div>';\n   document.body.appendChild(m);m.querySelector('[data-magic-close]').addEventListener('click',()=>closeMagicPanel());\n  }\n  const list=m.querySelector('#magicSlots'); list.innerHTML='';\n  const known=Array.isArray(G.spells)?G.spells:[];\n  safeFn(()=>registerCustomSpells());\n  for(let i=0;i<Math.max(12,SPELLS.length);i++){\n   const sp=SPELLS[i]||{n:`Слот ${i+1}`,cost:0};const b=document.createElement('button');b.type='button';b.className='item';b.dataset.magicIndex=i;\n   /* Резонанс называется до траты: незрячему игроку важно услышать, во что\n      обойдётся чужая стихия, прежде чем он её тронет. */\n   const рез=(SPELLS[i]&&known.includes(sp.n))?safeFn(()=>\" Созвучие: \"+Resonance.слово(sp)+\".\",\"\"):\"\";\n   b.dataset.speak=`Слот ${i+1}: ${sp.n}. Мана ${sp.cost}.${рез}`;\n   b.textContent=`${i+1}. ${sp.n}${known.includes(sp.n)?'':' (не изучено)'}`;\n   b.addEventListener('click',()=>{try{castSpell(i);}catch(e){narrate('Не удалось применить заклинание.');}});list.appendChild(b);\n  }\n  /* Вложенные чары висят тут же, за слотами: жезл нужен в подземелье, а\n     не в башне, где его сделали. */\n  safeFn(()=>{\n   const мои=chargedList();\n   мои.forEach((it,k)=>{\n    const c=CARRIER_BY_ID[it.вид];if(!c||!c.заряды)return;\n    const b=document.createElement('button');b.type='button';b.className='item';\n    b.dataset.speak=chargedLine(it)+\" Двойное касание — применить.\";\n    b.textContent=`${chargedName(it)} — ${it.заряд} из ${it.макс}`;\n    b.addEventListener('click',()=>{try{chargedUse(k);safeOpenMagicPanel();}catch(e){narrate('Не удалось применить вещь.');}});\n    list.appendChild(b);});});\n  m.hidden=false;m.setAttribute('aria-hidden','false');UI.open();const first=list.querySelector('button');if(first)first.focus();narrate('Панель магии открыта. '+magicSlotHint());\n }catch(e){try{console.error('Magic panel recovery',e);narrate('Панель магии временно недоступна.');}catch(x){}}\n}",
+  "buyCountButtons": "function buyCountButtons(price,cmd,name){\n const цена=Math.max(1,Number(price)||1),золото=Number(G.gold)||0,макс=Math.floor(золото/цена);\n if(макс<1)return `<button data-cmd=\"${cmd(1)}\" data-speak=\"Не хватает золота: ${name} стоит ${цена}, у вас ${золото}.\">Не хватает золота (${цена})</button>`;\n return [1,5,10].filter(k=>k<=макс).map(k=>`<button data-cmd=\"${cmd(k)}\" data-speak=\"Купить ${k} — ${name} — за ${цена*k} золота.\">Купить ${k} (${цена*k})</button>`).join(\"\")\n  +(макс>10?`<button data-cmd=\"${cmd(макс)}\" data-speak=\"Купить на всё золото: ${макс} — ${name} — за ${цена*макс} золота.\">На всё золото: ${макс} (${цена*макс})</button>`:\"\");}"
+ },
+ "props": {
+  "diplosay": [
+   "diplosay(){narrate(safeFn(()=>Diplo.text(),\"Дипломатия.\"),{pri:1,key:\"diplo\"});},"
+  ],
+  "attrssay": [
+   "attrssay(){narrate(safeFn(()=>Attrs.text(),\"Свойства.\"),{pri:1,key:\"attrs\"});},"
+  ],
+  "grimsay": [
+   "grimsay(i){const r=safeFn(()=>grimAt(Number(i)),null);\n  if(!r){narrate(\"Такого заклинания в гримуаре нет.\");return;}\n  safeFn(()=>Bank.play(r.голос||\"magic_shimmer\",{gain:0.45,maxSec:3}));\n  narrate(safeFn(()=>grimLine(r),r.n),{pri:1,key:\"grim\"});},"
+  ],
+  "carriersay": [
+   "carriersay(){narrate(safeFn(()=>Carriers.text(),\"Вложенные чары.\"),{pri:1,key:\"carrier\"});},"
+  ],
+  "carpot": [
+   "carpot(id){caravanPotion(id,1);},"
+  ],
+  "gestpick": [
+   "gestpick(arg){\n  const p=String(arg||\"\").split(\"~\");\n  const s=GEST_SHAPE_BY_ID[p[0]];\n  if(!s){narrate(\"Такой фигуры нет.\");return;}\n  if(p[1]){gestBind(p[0],p[1]);safeFn(()=>renderGestBind());return;}\n  /* Без второго довода — называем, что сейчас на этой фигуре, и предлагаем\n     список действий тем же окном действий. */\n  narrate(gestLine(p[0]),{interrupt:true});},"
+  ],
+  "shoptab": [
+   "shoptab(t){SHOP.tab=t===\"sell\"?\"sell\":\"buy\";SHOP.cat=null;SHOP.sel=null;renderShop();narrate(SHOP.tab===\"buy\"?\"Раздел «Купить»: категории и товары.\":\"Раздел «Продать»: что торговец берёт из вашей сумы.\",{interrupt:true});},"
+  ],
+  "shopcat": [
+   "shopcat(c){SHOP.cat=c===\"all\"?null:c;SHOP.sel=null;renderShop();narrate(SHOP.cat?`Категория: ${(SHOP_CAT_BY_ID[SHOP.cat]||{}).n||c}.`:\"Все категории.\",{interrupt:true});},"
+  ],
+  "tavernevt": [
+   "tavernevt(id){const t=Tavern.happen(id||undefined);if(!t)narrate(Tavern.in()?\"Сегодня в этот час здесь уже всё случилось.\":\"Таверны вокруг нет: её слышно по гулу, смеху и кружкам.\",{interrupt:true});},"
+  ],
+  "buywater": [
+   "buywater(){Body.buyWater();},"
+  ],
+  "buyflask": [
+   "buyflask(arg){const [id,ц]=String(arg).split(\"~\");Body.buyFlask(id,Number(ц)||((FLASK_BY_ID[id]||{}).price)||0);},"
+  ],
+  "zvride": [
+   "zvride(){const m=Zver.mount();if(m){narrate(Zver.dismount(),{interrupt:true});return;}\n  const a=Zver.st().list.find(x=>ZV_FAMILY_BY_ID[x.fam].ездовой);narrate(a?Zver.ride(a.uid):\"Ездового зверя нет: его покупают в зверинцах, приручают или получают в дар.\",{interrupt:true});},"
+  ]
+ }
+}

@@ -204,15 +204,7 @@ const ZvWalk={mv:{x:0,y:-1},last:null,n:0,
   const ход=safeFn(()=>Stable.moveOf(M),"walk");
   const L={fly:["zv_wing","raptor_wing"],swim:["oc_swim","oc_splash"],crawl:["prop_crawl","creatures/cr_spider_step.flac"],dig:["oc_dig"],walk:run?["zv_ride_trot","zv_ride_gallop"]:["zv_ride_walk"]}[ход]||["zv_ride_walk"];
   return ZvSnd.play(L,{dx:0,dy:0.15,maxSec:run?0.75:1,gain:0.9});},
- /* Спутники идут следом: каждый своим шагом, с опозданием на полшага. */
- follow(){const pets=safeFn(()=>Zver.pets(),[])||[];const inWater=safeFn(()=>/water|sea|coast|lake|river/.test(cellContent(G.x,G.y).terrain[0]),false);
-  pets.slice(0,2).forEach((a,i)=>{if(a.ранен||a.задание)return;const f=Zver.fam(a);if(!f)return;
-   /* двое спутников ступают по очереди: на шаг героя — один шаг зверя, а не три шага разом */
-   const редко=pets.length>1?(this.n+i)%2:(f.ход==="fly"?this.n%2:f.ход==="dig"?this.n%3:0);if(редко)return;
-   const p=ZvSnd.prof(a);const L=f.ход==="swim"&&!inWater?["oc_step_soft"]:(p.ш||["oc_step_soft"]);
-   ZvSnd.later(130+i*110,()=>ZvSnd.play(L,Object.assign({maxSec:1,gain:0.55,rate:ZvSnd.rate(a)},ZvSnd.behind(i))));
-   /* голос в пути — изредка */
-   if(Math.random()<0.035)ZvSnd.later(600+i*400,()=>ZvSnd.voice(a,Object.assign({gain:0.7,i},ZvSnd.behind(i))));});},
+ /* Спутники идут следом — ZvWalk.follow в zver155_late.js (Альфа 1.0: прежние версии из zv146 и zv150 сняты). */
  step(){this.n++;this.track();const M=this.mount();if(M){safeFn(()=>this.ride(M));}safeFn(()=>this.follow());safeFn(()=>ZvFind.step());return !!M;}};
 /* Шаг героя: верхом — шаг маунта вместо шагов героя; спутники — следом. */
 safeFn(()=>{const s0=stepSound;stepSound=matKeep(s0,function(){

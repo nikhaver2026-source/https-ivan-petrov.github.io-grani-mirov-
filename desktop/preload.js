@@ -2,7 +2,7 @@
 // и объявляет окно чтецу экрана приложением (клавиши идут в игру).
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('graniDesktop', {
-  version: '17.5', platform: process.platform,
+  version: 'Альфа 1.0', platform: process.platform,
   // «Выход» в меню действий: игра уже сохранилась — закрываем приложение.
   quit: () => ipcRenderer.send('grani-quit'),
   // Голоса Windows: почему не подключились и повторная попытка.

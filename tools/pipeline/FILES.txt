@@ -109,3 +109,9 @@ hron/rost180_late.js
 hron/patch_guide_r180.py
 rost/probe_rost.js
 rost/probe_grind.js
+release/releaseA10a.py
+release/releaseA10a_old.json
+release/releaseA10.py
+audit/audit.js
+audit/wraps.js
+audit/kcep.js

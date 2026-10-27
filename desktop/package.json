@@ -1,7 +1,7 @@
 {
   "name": "grani-mirov",
   "productName": "Грань Миров",
-  "version": "17.5.0",
+  "version": "1.0.0-alpha",
   "description": "Грань Миров — аудиоигра: приложение для компьютера, управление с клавиатуры",
   "main": "main.js",
   "author": "Грань Миров",

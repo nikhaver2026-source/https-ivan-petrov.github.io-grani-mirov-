@@ -139,13 +139,14 @@ function mspellInfo(sp){
   if(sc&&sc.n)р.push(`школа: ${String(sc.n).toLowerCase()}`);
   if(sp.d)р.push(String(sp.d));else if(sp.о)р.push(String(sp.о));
   return р.length?р.join("; ")+".":"";}catch(_){return "";}}
-magicSlotSwipe=function(fingers,dir){
+/* (Альфа 1.0) единственное определение: прежнее в основе снято */
+function magicSlotSwipe(fingers,dir){
  const row=MAGIC_SLOT_MAP[fingers];if(!row||row[dir]===undefined)return false;
  const i=row[dir];const ci=mslotCat(i);const sp=SPELLS[ci];
  safeFn(()=>UI.natStep("ui_select",0.5,0.88+i*0.045));
  if(!sp){narrate(`Слот ${i+1} пуст. Заклинание в слот ставится в панели магии: «Сменить заклинание в слоте».`,{interrupt:true});return true;}
  narrate(`Слот ${i+1}: ${sp.n}.`,{interrupt:true});safeFn(()=>castSpell(ci));return true;};
-safeOpenMagicPanel=function(mode){
+function safeOpenMagicPanel(mode){
  try{
   let m=document.getElementById("magicPanel");
   if(!m){

@@ -147,12 +147,9 @@ safeFn(()=>{РОСТ_ВЕТВИ_ШАГИ.forEach((v,i)=>{BRANCH_STEPS[i]=v;});
 /* ── Древо Граней: пороги со второй ступени в два с половиной раза выше; четвёртая — с 10-го уровня, пятая — с 20-го ── */
 safeFn(()=>{TREE_LEAVES.forEach(l=>{if(Array.isArray(l.шаги)&&!l.__рост180){l.__рост180=1;l.шаги=l.шаги.map((v,i)=>i?Math.round(v*2.5):v);}});
  const s0=Tree.ступень;Tree.ступень=function(id){return Math.min(s0.apply(this,arguments),Рост.древоПредел());};});
-/* ── ремёсла: ступень ремесла дороже ── */
-safeFn(()=>{mastNeed=function(ур){ур=Number(ур)||0;return 40+45*ур*ур;};});
-/* ── мастерство: ступень пути вдвое дороже (прежде 1 + 0,12 на ранг) ── */
-safeFn(()=>{Мастерство170.цена=function(р){return 2+0.25*Math.max(0,(Number(р)||1)-1);};});
-/* ── звери: уровень зверя дороже ── */
-safeFn(()=>{Zver.need=function(a){const l=Number(a&&a.lvl)||1;return 40+30*l+l*l;};});
+/* ── ремёсла, пути мастерства, звери: формулы — в своих местах (Альфа 1.0: прежде перезаписывались здесь):
+   mastNeed(ур) = 40 + 45·ур² — в основе; Мастерство170.цена(р) = 2 + 0,25·(р−1) — masterstvo170_late.js;
+   Zver.need = 40 + 30·L + L² — в основе. ── */
 /* ── окно «Герой»: познание мира рядом с четырьмя осями ── */
 safeFn(()=>{const h0=axesHtml;axesHtml=function(){const h=h0.apply(this,arguments);
  const t=safeFn(()=>Рост.текст(),"");if(!t)return h;

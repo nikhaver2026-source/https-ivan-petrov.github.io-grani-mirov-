@@ -25,7 +25,7 @@
      GitHub Pages. Там же включается и service worker (см. ниже): игра ставится
      на главный экран и работает без сети. -->
 <meta name="theme-color" content="#10121c">
-<title>Грань Миров. Версия 17.5</title>
+<title>Грань Миров. Альфа 1.0</title>
 <style>
 /* Палец, положенный на ползунок, не должен его двигать: браузер по умолчанию
    перебрасывает бегунок в точку касания, и незрячий игрок, просто читая
@@ -106,7 +106,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
 
 <!-- ТИТУЛ -->
 <div id="screen-title" class="screen">
- <h1>Грань Миров <small id="gameVersion" style="font-size:.5em;opacity:.75">Версия 17.5</small></h1>
+ <h1>Грань Миров <small id="gameVersion" style="font-size:.5em;opacity:.75">Альфа 1.0</small></h1>
  <div class="menu">
   <button type="button" data-cmd="check">Проверить звук</button>
   <button type="button" data-cmd="whatsnew">Что нового</button>
@@ -2739,9 +2739,9 @@ SVD.weapons=[
  {id:"svw_perer",n:"Меч Перерождённого",type:"Меч",k:1.0,эфф:"отчаяние",о:"когда здоровья меньше трети, удар крепче на пять"},
  {id:"svw_slepok",n:"Посох Слепков",type:"Посох",k:0.9,эфф:"слепок",о:"с каждой твари Сводов — лишняя сущность"},
  {id:"svw_toplat",n:"Посох Топлых Латников",type:"Посох",k:1.05,эфф:"пробой",о:"пробивает хитин и латы: умение «панцирь» не спасает"}];
-const WEB_VERSION="17.5",APP_VERSION="17.5";
+const WEB_VERSION="Альфа 1.0",APP_VERSION="Альфа 1.0";
 /* У сборки для Android своя строка версии (versionName в build.gradle); с 8.0 все три сборки — 8.0. */
-const ANDROID_VERSION="17.5";
+const ANDROID_VERSION="Альфа 1.0";
 const GAME_VERSION=SVODY_ON?ANDROID_VERSION:IN_APP?APP_VERSION:WEB_VERSION;
 const GVOICE_ON=true;
 /* Номер голосового пакета: растёт, когда пакет пополнился (обходит кэш). */
@@ -3285,6 +3285,16 @@ NEWS.push({v:156,н:"версия 17.5: без «Сначала завершит
   т:"Из боя можно сбежать, убежать от твари или уйти «Покровом тени» — фраза, будто бой надо непременно закончить, убрана отовсюду: шаг, лаз, подъёмник, лестница, рыбалка, узел Сети."});
 NEWS.push({v:157,н:"версия 17.5: Android — файлы и обновление",
   т:"«Сохранить в файл» кладёт файл в «Загрузки», «Загрузить из файла» открывает выбор файла телефона. Старый голосовой пакет больше не занимает память. Удаляя игру, Android предлагает оставить сохранения."});
+NEWS.push({v:158,н:"Альфа 1.0: предания Грани",
+  т:"Новые школы магии и формы плетения, твари, питомцы и скакуны, вещи, умения и семнадцать краёв со своими людьми, богами и делами. Всё живёт в общем мире: встречи, бои, торговля, наставники, поселения."});
+NEWS.push({v:159,н:"Альфа 1.0: рост через познание мира",
+  т:"Уровни, ветви силы, Древо Граней, ремёсла, пути мастерства и звери растут заметно медленнее. С пятого уровня новый уровень требует узнавать мир. Окно «Герой», строка «Познание мира», — чего не хватает."});
+NEWS.push({v:160,н:"Альфа 1.0: опыт за тварь и за знание",
+  т:"Одна и та же порода приедается, тварь много слабее героя почти ничего не даёт, первая победа над новой породой — в полтора раза больше. Новый рецепт, язык, обряд или тайна сами приносят опыт."});
+NEWS.push({v:161,н:"Альфа 1.0: игра проверена и почищена",
+  т:"Полная проверка: сняты мёртвые команды и старые обработчики, которые тихо заменялись новыми, повторные обёртки сведены в одну. Игра ведёт себя как прежде, но работы у неё меньше."});
+NEWS.push({v:162,н:"Альфа 1.0: Android — постоянная подпись",
+  т:"Приложение подписано постоянным ключом. Поверх 17.5 эта версия не встанет: в 17.5 сделайте «Сохранить в файл», удалите игру, не оставляя данных, поставьте Альфу 1.0 и «Загрузить из файла»."});
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* (8.5) Выпуск читается коротко: заголовок, затем факты. */
 function newsLine(n){const н=String(n.н||"");return `${н.charAt(0).toUpperCase()+н.slice(1)}. ${n.т||""}`;}
@@ -9008,14 +9018,7 @@ function handleFourFingerTap(двойное){if(!gameActive())return;
    слот отвечает словами. Четыре пальца остаются речи. */
 const MAGIC_SLOT_MAP={1:{N:0,E:1,S:2,W:3},2:{N:4,E:5,S:6,W:7},3:{N:8,E:9,W:10,S:11}};
 function magicPanelOpen(){const m=document.getElementById('magicPanel');return !!(m&&!m.hidden);}
-function magicSlotSwipe(fingers,dir){
- const row=MAGIC_SLOT_MAP[fingers];if(!row||row[dir]===undefined)return false;
- const i=row[dir];const sp=SPELLS[i];
- safeFn(()=>UI.natStep("ui_select",0.5,0.88+i*0.045));
- if(!sp){narrate(`Слот ${i+1} пуст.`,{interrupt:true});return true;}
- narrate(`Слот ${i+1}: ${sp.n}.`,{interrupt:true});
- safeFn(()=>castSpell(i));
- return true;}
+/* (Альфа 1.0) magicSlotSwipe — единственное определение в fix146_late.js */
 function magicSlotHint(){return "Двенадцать слотов по свайпам: одним пальцем вверх, вправо, вниз, влево — с первого по четвёртый; двумя пальцами так же — с пятого по восьмой; тремя пальцами вверх, вправо, влево, вниз — с девятого по двенадцатый. Двойное касание четырьмя пальцами — закрыть.";}
 /* Прежде палец, задержавшийся на слоте заклинания дольше полусекунды, применял
    его сам. Для незрячего игрока это и есть обычное ощупывание: он ведёт пальцем,
@@ -10577,40 +10580,7 @@ function closeActionMenu(){const m=document.getElementById("actionMenu");
  safeFn(()=>narrate("Меню действий закрыто.",{interrupt:true}));}
 
 /* ════════ ПАНЕЛЬ МАГИИ ════════ */
-function safeOpenMagicPanel(){
- try{
-  let m=document.getElementById("magicPanel");
-  if(!m){
-   m=document.createElement("div");m.id="magicPanel";m.className="overlay";m.hidden=true;m.setAttribute("role","dialog");m.setAttribute("aria-modal","true");m.setAttribute("aria-label","Панель магии");
-   m.innerHTML='<div class="sheet"><h2>Магия</h2><div id="magicSlots" class="list"></div><p>Двенадцать слотов по свайпам: один палец — 1–4, два пальца — 5–8, три пальца — 9–12 (вверх, вправо, влево, вниз). Двойное касание четырьмя пальцами — закрыть.</p><button type="button" data-magic-close>Закрыть</button></div>';
-   document.body.appendChild(m);m.querySelector('[data-magic-close]').addEventListener('click',()=>closeMagicPanel());
-  }
-  const list=m.querySelector('#magicSlots'); list.innerHTML='';
-  const known=Array.isArray(G.spells)?G.spells:[];
-  safeFn(()=>registerCustomSpells());
-  for(let i=0;i<Math.max(12,SPELLS.length);i++){
-   const sp=SPELLS[i]||{n:`Слот ${i+1}`,cost:0};const b=document.createElement('button');b.type='button';b.className='item';b.dataset.magicIndex=i;
-   /* Резонанс называется до траты: незрячему игроку важно услышать, во что
-      обойдётся чужая стихия, прежде чем он её тронет. */
-   const рез=(SPELLS[i]&&known.includes(sp.n))?safeFn(()=>" Созвучие: "+Resonance.слово(sp)+".",""):"";
-   b.dataset.speak=`Слот ${i+1}: ${sp.n}. Мана ${sp.cost}.${рез}`;
-   b.textContent=`${i+1}. ${sp.n}${known.includes(sp.n)?'':' (не изучено)'}`;
-   b.addEventListener('click',()=>{try{castSpell(i);}catch(e){narrate('Не удалось применить заклинание.');}});list.appendChild(b);
-  }
-  /* Вложенные чары висят тут же, за слотами: жезл нужен в подземелье, а
-     не в башне, где его сделали. */
-  safeFn(()=>{
-   const мои=chargedList();
-   мои.forEach((it,k)=>{
-    const c=CARRIER_BY_ID[it.вид];if(!c||!c.заряды)return;
-    const b=document.createElement('button');b.type='button';b.className='item';
-    b.dataset.speak=chargedLine(it)+" Двойное касание — применить.";
-    b.textContent=`${chargedName(it)} — ${it.заряд} из ${it.макс}`;
-    b.addEventListener('click',()=>{try{chargedUse(k);safeOpenMagicPanel();}catch(e){narrate('Не удалось применить вещь.');}});
-    list.appendChild(b);});});
-  m.hidden=false;m.setAttribute('aria-hidden','false');UI.open();const first=list.querySelector('button');if(first)first.focus();narrate('Панель магии открыта. '+magicSlotHint());
- }catch(e){try{console.error('Magic panel recovery',e);narrate('Панель магии временно недоступна.');}catch(x){}}
-}
+/* (Альфа 1.0) safeOpenMagicPanel — единственное определение в fix146_late.js */
 function closeMagicPanel(){const m=document.getElementById('magicPanel');if(!m)return;
  if(m.hidden)return;
  m.hidden=true;m.setAttribute('aria-hidden','true');UI.close();
@@ -17465,11 +17435,7 @@ function caravanBuy(res,qty){
    Счётный товар берётся у любого продавца одинаково: 1, 5, 10 и «на всё
    золото» — как в лавке торговца. Прежде зелья у обоза продавались только по
    одному, а товары обоза — по одному и по пять. */
-function buyCountButtons(price,cmd,name){
- const цена=Math.max(1,Number(price)||1),золото=Number(G.gold)||0,макс=Math.floor(золото/цена);
- if(макс<1)return `<button data-cmd="${cmd(1)}" data-speak="Не хватает золота: ${name} стоит ${цена}, у вас ${золото}.">Не хватает золота (${цена})</button>`;
- return [1,5,10].filter(k=>k<=макс).map(k=>`<button data-cmd="${cmd(k)}" data-speak="Купить ${k} — ${name} — за ${цена*k} золота.">Купить ${k} (${цена*k})</button>`).join("")
-  +(макс>10?`<button data-cmd="${cmd(макс)}" data-speak="Купить на всё золото: ${макс} — ${name} — за ${цена*макс} золота.">На всё золото: ${макс} (${цена*макс})</button>`:"");}
+/* (Альфа 1.0) buyCountButtons — единственное определение в torg160_late.js */
 /* Зелья обоза: дороже прилавка на четверть — везут издалека. */
 function caravanPotions(car){
  const out=[{key:"health",n:"Зелье здоровья",price:19},{key:"mana",n:"Зелье маны",price:25,зелье:"mana"}];
@@ -33805,7 +33771,7 @@ function mastOf(id){
  return {ур:Math.max(0,Math.min(5,Number(r.ур)||0)),
   оп:Math.max(0,Number(r.оп)||0),дел:Math.max(0,Number(r.дел)||0)};}
 function mastLevel(id){return mastOf(id).ур;}
-function mastNeed(ур){return 20+ур*ур*22;}
+function mastNeed(ур){return 40+45*ур*ур;}   /* (18.0) прежде 20 + 22·ур² */
 /* Опыт за работу. Уровень растёт только от сделанного, а не от уровня героя. */
 function mastGain(id,n){
  if(!MAST_BY_ID[id])return false;
@@ -48265,12 +48231,12 @@ const CMD={
  foreopen(){const t=Fore.open();narrate(t,{pri:1,key:"fore"});safeFn(()=>{if(typeof renderLiving==="function")renderLiving();});},
  /* §18: узнать тайный договор державы. Дорого, с риском и только в городе. */
  diploscout(i){safeFn(()=>Diplo.scout(Number(i)));},
- diplosay(){narrate(safeFn(()=>Diplo.text(),"Дипломатия."),{pri:1,key:"diplo"});},
+ 
  /* §4: свойство называет себя и звучит своим голосом. */
  attrsay(id){const a=ATTR_BY_ID[id];if(!a){narrate("Такого свойства нет.");return;}
   safeFn(()=>Bank.play(a.звук,{gain:0.5,maxSec:4}));
   narrate(safeFn(()=>Attrs.line(id),a.n),{pri:1,key:"attr"});},
- attrssay(){narrate(safeFn(()=>Attrs.text(),"Свойства."),{pri:1,key:"attrs"});},
+ 
  foresay(){narrate(Fore.text(),{pri:2,key:"fore"});},
  sfcore(id){spellForgePick("core",id||"");},
  sfelem(id){spellForgePick("elem",id||"");},
@@ -48279,10 +48245,7 @@ const CMD={
  grimschool(id){safeFn(()=>grimPick("school",id||""));},
  grimspec(id){safeFn(()=>grimPick("spec",id||""));},
  grimpage(d){safeFn(()=>grimPage(Number(d)||0));},
- grimsay(i){const r=safeFn(()=>grimAt(Number(i)),null);
-  if(!r){narrate("Такого заклинания в гримуаре нет.");return;}
-  safeFn(()=>Bank.play(r.голос||"magic_shimmer",{gain:0.45,maxSec:3}));
-  narrate(safeFn(()=>grimLine(r),r.n),{pri:1,key:"grim"});},
+ 
  grimlearn(i){safeFn(()=>grimLearn(Number(i)));},
  /* Вложенная чара: выбрать, сделать носитель, применить, зарядить. */
  grimpick(i){safeFn(()=>grimPickSpell(Number(i)));},
@@ -48293,7 +48256,7 @@ const CMD={
   safeFn(()=>chargedMake(GRIM.выбор,v));},
  carrieruse(k){safeFn(()=>chargedUse(Number(k)));},
  carriercharge(k){safeFn(()=>chargedRecharge(Number(k)));},
- carriersay(){narrate(safeFn(()=>Carriers.text(),"Вложенные чары."),{pri:1,key:"carrier"});},
+ 
  quests(){openModal("modal-quests");renderQuests();},
  signs(){openSigns();},
  stashes(){safeFn(()=>openStashes());},
@@ -48410,7 +48373,7 @@ const CMD={
  sail(){if(G.ship)sailLeg();else narrate("Вы не на борту. Найдите порт на побережье.");},
  carbuy(res){caravanBuy(res,1);},
  carbuy5(res){caravanBuy(res,5);},
- carpot(id){caravanPotion(id,1);},
+ 
  carpotn(a){const [id,k]=String(a).split("~");caravanPotion(id,Number(k)||1);},
  carbuyn(a){const [r,k]=String(a).split("~");caravanBuy(r,Number(k)||1);},
  carsell(res){caravanSell(res,false);},
@@ -48497,14 +48460,7 @@ const CMD={
   narrate(ok?"Настройки сохранены на этом устройстве. Они останутся и после закрытия игры."
             :"Сохранить не вышло: браузер не даёт игре память. В частном окне это обычное дело — настройки будут жить до закрытия вкладки.",
    {interrupt:true});},
- gestpick(arg){
-  const p=String(arg||"").split("~");
-  const s=GEST_SHAPE_BY_ID[p[0]];
-  if(!s){narrate("Такой фигуры нет.");return;}
-  if(p[1]){gestBind(p[0],p[1]);safeFn(()=>renderGestBind());return;}
-  /* Без второго довода — называем, что сейчас на этой фигуре, и предлагаем
-     список действий тем же окном действий. */
-  narrate(gestLine(p[0]),{interrupt:true});},
+ 
  testall(){openModal("modal-encyclopedia");buildEncycCats();testAllSounds();},
  silence(){stopEverything();},
  speechstop(){Речь.стоп();safeFn(()=>UI.nat("ui_hush",0.5));vib(15);Speech.request("Тихо.",{key:"stopped"});},
@@ -48679,8 +48635,8 @@ const CMD={
  qprev(arg){const p=String(arg||"").split("~");npcQuestPreview(p[0],p[1]||"main");},
  qpick(arg){const p=String(arg||"").split("~");npcQuestPick(p[0],p[1]||"main");},
  shopnear(){const ctx=invContext();if(!ctx.торговец){narrate("Торговца рядом нет: ищите лавку, торговца в городе или обоз на дороге.");return;}openTrade(ctx.торговец.key,"buy");},
- shoptab(t){SHOP.tab=t==="sell"?"sell":"buy";SHOP.cat=null;SHOP.sel=null;renderShop();narrate(SHOP.tab==="buy"?"Раздел «Купить»: категории и товары.":"Раздел «Продать»: что торговец берёт из вашей сумы.",{interrupt:true});},
- shopcat(c){SHOP.cat=c==="all"?null:c;SHOP.sel=null;renderShop();narrate(SHOP.cat?`Категория: ${(SHOP_CAT_BY_ID[SHOP.cat]||{}).n||c}.`:"Все категории.",{interrupt:true});},
+ 
+ 
  shopitem(i){if(shopItemCard(i)===false&&!shopNpc())narrate("Окно торговли не открыто: подойдите к торговцу и откройте «Торговля».");},
  shopask(arg){const p=String(arg).split(":");if(shopAsk(p[0],p[1])===false&&(!shopNpc()||!SHOP.sel))narrate(shopNpc()?"Сперва выберите товар в окне торговли.":"Окно торговли не открыто: подойдите к торговцу и откройте «Торговля».");},
  shopyes(){shopYes();},
@@ -48707,7 +48663,7 @@ const CMD={
   Garrison.use(f.id,p[0]);
   safeFn(()=>{const m=document.getElementById("modal-building");if(m&&!m.hidden){const c=cellContent(G.x,G.y);if(c.structure&&c.structure.type==="fortress")openBuilding(c);}});},
  tavern(){narrate(Tavern.text(),{interrupt:true});},
- tavernevt(id){const t=Tavern.happen(id||undefined);if(!t)narrate(Tavern.in()?"Сегодня в этот час здесь уже всё случилось.":"Таверны вокруг нет: её слышно по гулу, смеху и кружкам.",{interrupt:true});},
+ 
  war(){narrate(WarArc.text(),{interrupt:true});},
  waract(id){narrate(WarArc.act(id),{interrupt:true});safeFn(()=>{const m=document.getElementById("modal-living");if(m&&!m.hidden)renderLiving();});},
  artchain(arg){const p=String(arg||"").split("~");narrate(ArtChains.open(decodeURIComponent(p[0]),p[1]),{interrupt:true});safeFn(()=>{const m=document.getElementById("modal-merit");if(m&&!m.hidden)renderMerit();saveGame(true);});},
@@ -48797,8 +48753,8 @@ const CMD={
   renderDifficulty();narrate(`Время мира ${CLOCK_MODES[k].n}: ${CLOCK_MODES[k].о}.`,{interrupt:true});},
  drinkwater(){Body.drink(false);},
  fillflask(){if(!Body.freshHere()&&safeFn(()=>invContext().торговец,null)){Body.buyWater();return;}Body.fill();},
- buywater(){Body.buyWater();},
- buyflask(arg){const [id,ц]=String(arg).split("~");Body.buyFlask(id,Number(ц)||((FLASK_BY_ID[id]||{}).price)||0);},
+ 
+ 
  bodynow(){Speech.request(Body.text(),{key:"bodynow"});},
  tutor(){Tutor.on?Tutor.stop():Tutor.start();},
  warm(){Warm.busy?Warm.cancel():Warm.run();},
@@ -55158,7 +55114,7 @@ const Zver={
  feedAll(){const out=[];for(const a of this.st().list){if((Number(a.сыт)||0)<70)out.push(this.feed(a.uid));}
   return out.length?out.join(" "):"Все звери сыты.";},
  /* ── Рост ── */
- need(a){return 20+15*(Number(a.lvl)||1);},
+ need(a){const l=Number(a&&a.lvl)||1;return 40+30*l+l*l;},   /* (18.0) прежде 20 + 15·L */
  xp(a,n){if(!a||(Number(a.lvl)||1)>=30)return "";a.xp=(Number(a.xp)||0)+n;let t="";
   while(a.xp>=this.need(a)&&a.lvl<30){a.xp-=this.need(a);a.lvl++;t+=` ${a.n} вырос до уровня ${a.lvl}.`;
    if(a.lvl%3===0)t+=" Есть очко развития.";safeFn(()=>journal(`${a.n}: уровень ${a.lvl}.`));}
@@ -55660,8 +55616,7 @@ const Director={
 Modules.register("DIRECTOR",Director);
 Object.assign(CMD,{
  zv(a){Zver.cmd(a);},zver(){Zver.home();},zvtame(){narrate(Zver.tame(),{interrupt:true});safeFn(()=>saveGame(true));},
- zvfeed(){narrate(Zver.feedAll(),{interrupt:true});},zvride(){const m=Zver.mount();if(m){narrate(Zver.dismount(),{interrupt:true});return;}
-  const a=Zver.st().list.find(x=>ZV_FAMILY_BY_ID[x.fam].ездовой);narrate(a?Zver.ride(a.uid):"Ездового зверя нет: его покупают в зверинцах, приручают или получают в дар.",{interrupt:true});},
+ zvfeed(){narrate(Zver.feedAll(),{interrupt:true});},
  dir(a){Director.cmd(a);},director(){Director.home();},
  setdir(k){narrate(Director.setMode(k),{interrupt:true});}});
 /* ════════════════════════════════════════════════════════════════════════

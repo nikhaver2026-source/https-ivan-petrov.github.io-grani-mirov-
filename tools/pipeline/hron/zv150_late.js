@@ -308,14 +308,7 @@ const ZV_STEP150={
 for(const [k,v] of Object.entries(ZV_STEP150))if(ZV_SND[k])Object.assign(ZV_SND[k],v);
 /* Отзвук шага: изредка, тише самого шага. */
 ZvSnd.stepAccent=function(a,pos,ms){const p=this.prof(a);if(p.шз&&Math.random()<0.3)this.later((ms||0)+120,()=>this.play([p.шз],Object.assign({maxSec:0.8,gain:0.38},pos)));};
-/* Спутники следом: как прежде (двое ступают по очереди), и за шагом — отзвук. */
-ZvWalk.follow=function(){const pets=safeFn(()=>Zver.pets(),[])||[];const inWater=safeFn(()=>/water|sea|coast|lake|river/.test(cellContent(G.x,G.y).terrain[0]),false);
- pets.slice(0,2).forEach((a,i)=>{if(a.ранен||a.задание)return;const f=Zver.fam(a);if(!f)return;
-  const редко=pets.length>1?(this.n+i)%2:(f.ход==="fly"?this.n%2:f.ход==="dig"?this.n%3:0);if(редко)return;
-  const p=ZvSnd.prof(a);const суша=f.ход==="swim"&&!inWater;const L=суша?["oc_step_soft"]:(p.ш||["oc_step_soft"]);const pos=ZvSnd.behind(i);
-  ZvSnd.later(130+i*110,()=>ZvSnd.play(L,Object.assign({maxSec:1,gain:0.55,rate:ZvSnd.rate(a)},pos)));
-  if(!суша)ZvSnd.stepAccent(a,pos,130+i*110);
-  if(Math.random()<0.035)ZvSnd.later(600+i*400,()=>ZvSnd.voice(a,Object.assign({gain:0.7,i},ZvSnd.behind(i))));});};
+/* Спутники следом — ZvWalk.follow в zver155_late.js (там же отзвук за шагом). */
 safeFn(()=>{const r0=ZvWalk.ride;ZvWalk.ride=function(M){const ok=r0.apply(this,arguments);if(M&&M.kind==="zv")ZvSnd.stepAccent(M.a,{dx:0,dy:0.15},0);return ok;};});
 
 /* ── 10. Скакуны тайных палат: у каждого свой ход (15.0) ──

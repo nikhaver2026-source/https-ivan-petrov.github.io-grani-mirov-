@@ -74,7 +74,8 @@ const CountRow={
   narrate(`${n} из ${o.max} — ${this.gold(o.price*n)}${край?(d>0?(o.verb==="купить"?". Больше не хватает золота или товара":". Это вся стопка"):". Меньше одной нельзя"):""}.`,{interrupt:true,cat:"ui"});
   return true;}};
 /* Кнопки «Купить 1, 5, 10, на всё» — у обоза и везде, где их звали, — стали ползунком. */
-buyCountButtons=function(price,cmd,name){const цена=Math.max(1,Number(price)||1);
+/* (Альфа 1.0) единственное определение: прежнее в основе снято */
+function buyCountButtons(price,cmd,name){const цена=Math.max(1,Number(price)||1);
  return CountRow.html({tpl:cmd("{n}"),name:String(name),price:цена,max:Math.min(999,Math.floor((Number(G.gold)||0)/цена)),verb:"купить",unit:true});};
 
 /* ── 2. ИНСТРУМЕНТЫ И ЕДА: ЧТО ЭТО ЗА ВЕЩИ ── */

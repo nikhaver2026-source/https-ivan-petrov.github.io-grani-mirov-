@@ -68,7 +68,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   кот.сыт=30;r.безКорма=Zver.feed(кот.uid);
   G.inv["рыба"]=5;r.корм=Zver.feed(кот.uid);r.сыт=кот.сыт;
   r.безОчков=Zver.grow(кот.uid,"sense");
-  Zver.xp(кот,20000);r.ур=кот.lvl;r.очки=Zver.points(кот);
+  /* (18.0) рост зверя дороже (40 + 30·L + L²): до тридцатого уровня — около 22 800 опыта */
+  Zver.xp(кот,30000);r.ур=кот.lvl;r.очки=Zver.points(кот);
   r.ветвь=Zver.grow(кот.uid,"sense");r.ход=Zver.grow(кот.uid,"move");r.ветви=Object.assign({},кот.ветви);
   r.чутьё0=ZV_FAMILY_BY_ID.cat.чутьё;r.чутьё=Zver.stat(кот,"чутьё");
   const шаг0=Zver.gift(конь,"шаг");
