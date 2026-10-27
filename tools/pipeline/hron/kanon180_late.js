@@ -378,7 +378,7 @@ const КанонТвари={
  есть(m,u){return !!(m&&m.кн&&(m.кнУм||[]).indexOf(u)>=0);},
  имя(m){return ((m&&КАНОН_ТВАРЬ[m.id])||m||{}).n||"тварь";},
  /* где водится: биом клетки по правилам мира, а в краях канона — их твари */
- подходят(t){const b=t||"";return КАНОН_ТВАРИ.filter(m=>m.кнБиомы.indexOf(b)>=0);},
+ подходят(t){const b=t||"";const к=this._по||(this._по={});return к[b]||(к[b]=КАНОН_ТВАРИ.filter(m=>m.кнБиомы.indexOf(b)>=0));},
  тихо(){return safeFn(()=>buffActive("тишина шага")||buffActive("морок")||buffActive("скрытность"),false);},
  слово(m){const s=Канон.ст();if(!s.твари||typeof s.твари!=="object")s.твари={};const перв=!s.твари[m.id];s.твари[m.id]=(Number(s.твари[m.id])||0)+1;
   const ум=(m.кнУм||[]).map(u=>this.УМ[u]).filter(Boolean);
@@ -387,8 +387,8 @@ const КанонТвари={
 /* мир: изредка вместо здешнего зверя — тварь канона той же земли; в краях канона чаще (§12) */
 КанонЦепь.шаг("beastAt",function(m,x,y,c,доля){
  if(!m||G.dark||m.нем||m.кн)return m;
- try{const t=c&&c.terrain&&c.terrain[0];let p=0.16;const край=safeFn(()=>Канон.край&&Канон.край(x,y),null);if(край)p=0.6;
-  if(hashName(x,y,18011)>=p)return m;
+ try{const ж=hashName(x,y,18011);if(ж>=0.6)return m;  /* (Альфа 1.5) сперва жребий: край ищется, только если он может решить */
+  const t=c&&c.terrain&&c.terrain[0];const край=safeFn(()=>Канон.край&&Канон.край(x,y),null);if(ж>=(край?0.6:0.16))return m;
   let cand=край&&край.твари&&край.твари.length?край.твари.map(id=>КАНОН_ТВАРЬ[id]).filter(Boolean):КанонТвари.подходят(t);
   if(!cand.length)return m;const пик=cand[Math.floor(hashName(x,y,18012)*cand.length)%cand.length];
   if(КанонТвари.есть(пик,"слепой")&&КанонТвари.тихо())return m;
@@ -889,26 +889,32 @@ const КанонКрай={
   const L=КАНОН_КРАЯ.filter(k=>!о.has(k.id)).sort((a,b)=>a.опасность-b.опасность||(a.пакет<b.пакет?-1:1));
   return L.find(k=>k.опасность<=2+Math.floor(lvl/8))||null;},
  /* земля, её поселения (места Режиссёра), народы, боги, ресурсы, звери */
- открыть(k,R){if(!k)return "";R=R||Math.random;const g=Neuro.gen();if(!Array.isArray(g.places))g.places=[];if(!Array.isArray(g.gods))g.gods=[];if(!Array.isArray(g.pets))g.pets=[];
+ открыть(k,R){if(!k)return "";R=R||Math.random;const g=Neuro.gen();
   const ang=R()*Math.PI*2,d=30+Math.round(R()*50);const x=Math.round((Number(G.x)||0)+Math.cos(ang)*d),y=Math.round((Number(G.y)||0)+Math.sin(ang)*d);
   const land={id:"gl_"+(g.n++),n:k.имя,terr:k.terr,x,y,r:10,fam:k.fam,опасность:k.опасность,день:Number(G.day)||1,res:null,кн:k.id};g.lands.push(land);
-  const people=[];for(const p of k.народы){const rec={id:"gn_"+(g.n++),kind:"people",n:p.имя,ethos:safeFn(()=>NEURO_ETHOS_IDS[0],"trade"),тяга:[],вождь:"",земля:land.id,род:null,держава:null,реп:0,день:Number(G.day)||1,кн:p.id};
-   safeFn(()=>{rec.тяга=NEURO_ETHOS[rec.ethos].тяга.slice();});g.peoples.push(rec);people.push(rec);}
-  for(const b of k.боги){g.gods.push({id:"gg_"+(g.n++),n:b.имя,дар:MIX_BUFF_WORD[b.дар]?b.дар:"удача",нрав:"древний",культ:people[0]?people[0].id:null,вера:0,день:Number(G.day)||1,кн:b.id});}
-  for(const r of k.ресурсы){if(g.res.some(x=>x.n===r.имя))continue;const rec={id:"gr_"+(g.n++),n:r.имя,ниши:r.ниши.slice(),цена:r.цена,земля:land.id,кто:k.имя,где:"в землях «"+k.имя+"»",x,y,день:Number(G.day)||1,кн:r.id};
-   g.res.push(rec);safeFn(()=>Neuro.regRes(rec));if(!land.res)land.res=r.имя;}
-  k.поселения.forEach((p,i)=>{const a=ang+Math.PI*(0.3+0.9*i),dd=3+Math.round(R()*5);
-   g.places.push({id:"gc_"+(g.n++),kind:NEURO_PLACE[p.kind]?p.kind:"деревня",n:p.имя,x:x+Math.round(Math.cos(a)*dd),y:y+Math.round(Math.sin(a)*dd),r:2,народ:people[i%Math.max(1,people.length)]?people[i%people.length].id:null,день:Number(G.day)||1,кн:p.id,кнКрай:k.id});});
-  for(const z of k.звери){const b=ZV_BREED_BY_ID[z.fam+"_wild"];if(!b)continue;g.pets.push({id:"gz_"+(g.n++),n:`${z.имя} — ${b.n.toLowerCase()}`,имя:z.имя,breed:b.id,mount:!!ZV_FAMILY_BY_ID[z.fam].ездовой,
-   lvl:1+Math.floor((Number(G.level)||1)/4),цена:(ZV_FAMILY_BY_ID[z.fam].ездовой?160:80)+Math.round(R()*60),кто:k.поселения[0]?k.поселения[0].имя:k.имя,p:people[0]?people[0].id:null,x,y,где:"в землях «"+k.имя+"»",день:Number(G.day)||1,кн:z.id});}
+  const people=this.наполнить(k,land,R,ang);const гео=safeFn(()=>КанонГео.разместить(k,land,R),[])||[];
   const s=this.ст();s.открыто.push(k.id);s.день=Number(G.day)||1;safeFn(()=>Neuro.chron(`открылся край — ${k.имя}`));
   safeFn(()=>Lore.add("map",`kn_land:${k.id}`,k.имя,"край открылся"));safeFn(()=>journal(`Открылся край: ${k.имя}.`));Канон.звук("sv_god_omen",{gain:0.45});
   const где=safeFn(()=>Director.where(x-G.x,y-G.y),"")||"вдали";
-  return `Открылся край — ${k.имя}, ${где}, около ${d} шагов: ${k.о.charAt(0).toLowerCase()+k.о.slice(1)}. Там ${k.поселения.map(p=>p.имя).join(" и ")}${people.length?`; живут ${people.map(p=>"«"+p.n+"»").join(", ")}`:""}${k.боги.length?`; молятся ${k.боги.map(b=>b.имя).join(" и ")}`:""}.`;},
+  return `Открылся край — ${k.имя}, ${где}, около ${d} шагов: ${k.о.charAt(0).toLowerCase()+k.о.slice(1)}. Там ${k.поселения.map(p=>p.имя).join(" и ")}${people.length?`; живут ${people.map(p=>"«"+p.n+"»").join(", ")}`:""}${k.боги.length?`; молятся ${k.боги.map(b=>b.имя).join(" и ")}`:""}.${гео.length?` Вокруг — ${гео.map(f=>f.имя).join(", ")}.`:""}`;},
+ /* народы, боги, ресурсы, поселения и звери края; что уже есть в мире — не повторяется (так дополняются и старые сохранения) */
+ наполнить(k,land,R,ang){const g=Neuro.gen();R=R||Math.random;ang=Number(ang)||0;const x=land.x,y=land.y;
+  for(const a of ["places","gods","pets","peoples","res"])if(!Array.isArray(g[a]))g[a]=[];
+  const people=[];for(const p of k.народы){let rec=g.peoples.find(q=>q.кн===p.id);
+   if(!rec){rec={id:"gn_"+(g.n++),kind:"people",n:p.имя,ethos:safeFn(()=>NEURO_ETHOS_IDS[0],"trade"),тяга:[],вождь:"",земля:land.id,род:null,держава:null,реп:0,день:Number(G.day)||1,кн:p.id};
+    safeFn(()=>{rec.тяга=NEURO_ETHOS[rec.ethos].тяга.slice();});g.peoples.push(rec);}people.push(rec);}
+  for(const b of k.боги){if(g.gods.some(q=>q.кн===b.id))continue;g.gods.push({id:"gg_"+(g.n++),n:b.имя,дар:MIX_BUFF_WORD[b.дар]?b.дар:"удача",нрав:"древний",культ:people[0]?people[0].id:null,вера:0,день:Number(G.day)||1,кн:b.id});}
+  for(const r of k.ресурсы){if(g.res.some(q=>q.n===r.имя))continue;const rec={id:"gr_"+(g.n++),n:r.имя,ниши:r.ниши.slice(),цена:r.цена,земля:land.id,кто:k.имя,где:"в землях «"+k.имя+"»",x,y,день:Number(G.day)||1,кн:r.id};
+   g.res.push(rec);safeFn(()=>Neuro.regRes(rec));if(!land.res)land.res=r.имя;}
+  k.поселения.forEach((p,i)=>{if(g.places.some(q=>q.кн===p.id))return;const a=ang+Math.PI*(0.3+0.9*i),dd=3+Math.round(R()*5);
+   g.places.push({id:"gc_"+(g.n++),kind:NEURO_PLACE[p.kind]?p.kind:"деревня",n:p.имя,x:x+Math.round(Math.cos(a)*dd),y:y+Math.round(Math.sin(a)*dd),r:2,народ:people[i%Math.max(1,people.length)]?people[i%people.length].id:null,день:Number(G.day)||1,кн:p.id,кнКрай:k.id});});
+  for(const z of k.звери){if(g.pets.some(q=>q.кн===z.id))continue;const b=ZV_BREED_BY_ID[z.fam+"_wild"];if(!b)continue;g.pets.push({id:"gz_"+(g.n++),n:`${z.имя} — ${b.n.toLowerCase()}`,имя:z.имя,breed:b.id,mount:!!ZV_FAMILY_BY_ID[z.fam].ездовой,
+   lvl:1+Math.floor((Number(G.level)||1)/4),цена:(ZV_FAMILY_BY_ID[z.fam].ездовой?160:80)+Math.round(R()*60),кто:k.поселения[0]?k.поселения[0].имя:k.имя,p:people[0]?people[0].id:null,x,y,где:"в землях «"+k.имя+"»",день:Number(G.day)||1,кн:z.id});}
+  return people;},
  /* где мы: край по земле Режиссёра с меткой канона */
  здесь(x,y){const g=G.gen;if(!g||!Array.isArray(g.lands))return null;const l=g.lands.find(l=>l.кн&&Math.abs(l.x-x)+Math.abs(l.y-y)<=l.r);return l?КАНОН_КРАЙ[l.кн]:null;},
  место(){const p=safeFn(()=>Neuro.placeHere(),null);if(!p||!p.кн)return null;const k=КАНОН_КРАЙ[p.кнКрай];if(!k)return null;const s=k.поселения.find(x=>x.id===p.кн);return s?{p,k,s}:null;},
- день(){if(G.inCombat)return;const s=this.ст();const d=Number(G.day)||1;if(!s.день)s.день=d;if(d-s.день<4)return;const k=this.следующий();if(!k)return;
+ день(){if(G.inCombat)return;safeFn(()=>КанонГео.доразместить());const s=this.ст();const d=Number(G.day)||1;if(!s.день)s.день=d;if(d-s.день<4)return;const k=this.следующий();if(!k)return;
   const t=this.открыть(k);if(t)safeFn(()=>narrate(t,{interrupt:false}));}};
 /* Режиссёр: новая земля — край канона, пока они не кончатся */
 safeFn(()=>{const l0=Neuro.newLand.bind(Neuro);Neuro.newLand=function(id,R){const k=КанонКрай.следующий();if(k)return КанонКрай.открыть(k,R);return l0(id,R);};});
@@ -923,18 +929,27 @@ Object.assign(Канон,{
 /* прибытие в поселение края: слово о нём и кто здесь */
 safeFn(()=>{const p0=Neuro.placeStep.bind(Neuro);Neuro.placeStep=function(){const st=Neuro.st();const было=st.inPlace;const r=p0();
  try{const м=КанонКрай.место();if(м&&было!==м.p.id){setTimeout(()=>safeFn(()=>narrate(`${м.s.о}. ${м.k.люди.length?`Здесь: ${м.k.люди.slice(0,4).map(c=>c.имя).join(", ")}.`:""} «Действие здесь» — войти.`,{interrupt:false})),900);}}catch(_){}
- return r;};});
+ safeFn(()=>КанонГео.шаг());return r;};});
 /* «Действие здесь» в поселении края — его окно */
-safeFn(()=>{const u0=useHere;useHere=function(){const м=!G.inCombat&&!G.place&&!G.ship?КанонКрай.место():null;if(м){КанонМесто.окно(м);return true;}return u0.apply(this,arguments);};});
+safeFn(()=>{const u0=useHere;useHere=function(){const м=!G.inCombat&&!G.place&&!G.ship?КанонКрай.место():null;if(м){КанонМесто.окно(м);return true;}
+ const гео=!G.inCombat&&!G.place&&!G.ship&&КанонГео.свободно()?КанонГео.здесь():null;if(гео){КанонГео.окно(гео);return true;}return u0.apply(this,arguments);};});
 const КанонМесто={
  цена(x){return Math.max(30,Math.round(safeFn(()=>ART.price(КанонВещи.сделать(x.id)),100)*1.2));},
  окно(м){const {k,s}=м;const ч=[];
   for(const c of k.люди)ч.push({l:`Поговорить: ${c.имя}, ${c.роль}`,run:()=>this.человек(c.id)});
   for(const b of k.здания)ч.push({l:`Зайти: ${b.имя}`,run:()=>this.помощь(b,"здание")});
   for(const o of k.объекты.slice(0,6))ч.push({l:`Осмотреть: ${o.имя}`,run:()=>this.помощь(o,"объект")});
-  for(const b of k.боги){const g=(Neuro.gen().gods||[]).find(x=>x.кн===b.id);if(g)ч.push({l:`Помолиться: ${b.имя}`,run:()=>{const t=safeFn(()=>Neuro.offer(g.id),"");narrate(`${b.о}. ${t}`,{interrupt:true});}});}
+  for(const b of k.боги){const g=(Neuro.gen().gods||[]).find(x=>x.кн===b.id);if(g)ч.push({l:`Помолиться: ${b.имя}`,run:()=>{const t=safeFn(()=>Neuro.offer(g.id),"");narrate(`${b.о}.${b.запрет?` Завет: не ${b.запрет}.`:""} ${t}`,{interrupt:true});}});}
+  for(const q of (s.кварталы||[]))ч.push({l:`Квартал: ${q.имя} — ${q.о}`,run:()=>this.помощь(q,"квартал")});
+  if(s.кварталы)for(const p of k.народы.filter(p=>p.канон2))ч.push({l:`${p.раса?"Раса":"Народ"}: ${p.имя}`,run:()=>this.народ(p,k)});
   ч.push({l:"Уйти",run:()=>{}});
-  выбор147(s.имя,`${s.о}. Край — ${k.имя}. ${s.товар?`Здесь в ходу: ${s.товар}; нужда — ${s.нужда}.`:""}`,ч);},
+  выбор147(s.имя,`${s.о}. Край — ${k.имя}.${s.правитель?` Правит ${s.правитель}.`:""} ${s.товар?`Здесь в ходу: ${s.товар}${s.нужда?`; нужда — ${s.нужда}`:""}.`:""}`,ч);},
+ /* народ или раса края II: слово о них, знакомство — знание; раз в сутки их дар */
+ народ(p,k){const s=Канон.ст();if(!s.народы2||typeof s.народы2!=="object")s.народы2={};const перв=!s.народы2[p.id];s.народы2[p.id]=Number(G.day)||1;
+  if(перв)safeFn(()=>p.раса?Lore.add("tongue",`kn2:${p.id}`,`${p.язык||"говор"} — ${p.имя}`,k.имя):Lore.add("rite",`kn2:${p.id}`,`обычаи: ${p.имя}`,k.имя));
+  const t=[`${p.имя}: ${p.о.charAt(0).toLowerCase()+p.о.slice(1)}.`];if(p.облик)t.push(`Облик: ${p.облик}.`);if(p.язык)t.push(`Говорят: ${p.язык}.`);if(p.дар)t.push(`Их дар: ${p.дар}.`);
+  if(p.эф&&КанонМесто.ЭФ[p.эф]){const ключ="нд_"+p.id+":"+G.day;if(!s.помощь||typeof s.помощь!=="object")s.помощь={};if(!s.помощь[ключ]){s.помощь[ключ]=1;t.push(КанонМесто.ЭФ[p.эф]());}}
+  Канон.звук(p.звукО||"hall_market",{kind:"world",gain:0.4,maxSec:3});narrate(t.join(" "),{interrupt:true});},
  человек(cid){const c=КАНОН_ЛЮДИ[cid];if(!c)return;const ч=[];const s=Канон.ст();
   for(const id of c.учит){const u=КАНОН_УМЕНИЕ[id];if(!u)continue;const {ур,цена}=КанонУмения.условие(c,id);
    ч.push({l:КанонУмения.есть_у(id)?`Умение «${u.имя}» — уже знаете`:`Учиться: «${u.имя}» — ${цена} золота, с ${ур}-го уровня. ${u.дело}`,run:()=>{narrate(КанонУмения.учить(cid,id),{interrupt:true});safeFn(()=>saveGame(true));}});}
@@ -986,6 +1001,135 @@ safeFn(()=>{const b0=Zver.beastView.bind(Zver);Zver.beastView=function(u){const 
  try{const a=this.byUid(u);if(a&&["сквозь","роет","завал"].some(k=>КанонЗвери.особ(a,k)!=null)){const box=document.getElementById("zvBody");
    if(box&&!box.querySelector('[data-cmd="knpass"]'))box.insertAdjacentHTML("afterbegin",`<button type="button" class="item" data-cmd="knpass" data-speak="Пройти сквозь камень со зверем: раз в сутки">Пройти сквозь камень со зверем</button>`);}}catch(_){}
  return r;};});
+
+/* ── 13. Предания краёв: места природы (Альфа 1.5) ──
+   Канон II лёг в те же семнадцать краёв. Вокруг земли края — его озеро, река, горы, море с островами, а под водой —
+   подводье со своим хозяином. Подойдёте к месту — слово о нём, и оно идёт в познание мира (грань «земли»).
+   «Действие здесь» у места — его окно: испить и окунуться, переправиться, подняться на перевал, выйти к воде,
+   сплавать к острову, собрать здешний ресурс, нырнуть. Дар места — раз в сутки (те же дары, что у зданий края).
+   У мест свои опасности: холод, обвал, яд, буря, топь, глубина, ветер, туман — от них берегут усиления и вещи.
+   Подводье: нужно дыхание (свет, тепло — где глубже и темнее); без него нырок стоит здоровья. Хозяин глубины
+   встречает первого гостя; одолеете — клад, ресурс и тайна глубин, а дальше подводье даёт свой дар раз в сутки.
+   Города края II — его поселения: в окне города — кварталы с дарами, народы и расы края. */
+const КАНОН_ГЕО={};const КАНОН_РЕС={};
+for(const k of КАНОН_КРАЯ){for(const f of (k.гео||[]))КАНОН_ГЕО[f.id]=Object.assign({край:k.id},f);for(const r of (k.ресурсы||[]))КАНОН_РЕС[r.id]=r;}
+const КанонГео={
+ ОПАС:{холод:"холод",обвал:"обвалы",яд:"ядовитые испарения",буря:"бури",топь:"топь",глубина:"глубина",ветер:"сильный ветер",туман:"туман"},
+ ДЕЛО:{озеро:"испить и окунуться",река:"переправиться",горы:"подняться на перевал",море:"выйти к воде",архипелаг:"сплавать к островам"},
+ ст(){const s=Канон.ст();if(!s.гео||typeof s.гео!=="object"||Array.isArray(s.гео))s.гео={};const g=s.гео;
+  if(!Array.isArray(g.места))g.места=[];for(const k of ["был","дар","хозяин","сбор"])if(!g[k]||typeof g[k]!=="object"||Array.isArray(g[k]))g[k]={};return g;},
+ /* места природы края — вокруг его земли: ближе озеро и река, дальше горы, ещё дальше море и острова */
+ разместить(k,land,R){if(!k||!land||!Array.isArray(k.гео)||!k.гео.length)return [];const g=this.ст();if(g.места.some(m=>m.край===k.id))return [];
+  if(!R){let s=((Math.abs(Number(land.x)|0)*73856093)^(Math.abs(Number(land.y)|0)*19349663))%2147483647||7;R=()=>{s=(s*16807)%2147483647;return s/2147483647;};}
+  const св=k.гео.filter(f=>f.вид!=="подводье");const out=[];const a0=R()*Math.PI*2;const W=safeFn(()=>WORLD_MAX,1e9)||1e9;
+  св.forEach((f,i)=>{const a=a0+i*2*Math.PI/Math.max(1,св.length)+(R()-0.5)*0.4;
+   const d=f.вид==="архипелаг"?16+Math.round(R()*3):f.вид==="море"?12+Math.round(R()*3):f.вид==="горы"?8+Math.round(R()*3):4+Math.round(R()*4);
+   const r=f.вид==="море"?4:f.вид==="горы"||f.вид==="архипелаг"?3:2;
+   const x=Math.max(0,Math.min(W-1,Math.round(Number(land.x)+Math.cos(a)*d))),y=Math.max(0,Math.min(W-1,Math.round(Number(land.y)+Math.sin(a)*d)));
+   g.места.push({id:f.id,край:k.id,x,y,r});out.push(f);});
+  return out;},
+ /* старые сохранения: краю, открытому до преданий, — его места природы, народы, боги, ресурсы и город */
+ доразместить(){const g=G.gen;if(!g||!Array.isArray(g.lands))return;const st=this.ст();if(st.сверено===g.lands.length)return;st.сверено=g.lands.length;
+  for(const l of g.lands){if(!l||!l.кн)continue;const k=КАНОН_КРАЙ[l.кн];if(!k||st.места.some(m=>m.край===k.id))continue;
+   safeFn(()=>КанонКрай.наполнить(k,l,null,0));this.разместить(k,l,null);}},
+ здесь(x,y){x=x==null?G.x:x;y=y==null?G.y:y;let best=null,bd=1e9;
+  for(const m of this.ст().места){const d=Math.abs(m.x-x)+Math.abs(m.y-y);if(d<=m.r&&d<bd){bd=d;best=m;}}
+  if(!best)return null;const f=КАНОН_ГЕО[best.id],k=КАНОН_КРАЙ[best.край];return f&&k?{m:best,f,k}:null;},
+ счёт(){return Object.keys(this.ст().был).length;},
+ /* «Действие здесь» уходит месту природы, только где нет ни постройки, ни ресурса, ни чертога, ни добычи */
+ свободно(){if(G.loot&&Array.isArray(G.loot)&&G.loot.length)return false;if(G.chStair||safeFn(()=>inFlight(),false))return false;
+  const c=safeFn(()=>cellContent(G.x,G.y),null);if(!c||c.structure||c.res)return false;return !safeFn(()=>Chertog.here(),null);},
+ дарСлово(эф){const t={лечение:"раны затянутся",мана:"сила вернётся",весть:"здешний слух",стойкость:"защита выше",оберег:"оберег от проклятий",мощь:"удар сильнее",
+  тишина:"шаг беззвучен",чутьё:"слух шире",тепло:"стужа не вредит",клад:"можно найти золото",свет:"свет во тьме",убежище:"укрытие от тварей",разум:"морок не входит",след:"погоня собьётся со следа"};return t[эф]||"дар места";},
+ /* подход к месту: слово о нём, в первый раз — знание */
+ шаг(){if(G.inCombat||G.place)return;const h=this.здесь();const g=this.ст();if(!h){g.тут=null;return;}if(g.тут===h.m.id)return;g.тут=h.m.id;
+  const {f,k}=h;const перв=!g.был[f.id];
+  if(перв){g.был[f.id]=Number(G.day)||1;safeFn(()=>Lore.add("map",`kn2:${f.id}`,f.имя,`край «${k.имя}»`));safeFn(()=>Рост.сброс());
+   safeFn(()=>journal(`Место края «${k.имя}»: ${f.имя}.`));if(Рост.ст().удерж>0)safeFn(()=>checkLevelUp());}
+  Канон.звук(f.звукО||"amb_water",{kind:"world",gain:0.4,maxSec:4});
+  const что=this.ДЕЛО[f.вид]||"осмотреться";
+  const t=перв?`${f.имя}: ${f.о.charAt(0).toLowerCase()+f.о.slice(1)}. ${f.механика?mixCap(f.механика)+". ":""}«Действие здесь» — ${что}.`
+   :`${f.имя}. «Действие здесь» — ${что}.`;
+  setTimeout(()=>safeFn(()=>narrate(t,{interrupt:false})),700);},
+ /* опасность места — чем грозит и что бережёт */
+ опасность(o){if(!o)return "";const есть=b=>!!safeFn(()=>buffActive(b),false);const ст=k=>Number(safeFn(()=>ART.sum(k),0))||0;
+  const рана=p=>{const d=Math.max(1,Math.round((Number(G.hpMax)||100)*p));G.hp=Math.max(1,(Number(G.hp)||1)-d);return d;};
+  if(o==="холод")return есть("тепло")||ст("сопр_лёд")>=0.2?" Холод не взял: вы в тепле.":` Холод пробрал до костей: здоровья −${рана(0.08)}.`;
+  if(o==="обвал")return КанонДары.есть("закалка")?" Сорвались камни, но закалка уберегла.":Math.random()<0.5?` Сорвался камень: здоровья −${рана(0.1)}.`:" Камни шуршат над головой, но обошлось.";
+  if(o==="яд")return ст("сопр_яд")>=0.2?" Ядовитые испарения вам нипочём.":` Ядовитые испарения жгут горло: здоровья −${рана(0.06)}.`;
+  if(o==="буря")return есть("стойкость")?" Буря бьёт, но вы стоите.":` Буря сбила с ног: здоровья −${рана(0.06)}.`;
+  if(o==="ветер")return есть("лёгкость")||есть("стойкость")?" Ветер рвёт плащ, но вы держитесь.":Math.random()<0.5?` Порыв ветра швырнул о камни: здоровья −${рана(0.05)}.`:" Ветер едва не сбил с ног.";
+  if(o==="топь"){if(есть("лёгкость"))return " Лёгкий шаг не вяз в топи.";G.hour=(Number(G.hour)||0)+1;return " Топь держала за ноги: ушёл час.";}
+  if(o==="туман"){if(есть("чутьё")||КанонДары.есть("чует_засаду"))return " Туман густой, но слух ведёт верно.";G.hour=(Number(G.hour)||0)+1;return " В тумане плутали час.";}
+  return "";},
+ /* окно места */
+ окно(h){const {f,k}=h;const g=this.ст();const сег=Number(G.day)||1;const ч=[];const сегодня=g.дар[f.id]===сег;
+  const дар=сегодня?"сегодня дар уже взят":this.дарСлово(f.эф);
+  if(f.вид==="озеро")ч.push({l:`Испить и окунуться — ${дар}`,run:()=>this.дар(f,k)});
+  if(f.вид==="река")ч.push({l:`Переправиться ${f.переправа==="брод"?"вброд":f.переправа==="паром"?"на пароме — 3 золота":"по мосту"} — ${дар}`,run:()=>this.дар(f,k)});
+  if(f.вид==="горы")ч.push({l:`Подняться${f.перевал?` на ${f.перевал}`:" на перевал"} — ${дар}`,run:()=>this.дар(f,k)});
+  if(f.вид==="море")ч.push({l:`Выйти к воде — ${дар}`,run:()=>this.дар(f,k)});
+  if(f.вид==="архипелаг")for(const q of f.острова||[])ч.push({l:`Сплавать: ${q.имя} — ${q.о}; ${g.дар[q.id]===сег?"сегодня там уже были":this.дарСлово(q.эф)}${G.ship?"":" (лодка — 5 золота)"}`,run:()=>this.остров(f,q,k)});
+  if(f.ресурс&&КАНОН_РЕС[f.ресурс]){const r=КАНОН_РЕС[f.ресурс];ч.push({l:g.сбор[f.id]===сег?`Собрать: ${r.имя} — сегодня уже собрано`:`Собрать: ${r.имя}`,run:()=>this.собрать(f,r,k)});}
+  if(f.подводье&&КАНОН_ГЕО[f.подводье]){const d=КАНОН_ГЕО[f.подводье];const хоз=!g.хозяин[d.id]&&d.тварь&&КАНОН_ТВАРЬ[d.тварь];
+   ч.push({l:`Нырнуть: ${d.имя} — глубина ${Number(d.глубина)||1}, нужно ${this.нужно(d)}${хоз?`; там хозяин — ${хоз.n}`:""}`,run:()=>this.нырнуть(d,f,k)});}
+  if(f.архипелаг&&КАНОН_ГЕО[f.архипелаг])ч.push({l:`Острова: ${КАНОН_ГЕО[f.архипелаг].имя} — ${this.куда(f.архипелаг)}`,run:()=>narrate(`${КАНОН_ГЕО[f.архипелаг].имя}: ${this.куда(f.архипелаг)}.`,{interrupt:true})});
+  ч.push({l:"Уйти",run:()=>{}});
+  выбор147(f.имя,`${f.о}. Край — ${k.имя}.${f.опасность?` Здесь опасно: ${this.ОПАС[f.опасность]||f.опасность}.`:""}`,ч);},
+ куда(id){const m=this.ст().места.find(x=>x.id===id);if(!m)return "далеко";const d=Math.max(Math.abs(m.x-G.x),Math.abs(m.y-G.y));
+  return `${safeFn(()=>stepWords(d),d+" шагов")} ${safeFn(()=>dirAtWord(m.x-G.x,m.y-G.y),"")}`.trim();},
+ /* дар места: раз в сутки; опасность — всякий раз */
+ дар(f,k){const g=this.ст();const сег=Number(G.day)||1;
+  if(f.вид==="река"&&f.переправа==="паром"&&!G.ship){if((Number(G.gold)||0)<3){narrate("Паромщик берёт 3 золота, а у вас меньше.",{interrupt:true});return;}G.gold-=3;}
+  const оп=this.опасность(f.опасность);
+  if(g.дар[f.id]===сег){narrate(`${f.имя}: сегодня место свой дар уже отдало.${оп}`,{interrupt:true});return;}
+  g.дар[f.id]=сег;const t=(КанонМесто.ЭФ[f.эф]||КанонМесто.ЭФ.чутьё)();
+  Канон.звук(f.звукО||"amb_water",{kind:"world",gain:0.5,maxSec:4});
+  narrate(`${f.имя}: ${t}${оп}`,{interrupt:true});safeFn(()=>saveGame(true));},
+ остров(f,q,k){const g=this.ст();const сег=Number(G.day)||1;
+  if(g.дар[q.id]===сег){narrate(`${q.имя}: сегодня вы там уже были.`,{interrupt:true});return;}
+  if(!G.ship){if((Number(G.gold)||0)<5){narrate(`Лодочник везёт на ${q.имя} за 5 золота, а у вас меньше.`,{interrupt:true});return;}G.gold-=5;}
+  g.дар[q.id]=сег;const перв=!g.был[q.id];if(перв){g.был[q.id]=сег;safeFn(()=>Lore.add("map",`kn2:${q.id}`,q.имя,`острова «${f.имя}»`));safeFn(()=>Рост.сброс());}
+  const t=(КанонМесто.ЭФ[q.эф]||КанонМесто.ЭФ.чутьё)();const оп=this.опасность(f.опасность);
+  Канон.звук("ship_creak",{kind:"world",gain:0.45,maxSec:3});
+  narrate(`${q.имя}: ${q.о}. ${t}${оп}`,{interrupt:true});safeFn(()=>saveGame(true));},
+ собрать(f,r,k){const g=this.ст();const сег=Number(G.day)||1;
+  if(g.сбор[f.id]===сег){narrate(`${r.имя}: сегодня здесь уже собрано, приходите завтра.`,{interrupt:true});return;}
+  g.сбор[f.id]=сег;const n=1+(Math.random()<0.35?1:0)+(КанонДары.есть("добыча")?1:0);G.inv[r.имя]=(Number(G.inv[r.имя])||0)+n;
+  Канон.звук("oc_soft_touch",{kind:"world",gain:0.45});narrate(`Собрано: ${r.имя}, ${n}. ${r.о}.`,{interrupt:true});safeFn(()=>saveGame(true));},
+ /* подводье */
+ нужно(d){return {дыхание:"дыхание",свет:"свет",тепло:"тепло"}[d.нужно||"дыхание"]||"дыхание";},
+ готов(d){const н=d.нужно||"дыхание";const есть=b=>!!safeFn(()=>buffActive(b),false);
+  if(н==="свет")return есть("свет")||есть("ночное зрение")||КанонДары.есть("свет");
+  if(н==="тепло")return есть("тепло")||(Number(safeFn(()=>ART.sum("сопр_лёд"),0))||0)>=0.2;
+  return есть("дыхание")||КанонДары.есть("дыхание")||(Number(d.глубина)||1)<=1;},
+ нырнуть(d,f,k){if(G.inCombat)return;const g=this.ст();const гл=Number(d.глубина)||1;const т=[];
+  if(!this.готов(d)){const dmg=Math.max(1,Math.round((Number(G.hpMax)||100)*0.12*гл));
+   const совет={дыхание:"зелье дыхания или вещь, что даёт дышать под водой",свет:"свет — зелье, чары или фонарь",тепло:"тепло — зелье или вещь от стужи"}[d.нужно||"дыхание"];
+   if((Number(G.hp)||0)<=dmg+1){narrate(`${d.имя}: на глубину ${гл} так не дотянуть — нужно ${совет}.`,{interrupt:true});return;}
+   G.hp-=dmg;т.push(`Без ${this.нужно(d)==="дыхание"?"запаса дыхания":this.нужно(d)==="свет"?"света":"тепла"} тяжело: здоровья −${dmg}.`);}
+  Канон.звук(d.звукО||"oc_bubble",{kind:"world",gain:0.5,maxSec:4});
+  if(!g.был[d.id]){g.был[d.id]=Number(G.day)||1;safeFn(()=>Lore.add("secret",`kn2deep:${d.id}`,d.имя,`подводье края «${k.имя}»`));safeFn(()=>Рост.сброс());}
+  const хоз=!g.хозяин[d.id]&&d.тварь&&КАНОН_ТВАРЬ[d.тварь];
+  if(хоз){const L=Number(G.level)||1;const lvl=Math.max(хоз.min,Math.min(хоз.max,хоз.min+Math.floor(L/3)));
+   const m=Object.assign({},хоз,{lvl,hp:Math.round((20+lvl*8)*safeFn(()=>diff().foeHp,1)*1.3),dmg:3+lvl*2,xp:15+lvl*10,gold:5+lvl*4,стаей:1,кнНырок:d.id});
+   narrate(`${т.join(" ")} ${d.имя}: ${d.о.charAt(0).toLowerCase()+d.о.slice(1)}. Из глубины поднимается хозяин — ${хоз.n}!`.trim(),{interrupt:true});
+   setTimeout(()=>safeFn(()=>{if(!G.inCombat)startCombat({x:G.x,y:G.y,monster:m},{});}),1600);return;}
+  narrate(`${т.join(" ")} ${this.награда(d,k,false)}`.trim(),{interrupt:true});safeFn(()=>saveGame(true));},
+ награда(d,k,победа){const g=this.ст();const сег=Number(G.day)||1;const т=[];
+  if(победа){g.хозяин[d.id]=сег;const з=20+Math.round((Number(G.level)||1)*5);G.gold=(Number(G.gold)||0)+з;т.push(`Хозяин глубины повержен. На дне — клад: ${з} золота.`);
+   const из=(d.клад||[]).filter(id=>КАНОН_ВЕЩЬ[id]&&!КанонВещи.есть_у(id));
+   if(из.length){const a=КанонВещи.дать(из[Math.floor(Math.random()*из.length)],d.имя);if(a)т.push(`И ещё — ${a.имя}.`);}
+   safeFn(()=>journal(`Подводье «${d.имя}»: хозяин глубины повержен.`));}
+  if(g.дар[d.id]!==сег){g.дар[d.id]=сег;т.push((КанонМесто.ЭФ[d.эф]||КанонМесто.ЭФ.клад)());}else if(!победа)т.push(`${d.имя}: тихо, сегодня глубина свой дар уже отдала.`);
+  const r=d.ресурс&&КАНОН_РЕС[d.ресурс];if(r&&g.сбор[d.id]!==сег){g.сбор[d.id]=сег;G.inv[r.имя]=(Number(G.inv[r.имя])||0)+1;т.push(`Со дна — ${r.имя}.`);}
+  return т.join(" ");}};
+/* победа над хозяином глубины — клад и дар подводья */
+КанонЦепь.шаг("victory",function(m,cb,r){try{if(m&&m.кнНырок){const d=КАНОН_ГЕО[m.кнНырок];const k=d&&КАНОН_КРАЙ[d.край];
+ if(d&&k){const t=КанонГео.награда(d,k,true);setTimeout(()=>safeFn(()=>narrate(t,{interrupt:false})),2400);}}}catch(_){}return r;});
+/* карта с координатами: места природы краёв видны на своих клетках */
+safeFn(()=>{const ч0=Карта165.что.bind(Карта165);Карта165.что=function(x,y){const s=ч0(x,y);
+ try{if(this.мир){const h=КанонГео.здесь(x,y);if(h)return s?`${s}, ${h.f.вид} «${h.f.имя}»`:`${h.f.вид} «${h.f.имя}»`;}}catch(_){}return s;};});
 
 /* ── КанонЦепь: обёртки — по одной на функцию ── */
 safeFn(()=>{const s0=Undead.onStrike.bind(Undead);Undead.onStrike=function(m,mdmg){let d=s0(m,mdmg);

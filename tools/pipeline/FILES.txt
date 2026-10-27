@@ -115,3 +115,8 @@ release/releaseA10.py
 audit/audit.js
 audit/wraps.js
 audit/kcep.js
+kanon/kanon_canon2.py
+kanon/apply_kanon2.py
+kanon/sec13_geo.js
+kanon/apply_tests_k2.py
+hron/patch_guide_k2.py

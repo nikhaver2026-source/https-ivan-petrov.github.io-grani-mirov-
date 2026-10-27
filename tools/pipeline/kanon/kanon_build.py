@@ -6,7 +6,7 @@ import json, glob, re, sys, os
 sys.path.insert(0, "/root/S/kanon")
 import kanon_magic as KM
 
-C = "/root/S/lit/canon"; OUT = "/root/S/hron/kanon180_data.json"
+C = "/root/S/lit/canon"; OUT = os.environ.get("KANON_OUT", "/root/S/hron/kanon180_data.json")
 MAG = open("/root/S/kanon/mag_region.js", encoding="utf-8").read()
 DUMP = json.load(open("/root/S/kanon/dump.json"))
 BANK = set(DUMP["bank"]); NEWSND = set()  # новые записи kn_* (синтез) — заводятся модулем в SOUND_BANK
@@ -197,7 +197,18 @@ NICHES = set(re.findall(r'\n ?([a-z]+):\s*\{прил:', _mn))
 CTX = dict(дело=dict(KI.ДЕЛО), stats=ART_NM, ниши=NICHES, роды=set(DUMP["zvsnd"]), школы=SCH_N)
 WORLD, SKILLS, ош_м = KW.build(CANON, CRE, extra, ITEMS, CTX)
 ош += ош_м
-data = dict(world=WORLD, skills=SKILLS, items=ITEMS, pets=PETS, zvLevel=ZV_NEW, версия="18.0", sounds={r: SND_FILES[r] for r in sorted(NEWSND) if r in SND_FILES}, schools=schools, forms=KM.FORMS, coreForms=KM.CORE_FORMS, schoolSpells=base, extraSpells=extra, creatures=CRE, newSounds=sorted(NEWSND))
+# ── канон II (Альфа 1.5): места природы, города с кварталами, расы, боги, твари, вещи, ресурсы и люди краёв ──
+import kanon_canon2 as K2
+_src = open("/root/S/hron/index_before_mater.html", encoding="utf-8").read() + "".join(open(f, encoding="utf-8").read() for f in glob.glob("/root/S/hron/*_late.js") if not f.endswith("kanon180_late.js"))
+CTX2 = dict(stats=ART_ST, ниши=NICHES, бог_рода=БОГ, имена=set(re.findall(r'"([^"\\\n]{3,80})"', _src)))
+CRE2, ITEMS2, ош_2 = K2.build2(K2.load(), WORLD, CRE, ITEMS, CTX2)
+ош += ош_2
+for t in CRE2: snd(t["звукО"], f"тварь II {t['n']}")
+for x in ITEMS2: snd(x["звукО"], f"вещь II {x['имя']}")
+for k in WORLD:
+    for f in k.get("гео", []): snd(f["звукО"], f"место II {f['имя']}")
+CRE += CRE2; ITEMS += ITEMS2
+data = dict(world=WORLD, skills=SKILLS, items=ITEMS, pets=PETS, zvLevel=ZV_NEW, версия="Альфа 1.5", sounds={r: SND_FILES[r] for r in sorted(NEWSND) if r in SND_FILES}, schools=schools, forms=KM.FORMS, coreForms=KM.CORE_FORMS, schoolSpells=base, extraSpells=extra, creatures=CRE, newSounds=sorted(NEWSND))
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 json.dump(data, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 print(f"краёв {len(WORLD)}, умений {len(SKILLS)}; вещей {len(ITEMS)}, зверей {len(PETS)}, новых громкостей {len(ZV_NEW)}; тварей {len(CRE)}; школ {len(schools)}, специализаций {sum(len(s['specs']) for s in schools)}, форм {len(KM.FORMS)}, чар академии {len(base)}, у наставников {len(extra)}; новых звуков {len(NEWSND)}: {sorted(NEWSND)}")

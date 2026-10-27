@@ -46,7 +46,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   м.школ===60&&м.форм===20&&м.спец===240&&м.чарАкадемии===180&&!м.несовм.length&&!м.нетВСписке.length&&Object.values(м.формы).every(v=>v===true),м);
 
  /* ── 2. Твари канона ── */
- const т=await p.evaluate(async()=>{const o={всего:КАНОН_ТВАРИ.length};let встреч=0;
+ const т=await p.evaluate(async()=>{const o={всего:(KN.creatures||[]).filter(c=>!c.канон2).length};  /* (Альфа 1.5) канон II считает набор 346 */let встреч=0;
   for(let i=0;i<600;i++){const x=G.x+i*7,y=G.y+i*3;const c=cellContent(x,y);const m=safeFn(()=>beastAt(x,y,c,1),null);if(m&&m.кн)встреч++;}o.встречКанона=встреч;
   const мз=КАНОН_ТВАРИ.find(m=>КанонТвари.есть(m,"засада"));G.buffs={};
   const cb=БОЙ(Object.assign({},мз));o.засадаНаЭтомБою=cb.кнЗасада===1;await спим(2200);o.повадки=СКАЗАНО.some(t=>t.indexOf(мз.n)>=0&&/Повадки|засад/.test(t));if(G.inCombat)endCombat();
@@ -91,7 +91,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   &&з.облик&&з.встреча&&з.зверинец&&з.шаг[0]<з.шаг[1]&&з.окно,з);
 
  /* ── 5. Вещи канона ── */
- const в=await p.evaluate(async()=>{const o={всего:КАНОН_ВЕЩИ.length};G.artifacts=[];G.level=100;
+ const в=await p.evaluate(async()=>{const o={всего:КАНОН_ВЕЩИ.filter(x=>!x.канон2).length};  /* (Альфа 1.5) канон II считает набор 346 */G.artifacts=[];G.level=100;
   const a=КанонВещи.дать(КАНОН_ВЕЩИ.find(x=>x.имя==="Кольцо пяти зарядов").id,"проба");o.дело=/Дело:/.test(ART.describe(a,true));
   const m={id:"skeleton",n:"Скелет",lvl:3,hp:300,dmg:6,xp:1,gold:1};БОЙ(m);await спим(200);o.заряд=Undead.onStrike(m,10)===0;if(G.inCombat)endCombat();
   const k=КанонВещи.дать(КАНОН_ВЕЩИ.find(x=>x.имя==="Камертон усилителя").id,"проба");o.школа=Power.spellK({n:"проба",school:"strings"})>Power.spellK({n:"проба",school:"fire"});
