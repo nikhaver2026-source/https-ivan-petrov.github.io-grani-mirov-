@@ -128,7 +128,8 @@ const ГОЛОСА=["Algenib","Charon","Orus","Enceladus","Achird","Puck","Gacru
     руководства и титрах нет ни имени нейросети, ни имён её голосов, ни условий
     сервиса — только то, что слышно в игре. */
  check('8. выпуск новостей 21 есть, версия не ниже 3.7; новость, глава о живой речи и титры — без закулисья',
-  (v=>{const[a,b]=String(v).split('.').map(Number);return a*100+(b||0);})(свод.v)>=307&&/Версия \d+\.\d+/.test(свод.title)&&/versionName '\d+\.\d+(\.\d+)?'/.test(gradle)&&свод.news>=21
+  /* (Альфа 1.0) после 17.5 номер — «Альфа N.N»: он новее любой «Версии N.N» */
+  (v=>/^Альфа /.test(String(v))?10000+Number(String(v).slice(6))*100:(([a,b])=>a*100+(b||0))(String(v).split('.').map(Number)))(свод.v)>=307&&/Версия \d+\.\d+|Альфа \d+\.\d+/.test(свод.title)&&/versionName '(Альфа )?\d+\.\d+(\.\d+)?'/.test(gradle)&&свод.news>=21
   &&/четыреста семь/.test(свод.т)&&!/Gemini/.test(свод.н+свод.т)
   &&свод.глава.length>0&&!["Gemini","Algenib","Charon","Iapetus","Additional Terms"].some(v=>(свод.глава+" "+свод.титры).includes(v)),
   {v:свод.v,news:свод.news,н:свод.н});

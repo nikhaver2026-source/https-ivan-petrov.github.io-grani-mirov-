@@ -101,7 +101,7 @@ const flac=f=>{const b=fs.readFileSync(f);if(b.slice(0,4).toString()!=="fLaC")re
  const ww=fs.readFileSync(path.join(R,'.github','workflows','windows.yml'),'utf8');
  /* 14.5: только полные сборки при любом весе — один APK со всеми голосами (ZIP64, подпись v1) и один архив Windows */
  check('7. выкладываются только полные сборки: обычного APK, AAB и архива нет, выпуски несут ссылку на полные',
-  /grani-mirov-[\d.]+-full\.apk/.test(wa)&&!/grani-mirov-[\d.]+\.(apk|aab)\b/.test(wa)&&/gh release create android-latest --target/.test(wa)
+  /grani-mirov-(alpha-)?[\d.]+-full\.apk/.test(wa)&&!/grani-mirov-(alpha-)?[\d.]+\.(apk|aab)\b/.test(wa)  /* (Альфа 1.0) с alpha- */&&/gh release create android-latest --target/.test(wa)
   &&/windows-full\.zip/.test(ww)&&!/GraniMirov-[\d.]+-windows\.zip/.test(ww)&&!/voices\.zip/.test(ww)&&/gh release create windows-latest --target/.test(ww)
   &&/upload-artifact/.test(wa)&&/upload-artifact/.test(ww));
 

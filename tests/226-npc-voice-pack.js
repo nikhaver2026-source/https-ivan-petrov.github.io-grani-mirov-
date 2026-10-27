@@ -87,7 +87,7 @@ z=zipfile.ZipFile(sys.argv[1]);print(json.dumps({i.filename:[i.file_size,i.compr
   &&JSON.stringify(состав['assets/www/sounds/gvoice_pack/m/p00001.flac'])==='[3000,0]'&&JSON.stringify(состав['assets/www/sounds/voice/a.flac'])==='[1200,0]'&&!!состав['assets/www/sounds/CREDITS.md'];
  fs.rmSync(врем,{recursive:true,force:true});
  const wa=fs.readFileSync(path.join(ROOT,'.github','workflows','android.yml'),'utf8'),ww=fs.readFileSync(path.join(ROOT,'.github','workflows','windows.yml'),'utf8');
- const андроид=/full-apk\.py "\$SMALL" sounds/.test(wa)&&/TARGET_SDK: '29'/.test(wa)&&/jarsigner .*-signedjar grani-mirov-[\d.]+-full\.apk/.test(wa)
+ const андроид=/full-apk\.py "\$SMALL" sounds/.test(wa)&&/TARGET_SDK: '29'/.test(wa)&&/jarsigner .*-signedjar grani-mirov-(alpha-)?[\d.]+-full\.apk/.test(wa)  /* (Альфа 1.0) файл — grani-mirov-alpha-N.N-full.apk */
   &&(wa.match(/install-check\.sh/g)||[]).length>=2&&/api-level: 31/.test(wa)&&!/gvoice_pack/.test(wa)&&!/3900e6|3,9 ГБ/.test(wa);
  const виндоус=/mv sounds "\$G"\//.test(ww)&&/mv \.\.\/build\/game "\$D\/resources\/game"/.test(ww)&&/7z a -tzip -mx=0/.test(ww)&&!/gvoice_pack\/\*\*/.test(ww)&&!/3900e6|3,9 ГБ/.test(ww);
  check('4. полные сборки при любом весе: один APK (ZIP64, подпись v1, проверка на Android 12 и 15) и один архив Windows; сборщик APK кладёт все записи без сжатия',

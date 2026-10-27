@@ -64,7 +64,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* хозяйство с добротной мотыгой */
   let V=null;for(let i=0;i<4000&&!V;i++){const x=39000+i*7,y=40500+(i%13)*11;if(settlementSeed(x,y)==="village"){const c=cellContent(x,y);if(c&&c.structure&&c.structure.type==="village")V={x,y,c};}}
   G.place=null;G.x=V.x;G.y=V.y;const имя=Хозяйство170.имяДеревни(V.c);G.standing["vill:"+имя]=0;G.standing["city:"+имя]=0;Хозяйство170.ст();for(const k in G.хоз170)delete G.хоз170[k];Слава170.ст().день={};
-  const ч0=G.hour,д0=G.day;const s0=__said.length;o.работа=Хозяйство170.сделать("ogorod");o.прирост=Хозяйство170.отношение(имя);o.речь=__said.slice(s0).find(t=>/гряд/.test(t))||"";o.часов=((G.day-д0)*24+(G.hour-ч0));
+  /* (Альфа 1.0) часы игры идут по настоящим: поздним вечером работа переходила через полночь, а в полночь
+     отношение деревни тает на единицу — 9 становилось 8. Работа — днём. */
+  G.hour=10;const ч0=G.hour,д0=G.day;const s0=__said.length;o.работа=Хозяйство170.сделать("ogorod");o.прирост=Хозяйство170.отношение(имя);o.речь=__said.slice(s0).find(t=>/гряд/.test(t))||"";o.часов=((G.day-д0)*24+(G.hour-ч0));
   /* сбор: мастерский топор */
   G.items=(G.items||[]).filter(x=>!/^Топор лесоруба/.test(x));G.items.push("Топор лесоруба (мастерской работы)");const g=ToolKit.gather("дерево");o.сбор=g;
   return o;});

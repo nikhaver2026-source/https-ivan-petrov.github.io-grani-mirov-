@@ -195,7 +195,8 @@ const КОРОТКО=t=>typeof t==="string"&&t.length>0&&!/\d|\(|\)|Двойно
  const версия=await page.evaluate(()=>({v:GAME_VERSION,title:document.title,news:NEWS_V,т:(NEWS.find(n=>n.v===20)||{}).т||""}));
  const gradle=fs.readFileSync(path.join(ROOT,'android','app','build.gradle'),'utf8');
  check('9. версия не ниже 3.6, выпуск новостей 20 рассказывает о переменах',
-  (v=>{const[a,b]=String(v).split('.').map(Number);return a*100+(b||0);})(версия.v)>=306&&/Версия \d+\.\d+/.test(версия.title)&&/versionName '\d+\.\d+(\.\d+)?'/.test(gradle)&&версия.news>=20
+  /* (Альфа 1.0) после 17.5 номер — «Альфа N.N»: он новее любой «Версии N.N» */
+  (v=>/^Альфа /.test(String(v))?10000+Number(String(v).slice(6))*100:(([a,b])=>a*100+(b||0))(String(v).split('.').map(Number)))(версия.v)>=306&&/Версия \d+\.\d+|Альфа \d+\.\d+/.test(версия.title)&&/versionName '(Альфа )?\d+\.\d+(\.\d+)?'/.test(gradle)&&версия.news>=20
   &&/одним именем/.test(версия.т)&&!/Supertonic/.test(версия.т),версия);  /* (14.5) без имени движка: игроку не нужно знать, чем это сделано */
 
  check('страница не бросила ни одной ошибки',errors.length===0,errors.slice(0,3));

@@ -341,9 +341,13 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* бой с капитаном */
   while(activeLayer())closeTopUI();G.inCombat=false;G.combat=null;
   r.бой=Forts.capture(f.id);r.капитан=G.inCombat&&G.combat&&G.combat.m&&G.combat.m.взятие&&G.combat.m.взятие.fort===f.id;
+  /* (Альфа 1.0) музыка нового места — по таймеру от прежнего шага — могла лечь позже музыки победы;
+     смотрим, что победа прозвучала после взятия, а не что она последняя. */
+  const ев=[];const e0=eventTheme;eventTheme=function(id,o){ев.push(id);return e0.apply(this,arguments);};
   if(r.капитан){G.combat.hp=0;EventPick.last=null;PLAYED.length=0;victory();await пауза(700);
    const ov=document.getElementById("lootOverlay");if(ov)ov.hidden=true;G.loot=null;while(activeLayer())closeTopUI();}
-  r.взята=Forts.state(f.id).owner==="player";r.взятиеМузыка=EventPick.last&&EventPick.last.id;r.взятиеЗвук=PLAYED.includes("siege_victory");
+  eventTheme=e0;
+  r.взята=Forts.state(f.id).owner==="player";r.взятиеМузыка=ев.includes("victory_great")?"victory_great":(EventPick.last&&EventPick.last.id);r.взятиеЗвук=PLAYED.includes("siege_victory");
   /* восстановить, укрепить, база, передать */
   G.gold=1000;G.inv["кристалл"]=5;
   PLAYED.length=0;r.восст=Forts.restore(f.id);r.стены=Forts.state(f.id).walls;r.восстЗвук=PLAYED.includes("build_work");
