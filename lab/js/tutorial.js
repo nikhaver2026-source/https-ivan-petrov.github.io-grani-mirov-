@@ -76,7 +76,7 @@ var IDLE = [
 var idleN = 0, lastIdle = 0, timer = null;
 function idleGap() { return [0, 300000, 150000, 75000][level()] || 0; }
 function idleTick() {
-  var g = gm(); if (!g || !g.entered || g.paused || !G() || G().dead || G().stair) return;
+  var g = gm(); if (!g || !g.entered || g.paused || LAB.bg || !G() || G().dead || G().stair) return; /* (3.3) фон — не безделье */
   var gap = idleGap(); if (!gap) return;
   if (LAB.ui && LAB.ui.layer && LAB.ui.layer()) return;
   if (LAB.mini && LAB.mini.active && LAB.mini.active()) return;

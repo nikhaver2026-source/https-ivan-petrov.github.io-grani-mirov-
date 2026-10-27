@@ -66,6 +66,16 @@ function recover(min, asleep) {
   var f0 = b.food;
   gm().advanceTime(min, true);
   b.food = Math.min(100, f0 + min / 40);
+  /* (3.3) пока на этаже тревога или каратели идут по следу, капсула только кормит:
+     иначе посреди погони в ней отлёживались бы страницами рассказов и получасами
+     с закрытыми глазами (сон в такое время и не начнётся — sleep) */
+  var why = gm().restBlock ? gm().restBlock() : null;
+  if (why) {
+    inCap.min += min;
+    if (!inCap.noRest) { inCap.noRest = 1; sayq("Пока машины ОКО ищут вас, капсула сил не восстанавливает: раствор только кормит."); }
+    UIx("refresh");
+    return;
+  }
   var deep = LAB.ach && LAB.ach.has("sleeper") ? 1.25 : 1; /* умение «Глубокий сон» */
   g.hp = Math.min(g.hpMax, g.hp + Math.ceil(g.hpMax * min * deep / 240));
   g.en = Math.min(g.enMax, g.en + Math.ceil(g.enMax * min * deep / 240));
@@ -111,13 +121,11 @@ function bind() {
   var p = bindPrice(g.L, g.F);
   if ((g.credits || 0) < p) { LAB.UI.error(); say("Не хватает кредитов: привязка здесь стоит " + p + ", у вас " + (g.credits || 0) + ". Без привязки, если погибнете, «Эхо» вернёт вас к началу уровня."); return; }
   g.credits -= p;
-  var c = gm().freeNear ? gm().freeNear(o) : [g.x, g.y];
-  g.checkpoint = { L: g.L, F: g.F, x: c[0], y: c[1], cap: o.id };
+  g.checkpoint = { L: g.L, F: g.F, x: g.x, y: g.y, cap: o.id }; /* возрождаться — там, где вы стоите у капсулы */
   A("play", "term_ok");
   ev("bind", 1);
   say("Капсула считала ваш браслет и запомнила вас. Списано " + p + " " + pl(p, "кредит", "кредита", "кредитов") + ", осталось " + g.credits + ". Если погибнете на этом уровне, «Эхо» вернёт вас сюда. Прежняя привязка снята.");
   gm().journal("Привязка к капсуле восстановления: уровень " + g.L + ", этаж " + g.F + ", " + p + " " + pl(p, "кредит", "кредита", "кредитов") + ".");
-  refreshTop();
 }
 function menu(focus, intro) {
   var o = inCap.o;
@@ -125,11 +133,10 @@ function menu(focus, intro) {
   var build = function () { return menuItems(); };
   UIx("menu", "Капсула восстановления", build(), { keep: true, rebuild: build, focus: focus || 0, intro: intro || statusLine(), onClose: function () { if (inCap.o) leave(true); } });
 }
-/* Окно сверху — заново по своему списку (новые пункты, например «Остановить музыку»). */
-function refreshTop() {
-  var w = LAB.ui && LAB.ui.layer ? LAB.ui.layer() : null;
-  if (w && w !== "screen" && w.rebuild) { w.items = w.rebuild(); w.i = Math.min(w.i, w.items.length - 1); if (LAB.ui.render) LAB.ui.render(); }
-}
+/* Окно сверху — заново по своему списку (новые пункты, например «Остановить музыку»), когда
+   перемены пришли не от пункта окна (сон, музыка). (3.3) Окно, чей пункт сам что-то изменил,
+   собирается заново в ui.js (activate) — здесь его не пересобирают второй раз. */
+function refreshTop() { if (LAB.ui && LAB.ui.rebuildTop) LAB.ui.rebuildTop(); }
 /* Сказать после того, как окно объявит себя. */
 function later(t) { setTimeout(function () { LAB.safe(function () { sayq(t); }); }, 40); }
 function menuItems() {
@@ -147,7 +154,10 @@ function menuItems() {
   items.push({ label: "Почитать «Библиотеку проектов»", fn: function () { shelf("projects"); } });
   items.push({ label: "Включить радио поверхности", fn: function () { shelf("radio"); } });
   items.push({ label: "Видеоархив капсулы", fn: function () { shelf("video"); } });
-  items.push({ label: "Полежать с закрытыми глазами: полчаса", keep: true, fn: function () { recover(30, false); A("play", "capsule_hum", { gain: 0.5 }); say("Вы лежите, слушая ровный гул капсулы. Прошло полчаса. " + statusLine()); } });
+  items.push({ label: "Полежать с закрытыми глазами: полчаса", keep: true, fn: function () {
+    var why = gm().restBlock ? gm().restBlock() : null; /* (3.3) как и сон: в тревогу — не до покоя */
+    if (why) { LAB.UI.error(); say(why); return; }
+    recover(30, false); A("play", "capsule_hum", { gain: 0.5 }); say("Вы лежите, слушая ровный гул капсулы. Прошло полчаса. " + statusLine()); } });
   items.push({ label: "Состояние тела", keep: true, fn: function () { gm().bodyStatus(); } });
   if (o && boundHere(o)) items.push({ label: "Вы привязаны к этой капсуле: если погибнете, вернётесь сюда", info: true, keep: true, fn: function () { say("Вы привязаны к этой капсуле. Погибнете на этом уровне — «Эхо» вернёт вас сюда. Привязка к другой капсуле снимет эту."); } });
   items.push({ label: "Откинуть крышку и выйти", fn: function () { leave(false); } });
@@ -206,12 +216,12 @@ function chargeItems(st) {
   var g = G(), items = [], all = g.weapons.filter(chargeable), need = all.filter(function (w) { return w.charge < w.cap; });
   var who = st ? "станция" : "капсула";
   items.push({ label: "У вас " + cr(g.credits || 0) + ". Платите только за недостающий заряд.", info: true, keep: true, fn: function () { say("У вас " + cr(G().credits || 0) + "."); } });
-  need.forEach(function (w) { items.push({ label: capital(gm().weaponLine(w)) + ". Зарядить полностью — " + cr(chargePrice(w)), keep: true, fn: function () { chargeOne(w); refreshTop(); } }); });
-  if (need.length > 1) items.push({ label: "Зарядить всё оружие — " + cr(need.reduce(function (s2, w) { return s2 + chargePrice(w); }, 0)), keep: true, fn: function () { chargeAll(); refreshTop(); } });
+  need.forEach(function (w) { items.push({ label: capital(gm().weaponLine(w)) + ". Зарядить полностью — " + cr(chargePrice(w)), keep: true, fn: function () { chargeOne(w); } }); });
+  if (need.length > 1) items.push({ label: "Зарядить всё оружие — " + cr(need.reduce(function (s2, w) { return s2 + chargePrice(w); }, 0)), keep: true, fn: function () { chargeAll(); } });
   if (!need.length) items.push({ label: all.length ? "Всё оружие заряжено" : "Оружия на батареях нет: " + who + " заряжает только его, не патроны", info: true, keep: true, fn: function () { say(all.length ? "Всё оружие заряжено." : capital(who) + " заряжает только оружие на батареях."); } });
   if (st && LAB.medic && LAB.medic.vendPrice) {
     var pb = LAB.medic.vendPrice("ammo:energy");
-    items.push({ label: "Зарядить энергобатарею — " + cr(pb) + ". Батарей у вас: " + (g.ammo.energy || 0), keep: true, fn: function () { gm().buy("ammo:energy", pb); refreshTop(); } });
+    items.push({ label: "Зарядить энергобатарею — " + cr(pb) + ". Батарей у вас: " + (g.ammo.energy || 0), keep: true, fn: function () { gm().buy("ammo:energy", pb); } });
   }
   items.push({ label: "Назад", fn: function () {} });
   return items;
@@ -237,11 +247,16 @@ function sleepMenu() {
   UIx("menu", "Сон", items);
 }
 function sleep(s) {
+  /* (3.3) часы сна пролетают разом, а машины ОКО не ждут: в тревогу, под шагами
+     карателей и когда сюда идут машины — не уснуть (как и отдыхать на обстановке) */
+  var why = gm().restBlock ? gm().restBlock() : null;
+  if (why) { LAB.UI.error(); say(why.replace("Не до отдыха", "Не до сна")); return; }
   UIx("closeTop", true);
   stopTrack(true);
   var g = G(), b = g.body;
   var dream = pickDream();
   recover(s.min, true);
+  g.restAt = (g.day || 0) * 1440 + (g.min || 0); /* (3.3) только что выспались — стул после капсулы толку не даст */
   if (s.min >= 240) { g.hp = g.hpMax; g.en = g.enMax; b.wake = 100; b.neuro = 0; g.st.poison = 0; g.st.bleed = 0; }
   if (s.min >= 480) g.st.restedMin = 360;
   if (s.min >= 720) { b.tox = 0; b.rad = Math.max(0, (b.rad || 0) - 30); }
@@ -274,7 +289,7 @@ var playing = null;
 function musicMenu() {
   var list = tracks(), items = [];
   if (!list.length) { items.push({ label: "Фонотека капсулы пуста", info: true, keep: true, fn: function () {} }); }
-  if (LAB.S && !LAB.S.music) items.push({ label: "Музыка выключена в настройках: громкость музыки — в разделе «Настройки», «Громкость»", info: true, keep: true, fn: function () {} });
+  if (LAB.settings && !LAB.settings.music) items.push({ label: "Музыка выключена в настройках: громкость музыки — в разделе «Настройки», «Громкость»", info: true, keep: true, fn: function () {} });
   list.forEach(function (t) { items.push({ label: "«" + t.n + "» — " + t.mood + (playing && playing.t === t ? " — играет" : ""), fn: function () { playTrack(t); } }); });
   if (list.length > 1) items.push({ label: "Всё подряд: вся фонотека, одна запись за другой", fn: function () { playAll(list); } });
   items.push({ label: "Об этих записях: авторы и лицензии", keep: true, fn: function () { say("Записи фонотеки — свободные. " + list.map(function (t) { return "«" + t.n + "»: " + t.cr; }).join(". ") + "."); } });
@@ -287,7 +302,8 @@ function playTrack(t, queue) {
   var h = LAB.Sound && LAB.Sound.loop ? LAB.Sound.loop("capmus", t.id, { bus: "music", gain: 1, fadeIn: 1.2, xfade: 1 }) : null;
   playing = { t: t, h: h, t0: Date.now(), q: queue || null };
   playing.timer = setTimeout(function () { LAB.safe(trackEnd); }, TRACK_SEC * 1000);
-  ev("music", 1);
+  /* (3.3) в счёт вехи — каждая запись один раз: одну и ту же гонять по кругу не в счёт */
+  if (!(G().heard || {})[t.id]) ev("music", 1);
   (G().heard = G().heard || {})[t.id] = 1;
   if (Object.keys(G().heard).length >= tracks().length) ev("allmusic", 1);
   if (!queue || queue.first) {
@@ -295,7 +311,7 @@ function playTrack(t, queue) {
     var w = LAB.ui && LAB.ui.layer ? LAB.ui.layer() : null;
     if (w && w !== "screen" && w.title === "Фонотека капсулы") UIx("closeTop", true);
     refreshTop();
-    say("Играет «" + t.n + "». Вы в меню капсулы: под музыку можно читать, слушать радио или просто лежать." + (LAB.S && !LAB.S.music ? " Но музыка выключена в настройках — включите громкость музыки." : ""));
+    say("Играет «" + t.n + "». Вы в меню капсулы: под музыку можно читать, слушать радио или просто лежать." + (LAB.settings && !LAB.settings.music ? " Но музыка выключена в настройках — включите громкость музыки." : ""));
   } else refreshTop();
 }
 function playAll(list) { var q = { list: list.slice(), i: 0, first: true }; playTrack(q.list[0], q); q.first = false; }
@@ -355,7 +371,7 @@ function open(kind, q) {
   ev(kind === "projects" ? "project" : kind, 1);
   if (kind === "radio") A("play", "radio", { gain: 0.5 });
   var title = (kind === "video" ? "Видеозапись" : kind === "radio" ? "Радио" : "Рассказ") + ": «" + q.t + "»";
-  reader(title, q.x, { intro: q.a ? q.a + "." : "", perPage: S.page, onClose: function () { later("Вы откладываете " + (kind === "video" ? "экран" : kind === "radio" ? "приёмник" : "чтение") + ". " + statusLine()); } });
+  reader(title, q.x, { id: kind + ":" + q.id, intro: q.a ? q.a + "." : "", perPage: S.page, onClose: function () { later("Вы откладываете " + (kind === "video" ? "экран" : kind === "radio" ? "приёмник" : "чтение") + ". " + statusLine()); } });
 }
 /* Читалка: по странице на пункт, свайп вправо — дальше, влево — назад; за
    каждую новую страницу — несколько минут отдыха; «Закрыть» — в меню капсулы. */
@@ -374,7 +390,7 @@ function reader(title, text, opts) {
       seen[i] = 1;
       if (i > 0) A("play", "paper_turn", { gain: 0.45 });
       if (opts.perPage && inCap.o) recover(opts.perPage, false);
-      if (i === n - 1) ev("readend", 1);
+      if (i === n - 1) { var re = G().readEnd = G().readEnd || {}, rid = opts.id || title; if (!re[rid]) { re[rid] = 1; ev("readend", 1); } } /* (3.3) дочитанное — в счёт один раз */
     },
     onClose: function () { LAB.safe(function () { if (opts.onClose) opts.onClose(); }); }
   });

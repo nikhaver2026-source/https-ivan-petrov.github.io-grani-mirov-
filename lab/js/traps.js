@@ -650,7 +650,9 @@ function place(k, where) {
   A("play", "mine_set");
   if (d.mine) A("play", "mine_arm", { delay: 0.35 }); /* (2.6) мина взведена: короткие писки взрывателя */
   if (cb()) cb().noise(2);
-  ev("trap_set", 1);
+  /* (3.3) в счёт вехи — каждая ловушка один раз: снятая целой и поставленная снова не в счёт */
+  var tb = g.trapBack = g.trapBack || {};
+  if (tb[k] > 0) tb[k]--; else ev("trap_set", 1);
   var where2 = where === "front" ? LAB.DIRN[g.face] : "под ногами";
   var extra = d.trig === "wire" && tp.cells.length > 1 ? " Проволока натянута поперёк, на " + tp.cells.length + " " + pl(tp.cells.length, "шаг", "шага", "шагов") + "." : d.trig === "cone" ? " Веер смотрит " + LAB.DIRTO[g.face] + "." : "";
   var how = d.trig === "remote" ? " Подорвать — окно «Ловушки и мины», «Ваши ловушки на этаже»." : d.trig === "lure" ? " Запищит, когда отойдёте." : tp.st === "wait" ? " Взведётся, когда вы отойдёте." : " Взведётся через пару секунд.";
@@ -680,8 +682,11 @@ function pickUp(tp) {
   if (tp.st === "held") { say("Сначала пусть ловушка отпустит того, кого держит."); return; }
   remove(tp);
   A("play", "pry");
-  var full = tp.uses >= (d.uses || 1) || d.uses >= 99 || (d.trig === "lure" && tp.st !== "on");
-  if (full || tp.st === "wait" || tp.st === "arm") { g.inv[d.item] = (g.inv[d.item] || 0) + 1; say(cap1(d.n) + " " + gv(d, "снят", "снята", "сняты") + " и в рюкзаке."); }
+  /* (3.3) целой возвращается только неизношенная: взведённая снова после срабатываний —
+     изношенная (прежде «Взвести снова» и «Снять» превращали капкан на излёте в новый), а
+     приманка — только пока не запищала */
+  var full = d.trig === "lure" ? tp.st !== "on" && (tp.life == null || !d.life || tp.life >= d.life) : (tp.uses >= (d.uses || 1) || d.uses >= 99);
+  if (full) { g.inv[d.item] = (g.inv[d.item] || 0) + 1; var tb = g.trapBack = g.trapBack || {}; tb[tp.t] = (tb[tp.t] || 0) + 1; say(cap1(d.n) + " " + gv(d, "снят", "снята", "сняты") + " и в рюкзаке."); }
   else { var parts = partsOf(d), got = []; for (var p in parts) { g.inv[p] = (g.inv[p] || 0) + parts[p]; got.push((LAB.ITEMS[p] ? LAB.ITEMS[p].n.toLowerCase() : p) + (parts[p] > 1 ? " — " + parts[p] : "")); } say(cap1(d.n) + " " + gv(d, "изношен", "изношена", "изношены") + ": вы разбираете её на детали. " + (got.length ? "Получено: " + got.join(", ") + "." : "")); }
   UIx("refresh");
 }
@@ -875,6 +880,8 @@ function okoTrap(kind, x, y, o) {
   o = o || {};
   var d = T[kind];
   if (!d || !floorOk(x, y) || trapOn(x, y)) return null;
+  /* (3.3) в безопасной зоне у капсулы ОКО мин не ставит */
+  if (LAB.combat && LAB.combat.havenAt && LAB.combat.havenAt(x, y)) return null;
   var tp = { id: nextId(), t: kind, x: x, y: y, own: 0, by: "oko", known: 0, st: "on", uses: d.uses >= 99 ? 99 : 1 };
   if (o.dmg) tp.dmgAbs = o.dmg;
   if (d.trig === "wire") { tp.cells = wireCells(x, y, o.face || "N"); if (tp.cells.some(function (q) { return trapOn(q[0], q[1], tp); })) return null; }

@@ -1206,11 +1206,20 @@ function genFloor(seed, L, F, attempt) {
     quietRooms.push(s);
   }
   r.shuffle(quietRooms);
-  if (quietRooms.length && r.chance(L <= 9 ? 0.32 : 0.25)) {
+  /* (3.3, просьба игрока: живых больше) выжившие — чаще и до двоих на этаже: в «Ковчеге» и
+     «Подножии» люди прячутся по помещениям, глубже их меньше. У второго — своё зерно и свой
+     ключ (L-F-s2): поручения у каждого свои. */
+  var survP = L <= 20 ? [0.7, 0.35] : [0.55, 0.22];
+  if (quietRooms.length && r.chance(survP[0])) {
     var ns = quietRooms.shift();
     var sv = makeSurvivor(r, L, F, ns, rooms[ns]);
     var cS = freeCell(ns);
     if (cS) { sv.x = cS[0]; sv.y = cS[1]; objCell[idx(sv.x, sv.y)] = 1; fl.npcs.push(sv); }
+    var rs2 = Rng(seed, "surv2:" + L + ":" + F + ":" + attempt);
+    if (quietRooms.length && rs2.chance(survP[1])) {
+      var ns2 = quietRooms.shift(), sv2 = makeSurvivor(rs2, L, F, ns2, rooms[ns2]), cS2 = freeCell(ns2);
+      if (cS2) { sv2.id = "n" + fl.npcs.length; sv2.key = L + "-" + F + "-s2"; sv2.x = cS2[0]; sv2.y = cS2[1]; objCell[idx(sv2.x, sv2.y)] = 1; fl.npcs.push(sv2); }
+    }
   }
   if (quietRooms.length && r.chance(0.22)) {
     var nr = quietRooms.shift();
@@ -1361,6 +1370,36 @@ function genFloor(seed, L, F, attempt) {
   /* 25. (3.0) Химия (chem.js): химические столы, сырьё в хранилищах лабораторий,
      медпунктов, складов и мастерских, склянки и журналы с рецептурами — своим потоком. */
   if (LAB.chem && LAB.chem.place) LAB.chem.place({ fl: fl, L: L, F: F, seed: seed, attempt: attempt, U: U, addObj: addObj, addItem: addItem });
+  /* 26. (3.3, просьба игрока: живых больше) Выживших меньше задуманного — ещё в помещениях
+     и кабинетах, где нет ни машин, ни тварей (уже после охраны и отрядов): люди прячутся
+     и в кабинетах у коридоров. Своё зерно, свой ключ у каждого (L-F-s, s2, s3). */
+  var rs3 = Rng(seed, "surv3:" + L + ":" + F + ":" + attempt);
+  var survWant = (rs3.chance(L <= 20 ? 0.75 : 0.6) ? 1 : 0) + (rs3.chance(L <= 20 ? 0.4 : 0.25) ? 1 : 0);
+  var humans = fl.npcs.filter(function (n9) { return !n9.robot && !n9.heal; }).length;
+  if (humans < survWant && !(L === 1 && F === 1)) {
+    var foeRoom = {}, npcRoom = {}, capRoom = {}, usedKey = {}, calm = [];
+    fl.foes.forEach(function (f9) { if (f9.room != null) foeRoom[f9.room] = 1; });
+    fl.npcs.forEach(function (n9) { npcRoom[n9.room] = 1; usedKey[n9.key] = 1; });
+    /* у капсулы — только аптечный автомат (medic.js уже развёл торговые точки):
+       выживший-торговец туда не встаёт */
+    fl.objs.forEach(function (o9) { if ((o9.type === "capsule" || o9.type === "wake") && o9.room >= 0) capRoom[o9.room] = 1; });
+    fl.rooms.forEach(function (m9, s9) {
+      if (!m9 || m9.hidden || m9.rad || m9.gas || foeRoom[s9] || npcRoom[s9] || capRoom[s9] || s9 === U || s9 === D || s9 === E || s9 === secret || s9 === bossSlot) return;
+      var def9 = LAB.ROOMS[m9.type] || {};
+      if (def9.special || (def9.kind && def9.kind !== "locked")) return;
+      calm.push(s9);
+    });
+    rs3.shuffle(calm);
+    while (humans < survWant && calm.length) {
+      var s9 = calm.shift(), sv9 = makeSurvivor(rs3, L, F, s9, fl.rooms[s9]), c9 = freeCell(s9);
+      if (!c9) continue;
+      var k9 = ["s", "s2", "s3"].filter(function (k) { return !usedKey[L + "-" + F + "-" + k]; })[0];
+      if (!k9) break;
+      usedKey[L + "-" + F + "-" + k9] = 1;
+      sv9.id = "n" + fl.npcs.length; sv9.key = L + "-" + F + "-" + k9; sv9.x = c9[0]; sv9.y = c9[1];
+      objCell[idx(sv9.x, sv9.y)] = 1; fl.npcs.push(sv9); humans++;
+    }
+  }
   /* 26. (3.0) Заваленная лестница вниз (rubble.js): на этом же этаже — гидравлический
      домкрат или подрывной заряд, там, куда можно дойти, не открывая других замков,
      кроме тех, что и так стоят на пути к лестнице; не в тайной комнате, не у самой

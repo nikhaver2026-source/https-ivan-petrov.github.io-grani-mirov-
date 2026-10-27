@@ -38,7 +38,9 @@ var DRINKS = {
     { n: "Изотоник «Марафон»", id: "isotonic", p: 9, hp: 12, cure: true, wake: 6, detox: 6, x: "Солоноватый изотоник. Тяжесть в ногах отступает.", s: "drink_gulp" }
   ] }
 };
-function priceOf(d) { return Math.round(d.p * (1 + (G().L - 1) * 0.12)); }
+/* (3.3) цена растёт с глубиной так же, как лечение (прежде медленнее), и — по режиму
+   сложности, как у прочих торговцев */
+function priceOf(d) { var dk = LAB.dk ? LAB.dk() : {}; return Math.round(d.p * (1 + (G().L - 1) * 0.15) * (dk.price || 1) * (G().faction === "res" ? 0.8 : 1)); }
 function healOf(d) { return Math.round(d.hp * (1 + (G().L - 1) * 0.15)); }
 function machineName(o) { return DRINKS[o.type] ? DRINKS[o.type].n : "Автомат"; }
 function drinkMenu(o) {
@@ -71,6 +73,9 @@ function buyDrink(o, d) {
 function takeDrink(o, d, pre) {
   var g = G();
   g.inv[d.id] = (g.inv[d.id] || 0) + 1;
+  /* (3.3) стакан помнит глубину, где его купили: лечит, как автомат той глубины (game.js, useItem);
+     прежде стакан за десять кредитов с первого уровня глубоко внизу лечил, как тамошний */
+  if (LAB.ITEMS[d.id] && LAB.ITEMS[d.id].cup) { g.cupL = g.cupL || {}; (g.cupL[d.id] = g.cupL[d.id] || []).push(g.L); }
   say(pre + " " + LAB.ITEMS[d.id].n + " — в рюкзаке, раздел «Еда и напитки»" + (o.type === "coffee" ? ", под крышкой не остынет" : "") + ". Выпить — " + LAB.K("инвентарь, «Еда и напитки», или присев на диван, в кресло, на койку: там напиток действует лучше.", "клавиша G или инвентарь, «Еда и напитки», или присев на диван, в кресло, на койку: там напиток действует лучше.") + " Кредитов " + g.credits + ".");
   gm().journal("Взят с собой напиток: " + d.n + ".");
   UIx("refresh");

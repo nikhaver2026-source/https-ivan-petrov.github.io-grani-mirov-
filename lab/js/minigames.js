@@ -32,11 +32,12 @@ function puzzleDuck() {
   duckOn = on;
   if (LAB.AE && LAB.AE.setPuzzle) LAB.AE.setPuzzle(on);
 }
-setInterval(function () { LAB.safe ? LAB.safe(puzzleDuck) : puzzleDuck(); }, 150);
+/* (3.3) приглушение мира переключается там, где головоломка начинается и кончается
+   (прежде — опросом раз в 150 мс всю игру, и в меню, и в фоне) */
 function finish(ok, val) {
   var c = cur;
   if (!c) return;
-  cur = null;
+  cur = null; puzzleDuck();
   if (c.cleanup) LAB.safe(c.cleanup);
   if (LAB.ui && LAB.ui.refresh) LAB.ui.refresh();
   LAB.UI[ok ? "ok" : "error"]();
@@ -46,9 +47,13 @@ function finish(ok, val) {
 var lastCancel = 0;
 function cancel(silent) {
   if (!cur) return;
-  lastCancel = Date.now();
+  /* (3.3) отойти можно, пока не ошиблись: прерванная после ошибок игра — провал, иначе
+     отмена стирала бы промахи и штраф (мина не взрывалась, взлом не поднимал тревогу,
+     и новая попытка начиналась с полными жизнями) */
+  var c0 = cur, dirty = c0.type === "hack" ? c0.tries < (c0.tries0 || c0.tries) : (c0.tries || 0) > 0 || (c0.misses || 0) > 0 || (c0.errs || 0) > 0;
+  lastCancel = dirty ? 0 : Date.now();
   var quiet = cur.type === "ext" && cur.quiet; /* занятие без исхода (инструмент): уйти — не провал */
-  if (!silent && !quiet) say(cur.name + ": прервано.");
+  if (!silent && !quiet) say(cur.name + (dirty ? ": прервано — но ошибки уже сделаны, это провал." : ": прервано."));
   finish(quiet ? true : false, cur.type === "code" ? null : (quiet ? true : false));
 }
 /* Внешнее занятие с перехватом жестов (1.6): музыкальный инструмент и т. п.
@@ -56,7 +61,7 @@ function cancel(silent) {
    считается провалом; back() — «Назад» занятие не прерывает, если вернула
    true (2.0: инструмент на весь экран уводят только четыре пальца). */
 function start(ext) {
-  cur = { type: "ext", name: ext.name || "Занятие", cb: ext.cb, handler: ext.handler, cleanup: ext.cleanup, quiet: !!ext.quiet, back: ext.back || null };
+  cur = { type: "ext", name: ext.name || "Занятие", cb: ext.cb, handler: ext.handler, cleanup: ext.cleanup, quiet: !!ext.quiet, back: ext.back || null }; puzzleDuck();
 }
 
 /* ════════ ВЗЛОМ: повторить сигналы ════════
@@ -94,7 +99,8 @@ function hack(len, cb, opts) {
   var seq = [], dirs = ["U", "D", "L", "R"];
   for (var i = 0; i < len; i++) seq.push(dirs[Math.floor(Math.random() * 4)]);
   /* четыре попытки (1.6): ошибка не губит взлом сразу — раунд звучит заново; четвёртая ошибка — защита сработала, и ОКО шлёт проверку */
-  cur = { type: "hack", name: opts.title || "Взлом", cb: cb, seq: seq, round: Math.min(3, len), pos: 0, replays: 1, busy: true, tries: (opts.tries || 4) + (LAB.implants ? Math.round(LAB.implants.stat("tries")) : 0), noOko: !!opts.noOko };
+  cur = { type: "hack", name: opts.title || "Взлом", cb: cb, seq: seq, round: Math.min(3, len), pos: 0, replays: 1, busy: true, tries: (opts.tries || 4) + (LAB.implants ? Math.round(LAB.implants.stat("tries")) : 0), noOko: !!opts.noOko }; puzzleDuck();
+  cur.tries0 = cur.tries; /* (3.3) сколько попыток было: отмена после ошибок — провал */
   say((opts.title || "Взлом") + ". Сигналов: " + len + ". Попыток: " + cur.tries + ". У каждого сигнала своя цифра: " + sigHelp() + ". " + LAB.K("Слушайте комбинацию и повторяйте её свайпами; после каждого верного повтора добавляется ещё один сигнал. Касание — повторить комбинацию.", "Слушайте комбинацию и повторяйте её стрелками или цифрами от 1 до 4; после каждого верного повтора добавляется ещё один сигнал. Пробел — повторить комбинацию, Escape — отойти."), { interrupt: true });
   waitSpeech(function () { playRound(); });
 }
@@ -150,7 +156,7 @@ function tune(cb, opts) {
   var f0 = 220, sign = Math.random() < 0.5 ? -1 : 1;
   var delta = sign * (opts.hard ? 9 + Math.random() * 7 : 5 + Math.random() * 6);
   var c = { type: "tune", name: "Настройка резонатора", cb: cb, f0: f0, delta: delta, step: opts.hard ? 0.5 : 1, tries: 0 };
-  cur = c;
+  cur = c; puzzleDuck();
   /* два тона с биениями — особый звук единого обработчика */
   var hv = LAB.Sound && LAB.Sound.custom("tune", "puzzle", function (x, bus) {
     var g = x.createGain(); g.gain.value = 0; g.connect(bus);
@@ -196,7 +202,7 @@ function tuneGesture(g) {
 /* ════════ ПОЗИТРОННАЯ ЛОВУШКА: в такт пульсу ════════ */
 function rhythm(n, cb) {
   var c = { type: "rhythm", name: "Стабилизация ловушки", cb: cb, need: Math.max(3, n || 3), streak: 0, misses: 0, period: 950, next: 0, raw: true, timer: null, ready: false };
-  cur = c;
+  cur = c; puzzleDuck();
   say("Стабилизация ловушки. Слушайте пульс поля и " + LAB.K("касайтесь экрана одним пальцем точно в такт. Нужно " + c.need + " точных касаний подряд.", "нажимайте пробел точно в такт. Нужно " + c.need + " точных нажатий подряд.") + " Три промаха — выброс.", { interrupt: true });
   waitSpeech(function () {
     if (cur !== c) return;
@@ -242,7 +248,7 @@ function rhythmDown(t) {
 function code(cb, opts) {
   opts = opts || {};
   /* (3.0) opts.pin — пароль компьютера: те же четыре позиции, но слова про цифры, а не про диски */
-  cur = { type: "code", name: opts.title ? opts.title + (opts.pin ? "" : ": кодовый замок") : "Кодовый замок", cb: cb, d: [0, 0, 0, 0], i: 0, w: opts.pin ? "Цифра" : "Диск" };
+  cur = { type: "code", name: opts.title ? opts.title + (opts.pin ? "" : ": кодовый замок") : "Кодовый замок", cb: cb, d: [0, 0, 0, 0], i: 0, w: opts.pin ? "Цифра" : "Диск" }; puzzleDuck();
   say((opts.title ? opts.title + ". " : "") + (opts.pin ? "Пароль — четыре цифры. " : "Кодовый замок. Четыре диска. ") + LAB.K("Свайп вверх или вниз — цифра, вправо или влево — следующая или прошлая позиция, двойное касание — ввести " + (opts.pin ? "пароль" : "код") + ". Касание — повторить набранное, два пальца вниз — отойти.", "Стрелки вверх и вниз — цифра, вправо и влево — следующая или прошлая позиция, цифры от 0 до 9 — набрать сразу, Enter — ввести " + (opts.pin ? "пароль" : "код") + ". Пробел — повторить набранное, Escape — отойти.") + " " + (opts.pin ? "Цифра" : "Диск") + " 1: 0.", { interrupt: true });
 }
 function codeGesture(g) {
@@ -288,7 +294,7 @@ function relays(n, cb, opts) {
   while (presses < n + 2 || !st.some(function (v) { return v; })) { relayPress(c, rnd.int(0, n - 1)); presses++; if (presses > 40) break; }
   if (!st.some(function (v) { return v; })) st[0] = st[1] = true;
   c.moves = 0;
-  cur = c;
+  cur = c; puzzleDuck();
   say((opts.title || "Схема реле") + ". Реле: " + n + (c.ring ? ", замкнуты в кольцо" : "") + ". Горящие реле звучат. Переключая реле, вы переключаете и соседей. Погасите все. " +
     LAB.K("Свайп влево и вправо — выбрать реле, двойное касание — переключить, касание — послушать схему.", "Стрелки влево и вправо — выбрать реле, Enter — переключить, пробел — послушать схему, Escape — отойти.") + " Ходов не больше " + c.limit + ".", { interrupt: true });
   waitSpeech(function () { if (cur === c) relayChord(c, true); });
@@ -340,7 +346,7 @@ function bulls(len, cb, opts) {
   key = pool.slice(0, len);
   var c = { type: "bulls", name: opts.title || "Подбор ключа", cb: cb, key: key, len: len, d: [], i: 0, tries: 0, limit: opts.limit || (len === 3 ? 9 : len === 4 ? 11 : 13), hist: [] };
   for (var k = 0; k < len; k++) c.d.push(k + 1);
-  cur = c;
+  cur = c; puzzleDuck();
   say((opts.title || "Подбор ключа") + ". Ключ — " + len + " разные цифры от одной до шести. После каждой попытки высокий сигнал — цифра на своём месте, низкий — цифра есть, но не там. " +
     LAB.K("Свайп вверх и вниз — цифра, влево и вправо — позиция, двойное касание — проверить, касание — что набрано и прошлые попытки.", "Стрелки вверх и вниз — цифра, влево и вправо — позиция, цифры от 1 до 6 — набрать сразу, Enter — проверить, пробел — что набрано, Escape — отойти.") + " Попыток: " + c.limit + ".", { interrupt: true });
 }
@@ -383,7 +389,7 @@ function sortTones(n, cb, opts) {
   var base = [220, 262, 311, 370, 440, 523, 622].slice(0, n), arr = base.slice();
   do { for (var i = arr.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = arr[i]; arr[i] = arr[j]; arr[j] = t; } } while (arr.every(function (v, k) { return v === base[k]; }));
   var c = { type: "sort", name: opts.title || "Настройка частот", cb: cb, arr: arr, n: n, pos: 0, swaps: 0, limit: opts.limit || n * 3 };
-  cur = c;
+  cur = c; puzzleDuck();
   say((opts.title || "Настройка частот") + ". Тонов: " + n + ", они перепутаны. Расставьте их от низкого слева к высокому справа. " +
     LAB.K("Свайп влево и вправо — выбрать тон, свайп вверх — поменять его местами с соседом справа, касание — проиграть все, двойное касание — проверить.", "Стрелки влево и вправо — выбрать тон, стрелка вверх — поменять с соседом справа, пробел — проиграть все, Enter — проверить, Escape — отойти.") + " Перестановок не больше " + c.limit + ".", { interrupt: true });
   waitSpeech(function () { if (cur === c) sortPlay(c); });
@@ -414,7 +420,7 @@ function sorted(c) { for (var i = 1; i < c.n; i++) if (c.arr[i] < c.arr[i - 1]) 
 function melody(seq, cb, opts) {
   opts = opts || {};
   var c = { type: "melody", name: opts.title || "Звуковой замок", cb: cb, seq: seq.split(""), pos: 0, replays: opts.replays == null ? 1 : opts.replays, busy: true, mirror: !!opts.mirror };
-  cur = c;
+  cur = c; puzzleDuck();
   say((opts.title || "Звуковой замок") + ". Сыграйте мелодию: " + c.seq.length + " нот. " + (c.mirror ? "Замок зеркальный: левое и правое поменяны местами. " : "") + "У каждого звука своя цифра: " + sigHelp() + ". " +
     LAB.K("Играйте свайпами. Касание — «Эхо» напомнит мелодию.", "Играйте стрелками или цифрами от 1 до 4. Пробел — «Эхо» напомнит мелодию, Escape — отойти."), { interrupt: true });
   waitSpeech(function () { if (cur === c) { c.busy = false; tone(1500, 0.06, 0, "sine", 0.1); } });
@@ -449,7 +455,7 @@ function sync(cb, opts) {
   opts = opts || {};
   var pA = 900, off = (Math.random() < 0.5 ? -1 : 1) * (120 + Math.floor(Math.random() * 4) * 40);
   var c = { type: "sync", name: opts.title || "Синхронизация", cb: cb, pA: pA, pB: pA + off, step: 40, tries: 0, limit: opts.limit || 3, hints: 2, ready: false, aligned: false, tA: 0 };
-  cur = c;
+  cur = c; puzzleDuck();
   say((opts.title || "Синхронизация") + ". Слева — ведущий механизм, справа — ведомый. " + LAB.K("Свайп вверх — ведомый быстрее, вниз — медленнее. Когда удары сольются в один, двойное касание — сцепить. Касание — подсказка.", "Стрелка вверх — ведомый быстрее, вниз — медленнее. Когда удары сольются в один, Enter — сцепить. Пробел — подсказка, Escape — отойти."), { interrupt: true });
   waitSpeech(function () {
     if (cur !== c) return;
@@ -539,7 +545,7 @@ function chain(steps, cb) {
     if (!ok) { cb(false); return; }
     if (i >= steps.length) { cb(true); return; }
     var s = steps[i++];
-    if (i > 1) { LAB.UI.ok(); gapOn = true; gapCancel = false; setTimeout(function () { gapOn = false; if (gapCancel) { gapCancel = false; say("Прервано."); cb(false); return; } s(next); }, 700); } else s(next);
+    if (i > 1) { LAB.UI.ok(); gapOn = true; gapCancel = false; puzzleDuck(); setTimeout(function () { gapOn = false; puzzleDuck(); if (gapCancel) { gapCancel = false; say("Прервано."); cb(false); return; } s(next); }, 700); } else s(next);
   };
   next(true);
 }

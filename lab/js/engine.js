@@ -124,10 +124,14 @@ function vol01(v) { return v == null ? 1 : Math.max(0, Math.min(1, +v)); }
 function spaceK() { return settings.spaceVol == null ? 1 : Math.max(0, Math.min(1.5, +settings.spaceVol)); }
 /* Во сколько раз канал сигналов головоломок громче интерфейса (около +7 дБ). */
 var PUZZLE_GAIN = 2.2;
-/* (2.2) Игра в фоне со звуком: общая громкость — четверть обычной. */
+/* (2.2) Игра в фоне со звуком: общая громкость — четверть обычной. (3.3) Приглушение —
+   последним звеном, после ограничителя (AE.out): прежде тише делался вход ограничителя,
+   и он громкие звуки (выстрелы, взрывы, тревоги) почти не опускал — переставал их
+   сжимать, а тихие (шаги, фон) уходили на всю глубину; при Alt+Tab одни звуки
+   приглушались, другие звучали в наушниках громко. */
 var BG_DIM = 0.25;
 var AE = {
-  ctx: null, master: null, fx: null, music: null, amb: null, beacon: null, ui: null, voice: null, conv: null, wet: null, cache: {}, irc: {}, duck: 1,
+  ctx: null, master: null, out: null, fx: null, music: null, amb: null, beacon: null, ui: null, voice: null, conv: null, wet: null, cache: {}, irc: {}, duck: 1,
   weap: null, foe: null, alarm: null, bed: null, bass: null, comp: null, makeup: null, wetBase: 0.35,
   /* канал сигналов головоломок и приглушение мира, пока идёт головоломка */
   puzzle: null, pduck: 0,
@@ -150,13 +154,14 @@ var AE = {
     catch (e) { try { this.ctx = new C({ latencyHint: hint }); } catch (e1) { try { this.ctx = new C(); } catch (e2) { return null; } } }
     this.liteCtx = lite;
     var c = this.ctx;
-    this.master = c.createGain(); this.master.gain.value = 0.95 * this.bgK;
+    this.master = c.createGain(); this.master.gain.value = 0.95;
     /* мягкий ограничитель на выходе: громкие сцены не хрипят; за ним — подъём
-       громкости для сжатого диапазона */
+       громкости для сжатого диапазона и последнее звено — громкость в фоне */
     var comp = c.createDynamicsCompressor();
     comp.threshold.value = -10; comp.knee.value = 8; comp.ratio.value = 6; comp.attack.value = 0.004; comp.release.value = 0.2;
     this.comp = comp; this.makeup = c.createGain();
-    this.master.connect(comp); comp.connect(this.makeup); this.makeup.connect(c.destination);
+    this.out = c.createGain(); this.out.gain.value = this.bgK;
+    this.master.connect(comp); comp.connect(this.makeup); this.makeup.connect(this.out); this.out.connect(c.destination);
     /* «подложка» — эффекты, музыка, окружение — идёт через полку низких частот;
        речь, интерфейс и маяки — мимо неё: бас не закрывает слова и сигналы */
     this.bass = c.createBiquadFilter(); this.bass.type = "lowshelf"; this.bass.frequency.value = 160;
@@ -232,10 +237,11 @@ var AE = {
     this.makeup.gain.setTargetAtTime(P.mk, t, 0.1);
   },
   setDuck: function (on) { this.duck = on ? 0 : 1; this.applyVolumes(); },
-  /* (2.2) игра ушла в фон со звуком — вся громкость тише; вернулась — как была */
+  /* (2.2) игра ушла в фон со звуком — вся громкость тише, ровно для всех звуков (после
+     ограничителя); вернулась — как была */
   setBgDim: function (on) {
     this.bgK = on ? BG_DIM : 1;
-    if (this.ctx && this.master) { try { this.master.gain.setTargetAtTime(0.95 * this.bgK, this.ctx.currentTime, 0.15); } catch (e) { /* */ } }
+    if (this.ctx && this.out) { try { this.out.gain.setTargetAtTime(this.bgK, this.ctx.currentTime, 0.15); } catch (e) { /* */ } }
     this.applyLite();
   },
   /* головоломка началась или кончилась (зовёт minigames.js) */
@@ -680,8 +686,8 @@ var Speech = {
     }
     this.choose();
     if (settings.robotVoice) setTimeout(function () { self.loadESpeak(); }, 2500);
-    /* (2.2) окно снова видно, но игра ещё в фоне (без фокуса) — речь продолжит возврат в игру (main.js) */
-    try { document.addEventListener("visibilitychange", function () { if (!document.hidden && !LAB.bg) self.resume(); }); } catch (e) { /* */ }
+    /* (3.3) речь после фона продолжает возврат в игру (main.js → labResume → resume); прежний
+       слушатель видимости страницы срабатывал раньше него, пока игра ещё в фоне, и не делал ничего */
   },
   /* Голоса моста заново: телефон или компьютер (голоса перечитаны). */
   refreshBridge: function (st) {
@@ -1015,6 +1021,11 @@ var Speech = {
   },
   _pump: function () {
     if (this.speaking || !this.queue.length) return;
+    /* (3.3) игра в фоне: новая фраза ждёт возвращения (labResume → resume). Голос компьютера
+       звучит мимо звука игры — в фоне он гремел бы в наушниках поверх приглушённого или
+       выключенного звука, а голос чтеца экрана — поверх того, что чтец читает в другом окне.
+       Событиям с коротким сроком ждать незачем: опоздавшие не прозвучат. */
+    if (LAB.bg && !LAB.selftesting) return;
     var now = Date.now();
     while (this.queue.length && this.queue[0].ttl && now - this.queue[0].t > this.queue[0].ttl) { this.queue.shift(); this.dropped++; }
     if (!this.queue.length) { this._idle(); if (!this.queue.length) return; }

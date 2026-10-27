@@ -84,8 +84,8 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     LAB.ui.closeTop(true); LAB.ui.closeAll(); LAB.ui.mainMenu(true);
     return out;
   });
-  ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.ver === "Альфа 3.2" && news.items.some(l => /^Альфа 3\.1$/.test(l)) && news.items.some(l => /^Альфа 3\.0$/.test(l)) && news.items.some(l => /^Альфа 2\.6$/.test(l)) && news.items.some(l => /^Альфа 2\.5$/.test(l)) && news.items.some(l => /^Альфа 2\.2$/.test(l)) && news.items.some(l => /^Альфа 2\.1$/.test(l)) && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
-  ok(/Что нового: /.test(news.note) && /ОКО меняется с глубиной/.test(news.text) && /«Облики ОКО»/.test(news.text) && /Шаги по бетону и дереву звучат чище/.test(news.text) && /Тишины меньше/.test(news.text) && /Чем ниже блок, тем просторнее/.test(news.text) && /в пять, шесть и семь шагов/.test(news.text) && /перезарядка — (касание двумя пальцами|Alt\+R или F)/.test(news.text) && /настройки остались прежними/.test(news.text) && !/Мутагенный туман/.test(news.text) && !/выходят волнами/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
+  ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.ver === "Альфа 3.3" && news.items.some(l => /^Альфа 3\.2$/.test(l)) && news.items.some(l => /^Альфа 3\.1$/.test(l)) && news.items.some(l => /^Альфа 3\.0$/.test(l)) && news.items.some(l => /^Альфа 2\.6$/.test(l)) && news.items.some(l => /^Альфа 2\.5$/.test(l)) && news.items.some(l => /^Альфа 2\.2$/.test(l)) && news.items.some(l => /^Альфа 2\.1$/.test(l)) && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
+  ok(/Что нового: /.test(news.note) && /Качаться на машинах ОКО не выйдет/.test(news.text) && /Отдых — не лечение/.test(news.text) && /Тайник вскрывается один раз/.test(news.text) && /Тренажёры дают всего пять единиц силы/.test(news.text) && /что даст разбор оружия, брони и устройств/.test(news.text) && /Скупка всегда дешевле покупки/.test(news.text) && /Звук в фоне: ушли в другое (приложение|окно \(Alt\+Tab\))/.test(news.text) && /тише становятся все звуки поровну/.test(news.text) && /настройки остались прежними/.test(news.text) && !/ОКО меняется с глубиной/.test(news.text) && !/выходят волнами/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
 
   console.log("Настройки");
   await page.evaluate(() => { LAB.ui.top().i = 0; });
@@ -2649,7 +2649,11 @@ LAB.ui.closeAll();
       let cl = labels(); out.bindItem = /^Привязаться к капсуле.*\d+ кредит/.test(cl[0] || "");
       LAB.ui.top().i = 0; LAB.ui.activate();
       out.bindPoor = !G.checkpoint && G.credits === 2;
-      G.credits = 100;
+      /* (3.3) кредиты пришли, пока окно было открыто: первое нажатие собирает окно заново
+         (в пункте теперь другое «у вас»), второе — привязывает */
+      G.credits = 100; SPOKEN.length = 0;
+      LAB.ui.top().i = 0; LAB.ui.activate();
+      out.bindStale = !G.checkpoint && G.credits === 100 && SPOKEN.some(t => /^Здесь всё изменилось/.test(t)) && /у вас 100\)/.test(labels()[0] || "");
       LAB.ui.top().i = 0; LAB.ui.activate();
       out.bindOk = !!(G.checkpoint && G.checkpoint.cap === cap.id) && G.credits === 100 - bp(3, 5);
       cl = labels(); out.boundInfo = cl.some(l => /Вы привязаны к этой капсуле/.test(l)) && !/^Привязаться/.test(cl[0] || "");
@@ -2805,7 +2809,7 @@ LAB.ui.closeAll();
   ok(tr.cred, "три пальца влево: кредиты и цена привязки к капсуле");
   ok(tr.navMenu, "четыре пальца вверх: список целей навигатора");
   ok(tr.prices === "4,4,8,8,12,20", "привязка к капсуле: этажи 1–10 — 4 кредита, каждые десять этажей — дороже: " + tr.prices);
-  ok(!tr.hasCap || (tr.bindItem && tr.bindPoor && tr.bindOk && tr.boundInfo), "капсула: привязка — первым пунктом, без кредитов — нельзя, с кредитами — списывает цену");
+  ok(!tr.hasCap || (tr.bindItem && tr.bindPoor && tr.bindStale && tr.bindOk && tr.boundInfo), "капсула: привязка — первым пунктом, без кредитов — нельзя, с кредитами — списывает цену; окно, где всё изменилось, сперва собирается заново");
   ok(!tr.hasCap || (tr.respawnCap && tr.respawnStart), "гибель: к привязанной капсуле, без привязки — к началу уровня");
   ok(tr.blaster === "30,32,35,42" && tr.blName, "бластер: «Искра» первой ступени — 30 зарядов, ступень — плюс восемь процентов (" + tr.blaster + ")");
   ok(tr.capOrder && tr.capPhys, "ёмкость: чем лучше оружие, тем больше, у всего на батареях и зарядах — не меньше тридцати; огнестрел — как прежде (" + tr.capTxt + ")");
@@ -2843,6 +2847,7 @@ LAB.ui.closeAll();
     g.enterFloor(2, 3, "down", true);
     LAB.combat.foes().forEach(f => { f.dead = true; });
     G.dead = false; G.hpMax = 100; G.hp = 40; G.body.wake = 50; G.body.neuro = 50; G.body.food = 80;
+    G.restAt = -1e9; /* (3.3) отдых снова в полную силу, только когда давно не отдыхали */
     LAB.fixtures.menu({ id: "t_chair", type: "fx", fx: "chair", x: G.x, y: G.y, room: g.CUR.room });
     const kc = LAB.ui.top() ? LAB.ui.top().items.findIndex(i => label(i) === "Присесть и перевести дух") : -1;
     if (kc >= 0) { LAB.ui.top().i = kc; LAB.ui.activate(); }
@@ -2869,7 +2874,7 @@ LAB.ui.closeAll();
     if (sw) sw.set(false);
     LAB.ui.closeAll();
     /* диван и эспрессо: отдых и напиток вместе, в покое — ещё бодрее и спокойнее */
-    G.hp = 40; G.body.wake = 40; G.body.neuro = 60; G.body.food = 80;
+    G.hp = 40; G.body.wake = 40; G.body.neuro = 60; G.body.food = 80; G.restAt = -1e9;
     LAB.fixtures.menu({ id: "t_sofa", type: "fx", fx: "sofa", x: G.x, y: G.y, room: g.CUR.room });
     const kd = LAB.ui.top() ? LAB.ui.top().items.findIndex(i => /^Посидеть на диване и выпить эспрессо$/.test(label(i))) : -1;
     SPOKEN.length = 0;
@@ -3451,14 +3456,6 @@ LAB.ui.closeAll();
     SPOKEN.length = 0; C.damageFoe(tgt, 1, "kinetic", {});
     out.fight = G.wakeSafe === 0 && SPOKEN.some(t => /Вы начали бой/.test(t));
     tgt.dead = true; G.wakeSafe = 0; G.hp = G.hpMax = 100;
-    /* прежняя запись без набора получает бластер и комбинезон один раз, найденное не дублирует */
-    const bare = JSON.parse(JSON.stringify(G)); delete bare.startKit; bare.weapons = [bare.weapons[0]]; bare.armor = null; bare.armors = [];
-    const m1 = g._migrate(bare);
-    out.mig = m1.weapons.filter(w => w.base === "spark").length === 1 && m1.armor && m1.armor.base === "suit" && m1.armors.length === 1 && m1.startKit === 2;
-    const m2 = g._migrate(JSON.parse(JSON.stringify(m1)));
-    const had = JSON.parse(JSON.stringify(G)); delete had.startKit;
-    const m3 = g._migrate(had);
-    out.migOnce = m2.weapons.length === m1.weapons.length && m3.weapons.length === G.weapons.length && m3.armors.length === G.armors.length;
     /* монтировка: удар раз в 0,3 с (прежде 0,5) — и у монтировки из старой записи (в ней cd 500) */
     G.wi = 0; G.drawn = true;
     const real = Date.now; let t = real() + 60000; Date.now = () => t;
@@ -3533,7 +3530,6 @@ LAB.ui.closeAll();
   ok(kit.safe0 && kit.safeHit.adj && kit.safeHit.outside && kit.safeHit.hurtSafe === 0 && kit.safeHit.entered === 0,
     "безопасное пробуждение: в капсульном отсеке робот вплотную не бьёт, робот у открытой двери в отсек не входит (" + JSON.stringify(kit.safeHit) + ")");
   ok(kit.left && kit.leftOnce && kit.fight, "вышли из отсека или сами ранили врага — защита снята, «Эхо» предупреждает; вернулись — её больше нет");
-  ok(kit.mig && kit.migOnce, "прежняя запись без набора получает бластер и комбинезон один раз; найденное не дублируется");
   ok(kit.crow === "1011" && kit.crowCd === 300, "монтировка бьёт раз в 0,3 секунды — и монтировка из старой записи тоже (" + kit.crow + ", " + kit.crowCd + " мс)");
   ok(kit.corner && kit.cornerOpen, "взгляд и выстрел не проходят по диагонали между двумя стенами (угол), а мимо одной стены проходят");
   ok(kit.flee && kit.losClosed === false && kit.losOpen === true && kit.flee.hurtClosed === 0 && kit.flee.hurtOpen >= 1 && kit.flee.shots >= 4 && kit.flee.shots <= Math.ceil(24 / kit.flee.acd) + 1 && kit.doorway,
@@ -4113,7 +4109,8 @@ LAB.ui.closeAll();
       const plainF = b => !b.boss && ["stationary", "camera", "turret", "observer", "fixer", "relay", "split", "swarm", "mimic"].every(x => (b.beh || []).indexOf(x) < 0);
       const mech = Object.keys(LAB.FOES).find(k => LAB.FOES[k].kind === "mech" && plainF(LAB.FOES[k]));
       const bio = Object.keys(LAB.FOES).find(k => LAB.FOES[k].kind === "bio" && plainF(LAB.FOES[k]));
-      const killAt = (c, o) => { o = o || {}; const f = C.spawnFoe(o.type || mech, c[0], c[1], {}); if (!f) return null; f.spawned = !!o.spawned; f.oko = !!o.oko; f.punisher = !!o.pun; f.ally = false; f.lvl = 1; C.damageFoe(f, 1e9, "kinetic", { quiet: true }); return f; };
+      /* (3.3) у присланных на этаж своя доля (sentK): здесь каждый — как первый присланный */
+      const killAt = (c, o) => { o = o || {}; const f = C.spawnFoe(o.type || mech, c[0], c[1], {}); if (!f) return null; g.CUR.fs.sentN = 0; f.spawned = !!o.spawned; f.oko = !!o.oko; f.punisher = !!o.pun; f.ally = false; f.lvl = 1; C.damageFoe(f, 1e9, "kinetic", { quiet: true }); return f; };
       const drops = () => (g.CUR.fs.drops || []).filter(d => d.nth27).length;
       const runN = (m, n, cells, o, tb) => { S.difficulty = m; S.turnBased = tb ? 1 : 0; G.batKills = 0; const d1 = drops(), res = []; for (let i = 0; i < n; i++) { killAt(cells[i % cells.length], o); res.push(drops() - d1); } S.difficulty = 1; S.turnBased = 0; return res; };
       out.mech = mech; out.bio = bio; out.cells = corr.length + "/" + roomC.length;
@@ -4298,9 +4295,10 @@ LAB.ui.closeAll();
     /* 2. флажок стоит: звук тише, но звучит; вернулись — как был */
     S.bgDim = 1;
     fire("blur"); await wait(600);
-    out.dim = LAB.bg === true && AE.ctx.state === "running" && AE.bgK < 0.5 && AE.master.gain.value < 0.4;
+    /* (3.3) тише — последнее звено, после ограничителя: вход ограничителя прежний */
+    out.dim = LAB.bg === true && AE.ctx.state === "running" && AE.bgK < 0.5 && AE.out.gain.value < 0.4 && AE.master.gain.value > 0.8;
     fire("focus"); await wait(700);
-    out.dimBack = !LAB.bg && AE.bgK === 1 && AE.master.gain.value > 0.8;
+    out.dimBack = !LAB.bg && AE.bgK === 1 && AE.out.gain.value > 0.8;
     /* 3. телефон: приложение ушло с экрана — звук выключен, сторож его не будит; вернулось — звучит */
     S.bgDim = 0;
     window.labPause(); await wait(100);
@@ -4408,10 +4406,11 @@ LAB.ui.closeAll();
       const bt = LAB.LEVELS[G.L].foes.filter(id => LAB.FOES[id] && LAB.FOES[id].kind === "bio" && (LAB.FOES[id].beh || []).indexOf("split") < 0)[0] || "labmut";
       for (let i = 0; i < 40; i++) {
         const c = C.okoPoint({ minHero: 6, dmin: 4 }); if (!c) break;
+        /* (3.3) присланные на этаж с каждым разом дают меньше (sentK): здесь каждый — как первый */
         const f = C.spawnFoe(bt, c[0], c[1], { oko: true });
-        if (f) { const dd = fs.drops.length; C.damageFoe(f, 1e9, "phys", { noarmor: true }); bioN += fs.drops.slice(dd).filter(it => CH.MAT[it.item]).length; }
+        if (f) { fs.sentN = 0; const dd = fs.drops.length; C.damageFoe(f, 1e9, "phys", { noarmor: true }); bioN += fs.drops.slice(dd).filter(it => CH.MAT[it.item]).length; }
         const m = C.dispatch(1, "check", { x: c[0], y: c[1] })[0];
-        if (m) { const dd = fs.drops.length; C.damageFoe(m, 1e9, "phys", { noarmor: true }); mechN += fs.drops.slice(dd).filter(it => CH.MAT[it.item]).length; }
+        if (m) { fs.sentN = 0; const dd = fs.drops.length; C.damageFoe(m, 1e9, "phys", { noarmor: true }); mechN += fs.drops.slice(dd).filter(it => CH.MAT[it.item]).length; }
       }
       out.bioN = bioN; out.mechN = mechN;
       fs.grind = 0; fs.pun = 0; fs.repl = []; C.foes().forEach(f => { if (f.spawned) f.dead = true; });
@@ -5342,8 +5341,8 @@ LAB.ui.closeAll();
       LAB.oko.state().heat = 0;
       LAB.ui.closeAll();
       /* запись прежнего выпуска мира: этажи построены заново, носитель — у входа на свой этаж */
-      const dn = JSON.parse(JSON.stringify(G)); dn.worldV = 3; dn.L = 50; dn.F = 5; dn.fs = { "50-5": { objs: { k: 1 } } }; dn.relocate = false;
-      const m2 = g._migrate(dn); out.migDown = m2.worldV === 4 && m2.relocate === true && !m2.fs["50-5"];
+      const dn = JSON.parse(JSON.stringify(G)); dn.worldV = 4; dn.L = 50; dn.F = 5; dn.fs = { "50-5": { objs: { k: 1 } } }; dn.relocate = false;
+      const m2 = g._migrate(dn); out.migDown = m2.worldV === 5 && m2.relocate === true && !m2.fs["50-5"];
     } catch (e) { out.err = String(e && e.stack || e).slice(0, 400); }
     LAB.keysMode = km; LAB.ui.closeAll(); C.stop();
     g.enterFloor(keep.L, keep.F, "down", true); C.stop(); G = g.G;
@@ -5366,6 +5365,241 @@ LAB.ui.closeAll();
     ok(/своим на смене/.test(grow.punch) && grow.punchHeat === "50→42→42", "табельные часы: отметка — ОКО подозревает меньше, один раз (" + grow.punchHeat + ")");
     ok(grow.migDown, "запись прежнего выпуска мира: этаж строится заново, носитель — у входа");
   }
+
+  console.log("Альфа 3.3: лазейки закрыты — тайник, отдых, тренажёр, окна, присланные машины, задания, укрытие, разбор, скупка, стакан, капсула");
+  const holes = await page.evaluate(async () => {
+    const g = LAB.game, C = LAB.combat, U = LAB.ui, out = {}, label = i => typeof i.label === "function" ? i.label() : String(i.label);
+    let G = g.G;
+    const keep = { L: G.L, F: G.F, x: G.x, y: G.y, inv: JSON.stringify(G.inv), ammo: JSON.stringify(G.ammo), credits: G.credits, hp: G.hp, str: G.str, cha: G.cha, diff: G.diff, train: JSON.stringify(G.train || null), quests: JSON.stringify(G.quests), weapons: G.weapons.slice(), wi: G.wi, restAt: G.restAt };
+    const said = [], say0 = LAB.say; LAB.say = function (t) { said.push(String(t)); };
+    const last = () => said.slice(-2).join(" | ");
+    const go = (L, F) => { g.enterFloor(L, F, "down", true); C.stop(); G = g.G; C.foes().forEach(f => { f.dead = true; }); };
+    const near = o => { const c = C.freeCellNear(o.x, o.y, null); if (c) { G.x = c[0]; G.y = c[1]; } return !!c; };
+    const findFloor = pred => { for (let L = 1; L <= 14; L++) for (let F = 1; F <= 8; F++) { const fl = LAB.getFloor(G.seed, L, F); if (pred(fl)) return [L, F]; } return null; };
+    const fxWith = (fl, kind) => fl.objs.find(o => o.type === "fx" && LAB.FIX.T[o.fx] && LAB.FIX.T[o.fx].a.some(a => a[0] === kind));
+    const tick = () => new Promise(r => setTimeout(r, 0)); /* окно отмечается, когда открывшее его действие закончилось */
+    const itemOf = (o, kind) => { const a = LAB.FIX.T[o.fx].a.find(q => q[0] === kind); U.closeAll(); LAB.fixtures.menu(o); const w = U.top(); const l = w ? w.items.map(label).find(x => x.indexOf(a[1]) === 0) : null; U.closeAll(); return l || ""; };
+    const act = (o, kind) => { const a = LAB.FIX.T[o.fx].a.find(q => q[0] === kind); U.closeAll(); LAB.fixtures.menu(o); const w = U.top(); const it = w && w.items.find(x => label(x).indexOf(a[1]) === 0); if (it) it.fn(); return !!it; };
+    try {
+      U.closeAll(); C.stop();
+      /* 1. тайник: второй раз — ни опыта, ни счёта */
+      const fs1 = findFloor(fl => fl.doors.some(d => d.lock && d.lock.type === "secret"));
+      if (fs1) {
+        go(fs1[0], fs1[1]);
+        const sd = g.CUR.fl.doors.find(d => d.lock && d.lock.type === "secret");
+        const s0 = G.stats.secrets, x0 = G.lvl * 1e6 + G.xp;
+        g.revealSecret(sd); const s1 = G.stats.secrets, x1 = G.lvl * 1e6 + G.xp;
+        g.revealSecret(sd); g.revealSecret(sd);
+        out.secret = { first: s1 - s0, more: G.stats.secrets - s1, xp1: x1 > x0, xpMore: G.lvl * 1e6 + G.xp - x1 };
+      }
+      /* 2. отдых: второй раз подряд — отказ; в тревогу — отказ */
+      const fs2 = findFloor(fl => !!fxWith(fl, "rest"));
+      if (fs2) {
+        go(fs2[0], fs2[1]);
+        const ch = fxWith(g.CUR.fl, "rest"); near(ch);
+        G.restAt = -1e9; G.hp = 10;
+        out.restFresh = itemOf(ch, "rest");
+        act(ch, "rest"); out.rest1 = G.hp > 10;
+        out.restNote = itemOf(ch, "rest");
+        const h1 = G.hp; act(ch, "rest"); out.rest2 = { same: G.hp === h1, said: /отдыхали совсем недавно/.test(last()) };
+        G.restAt = -1e9; LAB.oko.setLevel(3, "проверка"); act(ch, "rest"); out.restAlarm = /тревога/.test(last()); LAB.oko.setLevel(0, "проверка");
+      }
+      /* 3. тренажёр: предел и перерыв */
+      const fs3 = findFloor(fl => !!fxWith(fl, "train"));
+      if (fs3) {
+        go(fs3[0], fs3[1]);
+        const gym = fxWith(g.CUR.fl, "train"); near(gym);
+        if (G.body) G.body.wake = 90;
+        G.train = { strPts: 2, aimPts: 0 }; out.gymNote = itemOf(gym, "train");
+        G.train = { strPts: 5, aimPts: 0 }; out.gymCapNote = itemOf(gym, "train");
+        const st0 = G.str; act(gym, "train"); out.gymCap = { same: G.str === st0, said: /больше ничего не дадут/.test(last()) };
+        G.train = { strPts: 0, aimPts: 0, strAt: (G.day || 0) * 1440 + (G.min || 0) }; act(gym, "train"); out.gymGap = /не восстановились/.test(last());
+      }
+      /* 4. инвентарь: аптечка, назад в инвентарь, «Еда» — открывается, а не отказ */
+      U.closeAll(); G.inv.medkit_s = (G.inv.medkit_s || 0) + 2; G.hp = Math.max(1, Math.floor(G.hpMax / 3));
+      U.inventory(); let w = U.top(); w.i = w.items.findIndex(x => /^Аптечки/.test(label(x))); U.activate();
+      w = U.top(); w.i = w.items.findIndex(x => /^Аптечка:/.test(label(x))); U.activate();
+      out.invBack = U.top() && U.top().title;
+      w = U.top(); if (w && w.title === "Инвентарь") { w.i = w.items.findIndex(x => /^Еда/.test(label(x))); U.activate(); }
+      out.invFood = U.top() && U.top().title;
+      /* 5. устаревшее окно: без сборщика — старый пункт не выполняется; со сборщиком — собирается заново */
+      U.closeAll(); let hits = 0;
+      U.menu("Проверка старого окна", [{ label: "Взять", fn: function () { hits++; } }, { label: "Другое", fn: function () {} }]);
+      await tick(); G.credits += 7; w = U.top(); w.i = 0; U.activate();
+      out.staleNoRebuild = { hits: hits, closed: !U.top() || U.top().title !== "Проверка старого окна" };
+      U.closeAll(); hits = 0;
+      const build = () => [{ label: "Кредитов: " + G.credits, keep: true, fn: function () { hits++; } }, { label: "Взять", fn: function () { hits += 10; } }];
+      U.menu("Проверка сборщика", build(), { rebuild: build });
+      await tick(); G.credits += 3; w = U.top(); w.i = 0; U.activate();
+      out.staleRebuild = { hits: hits, label: label(U.top().items[0]), open: U.top().title === "Проверка сборщика" };
+      w = U.top(); w.i = 1; G.credits += 1; U.activate(); out.staleSameLabel = hits;
+      U.closeAll();
+      /* 6. присланные: на пороге — ни опыта; обезвреженные и свои — тоже */
+      go(2, 3);
+      const kx = f => { const x0 = G.lvl * 1e6 + G.xp; C.damageFoe(f, 99999, "kinetic", { quiet: true }); return G.lvl * 1e6 + G.xp - x0; };
+      /* клетка рядом, но не в безопасной зоне у капсулы: туда ОКО никого не присылает */
+      const spawnAt = () => {
+        for (let r = 3; r < 40; r++) for (const d of [[r, 0], [-r, 0], [0, r], [0, -r]]) {
+          const x = G.x + d[0], y = G.y + d[1]; if (!LAB.inb(x, y)) continue;
+          const c = C.freeCellNear(x, y, null); if (!c || C.havenAt(c[0], c[1])) continue;
+          const f = C.spawnFoe("patrolbot", c[0], c[1], { oko: true }); if (f) return f;
+        }
+        return null;
+      };
+      const fsx = g.CUR.fs; fsx.sentN = 0; fsx.grind = 0; fsx.pun = 0;
+      let f = spawnAt(); out.sentFirst = f ? kx(f) : -1;
+      fsx.sentN = 1000; fsx.grind = 0; fsx.pun = 0;
+      f = spawnAt(); out.sentLast = f ? kx(f) : -1;
+      fsx.sentN = 0; fsx.grind = 0; fsx.pun = 0;
+      f = spawnAt(); if (f) f.calm = true; out.calmKill = f ? kx(f) : -1;
+      f = spawnAt(); if (f) f.ally = true; out.allyKill = f ? kx(f) : -1;
+      /* 7. задания выжившего: не больше трёх; «разведать» — заход после того, как взяли */
+      const npc = { key: "test:npc", n: "Проверочный", prof: "Инженер" };
+      G.quests = G.quests.filter(q => q.giver !== npc.key).concat([0, 1, 2].map(i => ({ id: npc.key + ":" + i, giver: npc.key, done: true, type: "kill", short: "x" })));
+      const qn = G.quests.length; g.takeQuest(npc); out.questCap = { none: G.quests.length === qn, said: /больше не о чем/.test(last()) };
+      const vq = { type: "visit", tL: G.L, tF: G.F, seq0: G.visitSeq || 0, giverName: "Проверочный" };
+      out.visitBefore = g.questProgress(vq);
+      go(G.L, G.F); out.visitAfter = g.questProgress(vq);
+      /* 8. «Затаиться»: укрытие, пока на месте; шаг — и его нет */
+      const fs8 = findFloor(fl => !!fxWith(fl, "hide"));
+      if (fs8) {
+        go(fs8[0], fs8[1]);
+        const tb = fxWith(g.CUR.fl, "hide"); near(tb);
+        act(tb, "hide"); out.hid = C.hidden();
+        const c2 = C.freeCellNear(G.x, G.y, null); if (c2) { G.x = c2[0]; G.y = c2[1]; }
+        out.hidMoved = C.hidden();
+      }
+      /* 9. собранное оружие разбирается не богаче рецепта */
+      const nw = LAB.makeWeapon("spark", 1, 0, 1); nw.rcNeed = { scrap: 2, chip: 1 }; nw.crafted = 40;
+      G.weapons.push(nw); const sc0 = G.inv.scrap || 0, ch0 = G.inv.chip || 0;
+      out.scrapText = g.scrapWeaponText ? g.scrapWeaponText(nw) : "";
+      g.scrapWeapon(G.weapons.indexOf(nw));
+      out.scrapGot = { scrap: (G.inv.scrap || 0) - sc0, chip: (G.inv.chip || 0) - ch0 };
+      /* 10. скупка дешевле самой низкой покупки: лёгкий режим, харизма 40 */
+      G.diff = "easy"; G.cha = 40;
+      const pk = g.priceK(), lowBat = Math.round(LAB.AMMO.energy.price * pk * 0.85 * 0.9), lowKit = Math.round(LAB.ITEMS.medkit_s.price * pk * 0.9 * g.chaK());
+      out.sellBat = [LAB.sellPrice.ammo("energy", { who: "npc", npc: "ammo" }), lowBat];
+      out.sellKit = [LAB.sellPrice.item("medkit_s", { who: "npc", npc: "med" }), lowKit];
+      G.diff = keep.diff; G.cha = keep.cha;
+      /* 11. стакан с собой лечит, как автомат той глубины, где куплен */
+      G.inv.cup_espresso = 1; G.cupL = { cup_espresso: [1] }; const L0 = G.L; G.L = 60; G.hp = 1;
+      g.useItem("cup_espresso"); out.cupHeal = G.hp - 1; G.L = L0;
+      /* 12. капсула: пока машины ОКО ищут вас, полежать с закрытыми глазами нельзя; без тревоги — можно */
+      const fs12 = findFloor(fl => fl.objs.some(o => o.type === "capsule"));
+      if (fs12) {
+        go(fs12[0], fs12[1]);
+        const cap = g.CUR.fl.objs.find(o => o.type === "capsule");
+        G.hp = Math.max(1, Math.floor(G.hpMax / 2)); const hp12 = G.hp;
+        LAB.capsule.menu(cap); await new Promise(r => setTimeout(r, 1400));
+        LAB.oko.setLevel(3, "проверка");
+        const lie = () => { const wl = U.top(), k = wl ? wl.items.findIndex(x => /^Полежать с закрытыми глазами/.test(label(x))) : -1; if (k >= 0) { wl.i = k; U.activate(); } return k >= 0; };
+        said.length = 0; const found = lie();
+        out.capAlarm = { found: found, same: G.hp === hp12, said: /Не до отдыха/.test(said.join(" ")) };
+        LAB.oko.setLevel(0, "проверка");
+        lie(); out.capCalm = G.hp > hp12;
+        LAB.capsule.leave(true); U.closeAll(); C.stop();
+      }
+    } catch (e) { out.err = e.message + " " + (e.stack || "").split("\n")[1]; }
+    finally {
+      LAB.say = say0;
+      U.closeAll();
+      go(keep.L, keep.F); G.x = keep.x; G.y = keep.y; G.inv = JSON.parse(keep.inv); G.ammo = JSON.parse(keep.ammo); G.credits = keep.credits; G.hp = keep.hp; G.str = keep.str;
+      G.train = JSON.parse(keep.train) || undefined; G.quests = JSON.parse(keep.quests); G.weapons = keep.weapons; G.wi = keep.wi; G.restAt = keep.restAt; G.st.hide = null;
+    }
+    return out;
+  });
+  ok(!holes.err, "сценарии прошли без ошибок" + (holes.err ? ": " + holes.err : ""));
+  ok(holes.secret && holes.secret.first === 1 && holes.secret.more === 0 && holes.secret.xp1 && holes.secret.xpMore === 0, "тайник: опыт и счёт — один раз, повтор из старого окна ничего не даёт (" + JSON.stringify(holes.secret) + ")");
+  ok(holes.rest1 && holes.rest2 && holes.rest2.same && holes.rest2.said, "отдых: второй раз подряд — отказ, здоровье не растёт (" + JSON.stringify(holes.rest2) + ")");
+  ok(holes.restAlarm, "отдых при тревоге — отказ");
+  ok(holes.restFresh && !/ — /.test(holes.restFresh) && / — вы только что отдыхали: толку не будет ещё \d+ минут/.test(holes.restNote || ""), "пункт отдыха сам говорит, что вы только что отдыхали и когда будет толк (" + holes.restNote + ")");
+  ok(/ — накачано 2 из 5 единиц$/.test(holes.gymNote || "") && / — больше ничего не даст$/.test(holes.gymCapNote || ""), "пункт тренажёра: сколько прибавок из пяти взято, на пределе — «больше ничего не даст» (" + holes.gymNote + " / " + holes.gymCapNote + ")");
+  ok(holes.gymCap && holes.gymCap.same && holes.gymCap.said && holes.gymGap, "тренажёр: предел в пять единиц и перерыв три часа");
+  ok(holes.invBack === "Инвентарь" && holes.invFood === "Еда и напитки", "инвентарь: после аптечки — снова инвентарь, «Еда» открывается (" + holes.invBack + " → " + holes.invFood + ")");
+  ok(holes.staleNoRebuild.hits === 0 && holes.staleNoRebuild.closed, "устаревшее окно без сборщика: старый пункт не выполняется, окно закрыто");
+  ok(holes.staleRebuild.hits === 0 && holes.staleRebuild.open && /Кредитов: /.test(holes.staleRebuild.label) && holes.staleSameLabel === 10, "окно со сборщиком собирается заново: сменившийся пункт не выполняется, прежний — выполняется (" + JSON.stringify(holes.staleRebuild) + ", " + holes.staleSameLabel + ")");
+  ok(holes.sentFirst > 0 && holes.sentLast === 0, "присланные машины: опыт есть, на пороге этажа — ноль (" + holes.sentFirst + " → " + holes.sentLast + ")");
+  ok(holes.calmKill === 0 && holes.allyKill === 0, "обезвреженные и свои машины — без опыта (" + holes.calmKill + ", " + holes.allyKill + ")");
+  ok(holes.questCap && holes.questCap.none && holes.questCap.said, "выживший даёт не больше трёх поручений");
+  ok(/не разведан/.test(holes.visitBefore) && /разведан, вернитесь/.test(holes.visitAfter), "«разведать этаж» — засчитывается заход после того, как задание взято (" + holes.visitBefore + " → " + holes.visitAfter + ")");
+  ok(holes.hid === true && holes.hidMoved === false, "«Затаиться»: укрытие, пока на месте; шаг — и его нет");
+  ok(/около половины/.test(holes.scrapText) && holes.scrapGot.scrap === 1 && holes.scrapGot.chip <= 1, "собранное оружие разбирается не богаче рецепта (" + JSON.stringify(holes.scrapGot) + ")");
+  ok(holes.sellBat[0] < holes.sellBat[1] && holes.sellKit[0] < holes.sellKit[1], "скупка дешевле самой низкой покупки даже в лёгком режиме с харизмой 40 (батарея " + holes.sellBat.join(" < ") + ", аптечка " + holes.sellKit.join(" < ") + ")");
+  ok(holes.cupHeal > 0 && holes.cupHeal <= 8, "стакан эспрессо с первого уровня лечит, как там, а не как на шестидесятом (" + holes.cupHeal + ")");
+  ok(holes.capAlarm && holes.capAlarm.found && holes.capAlarm.same && holes.capAlarm.said && holes.capCalm, "капсула: пока машины ОКО ищут вас, полежать нельзя, без тревоги — можно (" + JSON.stringify(holes.capAlarm) + ", " + holes.capCalm + ")");
+
+  console.log("(3.3) Задания: не больше трёх сразу, отказ, награды по труду и ремеслу; тела и выжившие");
+  const qz = await page.evaluate(async () => {
+    const g = LAB.game, G = g.G, U = LAB.ui, out = {};
+    const spoken = [], say0 = LAB.say; LAB.say = function (t) { spoken.push(String(t)); };
+    const keep = JSON.parse(JSON.stringify({ quests: G.quests, credits: G.credits, inv: G.inv, ammo: G.ammo, L: G.L, F: G.F, x: G.x, y: G.y, xp: G.xp, lvl: G.lvl, hpMax: G.hpMax, enMax: G.enMax, str: G.str, agi: G.agi, mind: G.mind, cha: G.cha }));
+    try {
+      g.enterFloor(1, 4, "down", true); LAB.combat.stop();
+      G.quests = G.quests.filter(q => q.type === "main");
+      const mk = (i, prof, f) => ({ key: "T33-" + i, n: "Выживший " + i, prof: prof, female: !!f });
+      [0, 1, 2].forEach(i => g.takeQuest(mk(i, "Медик", i % 2)));
+      out.three = g.activeQuests().length;
+      spoken.length = 0; g.takeQuest(mk(3, "Повар"));
+      out.fourth = { n: g.activeQuests().length, said: /3 из 3: сдайте одно или откажитесь/.test(spoken.join(" ")) };
+      out.rewards = g.activeQuests().map(q => ({ t: q.type, cr: q.reward.cr, xp: q.reward.xp, gift: q.reward.gift ? (q.reward.gift.item || q.reward.gift.ammo) : null, txt: g.rewardText(q) }));
+      /* отказ: место освобождается, заказчик больше не просит */
+      const q1 = g.activeQuests()[1];
+      out.abandon = g.abandonQuest(q1) && q1.failed === true && g.activeQuests().length === 2;
+      spoken.length = 0; g.takeQuest(mk(1, "Медик", 1)); out.refused = /отказались от моей просьбы/.test(spoken.join(" "));
+      g.takeQuest(mk(3, "Повар")); out.after = g.activeQuests().length === 3;
+      /* окно заданий: счёт, награда, отказ */
+      U.closeAll(); U.inventory("Задания"); await Promise.resolve(); let w = U.top();
+      out.invLabel = w.items[w.i].label;
+      U.activate(); await Promise.resolve(); w = U.top();
+      out.win = { head: w.items.some(x => /^Взятых поручений — 3 из 3/.test(x.label)), ab: w.items.some(x => x.label === "Отказаться от поручения"), rew: w.items.some(x => /Награда — \d+ кредит/.test(x.label)) };
+      U.closeAll();
+      /* выплата за детали: дороже их цены, и вещь в придачу — не та же деталь */
+      G.quests = G.quests.filter(q => q.type === "main");
+      const eng = { key: "T33-eng", n: "Инженер Проверкин", prof: "Инженер" };
+      let qf = null;
+      for (let k = 0; k < 60 && !qf; k++) { eng.key = "T33-eng-" + k; g.takeQuest(eng); const qq = G.quests[G.quests.length - 1]; if (qq && qq.type === "fetch") qf = qq; else G.quests.pop(); }
+      if (qf) {
+        const price = LAB.ITEMS[qf.item].price * qf.need * g.priceK(), gift = qf.reward.gift;
+        G.inv[qf.item] = (G.inv[qf.item] || 0) + qf.need;
+        const cnt = () => gift.kind === "ammo" ? (G.ammo[gift.ammo] || 0) : (G.inv[gift.item] || 0);
+        const cr0 = G.credits, h0 = cnt();
+        g.completeQuest(qf, eng);
+        out.pay = { done: qf.done, above: G.credits - cr0 > price, gift: cnt() - h0 === gift.n, notSame: gift.item !== qf.item };
+      }
+      /* весточка — награда от получателя, при передаче */
+      G.quests = G.quests.filter(q => q.type === "main");
+      const cq = { id: "T33-c:2", giver: "T33-c", giverName: "Анна Проверкина", gf: true, L: G.L - 1, F: 3, done: false, stage: 2, type: "courier", cross: true, toL: G.L, short: "передать весточку", text: "x" };
+      G.quests.push(cq);
+      out.courierBefore = g.rewardText(cq);
+      const ci = g.courierItems({ key: "T33-rec", n: "Пётр Получатель", prof: "Охранник" });
+      const c0 = G.credits; spoken.length = 0; if (ci[0]) ci[0].fn();
+      out.courier = { n: ci.length, done: cq.done, gain: G.credits - c0, gift: !!(cq.reward && cq.reward.gift), fem: /Жива…/.test(spoken.join(" ")) };
+      /* тела и выжившие на этажах; торговец не стоит у капсулы */
+      let bodies = 0, floors = 0, humans = 0, capTrader = 0;
+      for (const [L, F] of [[1, 3], [2, 7], [5, 12], [12, 4], [25, 9], [47, 6], [66, 15], [88, 3]]) {
+        const fl = LAB.getFloor(G.seed, L, F); floors++;
+        bodies += fl.objs.filter(o => o.type === "corpse").length;
+        humans += fl.npcs.filter(n => !n.robot && !n.heal).length;
+        const cap = {}; fl.objs.forEach(o => { if ((o.type === "capsule" || o.type === "wake") && o.room >= 0) cap[o.room] = 1; });
+        capTrader += fl.npcs.filter(n => cap[n.room] && !n.robot && (LAB.PROFS[n.prof] || {}).trade).length;
+      }
+      out.world = { bodies: +(bodies / floors).toFixed(2), humans: +(humans / floors).toFixed(2), capTrader };
+      g.enterFloor(keep.L, keep.F, "down", true); LAB.combat.stop();
+    } catch (e) { out.err = e.message + " " + (e.stack || "").split("\n")[1]; }
+    G.quests = keep.quests; G.credits = keep.credits; G.inv = keep.inv; G.ammo = keep.ammo;
+    ["x", "y", "xp", "lvl", "hpMax", "enMax", "str", "agi", "mind", "cha"].forEach(k => { G[k] = keep[k]; });
+    LAB.say = say0;
+    return out;
+  });
+  ok(!qz.err, "задания 3.3: без ошибок" + (qz.err ? ": " + qz.err : ""));
+  ok(qz.three === 3 && qz.fourth && qz.fourth.n === 3 && qz.fourth.said, "поручений сразу — не больше трёх: четвёртое не дают и говорят, как освободить место");
+  ok(qz.abandon && qz.refused && qz.after, "отказ от поручения: место освобождается, а тот, кому отказали, больше ни о чём не просит");
+  ok(qz.rewards && qz.rewards.length === 3 && qz.rewards.every(r => r.cr > 0 && r.xp > 0 && /^Награда — \d+ кредит/.test(r.txt)), "награда названа сразу: кредиты, опыт и вещь (" + (qz.rewards || []).map(r => r.t + ": " + r.txt).join(" | ") + ")");
+  ok(qz.rewards && qz.rewards.every(r => /^(medkit_s|bandage|antidote|sorbent|painkiller|medkit_l)$/.test(r.gift || "")), "вещь в награду — из ремесла заказчика: медик даёт лекарства");
+  ok(/поручений 3 из 3/.test(qz.invLabel || "") && qz.win && qz.win.head && qz.win.ab && qz.win.rew, "окно заданий: «3 из 3», награда у каждого поручения, пункт «Отказаться от поручения» (" + qz.invLabel + ")");
+  ok(qz.pay && qz.pay.done && qz.pay.above && qz.pay.gift && qz.pay.notSame, "принесённые детали оплачены дороже их цены, вещь в придачу — и не та же деталь (" + JSON.stringify(qz.pay) + ")");
+  ok(/дадут те, кому передадите/.test(qz.courierBefore || "") && qz.courier && qz.courier.n === 1 && qz.courier.done && qz.courier.gain > 0 && qz.courier.gift && qz.courier.fem, "весточка: награду даёт получатель при передаче, по своему ремеслу (" + JSON.stringify(qz.courier) + ")");
+  ok(qz.world && qz.world.bodies >= 1.5 && qz.world.humans >= 0.5 && qz.world.capTrader === 0, "на этажах больше тел и живых, а выживший-торговец не стоит у капсулы (" + JSON.stringify(qz.world) + ")");
 
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {

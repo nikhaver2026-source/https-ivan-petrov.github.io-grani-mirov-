@@ -93,12 +93,18 @@ function boot() {
   window.labBgSet = function (k, on) { if (!LAB.selftesting) bgSet(String(k), !!on); };
   window.labBgReset = function () { why = {}; clearTimeout(minT); if (LAB.bg) toBg(false); };
   document.addEventListener("visibilitychange", function () { bgSet("hidden", document.hidden); });
-  if (!app) {
+  /* (3.3) на компьютере фокус и сворачивание окна сообщает главный процесс (labBgSet):
+     второй, страничный слушатель фокуса дублировал его, а с задержкой связи между
+     процессами при быстром Alt+Tab туда и обратно возвращал игру в фон уже после
+     возврата — и обрывал речь */
+  if (!app && !LAB.desktop) {
     window.addEventListener("blur", function () { if (!LAB.selftesting) bgSet("blur", true); });
     window.addEventListener("focus", function () { bgSet("blur", false); });
   }
-  /* нажали клавишу или коснулись — игра на экране, что бы ни сказали события окна */
-  ["pointerdown", "keydown"].forEach(function (ev) { window.addEventListener(ev, function () { if ((why.blur || why.min) && !document.hidden) { delete why.min; bgSet("blur", false); } }, true); });
+  /* нажали клавишу или коснулись — игра на экране, что бы ни сказали события окна
+     (3.3: и после паузы приложения — в фоне касаний не бывает; речь в фоне ждёт,
+     и застрявший фон оставил бы игру без голоса) */
+  ["pointerdown", "keydown"].forEach(function (ev) { window.addEventListener(ev, function () { if ((why.blur || why.min || why.pause) && !document.hidden) { delete why.min; delete why.pause; bgSet("blur", false); } }, true); });
   window.labPause = function () { bgSet("pause", true); return LAB.settings.bgDim || LAB.selftesting ? 1 : 0; };
   window.labResume = function () { delete why.blur; bgSet("pause", false); };
   /* для проверок: в приложении — отметка в журнале устройства */

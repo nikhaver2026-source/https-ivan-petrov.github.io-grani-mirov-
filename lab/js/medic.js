@@ -362,8 +362,10 @@ function profileOf(n) {
 }
 function title(n) { return gm().npcName ? gm().npcName(n) : n.n; }
 /* сколько стоит в кредитах: от недостающего здоровья, глубины и режима */
-function healCost(P, hp) { return Math.max(3, Math.round(hp * 0.6 * pk() * P.k)); }
-function svcCost(P, base) { return Math.max(2, Math.round(base * pk() * P.k)); }
+/* (3.3) медик-человек уступает в цене тому, у кого харизма выше; машине и улью всё равно */
+function chaP(P) { return P.kind === "human" && gm().chaK ? gm().chaK() : 1; }
+function healCost(P, hp) { return Math.max(3, Math.round(hp * 0.6 * pk() * P.k * chaP(P))); }
+function svcCost(P, base) { return Math.max(2, Math.round(base * pk() * P.k * chaP(P))); }
 function partHp() { var g = G(); return Math.min(g.hpMax - g.hp, Math.max(25, Math.round(g.hpMax * 0.35))); }
 /* Чем ещё платят: возвращает { ok, text, take } на сумму в кредитах (credits) или на столько здоровья (hp). */
 var FOOD = ["ration", "stew", "mre", "fishcan", "protein", "crackers", "noodles", "nuts", "choco", "bread", "porridge", "sausage", "glucose"];
@@ -394,13 +396,19 @@ function altPay(P, credits, hp) {
     var what = P.pay === "food" ? "едой" : P.pay === "gel" ? "биогелем и реагентами" : "деталями";
     return { ok: gp.ok, label: what + (gp.ok ? ": " + gp.text : ": у вас не хватает"), take: gp.take };
   }
+  /* (3.3) покой — это и силы: нервы успокаиваются сами за пару минут, а бодрость — только
+     сном, отдыхом и кофе; прежде платили одной нейронагрузкой — и лечились снова и снова */
   if (P.pay === "nerve") {
-    var cost = Math.max(5, Math.min(60, Math.round(hp / g.hpMax * 50 * ak))), now = Math.round(b.neuro || 0);
-    return { ok: now + cost <= 85, label: "своим покоем: нейронагрузка плюс " + cost + " (сейчас " + now + (now + cost > 85 ? ", это слишком много" : "") + ")", take: function () { b.neuro = Math.min(100, (b.neuro || 0) + cost); } };
+    var cost = Math.max(5, Math.min(60, Math.round(hp / g.hpMax * 50 * ak))), now = Math.round(b.neuro || 0), wk = Math.ceil(cost / 2), wn = Math.round(b.wake == null ? 100 : b.wake);
+    var nOk = now + cost <= 85, wOk = wn - wk >= 5;
+    return { ok: nOk && wOk, label: "своим покоем: нейронагрузка плюс " + cost + " (сейчас " + now + (nOk ? "" : ", это слишком много") + "), бодрость минус " + wk + " (сейчас " + wn + (wOk ? "" : ", сил не хватит") + ")",
+      take: function () { b.neuro = Math.min(100, (b.neuro || 0) + cost); b.wake = Math.max(0, (b.wake == null ? 100 : b.wake) - wk); } };
   }
+  /* (3.3) время идёт наяву: сытость и бодрость тратятся (прежде — как во сне в капсуле,
+     даром); и пока на этаже тревога или рядом враг, часами лечиться некогда */
   if (P.pay === "time") {
-    var h = Math.max(1, Math.min(12, Math.ceil(hp / g.hpMax * 6 * ak)));
-    return { ok: true, label: "временем: лечение займёт " + h + " " + pl(h, "час", "часа", "часов"), take: function () { if (gm().advanceTime) gm().advanceTime(h * 60, true); } };
+    var h = Math.max(1, Math.min(12, Math.ceil(hp / g.hpMax * 6 * ak))), rb = gm().restBlock ? gm().restBlock() : null;
+    return { ok: !rb, label: "временем: лечение займёт " + h + " " + pl(h, "час", "часа", "часов") + (rb ? " — " + rb.replace(/^Не до отдыха: /, "сейчас нельзя: ") : ""), take: function () { if (gm().advanceTime) gm().advanceTime(h * 60, false); } };
   }
   return null;
 }

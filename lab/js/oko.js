@@ -828,8 +828,9 @@ function punTick(f, now) {
     /* каратели без дела (группу отозвали, а этаж загрузили заново) — уходят */
     if (cb.strikers().length) cb.strikeRecall();
     if (gr < lim || f.netCut) return;
+    /* (3.3) очередь замены не стирается: пока идёт мясорубка, замена и так не выходит,
+       а после отзыва карателей посты и кабинеты, потерянные раньше, снова заполнятся */
     f.pun = 1; f.punWave = (f.punWave || 0) + 1; f.punAt = now + (dk.punPrep || 80); f.punGo = 0;
-    f.repl = []; /* замена отозвана */
     speak(f.punWave > 1 ? "grinder_more" : "grinder", true);
     log("Замена отозвана: на этаже мясорубка. Готовится ударная группа.");
     if (!g.tut.grind) { g.tut.grind = 1; voice("«Эхо»: ОКО перестало присылать машины по одной. За присланных опыта больше нет, а с нижних уровней идёт ударная группа — засада у вас на пути вниз. Уходите с этажа или затихните: тогда ОКО её отзовёт.", { prio: "event", keep: true }); }
@@ -854,6 +855,18 @@ function punTick(f, now) {
   }
   if (!f.punGo && alive.some(function (q) { return q.ambush; })) f.punGo = now + (dk.punWait || 240); /* после гибели героя и загрузки этажа — снова отсчёт */
   if (f.punGo && now >= f.punGo) { f.punGo = 0; if (cb.strikeGo()) speak("strike_go", true); }
+  /* (3.3) тревога и громкая стрельба — это не тишина: отзыв откладывается */
+  var lvP = level();
+  if ((lvP >= 2 && lvP <= 5) || (g.noise || 0) >= 10) f.punCalmT = now;
+  /* (3.3) каратели вышли на перехват и потеряли носителя — ОКО раз в десять секунд
+     наводит их на место, где его видели последним (прежде, обыскав одну точку,
+     они бродили без цели, и их тихо отзывали) */
+  if (!f.punGo && now % 20 === 0 && cb.search) {
+    var sa = st().seenAt;
+    if (sa && sa.L === g.L && sa.F === g.F && now - sa.t < 240) alive.forEach(function (q) {
+      if (!q.ambush && q.state !== "hunt" && q.task !== "leave") cb.search(q, { x: sa.x, y: sa.y });
+    });
+  }
   /* затихли, и никто за вами не гонится — ОКО отзывает карателей */
   var quietT = now - Math.max(f.grindLast || 0, f.punCalmT || 0);
   if (quietT >= (dk.punCalm || 600) && !cb.hunted()) {

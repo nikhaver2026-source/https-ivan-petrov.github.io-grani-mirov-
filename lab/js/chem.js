@@ -820,8 +820,13 @@ function use(id) {
     case "salve": g.st.shield = Math.max(g.st.shield || 0, Math.round(30 * k.mag * potK("bio"))); g.st.shieldT = Math.round(60 * k.dur * bioDur()); msg = "Хитиновая корка схватывается на коже: щит " + g.st.shield + "."; break;
     case "coat":
       if (!coatable(w)) { say("Смазку наносят на оружие ближнего боя или на стальные пули. Возьмите такое оружие в руки."); return false; }
-      w.coat = { k: b0 === "c_coat_tox" ? "tox" : "acid", n: Math.round(15 * k.dur * (rank("tox") >= 1 ? 2 : 1)), m: Math.round(k.mag * 100) / 100 };
-      msg = (w.coat.k === "tox" ? "Яд" : "Кислота") + " на оружии: " + w.coat.n + " попаданий."; break;
+      /* (3.3) та же смазка поверх — попадания складываются; другая — стирает прежнюю, и это
+         говорится вслух (прежде остаток старой пропадал молча) */
+      var ck = b0 === "c_coat_tox" ? "tox" : "acid", cn = Math.round(15 * k.dur * (rank("tox") >= 1 ? 2 : 1)), cm = Math.round(k.mag * 100) / 100, old = w.coat && w.coat.n > 0 ? w.coat : null, wipe = "";
+      if (old && old.k === ck) { cn += old.n; cm = Math.max(cm, old.m || 0); }
+      else if (old) wipe = "Прежняя смазка — " + (old.k === "tox" ? "яд" : "кислота") + ", " + old.n + " " + pl(old.n, "попадание", "попадания", "попаданий") + " — стёрта. ";
+      w.coat = { k: ck, n: cn, m: cm };
+      msg = wipe + (ck === "tox" ? "Яд" : "Кислота") + " на оружии: " + cn + " " + pl(cn, "попадание", "попадания", "попаданий") + "."; break;
     case "over":
       if (!batteryGun(w)) { say("Перегрузочную капсулу вставляют в оружие на энергобатареях. Возьмите такое в руки."); return false; }
       w.over = (w.over || 0) + Math.round(6 * k.dur) + (rank("energy") >= 2 ? 3 : 0); w.overK = Math.max(w.overK || 1.5, Math.round((1 + 0.5 * k.mag) * 100) / 100);

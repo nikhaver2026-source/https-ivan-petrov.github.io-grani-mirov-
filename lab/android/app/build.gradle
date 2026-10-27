@@ -18,11 +18,16 @@ android {
         targetSdk 37
         /* Номер сборки растёт с каждым запуском рабочего процесса: новая
            версия ставится поверх прежней, сохранения остаются. */
-        versionCode(3200 + ((System.getenv('BUILD_NUMBER') ?: '0') as int))
-        versionName 'Альфа 3.2'
+        versionCode(3300 + ((System.getenv('BUILD_NUMBER') ?: '0') as int))
+        versionName 'Альфа 3.3'
     }
 
-    /* Ключ подписи — только из окружения сборки: в репозитории ключей нет. */
+    /* Ключ подписи — только из окружения сборки: в репозитории ключей нет.
+       (3.3) Ключ должен быть постоянным — один и тот же во всех сборках (секрет
+       репозитория, см. android/SIGNING.md). Тогда Android ставит новую версию
+       поверх прежней, не требуя удаления, а Play Protect узнаёт приложение и не
+       проверяет его заново при каждой установке. Подпись — всеми схемами:
+       v1 (JAR) нужна Android 9–10, v2 и v3 — новым системам. */
     signingConfigs {
         release {
             if (System.getenv('KS_FILE')) {
@@ -31,6 +36,9 @@ android {
                 keyAlias System.getenv('KS_ALIAS')
                 keyPassword System.getenv('KS_KEY_PASS')
             }
+            enableV1Signing true
+            enableV2Signing true
+            enableV3Signing true
         }
     }
 

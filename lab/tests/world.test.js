@@ -281,7 +281,9 @@ for (let si = 0; si < seeds; si++) {
    обновите отпечатки; ненарочно — верните прежний поток случайностей генератора. */
 {
   const crypto = require("crypto");
-  const FP = { "fpA 1-1": "f03f88aae83208ea", "fpA 10-13": "2ade3cfc804c0754", "fpB 20-20": "be43eb88146375f7", "fpB 21-7": "61ce87f747db77b0", "fpC 30-2": "e7d356f206b034d8", "fpC 40-13": "545d6af8c7eb5b3b" };
+  /* (3.3) пятый выпуск мира (WORLD_V 5): тела погибших в помещениях (annex.js) и выжившие
+     чаще (world.js, шаги 17 и 26) — отпечатки новые */
+  const FP = { "fpA 1-1": "f03f88aae83208ea", "fpA 10-13": "bf00c1ba63cf5a44", "fpB 20-20": "3a4f6336c26921ce", "fpB 21-7": "e4cfc44a5ab3b83e", "fpC 30-2": "a469748a1ae62721", "fpC 40-13": "b3cd37805c459756" };
   for (const k in FP) {
     const m = k.match(/^(\S+) (\d+)-(\d+)$/), fl = LAB.getFloor(m[1], +m[2], +m[3]), h = crypto.createHash("sha1");
     h.update(Buffer.from(fl.t.buffer)); h.update(Buffer.from(fl.room.buffer)); h.update(Buffer.from(fl.corrAt.buffer));

@@ -442,8 +442,11 @@ function guard(o, cont) {
 function menu(o, s, cont) {
   var d = K[s.k], pct = Math.round(disarmChance(s) * 100);
   var items = [];
-  items.push({ label: (d.noDisarm ? d.kill : "Обезвредить: " + d.n) + " (удача — " + pct + " " + gm().plural(pct, "процент", "процента", "процентов") + ")", fn: function () { disarm(o, s, cont); } });
-  items.push({ label: d.noDisarm ? "Открыть всё равно" : "Открыть, не обезвреживая", fn: function () { spring(o, s, cont); } });
+  /* (3.3) окно ловушки могло остаться под запиской из хранилища: ловушки уже нет —
+     пункт не даёт ни второго опыта, ни второго взрыва */
+  var gone = function () { if (armed(s)) return false; say("Ловушки здесь уже нет."); return true; };
+  items.push({ label: (d.noDisarm ? d.kill : "Обезвредить: " + d.n) + " (удача — " + pct + " " + gm().plural(pct, "процент", "процента", "процентов") + ")", fn: function () { if (!gone()) disarm(o, s, cont); } });
+  items.push({ label: d.noDisarm ? "Открыть всё равно" : "Открыть, не обезвреживая", fn: function () { if (!gone()) spring(o, s, cont); } });
   items.push({ label: "Осмотреть ловушку", keep: true, fn: function () { say(d.hint + (d.glove ? " Прорезиненная ткань на руках убережёт от неё." : d.mask ? " Респиратор или противогаз убережёт от неё." : "")); } });
   items.push({ label: "Отойти", fn: function () { say("Вы отходите от хранилища."); } });
   UIx("menu", nameIn(o) + ": ловушка — " + d.n, items);

@@ -276,14 +276,17 @@ var STAGES = [
 function stageOf(L) { var s = null; STAGES.forEach(function (q) { if (q.at(L)) s = q; }); return s; }
 /* Вход на новый уровень (oko.js, event "enter"): после приветствия ОКО —
    слово «Эхо» о новом облике, если он сменился. */
+/* (3.3) отметка «сказано» ставится, когда фраза прозвучала: погибли, вышли или
+   загрузили другую запись за эти секунды — «Эхо» скажет при следующем входе */
+function later(fn, ms) { return LAB.game.later ? LAB.game.later(fn, ms) : setTimeout(function () { if (LAB.game.entered) fn(); }, ms); }
 function entered() {
   var g = G(), o = okoSt(), s = stageOf(g.L);
   if (!s || o.formSaid === s.key) return;
-  o.formSaid = s.key;
   var L0 = g.L;
-  setTimeout(function () {
-    var g2 = G();
-    if (!LAB.game.entered || !g2 || g2.dead || g2.L !== L0) return;
+  later(function () {
+    var g2 = G(), o2 = okoSt();
+    if (!g2 || g2.dead || g2.L !== L0 || o2.formSaid === s.key) return;
+    o2.formSaid = s.key;
     LAB.say(s.t, { prio: "event", keep: true });
     if (LAB.game.journal) LAB.game.journal("Облик ОКО: " + s.t.replace(/^«Эхо»: /, ""));
   }, 11000);
@@ -292,12 +295,12 @@ function entered() {
 function floorIn() {
   var g = G(), o = okoSt();
   if (!g || g.L !== 99 || g.F < 20 || o.farewell) return;
-  o.farewell = 1;
-  setTimeout(function () {
-    var g2 = G();
-    if (!LAB.game.entered || !g2 || g2.dead) return;
+  later(function () {
+    var g2 = G(), o2 = okoSt();
+    if (!g2 || g2.dead || g2.L !== 99 || g2.F < 20 || o2.farewell) return;
+    o2.farewell = 1;
     LAB.say("ОКО, шёпотом, прямо в ухо: «Дальше я не пойду, носитель. Слушайте сами — вы умеете лучше меня. Я берёг росток. Теперь — вы. Прощайте.»", { prio: "event", keep: true });
-    setTimeout(function () { if (LAB.game.entered) LAB.say("«Эхо»: ОКО замолчало. Кажется, насовсем.", { prio: "event", keep: true }); }, 9000);
+    later(function () { if (!G().dead) LAB.say("«Эхо»: ОКО замолчало. Кажется, насовсем.", { prio: "event", keep: true }); }, 9000);
     if (LAB.game.journal) LAB.game.journal("ОКО простилось и замолчало.");
   }, 6000);
 }

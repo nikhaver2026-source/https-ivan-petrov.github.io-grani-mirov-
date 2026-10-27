@@ -95,8 +95,17 @@ var REC = [
   { id: "i_r_rootwhip", out: "weapon:i_rootwhip", n: "Корневой бич", need: { i_treefiber: 2, k_root: 1, i_omegagel: 1 }, cls: "spec", minL: 89 },
   { id: "i_r_gardenstaff", out: "weapon:i_gardenstaff", n: "Посох садовника", need: { i_treefiber: 2, i_soundlump: 2, i_timesand: 1, m_gear: 2 }, cls: "exp", bp: true, minL: 97 }
 ];
-REC.forEach(function (rc) {
-  for (var k in rc.need) if (!LAB.ITEMS[k]) return;
-  if (!LAB.RECIPES.some(function (q) { return q.id === rc.id; })) LAB.RECIPES.push(rc);
-});
+/* (3.3) Рецепт встаёт в список, когда все его детали уже есть. Сервопривод, ячейка, реле
+   и защитная панель появляются в workshop.js, а он подключается позже, — прежде восемь
+   рецептов (гвоздемёт, лазерный скальпель, «Оса», «Шёпот», ударный молот, кирка-отбойник,
+   луч коногонки, шестерёночная пила) в игру не попадали. Мастерская, добавив детали,
+   зовёт LAB.armsLate — и остальные рецепты встают в список. */
+function register() {
+  REC.forEach(function (rc) {
+    for (var k in rc.need) if (!LAB.ITEMS[k]) return;
+    if (!LAB.RECIPES.some(function (q) { return q.id === rc.id; })) LAB.RECIPES.push(rc);
+  });
+}
+register();
+LAB.armsLate = register;
 })();

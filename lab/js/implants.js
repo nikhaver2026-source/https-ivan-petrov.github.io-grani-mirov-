@@ -207,9 +207,13 @@ function catXp(c) { return cy().xp[c] || 0; }
 function catLv(c) { var x = catXp(c), n = 0; for (var i = 1; i < CAT_XP.length; i++) if (x >= CAT_XP[i]) n = i; return n; }
 function totalXp() { var s = 0, x = cy().xp; for (var k in x) s += x[k] || 0; return s; }
 function level() { var x = totalXp(), n = 1; for (var i = 1; i < ALL_XP.length; i++) if (x >= ALL_XP[i]) n = i + 1; return n; }
-function gain(c, how) {
+/* (3.3) опыт за сборку, вживление, извлечение и разбор — один раз на каждый чип (key):
+   прежде «собрать — разобрать» и «вживить — извлечь» качали кибернетику без конца */
+function once(key) { var s = cy().once || (cy().once = {}); if (s[key]) return false; s[key] = 1; return true; }
+function gain(c, how, key) {
   var n = XP[how] || 0, before = catLv(c), lb = level();
   if (!n || !CATS[c]) return;
+  if (key && !once(how + ":" + key)) return;
   cy().xp[c] = catXp(c) + n;
   var after = catLv(c), la = level();
   if (after > before) gm().later(function () { A("play", "ui_levelup"); LAB.say("Кибернетика, " + CATS[c].n + ": ступень " + after + ". " + catPerk(after), { interrupt: false }); }, 600);
@@ -292,8 +296,10 @@ function applyStatic() {
   var g = G(); if (!g) return;
   var hp = Math.round((g.hpMax - (g.chipHp || 0)) * stat("hpmax")), en = Math.round(stat("enmax"));
   var dh = hp - (g.chipHp || 0), de = en - (g.chipEn || 0);
-  if (dh) { g.hpMax += dh; g.hp = Math.max(1, Math.min(g.hpMax, g.hp + Math.max(0, dh))); g.chipHp = hp; }
-  if (de) { g.enMax += de; g.en = Math.max(0, Math.min(g.enMax, g.en + Math.max(0, de))); g.chipEn = en; }
+  /* (3.3) прибавка уходит так же, как пришла: прежде вживление добавляло здоровье и
+     энергию, а извлечение их не забирало — «вживить и извлечь» лечило */
+  if (dh) { g.hpMax += dh; g.hp = Math.max(1, Math.min(g.hpMax, g.hp + dh)); g.chipHp = hp; }
+  if (de) { g.enMax += de; g.en = Math.max(0, Math.min(g.enMax, g.en + de)); g.chipEn = en; }
 }
 /* множитель урона оружия: чипы, разгон, добивание */
 function dmgK(f) {
@@ -600,7 +606,7 @@ function craftWhy(rc) {
   if (!rc || !rc.cyb) return "";
   return catLv(rc.cyb) < (rc.cybN || 0) ? "Не хватает кибернетики: «" + CATS[rc.cyb].n + "», нужна ступень " + rc.cybN + ", у вас " + catLv(rc.cyb) + ". Ступень растёт от вживления, калибровки, модификаций, разбора и применения имплантов этого направления." : "";
 }
-function crafted(rc) { if (rc && rc.cyb) gain(rc.cyb, "craft"); }
+function crafted(rc) { if (rc && rc.cyb) gain(rc.cyb, "craft", rc.id); }
 
 /* ════════ ВЖИВИТЬ, ИЗВЛЕЧЬ, РАЗОБРАТЬ, КАЛИБРОВАТЬ ════════ */
 function roomFor(id) {
@@ -617,7 +623,7 @@ function install(id, how, quiet) {
   var b = g.body; if (b) b.neuro = Math.min(100, (b.neuro || 0) + 12);
   A("play", "implant");
   applyStatic();
-  gain(d.cat, "install");
+  gain(d.cat, "install", id);
   var msg = (how || "Вживлено") + ": «" + d.n + "»" + (tagText(id) ? ", " + tagText(id) : "") + ". " + (d.passive ? "Пассивный чип: работает сам. Гнёзд занято " + chipsIn() + " из " + slots() + "." : "Панель имплантов — " + LAB.K("двойное касание четырьмя пальцами.", "клавиша U.") + " Ёмкость: " + usedCap() + " из " + capacity() + ".");
   if (!quiet) say(msg);
   if (LAB.oko && LAB.oko.react) gm().later(function () { LAB.oko.react("implant"); }, 3000);
@@ -649,7 +655,7 @@ function extract(id, how) {
   var self = how === "self", pain = self ? 14 : 8;
   g.hp = Math.max(1, g.hp - pain);
   var b = g.body; if (b) b.neuro = Math.min(100, (b.neuro || 0) + (self ? 18 : 10));
-  gain(d.cat, "extract");
+  gain(d.cat, "extract", id);
   A("play", "inject");
   say((self ? "Вы сами вскрываете гнездо. " : "") + "«" + d.n + "» извлечён: чип — в рюкзаке. Больно: здоровье " + g.hp + ". Ступень и модификации «Эхо» запомнило.");
   if (LAB.ui && LAB.ui.refresh) LAB.ui.refresh();
@@ -664,7 +670,7 @@ function dismantle(id, tier) {
   if (d.t >= 3) parts.supercond = (parts.supercond || 0) + 1;
   for (var k in parts) { g.inv[k] = (g.inv[k] || 0) + parts[k]; got.push(low(LAB.ITEMS[k] ? LAB.ITEMS[k].n : k) + " " + parts[k]); }
   A("play", "pry");
-  gain(d.cat, "dismantle");
+  gain(d.cat, "dismantle", id);
   var t = "«" + d.n + "» разобран. Получено: " + got.join(", ") + ".", W = LAB.workshop;
   if (W && (tier || 0) >= 2) { var lt = W.learn(it, "Поняли, разбирая чип.", true); if (lt) t += " " + lt; }
   else if (W && !W.known({ id: it, bp: true })) t += " Схему поймёте, если разбирать у верстака со станками.";
@@ -722,7 +728,7 @@ function delMod(id, m) {
   var g = G(); if (!has(id, m)) return false;
   g.impMod[id] = mods(id).filter(function (x) { return x !== m; });
   applyStatic();
-  A("play", "pry"); say("Модификация «" + MODS[m].n + "» снята.");
+  A("play", "pry"); say("Модификация «" + MODS[m].n + "» снята. Её детали спеклись в гнезде — не вернуть.");
   return true;
 }
 function tagText(id) { var s = []; if (lv(id) > 1) s.push("ступень " + lv(id)); mods(id).forEach(function (m) { if (MODS[m]) s.push(MODS[m].n); }); return s.join(", "); }
@@ -754,7 +760,7 @@ function benchItems(tier) {
     var d = def(id), n = lv(id) + 1;
     if (!upgradable(id)) return;
     var why = n > maxGrade() ? "нужна общая ступень кибернетики " + (n === 2 ? 2 : 5) : tier < UP_TIER[n] ? (n === 3 ? "нужен станок с программным управлением" : "нужны станки") : "";
-    items.push({ label: "Калибровка: «" + d.n + "» — " + lvWord(n) + " ступень. " + (why ? cap1(why) : "Нужно: " + costTxt(UP_COST[n])), keep: true, disabled: !!why, why: why ? cap1(why) + "." : "", fn: function () { upgrade(id, "bench", tier); } });
+    items.push({ label: "Калибровка: «" + d.n + "» — " + lvWord(n) + " ступень: сила в " + (n === 2 ? "1,35" : "1,75") + " раза больше первой, энергии на " + (n === 2 ? "десятую часть" : "пятую часть") + " меньше. " + (why ? cap1(why) : "Нужно: " + costTxt(UP_COST[n])), keep: true, disabled: !!why, why: why ? cap1(why) + "." : "", fn: function () { upgrade(id, "bench", tier); } });
   });
   if (tier >= 2) g.implants.forEach(function (id) {
     if (id === "echo") return;
@@ -777,7 +783,7 @@ function benchMenu(tier) {
 }
 function modItems(id) {
   var items = [];
-  mods(id).forEach(function (m) { items.push({ label: "Стоит: " + MODS[m].n + " — " + MODS[m].d + ". Снять", keep: true, fn: function () { delMod(id, m); } }); });
+  mods(id).forEach(function (m) { items.push({ label: "Стоит: " + MODS[m].n + " — " + MODS[m].d + ". Снять — детали не вернутся", keep: true, fn: function () { delMod(id, m); } }); });
   MOD_ORDER.forEach(function (m) {
     if (has(id, m)) return;
     var M = MODS[m], why = compat(id, m);

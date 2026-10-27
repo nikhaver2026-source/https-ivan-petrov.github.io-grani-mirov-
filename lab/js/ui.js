@@ -39,16 +39,51 @@ function valueText(it) {
   return String(v);
 }
 function top() { return stack.length ? stack[stack.length - 1] : null; }
+/* (3.3) Окно помнит, каким был мир, когда его открыли: этаж и место героя, опыт,
+   кредиты, вещи, заряды, оружие, броня, здоровье, найденные тайники. Пока окно открыто,
+   мир стоит, так что меняется он только действиями героя. Окно снова наверху, а мир
+   изменился (в окне поверх что-то взяли, купили, вскрыли, вылечили): окно, которое
+   умеет собраться заново (rebuild), собирается — числа в пунктах новые; не умеет —
+   закрывается вслед за верхним: его пункты устарели, и старый пункт мог бы дать ту же
+   награду ещё раз. */
+function stamp() {
+  var g = gm() && gm().entered ? G() : null;
+  if (!g) return "";
+  return [g.L, g.F, g.x, g.y, g.xp, g.lvl, g.credits, g.hp, JSON.stringify(g.inv || {}), JSON.stringify(g.ammo || {}), (g.weapons || []).length, (g.armors || []).length, (g.stats && g.stats.secrets) || 0].join("|");
+}
+/* Отметка окна — когда действие, открывшее его, закончилось (в конце задачи): действие
+   могло после menu() ещё что-то менять (сборка модуля открывает шаг 2 и начисляет опыт),
+   и окно не должно сразу считаться устаревшим. */
+function settle(w) { var f = function () { if (w.stamp == null) w.stamp = stamp(); }; if (typeof Promise !== "undefined") Promise.resolve().then(f); else setTimeout(f, 0); }
+/* Собрать окно заново; пустой список — false (окно закрывают) */
+function rebuildWin(t) {
+  var its = (t.rebuild() || []).filter(Boolean);
+  if (!its.length) return false;
+  t.items = its; t.i = Math.max(0, Math.min(t.i, its.length - 1)); t.stamp = stamp();
+  return true;
+}
+/* (3.3) Окно сверху — заново, когда мир изменили не его пункты (сон в капсуле, музыка
+   доиграла): числа в пунктах новые, отметка тоже. */
+function rebuildTop() { var t = top(); if (t && !t.root && t.rebuild && rebuildWin(t)) render(); }
+/* Окно снова наверху: с rebuild — собирается заново (пусто — закрывается),
+   без rebuild и устаревшее — закрывается; и так до первого живого окна. */
+function reveal() {
+  var st = stamp(), t = top();
+  while (t && !t.root && !t.note) {
+    if (t.rebuild ? rebuildWin(t) : (t.stamp == null || t.stamp === st)) return;
+    stack.pop(); if (t.onClose) LAB.safe(t.onClose); t = top();
+  }
+}
 function menu(title, items, opts) {
   opts = opts || {};
   items = (items || []).filter(Boolean);
   if (!items.length) return;
-  if (opts.closeFirst !== false && opts.replace) stack.pop();
   /* то же окно уже открыто ниже (пункт «Назад» открывает родителя заново) —
      заменяем его, а не копим: «назад» и пункт «Назад» ведут в одно место */
   for (var si = stack.length - 1; si >= 0; si--) if (stack[si].title === title && !stack[si].root) { stack.splice(si); break; }
-  var w = { title: title, items: items, i: Math.max(0, Math.min(items.length - 1, opts.focus || 0)), keep: !!opts.keep, root: !!opts.root, rebuild: opts.rebuild || null, onClose: opts.onClose || null, onFocus: opts.onFocus || null, silentOpen: !!opts.silent, intro: opts.intro || "", puzzle: !!opts.puzzle };
+  var w = { title: title, items: items, i: Math.max(0, Math.min(items.length - 1, opts.focus || 0)), keep: !!opts.keep, root: !!opts.root, rebuild: opts.rebuild || null, onClose: opts.onClose || null, onFocus: opts.onFocus || null, silentOpen: !!opts.silent, intro: opts.intro || "", puzzle: !!opts.puzzle, stamp: null };
   stack.push(w);
+  settle(w);
   if (LAB.input && LAB.input.stopAll) LAB.input.stopAll(); /* ходьба и очередь с удержания — стоп */
   LAB.UI.open();
   render();
@@ -68,11 +103,11 @@ function closeTop(silent) {
   var quiet = LAB.Speech.noteBusy(); /* записка ещё читается — без объявлений */
   stack.pop();
   if (w.onClose) LAB.safe(w.onClose);
+  reveal();
   if (!silent) LAB.UI.close();
   render();
   var t = top();
   if (t && !silent) {
-    if (t.rebuild) { t.items = t.rebuild(); t.i = Math.min(t.i, t.items.length - 1); render(); }
     if (!quiet) say(t.title + ". " + itemText(t.items[t.i]));
   } else if (!t && !silent && !quiet && screen === "game") say("Игра.");
   return true;
@@ -95,6 +130,23 @@ function activate() {
   if (it.disabled) { LAB.UI.error(); say(it.why || "Недоступно."); return; }
   /* «Отойти», «Назад», «Отмена» без действия — закрыть окно и сказать, где вы */
   if (it.close || (/^(Отойти|Назад|Отмена)$/.test(String(it.label)) && String(it.fn).replace(/\s+/g, "") === "function(){}")) { if (!closeTop()) LAB.UI.error(); return; }
+  /* (3.3) мир изменился, пока окно было открыто (не его пунктом). Окно с rebuild
+     собирается заново; выбранный пункт остался прежним — выполняется, иначе окно
+     называет себя заново. Окно без rebuild старый пункт не выполняет: оно закрывается. */
+  if (!w.root && !w.note && w.stamp && w.stamp !== stamp()) {
+    var was = itemText(it), tt;
+    if (w.rebuild && rebuildWin(w)) {
+      var j = -1; w.items.forEach(function (x, k) { if (j < 0 && itemText(x) === was) j = k; });
+      render();
+      if (j < 0) { LAB.UI.error(); say("Здесь всё изменилось. " + w.title + ". " + itemText(w.items[w.i])); return; }
+      w.i = j; it = w.items[j];
+      if (it.disabled) { LAB.UI.error(); say(it.why || "Недоступно."); return; }
+    } else {
+      LAB.UI.error(); stack.splice(stack.indexOf(w), 1); if (w.onClose) LAB.safe(w.onClose); reveal(); render(); tt = top();
+      say("Здесь всё уже изменилось: откройте окно заново." + (tt ? " " + tt.title + ". " + itemText(tt.items[tt.i]) : ""));
+      return;
+    }
+  }
   LAB.UI.click();
   var keep = w.keep || it.keep, n0 = LAB.Speech.sayN || 0;
   /* пункт выполняется, пока его окно ещё открыто: открыл новое окно — это
@@ -102,17 +154,20 @@ function activate() {
   LAB.safe(function () { it.fn(); });
   var wi = stack.indexOf(w);
   if (!keep && !w.root && wi >= 0 && top() === w) {
-    stack.splice(wi, 1); render();
+    stack.splice(wi, 1); reveal(); render();
     if ((LAB.Speech.sayN || 0) === n0 && !(LAB.mini && LAB.mini.active())) {
       var t = top();
       if (t) say(t.title + ". " + itemText(t.items[t.i])); else if (screen === "game") say("Игра.");
     }
   }
-  if (keep && top() === w && w.rebuild) { var old = w.i; w.items = w.rebuild(); w.i = Math.min(old, w.items.length - 1); render(); }
+  if (keep && top() === w && w.rebuild) { if (rebuildWin(w)) render(); else { stack.splice(stack.indexOf(w), 1); if (w.onClose) LAB.safe(w.onClose); reveal(); render(); } }
+  /* окно осталось наверху: что изменилось, изменилось его же пунктом — оно в курсе */
+  if (top() === w) w.stamp = stamp();
 }
 function move(step) {
   var w = top(); if (!w) return;
   var n = w.items.length;
+  if (!n) return;
   w.i = (w.i + step + n) % n;
   LAB.UI.move();
   render();
@@ -259,7 +314,8 @@ function pageGesture(g) {
     if (g.dir === "U" && page.opts.skip !== false) { var d2 = page.opts.done; page = null; LAB.UI.close(); if (d2) d2(); return true; }
   }
   if (g.kind === "tap" || g.kind === "dtap") { showPage(page.pages, page.i, page.opts); return true; }
-  if (g.kind === "back") { var d3 = page.opts.done; page = null; if (d3) d3(); return true; }
+  /* (3.3) финал с итогами (skip: false) «назад» не пропускает — как и Escape */
+  if (g.kind === "back") { if (page.opts.skip === false) { LAB.UI.error(); return true; } var d3 = page.opts.done; page = null; if (d3) d3(); return true; }
   return true;
 }
 
@@ -402,7 +458,13 @@ function diffConfirm(k) {
   ], { intro: d.desc + " " + TB_INTRO, focus: S.turnBased ? 1 : 0 });
 }
 var TB_INTRO = "Бой выбирают здесь же, на всю игру. Пошаговый бой: враги ходят только после ваших действий, а перезарядка, смена оружия, лечение, обыск, броски и импланты стоят ходов. Зато всё дороже: цены выше на четверть, скупка, кредиты, добыча и лечебные припасы скромнее, энергобатарея падает с врага на одного позже, у капсулы прибытия их на одну меньше.";
-function reopenMain() { if (screen === "menu" && !top()) mainMenu(true); else if (top()) say(top().title + ". " + itemText(top().items[top().i])); }
+/* Пункт «Назад», «Отмена» в окнах главного меню: окно пункта ещё сверху — закрыть
+   его, и прозвучит то окно, куда вернулись (прежде называлось закрываемое) */
+function reopenMain() {
+  var t = top();
+  if (t && !t.root) { closeTop(); return; }
+  if (screen === "menu" && !t) mainMenu(true); else if (t) say(t.title + ". " + itemText(t.items[t.i]));
+}
 
 function loadMenu() {
   var keys = ["auto", 1, 2, 3];
@@ -544,18 +606,21 @@ function desktopVoiceMenu(vs, focus) {
     /* пустое имя — голос выбирается сам и дальше: запустят NVDA или JAWS — заговорит он */
     if (window.LabTTS && window.LabTTS.setVoice) { try { window.LabTTS.setVoice(""); } catch (e) { /* */ } }
     LAB.Speech.choose(); setTimeout(function () { say("Голос выбирается сам. Сейчас: " + autoVoiceName().replace("сам выбирается — ", "") + "."); settingsMenu(); }, 250); } });
-  items.push({ label: "Перечитать голоса компьютера", fn: function () {
+  /* (3.3) голоса ищутся до 15 секунд: список открывается заново, только если игрок
+     всё ещё в нём — ушёл в игру или в другое окно — просто прозвучит число голосов */
+  items.push({ label: "Перечитать голоса компьютера", keep: true, fn: function () {
     var D = window.LabDesktop;
     if (!D || !D.ttsRestart) { desktopVoiceMenu(LAB.Speech.listVoices()); return; }
     say("Ищу голоса компьютера…");
+    var here = top(), reopen = function (list) { if (top() === here) { closeTop(true); desktopVoiceMenu(list); } };
     D.ttsRestart().then(function (r) {
       setTimeout(function () {
         LAB.Speech.refreshBridge();
         var list = LAB.Speech.listVoices();
         say("Голосов найдено: " + list.length + "." + (r && r.ready ? "" : " Почему мало: " + (r && r.diag || "")));
-        desktopVoiceMenu(list);
+        reopen(list);
       }, 600);
-    }).catch(function () { desktopVoiceMenu(LAB.Speech.listVoices()); });
+    }).catch(function () { reopen(LAB.Speech.listVoices()); });
   } });
   items.push({ label: "Назад", fn: settingsMenu });
   menu("Голоса компьютера: " + vs.length, items, { focus: focus || 0 });
@@ -564,6 +629,9 @@ function desktopVoiceMenu(vs, focus) {
 /* ════════ ОКНО ПЕРСОНАЖА (три пальца вверх) ════════ */
 function character() {
   if (!gm().entered) return;
+  menu("Персонаж", characterItems(), { rebuild: characterItems });
+}
+function characterItems() {
   var lines = gm().characterText();
   var items = lines.map(function (t) { return { label: t, keep: true, fn: function () { say(t); } }; });
   items.push({ label: "Сохранить игру", fn: saveMenu });
@@ -571,7 +639,7 @@ function character() {
   items.push({ label: "Руководство", fn: function () { if (LAB.guide) LAB.guide.open(); } });
   if (LAB.tutor) items.push({ label: "Обучение: повторить подсказку. " + LAB.tutor.progress(), keep: true, fn: function () { LAB.tutor.repeat(); } });
   items.push({ label: "Выход", fn: exitMenu });
-  menu("Персонаж", items);
+  return items;
 }
 function exitMenu() {
   var items = [{ label: "Выйти в главное меню. Игра сохранится в автозапись", fn: function () { gm().autosave(); mainMenu(); } }];
@@ -581,8 +649,16 @@ function exitMenu() {
 }
 
 /* ════════ ИНВЕНТАРЬ (три пальца вниз) ════════ */
+/* (3.3) Окна инвентаря собираются заново (rebuild), когда к ним возвращаются:
+   съели, вставили пластину, разобрали — числа в пунктах уже новые. */
 function inventory(focus) {
   if (!gm().entered) return;
+  var items = invItems();
+  /* focus — номер пункта или начало его названия («Задания») */
+  if (typeof focus === "string") { var fi = -1; items.forEach(function (it, i) { if (fi < 0 && it.label.indexOf(focus) === 0) fi = i; }); focus = fi < 0 ? 0 : fi; }
+  menu("Инвентарь", items, { focus: focus || 0, rebuild: invItems });
+}
+function invItems() {
   var g = G();
   var cnt = function (ids) { return ids.reduce(function (a, k) { return a + (g.inv[k] || 0); }, 0); };
   var ammoN = Object.keys(g.ammo).reduce(function (a, k) { return a + (g.ammo[k] || 0); }, 0);
@@ -601,39 +677,51 @@ function inventory(focus) {
     { label: "Модули оружия в запасе: " + cnt(modIds()), fn: modsMenu },
     { label: "Пропуска и ключи", fn: passesMenu },
     { label: "Архив документов: " + g.noteList.length, fn: notesMenu },
-    { label: "Задания: " + g.quests.filter(function (q) { return !q.done; }).length, fn: questsMenu },
+    { label: "Задания: поручений " + gm().activeQuests().length + " из " + gm().QUEST_ACTIVE, fn: questsMenu },
     { label: "Журнал", fn: journalMenu },
     { label: "Достижения" + (LAB.ach && g.ach ? ": " + Object.keys(g.ach.d || {}).length + " из " + LAB.ach.LIST.length : ""), fn: function () { if (LAB.ach) LAB.ach.menu(); } },
     { label: "Импланты: " + g.implants.length + ", образцы: " + Object.keys(g.samples).length, fn: implants },
     { label: "Кредиты: " + g.credits, info: true, keep: true, fn: function () { say("Кредиты: " + g.credits + ". Тратятся в торговых терминалах и у выживших."); } }
   ];
-  /* focus — номер пункта или начало его названия («Задания») */
-  if (typeof focus === "string") { var fi = -1; items.forEach(function (it, i) { if (fi < 0 && it.label.indexOf(focus) === 0) fi = i; }); focus = fi < 0 ? 0 : fi; }
-  menu("Инвентарь", items, { focus: focus || 0 });
+  return items;
 }
 function back(fn) { return { label: "Назад", fn: fn || function () { inventory(); } }; }
-function weaponsMenu() {
+function weaponsMenu() { menu("Оружие", weaponsItems(), { rebuild: weaponsItems }); }
+function weaponsItems() {
   var g = G();
-  menu("Оружие", g.weapons.map(function (w, i) {
+  return g.weapons.map(function (w, i) {
     return { label: gm().weaponLine(w) + (i === g.wi ? " — в руках" : ""), fn: function () { weaponMenu(i); } };
-  }).concat([back()]));
+  }).concat([back()]);
 }
+/* окно одного ствола помнит его по метке: оружие ниже по списку разобрали — номер сдвинулся */
 function weaponMenu(i) {
-  var g = G(), w = g.weapons[i];
+  var w = G().weapons[i];
   if (!w) return;
+  var id = w.id, build = function () { return weaponItems(id); };
+  menu(w.name, build(), { rebuild: build });
+}
+function weaponItems(id) {
+  var g = G(), i = -1;
+  g.weapons.forEach(function (x, k) { if (x.id === id) i = k; });
+  var w = g.weapons[i];
+  if (!w) return [];
   var d = LAB.WEAPONS[w.base];
-  menu(w.name, [
+  return [
     { label: i === g.wi ? "Уже в руках" : "Взять в руки", fn: function () { gm().equipWeapon(i); } },
     { label: "Осмотреть", fn: function () {
       var Wk = LAB.workshop, ml = Wk ? Wk.modsLine(w) : "";
       var pf = Wk ? Wk.profile(w) : "";
       say(w.name + ". " + d.desc + " Урон " + LAB.weaponDmg(w) + " (" + LAB.DTYPE_N[w.dt] + ")" + (w.cap ? ", заряд " + w.charge + " из " + w.cap : "") + ". " + (Wk ? pf.charAt(0).toUpperCase() + pf.slice(1) + " Состояние " + Math.round(Wk.cond(w)) + " из 100. " + (ml ? "Модули: " + ml + ". " : "") + "Гнёзд для модулей: " + Wk.slots(w) + ", занято " + Wk.used(w) + ". " : "Дальность " + w.rng + ". ") + LAB.RANKS[w.rank] + ".");
       weaponMenu(i); } },
-    { label: "Разобрать на детали", fn: function () { gm().scrapWeapon(i); weaponsMenu(); } },
+    { label: "Разобрать на детали" + (i === g.wi ? " (оно в руках)" : "") + ": " + (gm().scrapWeaponText ? gm().scrapWeaponText(w) : "детали"), fn: function () { gm().scrapWeapon(i); weaponsMenu(); } },
     back(weaponsMenu)
-  ]);
+  ];
 }
 function ammoMenu() {
+  var w = gm().curWeapon();
+  menu("Батареи и боеприпасы", ammoItems(), { rebuild: ammoItems, intro: w && w.ammo !== "none" ? LAB.K("Двойное касание на нужной батарее — перезарядить оружие в руках.", "Enter на нужной батарее — перезарядить оружие в руках.") : "" });
+}
+function ammoItems() {
   var g = G(), w = gm().curWeapon();
   var kinds = ["energy", "magnetron", "positron"];
   Object.keys(g.ammo).forEach(function (k) { if (kinds.indexOf(k) < 0 && LAB.AMMO[k] && (g.ammo[k] > 0 || (w && w.ammo === k))) kinds.push(k); });
@@ -643,21 +731,23 @@ function ammoMenu() {
     } };
   });
   items.push(back());
-  menu("Батареи и боеприпасы", items, { intro: w && w.ammo !== "none" ? LAB.K("Двойное касание на нужной батарее — перезарядить оружие в руках.", "Enter на нужной батарее — перезарядить оружие в руках.") : "" });
+  return items;
 }
 var MEDS = ["medkit_s", "medkit_l", "bandage", "antidote", "sorbent", "stim", "energy_d", "neuroblock"];
 /* Вещи одного раздела (1.5): лекарства, защита, инструменты, ценности — по полю cat. */
 function catIds(cat) { return Object.keys(LAB.ITEMS).filter(function (k) { return LAB.ITEMS[k].cat === cat; }); }
 /* Лекарства: прежние — всегда в списке, новые — только те, что есть с собой. */
 function medIds() { var g = G(); return MEDS.concat(catIds("med").filter(function (k) { return MEDS.indexOf(k) < 0 && g.inv[k] > 0; })); }
-function medsMenu() {
+function medsMenu() { menu("Аптечки и лекарства", medsItems(), { rebuild: medsItems }); }
+function medsItems() {
   var g = G();
-  menu("Аптечки и лекарства", medIds().map(function (k) {
-    return { label: LAB.ITEMS[k].n + ": " + (g.inv[k] || 0) + ". " + LAB.ITEMS[k].desc, fn: function () { if (gm().useItem(k)) {} } };
-  }).concat([{ label: "Состояние тела", keep: true, fn: function () { gm().bodyStatus(); } }, back()]));
+  return medIds().map(function (k) {
+    return { label: LAB.ITEMS[k].n + ": " + (g.inv[k] || 0) + ". " + LAB.ITEMS[k].desc, fn: function () { gm().useItem(k); } };
+  }).concat([{ label: "Состояние тела", keep: true, fn: function () { gm().bodyStatus(); } }, back()]);
 }
 /* Защита (респираторы, изолента) и инструменты (дозиметр, кусачки, набор): инструменты не тратятся. */
-function toolsMenu() {
+function toolsMenu() { menu("Защита и инструменты", toolsItems(), { rebuild: toolsItems }); }
+function toolsItems() {
   var g = G();
   var items = catIds("protect").concat(catIds("tool")).filter(function (k) { return g.inv[k] > 0; }).map(function (k) {
     var d = LAB.ITEMS[k];
@@ -665,53 +755,70 @@ function toolsMenu() {
   });
   if (!items.length) items.push({ label: "Ничего нет. Респираторы, изоленту, дозиметры и инструменты продают пункты снабжения; их собирают у верстака и находят в кабинетах.", info: true, keep: true, fn: function () {} });
   items.push(back());
-  menu("Защита и инструменты", items);
+  return items;
 }
 /* Ценности: часы, кольца, слитки, носители — их скупают пункты снабжения, торговые терминалы и выжившие. */
 function valuablesMenu() {
   var g = G(), tot = 0;
+  catIds("valuable").forEach(function (k) { if (g.inv[k] > 0) tot += (LAB.sellPrice ? LAB.sellPrice.item(k, { who: "supply" }) : Math.round(LAB.ITEMS[k].price * 0.7)) * g.inv[k]; });
+  menu("Ценности", valuablesItems(), { rebuild: valuablesItems, intro: tot ? "Всё вместе стоит около " + tot + " кредитов." : "" });
+}
+function valuablesItems() {
+  var g = G();
   var items = catIds("valuable").filter(function (k) { return g.inv[k] > 0; }).map(function (k) {
     var d = LAB.ITEMS[k], p = LAB.sellPrice ? LAB.sellPrice.item(k, { who: "supply" }) : Math.round(d.price * 0.7);
-    tot += p * g.inv[k];
     return { label: d.n + ": " + g.inv[k] + ". Скупка — около " + p + " за штуку. " + d.desc, keep: true, fn: function () { gm().useItem(k); } };
   });
   if (!items.length) items.push({ label: "Ценностей нет. Их находят в кабинетах, сейфах и тайниках, а продают в пунктах снабжения.", info: true, keep: true, fn: function () {} });
   items.push(back());
-  menu("Ценности", items, { intro: tot ? "Всё вместе стоит около " + tot + " кредитов." : "" });
+  return items;
 }
 function foodIds() { return Object.keys(LAB.ITEMS).filter(function (k) { return LAB.ITEMS[k].kind === "food"; }); }
 /* Еда в рюкзаке: съесть; вверху — сколько сытости и энергии. */
 function foodMenu() {
   var g = G(), b = g.body || { food: 0 };
+  menu("Еда и напитки", foodItems(), { rebuild: foodItems, intro: "Сытость " + Math.round(b.food) + " из 100, энергия имплантов " + g.en + " из " + g.enMax + "." });
+}
+function foodItems() {
+  var g = G();
   var items = foodIds().filter(function (k) { return g.inv[k] > 0; }).map(function (k) {
     return { label: LAB.ITEMS[k].n + ": " + g.inv[k] + ". " + LAB.ITEMS[k].desc, fn: function () { gm().useItem(k); } };
   });
   if (!items.length) items.push({ label: "Еды нет. Её продают автоматы с едой и повара; бывает она на кухнях и в столовых.", info: true, keep: true, fn: function () {} });
   items.push(back());
-  menu("Еда и напитки", items, { intro: "Сытость " + Math.round(b.food) + " из 100, энергия имплантов " + g.en + " из " + g.enMax + "." });
+  return items;
 }
-function armorMenu() {
+function armorMenu() { menu("Броня", armorItems(), { rebuild: armorItems }); }
+function armorItems() {
   var g = G();
   var items = g.armors.map(function (a, i) {
     var on = g.armor && g.armor.id === a.id;
     return { label: gm().armorLine(a) + (on ? " — надета" : ""), fn: function () { armorItem(i); } };
   });
   if (!items.length) items.push({ label: "Брони нет. Её находят, покупают в торговых терминалах и собирают в мастерской.", info: true, keep: true, fn: function () {} });
-  if (g.armor) items.push({ label: "Вставить бронепластину в надетую броню: пластин " + (g.inv.plate || 0), fn: function () { gm().installPlate(); armorMenu(); } });
+  if (g.armor) items.push({ label: "Вставить бронепластину в надетую броню: в ней " + (g.armor.up || 0) + " из 5, в рюкзаке " + (g.inv.plate || 0) + ". Каждая — плюс десятая часть защиты", fn: function () { gm().installPlate(); armorMenu(); } });
   items.push(back());
-  menu("Броня", items);
+  return items;
 }
 function armorItem(i) {
-  var g = G(), a = g.armors[i];
+  var a = G().armors[i];
   if (!a) return;
+  var id = a.id, build = function () { return armorOne(id); };
+  menu(a.name, build(), { rebuild: build });
+}
+function armorOne(id) {
+  var g = G(), i = -1;
+  g.armors.forEach(function (x, k) { if (x.id === id) i = k; });
+  var a = g.armors[i];
+  if (!a) return [];
   var on = g.armor && g.armor.id === a.id;
   var d = LAB.ARMORS[a.base];
-  menu(a.name, [
+  return [
     on ? { label: "Снять", fn: function () { gm().removeArmor(); armorMenu(); } } : { label: "Надеть", fn: function () { gm().equipArmor(i); armorMenu(); } },
     { label: "Осмотреть", fn: function () { say(gm().armorLine(a) + ". " + d.desc); armorItem(i); } },
-    { label: "Разобрать на детали", fn: function () { gm().scrapArmor(i); armorMenu(); } },
+    { label: on ? "Разобрать на детали: сначала снимите" : "Разобрать на детали: " + (gm().scrapArmorText ? gm().scrapArmorText(a) : "детали"), fn: function () { gm().scrapArmor(i); armorMenu(); } },
     back(armorMenu)
-  ]);
+  ];
 }
 /* Устройства: гранаты, пластины, самоделки мастерской и вещи блоков. */
 function gadgetIds() {
@@ -719,11 +826,12 @@ function gadgetIds() {
   for (var k in LAB.ITEMS) { var d = LAB.ITEMS[k]; if (d.kind !== "part" && !d.cat && d.depth && ids.indexOf(k) < 0) ids.push(k); }
   return ids;
 }
-function gadgetsMenu() {
+function gadgetsMenu() { menu("Гранаты, пластины и устройства", gadgetsItems(), { rebuild: gadgetsItems }); }
+function gadgetsItems() {
   var g = G();
   var items = [
     { label: "ЭМИ-граната: " + (g.inv.emp || 0) + ". Бросить вперёд по последнему направлению", fn: function () { if (LAB.combat) LAB.combat.throwEmp(); } },
-    { label: "Бронепластина: " + (g.inv.plate || 0) + ". Вставить в надетую броню", fn: function () { gm().installPlate(); } },
+    { label: "Бронепластина: " + (g.inv.plate || 0) + ". Вставить в надетую броню" + (g.armor ? ": в ней " + (g.armor.up || 0) + " из 5" : ": сначала наденьте броню"), fn: function () { gm().installPlate(); } },
     { label: "Декодер пропусков: " + (g.inv.decoder || 0), keep: true, fn: function () { say(LAB.ITEMS.decoder.desc + LAB.K(" Применяется у двери: двойное касание у двери.", " Применяется у двери: Enter у двери.")); } }
   ];
   gadgetIds().slice(3).forEach(function (k) {
@@ -734,9 +842,10 @@ function gadgetsMenu() {
     items.push({ label: d.n + ": " + (kit ? LAB.repair.countText(k) : g.inv[k]) + ". " + verb + ". " + d.desc, fn: function () { gm().useItem(k); } });
   });
   items.push(back());
-  menu("Гранаты, пластины и устройства", items);
+  return items;
 }
-function partsMenu() {
+function partsMenu() { menu("Детали", partsItems(), { rebuild: partsItems }); }
+function partsItems() {
   var g = G();
   var items = LAB.PARTS.filter(function (k) { return g.inv[k] > 0; }).map(function (k) {
     var line = LAB.workshop ? LAB.workshop.partLine(k) : LAB.ITEMS[k].n + ": " + g.inv[k];
@@ -745,20 +854,22 @@ function partsMenu() {
   if (!items.length) items.push({ label: "Деталей нет. Ищите в ящиках, у роботов и на полу.", keep: true, fn: function () {} });
   if (LAB.workshop) items.push({ label: "Все детали этой глубины: где найти и для чего", fn: function () { LAB.workshop.partsGuide(); } });
   items.push(back());
-  menu("Детали", items);
+  return items;
 }
 /* Запасные модули оружия: ставятся у верстака. */
 function modIds() { return Object.keys(LAB.ITEMS).filter(function (k) { return LAB.ITEMS[k].kind === "wmodule"; }); }
-function modsMenu() {
+function modsMenu() { menu("Модули оружия в запасе", modsItems(), { rebuild: modsItems }); }
+function modsItems() {
   var g = G();
   var items = modIds().filter(function (k) { return g.inv[k] > 0; }).map(function (k) {
     return { label: LAB.ITEMS[k].n + ": " + g.inv[k] + ". " + LAB.ITEMS[k].desc, keep: true, fn: function () { say(LAB.ITEMS[k].desc); } };
   });
   if (!items.length) items.push({ label: "Запасных модулей нет. Их собирают у верстака, раздел «Модули оружия», и снимают с оружия.", info: true, keep: true, fn: function () {} });
   items.push(back());
-  menu("Модули оружия в запасе", items);
+  return items;
 }
-function passesMenu() {
+function passesMenu() { menu("Пропуска и ключи", passesItems(), { rebuild: passesItems }); }
+function passesItems() {
   var g = G(), items = [];
   items.push({ label: "Пропуск доступа: " + (g.tier ? LAB.TIERS[g.tier].n : "нет"), keep: true, fn: function () { say(g.tier ? LAB.TIERS[g.tier].n + ": открывает двери с картридером этого цвета и ниже." : "Пропуска нет."); } });
   items.push({ label: "Пропуск лифта этажей уровня " + g.L + ": " + (g.elev[g.L] ? "есть" : "нет"), keep: true, fn: function () { say(g.elev[g.L] ? "Лифт этажей уровня " + g.L + " вас повезёт." : "Пропуск лифта лежит на втором этаже уровня."); } });
@@ -768,7 +879,7 @@ function passesMenu() {
   var codes = Object.keys(g.codes);
   if (codes.length) items.push({ label: "Известные коды: " + codes.length, keep: true, fn: function () { say(codes.map(function (c) { return "«" + g.codes[c] + "» — " + c.split("").join(" "); }).join("; ") + "."); } });
   items.push(back());
-  menu("Пропуска и ключи", items);
+  return items;
 }
 /* ── АРХИВ ДОКУМЕНТОВ: всё найденное, с поиском ── */
 function docLabel(n, d) {
@@ -835,21 +946,45 @@ function notesMenu() {
   items.push(back());
   menu("Архив документов", items);
 }
-function questsMenu() {
-  var g = G();
-  var items = g.quests.filter(function (q) { return !q.done; }).map(function (q) {
-    return { label: (q.type === "main" ? "Главное: " + q.text : q.short + " — " + gm().questProgress(q) + ". Заказчик: " + q.giverName + ", уровень " + q.L + ", этаж " + q.F), keep: true, fn: function () { say(q.text || q.short); } };
+function questsMenu() { menu("Задания", questsItems(), { rebuild: questsItems }); }
+function questsItems() {
+  var g = G(), cap = gm().QUEST_ACTIVE, act = gm().activeQuests(), items = [];
+  g.quests.forEach(function (q) { if (!q.done && q.type === "main") items.push({ label: "Главное: " + q.text, keep: true, fn: function () { say(q.text); } }); });
+  /* (3.3) поручений сразу — не больше трёх; счёт — первой строкой после главного */
+  var head = act.length ? "Взятых поручений — " + act.length + " из " + cap + "." + (act.length >= cap ? " Новых не дадут, пока одно не сдано или от него не отказались." : "") : "Поручений нет. Выжившие сами просят о помощи — спросите их; больше " + cap + " сразу не взять.";
+  items.push({ label: head, keep: true, fn: function () { say(head); } });
+  act.forEach(function (q) {
+    items.push({ label: q.short + " — " + gm().questProgress(q) + ". Заказчик: " + q.giverName + ", уровень " + q.L + ", этаж " + q.F + ". " + gm().rewardText(q), keep: true, fn: function () { say(q.text || q.short); } });
   });
-  if (!items.length) items.push({ label: "Заданий нет.", keep: true, fn: function () {} });
+  if (act.length) items.push({ label: "Отказаться от поручения", fn: function () { abandonMenu(); } });
   items.push(back());
-  menu("Задания", items);
+  return items;
 }
-function journalMenu() {
+/* Отказ — с подтверждением: заказчик больше ни о чём не попросит. */
+function abandonMenu() {
+  var build = function () {
+    var items = gm().activeQuests().map(function (q) {
+      return { label: q.short + ". Заказчик: " + q.giverName, fn: function () {
+        menu("Отказаться: " + q.short + "?", [
+          /* отказ сказан — оба окна закрываются молча, и сверху снова окно заданий */
+          { label: "Да, отказаться. " + q.giverName + " больше ни о чём не попросит", fn: function () { if (gm().abandonQuest(q)) { closeTop(true); closeTop(true); } else closeTop(); } },
+          { label: "Нет, оставить поручение", fn: function () { closeTop(); } }
+        ]);
+      } };
+    });
+    if (!items.length) items.push({ label: "Отказываться не от чего.", keep: true, fn: function () {} });
+    items.push({ label: "Назад", fn: function () {} });
+    return items;
+  };
+  menu("Отказаться от поручения", build(), { rebuild: build });
+}
+function journalMenu() { menu("Журнал", journalItems(), { rebuild: journalItems }); }
+function journalItems() {
   var g = G();
   var items = g.journal.slice(0, 40).map(function (t) { return { label: t, keep: true, fn: function () { say(t); } }; });
   if (!items.length) items.push({ label: "Журнал пуст.", keep: true, fn: function () {} });
   items.push(back());
-  menu("Журнал", items);
+  return items;
 }
 /* Окно записки: пока оно открыто, мир ждёт, и текст дочитывается до конца,
    если игрок его не трогает. Свайп вправо и влево (стрелки на компьютере) —
@@ -878,6 +1013,9 @@ function craft(o) { if (LAB.workshop) LAB.workshop.open(o); }
 /* ════════ ИМПЛАНТЫ (четыре пальца, двойное касание) ════════ */
 function implants() {
   if (!gm().entered) return;
+  menu("Импланты", implantItems(), { rebuild: implantItems });
+}
+function implantItems() {
   var g = G(), IM = LAB.implants;
   /* (2.0) сначала импланты, которые применяют; потом чипы — работают сами */
   var act = g.implants.filter(function (id) { return !(IM && IM.isChip(id)); }), pas = g.implants.filter(function (id) { return IM && IM.isChip(id); });
@@ -893,7 +1031,7 @@ function implants() {
   });
   items.push({ label: "Энергия: " + g.en + " из " + g.enMax, keep: true, fn: function () { say("Энергия имплантов " + g.en + " из " + g.enMax + ". Понемногу восстанавливается сама, если вы сыты и нервы не перегружены. Образцы «Колыбели» расширяют запас."); } });
   if (IM) items.push({ label: IM.cyberText(), fn: function () { IM.cyberMenu(); } });
-  menu("Импланты", items);
+  return items;
 }
 
 /* ════════ НАВИГАТОР: список целей (четыре пальца вверх) ════════ */
@@ -1012,7 +1150,7 @@ LAB.ui = {
   note: note, craft: craft, ending: ending, levelBanner: levelBanner, showGame: showGame, mainMenu: mainMenu, prologue: prologue, pages: pages,
   character: character, inventory: inventory, implants: implants, settings: settingsMenu, loadMenu: loadMenu, saveMenu: saveMenu,
   navMenu: navMenu, screen: function () { return screen; }, setScreen: setScreen, top: top, activate: activate, move: move,
-  startGame: startGame, diffMenu: diffMenu,
+  startGame: startGame, diffMenu: diffMenu, rebuildTop: rebuildTop,
   /* (3.0) открыта ли головоломка (её окно или окно внутри неё): ОКО тогда молчит */
   puzzleOpen: function () { return stack.some(function (w) { return w.puzzle; }); }
 };

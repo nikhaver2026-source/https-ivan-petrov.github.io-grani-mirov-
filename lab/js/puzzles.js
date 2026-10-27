@@ -174,7 +174,8 @@ function labels(seed, cb, opts) {
   var ans = lab.map(function () { return null; });
   run("Пробы с ярлыками", cond, function (st, finish, fail, items) {
     var out = lab.map(function (s, k) {
-      return { label: "Контейнер " + (k + 1) + " (ярлык «" + s.n + "»): " + (ans[k] ? ans[k].n : "не определено"), keep: true, fn: function () {
+      /* (3.3) подпись читается в миг показа: после выбора звучит выбранное, а не «не определено» */
+      return { label: function () { return "Контейнер " + (k + 1) + " (ярлык «" + s.n + "»): " + (ans[k] ? ans[k].n : "не определено"); }, keep: true, fn: function () {
         UIx("menu", "Контейнер " + (k + 1) + ": что внутри?", subs.map(function (sub) { return { label: sub.n, fn: function () { ans[k] = sub; sayq("Контейнер " + (k + 1) + ": " + sub.n + "."); UIx("refresh"); } }; }));
       } };
     });

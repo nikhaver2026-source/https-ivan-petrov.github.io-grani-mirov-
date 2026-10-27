@@ -93,7 +93,7 @@ function tick() {
   if (rm && rm.rad) addRad(radDose(rm.rad, 0.12));
   if (rm && rm.gas && !vented(rm)) { addTox(gasDose(rm.gas, 0.12)); if (tickN % 12 === 0) A("play", "ev_steam", { gain: 0.25 + 0.1 * rm.gas }); }
   /* дозиметр щёлкает: в зоне — по фону, у двери в неё — редко */
-  if (hasDosimeter() && LAB.S && LAB.S.effects !== 0) {
+  if (hasDosimeter() && LAB.settings && LAB.settings.effects !== 0) { /* (3.3) прежде LAB.S — его не было, дозиметр молчал */
     var lv = rm && rm.rad ? rm.rad : nearRad();
     if (lv) geiger(lv);
   }
@@ -151,7 +151,9 @@ function zoneCheck(rm) {
     t.push(G().st.antitox > 0 ? "Респиратор не пропускает газ." : "Без респиратора или фильтра здесь копятся токсины.");
   }
   if (t.length) sayq(t.join(" "));
-  ev("zone", 1);
+  /* (3.3) в счёт вехи — каждая зона один раз: шаг из зоны и обратно новой зоной не считается */
+  var zs = G().zonesSeen = G().zonesSeen || {};
+  if (!zs[key]) { zs[key] = 1; ev("zone", 1); }
 }
 /* Санпропускник горячей камеры: пускает, если костюм гасит хотя бы половину излучения. */
 function hazardBlock(d) {
@@ -177,14 +179,20 @@ function objMenu(o) {
   }
   return false;
 }
+/* (3.3) окно хранилища собирается заново, когда к нему возвращаются (обыскали — «пусто»):
+   прежде окно, устаревшее под окном обыска, закрывалось само */
 function boxMenu(o) {
+  var build = function () { return boxItems(o); };
+  UIx("menu", LAB.OBJ[o.type].n, build(), { rebuild: build });
+}
+function boxItems(o) {
   var s = st(o), name = LAB.OBJ[o.type].n, items = [];
   if (s.open) items.push({ label: "Пусто: всё уже забрано", info: true, keep: true, fn: function () { say(name + ": пусто."); } });
   else items.push({ label: SEARCH[o.type] || "Обыскать", fn: function () { search(o); } });
   if (o.type === "cabinet") items.push({ label: "Пролистать папки", fn: function () { readFiles(o); } });
   if (o.type === "tubepost") items.push({ label: "Прочитать квитанции", fn: function () { readReceipts(o); } });
-  items.push({ label: "Осмотреть", fn: function () { say(LAB.fixtures ? LAB.fixtures.examine(o) : name + ". " + LAB.OBJ[o.type].desc); } });
-  UIx("menu", name, items);
+  items.push({ label: "Осмотреть", keep: true, fn: function () { say(LAB.fixtures ? LAB.fixtures.examine(o) : name + ". " + LAB.OBJ[o.type].desc); } });
+  return items;
 }
 function search(o) {
   var s = st(o);
@@ -199,7 +207,7 @@ function search(o) {
   /* (3.0) в холодильнике обычно не одна вещь: вторая кладётся при открытии (kitchen.js) */
   if (o.type === "fridge" && !s.cold2 && LAB.kitchen) { s.cold2 = 1; var x2 = LAB.kitchen.fridgeExtra(o); if (x2) { o.loot = (o.loot || []).slice(); LAB.kitchen.addTo(o.loot, x2); } }
   gm().openContainer(o);
-  ev("search", 1);
+  if (st(o).open) ev("search", 1); /* (3.3) в счёт — только состоявшийся обыск: окно ловушки и «Отойти» не считаются */
 }
 /* Папки картотеки: личные дела, отчёты, накладные — каждый раз другие. */
 function readFiles(o) {
@@ -208,13 +216,13 @@ function readFiles(o) {
   spend(3); snd("paper_turn", "paper");
   var doc = r.chance(0.55) ? personnelFile(r) : r.chance(0.5) ? reportDoc(r) : invoiceDoc(r);
   UIx("note", doc.t, doc.x, function () { boxMenu(o); });
-  ev("read", 1);
+  if (!s.evRead) { s.evRead = 1; ev("read", 1); } /* (3.3) в счёт вехи — один раз за картотеку */
 }
 function readReceipts(o) {
   var r = LAB.Rng(G().seed, "rcpt:" + CUR().key + ":" + o.id + ":" + ((st(o).rc = (st(o).rc || 0) + 1)));
   spend(2); snd("paper", null);
   UIx("note", "Квитанции пневмопочты", invoiceDoc(r).x + " " + invoiceDoc(r).x, function () { boxMenu(o); });
-  ev("read", 1);
+  if (!st(o).evRcpt) { st(o).evRcpt = 1; ev("read", 1); }
 }
 
 /* ── книги, объявления, журнал, фотографии ── */
@@ -229,22 +237,29 @@ function dealt(kind, list, o, n) {
   if (!d.by[o.id]) { var out = []; for (var j = 0; j < n; j++) out.push(all[d.p[(d.i++) % all.length]]); d.by[o.id] = out; }
   return d.by[o.id];
 }
+/* (3.3) окно полки собирается заново, когда к нему возвращаются: книга — «прочитано»,
+   «Поискать между книгами» после поиска пропадает (прежде поиск открывал вторую полку
+   поверх первой, а из старой можно было искать снова) */
 function bookshelfMenu(o) {
+  var build = function () { return shelfItems(o); };
+  UIx("menu", "Книжная полка", build(), { rebuild: build });
+}
+function shelfItems(o) {
   var books = dealt("books", TX().books, o, 2 + (o.seed || 0) % 3), s = st(o), items = [];
   books.forEach(function (b) {
     items.push({ label: "«" + b.t + "»" + (b.a ? ", " + b.a : "") + (s["b_" + b.id] ? " — прочитано" : ""), fn: function () { readBook(o, b); } });
   });
-  if (!s.between) items.push({ label: "Поискать между книгами", fn: function () {
+  if (!s.between) items.push({ label: "Поискать между книгами", keep: true, fn: function () {
+    if (s.between) { say("Между этими книгами вы уже искали."); return; }
     s.between = 1; spend(1); snd("paper", null);
     var r = LAB.Rng(G().seed, "betw:" + CUR().key + ":" + o.id);
     if (r.chance(0.45)) {
       var it = r.chance(0.5) ? { kind: "credits", n: LAB.credits(6 + r.int(0, 14), G().L, G().F) } : r.chance(0.5) ? { kind: "note", note: "staff", n: r.int(0, 999), id: "bt" + o.id } : { kind: "item", item: r.pick(["watch", "pen", "ring", "harmonica", "datachip"].filter(function (k) { return LAB.ITEMS[k]; })), n: 1 };
       say("Между книгами что-то есть. " + gm().giveItem(it));
     } else say("Между книгами — только пыль и закладка с телефонным номером без кода города.");
-    bookshelfMenu(o);
   } });
-  items.push({ label: "Осмотреть полку", fn: function () { say(LAB.OBJ.bookshelf.desc + " Книг здесь " + books.length + "."); } });
-  UIx("menu", "Книжная полка", items);
+  items.push({ label: "Осмотреть полку", keep: true, fn: function () { say(LAB.OBJ.bookshelf.desc + " Книг здесь " + books.length + "."); } });
+  return items;
 }
 function readBook(o, b) {
   var s = st(o), first = !s["b_" + b.id];
@@ -252,7 +267,7 @@ function readBook(o, b) {
   var pages = String(b.x).split(/\n\n+/).length;
   spend(3 * pages);
   snd("paper_turn", "paper");
-  UIx("note", "«" + b.t + "»" + (b.a ? ", " + b.a : ""), b.x.replace(/\n\n+/g, " "), function () { bookshelfMenu(o); });
+  UIx("note", "«" + b.t + "»" + (b.a ? ", " + b.a : ""), b.x.replace(/\n\n+/g, " ")); /* закрыли книгу — под ней та же полка, собранная заново */
   if (first) { G().stats.books = (G().stats.books || 0) + 1; ev("book", 1); }
 }
 function boardMenu(o) {
@@ -305,7 +320,12 @@ function sinkMenu(o) {
       if (b && b.rad > 0) { b.rad = Math.max(0, b.rad - 5); msg.push("Радиоактивную пыль с лица и рук смыло."); }
       say("Холодная вода обжигает лицо, ссадины промыты. " + msg.join(" "));
     } },
-    { label: "Попить воды из-под крана", fn: function () { spend(1); snd("drink_gulp", null); var msg = []; gm().bodyApply({ detox: 8, food: 5, wake: 5 }, msg); say("Вода чистая, с привкусом железа. " + msg.join(" ")); } },
+    { label: "Попить воды из-под крана", fn: function () {
+      /* (3.3) и попить — не чаще раза в двадцать минут: иначе сытость и бодрость накручивались глотками */
+      var s = st(o), t = nowMin();
+      if (s.sipAt != null && t - s.sipAt < 20) { say("Вы только что пили: вода больше не лезет."); return; }
+      s.sipAt = t;
+      spend(1); snd("drink_gulp", null); var msg = []; gm().bodyApply({ detox: 8, food: 2, wake: 5 }, msg); say("Вода чистая, с привкусом железа. " + msg.join(" ")); } },
     { label: "Осмотреть", fn: function () { say(LAB.OBJ.sink.desc); } }
   ]);
 }
@@ -313,13 +333,18 @@ function deconMenu(o) {
   UIx("menu", "Дезактивационный душ", [
     { label: "Пройти дезактивацию: пять минут под форсунками", fn: function () {
       var b = G().body; if (!b) return;
+      /* (3.3) душ смывает то, что осело на коже и одежде, — не чаще раза в полчаса:
+         прежде семь заходов подряд обнуляли любое облучение */
+      var sd = st(o), td = nowMin();
+      if (sd.deconAt != null && td - sd.deconAt < 30) { say("Форсунки ещё перезаряжают раствор: снова через " + (30 - (td - sd.deconAt)) + " " + pl(30 - (td - sd.deconAt), "минуту", "минуты", "минут") + ". Что осело снаружи, уже смыто; внутри облучение выводят антирадин и «Чистота»."); return; }
+      sd.deconAt = td;
       UIx("closeAll");
       A("play", "ev_steam", { gain: 0.6 }); setTimeout(function () { A("play", "ev_bubbles", { gain: 0.5 }); }, 700);
       var was = b.rad || 0;
       spend(5);
       b.rad = Math.max(0, (b.rad || 0) - 15); b.tox = Math.max(0, b.tox - 5); gm().bodyWarn();
       say("Форсунки шипят, вода с раствором смывает пыль с кожи и одежды, решётка слива булькает." + (was > 0.5 ? " Облучение было " + Math.round(was) + ", стало " + Math.round(b.rad) + "." : " Облучения на вас и не было.") + (LAB.chem ? LAB.chem.decon() : "") + " Душ смывает только то, что осело снаружи: то, что уже внутри, выводят антирадин и раствор «Чистота», а мутаген — антимутаген.");
-      ev("decon", 1);
+      if (was > 0.5) ev("decon", 1); /* (3.3) в счёт вехи — только когда было что смывать */
     } },
     { label: "Осмотреть", fn: function () { say(LAB.OBJ.decon.desc); } }
   ]);
@@ -339,8 +364,9 @@ function fuseMenu(o) {
       A("play", "power_off"); A("play", "term_ok");
       say("Рубильники камер опущены: камеры этажа ослепли. ОКО заметит обрыв и пришлёт ремонтника — он поднимет рубильники по одной камере.");
       if (LAB.oko) LAB.oko.event("cam_cut", { all: true, x: o.x, y: o.y });
-      gm().gainXP && gm().gainXP(10);
-      ev("fuse", 1);
+      /* (3.3) опыт и веха — за щит один раз: ремонтник поднимает рубильники, и щит снова
+         можно опустить, но это уже не новое дело */
+      if (!s.fuseXp) { s.fuseXp = 1; if (gm().gainXP) gm().gainXP(10); ev("fuse", 1); }
     }, { title: "Электрощит этажа", seed: h32(CUR().key + o.id) % 99999 });
   } });
   var locked = fs.okoLock ? Object.keys(fs.okoLock).filter(function (k) { return fs.okoLock[k] > (fs.okoT || 0); }) : [];

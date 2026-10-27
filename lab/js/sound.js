@@ -336,7 +336,8 @@ function startWatch() {
   timer = setInterval(function () { LAB.safe(tick); }, 1000);
   var poke = function () { if (AE.ctx && AE.ctx.state !== "running") wake(); };
   try {
-    document.addEventListener("visibilitychange", function () { if (!document.hidden) { wake(); setTimeout(function () { LAB.safe(tick); }, 400); } });
+    /* (3.3) возврат из фона будит звук и сторожа через labResume (main.js) — второй слушатель
+       видимости страницы, делавший то же раньше времени, убран */
     window.addEventListener("focus", poke);
     window.addEventListener("pageshow", poke);
     ["pointerdown", "touchstart", "keydown"].forEach(function (ev) { window.addEventListener(ev, poke, true); });

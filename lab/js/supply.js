@@ -48,29 +48,61 @@ function depthSellK() { var k = gm().priceDepth ? gm().priceDepth() : gm().price
 function profBuy(prof, cat) { var p = LAB.SUPPLY_PROFILES[prof]; return p && p.buy && p.buy[cat] ? p.buy[cat] : 1; }
 /* Торговец-выживший скупает своё дороже: медик — лекарства, инженер — детали, повар — еду. */
 var NPC_BUY = { med: { med: 1.25, protect: 1.15 }, food: { food: 1.25 }, parts: { part: 1.25, tool: 1.15 }, ammo: { ammo: 1.25, weapon: 1.15 }, all: { valuable: 1.15 } };
-function ctxK(ctx, cat) { return ctxK0(ctx, cat) * (LAB.ach && LAB.ach.has("trader") ? 1.1 : 1) * (1 + (LAB.implants ? LAB.implants.stat("sell") : 0)); /* (2.0) чип оценщика */ }
+function ctxK(ctx, cat) { return ctxK0(ctx, cat) * (LAB.ach && LAB.ach.has("trader") ? 1.1 : 1) * (1 + (LAB.implants ? LAB.implants.stat("sell") : 0)) * (ctx && ctx.who === "npc" && !ctx.robot && gm().chaSellK ? gm().chaSellK() : 1); /* (2.0) чип оценщика; (3.3) харизма — у людей */ }
 function ctxK0(ctx, cat) {
   if (!ctx) return 1;
   if (ctx.prof) return profBuy(ctx.prof, cat);
   if (ctx.npc && NPC_BUY[ctx.npc] && NPC_BUY[ctx.npc][cat]) return NPC_BUY[ctx.npc][cat];
   return ctx.who === "terminal" ? 0.9 : 1;
 }
-function itemSellPrice(id, ctx) {
-  var d = LAB.ITEMS[id], cat = catOf(id);
-  var p = Math.max(1, Math.round(d.price * (LAB.SELL_K[cat] || LAB.SELL_K[d.kind] || 0.4) * depthSellK() * ctxK(ctx, cat)));
-  /* (2.2) скупка не дороже 85 процентов прилавка: купить и тут же продать с прибылью нельзя ни в каком режиме */
-  return Math.max(1, Math.min(p, Math.floor(itemBuyPrice(id) * 0.85)));
+/* (2.2) Купить и тут же продать с прибылью нельзя ни в каком режиме. (3.3) Потолок скупки —
+   ниже самой низкой цены покупки, какая бывает: свой товар пункта (−10 %), Служба
+   безопасности на батареях (−15 %), выжившие (−10 %) с харизмой (до −12 %). Прежде
+   потолок был в 85 % прилавка и только у вещей — батареи, оружие и броню в лёгком
+   режиме и с высокой харизмой перепродавали дороже, чем купили. */
+var SELL_CAP = 0.72;
+function sellCap(p, buy) { return Math.max(1, Math.min(p, Math.floor(buy * SELL_CAP))); }
+/* (3.3) То, что вы сами собрали у верстака (G.craftN — сколько таких штук у вас), скупают
+   не дороже двух пятых цены деталей: иначе «купить детали — собрать — продать» печатало
+   кредиты (чипы уходили втрое дороже деталей, а партия из трёх и смекалка инженеров давали
+   вещи и вовсе даром). Найденное продаётся как прежде, и первым. */
+var RC_OUT = null;
+function rcOf(out) {
+  if (!RC_OUT) { RC_OUT = {}; (LAB.RECIPES || []).forEach(function (r) { if (!RC_OUT[r.out]) RC_OUT[r.out] = r; }); }
+  return RC_OUT[out] || null;
 }
-function ammoSellPrice(k, ctx) { var a = LAB.AMMO[k]; return Math.max(1, Math.round((a.price || 30) * LAB.SELL_K.ammo * depthSellK() * ctxK(ctx, "ammo"))); }
+function partsCap(p, out) {
+  var rc = rcOf(out); if (!rc) return p;
+  var c = 0;
+  for (var k in rc.need) { var d = LAB.ITEMS[k]; if (!d || !d.price) return p; c += d.price * rc.need[k]; }
+  return Math.max(1, Math.min(p, Math.floor(c * buyK() * 0.4)));
+}
+function craftedHeld(key, held) { var n = (G().craftN && G().craftN[key]) || 0; return Math.max(0, Math.min(n, held)); }
+/* продана одна штука: если найденных уже нет — значит, собранная */
+function soldOne(key, held) { var c = G().craftN; if (c && c[key] > 0 && craftedHeld(key, held) >= held) c[key]--; }
+function itemSellPrice(id, ctx, asCrafted) {
+  var d = LAB.ITEMS[id], cat = catOf(id), held = G().inv[id] || 0;
+  var p = sellCap(Math.max(1, Math.round(d.price * (LAB.SELL_K[cat] || LAB.SELL_K[d.kind] || 0.4) * depthSellK() * ctxK(ctx, cat))), itemBuyPrice(id));
+  if (asCrafted == null) asCrafted = held > 0 && craftedHeld(id, held) >= held;
+  return asCrafted ? partsCap(p, id) : p;
+}
+function ammoSellPrice(k, ctx, asCrafted) {
+  var a = LAB.AMMO[k], held = G().ammo[k] || 0, p = sellCap(Math.max(1, Math.round((a.price || 30) * LAB.SELL_K.ammo * depthSellK() * ctxK(ctx, "ammo"))), Math.round((a.price || 30) * buyK()));
+  if (asCrafted == null) asCrafted = held > 0 && craftedHeld("ammo:" + k, held) >= held;
+  return asCrafted ? partsCap(p, "ammo:" + k) : p;
+}
 function condOf(w) { return LAB.workshop && LAB.workshop.cond ? LAB.workshop.cond(w) : 100; }
+/* (3.3) собранное своими руками скупают не дороже трёх пятых цены его деталей (crafted):
+   прежде вещь «под эту глубину» уходила в разы дороже деталей — купить, собрать, продать */
+function craftCap(x, p) { return x && x.crafted ? Math.min(p, Math.round(x.crafted * 0.6)) : p; }
 function weaponSellPrice(w, ctx) {
   var c = condOf(w), mods = 0;
   if (w.mod) for (var m in w.mod) mods += w.mod[m] || 0;
-  return Math.max(3, Math.round(LAB.weaponPrice(w) * LAB.SELL_K.weapon * (0.35 + 0.65 * Math.max(0, Math.min(100, c)) / 100) * (LAB.QUAL_MULT[w.qual] || 1) * ctxK(ctx, "weapon") * (LAB.dk().sell || 1)) + mods * 12);
+  return Math.max(3, craftCap(w, sellCap(Math.round(LAB.weaponPrice(w) * LAB.SELL_K.weapon * (0.35 + 0.65 * Math.max(0, Math.min(100, c)) / 100) * (LAB.QUAL_MULT[w.qual] || 1) * ctxK(ctx, "weapon") * (LAB.dk().sell || 1)), weaponBuyPrice(w))) + mods * 12);
 }
 function armorValue(a) { var d = LAB.ARMORS[a.base] || { price: 50 }; return d.price * (LAB.QUAL_MULT[a.qual] || 1) * (1 + 0.04 * Math.max(0, (a.lvl || 1) - 1)); }
 /* (2.0) изношенная броня — дешевле, как изношенное оружие */
-function armorSellPrice(a, ctx) { var c = LAB.armorCond ? LAB.armorCond(a) : 100; return Math.max(3, Math.round(armorValue(a) * LAB.SELL_K.armor * (0.35 + 0.65 * c / 100) * ctxK(ctx, "armor") * (LAB.dk().sell || 1)) + (a.up || 0) * 30); }
+function armorSellPrice(a, ctx) { var c = LAB.armorCond ? LAB.armorCond(a) : 100; return Math.max(3, craftCap(a, sellCap(Math.round(armorValue(a) * LAB.SELL_K.armor * (0.35 + 0.65 * c / 100) * ctxK(ctx, "armor") * (LAB.dk().sell || 1)), armorBuyPrice(a))) + (a.up || 0) * 30); }
 LAB.sellPrice = { item: itemSellPrice, ammo: ammoSellPrice, weapon: weaponSellPrice, armor: armorSellPrice };
 function buyK() { return gm().priceK ? gm().priceK() : 1; }
 function itemBuyPrice(id) { return Math.max(2, Math.round(LAB.ITEMS[id].price * buyK())); }
@@ -119,11 +151,14 @@ function sellItems(ctx, cat, back) {
       var p = itemSellPrice(id, ctx), d = LAB.ITEMS[id];
       items.push({ label: "Продать: " + d.n + " (у вас " + g.inv[id] + ") — " + cr(p), fn: function () {
         if (!(G().inv[id] > 0)) { say("Больше нет."); return; }
-        G().inv[id]--; G().credits += p; soldSay(d.n.charAt(0).toLowerCase() + d.n.slice(1), p);
+        var p1 = itemSellPrice(id, ctx); soldOne(id, G().inv[id]);
+        G().inv[id]--; G().credits += p1; soldSay(d.n.charAt(0).toLowerCase() + d.n.slice(1), p1);
       } });
-      if (g.inv[id] > 1) items.push({ label: "Продать все: " + d.n + " (" + g.inv[id] + ") — " + cr(p * g.inv[id]), fn: function () {
+      var allP = function (n) { var c = craftedHeld(id, n); return (n - c) * itemSellPrice(id, ctx, false) + c * itemSellPrice(id, ctx, true); };
+      if (g.inv[id] > 1) items.push({ label: "Продать все: " + d.n + " (" + g.inv[id] + ") — " + cr(allP(g.inv[id])), fn: function () {
         var n = G().inv[id] || 0; if (!n) { say("Больше нет."); return; }
-        G().inv[id] = 0; G().credits += p * n; soldSay(d.n.charAt(0).toLowerCase() + d.n.slice(1) + ", " + n + " шт.", p * n);
+        var sum = allP(n), cn = G().craftN; if (cn && cn[id]) cn[id] = Math.max(0, cn[id] - craftedHeld(id, n));
+        G().inv[id] = 0; G().credits += sum; soldSay(d.n.charAt(0).toLowerCase() + d.n.slice(1) + ", " + n + " шт.", sum);
       } });
     });
     if (!items.length) items.push({ label: "Здесь больше нечего продать", disabled: true, fn: function () {} });
@@ -140,7 +175,8 @@ function sellAmmo(ctx, back) {
       var p = ammoSellPrice(k, ctx), nm = LAB.AMMO[k].n;
       items.push({ label: "Продать: " + nm + " (у вас " + g.ammo[k] + ") — " + cr(p), fn: function () {
         if (!(G().ammo[k] > 0)) { say("Больше нет."); return; }
-        G().ammo[k]--; G().credits += p; soldSay(nm.charAt(0).toLowerCase() + nm.slice(1), p);
+        var p1 = ammoSellPrice(k, ctx); soldOne("ammo:" + k, G().ammo[k]);
+        G().ammo[k]--; G().credits += p1; soldSay(nm.charAt(0).toLowerCase() + nm.slice(1), p1);
       } });
     });
     if (!items.length) items.push({ label: "Батарей больше нет", disabled: true, fn: function () {} });

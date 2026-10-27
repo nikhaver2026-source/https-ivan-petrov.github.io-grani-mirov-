@@ -65,6 +65,7 @@ for (pk in PARTS_NEW) {
   if (LAB.PARTS.indexOf(pk) < 0) LAB.PARTS.push(pk);
   LAB.PART_DEPTH[pk] = pd.depth;
 }
+if (LAB.armsLate) LAB.armsLate(); /* (3.3) рецепты arms.js, ждавшие этих деталей */
 function srcOf(k) { var s0 = LAB.ITEMS[k] && LAB.ITEMS[k].src; if (LAB.ARSENAL17 && LAB.ARSENAL17.srcText[s0]) return LAB.ARSENAL17.srcText[s0]; return SRC[k] || s0 || (LAB.ITEMS[k] && LAB.ITEMS[k].kind === "part" ? "попадается на своей глубине: ящики, склады, обломки машин" : "собирают в мастерской или покупают"); }
 
 /* ════════ ПАТРОНЫ, ОРУЖИЕ, УСТРОЙСТВА ════════ */
@@ -98,7 +99,7 @@ for (ik in I_NEW) LAB.ITEMS[ik] = I_NEW[ik];
 /* ════════ МОДУЛИ ОРУЖИЯ ════════ */
 var MODS = {
   power:  { item: "m_power", n: "модуль мощности", max: 3, price: 60, desc: "Плюс пятнадцать процентов к урону." },
-  acc:    { item: "m_acc", n: "модуль точности", max: 2, price: 55, desc: "Оптический прицел: попадания чаще, особенно издалека и очередью." },
+  acc:    { item: "m_acc", n: "модуль точности", max: 2, price: 55, desc: "Оптический прицел: плюс семь процентов к точности за каждый модуль." },
   range:  { item: "m_range", n: "удлинитель ствола", max: 2, price: 50, desc: "Плюс два шага дальности." },
   reload: { item: "m_reload", n: "модуль быстрой перезарядки", max: 2, price: 50, desc: "Перезарядка на треть быстрее, выстрелы чуть чаще." },
   cool:   { item: "m_cool", n: "радиатор", max: 2, price: 45, desc: "Ствол греется медленнее: больше выстрелов подряд без перегрева." },
@@ -106,10 +107,10 @@ var MODS = {
   /* (1.5) ёмкие энергобатареи для бластера и другого оружия на энергобатареях */
   bigcell: { item: "m_bigcell", n: "ёмкая энергобатарея", max: 2, price: 70, desc: "Штатный аккумулятор бластера — на побольше: плюс половина ёмкости оружия. Одна энергобатарея по-прежнему заряжает оружие целиком. Для бластеров и всего оружия на энергобатареях." },
   hugecell: { item: "m_hugecell", n: "сверхъёмкая энергобатарея", max: 1, price: 160, desc: "Накопитель на сверхпроводнике: плюс вся ёмкость оружия, зарядов вдвое больше. Для бластеров и всего оружия на энергобатареях." },
-  pierce: { item: "m_pierce", n: "бронебойный модуль", max: 2, price: 60, desc: "Броня роботов гасит удар заметно меньше." },
+  pierce: { item: "m_pierce", n: "бронебойный модуль", max: 2, price: 60, desc: "Пробивает броню: каждый модуль — плюс треть пробития (до девяти десятых)." },
   emp:    { item: "m_emp", n: "модуль подавления электроники", max: 2, price: 60, desc: "Плюс четверть урона по роботам, турелям и камерам." },
-  quiet:  { item: "m_quiet", n: "глушитель", max: 2, price: 50, desc: "Выстрел тише и глуше: враги слышат его только вблизи." },
-  stab:   { item: "m_stab", n: "стабилизатор", max: 1, price: 120, desc: "Оружие меньше изнашивается, реже даёт осечки, очередь точнее." }
+  quiet:  { item: "m_quiet", n: "глушитель", max: 2, price: 50, desc: "Выстрел тише на треть за каждый модуль: враги слышат его только вблизи." },
+  stab:   { item: "m_stab", n: "стабилизатор", max: 1, price: 120, desc: "Износ вдвое меньше, осечек в два с половиной раза меньше, точность плюс три процента, очередь — плюс тринадцать." }
 };
 var MOD_ORDER = ["power", "acc", "range", "reload", "cool", "cap", "bigcell", "hugecell", "pierce", "emp", "quiet", "stab"];
 /* (2.2, просьба игрока) Расточка батарейного отсека — ёмкость прямо в
@@ -340,7 +341,7 @@ function needOf(rc, b) {
   var n = {}, k, o = String(rc.out), d = LAB.ITEMS[o];
   for (k in rc.need) n[k] = rc.need[k];
   if (hasP(b, "arms") && (n.scrap || 0) >= 2 && (o.indexOf("weapon:") === 0 || o.indexOf("armor:") === 0 || (d && d.kind === "wmodule"))) n.scrap--;
-  /* партия из трёх на станке: деталей примерно на четверть меньше */
+  /* партия из трёх на станке: деталей на треть меньше (по одной-две — ровно вдвое на три вещи) */
   if (batchOn(rc, b)) for (k in n) n[k] = Math.max(n[k] * 2, Math.floor(n[k] * 3 * 0.8));
   return n;
 }
@@ -411,7 +412,8 @@ function md(w, k) { return (w && w.mod && w.mod[k]) || 0; }
 function wcls(w) { return (LAB.WEAPONS[w.base] || {}).cls || ""; }
 function melee(w) { return (w.rng0 != null ? w.rng0 : w.rng) <= 1; }
 function battery(w) { return w.ammo && w.ammo !== "none"; }
-function heats(w) { return battery(w) && w.ammo !== "slug" && !melee(w); }
+/* (3.3) греются только стволы на заряде: картечь, иглы и стальные пули — нет */
+function heats(w) { return battery(w) && !LAB.physAmmo(w.ammo) && !melee(w); }
 function hmax(w) { return 12 + 6 * md(w, "cool"); }
 function cooled(w, now) {
   if (!w.heat) return 0;
@@ -625,11 +627,14 @@ function repairArmor(a, b) {
   ]);
   return true;
 }
-/* Инженерный кейс: пополнить начатый — плюс один ремонт. */
-function refillCost(b) { return hasP(b, "repair") ? { scrap: 1 } : { scrap: 1, wire: 1 }; }
+/* Инженерный кейс: пополнить начатый — плюс один ремонт. (3.3) С микросхемой: ремонт кейсом
+   стоит не дешевле ремонта у верстака (прежде кусок лома давал «плюс пятьдесят» оружию или
+   починку целого верстака); и у повреждённого верстака кейс не пополнить. */
+function refillCost(b) { return hasP(b, "repair") ? { scrap: 1, wire: 1, chip: 1 } : { scrap: 2, wire: 1, chip: 1 }; }
 function refillKit(b) {
   var g = G(), R = LAB.repair, o = R ? R.opened("engkit") : 0, uses = R ? R.KITS.engkit.uses : 3;
   if (!o || o >= uses) { say("Пополнять нечего: начатого инженерного кейса нет."); return false; }
+  if (b && b.dmg) { LAB.UI.error(); say("Верстак повреждён: сначала почините его — пополнять кейс не на чем."); return false; }
   var need = refillCost(b);
   if (!haveAll(need)) { LAB.UI.error(); say("Для пополнения кейса не хватает: " + costLack(need) + "."); return false; }
   take(need);
@@ -800,14 +805,29 @@ function analyzeHint(key, b) {
   if (!rc || known(rc) || !b || effTier(b) < 2 || CLS_T[clsOf(rc)] > effTier(b)) return null;
   return rc;
 }
+/* (3.3) Что вернёт разбор: у того, что собирают у верстака, — не больше половины рецепта
+   (деталь по две и больше — половина, одиночная — через раз; экспериментальный компонент —
+   тоже через раз). Прежде модуль всегда возвращал свой компонент, а у устройств был свой
+   набор, иногда богаче рецепта: «партия из трёх — разобрать» плодила детали без конца. */
+function salvParts(id) {
+  var rc = recipeOut(id), sure = {}, maybe = {}, k;
+  if (rc) { for (k in rc.need) { if (rc.need[k] > 1) sure[k] = Math.floor(rc.need[k] / 2); else maybe[k] = 1; } return { sure: sure, maybe: maybe }; }
+  if (SALV[id]) return { sure: SALV[id], maybe: {} };
+  return null;
+}
+function salvText(id) {
+  var sp = salvParts(id); if (!sp) return "";
+  var a = costText(sp.sure), m = Object.keys(sp.maybe).map(function (k) { return LAB.ITEMS[k] ? LAB.ITEMS[k].n.toLowerCase() : k; });
+  return (a ? "даст " + a : "") + (m.length ? (a ? "; " : "") + "может найтись: " + m.join(", ") : "");
+}
 function give(parts) { var g = G(), s = []; for (var k in parts) { var n = parts[k]; if (!n) continue; g.inv[k] = (g.inv[k] || 0) + n; s.push((LAB.ITEMS[k] ? LAB.ITEMS[k].n.toLowerCase() : k) + " " + n); } return s.join(", "); }
 /* Разобрать устройство или запасной модуль из инвентаря. */
 function salvage(id, b) {
   var g = G(), d = LAB.ITEMS[id];
   if (!d || !(g.inv[id] > 0)) { say("Нет: " + (d ? d.n.toLowerCase() : id) + "."); return false; }
   b = b || nearBench();
-  var parts = SALV[id];
-  if (!parts && d.kind === "wmodule") { var rc = recipeOut(id); parts = {}; if (rc) for (var k in rc.need) if (rc.need[k] > 1 || k === "proto") parts[k] = Math.max(1, Math.floor(rc.need[k] / 2)); else if (Math.random() < 0.5) parts[k] = 1; }
+  var sp = salvParts(id), parts = null;
+  if (sp) { parts = {}; var k; for (k in sp.sure) parts[k] = sp.sure[k]; for (k in sp.maybe) if (Math.random() < 0.5) parts[k] = (parts[k] || 0) + 1; }
   if (!parts) { say("Это не разобрать с пользой."); return false; }
   g.inv[id]--;
   var got = give(parts), hint = analyzeHint(id, b), t = "Разобрано: " + d.n.toLowerCase() + ". Получено: " + (got || "ничего ценного") + ".";
@@ -826,15 +846,18 @@ function salvageBattery() {
   return true;
 }
 /* Разбор оружия: модули — в запас, детали по классу; у верстака — схема. */
-function onScrap(w) {
+function onScrap(w, crafted) {
   var g = G(), out = [], m = w.mod || {}, k;
   for (k in m) if (m[k] && MODS[k]) { g.inv[MODS[k].item] = (g.inv[MODS[k].item] || 0) + m[k]; }
   if (used(w)) out.push("Модули сняты и лежат в запасе: " + modsLine(w) + ".");
   var b = LAB.WEAPONS[w.base] || {}, extra = {};
-  if (battery(w) && w.ammo !== "slug") extra.cell = Math.random() < 0.5 + 0.1 * (w.rank || 0) ? 1 : 0;
-  if (b.cls === "laser" || b.cls === "blaster") extra.lens = Math.random() < 0.3 ? 1 : 0;
-  if (b.cls === "kinetic") extra.servo = Math.random() < 0.5 ? 1 : 0;
-  if ((w.rank || 0) >= 4) extra.proto = 1;
+  /* (3.3) собранное своими руками — без находок сверх рецепта (game.js, scrapWeapon) */
+  if (!crafted) {
+    if (battery(w) && w.ammo !== "slug") extra.cell = Math.random() < 0.5 + 0.1 * (w.rank || 0) ? 1 : 0;
+    if (b.cls === "laser" || b.cls === "blaster") extra.lens = Math.random() < 0.3 ? 1 : 0;
+    if (b.cls === "kinetic") extra.servo = Math.random() < 0.5 ? 1 : 0;
+    if ((w.rank || 0) >= 4) extra.proto = 1;
+  }
   var got = give(extra);
   if (got) out.push("Ещё: " + got + ".");
   var hint = analyzeHint(w.base, nearBench());
@@ -1062,7 +1085,7 @@ function groupItems(nm) {
   var b = bench(cur.o), list = avail().filter(function (rc) { return known(rc) && groupOf(rc) === nm; });
   var unk = avail().filter(function (rc) { return !known(rc) && groupOf(rc) === nm; }).length;
   var items = [];
-  if (effTier(b) >= 4 && list.some(batchable)) items.push({ label: "Сборка", kind: "choice", options: [{ v: false, label: "по одной" }, { v: true, label: "партией из трёх, деталей примерно на четверть меньше" }],
+  if (effTier(b) >= 4 && list.some(batchable)) items.push({ label: "Сборка", kind: "choice", options: [{ v: false, label: "по одной" }, { v: true, label: "партией из трёх, деталей на треть меньше" }],
     get: function () { return batch; }, set: function (v) { batch = v; var t = LAB.ui.top(); if (t && t.rebuild) { var i0 = t.i; t.items = t.rebuild(); t.i = i0; } } });
   items = items.concat(list.map(function (rc) { return { label: recLabel(rc, b), keep: true, fn: function () { gm().craft(rc); } }; }));
   if (unk) items.push({ label: "Неизвестных схем в разделе: " + unk + ". Их открывают технические документы, разговоры с инженерами, разбор устройств, исследование на верстаке и установки глубин.", info: true, keep: true, fn: function () {} });
@@ -1140,17 +1163,30 @@ function salvItems() {
   var g = G(), b = bench(cur.o), items = [];
   Object.keys(SALV).concat(MOD_ORDER.map(function (k) { return MODS[k].item; })).forEach(function (id) {
     if (!(g.inv[id] > 0) || !LAB.ITEMS[id]) return;
-    var parts = SALV[id], hint = analyzeHint(id, b);
-    items.push({ label: "Разобрать: " + LAB.ITEMS[id].n.toLowerCase() + " (" + g.inv[id] + ")" + (parts ? " — даст " + costText(parts) : " — вернёт часть деталей") + (hint ? "; разбор раскроет схему «" + hint.n + "»" : ""), keep: true, fn: function () { salvage(id, b); } });
+    var st0 = salvText(id), hint = analyzeHint(id, b);
+    items.push({ label: "Разобрать: " + LAB.ITEMS[id].n.toLowerCase() + " (" + g.inv[id] + ")" + (st0 ? " — " + st0 : " — вернёт часть деталей") + (hint ? "; разбор раскроет схему «" + hint.n + "»" : ""), keep: true, fn: function () { salvage(id, b); } });
   });
   if (g.ammo.energy > 0) items.push({ label: "Разобрать энергобатарею (" + g.ammo.energy + ") — даст аккумуляторную ячейку", keep: true, fn: salvageBattery });
   g.weapons.forEach(function (w, i) {
     if (w.id === "w_start_crowbar" || g.weapons.length <= 1) return;
     var hint = analyzeHint(w.base, b);
-    items.push({ label: "Разобрать оружие: " + w.name + (used(w) ? "; модули вернутся в запас" : "") + (hint ? "; разбор раскроет схему «" + hint.n + "»" : ""), keep: true, fn: function () { gm().scrapWeapon(g.weapons.indexOf(w)); } });
+    /* (3.3) оружие в руках — с пометкой и вопросом, как при продаже: одно нажатие его не разберёт */
+    var inHand = i === g.wi;
+    items.push({ label: "Разобрать оружие: " + w.name + (inHand ? " (оно в руках)" : "") + " — даст " + (gm().scrapWeaponText ? gm().scrapWeaponText(w) : "детали") + (hint ? "; разбор раскроет схему «" + hint.n + "»" : ""), keep: !inHand, fn: function () {
+      if (!inHand) { gm().scrapWeapon(g.weapons.indexOf(w)); return; }
+      menu("Разобрать оружие в руках?", [
+        { label: "Да, разобрать: " + w.name, fn: function () { gm().scrapWeapon(g.weapons.indexOf(w)); } },
+        { label: "Нет, оставить", close: true, fn: function () {} }
+      ]);
+    } });
+  });
+  /* (3.3) и броня — здесь же, со всем, что даст разбор; надетую сначала снимают */
+  g.armors.forEach(function (a) {
+    if (g.armor && g.armor.id === a.id) return;
+    items.push({ label: "Разобрать броню: " + a.name + " — даст " + (gm().scrapArmorText ? gm().scrapArmorText(a) : "детали"), keep: true, fn: function () { var i = g.armors.indexOf(a); if (i >= 0) gm().scrapArmor(i); } });
   });
   if (g.inv.proto > 0) items.push({ label: "Разобрать экспериментальный компонент (" + g.inv.proto + ")" + (effTier(b) >= 3 ? " — раскроет экспериментальную схему" : " — только на экспериментальном стенде"), keep: true, fn: function () { analyzeProto(b); } });
-  if (!items.length) items.push({ label: "Разбирать нечего: устройств, запасных модулей и лишнего оружия нет.", info: true, keep: true, fn: function () {} });
+  if (!items.length) items.push({ label: "Разбирать нечего: устройств, запасных модулей, лишнего оружия и снятой брони нет.", info: true, keep: true, fn: function () {} });
   items.push(back());
   return items;
 }
@@ -1186,6 +1222,7 @@ function partsGuide() {
 }
 
 LAB.workshop = {
+  salvText: salvText, /* (3.3) что вернёт разбор вещи — словами */
   open: open, bench: bench, effTier: effTier, benchLine: benchLine, check: check, clsOf: clsOf, known: known, learn: learn, unknownPick: unknownPick,
   fromDoc: fromDoc, npcTip: npcTip, isEng: isEng, depthFind: depthFind, needText: needText, afterCraft: afterCraft,
   beforeShot: beforeShot, afterShot: afterShot, accBonus: accBonus, dmgK: dmgK, pierce: pierce, reloadK: reloadK, gapK: gapK, loud: loud,

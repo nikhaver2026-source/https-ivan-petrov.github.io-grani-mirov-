@@ -355,6 +355,14 @@ LAB.annex.place = function (ctx) {
       if (bo) bo.loot = annexLoot(r, L, F, r.pick(["home", "smoke", "med", "paper"]), "desk", true);
     }
   }
+  /* 4в. (3.3, просьба игрока: «сотрудников было много, а тел мало») Тела — на всех
+     глубинах и чаще: в «Ковчеге» к прежним прибавляются тела в главных помещениях и
+     кабинетах, глубже — горняки «Подножия», поселенцы и разведчики «Колыбели», смена
+     «Отражения», отряд «Альфа» в «Механизме», садовники «Истока». Не у капсулы, не у
+     лестниц, лифта и шлюза, не в мастерской, не рядом с живыми и не в опасных зонах.
+     При каждом — немного вещей своей глубины; карманы, одежда, жетон и записка — как
+     у всех тел (fixtures.js). Свой поток случайностей. */
+  if (!(L === 1 && F === 1)) placeBodies(ctx, LAB.Rng(ctx.seed, "bodies33:" + L + ":" + F + ":" + ctx.attempt), era, L, F);
   /* 5. Записки: в ящиках, карманах и на полу — из частей, с людьми и помещениями этажа */
   if (gen) placeNotes(ctx, r, gen, spots);
   /* 6. Пункт снабжения обязателен; обстановка и подробности основных помещений, люди на телах */
@@ -375,6 +383,39 @@ LAB.annex.place = function (ctx) {
   });
   fl.annexN = spots.length;
 };
+/* (3.3) Сколько тел на этаже всего и что при них — по глубине. */
+var BODY_N = { K: [3, 5], P: [2, 4], C: [2, 3], O: [2, 3], M: [2, 4], I: [1, 3] };
+var BODY_LOOT = { K: ["home", "smoke", "med", "paper", "tech"], P: ["parts", "smoke", "food", "janitor"], C: ["food", "home", "herbs", "bio"],
+  O: ["med", "paper", "tech", "protect"], M: ["arms", "armory", "parts", "med"], I: ["food", "bio", "herbs", "home"] };
+var NOBODY = { capsule: 1, stairs_down: 1, stairs_up: 1, elevator: 1, gate_down: 1, gate_sealed: 1, supply: 1, workbench: 1, wake: 1, medvend: 1, reactor: 1, implantlab: 1, hq: 1, charger: 1 };
+function placeBodies(ctx, r, era, L, F) {
+  var fl = ctx.fl, have = 0, busy = {};
+  fl.objs.forEach(function (o) { if (o.type === "corpse") have++; if (NOBODY[o.type]) busy[o.room] = 1; });
+  (fl.npcs || []).forEach(function (n) { busy[n.room] = 1; });
+  var span0 = BODY_N[era] || BODY_N.K, want = r.int(span0[0], span0[1]);
+  if (L === 1 && F <= 3) want = Math.min(want, 2); /* начало пути — без завалов из тел */
+  var n = want - have;
+  if (n <= 0) return;
+  var rooms = [], pref = [];
+  fl.rooms.forEach(function (m) {
+    if (!m || m.hidden || busy[m.id] || m.rad || m.gas || m.shop) return;
+    if (m.id === fl.U || m.id === fl.D || m.id === fl.E || m.id === fl.secret || m.id === fl.boss) return;
+    var def = (LAB.ROOMS || {})[m.type] || {};
+    if (def.special || (def.kind && def.kind !== "locked")) return;
+    rooms.push(m.id);
+    if (m.state === "barricade" || m.state === "hurry" || m.state === "burnt" || m.state === "lived" || m.state === "dark") pref.push(m.id);
+  });
+  r.shuffle(rooms); r.shuffle(pref);
+  var per = {}, tags = BODY_LOOT[era] || BODY_LOOT.K;
+  for (var i = 0, guard = 0; i < n && rooms.length && guard < 40; guard++) {
+    var rid = pref.length && r.chance(0.6) ? pref.shift() : rooms[(i + guard) % rooms.length];
+    if ((per[rid] || 0) >= 2) continue;
+    var bo = ctx.addObj("corpse", rid, null);
+    if (!bo) continue;
+    per[rid] = (per[rid] || 0) + 1; i++;
+    bo.loot = annexLoot(r, L, F, r.pick(tags), "desk", true);
+  }
+}
 /* Что стоит в помещении: виды предметов и вещей обстановки. */
 function holds(fl, rm) {
   var h = {};
