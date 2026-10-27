@@ -83,7 +83,9 @@ LAB.LOGIC_KINDS = LOGIC_KINDS;
    ступени: простая, средняя, сложная. Вид и ступень выбирает свой поток
    случайностей — остальное на этаже от них не меняется. Чем глубже, тем
    чаще средние и сложные; на первом уровне — почти всегда простые. */
-function logicKinds() { return LOGIC_KINDS.concat(LAB.puzzles2 && LAB.puzzles2.kinds ? LAB.puzzles2.kinds : []); }
+/* (3.3) и задачи части третьей (puzzles3.js): пароли, архивы, взломы. Вид выбирается своим
+   потоком случайностей (pz17) — этажи от этого не меняются */
+function logicKinds() { return LOGIC_KINDS.concat(LAB.puzzles2 && LAB.puzzles2.kinds ? LAB.puzzles2.kinds : [], LAB.puzzles3 && LAB.puzzles3.kinds ? LAB.puzzles3.kinds : []); }
 function stationKinds() { return ["sort", "relays", "bulls", "riddle"].concat(logicKinds(), ["chess"]); }
 LAB.logicKinds = logicKinds;
 function puzzleDiff(rz, L, F) {

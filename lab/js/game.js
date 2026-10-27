@@ -2122,6 +2122,23 @@ function terminalMenu(o) {
           else termFail(o, st, "Доступ запрещён.");
         });
       } },
+      /* (3.3) или подобрать пароль по словарю (puzzles3.js): терминал отвечает, сколько букв
+         совпало. Три неверных — та же тревога и блокировка, что и при неудачном взломе.
+         Отошли после неверной попытки — терминал меняет пароль и словарь: подсказки
+         прошлого подхода не помогут, а попытки не копятся заново */
+      LAB.puzzles && LAB.puzzles.has("termhack") ? { label: "Подобрать пароль по словарю (логическая задача)", fn: function () {
+        UIx("closeAll");
+        var dd = G.L <= 5 ? 0 : G.L <= 30 ? 1 : 2;
+        LAB.puzzles.open("termhack", (LAB.hash32(o.id + ":" + CUR.key + ":" + (st.dictN || 0)) % 99991) + 1, function (ok) {
+          var ps = LAB.puzzles._last && LAB.puzzles._last.st;
+          if (ok) { st.hacked = true; A("play", "term_ok"); gainXP(10 + 4 * dd); sayq("Доступ получен."); if (LAB.oko) LAB.oko.event("terminal_hack", { x: o.x, y: o.y, o: o }); terminalMenu(o); }
+          else if (ps && ps.tries < ps.limit) {
+            if (ps.tries > 0) { st.dictN = (st.dictN || 0) + 1; say("Вы отходите. Терминал записал неверные пароли и сменил свой: в следующий раз — другой словарь."); }
+            else say("Вы отходите. Терминал ждёт пароля.");
+          }
+          else termFail(o, st, "Три неверных пароля.");
+        }, { title: objName(o), diff: dd });
+      } } : null,
       { label: "Отойти", fn: function () {} }
     ]);
     say(objName(o) + ". Терминал защищён паролем.");

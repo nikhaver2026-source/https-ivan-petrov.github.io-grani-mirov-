@@ -69,6 +69,7 @@ jobs:
           node lab/tests/world.test.js 6
           # (2.0) новые головоломки, оружие глубин, реплики ОКО
           node lab/tests/puzzles2.check.js
+          node lab/tests/puzzles3.check.js
           ACORN="$RUNNER_TEMP/n/node_modules/acorn" node lab/tests/arsenal.check.js --fast
           NODE_PATH="$RUNNER_TEMP/n/node_modules" node lab/tests/oko_lines_a.check.js
           NODE_PATH="$RUNNER_TEMP/n/node_modules" node lab/tests/oko_lines_b.check.js

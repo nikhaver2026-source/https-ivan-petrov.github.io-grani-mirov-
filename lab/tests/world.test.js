@@ -20,7 +20,7 @@ const ROOT = path.resolve(__dirname, "..");
 const ctx = { console, Math, JSON, Object, Array, String, Number, Uint8Array, Int8Array, Int16Array, Int32Array, Float64Array, Error, Date, RegExp };
 ctx.globalThis = ctx;
 vm.createContext(ctx);
-for (const f of ["js/data.js", "js/texts.js", "js/lore.js", "js/b1.js", "js/b2.js", "js/b3.js", "js/b4.js", "js/b5.js", "js/world.js", "js/mutants.js", "js/depths.js", "js/goods.js", "js/medic.js", "js/arms.js", "js/traps.js", "js/puzzles.js", "js/puzzles2.js", "js/annex_rooms.js", "js/annex_var.js", "js/annex_frag.js", "js/annex_gen.js", "js/fixtures_data.js", "js/annex.js", "js/garrison.js", "js/workshop.js", "js/repair.js", "js/implants.js", "js/arsenal.js", "js/chem.js", "js/kitchen.js", "js/floors.js"]) {
+for (const f of ["js/data.js", "js/texts.js", "js/lore.js", "js/b1.js", "js/b2.js", "js/b3.js", "js/b4.js", "js/b5.js", "js/world.js", "js/mutants.js", "js/depths.js", "js/goods.js", "js/medic.js", "js/arms.js", "js/traps.js", "js/puzzles.js", "js/puzzles2.js", "js/puzzles3.js", "js/annex_rooms.js", "js/annex_var.js", "js/annex_frag.js", "js/annex_gen.js", "js/fixtures_data.js", "js/annex.js", "js/garrison.js", "js/workshop.js", "js/repair.js", "js/implants.js", "js/arsenal.js", "js/chem.js", "js/kitchen.js", "js/floors.js"]) {
   const p = path.join(ROOT, f);
   if (fs.existsSync(p)) vm.runInContext(fs.readFileSync(p, "utf8"), ctx, { filename: f });
 }
