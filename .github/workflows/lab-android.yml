@@ -85,12 +85,19 @@ jobs:
           if [ -n "$KS_SECRET_B64" ] && [ -n "$KS_SECRET_PASS" ]; then
             # постоянный ключ — во временную папку задания, а не в кэшируемую: в кэш Actions он не попадёт
             KS="$RUNNER_TEMP/lab-release.keystore"; umask 077
-            # пробелы и переводы строк, попавшие в секреты при вставке, не мешают
-            printf '%s' "$KS_SECRET_B64" | base64 -d -i > "$KS"
+            # из секрета — самая длинная строка знаков base64: пробелы, переводы строк,
+            # кавычки и имя секрета, попавшие при вставке, не мешают
+            B64="$(printf '%s' "$KS_SECRET_B64" | tr -d ' \t\r\n' | grep -oE '[A-Za-z0-9+/]{64,}={0,2}' | awk '{ if (length($0) > length(b)) b = $0 } END { print b }')"
+            [ -n "$B64" ] && echo "::add-mask::$B64"
+            if [ -z "$B64" ] || ! printf '%s' "$B64" | base64 -d > "$KS" 2>/dev/null; then
+              HINT=""; [ "${#KS_SECRET_PASS}" -gt 200 ] && HINT=" Похоже, секреты перепутаны местами: в ANDROID_KEYSTORE_PASS — длинная строка."
+              echo "::error title=Ключ подписи::Секрет ANDROID_KEYSTORE_B64 не раскодируется: длина значения — ${#KS_SECRET_B64}, самой длинной строки base64 в нём — ${#B64}; нужна одна строка целиком, её длина делится на 4. Вставьте в секрет всё содержимое файла ANDROID_KEYSTORE_B64.txt, ничего не добавляя и не обрезая.$HINT Как задать ключ: lab/android/SIGNING.md"
+              exit 1
+            fi
             P="$(printf '%s' "$KS_SECRET_PASS" | tr -d '\r\n')"
             A="$(printf '%s' "${KS_SECRET_ALIAS:-lab}" | tr -d '\r\n')"
             KP="$(printf '%s' "${KS_SECRET_KEY_PASS:-$KS_SECRET_PASS}" | tr -d '\r\n')"
-            SRC="постоянный ключ из секретов репозитория"
+            SRC="постоянный ключ из секретов репозитория"; DIAG=" Длина пароля — ${#P}, строки base64 — ${#B64}."
           else
             D="$HOME/.lab-signing"; mkdir -p "$D"; chmod 700 "$D"
             if [ ! -f "$D/lab.keystore" ]; then
@@ -101,13 +108,13 @@ jobs:
                 -dname "CN=Podzemnaya Laboratoriya, O=Grani Mirov, C=RU"
             fi
             KS="$D/lab.keystore"; P="$(cat "$D/pass")"; A="lab"; KP="$P"
-            SRC="запасной ключ из кэша"
+            SRC="запасной ключ из кэша"; DIAG=""
             echo "::warning::Секрет ANDROID_KEYSTORE_B64 не задан: APK подписан запасным ключом из кэша. Он может смениться — тогда новая версия не встанет поверх старой, а Play Protect будет проверять её заново. Постоянный ключ: lab/android/SIGNING.md"
           fi
           echo "::add-mask::$P"; echo "::add-mask::$KP"
           # ключ читается и псевдоним верный — иначе сборка падает сразу, а не выдаёт APK без подписи
           if ! keytool -list -keystore "$KS" -storepass "$P" -alias "$A" > /dev/null 2>&1; then
-            echo "::error title=Ключ подписи::$SRC не читается: не тот пароль (ANDROID_KEYSTORE_PASS), испорчен base64 (ANDROID_KEYSTORE_B64) или псевдоним ключа не «$A» (ANDROID_KEY_ALIAS). Как задать ключ: lab/android/SIGNING.md"
+            echo "::error title=Ключ подписи::$SRC не открывается: не тот пароль (ANDROID_KEYSTORE_PASS), хранилище из ANDROID_KEYSTORE_B64 испорчено или обрезано, или псевдоним ключа не «$A» (ANDROID_KEY_ALIAS).$DIAG Как задать ключ: lab/android/SIGNING.md"
             exit 1
           fi
           FP=$(keytool -list -v -keystore "$KS" -storepass "$P" -alias "$A" | grep -m1 "SHA256:" | sed 's/.*SHA256: *//')
