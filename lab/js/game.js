@@ -22,13 +22,12 @@ var DIRS = LAB.DIRS;
 /* ════════ СОСТОЯНИЕ ════════ */
 /* Версия мира: этажи построены заново (широкие коридоры, тайные комнаты с
    двумя выходами, турели у дверей) — старые записи этажей к ним не подходят. */
-var WORLD_V = 5; /* (3.3) пятый выпуск мира: тела погибших и выжившие чаще (annex.js, world.js); (3.2) с третьего блока этажи просторнее */
+var WORLD_V = 5; /* (3.5) пятый выпуск мира: тела погибших и выжившие чаще (annex.js, world.js); (3.2) с третьего блока этажи просторнее */
 /* (2.1) Стартовый набор — с ним носитель выходит из капсулы: монтировка и
    заряженный бластер «Искра» (выбран он), надетый защитный комбинезон
    «Ковчег», бинт, походный ремнабор, сухпаёк и кредиты на первую покупку.
    Десять аптечек и десять энергобатарей лежат у капсулы — четыре стопки
    по пять (world.js, шаг 12). */
-var START_KIT = 2;
 function newState(seed) {
   var suit = LAB.makeArmor("suit", 1, 1, "a_start_suit");
   return {
@@ -38,7 +37,7 @@ function newState(seed) {
     weapons: [LAB.makeWeapon("crowbar", 1, 0, 1, "w_start_crowbar"), LAB.makeWeapon("spark", 1, 0, 1, "w_start_spark")], wi: 1, drawn: false,
     armor: suit, armors: [suit],
     ammo: { energy: 0, magnetron: 0, positron: 0 },
-    inv: { bandage: 1, fieldkit: 1, ration: 1 }, keys: {}, tier: 0, startKit: START_KIT, elev: {}, gate: {}, core: false, cores: {}, codes: {}, melodies: {}, blockSeen: {},
+    inv: { bandage: 1, fieldkit: 1, ration: 1 }, keys: {}, tier: 0, elev: {}, gate: {}, core: false, cores: {}, codes: {}, melodies: {}, blockSeen: {},
     notes: {}, noteList: [], samples: {}, implants: ["scan", "echo"], faction: null, crafted: 0, bp: {}, bpNpc: {},
     quests: [], journal: [], fs: {}, maxF: { 1: 1 }, visited: { "1-1": 1 },
     checkpoint: null, day: 1, min: 8 * 60, event: "norm", eventUntil: 8 * 60 + 90,
@@ -155,7 +154,7 @@ function enterFloor(L, F, how, silent) {
   G.visited = G.visited || {};
   var firstVisit = !G.visited[L + "-" + F];
   if (firstVisit) { G.visited[L + "-" + F] = 1; if (LAB.ach) { LAB.ach.ev("floor", 1); LAB.ach.ev("level", L); } }
-  /* (3.3) номер захода на этаж: задание «разведать» засчитывает заход после того, как его взяли */
+  /* (3.5) номер захода на этаж: задание «разведать» засчитывает заход после того, как его взяли */
   G.visitSeq = (G.visitSeq || 0) + 1; G.lastVisit = G.lastVisit || {}; G.lastVisit[L + "-" + F] = G.visitSeq;
   var fl = LAB.getFloor(G.seed, L, F), fs = fsFor(L, F);
   CUR.fl = fl; CUR.fs = fs; CUR.key = L + "-" + F; CUR.room = -9; CUR.focus = null; CUR.corr = -1;
@@ -488,8 +487,8 @@ function removeArmor() {
   UIx("refresh");
 }
 game.removeArmor = removeArmor;
-/* (3.3) Что даст разбор — словами, до разбора: в меню брони, оружия и у верстака. */
-/* (3.3) Собранное у верстака (a.rcNeed, w.rcNeed) разбирается не богаче рецепта: деталь по
+/* (3.5) Что даст разбор — словами, до разбора: в меню брони, оружия и у верстака. */
+/* (3.5) Собранное у верстака (a.rcNeed, w.rcNeed) разбирается не богаче рецепта: деталь по
    две и больше — половина, одиночная — через раз. Прежде разбор только что собранного
    давал лом, микросхему и батарею сверх того, что в него вложили. */
 function halfRecipe(need) { var sure = {}, maybe = {}; for (var k in need) { if (need[k] > 1) sure[k] = Math.floor(need[k] / 2); else maybe[k] = 1; } return { sure: sure, maybe: maybe }; }
@@ -562,7 +561,7 @@ function advanceTime(min, asleep) {
 }
 game.advanceTime = advanceTime;
 
-/* (3.3) Когда не до отдыха. Отдых, тренировка и прочие долгие дела пропускают время
+/* (3.5) Когда не до отдыха. Отдых, тренировка и прочие долгие дела пропускают время
    одним махом, а машины ОКО в это время не стоят: рядом враг, на этаже тревога или
    ОКО прочёсывает этаж, каратели идут по следу, сюда идут машины ОКО — отдыха нет.
    Возвращает причину словами или null. */
@@ -695,7 +694,7 @@ function aimPenalty() {
   if (b.neuro >= 85) p += 0.05;
   if (b.rad >= 70) p += 0.08; else if (b.rad >= 45) p += 0.04;
   /* тренировки на стрельбище и умение «Твёрдая рука» (1.5) */
-  var tr = G.train ? Math.min(5, G.train.aimPts != null ? G.train.aimPts : Math.floor((G.train.aim || 0) / 3)) * 0.01 : 0; /* (3.3) ступени тира */
+  var tr = G.train ? Math.min(5, G.train.aimPts || 0) * 0.01 : 0; /* (3.5) ступени тира */
   if (LAB.ach && LAB.ach.has("sharp")) p *= 0.6;
   return p - tr;
 }
@@ -1174,7 +1173,7 @@ function roomCheck(full, run, mute) {
   if (stuff) parts.push(stuff);
   if (run && !first) parts = [parts[0]];
   sayq(parts.join(" "));
-  questRoom(r); /* (3.3) вещь из поручения лежит здесь */
+  questRoom(r); /* (3.5) вещь из поручения лежит здесь */
 }
 game.roomCheck = roomCheck;
 
@@ -1363,7 +1362,7 @@ game.camsNear = camsNear;
 /* У самой камеры: петля через сервисный разъём, снять питание под кожухом,
    перепрошить. Быстрее, чем с терминала, но камеру надо обойти так, чтобы
    она смотрела в другую сторону. */
-/* (3.3) Опыт за саботаж сети ОКО — один раз за каждое действие с каждой машиной
+/* (3.5) Опыт за саботаж сети ОКО — один раз за каждое действие с каждой машиной
    (и с сетью этажа) на этаже: прежде петлю, обесточивание, перехват турелей и сброс
    тревоги гоняли по кругу — по десятку опыта в минуту без предела. */
 function netXp(key, n) { var m = CUR.fs.netXp || (CUR.fs.netXp = {}); if (m[key]) return; m[key] = 1; gainXP(n); }
@@ -1492,7 +1491,7 @@ function interact() {
     return;
   }
   if (targets.length > 1 && !(f && targets[0].ref === f.ref)) {
-    /* (3.3) окно остаётся под окном выбранной вещи; вернулись к нему — список
+    /* (3.5) окно остаётся под окном выбранной вещи; вернулись к нему — список
        собирается заново: вскрытый тайник уже дверь, унесённого нет */
     var nearItems = function (list) {
       var it = list.map(function (q) {
@@ -1507,7 +1506,7 @@ function interact() {
 }
 game.interact = interact;
 function openTarget(q) {
-  /* (3.3) пункт мог устареть, пока было открыто другое окно: тайник уже вскрыт — это дверь */
+  /* (3.5) пункт мог устареть, пока было открыто другое окно: тайник уже вскрыт — это дверь */
   if (q.type === "secret" && secretFound(q.ref)) q = { type: "door", ref: q.ref, dir: q.dir };
   /* закрытая дверь, которую можно открыть, — открывается сразу, без меню */
   if (q.type === "door" && !doorOpen(q.ref) && !doorBlock(q.ref)) {
@@ -1563,7 +1562,7 @@ function openDoor(d, auto) {
   if (d.lock && d.lock.type !== "secret" && LAB.oko) { var od = CUR.fs.okoDoor || (CUR.fs.okoDoor = {}); if (!od[d.id]) { od[d.id] = 1; LAB.oko.event("door", { x: d.x, y: d.y }); } }
   A("doorOpen", d);
   if (!auto) say("Дверь открыта.");
-  /* (3.3) опыт — за первое открытие двери с картридером, а не за каждое (прежде открыть-закрыть давало опыт без конца) */
+  /* (3.5) опыт — за первое открытие двери с картридером, а не за каждое (прежде открыть-закрыть давало опыт без конца) */
   if (d.lock && d.lock.type === "card" && !auto) { var cx = CUR.fs.cardXp || (CUR.fs.cardXp = {}); if (!cx[d.id]) { cx[d.id] = 1; gainXP(2); } }
   if (LAB.combat) LAB.combat.noise(4);
   UIx("refresh");
@@ -1635,7 +1634,7 @@ function doorMenu(d, dir) {
 /* Голосовой замок: загадка; неверный ответ — тревога и подсказка, замок молчит минуту. */
 function riddleDoor(d) {
   var fs = CUR.fs; fs.riddleWait = fs.riddleWait || {};
-  /* (3.3) отгаданный замок второй раз не спрашивает: из старого окна двери верный ответ давал опыт снова */
+  /* (3.5) отгаданный замок второй раз не спрашивает: из старого окна двери верный ответ давал опыт снова */
   if (fs.doors[d.id]) { say("Голосовой замок уже открыт."); return; }
   /* ждать после неверного ответа — по тактам этажа (мир стоит, пока открыто окно), а не по часам */
   if (fs.riddleWait[d.id] > (fs.okoT || 0)) { say("Замок молчит после неверного ответа. Подождите немного."); return; }
@@ -1750,14 +1749,14 @@ function hackLength(lv) {
   return Math.max(3, Math.min(9, n));
 }
 function secretMenu(d) {
-  if (secretFound(d)) { doorMenu(d); return; } /* (3.3) тайник уже вскрыт — это просто дверь */
+  if (secretFound(d)) { doorMenu(d); return; } /* (3.5) тайник уже вскрыт — это просто дверь */
   UIx("menu", "Стена со сквозняком", [
     { label: "Простучать стену", fn: function () { revealSecret(d); } },
     { label: "Прислушаться", fn: function () { A("play", "draft"); say("За стеной пустота: звук шагов уходит в неё и возвращается глухим эхом."); } }
   ]);
 }
 function revealSecret(d) {
-  /* (3.3) из старого окна «Что рядом» простучать можно было снова — и снова получить
+  /* (3.5) из старого окна «Что рядом» простучать можно было снова — и снова получить
      опыт и тайник в счёт: найденный тайник больше ничего не даёт */
   if (secretFound(d)) { say("Этот тайник уже вскрыт: проход открыт."); UIx("refresh"); return; }
   CUR.fs.secrets[d.id] = 1; CUR.fs.doors[d.id] = 2;
@@ -1863,7 +1862,7 @@ function okoMenu(o) {
   A("play", "term_on");
   items.push({ label: "Слушать ОКО", fn: function () { if (LAB.oko) LAB.oko.speak(Math.random() < 0.5 ? "taunt" : "riddle", true); } });
   if (!st.asked) items.push({ label: "Ответить на вопрос ОКО", fn: function () {
-    /* (3.3) вопрос ОКО — одна попытка: из старого окна панели переспросить нельзя */
+    /* (3.5) вопрос ОКО — одна попытка: из старого окна панели переспросить нельзя */
     if (st.asked) { say("ОКО уже задало свой вопрос и второй раз не спрашивает."); return; }
     var rd = riddleFor((o.seed || 7) + G.L * 31 + G.F, G.L);
     askRiddle(rd, "Вопрос ОКО", function (ok) {
@@ -1901,7 +1900,7 @@ function puzzleMenu(o) {
   UIx("menu", "Стенд испытаний: " + (kinds[o.kind] || "головоломка") + dw, [
     { label: "Пройти испытание", fn: function () {
       var done = function (ok) {
-        if (st.solved) return; /* (3.3) награда стенда — один раз */
+        if (st.solved) return; /* (3.5) награда стенда — один раз */
         if (LAB.oko && LAB.oko.react) LAB.oko.react(ok ? "puzzle_ok" : "puzzle_fail");
         if (!ok) { A("play", "term_err"); say("Стенд гаснет и снова загорается: можно попробовать ещё раз."); return; }
         st.solved = true; A("play", "term_ok"); LAB.UI.fanfare(); gainXP(18 + 10 * (o.diff || 0));
@@ -2014,13 +2013,13 @@ function descend(o, seam) {
   say(seam ? "Вы спускаетесь по скобам в колодец Шва. Гул обнимает со всех сторон, металл под руками тёплый." : "Ключ-карта принята. Створки расходятся. Вы входите в шлюзовую камеру — и она уходит вниз.");
   later(function () {
     game.paused = false;
-    var left = G.quests.filter(function (q) { return !q.done && q.type !== "main" && q.L === L0 && !q.cross; }); /* (3.3) поручения «уровнем ниже» — с собой */
+    var left = G.quests.filter(function (q) { return !q.done && q.type !== "main" && q.L === L0 && !q.cross; }); /* (3.5) поручения «уровнем ниже» — с собой */
     var go = function () {
       if (G.L !== L0) return; /* уже спустились */
       /* прошлый уровень недостижим: его этажи больше не храним (только теперь, когда
          герой внизу: автозапись во время страниц истории не вернёт старый уровень) */
       Object.keys(G.fs).forEach(function (k) { if (k.indexOf(L0 + "-") === 0) delete G.fs[k]; });
-      /* (3.3) доклад с этажа этого уровня, до которого так и не дошли, — уже не передать */
+      /* (3.5) доклад с этажа этого уровня, до которого так и не дошли, — уже не передать */
       var lost = G.quests.filter(function (q) { return !q.done && q.type === "deep" && q.tL === L0; });
       lost.forEach(function (q) { q.done = true; q.failed = true; });
       G.quests = G.quests.filter(function (q) { return q.done || q.type === "main" || q.L !== L0 || q.cross; });
@@ -2108,7 +2107,7 @@ function terminalMenu(o) {
   tutor("terminal");
   var st = objState(o);
   A("play", "term_on");
-  /* (3.3) после провала взлома терминал заблокирован минуту — и дольше, пока на этаже
+  /* (3.5) после провала взлома терминал заблокирован минуту — и дольше, пока на этаже
      тревога и машины ищут взломщика: отсидеться рядом в кресле не выйдет */
   var lockAl = !!st.lockUntil && LAB.oko && LAB.oko.level && LAB.oko.level() >= 2;
   if (st.lockUntil && (st.lockUntil > Date.now() || lockAl)) { A("play", "term_err"); say(objName(o) + " заблокирован ОКО после неудачного взлома. " + (lockAl ? "Пока на этаже тревога и машины ищут взломщика, блокировку не снимут." : "Экран мигает: «Повторите позже».")); return; }
@@ -2122,7 +2121,7 @@ function terminalMenu(o) {
           else termFail(o, st, "Доступ запрещён.");
         });
       } },
-      /* (3.3) или подобрать пароль по словарю (puzzles3.js): терминал отвечает, сколько букв
+      /* (3.5) или подобрать пароль по словарю (puzzles3.js): терминал отвечает, сколько букв
          совпало. Три неверных — та же тревога и блокировка, что и при неудачном взломе.
          Отошли после неверной попытки — терминал меняет пароль и словарь: подсказки
          прошлого подхода не помогут, а попытки не копятся заново */
@@ -2437,7 +2436,7 @@ function keyTurretCmd(o, f) {
     { label: "Перевести на ваши цели: бить тварей и машины, не носителя", fn: function () {
       if (!(G.inv.okokey > 0)) { say("Ключа нет."); return; }
       G.inv.okokey--;
-      /* (3.3) турель не приняла ключ (перерезана, уже ваша) — ключ остаётся, опыта нет */
+      /* (3.5) турель не приняла ключ (перерезана, уже ваша) — ключ остаётся, опыта нет */
       if (!cb.mineTurret(f)) { G.inv.okokey++; say("Турель не принимает ключ."); return; }
       A("play", "card_ok"); A("play", "term_ok");
       say("Ключ техника принят: " + f.name + " — " + (placeName(f.x, f.y) || relDir(f.x, f.y)) + " — бьёт по вашим врагам на своей линии. Контрвзлом её не вернёт, пока ОКО не отзовёт ключ."); netXp("tur" + f.id + "key", 8);
@@ -2620,7 +2619,7 @@ function safeNoteFor(code) {
   return null;
 }
 function openContainer(o) {
-  /* (3.3) обысканное — пусто: из старого окна «Обыскать» второй раз ничего не даёт
+  /* (3.5) обысканное — пусто: из старого окна «Обыскать» второй раз ничего не даёт
      (прежде та же добыча выдавалась снова) */
   if (objState(o).looted) { say(objName(o) + ": пусто, здесь уже искали."); return; }
   /* (2.5) пакость в хранилище: ловушка, гнездо, шкафник (stash.js) */
@@ -2648,7 +2647,7 @@ function priceDepth() { return G.L <= 10 ? 1 + G.L * 0.12 : 1 + 0.15 * (LAB.weal
 function priceK() { var dk = LAB.dk(), k = (dk.price || 1) * (1 + (priceDepth() - 1) * (dk.pgrow || 1)); if (G.faction === "res") k *= 0.8; return k; }
 game.priceK = priceK;
 game.priceDepth = priceDepth;
-/* (3.3) Харизма: люди — выжившие и медики — уступают в цене, до двенадцати процентов при
+/* (3.5) Харизма: люди — выжившие и медики — уступают в цене, до двенадцати процентов при
    сорока, а скупая, платят чуть больше; автоматам, дроидам и терминалам она безразлична. */
 function chaK() { return 1 - Math.max(0, Math.min(30, (G.cha || 10) - 10)) * 0.004; }
 function chaSellK() { return 1 + Math.max(0, Math.min(30, (G.cha || 10) - 10)) * 0.003; }
@@ -2735,7 +2734,7 @@ function medMenu(o) {
   var miss = G.hpMax - G.hp, p = Math.max(10, Math.round(miss * 0.6 * priceK())), pt = Math.max(5, Math.round(20 * priceK())), pp = Math.max(4, Math.round(15 * priceK()));
   UIx("menu", "Медицинская станция", [
     { label: miss > 0 ? "Лечение до полного — " + p + " кредитов" : "Вы здоровы", fn: function () {
-      /* (3.3) цена — по ранам сейчас, а не тогда, когда открывали окно */
+      /* (3.5) цена — по ранам сейчас, а не тогда, когда открывали окно */
       miss = G.hpMax - G.hp; p = Math.max(10, Math.round(miss * 0.6 * priceK()));
       if (miss <= 0) { say("Сканер: повреждений нет."); return; }
       if (G.credits < p) { LAB.UI.error(); say("Не хватает кредитов: нужно " + p + "."); return; }
@@ -2774,7 +2773,7 @@ function hqMenu(o) {
   var items = [{ label: "Узнать о фракции", fn: function () { say(f.n + ". " + f.desc + " Выгода: " + f.perk); } }];
   if (G.faction === o.faction) items.push({ label: "Вы уже в этой фракции", disabled: true, fn: function () {} });
   else items.push({ label: G.faction ? "Перейти во фракцию «" + f.n + "»" : "Вступить во фракцию «" + f.n + "»", fn: function () {
-    /* (3.3) прибавка Научного совета — пока вы в нём: ушли — снимается, вернулись — снова */
+    /* (3.5) прибавка Научного совета — пока вы в нём: ушли — снимается, вернулись — снова */
     if (G.sciMind) { G.mind = Math.max(10, G.mind - G.sciMind); G.sciMind = 0; }
     G.faction = o.faction; if (o.faction === "sci") { G.mind += 2; G.sciMind = 2; } LAB.UI.fanfare(); say("Вы вступили во фракцию «" + f.n + "». " + f.perk); journal("Вступление во фракцию: " + f.n + "."); UIx("refresh");
   } });
@@ -2862,7 +2861,7 @@ function npcMenu(n) {
     var q = G.quests.filter(function (qq) { return qq.giver === n.key && !qq.done; })[0];
     if (!q) items.push({ label: "Спросить о задании", fn: function () { takeQuest(n); } });
     else items.push({ label: "Сдать задание: " + q.short, fn: function () { completeQuest(q, n); } });
-    courierItems(n).forEach(function (ci) { items.push(ci); }); /* (3.3) весточки сверху */
+    courierItems(n).forEach(function (ci) { items.push(ci); }); /* (3.5) весточки сверху */
     var tr2 = LAB.PROFS[n.prof] && LAB.PROFS[n.prof].trade;
     /* (2.6) медики и целители глубин лечат: за кредиты и по-своему */
     if (tr2 === "med" && LAB.medic) items.push({ label: "Лечение", fn: function () { LAB.medic.healMenu(n); } });
@@ -2904,16 +2903,16 @@ function tradeItems(n, kind) {
 function questStage(n) { var c = 0; G.quests.forEach(function (q) { if (q.giver === n.key && q.done && !q.failed) c++; }); return Math.max(c, n.stage || 0); }
 game.questStage = questStage;
 game.takeQuest = function (n) { return takeQuest(n); };
-/* (3.3) у выжившего не больше трёх поручений: прежде этапы шли без конца, и награда
+/* (3.5) у выжившего не больше трёх поручений: прежде этапы шли без конца, и награда
    росла с каждым — выживший становился неиссякаемым источником кредитов и опыта.
-   (3.3, просьба игрока) Поручения — по месту: первое — здесь, на этом этаже (расчистить
+   (3.5, просьба игрока) Поручения — по месту: первое — здесь, на этом этаже (расчистить
    помещение, найти тело коллеги и принести жетон, забрать оставленную вещь, принести
    детали); второе — на другом этаже уровня (разведать, найти тело, забрать вещь,
    расчистить путь); третье — уровнем ниже: передать весточку выжившим внизу или
    разведать этаж следующего уровня. Наверх оттуда не вернуться — награду отдают те,
    кому передали весточку, или «Эхо» переводит её по связи. */
 var QUEST_MAX = 3;
-/* (3.3, просьба игрока) Взятых поручений сразу — не больше трёх: прежде можно было
+/* (3.5, просьба игрока) Взятых поручений сразу — не больше трёх: прежде можно было
    набрать их у всех выживших подряд и бросить. Четвёртое не дадут, пока одно не сдано
    или от него не отказались (окно заданий). Отказ — всерьёз: заказчик больше ни о чём
    не просит. Задания, оставшиеся на прошлом уровне, в счёт не идут — их уже не сдать. */
@@ -2930,7 +2929,7 @@ function abandonQuest(q) {
   return true;
 }
 game.abandonQuest = abandonQuest;
-/* (3.3) Награда — по труду и по заказчику. Кредиты — за что (детали, разведка, бой,
+/* (3.5) Награда — по труду и по заказчику. Кредиты — за что (детали, разведка, бой,
    поиски тела или вещи, путь на другой уровень), далеко ли (другой этаж) и которая это
    просьба (каждая следующая дальше и опаснее); с глубиной растут, как всё в «Ковчеге»
    (LAB.credits: достаток этажа и режим сложности). Детали оплачиваются дороже рынка —
@@ -2999,18 +2998,22 @@ function bodyOn(L, F, h) {
   var fl = questFloor(L, F); if (!fl || !LAB.agen || !LAB.agen.corpse) return null;
   var fsx = floorState(L, F), list = fl.objs.filter(function (o) {
     var st = fsx && fsx.objs && fsx.objs[o.id];
-    return o.type === "corpse" && !(st && st.badge) && fl.rooms[o.room] && !fl.rooms[o.room].hidden;
+    /* (3.5) тело, которое уже ищут по другому поручению, второму заказчику не достаётся:
+       иначе одно тело давало две награды */
+    var wanted = G.quests.some(function (q) { return !q.done && q.type === "body" && q.tL === L && q.tF === F && q.oid === o.id; });
+    return o.type === "corpse" && !wanted && !(st && st.badge) && fl.rooms[o.room] && !fl.rooms[o.room].hidden;
   });
   if (!list.length) return null;
   var o = list[h % list.length], id = LAB.agen.corpse(G.seed, L, F, o);
   return { o: o, who: id.p.fio, sign: id.p.sign, post: id.post, f: !!id.p.f, room: roomLabel(fl.rooms[o.room]) };
 }
-/* помещение для вещи: обычное, не тайное, не у прибытия и лестниц */
-function keepRoom(L, F, h) {
+/* помещение для вещи: обычное, не тайное, не у прибытия и лестниц; (3.5) и не то, где
+   стоит сам заказчик (avoid) */
+function keepRoom(L, F, h, avoid) {
   var fl = questFloor(L, F); if (!fl) return null;
   var list = [];
   fl.rooms.forEach(function (m, i) {
-    if (!m || m.hidden || m.rad || m.gas || i === fl.U || i === fl.D || i === fl.E || i === fl.secret) return;
+    if (!m || m.hidden || m.rad || m.gas || i === fl.U || i === fl.D || i === fl.E || i === fl.secret || i === avoid) return;
     var def = LAB.ROOMS[m.type] || {};
     if (def.special || (def.kind && def.kind !== "locked")) return;
     list.push(i);
@@ -3030,14 +3033,27 @@ function roomFoes(rid) {
     return CUR.fl.room[idx(f.x, f.y)] === rid;
   });
 }
-/* помещение этого этажа, где засели машины или твари */
+/* помещение этого этажа, где засели машины или твари; (3.5) патрули и идущие по маршруту
+   не в счёт — они там проходом */
+function sitters(rid) { return roomFoes(rid).filter(function (f) { return !f.patrol && !f.route; }); }
 function busyRoom(h) {
   var cnt = {};
-  CUR.fl.rooms.forEach(function (m, i) { if (m && !m.hidden && i !== CUR.fl.U) { var n = roomFoes(i).length; if (n) cnt[i] = n; } });
+  CUR.fl.rooms.forEach(function (m, i) { if (m && !m.hidden && i !== CUR.fl.U) { var n = sitters(i).length; if (n) cnt[i] = n; } });
   var ids = Object.keys(cnt).map(Number);
   if (!ids.length) return null;
   var rid = ids[h % ids.length];
-  return { id: rid, n: cnt[rid], label: roomLabel(CUR.fl.rooms[rid]) };
+  return { id: rid, n: cnt[rid], ids: sitters(rid).map(function (f) { return f.id; }), label: roomLabel(CUR.fl.rooms[rid]) };
+}
+/* (3.5) сколько из тех, кто сидел в помещении, когда взяли поручение, ещё на ногах: убить их
+   можно где угодно — выманить в коридор тоже расчистка; перепрошитые и усмирённые не в счёт */
+function clearLeft(q) {
+  var here = G.L === q.tL && G.F === q.tF, fsx = floorState(q.tL, q.tF), all = here && LAB.combat ? LAB.combat.foes() : [], left = 0;
+  (q.foeIds || []).forEach(function (id) {
+    if (here) { var f = all.filter(function (x) { return x.id === id; })[0]; if (f && !f.dead && !f.ally && !f.calm) left++; return; }
+    var st = fsx && fsx.foes && fsx.foes[id];
+    if (!(st && st.dead)) left++;
+  });
+  return left;
 }
 function takeQuest(n) {
   var stg = questStage(n), fem = !!n.female;
@@ -3078,15 +3094,15 @@ function makeQuest(q, kind, where, h, n) {
   }
   if (kind === "kill") {
     k = 3 + (h % 4);
-    /* (3.3) в счёт идут враги, за которых дают опыт: машины, которых ОКО шлёт на
+    /* (3.5) в счёт идут враги, за которых дают опыт: машины, которых ОКО шлёт на
        замену, после мясорубки не засчитываются */
-    q.type = "kill"; q.need = k; q.kills0 = G.stats.kills; q.wk0 = G.stats.wkills || 0;
+    q.type = "kill"; q.need = k; q.wk0 = G.stats.wkills || 0;
     q.text = n.n + " просит расчистить путь: уничтожить " + k + " врагов, где угодно; присланные ОКО на замену, когда с них уже нечего взять, не в счёт.";
     q.short = "уничтожить врагов: " + k;
     return true;
   }
   if (kind === "visit") {
-    /* (3.3) этаж — не тот, где стоите: ниже, а у дна уровня — выше; засчитывается
+    /* (3.5) этаж — не тот, где стоите: ниже, а у дна уровня — выше; засчитывается
        заход после того, как задание взято */
     tf = otherFloor(h);
     q.type = "visit"; q.tL = G.L; q.tF = tf; q.seq0 = G.visitSeq || 0;
@@ -3096,7 +3112,7 @@ function makeQuest(q, kind, where, h, n) {
   }
   if (kind === "clear") {
     b = busyRoom(h); if (!b) return false;
-    q.type = "clear"; q.tL = G.L; q.tF = G.F; q.room = b.id; q.roomName = b.label; q.foes = b.n;
+    q.type = "clear"; q.tL = G.L; q.tF = G.F; q.room = b.id; q.roomName = b.label; q.foes = b.n; q.foeIds = b.ids;
     q.text = n.n + ": «В " + b.label.replace(/^помещение/, "помещении") + " на этом этаже засели " + (b.n === 1 ? "машина или тварь" : "машины и твари") + " — оттуда не пройти. Расчистите его и возвращайтесь».";
     q.short = "расчистить " + b.label;
     return true;
@@ -3111,7 +3127,7 @@ function makeQuest(q, kind, where, h, n) {
   }
   if (kind === "keep") {
     tf = where === 0 ? G.F : otherFloor(h);
-    kr = keepRoom(G.L, tf, h); if (!kr) return false;
+    kr = keepRoom(G.L, tf, h, where === 0 ? n.room : -1); if (!kr) return false;
     var what = KEEPSAKE[(h >>> 3) % KEEPSAKE.length];
     q.type = "keep"; q.tL = G.L; q.tF = tf; q.room = kr.id; q.what = what; q.got = false;
     q.text = n.n + ": «Когда всё началось, я " + (n.female ? "оставила" : "оставил") + " " + what + " — " + kr.label + (where === 0 ? " на этом этаже" : ", этаж " + tf) + ". Загляните туда — «Эхо» услышит, где лежит, — и принесите мне».";
@@ -3142,22 +3158,22 @@ function questProgress(q) {
   if (q.type === "fetch") return Math.min(G.inv[q.item] || 0, q.need) + " из " + q.need;
   if (q.type === "kill") return Math.min(questKills(q), q.need) + " из " + q.need;
   if (q.type === "visit") return (visitDone(q) ? "этаж разведан, вернитесь к " + q.giverName : "этаж " + q.tF + " ещё не разведан");
-  if (q.type === "clear") return questReady(q) ? "расчищено, вернитесь к " + q.giverName : "там ещё враги";
+  if (q.type === "clear") { var cl = clearLeft(q); return cl ? "осталось врагов: " + cl + " из " + q.foeIds.length : "расчищено, вернитесь к " + q.giverName; }
   if (q.type === "body") return questReady(q) ? "жетон у вас, вернитесь к " + q.giverName : "этаж " + q.tF + ", тело ещё не найдено";
   if (q.type === "keep") return q.got ? "вещь у вас, вернитесь к " + q.giverName : "этаж " + q.tF + ", вещь ещё не найдена";
   if (q.type === "courier") return G.L > q.L ? "передайте любому выжившему здесь" : "выжившие — уровнем ниже";
   if (q.type === "deep") return visitDone(q) ? "доклад передан" : "этаж " + q.tF + " уровня " + q.tL + " ещё не разведан";
   return "";
 }
-function questKills(q) { return q.wk0 != null ? (G.stats.wkills || 0) - q.wk0 : G.stats.kills - q.kills0; }
-function visitDone(q) { return q.seq0 != null ? ((G.lastVisit || {})[q.tL + "-" + q.tF] || 0) > q.seq0 : !!G.visited[q.tL + "-" + q.tF]; }
+function questKills(q) { return (G.stats.wkills || 0) - q.wk0; }
+function visitDone(q) { return ((G.lastVisit || {})[q.tL + "-" + q.tF] || 0) > q.seq0; }
 game.questProgress = questProgress;
 function badgeTaken(q) {
-  if ((G.badges || []).some(function (b) { return b.n === q.who && b.L === q.tL && b.F === q.tF; })) return true;
+  if ((G.badges || []).some(function (b) { return b.o === q.oid && b.L === q.tL && b.F === q.tF; })) return true;
   var fsx = floorState(q.tL, q.tF), st = fsx && fsx.objs && fsx.objs[q.oid];
   return !!(st && st.badge);
 }
-/* (3.3) жетоны, взятые по поручениям «найти тело», — для заказчиков: передать их
+/* (3.5) жетоны, взятые по поручениям «найти тело», — для заказчиков: передать их
    «в общий котёл» нельзя, иначе за один жетон платили бы дважды */
 function reservedBadges() { return G.quests.filter(function (q) { return !q.done && q.type === "body" && badgeTaken(q); }).length; }
 game.reservedBadges = reservedBadges;
@@ -3165,17 +3181,14 @@ function questReady(q) {
   if (q.type === "fetch") return (G.inv[q.item] || 0) >= q.need;
   if (q.type === "kill") return questKills(q) >= q.need;
   if (q.type === "visit" || q.type === "deep") return visitDone(q);
-  if (q.type === "clear") {
-    var fsx = floorState(q.tL, q.tF);
-    if (!fsx || !fsx.cleared || !fsx.cleared[q.room]) return false;
-    return !(G.L === q.tL && G.F === q.tF) || !roomFoes(q.room).length;
-  }
+  if (q.type === "clear") return clearLeft(q) === 0;
   if (q.type === "body") return badgeTaken(q) && (G.inv.badge || 0) > 0;
   if (q.type === "keep") return !!q.got;
   return false;
 }
 game.completeQuest = function (q, n) { return completeQuest(q, n); };
 function completeQuest(q, n) {
+  if (q.done) return; /* (3.5) уже сдано — второй раз не платят */
   if (!questReady(q)) { say("Задание ещё не выполнено: " + questProgress(q) + "."); return; }
   if (q.type === "fetch") G.inv[q.item] -= q.need;
   if (q.type === "body") G.inv.badge--; /* жетон — тому, кто просил (questReady: он у вас) */
@@ -3195,8 +3208,8 @@ function payQuest(q, head) {
   if (G.faction === "res") { G.inv.medkit_s = (G.inv.medkit_s || 0) + 1; sayq("Сопротивление делится аптечкой."); }
   UIx("refresh");
 }
-function femGiver(q) { return q.gf != null ? !!q.gf : /[ая]$/.test(q.giverName.split(" ")[0]); }
-/* (3.3) весточка сверху — любому выжившему уровнем ниже: он и благодарит — своим
+function femGiver(q) { return !!q.gf; }
+/* (3.5) весточка сверху — любому выжившему уровнем ниже: он и благодарит — своим
    ремеслом и кредитами по своей глубине */
 function courierItems(n) {
   return G.quests.filter(function (q) { return q.type === "courier" && !q.done && G.L > q.L; }).map(function (q) {
@@ -3209,31 +3222,35 @@ function courierItems(n) {
   });
 }
 game.courierItems = courierItems;
-/* (3.3) зашли в помещение, где оставлена вещь из поручения, — «Эхо» её находит */
+/* (3.5) зашли в помещение, где оставлена вещь из поручения, — «Эхо» её находит */
 function questRoom(r) {
+  var got = false;
   G.quests.forEach(function (q) {
     if (q.done || q.type !== "keep" || q.got || q.tL !== G.L || q.tF !== G.F || q.room !== r.id) return;
-    q.got = true; A("play", "pick_part");
+    q.got = true; got = true; A("play", "pick_part");
     sayq("«Эхо»: вот оно. Вы забираете " + q.what + " — то, о чём просил" + (femGiver(q) ? "а" : "") + " " + q.giverName + ".");
   });
-  checkQuests();
+  if (got) checkQuests();
 }
 var lastQuestNote = {};
 function checkQuests() {
   G.quests.forEach(function (q) {
-    if (q.done || lastQuestNote[q.id]) return;
+    if (q.done) return;
+    /* (3.5) доклад по связи платится, как только этаж разведан, — что бы ни помнила
+       память объявлений (после загрузки записи доклад снова не передан) */
+    if (q.remote) {
+      if (!questReady(q)) return;
+      lastQuestNote[q.id] = 1; q.done = true;
+      payQuest(q, "«Эхо» передало доклад наверх. " + q.giverName + " благодарит по связи и переводит награду на браслет.");
+      return;
+    }
+    if (lastQuestNote[q.id]) return;
     if (q.type === "courier") {
       if (G.L > q.L) { lastQuestNote[q.id] = 1; sayq("Весточку от " + q.giverName + " можно передать любому выжившему здесь, внизу."); }
       return;
     }
     if (!questReady(q)) return;
     lastQuestNote[q.id] = 1;
-    if (q.remote) {
-      /* наверх не вернуться: доклад уходит по связи, награда — на браслет */
-      q.done = true;
-      payQuest(q, "«Эхо» передало доклад наверх. " + q.giverName + " благодарит по связи и переводит награду на браслет.");
-      return;
-    }
     LAB.UI.ok(); sayq("Задание «" + q.short + "» можно сдать: " + q.giverName + ", уровень " + q.L + ", этаж " + q.F + ".");
   });
 }
@@ -3412,7 +3429,7 @@ function navLive() {
 }
 function navBeaconTick() {
   var nf = navLive(); if (!nf) return;
-  if (LAB.bg || game.paused || G.stair || (LAB.ui && LAB.ui.layer())) return; /* (3.3) в фоне маяк молчит */
+  if (LAB.bg || game.paused || G.stair || (LAB.ui && LAB.ui.layer())) return; /* (3.5) в фоне маяк молчит */
   if (navAt(nf)) return;
   var p = routeTo(nf.cell, nf.o);
   if (!p) { navStop(); return; }
@@ -3538,12 +3555,12 @@ function useItem(id) {
   /* сытому еда не лезет, а питьё — всегда */
   if (food && !sip && body().food >= 100 && !d.en) { say("Вы сыты: больше не лезет."); return false; }
   G.inv[id]--;
-  if (G.craftN && G.craftN[id] > 0) G.craftN[id]--; /* (3.3) потрачена — считаем, что собранная */
+  if (G.craftN && G.craftN[id] > 0) G.craftN[id]--; /* (3.5) потрачена — считаем, что собранная */
   var msg = [];
   /* несвежая еда — токсины */
   if (food && d.stale && Math.random() < d.stale) { msg.push("Несвежее: подташнивает."); bodyApply({ tox: 15 }, msg); }
   var od = d.overdose && body().tox >= 70 && !(LAB.chem && LAB.chem.noOverdose()); /* передозировка: стимулятор не лечит, а бьёт по сердцу; (3.0) фармакологу не грозит */
-  /* стакан из автомата лечит, как сам автомат: с глубиной больше — (3.3) той глубины, где куплен */
+  /* стакан из автомата лечит, как сам автомат: с глубиной больше — (3.5) той глубины, где куплен */
   var cupL = d.cup ? (G.cupL && G.cupL[id] && G.cupL[id].length ? G.cupL[id].shift() : G.L) : 0;
   var hv = d.cup ? Math.round(d.heal * (1 + (Math.min(cupL, G.L) - 1) * 0.15)) : d.heal;
   if (hv && LAB.chem) hv = Math.round(hv * LAB.chem.healK(id, d)); /* (3.0) фармакология: лекарства в умелых руках лечат сильнее */
@@ -3728,7 +3745,7 @@ function craft(rc) {
   if (LAB.implants && LAB.implants.stat("craft") && Math.random() < LAB.implants.stat("craft") && !/^(armor|weapon):/.test(out)) extra++; /* (2.0) чип конструктора */
   if (LAB.implants) LAB.implants.crafted(rc);
   var times = batchN + (bonus ? 1 : 0) + extra;
-  /* (3.3) собранное оружие и броня помнят рецепт и цену деталей: разбор — не богаче
+  /* (3.5) собранное оружие и броня помнят рецепт и цену деталей: разбор — не богаче
      рецепта, скупка — не дороже полутора цен деталей (crafted); магазин собранного оружия
      пуст: батарея в сборку не входит, а разбор полного магазина возвращал её даром */
   var pv = 0, rn = {}, emptyMag = false;
@@ -3738,7 +3755,7 @@ function craft(rc) {
     if (out.indexOf("ammo:") === 0) { G.ammo[out.slice(5)] = (G.ammo[out.slice(5)] || 0) + 1; G.craftN = G.craftN || {}; G.craftN[out] = (G.craftN[out] || 0) + 1; }
     else if (out.indexOf("armor:") === 0) { var na = LAB.makeArmor(out.slice(6), LAB.foeLevel(G.L, G.F), qual); na.rcNeed = rn; na.crafted = pv; armorMsg = giveItem({ kind: "armor", a: na }, true); }
     else if (out.indexOf("weapon:") === 0) { var nw = LAB.makeWeapon(out.slice(7), LAB.foeLevel(G.L, G.F), 1, qual); nw.rcNeed = rn; nw.crafted = pv; if (nw.ammo !== "none" && nw.cap) { nw.charge = 0; emptyMag = true; } armorMsg = giveItem({ kind: "weapon", w: nw }, true); }
-    else { G.inv[out] = (G.inv[out] || 0) + 1; G.craftN = G.craftN || {}; G.craftN[out] = (G.craftN[out] || 0) + 1; } /* (3.3) сколько собрано своими руками — скупка (supply.js) */
+    else { G.inv[out] = (G.inv[out] || 0) + 1; G.craftN = G.craftN || {}; G.craftN[out] = (G.craftN[out] || 0) + 1; } /* (3.5) сколько собрано своими руками — скупка (supply.js) */
   }
   if (emptyMag) armorMsg += " Магазин пуст: батарея в сборку не входит — перезарядите.";
   A("play", out.indexOf("armor:") === 0 || out.indexOf("weapon:") === 0 ? "craft_armor" : "craft");
@@ -3758,7 +3775,7 @@ function die() {
   G.dead = true;
   G.stats.deaths++;
   G.drawn = false;
-  /* (3.3) окна этой жизни закрываются: их пункты не должны работать после
+  /* (3.5) окна этой жизни закрываются: их пункты не должны работать после
      возрождения (и тем более на другом этаже) */
   UIx("closeAll");
   if (LAB.input) LAB.input.stopAll();
@@ -3863,6 +3880,7 @@ function loadSlot(n, fromBak) {
   try {
     G = migrate(d.g);
     applyDiff();
+    lastQuestNote = {}; /* (3.5) задания записи объявляются заново */
     game.session++; game.paused = false; game.descending = false;
     if (LAB.office && LAB.office.clear) LAB.office.clear();
     noteCache = {};
@@ -3894,7 +3912,7 @@ function loadSlot(n, fromBak) {
 }
 game.loadSlot = loadSlot;
 function migrate(g) {
-  /* (3.3) запись без стартового набора больше не встречается: записи прежних версий
+  /* (3.5) запись без стартового набора больше не встречается: записи прежних версий
      сбрасываются при смене версии (engine.js), а новая игра набор выдаёт сразу */
   var base = newState(g.seed || "lab");
   for (var k in base) if (g[k] === undefined) g[k] = base[k];
@@ -3954,6 +3972,7 @@ function newGame() {
   var seed = "lab-" + Date.now().toString(36) + "-" + Math.floor(Math.random() * 1e6).toString(36);
   G = newState(seed);
   applyDiff();
+  lastQuestNote = {};
   G.wakeSafe = 1; /* (2.1) безопасное пробуждение: в капсульном отсеке никто не тронет (combat.js) */
   game.session++; game.paused = false; game.descending = false;
   if (LAB.office && LAB.office.clear) LAB.office.clear();

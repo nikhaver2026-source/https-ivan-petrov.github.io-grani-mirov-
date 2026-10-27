@@ -65,7 +65,7 @@ for (pk in PARTS_NEW) {
   if (LAB.PARTS.indexOf(pk) < 0) LAB.PARTS.push(pk);
   LAB.PART_DEPTH[pk] = pd.depth;
 }
-if (LAB.armsLate) LAB.armsLate(); /* (3.3) рецепты arms.js, ждавшие этих деталей */
+if (LAB.armsLate) LAB.armsLate(); /* (3.5) рецепты arms.js, ждавшие этих деталей */
 function srcOf(k) { var s0 = LAB.ITEMS[k] && LAB.ITEMS[k].src; if (LAB.ARSENAL17 && LAB.ARSENAL17.srcText[s0]) return LAB.ARSENAL17.srcText[s0]; return SRC[k] || s0 || (LAB.ITEMS[k] && LAB.ITEMS[k].kind === "part" ? "попадается на своей глубине: ящики, склады, обломки машин" : "собирают в мастерской или покупают"); }
 
 /* ════════ ПАТРОНЫ, ОРУЖИЕ, УСТРОЙСТВА ════════ */
@@ -412,7 +412,7 @@ function md(w, k) { return (w && w.mod && w.mod[k]) || 0; }
 function wcls(w) { return (LAB.WEAPONS[w.base] || {}).cls || ""; }
 function melee(w) { return (w.rng0 != null ? w.rng0 : w.rng) <= 1; }
 function battery(w) { return w.ammo && w.ammo !== "none"; }
-/* (3.3) греются только стволы на заряде: картечь, иглы и стальные пули — нет */
+/* (3.5) греются только стволы на заряде: картечь, иглы и стальные пули — нет */
 function heats(w) { return battery(w) && !LAB.physAmmo(w.ammo) && !melee(w); }
 function hmax(w) { return 12 + 6 * md(w, "cool"); }
 function cooled(w, now) {
@@ -627,7 +627,7 @@ function repairArmor(a, b) {
   ]);
   return true;
 }
-/* Инженерный кейс: пополнить начатый — плюс один ремонт. (3.3) С микросхемой: ремонт кейсом
+/* Инженерный кейс: пополнить начатый — плюс один ремонт. (3.5) С микросхемой: ремонт кейсом
    стоит не дешевле ремонта у верстака (прежде кусок лома давал «плюс пятьдесят» оружию или
    починку целого верстака); и у повреждённого верстака кейс не пополнить. */
 function refillCost(b) { return hasP(b, "repair") ? { scrap: 1, wire: 1, chip: 1 } : { scrap: 2, wire: 1, chip: 1 }; }
@@ -805,7 +805,7 @@ function analyzeHint(key, b) {
   if (!rc || known(rc) || !b || effTier(b) < 2 || CLS_T[clsOf(rc)] > effTier(b)) return null;
   return rc;
 }
-/* (3.3) Что вернёт разбор: у того, что собирают у верстака, — не больше половины рецепта
+/* (3.5) Что вернёт разбор: у того, что собирают у верстака, — не больше половины рецепта
    (деталь по две и больше — половина, одиночная — через раз; экспериментальный компонент —
    тоже через раз). Прежде модуль всегда возвращал свой компонент, а у устройств был свой
    набор, иногда богаче рецепта: «партия из трёх — разобрать» плодила детали без конца. */
@@ -851,7 +851,7 @@ function onScrap(w, crafted) {
   for (k in m) if (m[k] && MODS[k]) { g.inv[MODS[k].item] = (g.inv[MODS[k].item] || 0) + m[k]; }
   if (used(w)) out.push("Модули сняты и лежат в запасе: " + modsLine(w) + ".");
   var b = LAB.WEAPONS[w.base] || {}, extra = {};
-  /* (3.3) собранное своими руками — без находок сверх рецепта (game.js, scrapWeapon) */
+  /* (3.5) собранное своими руками — без находок сверх рецепта (game.js, scrapWeapon) */
   if (!crafted) {
     if (battery(w) && w.ammo !== "slug") extra.cell = Math.random() < 0.5 + 0.1 * (w.rank || 0) ? 1 : 0;
     if (b.cls === "laser" || b.cls === "blaster") extra.lens = Math.random() < 0.3 ? 1 : 0;
@@ -1170,7 +1170,7 @@ function salvItems() {
   g.weapons.forEach(function (w, i) {
     if (w.id === "w_start_crowbar" || g.weapons.length <= 1) return;
     var hint = analyzeHint(w.base, b);
-    /* (3.3) оружие в руках — с пометкой и вопросом, как при продаже: одно нажатие его не разберёт */
+    /* (3.5) оружие в руках — с пометкой и вопросом, как при продаже: одно нажатие его не разберёт */
     var inHand = i === g.wi;
     items.push({ label: "Разобрать оружие: " + w.name + (inHand ? " (оно в руках)" : "") + " — даст " + (gm().scrapWeaponText ? gm().scrapWeaponText(w) : "детали") + (hint ? "; разбор раскроет схему «" + hint.n + "»" : ""), keep: !inHand, fn: function () {
       if (!inHand) { gm().scrapWeapon(g.weapons.indexOf(w)); return; }
@@ -1180,7 +1180,7 @@ function salvItems() {
       ]);
     } });
   });
-  /* (3.3) и броня — здесь же, со всем, что даст разбор; надетую сначала снимают */
+  /* (3.5) и броня — здесь же, со всем, что даст разбор; надетую сначала снимают */
   g.armors.forEach(function (a) {
     if (g.armor && g.armor.id === a.id) return;
     items.push({ label: "Разобрать броню: " + a.name + " — даст " + (gm().scrapArmorText ? gm().scrapArmorText(a) : "детали"), keep: true, fn: function () { var i = g.armors.indexOf(a); if (i >= 0) gm().scrapArmor(i); } });
@@ -1222,7 +1222,7 @@ function partsGuide() {
 }
 
 LAB.workshop = {
-  salvText: salvText, /* (3.3) что вернёт разбор вещи — словами */
+  salvText: salvText, /* (3.5) что вернёт разбор вещи — словами */
   open: open, bench: bench, effTier: effTier, benchLine: benchLine, check: check, clsOf: clsOf, known: known, learn: learn, unknownPick: unknownPick,
   fromDoc: fromDoc, npcTip: npcTip, isEng: isEng, depthFind: depthFind, needText: needText, afterCraft: afterCraft,
   beforeShot: beforeShot, afterShot: afterShot, accBonus: accBonus, dmgK: dmgK, pierce: pierce, reloadK: reloadK, gapK: gapK, loud: loud,

@@ -442,7 +442,7 @@ function guard(o, cont) {
 function menu(o, s, cont) {
   var d = K[s.k], pct = Math.round(disarmChance(s) * 100);
   var items = [];
-  /* (3.3) окно ловушки могло остаться под запиской из хранилища: ловушки уже нет —
+  /* (3.5) окно ловушки могло остаться под запиской из хранилища: ловушки уже нет —
      пункт не даёт ни второго опыта, ни второго взрыва */
   var gone = function () { if (armed(s)) return false; say("Ловушки здесь уже нет."); return true; };
   items.push({ label: (d.noDisarm ? d.kill : "Обезвредить: " + d.n) + " (удача — " + pct + " " + gm().plural(pct, "процент", "процента", "процентов") + ")", fn: function () { if (!gone()) disarm(o, s, cont); } });

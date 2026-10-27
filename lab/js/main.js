@@ -93,7 +93,7 @@ function boot() {
   window.labBgSet = function (k, on) { if (!LAB.selftesting) bgSet(String(k), !!on); };
   window.labBgReset = function () { why = {}; clearTimeout(minT); if (LAB.bg) toBg(false); };
   document.addEventListener("visibilitychange", function () { bgSet("hidden", document.hidden); });
-  /* (3.3) на компьютере фокус и сворачивание окна сообщает главный процесс (labBgSet):
+  /* (3.5) на компьютере фокус и сворачивание окна сообщает главный процесс (labBgSet):
      второй, страничный слушатель фокуса дублировал его, а с задержкой связи между
      процессами при быстром Alt+Tab туда и обратно возвращал игру в фон уже после
      возврата — и обрывал речь */
@@ -102,7 +102,7 @@ function boot() {
     window.addEventListener("focus", function () { bgSet("blur", false); });
   }
   /* нажали клавишу или коснулись — игра на экране, что бы ни сказали события окна
-     (3.3: и после паузы приложения — в фоне касаний не бывает; речь в фоне ждёт,
+     (3.5: и после паузы приложения — в фоне касаний не бывает; речь в фоне ждёт,
      и застрявший фон оставил бы игру без голоса) */
   ["pointerdown", "keydown"].forEach(function (ev) { window.addEventListener(ev, function () { if ((why.blur || why.min || why.pause) && !document.hidden) { delete why.min; delete why.pause; bgSet("blur", false); } }, true); });
   window.labPause = function () { bgSet("pause", true); return LAB.settings.bgDim || LAB.selftesting ? 1 : 0; };

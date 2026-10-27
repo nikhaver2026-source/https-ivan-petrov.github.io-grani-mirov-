@@ -362,7 +362,7 @@ function profileOf(n) {
 }
 function title(n) { return gm().npcName ? gm().npcName(n) : n.n; }
 /* сколько стоит в кредитах: от недостающего здоровья, глубины и режима */
-/* (3.3) медик-человек уступает в цене тому, у кого харизма выше; машине и улью всё равно */
+/* (3.5) медик-человек уступает в цене тому, у кого харизма выше; машине и улью всё равно */
 function chaP(P) { return P.kind === "human" && gm().chaK ? gm().chaK() : 1; }
 function healCost(P, hp) { return Math.max(3, Math.round(hp * 0.6 * pk() * P.k * chaP(P))); }
 function svcCost(P, base) { return Math.max(2, Math.round(base * pk() * P.k * chaP(P))); }
@@ -396,7 +396,7 @@ function altPay(P, credits, hp) {
     var what = P.pay === "food" ? "едой" : P.pay === "gel" ? "биогелем и реагентами" : "деталями";
     return { ok: gp.ok, label: what + (gp.ok ? ": " + gp.text : ": у вас не хватает"), take: gp.take };
   }
-  /* (3.3) покой — это и силы: нервы успокаиваются сами за пару минут, а бодрость — только
+  /* (3.5) покой — это и силы: нервы успокаиваются сами за пару минут, а бодрость — только
      сном, отдыхом и кофе; прежде платили одной нейронагрузкой — и лечились снова и снова */
   if (P.pay === "nerve") {
     var cost = Math.max(5, Math.min(60, Math.round(hp / g.hpMax * 50 * ak))), now = Math.round(b.neuro || 0), wk = Math.ceil(cost / 2), wn = Math.round(b.wake == null ? 100 : b.wake);
@@ -404,7 +404,7 @@ function altPay(P, credits, hp) {
     return { ok: nOk && wOk, label: "своим покоем: нейронагрузка плюс " + cost + " (сейчас " + now + (nOk ? "" : ", это слишком много") + "), бодрость минус " + wk + " (сейчас " + wn + (wOk ? "" : ", сил не хватит") + ")",
       take: function () { b.neuro = Math.min(100, (b.neuro || 0) + cost); b.wake = Math.max(0, (b.wake == null ? 100 : b.wake) - wk); } };
   }
-  /* (3.3) время идёт наяву: сытость и бодрость тратятся (прежде — как во сне в капсуле,
+  /* (3.5) время идёт наяву: сытость и бодрость тратятся (прежде — как во сне в капсуле,
      даром); и пока на этаже тревога или рядом враг, часами лечиться некогда */
   if (P.pay === "time") {
     var h = Math.max(1, Math.min(12, Math.ceil(hp / g.hpMax * 6 * ak))), rb = gm().restBlock ? gm().restBlock() : null;

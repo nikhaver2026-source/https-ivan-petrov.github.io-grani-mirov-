@@ -32,29 +32,29 @@ function spend(min) { if (min > 0) gm().advanceTime(min); }
 function era() { return LAB.agen ? LAB.agen.eraOf(G().L) : "K"; }
 function danger() { return !!(LAB.combat && LAB.combat.danger && LAB.combat.danger()); }
 function nowMin() { return (G().day || 0) * 1440 + (G().min || 0); }
-/* (3.3) Когда не до отдыха и тренировок: рядом враг, тревога, каратели, машины ОКО идут сюда (game.restBlock). */
+/* (3.5) Когда не до отдыха и тренировок: рядом враг, тревога, каратели, машины ОКО идут сюда (game.restBlock). */
 function restBlock() { return gm().restBlock ? gm().restBlock() : (danger() ? "Не до отдыха: рядом опасность." : null); }
-/* (3.3) Отдых на обстановке — передышка, а не лечение. Польза — в меру того, сколько
+/* (3.5) Отдых на обстановке — передышка, а не лечение. Польза — в меру того, сколько
    герой подвигался с прошлого отдыха на любой вещи (шаг — минута): через час — полная,
    раньше — часть, совсем рано — никакой, и тогда время и еда не тратятся. Сидеть на
    стуле без конца и так восполнять здоровье и бодрость больше нельзя. */
 var REST_GAP = 60;
 function restK() { var t = G().restAt; return t == null ? 1 : Math.max(0, Math.min(1, (nowMin() - t) / REST_GAP)); }
 function restLeft() { var t = G().restAt; return t == null ? 0 : Math.max(1, Math.ceil(REST_GAP - (nowMin() - t))); }
-/* (3.3) Тренировки: тренажёры поднимают силу не больше чем на пять единиц за всю игру,
+/* (3.5) Тренировки: тренажёры поднимают силу не больше чем на пять единиц за всю игру,
    и каждая следующая единица — дольше (3, 6, 9, 12, 15 тренировок); мышцам нужен
    перерыв — три часа. Тир так же: меткость — не больше пяти ступеней, перерыв — час.
    На пределе тренажёр честно говорит, что больше не даст, и не тратит ни время, ни еду. */
 var TRAIN_MAX = 5, TRAIN_GAP = 180, AIM_GAP = 60;
 function trainSt() {
   var tr = G().train = G().train || {};
-  if (tr.strPts == null) tr.strPts = Math.min(TRAIN_MAX, Math.floor((tr.str || 0) / 3)); /* прежние сохранения: каждые три тренировки давали единицу */
-  if (tr.aimPts == null) tr.aimPts = Math.min(TRAIN_MAX, Math.floor((tr.aim || 0) / 3));
+  if (tr.strPts == null) tr.strPts = 0;
+  if (tr.aimPts == null) tr.aimPts = 0;
   return tr;
 }
 function sessW(n) { return n + " " + pl(n, "тренировка", "тренировки", "тренировок"); }
 function rng(o, tag) { return LAB.Rng(G().seed, "fx:" + tag + ":" + CUR().key + ":" + o.id); }
-/* (3.3) больше часа — часами и минутами: «через 2 часа 40 минут», а не «через 160 минут» */
+/* (3.5) больше часа — часами и минутами: «через 2 часа 40 минут», а не «через 160 минут» */
 function minW(n) { n = Math.max(0, Math.round(n)); var h = Math.floor(n / 60), m = n % 60; return h ? h + " " + pl(h, "час", "часа", "часов") + (m ? " " + m + " " + pl(m, "минута", "минуты", "минут") : "") : n + " " + pl(n, "минута", "минуты", "минут"); }
 function roomOf(o) { var fl = CUR().fl; return o && o.room >= 0 ? fl.rooms[o.room] : null; }
 function noise(n) { if (LAB.combat && LAB.combat.noise) LAB.combat.noise(n); }
@@ -223,7 +223,7 @@ function menu(o) {
   var def = fxDef(o);
   if (!def) return false;
   if (o.fx === "kettle" && LAB.kitchen) return LAB.kitchen.menu(o); /* (3.0) чайник — своё меню: вскипятить, заварить, сахар (kitchen.js) */
-  /* (3.3) окно вещи собирается заново, когда к нему возвращаются (поели с плиты,
+  /* (3.5) окно вещи собирается заново, когда к нему возвращаются (поели с плиты,
      прочли письмо, обыскали ящик): пункты — как вещь выглядит сейчас */
   var build = function () { return menuItems(o, def); };
   UIx("menu", def.n, build(), { rebuild: build });
@@ -236,7 +236,7 @@ function menuItems(o, def) {
   items.push({ label: "Осмотреть", keep: true, fn: function () { say(examine(o)); } });
   return items;
 }
-/* (3.3) Пункт перепроверяет себя в миг выбора: из старого окна (Escape и снова Enter)
+/* (3.5) Пункт перепроверяет себя в миг выбора: из старого окна (Escape и снова Enter)
    сорвать плод, снять костюм, обыскать или разобрать второй раз нельзя — вещь
    отвечает тем, что показала бы сейчас. */
 function fresh(o, def, a, it) {
@@ -270,7 +270,7 @@ function actionItem(o, def, a, s) {
   if (kind === "rest" && REST_DRINK[o.fx]) { var combos = drinkCombos(o, def, p, label); if (combos.length) return [base].concat(combos); }
   return base;
 }
-/* (3.3) Пункт сам говорит, будет ли от него толк сейчас: отдых — не отдыхали ли только что,
+/* (3.5) Пункт сам говорит, будет ли от него толк сейчас: отдых — не отдыхали ли только что,
    тренажёр и тир — сколько прибавок из пяти уже взято и не рано ли снова. Чтобы не гадать,
    упёрлись ли в предел и не тратятся ли зря время и еда. */
 var FX_NOTE = { rest: 1, train: 1, aim: 1 };
@@ -343,14 +343,14 @@ function run(o, def, kind, p, label, withId) {
     }
     case "hide": {
       UIx("closeAll");
-      /* (3.3) укрытие — пока вы на месте и не стреляете (combat.js, hidden); на глазах у
+      /* (3.5) укрытие — пока вы на месте и не нападаете (combat.js, hidden, unhide); на глазах у
          машин, которые уже идут на вас, не спрятаться */
       var cbH = LAB.combat;
       if (cbH && cbH.danger && cbH.danger()) { LAB.UI.error(); say("Поздно прятаться: машины уже видят вас и идут сюда."); return; }
       spend(1);
       G().st.hide = { x: G().x, y: G().y, L: G().L, F: G().F }; G().noise = 0;
-      say("Вы затаились: " + (o.fx === "bunk" ? "под койкой" : "под столом") + " тесно и пыльно, дыхание само становится тише. Пока вы не двигаетесь и не стреляете, вас не видно — только твари, что чуют тепло, найдут и здесь.");
-      if (!s.evHide) { s.evHide = 1; ev("hide", 1); } /* (3.3) в счёт вехи — каждое укрытие один раз */
+      say("Вы затаились: " + (o.fx === "bunk" ? "под койкой" : "под столом") + " тесно и пыльно, дыхание само становится тише. Пока вы не двигаетесь и не нападаете, вас не видно — только твари, что чуют тепло, найдут и здесь.");
+      if (!s.evHide) { s.evHide = 1; ev("hide", 1); } /* (3.5) в счёт вехи — каждое укрытие один раз */
       return;
     }
     case "read": {
@@ -358,7 +358,7 @@ function run(o, def, kind, p, label, withId) {
       spend(2); snd("paper_turn", "paper");
       UIx("note", tx.t, tx.x, function () { menu(o); });
       if (tx.src) s.lastSrc = tx.src;
-      if (!s.evRead) { s.evRead = 1; ev("read", 1); } /* (3.3) в счёт вехи — каждая вещь один раз: один плакат по кругу не в счёт */
+      if (!s.evRead) { s.evRead = 1; ev("read", 1); } /* (3.5) в счёт вехи — каждая вещь один раз: один плакат по кругу не в счёт */
       return;
     }
     case "code": {
@@ -379,7 +379,7 @@ function run(o, def, kind, p, label, withId) {
       return;
     }
     case "body": {
-      /* (3.3) раз в час, а не в двадцать минут: самовар и тёплая вода давали за час больше
+      /* (3.5) раз в час, а не в двадцать минут: самовар и тёплая вода давали за час больше
          сытости, бодрости и здоровья, чем отнимает день */
       var last = s.bodyAt || -1e9, left = 60 - (nowMin() - last);
       if (left > 0) { say("Вы только что этим пользовались: снова — примерно через " + left + " " + gm().plural(left, "минуту", "минуты", "минут") + "."); return; }
@@ -396,7 +396,7 @@ function run(o, def, kind, p, label, withId) {
     case "cook": cookMenu(o); return;
     case "listen": {
       spend(p.m || 1);
-      /* (3.3) бодрость от жара турбин — раз в час на вещь: прежде шестнадцать минут у турбин
+      /* (3.5) бодрость от жара турбин — раз в час на вещь: прежде шестнадцать минут у турбин
          заменяли сон */
       var wk = p.wake || 0;
       if (wk > 0) { if (nowMin() - (s.wakeAt != null ? s.wakeAt : -1e9) < 60) { wk = 0; m.push("Жар больше не бодрит: вы стояли здесь недавно."); } else s.wakeAt = nowMin(); }
@@ -419,7 +419,7 @@ function run(o, def, kind, p, label, withId) {
       spend(2); snd("ev_vent_rattle", null);
       /* (3.0) вытяжка выгоняет и туман мутагена: он тяжёлый и стекает снова — тем скорее, чем гуще; вентиль на трубе тумана не держит */
       var fogV = rm && rm.fog && o.fx !== "valves";
-      if (rm && (rm.gas || fogV)) { var fs = CUR().fs; fs.vented = fs.vented || {}; fs.vented[rm.id] = nowMin() + (fogV ? Math.round(120 / rm.fog) : 120); say(rm.gas ? "Вытяжка загудела, сквозняк потянул воздух в решётку: газ уходит. Часа два здесь можно дышать." + (fogV ? " Туман мутагена тянется следом." : "") : "Вытяжка загудела: сладковатый туман мутагена тянется в решётку. Он тяжелее воздуха и стечёт сюда снова — " + (rm.fog >= 3 ? "минут через сорок." : rm.fog >= 2 ? "примерно через час." : "часа через два.")); (function () { var ve = fs.ventEv = fs.ventEv || {}; if (!ve[rm.id]) { ve[rm.id] = 1; ev("vent", 1); } })() /* (3.3) в счёт вехи — каждое помещение один раз */; }
+      if (rm && (rm.gas || fogV)) { var fs = CUR().fs; fs.vented = fs.vented || {}; fs.vented[rm.id] = nowMin() + (fogV ? Math.round(120 / rm.fog) : 120); say(rm.gas ? "Вытяжка загудела, сквозняк потянул воздух в решётку: газ уходит. Часа два здесь можно дышать." + (fogV ? " Туман мутагена тянется следом." : "") : "Вытяжка загудела: сладковатый туман мутагена тянется в решётку. Он тяжелее воздуха и стечёт сюда снова — " + (rm.fog >= 3 ? "минут через сорок." : rm.fog >= 2 ? "примерно через час." : "часа через два.")); (function () { var ve = fs.ventEv = fs.ventEv || {}; if (!ve[rm.id]) { ve[rm.id] = 1; ev("vent", 1); } })() /* (3.5) в счёт вехи — каждое помещение один раз */; }
       else if (rm && rm.fog) say("Вентиль перекрыт, но туман мутагена идёт не из трубы, а из вентиляции. Его выгоняет только вытяжка.");
       else say("Вентилятор загудел, воздух посвежел. Газа здесь нет, но дышать стало легче.");
       noise(2);
@@ -457,7 +457,7 @@ function run(o, def, kind, p, label, withId) {
       var shots = Math.min(aw.charge, 5);
       aw.charge -= shots;
       spend(10); snd("term_beep", null); noise(5);
-      tr.aimAt = nowMin(); tr.aim = (tr.aim || 0) + 1; tr.aimN = (tr.aimN || 0) + 1;
+      tr.aimAt = nowMin(); tr.aimN = (tr.aimN || 0) + 1;
       var needA = tr.aimPts + 2, upA = tr.aimN >= needA;
       if (upA) { tr.aimN = 0; tr.aimPts++; }
       say("Мишени щёлкают одна за другой, на серию ушло выстрелов: " + shots + ". «Эхо» подсказывает поправку." + (upA ? " Рука твёрже: меткость выросла, ступень " + tr.aimPts + " из " + TRAIN_MAX + "." : " До следующей ступени меткости — ещё " + sessW(needA - tr.aimN) + ", не чаще раза в час."));
@@ -465,7 +465,7 @@ function run(o, def, kind, p, label, withId) {
       return;
     }
     case "plate": {
-      /* (3.3) четыре куска лома, как сказано в пункте (код брал три), и не больше двух пластин
+      /* (3.5) четыре куска лома, как сказано в пункте (код брал три), и не больше двух пластин
          с одного пресса: прежде лом покупали у инженера и без конца перепродавали пластины */
       var inv = G().inv, made = s.plates || 0;
       if (made >= 2) { say("Матрица пресса стёрлась: ровной пластины он больше не выправит."); return; }
@@ -538,7 +538,7 @@ function run(o, def, kind, p, label, withId) {
       snd(ok2 ? "paper" : "bump_rail", null);
       s.streak = ok2 ? (s.streak || 0) + 1 : 0;
       say(ok2 ? "Мяч шуршит сеткой: попали!" + (s.streak >= 3 ? " " + s.streak + " подряд!" : "") : "Мяч звонко отскакивает от кольца.");
-      /* (3.3) опыт за пять попаданий подряд — один раз у кольца, а не за каждую серию */
+      /* (3.5) опыт за пять попаданий подряд — один раз у кольца, а не за каждую серию */
       if (s.streak === 5 && !s.hoopXp) { s.hoopXp = 1; ev("hoop5", 1); gm().gainXP(5); }
       return;
     }
@@ -553,7 +553,7 @@ function run(o, def, kind, p, label, withId) {
       if (gapT < TRAIN_GAP) { say("Мышцы ещё не восстановились после прошлой тренировки: толк будет через " + minW(TRAIN_GAP - gapT) + ". Сейчас — только трата сил и еды."); return; }
       UIx("closeAll"); spend(20);
       gm().bodyApply({ wake: -6, food: -4 }, m);
-      tr2.strAt = nowMin(); tr2.str = (tr2.str || 0) + 1; tr2.strN = (tr2.strN || 0) + 1;
+      tr2.strAt = nowMin(); tr2.strN = (tr2.strN || 0) + 1;
       var need = 3 * (tr2.strPts + 1), up = tr2.strN >= need;
       if (up) { tr2.strN = 0; tr2.strPts++; G().str++; }
       snd("hit_metal", null);
@@ -742,7 +742,7 @@ function doSalvage(o, def, p) {
 }
 function doHarvest(o, def, p) {
   var s = st(o), r = rng(o, "harv:" + nowMin());
-  if (s.harvAt && nowMin() - s.harvAt < (p.every || 0)) { say("Ещё рано: созреет через " + minW(p.every - (nowMin() - s.harvAt)) + "."); return; } /* (3.3) */
+  if (s.harvAt && nowMin() - s.harvAt < (p.every || 0)) { say("Ещё рано: созреет через " + minW(p.every - (nowMin() - s.harvAt)) + "."); return; } /* (3.5) */
   if (risk(p.risk, r)) return;
   s.harvAt = nowMin(); spend(2); snd("paper", null);
   var it = { kind: "item", item: LAB.ITEMS[p.item] ? p.item : "apple", n: r.chance(0.3) ? 2 : 1 };
@@ -757,7 +757,7 @@ function doRespect(o, s) {
   ev("respect", 1);
 }
 function doStrip(o, def, s) {
-  if (s.strip) { say(def.n + ": здесь уже ничего не висит."); return; } /* (3.3) */
+  if (s.strip) { say(def.n + ": здесь уже ничего не висит."); return; } /* (3.5) */
   s.strip = 1;
   var r = rng(o, "strip"), L = G().L, F = G().F;
   var a = o.fx === "mannequin" ? LAB.genArmor(r, L, F, {}) : LAB.makeArmor(L > 10 && L <= 20 && LAB.ARMORS.g_rigrobe ? "g_rigrobe" : "suit", LAB.foeLevel(L, F), r.chance(0.5) ? 0 : 1);
@@ -825,7 +825,7 @@ function corpseText(o, id) {
   if (s.open) out.push("Вещи вокруг вы уже обыскали.");
   return out.filter(Boolean).join(" ").replace(/На нём —/, id.p.f ? "На ней —" : "На нём —");
 }
-/* (3.3) окно тела собирается заново, когда к нему возвращаются: обыскали вещи вокруг,
+/* (3.5) окно тела собирается заново, когда к нему возвращаются: обыскали вещи вокруг,
    сняли жетон — этих пунктов больше нет (прежде окно, устаревшее под окном обыска,
    закрывалось само) */
 function corpseMenu(o) {
@@ -869,13 +869,13 @@ function takeBadge(o, id) {
   var g = G();
   g.inv.badge = (g.inv.badge || 0) + 1;
   g.badges = g.badges || [];
-  if (g.badges.length < 200) g.badges.push({ n: id.p.fio, p: id.post, L: g.L, F: g.F });
+  if (g.badges.length < 200) g.badges.push({ n: id.p.fio, p: id.post, L: g.L, F: g.F, o: o.id }); /* (3.5) o — какое тело: поручение ждёт жетон именно этого человека */
   snd("pick_part", null);
   say("Жетон «" + id.p.fio + "» у вас. Выжившие передадут имя наверх. Жетонов: " + g.inv.badge + ".");
   ev("badge", 1);
-  if (gm().checkQuests) gm().checkQuests(); /* (3.3) этого человека искали по поручению */
+  if (gm().checkQuests) gm().checkQuests(); /* (3.5) этого человека искали по поручению */
 }
-/* Выжившим — жетоны погибших: награда и строчка в журнале. (3.3) Жетоны, взятые по
+/* Выжившим — жетоны погибших: награда и строчка в журнале. (3.5) Жетоны, взятые по
    поручениям, ждут своих заказчиков (reservedBadges): за один жетон не платят дважды.
    Тел теперь больше — и из общего котла за жетон дают меньше. */
 function badgeItem(n) {

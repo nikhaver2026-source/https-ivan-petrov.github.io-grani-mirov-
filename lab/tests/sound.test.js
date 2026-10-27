@@ -142,7 +142,7 @@ function ok(c, m) { console.log((c ? "  ✓ " : "  ✗ ") + m); if (!c) fails++;
   ok(s.open && s.before >= 1, "записка открылась окном и читается");
   ok(s.closed && s.after === 0 && !s.reading, "Escape закрыл окно записки — чтение оборвалось и дальше не идёт (после закрытия прозвучало: " + s.after + ")");
 
-  console.log("(3.3) Alt+Tab: приглушение — после ограничителя, речь в фоне ждёт возвращения");
+  console.log("(3.5) Alt+Tab: приглушение — после ограничителя, речь в фоне ждёт возвращения");
   s = await page.evaluate(async () => {
     const Sp = LAB.Speech, AE = LAB.AE, S = LAB.settings, spoken = [];
     const wait = ms => new Promise(r => setTimeout(r, ms));
@@ -168,28 +168,35 @@ function ok(c, m) { console.log((c ? "  ✓ " : "  ✗ ") + m); if (!c) fails++;
   ok(s.bg && s.outGain >= 0 && s.outGain < 0.4 && s.masterGain > 0.8, "в фоне со звуком тише последнее звено — после ограничителя: громкие и тихие звуки опускаются поровну (выход " + s.outGain.toFixed(2) + ", вход ограничителя " + s.masterGain.toFixed(2) + ")");
   ok(s.inBg === 0 && s.back === 1 && s.outBack > 0.8, "фраза, сказанная в фоне, ждёт и звучит, когда игра снова на экране (в фоне " + s.inBg + ", после " + s.back + ")");
 
-  /* (3.3) Громкость на самом выходе, а не числа в настройках: с флажком «Приглушать
+  /* (3.5) Громкость на самом выходе, а не числа в настройках: с флажком «Приглушать
      звук в фоне» каждый канал — громкий выстрел, тихий фон, музыка, интерфейс, сигналы
      головоломок — в фоне звучит одинаково тише; без флажка устройство в фоне спит, и
      ни звуки, которые игра просит в фоне, ни сторож звука его не будят. */
-  console.log("(3.3) Фон: громкость на выходе — с флажком все звуки тише поровну, без флажка — тишина");
+  console.log("(3.5) Фон: громкость на выходе — с флажком все звуки тише поровну, без флажка — тишина");
   s = await page.evaluate(async () => {
-    const AE = LAB.AE, S = LAB.settings, out = { dim: {} };
+    const AE = LAB.AE, S = LAB.settings, Sp = LAB.Speech, out = { dim: {} };
     const wait = ms => new Promise(r => setTimeout(r, ms));
-    const dim0 = S.bgDim;
+    const dim0 = S.bgDim, speech0 = S.speech, duck0 = AE.setDuck;
     if (window.labBgReset) window.labBgReset();
     AE.ensure(); try { await AE.ctx.resume(); } catch (e) { /* */ }
+    /* в замер — только свои тоны: прочие звуки и петли смолкли, речь молчит, и приглушение
+       под речь (setDuck: фон и музыка тише, пока говорят) не двигает каналы посреди замера —
+       фраза, звучавшая на экране и ждущая в фоне, давала фону 0,35 вместо четверти */
+    LAB.Sound.stopAll(0); S.speech = false; if (Sp && Sp.hush) Sp.hush();
+    AE.setDuck(false); AE.setDuck = function () { /* на время замера */ }; await wait(1500);
     const c = AE.ctx, an = c.createAnalyser(); an.fftSize = 2048; AE.out.connect(an);
     const buf = new Float32Array(an.fftSize);
     const rms = async () => { let sum = 0, n = 0; for (let k = 0; k < 8; k++) { an.getFloatTimeDomainData(buf); for (let i = 0; i < buf.length; i++) { sum += buf[i] * buf[i]; n++; } await wait(30); } return Math.sqrt(sum / n); };
+    /* величина своего тона на выходе (окно Ханна): прочее, что звучит, в неё не входит */
+    const amp = async f => { const N = buf.length, w = 2 * Math.PI * f / c.sampleRate; let a = 0; for (let k = 0; k < 8; k++) { an.getFloatTimeDomainData(buf); let re = 0, im = 0; for (let i = 0; i < N; i++) { const h = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (N - 1)); re += buf[i] * h * Math.cos(w * i); im += buf[i] * h * Math.sin(w * i); } a += Math.hypot(re, im); await wait(30); } return a / 8; };
     const tone = (bus, g, f) => { const o = c.createOscillator(), gg = c.createGain(); o.frequency.value = f; gg.gain.value = g; o.connect(gg); gg.connect(bus); o.start(); return () => { o.stop(); gg.disconnect(); }; };
-    /* громкий выстрел жмёт ограничитель, тихий фон — нет: до 3.3 они опускались по-разному */
+    /* громкий выстрел жмёт ограничитель, тихий фон — нет: до 3.5 они опускались по-разному */
     const buses = { "выстрел": [AE.weap, 2.5, 330], "фон": [AE.amb, 0.05, 220], "музыка": [AE.music, 0.3, 440], "интерфейс": [AE.ui, 0.2, 660], "головоломка": [AE.puzzle, 0.2, 550] };
     for (const k in buses) {
       const b = buses[k], stop = tone(b[0], b[1], b[2]);
-      await wait(400); const fg = await rms();
-      S.bgDim = 1; window.dispatchEvent(new Event("blur")); await wait(900); const bg = await rms();
-      window.dispatchEvent(new Event("focus")); await wait(900); const back = await rms();
+      await wait(400); const fg = await amp(b[2]);
+      S.bgDim = 1; window.dispatchEvent(new Event("blur")); await wait(900); const bg = await amp(b[2]);
+      window.dispatchEvent(new Event("focus")); await wait(900); const back = await amp(b[2]);
       stop(); await wait(200);
       out.dim[k] = { ratio: fg ? bg / fg : 0, back: fg ? back / fg : 0 };
     }
@@ -202,7 +209,7 @@ function ok(c, m) { console.log((c ? "  ✓ " : "  ✗ ") + m); if (!c) fails++;
     window.dispatchEvent(new Event("focus")); await wait(800);
     out.backState = c.state; out.backRms = await rms();
     stop2(); an.disconnect();
-    S.bgDim = dim0;
+    S.bgDim = dim0; S.speech = speech0; AE.setDuck = duck0;
     if (window.labBgReset) window.labBgReset();
     return out;
   });

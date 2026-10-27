@@ -431,7 +431,7 @@ function startTension() {
   s.lfo(0.25, 120, f.frequency);
   g.gain.setTargetAtTime(0.06, s.ctx.currentTime, 1);
   var beat = 0;
-  /* (3.3) звук спит (игра в фоне, звук выключен) — удар не ставится: прежде удары копились на
+  /* (3.5) звук спит (игра в фоне, звук выключен) — удар не ставится: прежде удары копились на
      застывшем времени устройства и при возвращении грохали разом */
   s.every(560, 560, function () { if (s.ctx.state !== "running" || (LAB.bgMuted && LAB.bgMuted())) return; beat++; s.thump(beat % 2 ? 0.25 : -0.25, beat % 4 === 0 ? 0.42 : 0.26); if (beat % 8 === 6) s.note(root * 4, 0, 0.25, "square", 0.025); });
   tension = { s: s, g: g };

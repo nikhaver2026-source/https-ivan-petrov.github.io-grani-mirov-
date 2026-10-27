@@ -39,7 +39,7 @@ function valueText(it) {
   return String(v);
 }
 function top() { return stack.length ? stack[stack.length - 1] : null; }
-/* (3.3) Окно помнит, каким был мир, когда его открыли: этаж и место героя, опыт,
+/* (3.5) Окно помнит, каким был мир, когда его открыли: этаж и место героя, опыт,
    кредиты, вещи, заряды, оружие, броня, здоровье, найденные тайники. Пока окно открыто,
    мир стоит, так что меняется он только действиями героя. Окно снова наверху, а мир
    изменился (в окне поверх что-то взяли, купили, вскрыли, вылечили): окно, которое
@@ -62,9 +62,13 @@ function rebuildWin(t) {
   t.items = its; t.i = Math.max(0, Math.min(t.i, its.length - 1)); t.stamp = stamp();
   return true;
 }
-/* (3.3) Окно сверху — заново, когда мир изменили не его пункты (сон в капсуле, музыка
+/* (3.5) Окно сверху — заново, когда мир изменили не его пункты (сон в капсуле, музыка
    доиграла): числа в пунктах новые, отметка тоже. */
-function rebuildTop() { var t = top(); if (t && !t.root && t.rebuild && rebuildWin(t)) render(); }
+function rebuildTop() {
+  var t = top(); if (!t || t.root) return;
+  if (t.rebuild) { if (rebuildWin(t)) render(); }
+  else if (t.stamp != null) t.stamp = stamp(); /* (3.5) окно без сборщика (чтение в капсуле): мир изменил таймер капсулы, а не пункт другого окна */
+}
 /* Окно снова наверху: с rebuild — собирается заново (пусто — закрывается),
    без rebuild и устаревшее — закрывается; и так до первого живого окна. */
 function reveal() {
@@ -130,7 +134,7 @@ function activate() {
   if (it.disabled) { LAB.UI.error(); say(it.why || "Недоступно."); return; }
   /* «Отойти», «Назад», «Отмена» без действия — закрыть окно и сказать, где вы */
   if (it.close || (/^(Отойти|Назад|Отмена)$/.test(String(it.label)) && String(it.fn).replace(/\s+/g, "") === "function(){}")) { if (!closeTop()) LAB.UI.error(); return; }
-  /* (3.3) мир изменился, пока окно было открыто (не его пунктом). Окно с rebuild
+  /* (3.5) мир изменился, пока окно было открыто (не его пунктом). Окно с rebuild
      собирается заново; выбранный пункт остался прежним — выполняется, иначе окно
      называет себя заново. Окно без rebuild старый пункт не выполняет: оно закрывается. */
   if (!w.root && !w.note && w.stamp && w.stamp !== stamp()) {
@@ -171,7 +175,11 @@ function move(step) {
   w.i = (w.i + step + n) % n;
   LAB.UI.move();
   render();
-  if (w.onFocus) LAB.safe(function () { w.onFocus(w.i); });
+  if (w.onFocus) {
+    LAB.safe(function () { w.onFocus(w.i); });
+    /* (3.5) мир изменило само окно (страница в капсуле лечит): окно в курсе, оно не устарело */
+    if (top() === w && w.stamp != null) w.stamp = stamp();
+  }
   /* записка читается, а игрок сам пошёл по её абзацам: общее чтение обрывается,
      и звучит выбранный абзац (прежде ходили молча, и на компьютере это выглядело
      как зависание: стрелки нажимаются, а ответа нет, пока не нажать Ctrl) */
@@ -314,7 +322,7 @@ function pageGesture(g) {
     if (g.dir === "U" && page.opts.skip !== false) { var d2 = page.opts.done; page = null; LAB.UI.close(); if (d2) d2(); return true; }
   }
   if (g.kind === "tap" || g.kind === "dtap") { showPage(page.pages, page.i, page.opts); return true; }
-  /* (3.3) финал с итогами (skip: false) «назад» не пропускает — как и Escape */
+  /* (3.5) финал с итогами (skip: false) «назад» не пропускает — как и Escape */
   if (g.kind === "back") { if (page.opts.skip === false) { LAB.UI.error(); return true; } var d3 = page.opts.done; page = null; if (d3) d3(); return true; }
   return true;
 }
@@ -606,7 +614,7 @@ function desktopVoiceMenu(vs, focus) {
     /* пустое имя — голос выбирается сам и дальше: запустят NVDA или JAWS — заговорит он */
     if (window.LabTTS && window.LabTTS.setVoice) { try { window.LabTTS.setVoice(""); } catch (e) { /* */ } }
     LAB.Speech.choose(); setTimeout(function () { say("Голос выбирается сам. Сейчас: " + autoVoiceName().replace("сам выбирается — ", "") + "."); settingsMenu(); }, 250); } });
-  /* (3.3) голоса ищутся до 15 секунд: список открывается заново, только если игрок
+  /* (3.5) голоса ищутся до 15 секунд: список открывается заново, только если игрок
      всё ещё в нём — ушёл в игру или в другое окно — просто прозвучит число голосов */
   items.push({ label: "Перечитать голоса компьютера", keep: true, fn: function () {
     var D = window.LabDesktop;
@@ -649,7 +657,7 @@ function exitMenu() {
 }
 
 /* ════════ ИНВЕНТАРЬ (три пальца вниз) ════════ */
-/* (3.3) Окна инвентаря собираются заново (rebuild), когда к ним возвращаются:
+/* (3.5) Окна инвентаря собираются заново (rebuild), когда к ним возвращаются:
    съели, вставили пластину, разобрали — числа в пунктах уже новые. */
 function inventory(focus) {
   if (!gm().entered) return;
@@ -950,7 +958,7 @@ function questsMenu() { menu("Задания", questsItems(), { rebuild: questsI
 function questsItems() {
   var g = G(), cap = gm().QUEST_ACTIVE, act = gm().activeQuests(), items = [];
   g.quests.forEach(function (q) { if (!q.done && q.type === "main") items.push({ label: "Главное: " + q.text, keep: true, fn: function () { say(q.text); } }); });
-  /* (3.3) поручений сразу — не больше трёх; счёт — первой строкой после главного */
+  /* (3.5) поручений сразу — не больше трёх; счёт — первой строкой после главного */
   var head = act.length ? "Взятых поручений — " + act.length + " из " + cap + "." + (act.length >= cap ? " Новых не дадут, пока одно не сдано или от него не отказались." : "") : "Поручений нет. Выжившие сами просят о помощи — спросите их; больше " + cap + " сразу не взять.";
   items.push({ label: head, keep: true, fn: function () { say(head); } });
   act.forEach(function (q) {

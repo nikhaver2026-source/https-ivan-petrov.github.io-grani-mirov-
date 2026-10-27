@@ -66,7 +66,7 @@ function recover(min, asleep) {
   var f0 = b.food;
   gm().advanceTime(min, true);
   b.food = Math.min(100, f0 + min / 40);
-  /* (3.3) пока на этаже тревога или каратели идут по следу, капсула только кормит:
+  /* (3.5) пока на этаже тревога или каратели идут по следу, капсула только кормит:
      иначе посреди погони в ней отлёживались бы страницами рассказов и получасами
      с закрытыми глазами (сон в такое время и не начнётся — sleep) */
   var why = gm().restBlock ? gm().restBlock() : null;
@@ -134,7 +134,7 @@ function menu(focus, intro) {
   UIx("menu", "Капсула восстановления", build(), { keep: true, rebuild: build, focus: focus || 0, intro: intro || statusLine(), onClose: function () { if (inCap.o) leave(true); } });
 }
 /* Окно сверху — заново по своему списку (новые пункты, например «Остановить музыку»), когда
-   перемены пришли не от пункта окна (сон, музыка). (3.3) Окно, чей пункт сам что-то изменил,
+   перемены пришли не от пункта окна (сон, музыка). (3.5) Окно, чей пункт сам что-то изменил,
    собирается заново в ui.js (activate) — здесь его не пересобирают второй раз. */
 function refreshTop() { if (LAB.ui && LAB.ui.rebuildTop) LAB.ui.rebuildTop(); }
 /* Сказать после того, как окно объявит себя. */
@@ -155,7 +155,7 @@ function menuItems() {
   items.push({ label: "Включить радио поверхности", fn: function () { shelf("radio"); } });
   items.push({ label: "Видеоархив капсулы", fn: function () { shelf("video"); } });
   items.push({ label: "Полежать с закрытыми глазами: полчаса", keep: true, fn: function () {
-    var why = gm().restBlock ? gm().restBlock() : null; /* (3.3) как и сон: в тревогу — не до покоя */
+    var why = gm().restBlock ? gm().restBlock() : null; /* (3.5) как и сон: в тревогу — не до покоя */
     if (why) { LAB.UI.error(); say(why); return; }
     recover(30, false); A("play", "capsule_hum", { gain: 0.5 }); say("Вы лежите, слушая ровный гул капсулы. Прошло полчаса. " + statusLine()); } });
   items.push({ label: "Состояние тела", keep: true, fn: function () { gm().bodyStatus(); } });
@@ -247,7 +247,7 @@ function sleepMenu() {
   UIx("menu", "Сон", items);
 }
 function sleep(s) {
-  /* (3.3) часы сна пролетают разом, а машины ОКО не ждут: в тревогу, под шагами
+  /* (3.5) часы сна пролетают разом, а машины ОКО не ждут: в тревогу, под шагами
      карателей и когда сюда идут машины — не уснуть (как и отдыхать на обстановке) */
   var why = gm().restBlock ? gm().restBlock() : null;
   if (why) { LAB.UI.error(); say(why.replace("Не до отдыха", "Не до сна")); return; }
@@ -256,7 +256,7 @@ function sleep(s) {
   var g = G(), b = g.body;
   var dream = pickDream();
   recover(s.min, true);
-  g.restAt = (g.day || 0) * 1440 + (g.min || 0); /* (3.3) только что выспались — стул после капсулы толку не даст */
+  g.restAt = (g.day || 0) * 1440 + (g.min || 0); /* (3.5) только что выспались — стул после капсулы толку не даст */
   if (s.min >= 240) { g.hp = g.hpMax; g.en = g.enMax; b.wake = 100; b.neuro = 0; g.st.poison = 0; g.st.bleed = 0; }
   if (s.min >= 480) g.st.restedMin = 360;
   if (s.min >= 720) { b.tox = 0; b.rad = Math.max(0, (b.rad || 0) - 30); }
@@ -302,7 +302,7 @@ function playTrack(t, queue) {
   var h = LAB.Sound && LAB.Sound.loop ? LAB.Sound.loop("capmus", t.id, { bus: "music", gain: 1, fadeIn: 1.2, xfade: 1 }) : null;
   playing = { t: t, h: h, t0: Date.now(), q: queue || null };
   playing.timer = setTimeout(function () { LAB.safe(trackEnd); }, TRACK_SEC * 1000);
-  /* (3.3) в счёт вехи — каждая запись один раз: одну и ту же гонять по кругу не в счёт */
+  /* (3.5) в счёт вехи — каждая запись один раз: одну и ту же гонять по кругу не в счёт */
   if (!(G().heard || {})[t.id]) ev("music", 1);
   (G().heard = G().heard || {})[t.id] = 1;
   if (Object.keys(G().heard).length >= tracks().length) ev("allmusic", 1);
@@ -390,7 +390,7 @@ function reader(title, text, opts) {
       seen[i] = 1;
       if (i > 0) A("play", "paper_turn", { gain: 0.45 });
       if (opts.perPage && inCap.o) recover(opts.perPage, false);
-      if (i === n - 1) { var re = G().readEnd = G().readEnd || {}, rid = opts.id || title; if (!re[rid]) { re[rid] = 1; ev("readend", 1); } } /* (3.3) дочитанное — в счёт один раз */
+      if (i === n - 1) { var re = G().readEnd = G().readEnd || {}, rid = opts.id || title; if (!re[rid]) { re[rid] = 1; ev("readend", 1); } } /* (3.5) дочитанное — в счёт один раз */
     },
     onClose: function () { LAB.safe(function () { if (opts.onClose) opts.onClose(); }); }
   });

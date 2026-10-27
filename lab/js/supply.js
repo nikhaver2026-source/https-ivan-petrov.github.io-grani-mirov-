@@ -48,21 +48,21 @@ function depthSellK() { var k = gm().priceDepth ? gm().priceDepth() : gm().price
 function profBuy(prof, cat) { var p = LAB.SUPPLY_PROFILES[prof]; return p && p.buy && p.buy[cat] ? p.buy[cat] : 1; }
 /* Торговец-выживший скупает своё дороже: медик — лекарства, инженер — детали, повар — еду. */
 var NPC_BUY = { med: { med: 1.25, protect: 1.15 }, food: { food: 1.25 }, parts: { part: 1.25, tool: 1.15 }, ammo: { ammo: 1.25, weapon: 1.15 }, all: { valuable: 1.15 } };
-function ctxK(ctx, cat) { return ctxK0(ctx, cat) * (LAB.ach && LAB.ach.has("trader") ? 1.1 : 1) * (1 + (LAB.implants ? LAB.implants.stat("sell") : 0)) * (ctx && ctx.who === "npc" && !ctx.robot && gm().chaSellK ? gm().chaSellK() : 1); /* (2.0) чип оценщика; (3.3) харизма — у людей */ }
+function ctxK(ctx, cat) { return ctxK0(ctx, cat) * (LAB.ach && LAB.ach.has("trader") ? 1.1 : 1) * (1 + (LAB.implants ? LAB.implants.stat("sell") : 0)) * (ctx && ctx.who === "npc" && !ctx.robot && gm().chaSellK ? gm().chaSellK() : 1); /* (2.0) чип оценщика; (3.5) харизма — у людей */ }
 function ctxK0(ctx, cat) {
   if (!ctx) return 1;
   if (ctx.prof) return profBuy(ctx.prof, cat);
   if (ctx.npc && NPC_BUY[ctx.npc] && NPC_BUY[ctx.npc][cat]) return NPC_BUY[ctx.npc][cat];
   return ctx.who === "terminal" ? 0.9 : 1;
 }
-/* (2.2) Купить и тут же продать с прибылью нельзя ни в каком режиме. (3.3) Потолок скупки —
+/* (2.2) Купить и тут же продать с прибылью нельзя ни в каком режиме. (3.5) Потолок скупки —
    ниже самой низкой цены покупки, какая бывает: свой товар пункта (−10 %), Служба
    безопасности на батареях (−15 %), выжившие (−10 %) с харизмой (до −12 %). Прежде
    потолок был в 85 % прилавка и только у вещей — батареи, оружие и броню в лёгком
    режиме и с высокой харизмой перепродавали дороже, чем купили. */
 var SELL_CAP = 0.72;
 function sellCap(p, buy) { return Math.max(1, Math.min(p, Math.floor(buy * SELL_CAP))); }
-/* (3.3) То, что вы сами собрали у верстака (G.craftN — сколько таких штук у вас), скупают
+/* (3.5) То, что вы сами собрали у верстака (G.craftN — сколько таких штук у вас), скупают
    не дороже двух пятых цены деталей: иначе «купить детали — собрать — продать» печатало
    кредиты (чипы уходили втрое дороже деталей, а партия из трёх и смекалка инженеров давали
    вещи и вовсе даром). Найденное продаётся как прежде, и первым. */
@@ -92,7 +92,7 @@ function ammoSellPrice(k, ctx, asCrafted) {
   return asCrafted ? partsCap(p, "ammo:" + k) : p;
 }
 function condOf(w) { return LAB.workshop && LAB.workshop.cond ? LAB.workshop.cond(w) : 100; }
-/* (3.3) собранное своими руками скупают не дороже трёх пятых цены его деталей (crafted):
+/* (3.5) собранное своими руками скупают не дороже трёх пятых цены его деталей (crafted):
    прежде вещь «под эту глубину» уходила в разы дороже деталей — купить, собрать, продать */
 function craftCap(x, p) { return x && x.crafted ? Math.min(p, Math.round(x.crafted * 0.6)) : p; }
 function weaponSellPrice(w, ctx) {

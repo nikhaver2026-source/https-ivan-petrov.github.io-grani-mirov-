@@ -83,7 +83,7 @@ LAB.LOGIC_KINDS = LOGIC_KINDS;
    ступени: простая, средняя, сложная. Вид и ступень выбирает свой поток
    случайностей — остальное на этаже от них не меняется. Чем глубже, тем
    чаще средние и сложные; на первом уровне — почти всегда простые. */
-/* (3.3) и задачи части третьей (puzzles3.js): пароли, архивы, взломы. Вид выбирается своим
+/* (3.5) и задачи части третьей (puzzles3.js): пароли, архивы, взломы. Вид выбирается своим
    потоком случайностей (pz17) — этажи от этого не меняются */
 function logicKinds() { return LOGIC_KINDS.concat(LAB.puzzles2 && LAB.puzzles2.kinds ? LAB.puzzles2.kinds : [], LAB.puzzles3 && LAB.puzzles3.kinds ? LAB.puzzles3.kinds : []); }
 function stationKinds() { return ["sort", "relays", "bulls", "riddle"].concat(logicKinds(), ["chess"]); }
@@ -1208,7 +1208,10 @@ function genFloor(seed, L, F, attempt) {
     quietRooms.push(s);
   }
   r.shuffle(quietRooms);
-  /* (3.3, просьба игрока: живых больше) выжившие — чаще и до двоих на этаже: в «Ковчеге» и
+  /* (3.5) живые — не там, где тела (морги, прозекторские): после перемешивания, чтобы
+     поток случайностей этажа не сдвинулся */
+  quietRooms = quietRooms.filter(function (q9) { return !fl.objs.some(function (o9) { return o9.type === "corpse" && o9.room === q9; }); });
+  /* (3.5, просьба игрока: живых больше) выжившие — чаще и до двоих на этаже: в «Ковчеге» и
      «Подножии» люди прячутся по помещениям, глубже их меньше. У второго — своё зерно и свой
      ключ (L-F-s2): поручения у каждого свои. */
   var survP = L <= 20 ? [0.7, 0.35] : [0.55, 0.22];
@@ -1372,7 +1375,7 @@ function genFloor(seed, L, F, attempt) {
   /* 25. (3.0) Химия (chem.js): химические столы, сырьё в хранилищах лабораторий,
      медпунктов, складов и мастерских, склянки и журналы с рецептурами — своим потоком. */
   if (LAB.chem && LAB.chem.place) LAB.chem.place({ fl: fl, L: L, F: F, seed: seed, attempt: attempt, U: U, addObj: addObj, addItem: addItem });
-  /* 26. (3.3, просьба игрока: живых больше) Выживших меньше задуманного — ещё в помещениях
+  /* 25б. (3.5, просьба игрока: живых больше) Выживших меньше задуманного — ещё в помещениях
      и кабинетах, где нет ни машин, ни тварей (уже после охраны и отрядов): люди прячутся
      и в кабинетах у коридоров. Своё зерно, свой ключ у каждого (L-F-s, s2, s3). */
   var rs3 = Rng(seed, "surv3:" + L + ":" + F + ":" + attempt);
@@ -1385,6 +1388,8 @@ function genFloor(seed, L, F, attempt) {
     /* у капсулы — только аптечный автомат (medic.js уже развёл торговые точки):
        выживший-торговец туда не встаёт */
     fl.objs.forEach(function (o9) { if ((o9.type === "capsule" || o9.type === "wake") && o9.room >= 0) capRoom[o9.room] = 1; });
+    /* и не среди тел погибших (annex.js, placeBodies): живые от мёртвых уходят */
+    fl.objs.forEach(function (o9) { if (o9.type === "corpse" && o9.room >= 0) capRoom[o9.room] = 1; });
     fl.rooms.forEach(function (m9, s9) {
       if (!m9 || m9.hidden || m9.rad || m9.gas || foeRoom[s9] || npcRoom[s9] || capRoom[s9] || s9 === U || s9 === D || s9 === E || s9 === secret || s9 === bossSlot) return;
       var def9 = LAB.ROOMS[m9.type] || {};

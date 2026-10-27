@@ -820,7 +820,7 @@ function use(id) {
     case "salve": g.st.shield = Math.max(g.st.shield || 0, Math.round(30 * k.mag * potK("bio"))); g.st.shieldT = Math.round(60 * k.dur * bioDur()); msg = "Хитиновая корка схватывается на коже: щит " + g.st.shield + "."; break;
     case "coat":
       if (!coatable(w)) { say("Смазку наносят на оружие ближнего боя или на стальные пули. Возьмите такое оружие в руки."); return false; }
-      /* (3.3) та же смазка поверх — попадания складываются; другая — стирает прежнюю, и это
+      /* (3.5) та же смазка поверх — попадания складываются; другая — стирает прежнюю, и это
          говорится вслух (прежде остаток старой пропадал молча) */
       var ck = b0 === "c_coat_tox" ? "tox" : "acid", cn = Math.round(15 * k.dur * (rank("tox") >= 1 ? 2 : 1)), cm = Math.round(k.mag * 100) / 100, old = w.coat && w.coat.n > 0 ? w.coat : null, wipe = "";
       if (old && old.k === ck) { cn += old.n; cm = Math.max(cm, old.m || 0); }

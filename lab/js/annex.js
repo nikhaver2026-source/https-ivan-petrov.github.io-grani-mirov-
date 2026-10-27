@@ -346,7 +346,8 @@ LAB.annex.place = function (ctx) {
   /* 4б. «Ковчег»: тела тех, кто не успел уйти три недели назад — чаще там, где держали
      оборону, бежали или горело; при них — вещи, жетон и, бывает, записка */
   if (era === "K" && !(L === 1 && F <= 2)) {
-    var bodyRooms = spots.filter(function (q) { var m = fl.rooms[q.id]; return m && m.num && !(ROOMS[m.type] || {}).kind; });
+    /* (3.5) не туда, где прячутся выжившие */
+    var bodyRooms = spots.filter(function (q) { var m = fl.rooms[q.id]; return m && m.num && !(ROOMS[m.type] || {}).kind && !(fl.npcs || []).some(function (n) { return n.room === q.id; }); });
     var pref = bodyRooms.filter(function (q) { var stt = fl.rooms[q.id].state; return stt === "barricade" || stt === "hurry" || stt === "burnt" || stt === "lived" || stt === "dark"; });
     var nb = r.int(1, 3) + (L >= 5 && r.chance(0.5) ? 1 : 0);
     for (var bi = 0; bi < nb && bodyRooms.length; bi++) {
@@ -355,7 +356,7 @@ LAB.annex.place = function (ctx) {
       if (bo) bo.loot = annexLoot(r, L, F, r.pick(["home", "smoke", "med", "paper"]), "desk", true);
     }
   }
-  /* 4в. (3.3, просьба игрока: «сотрудников было много, а тел мало») Тела — на всех
+  /* 4в. (3.5, просьба игрока: «сотрудников было много, а тел мало») Тела — на всех
      глубинах и чаще: в «Ковчеге» к прежним прибавляются тела в главных помещениях и
      кабинетах, глубже — горняки «Подножия», поселенцы и разведчики «Колыбели», смена
      «Отражения», отряд «Альфа» в «Механизме», садовники «Истока». Не у капсулы, не у
@@ -383,7 +384,7 @@ LAB.annex.place = function (ctx) {
   });
   fl.annexN = spots.length;
 };
-/* (3.3) Сколько тел на этаже всего и что при них — по глубине. */
+/* (3.5) Сколько тел на этаже всего и что при них — по глубине. */
 var BODY_N = { K: [3, 5], P: [2, 4], C: [2, 3], O: [2, 3], M: [2, 4], I: [1, 3] };
 var BODY_LOOT = { K: ["home", "smoke", "med", "paper", "tech"], P: ["parts", "smoke", "food", "janitor"], C: ["food", "home", "herbs", "bio"],
   O: ["med", "paper", "tech", "protect"], M: ["arms", "armory", "parts", "med"], I: ["food", "bio", "herbs", "home"] };

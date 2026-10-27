@@ -650,7 +650,7 @@ function place(k, where) {
   A("play", "mine_set");
   if (d.mine) A("play", "mine_arm", { delay: 0.35 }); /* (2.6) мина взведена: короткие писки взрывателя */
   if (cb()) cb().noise(2);
-  /* (3.3) в счёт вехи — каждая ловушка один раз: снятая целой и поставленная снова не в счёт */
+  /* (3.5) в счёт вехи — каждая ловушка один раз: снятая целой и поставленная снова не в счёт */
   var tb = g.trapBack = g.trapBack || {};
   if (tb[k] > 0) tb[k]--; else ev("trap_set", 1);
   var where2 = where === "front" ? LAB.DIRN[g.face] : "под ногами";
@@ -682,7 +682,7 @@ function pickUp(tp) {
   if (tp.st === "held") { say("Сначала пусть ловушка отпустит того, кого держит."); return; }
   remove(tp);
   A("play", "pry");
-  /* (3.3) целой возвращается только неизношенная: взведённая снова после срабатываний —
+  /* (3.5) целой возвращается только неизношенная: взведённая снова после срабатываний —
      изношенная (прежде «Взвести снова» и «Снять» превращали капкан на излёте в новый), а
      приманка — только пока не запищала */
   var full = d.trig === "lure" ? tp.st !== "on" && (tp.life == null || !d.life || tp.life >= d.life) : (tp.uses >= (d.uses || 1) || d.uses >= 99);
@@ -708,6 +708,7 @@ function detonate(tp) {
   var g = G();
   if (list().indexOf(tp) < 0) return;
   UIx("closeAll");
+  if (cb() && cb().unhide) cb().unhide("Подрыв выдал вас: укрытия больше нет."); /* (3.5) нападение из укрытия — как выстрел */
   A("play", "term_beep");
   var close = cheb(g.x, g.y, tp.x, tp.y) <= (D(tp).r || 1);
   if (close) sayq("Вы слишком близко!");
@@ -728,11 +729,17 @@ function disarm(tp) {
     if (!ok) { A("play", "term_err"); fire(tp, { hero: true }, [tp.x, tp.y]); return; }
     remove(tp);
     A("play", "term_ok");
-    g.inv[d.item] = (g.inv[d.item] || 0) + 1;
-    gm().gainXP(6 + Math.floor(g.L / 4));
+    /* (3.5) мины, которые сапёры ОКО ставят без конца, пока на этаже тревога, — не источник
+       опыта и добычи: с каждой обезвреженной на этаже опыта меньше, вещь — с первых трёх,
+       после шестой — ничего (как с машинами, которых ОКО присылает, sentK в combat.js) */
+    var k = 1, fs0 = CUR().fs;
+    if (tp.by === "oko") { fs0.okoDis = (fs0.okoDis || 0) + 1; k = Math.max(0, 1 - (fs0.okoDis - 1) / 6); }
+    var keep = k > 0.5; /* первые три: 1, 5/6, 4/6 */
+    if (keep) g.inv[d.item] = (g.inv[d.item] || 0) + 1;
+    gm().gainXP(Math.round((6 + Math.floor(g.L / 4)) * k));
     ev("disarm", 1);
     if (tp.by === "oko" && LAB.oko && LAB.oko.react) setTimeout(function () { LAB.oko.react("oko_trap_off"); }, 1500);
-    say(cap1(nameOf(tp)) + " " + gv(d, "обезврежен", "обезврежена", "обезврежены") + ". " + cap1(d.n) + " теперь ваш" + gv(d, "", "а", "и") + ": в рюкзаке, раздел «Ловушки и мины».");
+    say(cap1(nameOf(tp)) + " " + gv(d, "обезврежен", "обезврежена", "обезврежены") + ". " + (keep ? cap1(d.n) + " теперь ваш" + gv(d, "", "а", "и") + ": в рюкзаке, раздел «Ловушки и мины»." : "Взять с " + gv(d, "него", "неё", "них") + " нечего: сапёры ОКО ставят такие наспех, из лома." + (k <= 0 ? " Опыта за мины ОКО на этом этаже больше нет." : "")));
     UIx("refresh");
   }, { title: "Обезвредить: " + d.n });
 }
@@ -880,7 +887,7 @@ function okoTrap(kind, x, y, o) {
   o = o || {};
   var d = T[kind];
   if (!d || !floorOk(x, y) || trapOn(x, y)) return null;
-  /* (3.3) в безопасной зоне у капсулы ОКО мин не ставит */
+  /* (3.5) в безопасной зоне у капсулы ОКО мин не ставит */
   if (LAB.combat && LAB.combat.havenAt && LAB.combat.havenAt(x, y)) return null;
   var tp = { id: nextId(), t: kind, x: x, y: y, own: 0, by: "oko", known: 0, st: "on", uses: d.uses >= 99 ? 99 : 1 };
   if (o.dmg) tp.dmgAbs = o.dmg;

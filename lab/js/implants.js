@@ -207,7 +207,7 @@ function catXp(c) { return cy().xp[c] || 0; }
 function catLv(c) { var x = catXp(c), n = 0; for (var i = 1; i < CAT_XP.length; i++) if (x >= CAT_XP[i]) n = i; return n; }
 function totalXp() { var s = 0, x = cy().xp; for (var k in x) s += x[k] || 0; return s; }
 function level() { var x = totalXp(), n = 1; for (var i = 1; i < ALL_XP.length; i++) if (x >= ALL_XP[i]) n = i + 1; return n; }
-/* (3.3) опыт за сборку, вживление, извлечение и разбор — один раз на каждый чип (key):
+/* (3.5) опыт за сборку, вживление, извлечение и разбор — один раз на каждый чип (key):
    прежде «собрать — разобрать» и «вживить — извлечь» качали кибернетику без конца */
 function once(key) { var s = cy().once || (cy().once = {}); if (s[key]) return false; s[key] = 1; return true; }
 function gain(c, how, key) {
@@ -296,7 +296,7 @@ function applyStatic() {
   var g = G(); if (!g) return;
   var hp = Math.round((g.hpMax - (g.chipHp || 0)) * stat("hpmax")), en = Math.round(stat("enmax"));
   var dh = hp - (g.chipHp || 0), de = en - (g.chipEn || 0);
-  /* (3.3) прибавка уходит так же, как пришла: прежде вживление добавляло здоровье и
+  /* (3.5) прибавка уходит так же, как пришла: прежде вживление добавляло здоровье и
      энергию, а извлечение их не забирало — «вживить и извлечь» лечило */
   if (dh) { g.hpMax += dh; g.hp = Math.max(1, Math.min(g.hpMax, g.hp + dh)); g.chipHp = hp; }
   if (de) { g.enMax += de; g.en = Math.max(0, Math.min(g.enMax, g.en + de)); g.chipEn = en; }
@@ -337,6 +337,7 @@ var hits = 0;
 function hit(id, f, dmg, p) {
   var C = LAB.combat;
   if (!f || f.dead) return;
+  if (C.unhide) C.unhide("Удар импланта выдал вас: укрытия больше нет."); /* (3.5) нападение из укрытия — как выстрел */
   if (has(id, "execute") && f.maxhp && f.hp / f.maxhp < 0.4) dmg = Math.round(dmg * 1.5);
   C.damageFoe(f, dmg, p.dt, { noarmor: p.noarmor, quiet: true });
   hits++;

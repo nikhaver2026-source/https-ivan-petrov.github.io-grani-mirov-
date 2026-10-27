@@ -12,10 +12,11 @@
 # игры проходит.
 # Выпуск «lab-android-latest» несёт APK.
 #
-# Подпись. Ключей в репозитории нет. (3.3) Постоянный ключ — в секретах
+# Подпись. Ключей в репозитории нет. (3.5) Постоянный ключ — в секретах
 # репозитория (ANDROID_KEYSTORE_B64 и пароль, см. lab/android/SIGNING.md): все
 # сборки подписаны одним ключом, ставятся поверх прежних, и Play Protect узнаёт
-# приложение. Без секрета — запасной ключ из кэша Actions; кэш стирается после
+# приложение. Ключ проверяется первым шагом, до долгих проверок: неверный секрет
+# останавливает сборку сразу. Без секрета — запасной ключ из кэша Actions; кэш стирается после
 # недели без сборок, и ключ тогда меняется. (Прежняя задача keepkey по расписанию
 # не срабатывала: расписание GitHub запускает только из основной ветки.)
 name: Подземная лаборатория — Android
@@ -40,6 +41,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    env:
+      # (3.5) задан ли постоянный ключ — для условия шага (секреты в if не читаются)
+      HAS_KS: ${{ secrets.ANDROID_KEYSTORE_B64 != '' }}
     steps:
       - name: Забрать репозиторий
         uses: actions/checkout@v4
@@ -47,6 +51,74 @@ jobs:
           sparse-checkout: |
             lab
             .github
+
+      # (3.5) Подпись — в самом начале, до долгих проверок: неверный секрет
+      # останавливает сборку сразу, а заметка задания через минуту говорит, каким
+      # ключом будет подписан APK, и называет отпечаток сертификата.
+      - name: Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # (3.5) Запасной ключ — в кэше сборок, только когда постоянного в секретах нет.
+      # Кэш GitHub стирается после недели без сборок, и тогда ключ создаётся заново:
+      # новая версия не встаёт поверх прежней, а Play Protect видит «незнакомое»
+      # приложение. Постоянный ключ — секрет ниже.
+      - name: Запасной ключ сборки из кэша
+        if: env.HAS_KS != 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.lab-signing
+          key: lab-signing-v1
+
+      - name: Ключ подписи
+        env:
+          KS_SECRET_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KS_SECRET_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          KS_SECRET_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KS_SECRET_KEY_PASS: ${{ secrets.ANDROID_KEY_PASS }}
+        run: |
+          # Постоянный ключ — из секретов репозитория (lab/android/SIGNING.md): один
+          # и тот же во всех сборках. Тогда Android ставит новую версию поверх прежней,
+          # а Play Protect узнаёт приложение и не проверяет его заново при установке.
+          if [ -n "$KS_SECRET_B64" ] && [ -n "$KS_SECRET_PASS" ]; then
+            # постоянный ключ — во временную папку задания, а не в кэшируемую: в кэш Actions он не попадёт
+            KS="$RUNNER_TEMP/lab-release.keystore"; umask 077
+            # пробелы и переводы строк, попавшие в секреты при вставке, не мешают
+            printf '%s' "$KS_SECRET_B64" | base64 -d -i > "$KS"
+            P="$(printf '%s' "$KS_SECRET_PASS" | tr -d '\r\n')"
+            A="$(printf '%s' "${KS_SECRET_ALIAS:-lab}" | tr -d '\r\n')"
+            KP="$(printf '%s' "${KS_SECRET_KEY_PASS:-$KS_SECRET_PASS}" | tr -d '\r\n')"
+            SRC="постоянный ключ из секретов репозитория"
+          else
+            D="$HOME/.lab-signing"; mkdir -p "$D"; chmod 700 "$D"
+            if [ ! -f "$D/lab.keystore" ]; then
+              openssl rand -hex 24 > "$D/pass"
+              keytool -genkeypair -keystore "$D/lab.keystore" -storetype PKCS12 \
+                -alias lab -keyalg RSA -keysize 4096 -validity 12000 \
+                -storepass "$(cat "$D/pass")" -keypass "$(cat "$D/pass")" \
+                -dname "CN=Podzemnaya Laboratoriya, O=Grani Mirov, C=RU"
+            fi
+            KS="$D/lab.keystore"; P="$(cat "$D/pass")"; A="lab"; KP="$P"
+            SRC="запасной ключ из кэша"
+            echo "::warning::Секрет ANDROID_KEYSTORE_B64 не задан: APK подписан запасным ключом из кэша. Он может смениться — тогда новая версия не встанет поверх старой, а Play Protect будет проверять её заново. Постоянный ключ: lab/android/SIGNING.md"
+          fi
+          echo "::add-mask::$P"; echo "::add-mask::$KP"
+          # ключ читается и псевдоним верный — иначе сборка падает сразу, а не выдаёт APK без подписи
+          if ! keytool -list -keystore "$KS" -storepass "$P" -alias "$A" > /dev/null 2>&1; then
+            echo "::error title=Ключ подписи::$SRC не читается: не тот пароль (ANDROID_KEYSTORE_PASS), испорчен base64 (ANDROID_KEYSTORE_B64) или псевдоним ключа не «$A» (ANDROID_KEY_ALIAS). Как задать ключ: lab/android/SIGNING.md"
+            exit 1
+          fi
+          FP=$(keytool -list -v -keystore "$KS" -storepass "$P" -alias "$A" | grep -m1 "SHA256:" | sed 's/.*SHA256: *//')
+          echo "Подпись: $SRC. SHA-256 сертификата: ${FP:-?}"
+          echo "::notice title=Ключ подписи::$SRC; SHA-256 сертификата: ${FP:-?}"
+          {
+            echo "KS_FILE=$KS"
+            echo "KS_PASS=$P"
+            echo "KS_ALIAS=$A"
+            echo "KS_KEY_PASS=$KP"
+          } >> "$GITHUB_ENV"
 
       - name: Node
         uses: actions/setup-node@v4
@@ -81,12 +153,6 @@ jobs:
           NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/play.test.js
           NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/sound.test.js
 
-      - name: Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
       - name: Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
@@ -118,69 +184,21 @@ jobs:
           du -sh "$W" "$W"/sounds
           find "$W" -type f | wc -l
 
-      # (3.3) Запасной ключ — в кэше сборок. Кэш GitHub стирается после недели без
-      # сборок, и тогда ключ создаётся заново: новая версия не встаёт поверх прежней,
-      # а Play Protect видит «незнакомое» приложение. Постоянный ключ — секрет ниже.
-      - name: Запасной ключ сборки из кэша
-        uses: actions/cache@v4
-        with:
-          path: ~/.lab-signing
-          key: lab-signing-v1
-
-      - name: Ключ подписи
-        env:
-          KS_SECRET_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
-          KS_SECRET_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
-          KS_SECRET_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          KS_SECRET_KEY_PASS: ${{ secrets.ANDROID_KEY_PASS }}
-        run: |
-          D="$HOME/.lab-signing"; mkdir -p "$D"; chmod 700 "$D"
-          # Постоянный ключ — из секретов репозитория (lab/android/SIGNING.md): один
-          # и тот же во всех сборках. Тогда Android ставит новую версию поверх прежней,
-          # а Play Protect узнаёт приложение и не проверяет его заново при установке.
-          if [ -n "$KS_SECRET_B64" ] && [ -n "$KS_SECRET_PASS" ]; then
-            # постоянный ключ — во временную папку задания, а не в кэшируемую: в кэш Actions он не попадёт
-            KS="$RUNNER_TEMP/lab-release.keystore"; umask 077
-            printf '%s' "$KS_SECRET_B64" | base64 -d > "$KS"
-            P="$KS_SECRET_PASS"
-            A="${KS_SECRET_ALIAS:-lab}"; KP="${KS_SECRET_KEY_PASS:-$KS_SECRET_PASS}"
-            echo "Подпись: постоянный ключ из секретов репозитория."
-          else
-            if [ ! -f "$D/lab.keystore" ]; then
-              openssl rand -hex 24 > "$D/pass"
-              keytool -genkeypair -keystore "$D/lab.keystore" -storetype PKCS12 \
-                -alias lab -keyalg RSA -keysize 4096 -validity 12000 \
-                -storepass "$(cat "$D/pass")" -keypass "$(cat "$D/pass")" \
-                -dname "CN=Podzemnaya Laboratoriya, O=Grani Mirov, C=RU"
-            fi
-            KS="$D/lab.keystore"; P="$(cat "$D/pass")"; A="lab"; KP="$P"
-            echo "::warning::Секрет ANDROID_KEYSTORE_B64 не задан: APK подписан запасным ключом из кэша. Он может смениться — тогда новая версия не встанет поверх старой, а Play Protect будет проверять её заново. Постоянный ключ: lab/android/SIGNING.md"
-          fi
-          echo "::add-mask::$P"; echo "::add-mask::$KP"
-          # ключ читается и псевдоним верный — иначе сборка падает сразу, а не выдаёт APK без подписи
-          keytool -list -keystore "$KS" -storepass "$P" -alias "$A" > /dev/null
-          {
-            echo "KS_FILE=$KS"
-            echo "KS_PASS=$P"
-            echo "KS_ALIAS=$A"
-            echo "KS_KEY_PASS=$KP"
-          } >> "$GITHUB_ENV"
-
       - name: APK
         env:
           BUILD_NUMBER: ${{ github.run_number }}
         run: |
           (cd lab/android && gradle --no-daemon :app:assembleRelease)
-          cp lab/android/app/build/outputs/apk/release/app-release.apk Podzemnaya-laboratoriya-Alfa-3.3.apk
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs Podzemnaya-laboratoriya-Alfa-3.3.apk | grep -E "^Verified using v[123]|certificate SHA-256|certificate DN" 
-          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging Podzemnaya-laboratoriya-Alfa-3.3.apk | head -4
-          ls -la Podzemnaya-laboratoriya-Alfa-3.3.apk
+          cp lab/android/app/build/outputs/apk/release/app-release.apk Podzemnaya-laboratoriya-Alfa-3.5.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs Podzemnaya-laboratoriya-Alfa-3.5.apk | grep -E "^Verified using v[123]|certificate SHA-256|certificate DN" 
+          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging Podzemnaya-laboratoriya-Alfa-3.5.apk | head -4
+          ls -la Podzemnaya-laboratoriya-Alfa-3.5.apk
 
       - name: APK — на страницу сборки
         uses: actions/upload-artifact@v4
         with:
-          name: podzemnaya-laboratoriya-alfa-3.3-apk
-          path: Podzemnaya-laboratoriya-Alfa-3.3.apk
+          name: podzemnaya-laboratoriya-alfa-3.5-apk
+          path: Podzemnaya-laboratoriya-Alfa-3.5.apk
           compression-level: 0
           retention-days: 90
 
@@ -217,7 +235,7 @@ jobs:
           ram-size: 2048M
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: bash lab/android/install-check.sh Podzemnaya-laboratoriya-Alfa-3.3.apk
+          script: bash lab/android/install-check.sh Podzemnaya-laboratoriya-Alfa-3.5.apk
 
       - name: Установка и самопроверка на Android 15
         uses: reactivecircus/android-emulator-runner@v2
@@ -229,7 +247,7 @@ jobs:
           ram-size: 2048M
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: bash lab/android/install-check.sh Podzemnaya-laboratoriya-Alfa-3.3.apk
+          script: bash lab/android/install-check.sh Podzemnaya-laboratoriya-Alfa-3.5.apk
 
       # Android 17: имя образа — из списка SDK (шаг «Платформа Android 17»),
       # поэтому эмулятор запускаем сами, без готового действия.
@@ -295,7 +313,7 @@ jobs:
           adb devices
           for k in window_animation_scale transition_animation_scale animator_duration_scale; do adb shell settings put global $k 0 || true; done
           set +e
-          bash lab/android/install-check.sh Podzemnaya-laboratoriya-Alfa-3.3.apk
+          bash lab/android/install-check.sh Podzemnaya-laboratoriya-Alfa-3.5.apk
           RC=$?
           adb emu kill > /dev/null 2>&1 || true
           exit $RC
@@ -311,16 +329,16 @@ jobs:
           # проверяем, что он опубликован, и если нет — публикуем снова.
           for ID in $(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=50" --jq '.[] | select(.tag_name=="lab-android-latest") | select(.draft) | .id'); do gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/$ID" > /dev/null || true; done
           for i in $(seq 1 12); do git ls-remote --exit-code --tags "https://github.com/$GITHUB_REPOSITORY" "refs/tags/lab-android-latest" > /dev/null 2>&1 || break; sleep 5; done
-          SIZE=$(stat -c %s Podzemnaya-laboratoriya-Alfa-3.3.apk)
+          SIZE=$(stat -c %s Podzemnaya-laboratoriya-Alfa-3.5.apk)
           cat > "$RUNNER_TEMP/notes.md" <<EOF
-          «Подземная лаборатория» Альфа 3.3 — звуковая игра для Android 9 и новее, по Android 17 включительно. Сборка ${GITHUB_RUN_NUMBER} из ${GITHUB_REF_NAME} (${GITHUB_SHA}).
+          «Подземная лаборатория» Альфа 3.5 — звуковая игра для Android 9 и новее, по Android 17 включительно. Сборка ${GITHUB_RUN_NUMBER} из ${GITHUB_REF_NAME} (${GITHUB_SHA}).
 
-          Полная сборка: вся игра внутри одного файла Podzemnaya-laboratoriya-Alfa-3.3.apk (${SIZE} байт) — речь, звуки, музыка. Сеть не нужна, докачивать ничего не надо. Подключённая клавиатура тоже работает: W A S D — шаг, R — оружие, стрелки — выстрел.
+          Полная сборка: вся игра внутри одного файла Podzemnaya-laboratoriya-Alfa-3.5.apk (${SIZE} байт) — речь, звуки, музыка. Сеть не нужна, докачивать ничего не надо. Подключённая клавиатура тоже работает: W A S D — шаг, R — оружие, стрелки — выстрел.
 
           Проверено: ставится и запускается на эмуляторах Android 9, Android 15 и Android 17, самопроверка игры пройдена.
           EOF
-          gh release create lab-android-latest Podzemnaya-laboratoriya-Alfa-3.3.apk --prerelease --target "$GITHUB_SHA" \
-            --title "Подземная лаборатория Альфа 3.3 для Android (сборка ${GITHUB_RUN_NUMBER})" \
+          gh release create lab-android-latest Podzemnaya-laboratoriya-Alfa-3.5.apk --prerelease --target "$GITHUB_SHA" \
+            --title "Подземная лаборатория Альфа 3.5 для Android (сборка ${GITHUB_RUN_NUMBER})" \
             --notes-file "$RUNNER_TEMP/notes.md"
           for i in $(seq 1 6); do
             sleep 10

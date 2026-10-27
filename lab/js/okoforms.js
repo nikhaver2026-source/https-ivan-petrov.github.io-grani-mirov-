@@ -276,7 +276,7 @@ var STAGES = [
 function stageOf(L) { var s = null; STAGES.forEach(function (q) { if (q.at(L)) s = q; }); return s; }
 /* Вход на новый уровень (oko.js, event "enter"): после приветствия ОКО —
    слово «Эхо» о новом облике, если он сменился. */
-/* (3.3) отметка «сказано» ставится, когда фраза прозвучала: погибли, вышли или
+/* (3.5) отметка «сказано» ставится, когда фраза прозвучала: погибли, вышли или
    загрузили другую запись за эти секунды — «Эхо» скажет при следующем входе */
 function later(fn, ms) { return LAB.game.later ? LAB.game.later(fn, ms) : setTimeout(function () { if (LAB.game.entered) fn(); }, ms); }
 function entered() {
