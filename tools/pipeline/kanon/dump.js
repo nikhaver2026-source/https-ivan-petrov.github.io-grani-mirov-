@@ -1,0 +1,21 @@
+/* dump.js — снять из запущенной игры таблицы для встраивания канона: банк звуков, школы, формы, заклинания, твари, звери, ресурсы. */
+const {chromium}=require('playwright');const fs=require('fs');
+(async()=>{const b=await chromium.launch({args:['--autoplay-policy=no-user-gesture-required']});
+ const p=await (await b.newContext()).newPage();const errs=[];p.on('pageerror',e=>errs.push(String(e)));
+ await p.goto(process.argv[2]||'http://localhost:8903/index.html');await p.waitForTimeout(800);
+ await p.evaluate(()=>enterGame());await p.waitForTimeout(800);
+ const r=await p.evaluate(()=>{const o={};
+  o.bank=Object.fromEntries(Object.entries(SOUND_BANK).map(([k,v])=>[k,{d:v.d||"",f:(v.f||[]).slice(0,3),n:(v.f||[]).length}]));
+  o.schools=SCHOOLS.map(s=>({id:s.id,n:s.n,сем:s.сем,звук:s.звук,голос:s.голос}));
+  o.forms=SPELL_FORMS.map(f=>f.id);o.specs=SPELL_SPECS.length;
+  o.spells=SPELLS.map(s=>s.n);
+  o.monsters=MONSTERS.map(m=>({id:m.id,n:m.n,biomes:m.biomes,min:m.min,max:m.max,fly:m.fly||0,нежить:!!m.нежить}));
+  o.fam=ZV_FAMILIES.map(f=>f.id);o.zvsnd=ZV_SND;
+  o.res=typeof RES_KINDS!=="undefined"?RES_KINDS.map(k=>({id:k.id,n:k.n,res:k.res})):null;
+  o.itemlore=typeof ITEM_LORE!=="undefined"?Object.keys(ITEM_LORE).length:0;
+  o.foefam=typeof FOE_FAMILY_ID!=="undefined"?FOE_FAMILY_ID:null;
+  o.spoils=typeof SPOILS_BY_ID!=="undefined"?Object.keys(SPOILS_BY_ID):null;
+  o.audio=Object.keys(SCHOOL_AUDIO);
+  return o;});
+ fs.writeFileSync('/root/S/kanon/dump.json',JSON.stringify(r));console.log(Object.keys(r.bank).length,'звуков;',r.schools.length,'школ;',r.monsters.length,'тварей;',r.fam.length,'родов; ошибок',errs.length,errs.slice(0,3));
+ await b.close();})();

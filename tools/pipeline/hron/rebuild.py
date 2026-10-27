@@ -54,12 +54,17 @@ if PHASE>=9:
         late+="\n"+open(H+'door147_late.js',encoding='utf-8').read()
     # (15.0) древние подъёмники и Немота — Нулевой Предел: ядро, твари, вещи и люди, «Немая штольня»;
     # поиск под рукой, тайные ходы (лаз назван, вход шагом и касанием, после находки закрыт), завал не зря
-    for f in ('lift150_late.js','nem150_late.js','nem150b_late.js','nem150c_late.js','nem150d_late.js','poisk150_late.js','taina150_late.js','zagadki150_late.js','zaval150_late.js','nem155_late.js','glub155_late.js','zver155_late.js','zvuk155_late.js','prolog155_late.js','svod155_late.js','zhivye155_late.js','torg160_late.js','put165_late.js','zhivoe165_late.js','tayny165_late.js','dom165_late.js','zvuk165_late.js','vyuchka165_late.js','zagadki165_late.js','golos165_late.js','rudy170_late.js','zelya170_late.js','hozyain170_late.js','rabota170_late.js','dela170_late.js','slava170_late.js','molva170_late.js','lavka170_late.js','masterstvo170_late.js','priklyuch170_late.js','edin175_late.js','vyhod175_late.js','fonstrazh175_late.js','lestboy175_late.js','tihboy175_late.js','konec155_late.js'):
+    for f in ('lift150_late.js','nem150_late.js','nem150b_late.js','nem150c_late.js','nem150d_late.js','poisk150_late.js','taina150_late.js','zagadki150_late.js','zaval150_late.js','nem155_late.js','glub155_late.js','zver155_late.js','zvuk155_late.js','prolog155_late.js','svod155_late.js','zhivye155_late.js','torg160_late.js','put165_late.js','zhivoe165_late.js','tayny165_late.js','dom165_late.js','zvuk165_late.js','vyuchka165_late.js','zagadki165_late.js','golos165_late.js','rudy170_late.js','zelya170_late.js','hozyain170_late.js','rabota170_late.js','dela170_late.js','slava170_late.js','molva170_late.js','lavka170_late.js','masterstvo170_late.js','priklyuch170_late.js','edin175_late.js','vyhod175_late.js','fonstrazh175_late.js','lestboy175_late.js','tihboy175_late.js','kanon180_late.js','konec155_late.js'):
+        if f=='kanon180_late.js' and os.environ.get('NOKANON'): continue  # сборка без канона (пока он не доделан)
         if os.path.exists(H+f):
             _t=open(H+f,encoding='utf-8').read()
             # 17.5: поправки громкости записей по замеру (zvuk_lufs.py → lufs175.json) — в модуль единых обработчиков
             if f=='edin175_late.js' and '/*@LUFS175@*/{}' in _t and os.path.exists(H+'lufs175.json'):
                 _t=_t.replace('/*@LUFS175@*/{}',_json.dumps(_json.load(open(H+'lufs175.json',encoding='utf-8')),ensure_ascii=False,separators=(",",":"),sort_keys=True))
+            # 18.0: канон Грани — данные (tools/kanon/kanon_build.py → kanon180_data.json) в модуль
+            if f=='kanon180_late.js':
+                assert _t.count('/*@KANON180@*/{}')==1 and os.path.exists(H+'kanon180_data.json')
+                _t=_t.replace('/*@KANON180@*/{}',_json.dumps(_json.load(open(H+'kanon180_data.json',encoding='utf-8')),ensure_ascii=False,separators=(",",":")))
             late+="\n"+_t
 open(H+'mater_late.js','w',encoding='utf-8').write(late)
 R='/home/user/https-ivan-petrov.github.io-grani-mirov-/'

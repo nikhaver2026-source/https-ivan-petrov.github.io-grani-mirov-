@@ -1,0 +1,24 @@
+{
+ "kn_str_pluck": [
+  "kanon/kn_str_pluck_01.flac",
+  "kanon/kn_str_pluck_02.flac",
+  "kanon/kn_str_pluck_03.flac"
+ ],
+ "kn_str_chord": [
+  "kanon/kn_str_chord_01.flac",
+  "kanon/kn_str_chord_02.flac"
+ ],
+ "kn_str_gliss": [
+  "kanon/kn_str_gliss_01.flac",
+  "kanon/kn_str_gliss_02.flac"
+ ],
+ "kn_str_hum": [
+  "kanon/kn_str_hum_01.flac",
+  "kanon/kn_str_hum_02.flac"
+ ],
+ "kn_salt": [
+  "kanon/kn_salt_01.flac",
+  "kanon/kn_salt_02.flac",
+  "kanon/kn_salt_03.flac"
+ ]
+}
