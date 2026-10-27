@@ -54,7 +54,7 @@ if PHASE>=9:
         late+="\n"+open(H+'door147_late.js',encoding='utf-8').read()
     # (15.0) древние подъёмники и Немота — Нулевой Предел: ядро, твари, вещи и люди, «Немая штольня»;
     # поиск под рукой, тайные ходы (лаз назван, вход шагом и касанием, после находки закрыт), завал не зря
-    for f in ('lift150_late.js','nem150_late.js','nem150b_late.js','nem150c_late.js','nem150d_late.js','poisk150_late.js','taina150_late.js','zagadki150_late.js','zaval150_late.js','nem155_late.js','glub155_late.js','zver155_late.js','zvuk155_late.js','prolog155_late.js','svod155_late.js','zhivye155_late.js','torg160_late.js','put165_late.js','zhivoe165_late.js','tayny165_late.js','dom165_late.js','zvuk165_late.js','vyuchka165_late.js','zagadki165_late.js','golos165_late.js','rudy170_late.js','zelya170_late.js','hozyain170_late.js','rabota170_late.js','dela170_late.js','slava170_late.js','molva170_late.js','lavka170_late.js','masterstvo170_late.js','priklyuch170_late.js','edin175_late.js','vyhod175_late.js','fonstrazh175_late.js','lestboy175_late.js','tihboy175_late.js','kanon180_late.js','konec155_late.js'):
+    for f in ('lift150_late.js','nem150_late.js','nem150b_late.js','nem150c_late.js','nem150d_late.js','poisk150_late.js','taina150_late.js','zagadki150_late.js','zaval150_late.js','nem155_late.js','glub155_late.js','zver155_late.js','zvuk155_late.js','prolog155_late.js','svod155_late.js','zhivye155_late.js','torg160_late.js','put165_late.js','zhivoe165_late.js','tayny165_late.js','dom165_late.js','zvuk165_late.js','vyuchka165_late.js','zagadki165_late.js','golos165_late.js','rudy170_late.js','zelya170_late.js','hozyain170_late.js','rabota170_late.js','dela170_late.js','slava170_late.js','molva170_late.js','lavka170_late.js','masterstvo170_late.js','priklyuch170_late.js','edin175_late.js','vyhod175_late.js','fonstrazh175_late.js','lestboy175_late.js','tihboy175_late.js','kanon180_late.js','rost180_late.js','konec155_late.js'):
         if f=='kanon180_late.js' and os.environ.get('NOKANON'): continue  # сборка без канона (пока он не доделан)
         if os.path.exists(H+f):
             _t=open(H+f,encoding='utf-8').read()
@@ -75,6 +75,20 @@ def rep(old,new,cnt=1):
 # 18.0: канон добавил восемь форм плетения — самопроверка считает «не меньше двенадцати» (без канона — ровно двенадцать)
 if not os.environ.get('NOKANON'):
     rep("SPELL_FORMS.length===12&&SPELL_MODS","SPELL_FORMS.length>=12&&SPELL_MODS")
+    rep("new Set(SPELL_FORMS.map(f=>f.id)).size===12&&","new Set(SPELL_FORMS.map(f=>f.id)).size===SPELL_FORMS.length&&")
+# 18.0: рост героя медленнее — опыт уровня 100·L² + 5·L³ (модуль rost180: ворота познания, убывание опыта за породу)
+rep("const xpNeed=l=>l*l*50;","const xpNeed=l=>Math.round(100*l*l+5*l*l*l);   /* (18.0) прежде 50·L² — рост был слишком быстрым */")
+# 18.0: специализацию из книги понимает тот, кто знает чары её школы; не больше одной на шесть уровней сверх первой
+rep('''    if(!нет.length)return " Все специализации этой книги вам уже открыты.";
+    const s=нет[Math.floor(hashName(bookSum(n),17,9904)*нет.length)%нет.length];''',
+'''    if(!нет.length)return " Все специализации этой книги вам уже открыты.";
+    /* (18.0) Специализацию понимает тот, кто знает чары её школы, и держит не больше одной на шесть уровней сверх первой. */
+    const ур18=Math.max(1,Number(G.level)||1),предел18=1+Math.floor(ур18/6),уже18=Object.keys(G.specBook).length;
+    if(уже18>=предел18)return ` Специализации этой книги вам пока не по силам: открыто ${уже18}, а на ${ур18}-м уровне больше ${предел18} не удержать. Книга подождёт роста.`;
+    const школы18=new Set((G.spells||[]).map(x=>SPELL_SCHOOL[x]||safeFn(()=>(SCHOOL_SPELL_BY_NAME[x]||{}).school,null)).filter(Boolean));
+    const понятно=нет.filter(x=>школы18.has(x.школа));
+    if(!понятно.length)return " Специализации этой книги — о школах, чьих чар вы не знаете: строки не складываются в смысл. Выучите хотя бы одно заклинание такой школы.";
+    const s=понятно[Math.floor(hashName(bookSum(n),17,9904)*понятно.length)%понятно.length];''')
 rep("const WORLD_MAX=1000000;","const WORLD_MAX=20000000;\n/* (14.5) Прежний край мира: полоса Перекроя кончается на миллионе, дальше — Великие Материки. */\nconst PRK_MAX=1000000;")
 rep("const cap=l.ось===\"восток\"?{x:905000,y:Math.round(l.доля*WORLD_MAX)}","const cap=l.ось===\"восток\"?{x:905000,y:Math.round(l.доля*PRK_MAX)}")
 rep(" if(x>=WORLD_MAX||y>=WORLD_MAX)return null;\n /* Глубже в полосе"," if(x>=PRK_MAX||y>=PRK_MAX)return null;\n /* Глубже в полосе")

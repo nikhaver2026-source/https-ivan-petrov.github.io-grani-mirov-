@@ -23,7 +23,7 @@ const DirCheck={
  st(){if(!G.dchk||typeof G.dchk!=="object")G.dchk={};const s=G.dchk;if(!Array.isArray(s.отказ))s.отказ=[];if(!Number.isFinite(Number(s.ок)))s.ок=0;if(!Number.isFinite(Number(s.пред)))s.пред=0;return s;},
  inWorld(x,y){return Number.isFinite(Number(x))&&Number.isFinite(Number(y))&&x>=0&&y>=0&&x<WORLD_MAX&&y<WORLD_MAX;},
  nm(t){return typeof t==="string"&&t.trim().length>=2;},
- resKnown(k,g){return RES_BASE[k]>0||k==="кожа"||!!safeFn(()=>RES_KIND_BY_RES[k],null)||!!safeFn(()=>MIX_NATURE[k],null)||((g||Neuro.gen()).res||[]).some(z=>z.n===k);},
+ resKnown(k,g){return RES_BASE[k]>0||k==="кожа"||(typeof CONTRABAND_POOL!=="undefined"&&CONTRABAND_POOL.indexOf(k)>=0)||!!safeFn(()=>RES_KIND_BY_RES[k],null)||!!safeFn(()=>MIX_NATURE[k],null)||((g||Neuro.gen()).res||[]).some(z=>z.n===k);},
  /* ── ПРОВЕРКА ОДНОГО ОПРЕДЕЛЕНИЯ ── пустая строка — годно, иначе — почему нет */
  why(k,r,g){g=g||Neuro.gen();const id=x=>new Set((g[x]||[]).map(z=>z.id));
   if(!r||typeof r!=="object")return "не запись";if(k!=="rel"&&k!=="books"&&k!=="quests"&&!this.nm(r.n||r.name))return "без имени";
@@ -34,7 +34,8 @@ const DirCheck={
     if(!(Number(r.срок)>0)||!(r.стаб>0&&r.стаб<1))return "срок или устойчивость вне пределов";if(POTIONS.some(p=>p.id!==r.id&&p.n===r.n))return "имя уже занято";return "";}
    case "res":{if(!(Number(r.цена)>0&&Number(r.цена)<1000))return "цена вне пределов";if(r.земля&&!id("lands").has(r.земля))return "земля не существует";if(dup("res","n"))return "имя уже занято";return "";}
    /* из чего делать — из того, что знает мир: припасы, все роды ресурсов и природы опытов (зеркальный осколок
-      тёмных земель тоже), кожа (её дубят из шкур) и собственные припасы Режиссёра */
+      тёмных земель тоже), кожа (её дубят из шкур), контрабанда (тёмная смола — в трёх рецептах мистики; 18.0)
+      и собственные припасы Режиссёра */
    case "arts":{if(!(Number(r.цена)>0))return "без цены";if(!r.нужно||typeof r.нужно!=="object"||!Object.keys(r.нужно).length||Object.entries(r.нужно).some(([k2,v])=>!(Number(v)>0)||!this.resKnown(k2,g)))return "из чего делать — неизвестно";if(dup("arts","n"))return "имя уже занято";return "";}
    case "spells":{const q=r.rec;if(!q)return "без чар";if(!MSCHOOL_BY_ID[q.school]||!FORM_BY_ID[q.форма]||(q.ядро&&!CORE_BY_ID[q.ядро])||(q.стихия&&!ELEM_BY_ID[q.стихия]))return "школа, форма, ядро или стихия не существуют";
     const w=safeFn(()=>spellIncompat(q.school,q.форма,q.усиление||"none",q.ядро,q.стихия),"");if(w)return "чары не складываются: "+w;if(dup("spells","n"))return "имя уже занято";return "";}

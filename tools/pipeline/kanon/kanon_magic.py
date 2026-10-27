@@ -25,7 +25,7 @@ SCHOOLS = [
  dict(id="silence", n="Магия Безмолвия", род="безмолвия", сем="скрытность", k=0.95, звук="spell_dark", голос="oc_drone_die", elem="e_dark", fac="chrono",
       audio=dict(prep="oc_soft_touch", charge="sp_crystal", cast="oc_drone_die", travel="oc_rustle", impact="sv_trap_clang", result="oc_smoke", fade="sp_crystal"),
       specs=[("kn_nemoy_shag", "Немой шаг", "veil", "e_dark", "oc_step_soft", "шаг не слышен ни зверю, ни стражу"),
-             ("kn_glush", "Глушь", "veil", "e_mind", "sv_trap_clang", "вокруг гаснет всякий звук, и вас теряют"),
+             ("kn_glush", "Глушь", "shift", "e_mind", "sv_trap_clang", "вокруг гаснет всякий звук — и вы уже не там, где вас искали"),
              ("kn_usta", "Запечатанные уста", "sense", "e_mind", "oc_soft_touch", "в полной тишине слышно, кто где дышит"),
              ("kn_slepyashaya", "Слепящая тишина", "astral", "e_spirit", "sp_crystal", "тишина так глубока, что открывается иной слой")]),
  dict(id="path", n="Тропная магия", род="троп", сем="скрытность", k=1.0, звук="spell_cast", голос="step_dirt", elem="e_space", fac="kinetics",

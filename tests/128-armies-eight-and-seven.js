@@ -142,7 +142,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   G.cha=20;G.serveDay=null;
   const к0=a.командование;о.дипломат=Armies.serve("diplomat");о.команд=[к0,a.командование];
   /* диверсант */
-  G.deeds=G.deeds||{};G.deeds.hides=100;G.serveDay=null;
+  /* (18.0) вторая ступень «маскировки» в Древе — со 175 незамеченных переходов (пороги Древа выше) */
+  G.deeds=G.deeds||{};G.deeds.hides=200;G.serveDay=null;
   const о0=a.осады,чо0=b.осады,чс0=b.снабжение;
   о.диверсант=Armies.serve("saboteur");
   о.осады=[о0,a.осады];о.чужие=[чо0,b.осады];о.чужСнаб=[чс0,b.снабжение];

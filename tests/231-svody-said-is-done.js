@@ -51,7 +51,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    const b=СНИМОК();const сказ=СКАЗАНО.join(" ");
    const дело={тишина:()=>buffActive("глушь"),кровь:()=>a.hp-b.hp>Math.round(t.урон*1.4),жар:()=>b.mana<a.mana,ржа:()=>buffActive("ржа"),
     зов:()=>/идут/.test(сказ),тень:()=>s.shadow.hunger>голод,сбой:()=>Svody.n("glitch")>сбоев,клятва:()=>/признала/.test(сказ),
-    корни:()=>b.hour-a.hour>=1,соль:()=>b.water<a.water,
+    корни:()=>b.hour-a.hour>=1-1e-6,соль:()=>b.water<a.water,
     слепок:()=>(s.ess["коготь"]||0)<ess0,рассудок:()=>s.mind<90,рой:()=>/Роевики/.test(сказ),нить:()=>s.mind<90}[t.sv];
    out.push({id:t.id,звук:ИГРАЛО.indexOf(t.сраб)>=0,удар:t.зов?true:b.hp<a.hp,действие:!!(дело&&дело()),слова:сказ.indexOf(t.бьёт)>=0});}
   s.oath=null;return out;});
@@ -100,15 +100,18 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* (15.0) Поручения мира засчитываются при обновлении экрана — и «дойти до…» могло исполниться
      посреди высадки, прибавив свою награду к замеру острова. Мерится остров, а не случайное поручение. */
   safeFn(()=>{Director.st2().q=[];});
+  /* (18.0) Высадка — с моря, не из подземелья прошлой проверки: в ярусе Режиссёр мог засчитать своё «пройти подземелье»
+     посреди высадки. Поручения Режиссёра чистятся перед каждой высадкой — они рождаются заново по ходу. */
+  G.place=null;
   for(const t of SVD.isles)for(let k=0;k<6;k++){
-   G.ship={tox:G.x,toy:G.y,leg:0,legs:4,left:4,island:{type:t.id,x:1000+k*977,y:2000+k*313,name:"Проба"}};
+   safeFn(()=>{Director.st2().q=[];});G.ship={tox:G.x,toy:G.y,leg:0,legs:4,left:4,island:{type:t.id,x:1000+k*977,y:2000+k*313,name:"Проба"}};
    G.hp=G.hpMax=200;G.mana=k%2?10:G.manaMax;G.buffs={};ИГРАЛО.length=0;СКАЗАНО.length=0;
    const a=СНИМОК();const e0=JSON.stringify(Svody.st().ess);
    landIsland();const b=СНИМОК();const t2=СКАЗАНО.join(" ");слова[t.id]=t2.slice(0,120);
    ошибки.push(...СВЕРИТЬ(t2,a,b).map(e=>t.id+": "+e));
    if(/мана \+(\d+)/.test(t2)&&b.mana-a.mana!==Number(t2.match(/мана \+(\d+)/)[1]))ошибки.push(t.id+": мана");
    if(/сущност/.test(t2)&&JSON.stringify(Svody.st().ess)===e0)ошибки.push(t.id+": сущность");
-   if(/три часа/.test(t2)&&b.hour-a.hour<3)ошибки.push(t.id+": часы");
+   if(/три часа/.test(t2)&&b.hour-a.hour<3-1e-6)ошибки.push(t.id+": часы");
    if(setTimeout&&ИГРАЛО.indexOf("ship_arrive")<0)ошибки.push(t.id+": нет звука причала");}
   G.ship=null;return {ошибки:[...new Set(ошибки)],слова};});
  check('4. пять родов островов Сводов: слова высадки совпадают с делом',!о.ошибки.length,о);
@@ -169,6 +172,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const s=Svody.st();s.quests={};s.met={};s.relics=[];s.worn=[];s.seals=[];s.cnt.rivers={};s.cnt.seas={};s.shadow={lvl:0,xp:0,hunger:0};s.body={};s.oath=null;s.wrath={};
   for(const id of Object.keys(s.lands))s.lands[id].decay=50;
   for(const n of SVD.npcs)Svody.take(n.id);
+  /* (18.0) Не в подземелье: бродячий яруса прошлой проверки настигал героя, и в бою к острову-престолу не пристать. */
+  G.place=null;G.inCombat=false;G.combat=null;safeFn(()=>{Director.st2().q=[];});
   /* четыре в работе — остальные ждут; делаем по очереди */
   const итог={};const g0=G.gold;
   const сделать={
@@ -244,6 +249,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    for(let y=2;y<l.h-2;y++)for(let x=2;x<l.w-2;x++){if(tileAt(l,x,y)!=="."||tileAt(l,x+1,y)!=="#"||tileAt(l,x+2,y)!==".")continue;
     if(safeFn(()=>passageAt(x+1,y),null))continue;
     G.place.x=x;G.place.y=y;G.mana=G.manaMax=30;G.inCombat=false;G.combat=null;ИГРАЛО.length=0;
+    /* (18.0) поручение Режиссёра «пройти подземелье» на шаге давало опыт и уровень — а с уровнем мана полна */
+    safeFn(()=>{Director.st2().q=[];});
+    /* (18.0) набор двигал часы мира, а восполнение маны вещами помнит последний час: шаг догонял до шести часов
+       «манавосста» разом, и мана снова была полной. Отметка — на текущий час. */
+    G.artTick=Math.floor(Number(G.hour)||0)+(Number(G.day)||1)*24;
     const ответ=Svody.slipArm();moveInside("E");
     return {ответ:ответ.slice(0,40),там:G.place.x===x+2&&G.place.y===y,мана:30-G.mana,звук:ИГРАЛО.indexOf("sv_slip")>=0};}}
   return {нет:true};});
@@ -321,7 +331,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    const р=(t.match(/(?<!Чаша Мирры: )рассудок ([+−-]?[\d.]+)/)||[])[1];if(o!=="r"&&р!==undefined&&Math.abs(Number(р.replace("−","-"))-(b.mind-a.mind))>0.05)ошибки.push(c.id+o+": рассудок");
    const з=(t.match(/([+−])(\d+) золота/)||[]);if(з[2]&&(з[1]==="+"?1:-1)*Number(з[2])!==b.gold-a.gold)ошибки.push(c.id+o+": золото");
    const отд=(t.match(/отдано (\d+) золота/)||[])[1];if(отд&&Number(отд)!==a.gold-b.gold)ошибки.push(c.id+o+": отдано");
-   if(o==="r"&&(b.hour-a.hour<6||Math.abs(a.mind-b.mind-10)>0.05))ошибки.push(c.id+": отказ");}
+   /* (18.0) часы мира дробные (идут по реальному времени): через полночь 23,9 + 6 − 24 даёт 5,9999… */
+   if(o==="r"&&(b.hour-a.hour<6-1e-6||Math.abs(a.mind-b.mind-10)>0.05))ошибки.push(c.id+": отказ");}
   return ошибки;});
  check('18. выбор на краю: человечность, рассудок и золото меняются ровно на сказанное; отказ — шесть часов и рассудок −10',!в2.length,в2);
 

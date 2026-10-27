@@ -105,3 +105,7 @@ kanon/probe_mag.js
 hron/patch_guide_k180.py
 kanon/kanon_world.py
 kanon/probe_kraya.js
+hron/rost180_late.js
+hron/patch_guide_r180.py
+rost/probe_rost.js
+rost/probe_grind.js

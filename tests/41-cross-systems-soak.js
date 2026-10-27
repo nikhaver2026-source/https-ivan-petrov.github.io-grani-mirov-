@@ -301,7 +301,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    gestures:[],tutor:[],close:[],fight:["atk"],flee:[],cards:[10],fish:[],sellall:[],
    carsellall:[],pray:[],move:["N"],testall:[]};
   /* Разрушительное и служебное здесь ни при чём: они меняют весь прогон. */
-  const мимо=new Set(["testall","loadfile","savefile","load","loadauto","slotload","slotdel"]);
+  const мимо=new Set(["testall","loadfile","savefile","load","loadauto","slotload","slotdel",
+   /* (18.0) кнопки окон 17.0: довод у них всегда составной («окно~ид~пункт»), без него игроку их не вызвать —
+      пустой вызов честно возвращает «нет действия» (false) и молчит; проверяются наборами своих окон */
+   "z170","c170","molva170","prk170","prk170lens","prk170g"]);
   let вызовов=0;const медлили=[];
   for(const [имя,поставить] of Object.entries(состояния)){
    for(const к of команды){

@@ -74,6 +74,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const уровень=await page.evaluate(()=>{
   const ярусы=[1,4,5,7,10,15,20].map(l=>l+":"+levelTier(l));
   const роли=[];const o=Bank.play;Bank.play=function(r,opts){роли.push([r,(opts&&opts.kind)||"fx"]);return o.call(this,r,Object.assign({},opts||{},{gain:0,maxSec:0.3}));};
+  /* (18.0) Десятый уровень открывает познание мира: герой знает довольно земель и тайн. */
+  if(typeof Рост!=="undefined"){G.seenRegions=G.seenRegions||{};for(let i=0;i<30;i++)G.seenRegions["проба99_"+i]=1;G.faith=Object.assign(G.faith||{},{проба99:1});Рост.сброс();
+   /* подготовка не должна дарить достижений (их музыка легла бы на следующую проверку): что дорослось — отмечаем тихо */
+   safeFn(()=>MERITS.forEach(m=>{if(Merits.progress(m.id)>=m.цель)Merits.got()[m.id]=Number(G.day)||1;}));}
   const было=G.level;G.level=9;G.xp=xpNeed(9)+1;EventPick.last=null;
   checkLevelUp();
   Bank.play=o;

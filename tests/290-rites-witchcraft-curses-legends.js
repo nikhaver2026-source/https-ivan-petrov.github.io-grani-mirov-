@@ -70,7 +70,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    const sp=specsOfSchool(id);if(sp.length!==4)плохо.push(id+":спец");
    if(new Set(sp.map(x=>x.ядро)).size!==4||new Set(sp.map(x=>x.стихия)).size!==4)плохо.push(id+":повтор");
    sp.forEach(x=>{if(!grimFind(id,x.id).length)плохо.push(x.id+":пусто");});}
-  return {школ:SCHOOLS.length,плохо,дисциплин:НОВЫЕ.map(id=>MSCHOOL_BY_ID[id].n)};});
+  return {школ:SCHOOLS.filter(sc=>!sc.канон).length /* (18.0) школы преданий Грани — в наборе 344 */,плохо,дисциплин:НОВЫЕ.map(id=>MSCHOOL_BY_ID[id].n)};});
  check('1. десять новых школ полны: голос, семь слоёв записями, стихия, три чары, четыре специализации с заклинаниями в гримуаре',
   шк.школ===48&&шк.плохо.length===0,шк);
 

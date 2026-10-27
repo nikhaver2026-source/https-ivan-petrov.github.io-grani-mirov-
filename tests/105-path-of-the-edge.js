@@ -38,6 +38,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const errors=[];page.on('pageerror',e=>errors.push(String(e)));
  await page.goto(process.argv[2]);await page.waitForTimeout(700);
  await page.evaluate(()=>enterGame());await page.waitForTimeout(500);
+ /* (18.0) Высокие ступени ветвей ждут уровня героя: Путь проверяется на взрослом герое, а пороги ветвей круче. */
+ await page.evaluate(()=>{G.level=60;});
  const пауза=ms=>page.waitForTimeout(ms);
  await page.evaluate(()=>{window.SAID=[];const o=Speech.say.bind(Speech);Speech.say=(t,x)=>{SAID.push(String(t));return o(t,x);};
   window.PLAYED=[];const p=Bank.play.bind(Bank);Bank.play=(r,o)=>{PLAYED.push(String(r));return p(r,Object.assign({},o||{},{gain:0,maxSec:0.4}));};
@@ -67,12 +69,12 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const ступень=await page.evaluate(()=>{
   const r={};G.deeds={};G.pathRank=0;G.paths=[];G.bosses={};
   r.старт=Path.rank().id;r.next0=Path.next();
-  G.deeds={hits:12,kills:3};r.безДок=Path.rankIndex();
+  G.deeds={hits:30,kills:8};r.безДок=Path.rankIndex();
   G.deeds.steps=30;r.ученик=Path.rankIndex();
   PLAYED.length=0;JT.length=0;SAID.length=0;
   r.check1=Path.check();r.звук=PLAYED.includes("throng_hail_m");r.летопись=JT.some(t=>/Путь Грани: ступень «Ученик»/.test(t));r.сказано=SAID.some(t=>/поднялись на ступень «Ученик»/.test(t));
   r.check2=Path.check();
-  G.deeds={hits:35,kills:9,casts:4,manaSpent:72,steps:30};r.score=Path.score();r.практикБезДок=Path.rankIndex();r.next1=Path.next();
+  G.deeds={hits:110,kills:28,casts:10,manaSpent:180,steps:30};r.score=Path.score();r.практикБезДок=Path.rankIndex();r.next1=Path.next();
   G.deeds.quests=2;r.практик=Path.rankIndex();
   return r;});
  check('ступень: Искра на старте, порог ветвей без доказательства не даёт Ученика, тридцать шагов дают; подъём звучит приветствием толпы, пишется в летопись и объявляется один раз',
@@ -91,11 +93,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.text=Path.facetText(FACET_BY_ID.stone);
   G.tomeRead={a:1,b:1};r.tongue=Path.facetTier("tongue");r.gainLang=Path.gainK("lang");
   /* след силы и пути */
-  G.deeds={};r.следПусто=Path.traceText();G.deeds={hits:35,kills:9};r.след=Path.traceText();
+  G.deeds={};r.следПусто=Path.traceText();G.deeds={hits:110,kills:28};r.след=Path.traceText();
   G.paths=[];r.слабый=Path.declare("mage");
   PLAYED.length=0;r.объявлен=Path.declare("blade");r.труба=PLAYED.includes("throng_lord");r.paths1=(G.paths||[]).slice();
   r.повторно=Path.declare("blade");
-  G.deeds={hits:35,kills:9,casts:12,manaSpent:80,steps:100};r.второй=Path.declare("mage");r.третий=Path.declare("hunter");r.paths=(G.paths||[]).slice();
+  G.deeds={hits:110,kills:28,casts:37,manaSpent:180,steps:100};r.второй=Path.declare("mage");r.третий=Path.declare("hunter");r.paths=(G.paths||[]).slice();
   r.оставлен=Path.renounce("mage");r.paths2=(G.paths||[]).slice();
   /* ремёсла объявленного пути растут на десятую: Путь Артефактора — ветви артефакторики и зачарования */
   const б=G.paths;G.paths=["artificer"];r.gainArte=Path.gainK("arte");r.gainSmith=Path.gainK("smith");G.paths=б;
@@ -157,7 +159,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 7. чары Пути ── */
  const чары=await page.evaluate(()=>{
   const r={};G.deeds={};G.pathRank=0;r.rank0=Path.cast("impulse");
-  G.deeds={hits:35,kills:9,casts:4,manaSpent:72,steps:30,quests:2};G.core=null;r.noCore=Path.cast("seal");
+  G.deeds={hits:110,kills:28,casts:10,manaSpent:180,steps:30,quests:2};G.core=null;r.noCore=Path.cast("seal");
   Core.grant("crystal");G.will=10;G.aether=10;G.space=10;G.hp=G.hpMax=40;G.mana=0;G.manaMax=30;G.buffs={};
   const rnd=Math.random;Math.random=()=>0.99;
   PLAYED.length=0;r.seal=Path.cast("seal");r.sealSound=PLAYED.includes("stk_ward");r.will=G.will;r.оберег=buffActive("оберег");

@@ -134,7 +134,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 10. Специализация ── */
  const спец=await page.evaluate(()=>{
-  G.specBook={};G.spellbook=[];G.spells=[];G.inv={};G.mana=100;
+  /* (18.0) Специализацию из книги понимает тот, кто знает чары её школы: герой знает по одной чаре каждой школы. */
+  G.specBook={};G.spellbook=[];G.spells=SCHOOLS.map(sc=>(SCHOOL_SPELLS.find(sp=>sp.school===sc.id)||{}).n).filter(Boolean);G.inv={};G.mana=100;
   const слова=bookGrant(888,"spec");
   const открытые=Object.keys(G.specBook||{});
   if(!открытые.length)return {нет:true,слова};

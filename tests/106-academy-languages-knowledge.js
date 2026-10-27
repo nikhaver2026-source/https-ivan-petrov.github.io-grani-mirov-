@@ -52,7 +52,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* Хроника V (14.5) добавила ещё десять школ — до тридцати дисциплин мастер-промпта:
      вероятности, отражения, ведьмовство, клятвы, истинные имена, изменение законов,
      стихийные катастрофы, пространственные печати, подавление чар и симбиоз. */
-  r.schools=SCHOOLS.length;r.newSchools=["necro","enchant","forgemagic","homunc","memory","dream","rift",
+  /* (18.0) Двенадцать школ преданий Грани считают отдельно (набор 344): здесь — прежние сорок восемь. */
+  r.schools=SCHOOLS.filter(sc=>!sc.канон).length;r.newSchools=["necro","enchant","forgemagic","homunc","memory","dream","rift",
    "power","biomancy","astro","engine",
    "chance","mirror","witch","oath","truename","laws","calamity","sigil","counter","symbiont"].filter(id=>!MSCHOOL_BY_ID[id]||!SCHOOL_AUDIO[id]);
   r.layers=SCHOOLS.filter(sc=>!SCHOOL_AUDIO[sc.id]||!SPELL_LAYERS.every(l=>SOUND_BANK[SCHOOL_AUDIO[sc.id][l]])).map(sc=>sc.id);

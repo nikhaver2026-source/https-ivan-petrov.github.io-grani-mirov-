@@ -46,7 +46,10 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   Speech.say=(t,o)=>{__said.push(String(t));return s(t,o);};
   window.__played=[];const bp=Bank.play.bind(Bank);
   Bank.play=(r,o)=>{__played.push(r);return bp(r,o);};
-  try{enterGame();}catch(e){}});
+  try{enterGame();}catch(e){}
+  /* (18.0) Пороги Древа со второй ступени в два с половиной раза выше, а четвёртая и пятая ступени ждут 10-го и 20-го уровня героя:
+     дела в наборе умножены на два с половиной, герой взрослый. */
+  G.level=40;});
  await page.waitForTimeout(300);
 
  /* ── 1. состав ── */
@@ -107,13 +110,13 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const мечДо=Tree.ступень("sword"),лукДо=Tree.ступень("bow");
   G.level=40;G.xp=100000;
   const отУровня=Tree.ступень("sword");
-  G.deeds.w_sword=60;
+  G.deeds.w_sword=150;
   const мечПосле=Tree.ступень("sword"),лукПосле=Tree.ступень("bow");
   return {мечДо,лукДо,отУровня,мечПосле,лукПосле,счёт:Tree.счёт("sword")};});
  check('уровень героя не двигает ни одного умения: сорок уровней — и ноль ступеней',
   рост.мечДо===0&&рост.отУровня===0,рост);
- check('сделанное дело двигает своё умение и не трогает соседнее: шестьдесят ударов мечом — лук на нуле',
-  рост.мечПосле===3&&рост.лукПосле===0&&рост.счёт===60,рост);
+ check('сделанное дело двигает своё умение и не трогает соседнее: сто пятьдесят ударов мечом — лук на нуле',
+  рост.мечПосле===3&&рост.лукПосле===0&&рост.счёт===150,рост);
 
  /* ── 4. пять ступеней по своим порогам, без пропусков ── */
  const лестница=await page.evaluate(()=>{
@@ -135,10 +138,10 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const свояДо=Tree.своя("stance"),подпораДо=Tree.подпора("stance"),ступДо=Tree.ступень("stance");
   G.deeds.crits=2;                       /* восемь очков: первая ступень своя */
   const своя1=Tree.своя("stance"),подпора1=Tree.подпора("stance"),ступ1=Tree.ступень("stance");
-  G.deeds.w_sword=60;                    /* меч на третьей — подпора встаёт */
+  G.deeds.w_sword=150;                    /* меч на третьей — подпора встаёт */
   const своя2=Tree.своя("stance"),подпора2=Tree.подпора("stance"),ступ2=Tree.ступень("stance");
   /* Связь не кормит сама себя: подпора считается по «своей» ступени соседа. */
-  G.deeds={};G.deeds.w_sword=60;
+  G.deeds={};G.deeds.w_sword=150;
   const мечСам=Tree.своя("sword"),мечСПодпорой=Tree.ступень("sword");
   const связи=TREE_LEAVES.every(l=>Array.isArray(l.связь)&&l.связь.length>=1
    &&l.связь.every(x=>!!TREE_BY_ID[x]));
@@ -159,19 +162,19 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const дар=await page.evaluate(()=>{
   G.deeds={};G.tree={};
   const о={};
-  о.атакаДо=atk();G.deeds.w_sword=300;о.атакаПосле=atk();о.боК=Tree.боК();
-  G.deeds={};о.защитаДо=def();G.deeds.w_shield=360;о.защитаПосле=def();
-  G.deeds={};о.критДо=Tree.критK();G.deeds.crits=100;о.критПосле=Tree.критK();
-  G.deeds={};о.жаждаДо=Tree.нуждаK("thirst");G.deeds.drinks=100;о.жаждаПосле=Tree.нуждаK("thirst");
-  G.deeds={};о.сканДо=Tree.зрение();G.deeds.places=300;G.deeds.legs=200;G.deeds.stashes=100;о.сканПосле=Tree.зрение();
-  G.deeds={};о.ценаДо=Tree.ценаK();G.deeds.deals=100;о.ценаПосле=Tree.ценаK();
-  G.deeds={};о.репДо=Tree.репK(true);G.deeds.repGains=100;о.репПосле=Tree.репK(true);
-  G.deeds={};о.чараДо=Tree.чарыK("цена");G.deeds.manaSpent=2000;о.чараПосле=Tree.чарыK("цена");
-  G.deeds={};о.силаДо=Tree.чарыK("сила");G.deeds.casts=200;о.силаПосле=Tree.чарыK("сила");
-  G.deeds={};о.щитДо=Tree.чарыK("щит");G.deeds.wards=100;о.щитПосле=Tree.чарыK("щит");
-  G.deeds={};о.словоДо=Tree.словоK("закрытость");G.deeds.persuade=100;о.словоПосле=Tree.словоK("закрытость");
+  о.атакаДо=atk();G.deeds.w_sword=750;о.атакаПосле=atk();о.боК=Tree.боК();
+  G.deeds={};о.защитаДо=def();G.deeds.w_shield=900;о.защитаПосле=def();
+  G.deeds={};о.критДо=Tree.критK();G.deeds.crits=250;о.критПосле=Tree.критK();
+  G.deeds={};о.жаждаДо=Tree.нуждаK("thirst");G.deeds.drinks=250;о.жаждаПосле=Tree.нуждаK("thirst");
+  G.deeds={};о.сканДо=Tree.зрение();G.deeds.places=750;G.deeds.legs=500;G.deeds.stashes=250;о.сканПосле=Tree.зрение();
+  G.deeds={};о.ценаДо=Tree.ценаK();G.deeds.deals=250;о.ценаПосле=Tree.ценаK();
+  G.deeds={};о.репДо=Tree.репK(true);G.deeds.repGains=250;о.репПосле=Tree.репK(true);
+  G.deeds={};о.чараДо=Tree.чарыK("цена");G.deeds.manaSpent=5000;о.чараПосле=Tree.чарыK("цена");
+  G.deeds={};о.силаДо=Tree.чарыK("сила");G.deeds.casts=500;о.силаПосле=Tree.чарыK("сила");
+  G.deeds={};о.щитДо=Tree.чарыK("щит");G.deeds.wards=250;о.щитПосле=Tree.чарыK("щит");
+  G.deeds={};о.словоДо=Tree.словоK("закрытость");G.deeds.persuade=250;о.словоПосле=Tree.словоK("закрытость");
   G.deeds={};G.mast={};о.рукаДо=Tree.рукаK("smith");
-  G.mast={smith:{ур:5,оп:0,дел:80}};о.рукаПосле=Tree.рукаK("smith");
+  G.mast={smith:{ур:5,оп:0,дел:200}};о.рукаПосле=Tree.рукаK("smith");
   G.deeds={};G.mast={};
   return о;});
  check('атака и защита растут от того, чем вы бьёте и чем закрываетесь',
@@ -191,7 +194,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 7. решает оружие в руке ── */
  const оружие=await page.evaluate(()=>{
-  G.deeds={};G.tree={};G.deeds.w_sword=300;G.deeds.w_bow=0;
+  G.deeds={};G.tree={};G.deeds.w_sword=750;G.deeds.w_bow=0;
   const было=G.equip.weapon;
   G.equip.weapon={id:"t-sword",name:"Меч",type:"Меч",slot:"weapon",rank:0,qual:1,val:5,price:10};
   const сМечом={умение:Tree.оружие(),бонус:Tree.боК()};
@@ -232,7 +235,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  /* ── 9. ступень слышна ── */
  const слышно=await page.evaluate(()=>{
   G.deeds={};G.tree={};__played.length=0;__said.length=0;
-  G.deeds.w_sword=60;Tree._n=7;Tree.tick();
+  G.deeds.w_sword=150;Tree._n=7;Tree.tick();
   return {played:__played.slice(),said:__said.slice(),
    ждали:[TREE_BY_ID.sword.звук,TREE_GROUP_BY_ID.war.звук]};});
  /* Голос ветви идёт через 420 мс после записи умения. Ждём его до 2,5 с, а не
@@ -253,7 +256,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 10. окно «Герой» ── */
  const окно=await page.evaluate(()=>{
-  G.deeds={};G.tree={};G.deeds.w_sword=60;
+  G.deeds={};G.tree={};G.deeds.w_sword=150;
   safeFn(()=>renderCharacter());
   const el=document.getElementById("charStats");
   const html=el?el.innerHTML:"";

@@ -33,6 +33,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const errors=[];page.on('pageerror',e=>errors.push(String(e)));
  await page.goto(process.argv[2]);await page.waitForTimeout(700);
  await page.evaluate(()=>enterGame());await page.waitForTimeout(500);
+ /* (18.0) Высокие ступени ветвей ждут уровня героя, пороги ветвей круче: Путь проверяется на взрослом герое. */
+ await page.evaluate(()=>{G.level=60;});
  await page.evaluate(()=>{window.SAID=[];const o=Speech.say.bind(Speech);Speech.say=(t,x)=>{SAID.push(String(t));return o(t,x);};
   window.PLAYED=[];const p=Bank.play.bind(Bank);Bank.play=(r,o)=>{PLAYED.push(String(r));return p(r,Object.assign({},o||{},{gain:0,maxSec:0.4}));};
   window.JT=window.JT||[];const j=window.journal;window.journal=t=>{JT.push(String(t));return j(t);};});
@@ -102,7 +104,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const пробуждение=await page.evaluate(()=>{
   const r={};G.awake=null;G.core=null;G.deeds={};G.pathRank=0;r.noCore=Awaken.can();
   Core.grant("crystal");r.noRank=Awaken.can();
-  G.deeds={hits:35,kills:9,casts:4,manaSpent:72,steps:30,quests:2};r.can=Awaken.can();
+  G.deeds={hits:110,kills:28,casts:10,manaSpent:180,steps:30,quests:2};r.can=Awaken.can();
   PLAYED.length=0;JT.length=0;r.accept=Awaken.accept("aether");r.летопись=JT.some(t=>/Пробуждение: эфир/.test(t));r.звук=PLAYED.includes("magic_hum");r.again=Awaken.accept("ash");
   Energy.ensure();G.will=10;G.mana=0;G.manaMax=40;G.day=5;
   const rnd=Math.random;Math.random=()=>0.99;r.use=Awaken.use();r.мана=G.mana;r.контроль=G.awake.контроль;r.twice=Awaken.use();
