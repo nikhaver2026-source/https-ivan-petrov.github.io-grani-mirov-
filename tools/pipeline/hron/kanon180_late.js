@@ -458,7 +458,9 @@ safeFn(()=>{const u0=updateCombat;updateCombat=function(){const r=u0.apply(this,
 safeFn(()=>{const v0=victory;victory=function(){const m=G.combat&&G.combat.m;const r=v0.apply(this,arguments);
  try{if(m&&m.кн){const s=Канон.ст();const з=Number(s.украдено&&s.украдено[m.id])||0;if(з>0){s.украдено[m.id]=0;G.gold=(Number(G.gold)||0)+з;
    setTimeout(()=>safeFn(()=>narrate(`Украденное вернулось: ${з} золота.`,{interrupt:false})),1200);}
-  if(m.кн)safeFn(()=>Lore.add("monster",`kn:${m.id}`,m.n,m.о));}}catch(_){}
+  /* пять побед над тварью канона — её повадки изучены: знание «слабость твари» */
+  if(!s.твариПобед||typeof s.твариПобед!=="object")s.твариПобед={};s.твариПобед[m.id]=(Number(s.твариПобед[m.id])||0)+1;
+  if(s.твариПобед[m.id]===5)safeFn(()=>Lore.add("weak",m.id,m.n,"пять побед: повадки изучены"));}}catch(_){}
  return r;};});
 /* бестиарий: твари канона отдельным разделом, с голосом вида */
 CMD.knvoice=id=>{const m=КАНОН_ТВАРЬ[id];if(!m){narrate("Голос не найден.");return;}narrate(m.n);
@@ -603,7 +605,7 @@ safeFn(()=>{const s0=Zver.shop.bind(Zver);Zver.shop=function(){const out=s0();
 safeFn(()=>{const p0=Zver.price.bind(Zver);Zver.price=function(b){const v=p0(b);return b&&b.кн?Math.round(v*1.5):v;};});
 safeFn(()=>{const b0=Zver.buy.bind(Zver);Zver.buy=function(id){const x=КАНОН_ЗВЕРЬ[id];
  if(x&&(Number(G.level)||1)<x.ур)return `${x.имя} не пойдёт к новичку: он слушается хозяина не ниже ${x.ур}-го уровня.`;
- const r=b0(id);if(x&&/теперь ваш/.test(String(r)))safeFn(()=>Lore.add&&Lore.add("zver",x.имя,x.о));return r;};});
+ const r=b0(id);return r;};});
 safeFn(()=>{const t0=Zver.tame.bind(Zver);Zver.tame=function(){const o=this.st().tame;const x=o&&КАНОН_ЗВЕРЬ[o.breed];
  if(x&&(Number(G.level)||1)<x.ур)return `${x.имя} берёт корм, но идти за вами не хочет: он слушается хозяина не ниже ${x.ур}-го уровня.`;
  return t0();};});
@@ -803,4 +805,178 @@ safeFn(()=>{const v0=victory;victory=function(){const cb=G.combat;const m=cb&&cb
     const из=свои.length?свои:КАНОН_ВЕЩИ.filter(x=>!КанонВещи.есть_у(x.id));if(из.length){const x=из[Math.floor(Math.random()*из.length)];const a=КанонВещи.дать(x.id,m.n);
      if(a)t.push(`С твари — вещь из преданий: ${a.имя}. ${x.о}.${safeFn(()=>ART.works(a),true)?"":" Пока не слушается: ей нужен опыт посильнее."}`);}}}
   if(t.length)setTimeout(()=>safeFn(()=>narrate(t.join(" "),{interrupt:false})),2200);}catch(_){}
+ return r;};});
+
+/* ── 12. Края канона ──
+   Каждый из 17 пакетов канона — край: земля со своими поселениями, зданиями, объектами, подземельями,
+   народами, богами, ресурсами, зверями и людьми. Край открывается постепенно — как новая земля Режиссёра
+   (Neuro.newLand), а если Режиссёр молчит, раз в четыре дня сам; сперва тихие края, потом опасные.
+   В поселении края «Действие здесь» открывает его: люди учат умениям и чарам, торгуют вещами края,
+   приносят вести, дают дела; здания и объекты помогают раз в сутки; в святилище — дар богу края.
+   Умения канона — постоянные: прибавки к характеристикам и своё дело в общих обработчиках. */
+const КАНОН_КРАЯ=KN.world||[];const КАНОН_КРАЙ=Object.fromEntries(КАНОН_КРАЯ.map(k=>[k.id,k]));
+const КАНОН_УМЕНИЯ=KN.skills||[];const КАНОН_УМЕНИЕ=Object.fromEntries(КАНОН_УМЕНИЯ.map(u=>[u.id,u]));
+const КАНОН_ЛЮДИ={};for(const k of КАНОН_КРАЯ)for(const c of k.люди)КАНОН_ЛЮДИ[c.id]=Object.assign({край:k.id},c);
+const КанонУмения={
+ мои(){const s=Канон.ст();if(!Array.isArray(s.умения))s.умения=[];return s.умения.map(id=>КАНОН_УМЕНИЕ[id]).filter(Boolean);},
+ есть_у(id){return this.мои().some(u=>u.id===id);},
+ особ(u,k){const o=u.особ.find(s=>s.split(":")[0]===k);return o?(o.split(":").slice(1).join(":")||"1"):null;},
+ есть(k){return this.мои().some(u=>this.особ(u,k)!=null);},
+ кто(k){const u=this.мои().find(u=>this.особ(u,k)!=null);return u?`Умение «${u.имя}»`:"Умение";},
+ доля(k){let v=0;for(const u of this.мои()){const o=this.особ(u,k);if(o!=null)v+=Number(o)||0;}return v;},
+ школа(sid){let v=0;for(const u of this.мои())for(const o of u.особ){const p=o.split(":");if(p[0]==="школа"&&p[1]===sid)v+=Number(p[2])||0;}return v;},
+ стат(k){let v=0;for(const u of this.мои())v+=Number((u.стат||{})[k])||0;if(k==="удача"){const s=Канон.ст();if(this.есть("удача_после_смерти")&&Number(s.удачаДо)>=(Number(G.day)||1))v+=0.05;}return v;},
+ /* с какого уровня и за сколько учит: умения края — по порядку у наставника, каждое следующее позже */
+ условие(c,id){const i=Math.max(0,(c.учит||[]).indexOf(id));const ур=3+i*4+Math.max(0,(КАНОН_КРАЙ[c.край]||{}).опасность-1)*2;return {ур,цена:50+ур*25};},
+ учить(cid,id){const c=КАНОН_ЛЮДИ[cid],u=КАНОН_УМЕНИЕ[id];if(!c||!u)return "Такого учения нет.";if(this.есть_у(id))return `«${u.имя}» вы уже знаете.`;
+  const {ур,цена}=this.условие(c,id);if((Number(G.level)||1)<ур)return `${c.имя}: «Рано тебе, приходи, как наберёшься опыта» — нужен ${ур}-й уровень.`;
+  if((Number(G.gold)||0)<цена)return `${c.имя} учит «${u.имя}» за ${цена} золота, у вас ${G.gold}.`;
+  G.gold-=цена;Канон.ст().умения.push(id);safeFn(()=>Lore.add("recipe",`kn_skill:${u.id}`,`умение «${u.имя}»`,c.имя));safeFn(()=>journal(`Умение канона: ${u.имя} (учил${/а$|я$/.test(c.имя.split(" ")[0])?"а":""} ${c.имя}).`));
+  Канон.звук("arte_page",{gain:0.5});return `${c.имя} учит вас: «${u.имя}». ${u.о}. Дело: ${u.дело}.`;},
+ /* часовые и суточные дела умений */
+ час(){if(G.inCombat||!this.мои().length)return;const s=Канон.ст();if(!s.ум||typeof s.ум!=="object")s.ум={};const st=s.ум;const now=Math.floor((Number(G.day)||1)*24+(Number(G.hour)||0));
+  if(st.час===now)return;const было=Number(st.час)||now;st.час=now;const часов=Math.max(0,Math.min(6,now-было));if(!часов)return;const t=[];
+  const поз=(G.place?"p":"w")+G.x+","+G.y;const стоял=st.поз===поз;st.поз=поз;
+  if(стоял&&this.есть("убежище"))safeFn(()=>buffSet("кн_убежище",2));if(this.есть("наследие"))safeFn(()=>buffSet("кн_наследие",2));
+  if(this.есть("разум"))safeFn(()=>buffSet("кн_разум",2));if(G.dark&&this.есть("шов"))safeFn(()=>buffSet("кн_шов",2));
+  if(this.есть("травы")&&!G.place&&(КанонЗвери.пора("лес")||КанонЗвери.пора("степь"))&&Math.random()<0.15*часов){const р=["трава","ягоды","грибы"][Math.floor(Math.random()*3)];G.inv[р]=(Number(G.inv[р])||0)+1;t.push(`Травяная память: под ногами — ${р}, подобрано.`);}
+  if(st.день!==G.day){st.день=G.day;
+   if(this.есть("весть")){const n={key:"умение_"+G.day,x:G.x,y:G.y,prof:"Странник",name:"слух"};const L=safeFn(()=>Молва170._слухи(n,Number(G.day)||1),[])||[];
+    if(L[0]){safeFn(()=>Молва170.запомнить(L[0]));t.push(`Слух дня: ${L[0].текст}`);}}
+   if(this.есть("мёд")){const k=safeFn(()=>ZV_FOOD["мёд"],"мёд")||"мёд";G.inv[k]=(Number(G.inv[k])||0)+1;t.push("Борть дала мёд.");}
+   if(this.есть("монета")){const з=5+Math.round((Number(G.level)||1)*1.5);G.gold=(Number(G.gold)||0)+з;t.push(`Жалованье рода: ${з} золота.`);}}
+  if(t.length)safeFn(()=>narrate(t.join(" "),{interrupt:false}));}};
+/* умения — в общий помощник даров (звери, вещи, умения) */
+КанонДары.есть=function(k,где){return КанонЗвери.есть(k,где)||(!где&&(КанонВещи.есть(k)||КанонУмения.есть(k)));};
+КанонДары.кто=function(k){return КанонЗвери.есть(k)?КанонЗвери.кто(k):КанонВещи.есть(k)?КанонВещи.кто(k):КанонУмения.кто(k);};
+КанонДары.доля=function(k){return КанонЗвери.доля(k)+КанонВещи.доля(k)+КанонУмения.доля(k);};
+/* прибавки умений — в единый счёт характеристик */
+safeFn(()=>{const s0=ART.sum.bind(ART);ART.sum=function(stat){let v=s0(stat);const d=КанонУмения.стат(stat);if(d){v+=d;const st=ART_STAT_BY_ID[stat];if(st)v=Math.max(-st.предел,Math.min(st.предел,v));
+  v=st&&st.ед==="доля"?Math.round(v*1000)/1000:Math.round(v);}return v;};});
+safeFn(()=>{const k0=Power.spellK.bind(Power);Power.spellK=function(sp){let k=k0(sp);const v=КанонУмения.школа(sp&&sp.school);if(v)k*=1+v;return k;};});
+safeFn(()=>{const x0=Zver.xp.bind(Zver);Zver.xp=function(a,n){if(КанонУмения.есть("питомцы_опыт"))n=Math.round((Number(n)||0)*1.25);return x0(a,n);};});
+/* умения в бою: отчаяние, палуба, камень; одиночка; переигрыш и раны — как у вещей */
+safeFn(()=>{const h0=Undead.onHit.bind(Undead);Undead.onHit=function(m,dmg){let d=h0(m,dmg);
+ try{if(!(d>0)||!КанонУмения.мои().length)return d;const сем=String(safeFn(()=>foeFamily(m),"")||"");
+  if(КанонУмения.есть("отчаяние")&&G.hp<G.hpMax/3)d=Math.round(d*1.25);if(КанонУмения.есть("палуба")&&G.ship)d=Math.round(d*1.15);
+  if(КанонУмения.есть("против_камня")&&/construct|giant/.test(сем))d=Math.round(d*1.33);
+  if(КанонУмения.есть("полнолуние_сила")&&КанонЗвери.полнолуние())d=Math.round(d*1.2);}catch(_){}return d;};});
+safeFn(()=>{const s0=Undead.onStrike.bind(Undead);Undead.onStrike=function(m,mdmg){let d=s0(m,mdmg);
+ try{if(!(d>0)||!КанонУмения.мои().length)return d;const s=Канон.ст();if(!s.ум||typeof s.ум!=="object")s.ум={};const st=s.ум;const лог=t=>safeFn(()=>cbLog(t));
+  if(КанонУмения.есть("одиночка")&&!Zver.pets().length)d=Math.max(1,Math.round(d*0.9));
+  if(КанонУмения.есть("испуг_побеждённых")&&m&&(Number(((КанонВещи.ст().побеждено)||{})[m.id])||0)>0)d=Math.max(1,Math.round(d*0.85));
+  if(КанонУмения.есть("стойк_за_раны")){if(d>=(Number(G.hpMax)||100)*0.25)st.раны=(Number(st.раны)||0)+1;d=Math.max(1,d-Math.min(6,Math.floor((Number(st.раны)||0)/10)));}
+  if(d>=G.hp&&КанонУмения.есть("переиграть")&&st.переиграть!==G.day){st.переиграть=G.day;d=Math.max(0,G.hp-1);лог(`${КанонУмения.кто("переиграть")}: смертельный удар прошёл вскользь.`);}}catch(_){}
+ return d;};});
+/* победа: новизна (первая победа над видом — опыт вдвое), мана за павших, дела людей края */
+safeFn(()=>{const v0=victory;victory=function(){const cb=G.combat;const m=cb&&cb.m;const было=m?(Number(((КанонВещи.ст().побеждено)||{})[m.id])||0):1;const r=v0.apply(this,arguments);
+ try{if(!m)return r;const t=[];
+  if(КанонУмения.есть("новизна")&&было===0){const x=Math.max(1,Math.round(Number(m.xp)||((Number(m.lvl)||1)*4)));G.xp=(Number(G.xp)||0)+x;t.push(`Первопроход: новый вид — ещё ${x} опыта.`);safeFn(()=>checkLevelUp&&checkLevelUp());}
+  if(КанонУмения.есть("мана_за_павших")){const s=Канон.ст();if(!s.ум)s.ум={};s.ум.павших=(Number(s.ум.павших)||0)+1;if(s.ум.павших%10===0&&(Number(s.ум.маныДоб)||0)<20){s.ум.маныДоб=(Number(s.ум.маныДоб)||0)+1;G.manaMax=(Number(G.manaMax)||0)+1;t.push("Жилы силы: мана навсегда +1.");}}
+  const д=Канон.ст().дела||{};for(const [cid,z] of Object.entries(д))if(z&&!z.сделано&&z.тварь===m.id){z.сделано=1;const c=КАНОН_ЛЮДИ[cid];t.push(`Дело исполнено: ${z.n} повержен${/а$/.test(z.n.split(" ")[0])?"а":""}. Вернитесь к ${c?c.имя:"заказчику"} за наградой.`);}
+  if(t.length)setTimeout(()=>safeFn(()=>narrate(t.join(" "),{interrupt:false})),2600);}catch(_){}return r;};});
+safeFn(()=>{const d0=defeat;defeat=function(){const r=d0.apply(this,arguments);try{if(КанонУмения.есть("удача_после_смерти"))Канон.ст().удачаДо=(Number(G.day)||1)+1;}catch(_){}return r;};});
+/* ── открытие края ── */
+const КанонКрай={
+ ст(){const s=Канон.ст();if(!s.края||typeof s.края!=="object")s.края={открыто:[],день:0};if(!Array.isArray(s.края.открыто))s.края.открыто=[];return s.края;},
+ следующий(){const о=new Set(this.ст().открыто);const lvl=Number(G.level)||1;
+  const L=КАНОН_КРАЯ.filter(k=>!о.has(k.id)).sort((a,b)=>a.опасность-b.опасность||(a.пакет<b.пакет?-1:1));
+  return L.find(k=>k.опасность<=2+Math.floor(lvl/8))||null;},
+ /* земля, её поселения (места Режиссёра), народы, боги, ресурсы, звери */
+ открыть(k,R){if(!k)return "";R=R||Math.random;const g=Neuro.gen();if(!Array.isArray(g.places))g.places=[];if(!Array.isArray(g.gods))g.gods=[];if(!Array.isArray(g.pets))g.pets=[];
+  const ang=R()*Math.PI*2,d=30+Math.round(R()*50);const x=Math.round((Number(G.x)||0)+Math.cos(ang)*d),y=Math.round((Number(G.y)||0)+Math.sin(ang)*d);
+  const land={id:"gl_"+(g.n++),n:k.имя,terr:k.terr,x,y,r:10,fam:k.fam,опасность:k.опасность,день:Number(G.day)||1,res:null,кн:k.id};g.lands.push(land);
+  const people=[];for(const p of k.народы){const rec={id:"gn_"+(g.n++),kind:"people",n:p.имя,ethos:safeFn(()=>NEURO_ETHOS_IDS[0],"trade"),тяга:[],вождь:"",земля:land.id,род:null,держава:null,реп:0,день:Number(G.day)||1,кн:p.id};
+   safeFn(()=>{rec.тяга=NEURO_ETHOS[rec.ethos].тяга.slice();});g.peoples.push(rec);people.push(rec);}
+  for(const b of k.боги){g.gods.push({id:"gg_"+(g.n++),n:b.имя,дар:MIX_BUFF_WORD[b.дар]?b.дар:"удача",нрав:"древний",культ:people[0]?people[0].id:null,вера:0,день:Number(G.day)||1,кн:b.id});}
+  for(const r of k.ресурсы){if(g.res.some(x=>x.n===r.имя))continue;const rec={id:"gr_"+(g.n++),n:r.имя,ниши:r.ниши.slice(),цена:r.цена,земля:land.id,кто:k.имя,где:"в землях «"+k.имя+"»",x,y,день:Number(G.day)||1,кн:r.id};
+   g.res.push(rec);safeFn(()=>Neuro.regRes(rec));if(!land.res)land.res=r.имя;}
+  k.поселения.forEach((p,i)=>{const a=ang+Math.PI*(0.3+0.9*i),dd=3+Math.round(R()*5);
+   g.places.push({id:"gc_"+(g.n++),kind:NEURO_PLACE[p.kind]?p.kind:"деревня",n:p.имя,x:x+Math.round(Math.cos(a)*dd),y:y+Math.round(Math.sin(a)*dd),r:2,народ:people[i%Math.max(1,people.length)]?people[i%people.length].id:null,день:Number(G.day)||1,кн:p.id,кнКрай:k.id});});
+  for(const z of k.звери){const b=ZV_BREED_BY_ID[z.fam+"_wild"];if(!b)continue;g.pets.push({id:"gz_"+(g.n++),n:`${z.имя} — ${b.n.toLowerCase()}`,имя:z.имя,breed:b.id,mount:!!ZV_FAMILY_BY_ID[z.fam].ездовой,
+   lvl:1+Math.floor((Number(G.level)||1)/4),цена:(ZV_FAMILY_BY_ID[z.fam].ездовой?160:80)+Math.round(R()*60),кто:k.поселения[0]?k.поселения[0].имя:k.имя,p:people[0]?people[0].id:null,x,y,где:"в землях «"+k.имя+"»",день:Number(G.day)||1,кн:z.id});}
+  const s=this.ст();s.открыто.push(k.id);s.день=Number(G.day)||1;safeFn(()=>Neuro.chron(`открылся край — ${k.имя}`));
+  safeFn(()=>Lore.add("map",`kn_land:${k.id}`,k.имя,"край открылся"));safeFn(()=>journal(`Открылся край: ${k.имя}.`));Канон.звук("sv_god_omen",{gain:0.45});
+  const где=safeFn(()=>Director.where(x-G.x,y-G.y),"")||"вдали";
+  return `Открылся край — ${k.имя}, ${где}, около ${d} шагов: ${k.о.charAt(0).toLowerCase()+k.о.slice(1)}. Там ${k.поселения.map(p=>p.имя).join(" и ")}${people.length?`; живут ${people.map(p=>"«"+p.n+"»").join(", ")}`:""}${k.боги.length?`; молятся ${k.боги.map(b=>b.имя).join(" и ")}`:""}.`;},
+ /* где мы: край по земле Режиссёра с меткой канона */
+ здесь(x,y){const g=G.gen;if(!g||!Array.isArray(g.lands))return null;const l=g.lands.find(l=>l.кн&&Math.abs(l.x-x)+Math.abs(l.y-y)<=l.r);return l?КАНОН_КРАЙ[l.кн]:null;},
+ место(){const p=safeFn(()=>Neuro.placeHere(),null);if(!p||!p.кн)return null;const k=КАНОН_КРАЙ[p.кнКрай];if(!k)return null;const s=k.поселения.find(x=>x.id===p.кн);return s?{p,k,s}:null;},
+ день(){if(G.inCombat)return;const s=this.ст();const d=Number(G.day)||1;if(!s.день)s.день=d;if(d-s.день<4)return;const k=this.следующий();if(!k)return;
+  const t=this.открыть(k);if(t)safeFn(()=>narrate(t,{interrupt:false}));}};
+/* Режиссёр: новая земля — край канона, пока они не кончатся */
+safeFn(()=>{const l0=Neuro.newLand.bind(Neuro);Neuro.newLand=function(id,R){const k=КанонКрай.следующий();if(k)return КанонКрай.открыть(k,R);return l0(id,R);};});
+/* края говорят о себе: где водятся их твари, какие подземелья у них */
+Object.assign(Канон,{
+ край(x,y){const k=КанонКрай.здесь(x,y);return k?{твари:k.твари,имя:k.имя}:null;},
+ подземелье(p){if(!p)return null;const k=КанонКрай.здесь(Number(p.bx)||G.x,Number(p.by)||G.y);if(!k||!k.подземелья.length)return null;
+  const d=k.подземелья[Math.floor(hashName(Number(p.bx)||0,Number(p.by)||0,18401)*k.подземелья.length)%k.подземелья.length];
+  const s=Канон.ст();if(!s.подз||typeof s.подз!=="object")s.подз={};const ключ=(p.bx|0)+","+(p.by|0);
+  if(!s.подз[ключ]){s.подз[ключ]=d.id;setTimeout(()=>safeFn(()=>narrate(`${d.имя}: ${d.о.charAt(0).toLowerCase()+d.о.slice(1)}.${d.ловушка?` Говорят, здесь ловушки: ${d.ловушка}.`:""}`,{interrupt:false})),1500);}
+  return {твари:d.твари.length?d.твари:k.твари,имя:d.имя};}});
+/* прибытие в поселение края: слово о нём и кто здесь */
+safeFn(()=>{const p0=Neuro.placeStep.bind(Neuro);Neuro.placeStep=function(){const st=Neuro.st();const было=st.inPlace;const r=p0();
+ try{const м=КанонКрай.место();if(м&&было!==м.p.id){setTimeout(()=>safeFn(()=>narrate(`${м.s.о}. ${м.k.люди.length?`Здесь: ${м.k.люди.slice(0,4).map(c=>c.имя).join(", ")}.`:""} «Действие здесь» — войти.`,{interrupt:false})),900);}}catch(_){}
+ return r;};});
+/* «Действие здесь» в поселении края — его окно */
+safeFn(()=>{const u0=useHere;useHere=function(){const м=!G.inCombat&&!G.place&&!G.ship?КанонКрай.место():null;if(м){КанонМесто.окно(м);return true;}return u0.apply(this,arguments);};});
+const КанонМесто={
+ цена(x){return Math.max(30,Math.round(safeFn(()=>ART.price(КанонВещи.сделать(x.id)),100)*1.2));},
+ окно(м){const {k,s}=м;const ч=[];
+  for(const c of k.люди)ч.push({l:`Поговорить: ${c.имя}, ${c.роль}`,run:()=>this.человек(c.id)});
+  for(const b of k.здания)ч.push({l:`Зайти: ${b.имя}`,run:()=>this.помощь(b,"здание")});
+  for(const o of k.объекты.slice(0,6))ч.push({l:`Осмотреть: ${o.имя}`,run:()=>this.помощь(o,"объект")});
+  for(const b of k.боги){const g=(Neuro.gen().gods||[]).find(x=>x.кн===b.id);if(g)ч.push({l:`Помолиться: ${b.имя}`,run:()=>{const t=safeFn(()=>Neuro.offer(g.id),"");narrate(`${b.о}. ${t}`,{interrupt:true});}});}
+  ч.push({l:"Уйти",run:()=>{}});
+  выбор147(s.имя,`${s.о}. Край — ${k.имя}. ${s.товар?`Здесь в ходу: ${s.товар}; нужда — ${s.нужда}.`:""}`,ч);},
+ человек(cid){const c=КАНОН_ЛЮДИ[cid];if(!c)return;const ч=[];const s=Канон.ст();
+  for(const id of c.учит){const u=КАНОН_УМЕНИЕ[id];if(!u)continue;const {ур,цена}=КанонУмения.условие(c,id);
+   ч.push({l:КанонУмения.есть_у(id)?`Умение «${u.имя}» — уже знаете`:`Учиться: «${u.имя}» — ${цена} золота, с ${ур}-го уровня. ${u.дело}`,run:()=>{narrate(КанонУмения.учить(cid,id),{interrupt:true});safeFn(()=>saveGame(true));}});}
+  for(const n of c.чары){const sp=safeFn(()=>КанонЧары.по(n),null)||(SPELLS||[]).find(x=>x.n===n);if(!sp)continue;const знаю=(G.spells||[]).indexOf(n)>=0;
+   ч.push({l:знаю?`Чары «${n}» — уже знаете`:`Учиться чарам: «${n}» — ${safeFn(()=>КанонЧары.цена(sp),sp.золото||100)} золота`,run:()=>{narrate(safeFn(()=>КанонЧары.learn(n,c.имя),"Не вышло."),{interrupt:true});safeFn(()=>saveGame(true));}});}
+  for(const id of c.продаёт){const x=КАНОН_ВЕЩЬ[id];if(!x||КанонВещи.есть_у(id))continue;const ц=this.цена(x);
+   ч.push({l:`Купить: ${x.имя} — ${ц} золота. ${x.дело||x.о}`,run:()=>{if((Number(G.gold)||0)<ц){narrate(`${x.имя} стоит ${ц} золота, у вас ${G.gold}.`,{interrupt:true});return;}
+    G.gold-=ц;const a=КанонВещи.дать(id,c.имя);safeFn(()=>Bank.play("arte_coins",{gain:0.5,maxSec:2}));narrate(a?`${x.имя} теперь ваша. ${safeFn(()=>ART.describe(a,true),"")}`:"Не вышло.",{interrupt:true});safeFn(()=>saveGame(true));}});}
+  if(c.весть){if(!s.вести||typeof s.вести!=="object")s.вести={};ч.push({l:s.вести[cid]===G.day?"Весть — сегодня уже рассказал":"Расспросить о новостях",run:()=>{if(s.вести[cid]===G.day){narrate(`${c.имя}: «Всё, что знал, сказал».`,{interrupt:true});return;}
+    s.вести[cid]=G.day;const n={key:"кн_"+cid+"_"+G.day,x:G.x,y:G.y,prof:"Странник",name:c.имя};const L=safeFn(()=>Молва170._слухи(n,Number(G.day)||1),[])||[];
+    if(L[0]){safeFn(()=>Молва170.запомнить(L[0]));narrate(`${c.имя}: ${L[0].текст}`,{interrupt:true});}else narrate(`${c.имя}: «Тихо нынче в округе».`,{interrupt:true});}});}
+  if(c.дело){if(!s.дела||typeof s.дела!=="object")s.дела={};const z=s.дела[cid];
+   if(!z)ч.push({l:`Взять дело: одолеть ${c.дело.n} — награда ${c.дело.награда} золота`,run:()=>{s.дела[cid]=Object.assign({},c.дело,{взято:G.day});safeFn(()=>journal(`Дело от ${c.имя}: одолеть ${c.дело.n}.`));narrate(`${c.имя}: «${c.дело.n} — вот моя беда. Одолей — и награда твоя».`,{interrupt:true});}});
+   else if(z.сделано&&!z.сдано)ч.push({l:`Сдать дело: ${z.n} повержен`,run:()=>{z.сдано=1;G.gold=(Number(G.gold)||0)+z.награда;safeFn(()=>Bank.play("arte_coins",{gain:0.6,maxSec:2}));
+    const k=КАНОН_КРАЙ[c.край];const из=(KN.items||[]).filter(x=>x.пакет===k.пакет&&!КанонВещи.есть_у(x.id)&&x.ранг<=Math.max(2,Math.floor((Number(G.level)||1)/8)));let доп="";
+    if(из.length&&Math.random()<0.5){const x=из[Math.floor(Math.random()*из.length)];const a=КанонВещи.дать(x.id,c.имя);if(a)доп=` И сверх того — ${a.имя}.`;}
+    narrate(`${c.имя} платит ${z.награда} золота.${доп}`,{interrupt:true});safeFn(()=>saveGame(true));}});
+   else if(!z.сделано)ч.push({l:`Дело: одолеть ${z.n} — ещё не исполнено`,run:()=>narrate(`${c.имя}: «${z.n} всё ещё ходит по нашей земле».`,{interrupt:true})});}
+  ч.push({l:"Назад",run:()=>{const м=КанонКрай.место();if(м)this.окно(м);}});
+  выбор147(c.имя,`${c.о}. ${c.нрав?`Нрав — ${c.нрав}.`:""}`,ч);},
+ /* здание или объект: раз в сутки помогает — по своему делу */
+ помощь(o,вид){const s=Канон.ст();if(!s.помощь||typeof s.помощь!=="object")s.помощь={};const ключ=o.id+":"+G.day;
+  if(s.помощь[ключ]){narrate(`${o.имя}: ${o.о}. Сегодня здесь уже помогли.`,{interrupt:true});return;}s.помощь[ключ]=1;
+  const ks=Object.keys(s.помощь);if(ks.length>120)for(const k of ks.slice(0,ks.length-120))delete s.помощь[k];
+  const эф=КанонМесто.ЭФ[o.эф]||КанонМесто.ЭФ.чутьё;const t=эф();Канон.звук(вид==="здание"?"oc_door_open":"oc_soft_touch",{gain:0.45});
+  narrate(`${o.имя}: ${o.о}. ${t}`,{interrupt:true});safeFn(()=>Lore.add("map",`kn_place:${o.id}`,o.имя,"осмотрено"));},
+ ЭФ:{
+  лечение(){const h=Math.round(G.hpMax*0.3);G.hp=Math.min(G.hpMax,G.hp+h);return `Раны затянулись: здоровья +${h}.`;},
+  мана(){const v=Math.round((Number(G.manaMax)||10)*0.4);G.mana=Math.min(G.manaMax,(Number(G.mana)||0)+v);return `Сила вернулась: маны +${v}.`;},
+  весть(){const n={key:"место_"+G.x+"_"+G.y+"_"+G.day,x:G.x,y:G.y,prof:"Трактирщик",name:"место"};const L=safeFn(()=>Молва170._слухи(n,Number(G.day)||1),[])||[];
+   if(L[0]){safeFn(()=>Молва170.запомнить(L[0]));return `Здесь говорят: ${L[0].текст}`;}return "Здесь тихо.";},
+  стойкость(){safeFn(()=>buffSet("стойкость",6));return "Шесть часов защита выше.";},оберег(){safeFn(()=>buffSet("оберег",6));return "Шесть часов проклятия и духи бьют вполсилы.";},
+  мощь(){safeFn(()=>buffSet("мощь",6));return "Шесть часов удар сильнее.";},тишина(){safeFn(()=>buffSet("тишина шага",6));return "Шесть часов шаг беззвучен.";},
+  чутьё(){safeFn(()=>buffSet("чутьё",6));return "Шесть часов слух шире.";},тепло(){safeFn(()=>buffSet("тепло",6));return "Шесть часов стужа не вредит.";},
+  клад(){const з=5+Math.round((Number(G.level)||1)*2+Math.random()*10);G.gold=(Number(G.gold)||0)+з;return `Нашлось ${з} золота.`;},
+  свет(){safeFn(()=>buffSet("свет",6));return "Шесть часов с вами свет: тьма не гасит его.";},убежище(){safeFn(()=>buffSet("кн_убежище",4));return "Четыре часа здесь укрытие: твари обходят.";},
+  разум(){safeFn(()=>buffSet("кн_разум",6));return "Шесть часов страх и морок не входят.";},след(){safeFn(()=>buffSet("кн_след",4));return "Четыре часа погоня собьётся со следа.";}}};
+/* часы краёв: открытие нового раз в четыре дня, умения */
+safeFn(()=>{const k0=Zver.tick.bind(Zver);Zver.tick=function(){const r=k0();try{КанонКрай.день();КанонУмения.час();}catch(_){}return r;};});
+
+/* чертог, открытый Режиссёром рядом с краем канона, — один из чертогов этого края */
+safeFn(()=>{const c0=InstanceDirectorIntegration.createNear.bind(InstanceDirectorIntegration);InstanceDirectorIntegration.createNear=function(why){const c=c0(why);
+ try{const k=c&&КанонКрай.здесь(G.x,G.y);if(k&&k.чертоги.length){const s=КанонКрай.ст();if(!Array.isArray(s.чертоги))s.чертоги=[];
+   const h=k.чертоги.find(x=>s.чертоги.indexOf(x.id)<0);if(h){s.чертоги.push(h.id);c.n=h.имя;c.кн=h.id;c.о=h.о;
+    setTimeout(()=>safeFn(()=>narrate(`${h.имя}: ${h.о.charAt(0).toLowerCase()+h.о.slice(1)}.`,{interrupt:false})),1800);safeFn(()=>Lore.add("map",`kn_hall:${h.id}`,h.имя,"чертог края"));}}}catch(_){}
+ return c;};});
+/* окно зверя канона: если зверь ходит сквозь камень — кнопка «Пройти сквозь камень» */
+safeFn(()=>{const b0=Zver.beastView.bind(Zver);Zver.beastView=function(u){const r=b0(u);
+ try{const a=this.byUid(u);if(a&&["сквозь","роет","завал"].some(k=>КанонЗвери.особ(a,k)!=null)){const box=document.getElementById("zvBody");
+   if(box&&!box.querySelector('[data-cmd="knpass"]'))box.insertAdjacentHTML("afterbegin",`<button type="button" class="item" data-cmd="knpass" data-speak="Пройти сквозь камень со зверем: раз в сутки">Пройти сквозь камень со зверем</button>`);}}catch(_){}
  return r;};});

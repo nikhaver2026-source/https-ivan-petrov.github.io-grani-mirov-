@@ -71,7 +71,7 @@ def spell_rec(src, m, idx):
                откат=r["откат"], золото=r["золото"], о=lc(src["о"]), ядро=core)
     if m.get("стихия") or src.get("стихия"): rec["стихия"] = m.get("стихия") or src.get("стихия")
     if m.get("особое"): rec["особое"] = m["особое"]
-    rec["звукО"] = src.get("звук", ""); rec["механика"] = src.get("механика", "")
+    rec["звукО"] = src.get("звук", ""); rec["механика"] = src.get("механика", ""); rec["пакет"] = src.get("пакет", "")
     return rec
 
 base, extra = [], []
@@ -189,9 +189,17 @@ ITEMS, ош_в = KI.build(CANON, ART_ST, SCH_N)
 ош += ош_в
 names_all = [t["n"] for t in CRE] + [x["имя"] for x in PETS] + [x["имя"] for x in ITEMS]
 if len(set(names_all)) != len(names_all): ош.append("повтор имени среди тварей, зверей и вещей")
-data = dict(items=ITEMS, pets=PETS, zvLevel=ZV_NEW, версия="18.0", sounds={r: SND_FILES[r] for r in sorted(NEWSND) if r in SND_FILES}, schools=schools, forms=KM.FORMS, coreForms=KM.CORE_FORMS, schoolSpells=base, extraSpells=extra, creatures=CRE, newSounds=sorted(NEWSND))
+# ── края: земли, поселения, люди, умения ──
+import kanon_world as KW
+ART_NM = {m.group(1): m.group(2) for m in re.finditer(r'\{id:"([^"]+)",\s*n:"([^"]+)",\s*ед:"[^"]+",\s*предел:', IDX)}
+_mn = IDX[IDX.find("const MIX_NICHES={"):IDX.find("const MIX_NICHES={") + 20000]
+NICHES = set(re.findall(r'\n ?([a-z]+):\s*\{прил:', _mn))
+CTX = dict(дело=dict(KI.ДЕЛО), stats=ART_NM, ниши=NICHES, роды=set(DUMP["zvsnd"]), школы=SCH_N)
+WORLD, SKILLS, ош_м = KW.build(CANON, CRE, extra, ITEMS, CTX)
+ош += ош_м
+data = dict(world=WORLD, skills=SKILLS, items=ITEMS, pets=PETS, zvLevel=ZV_NEW, версия="18.0", sounds={r: SND_FILES[r] for r in sorted(NEWSND) if r in SND_FILES}, schools=schools, forms=KM.FORMS, coreForms=KM.CORE_FORMS, schoolSpells=base, extraSpells=extra, creatures=CRE, newSounds=sorted(NEWSND))
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 json.dump(data, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
-print(f"вещей {len(ITEMS)}, зверей {len(PETS)}, новых громкостей {len(ZV_NEW)}; тварей {len(CRE)}; школ {len(schools)}, специализаций {sum(len(s['specs']) for s in schools)}, форм {len(KM.FORMS)}, чар академии {len(base)}, у наставников {len(extra)}; новых звуков {len(NEWSND)}: {sorted(NEWSND)}")
+print(f"краёв {len(WORLD)}, умений {len(SKILLS)}; вещей {len(ITEMS)}, зверей {len(PETS)}, новых громкостей {len(ZV_NEW)}; тварей {len(CRE)}; школ {len(schools)}, специализаций {sum(len(s['specs']) for s in schools)}, форм {len(KM.FORMS)}, чар академии {len(base)}, у наставников {len(extra)}; новых звуков {len(NEWSND)}: {sorted(NEWSND)}")
 print(f"ошибки ({len(ош)}):", *ош[:40], sep="\n  ")
 sys.exit(1 if ош else 0)

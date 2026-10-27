@@ -102,3 +102,6 @@ kanon/zvabil.json
 kanon/mag_region.js
 kanon/probe_zv.js
 kanon/probe_mag.js
+hron/patch_guide_k180.py
+kanon/kanon_world.py
+kanon/probe_kraya.js

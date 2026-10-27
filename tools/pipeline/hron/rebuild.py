@@ -72,6 +72,9 @@ s=open(H+'index_before_mater.html',encoding='utf-8').read()
 def rep(old,new,cnt=1):
     global s
     k=s.count(old);assert k==cnt,(old[:80],k);s=s.replace(old,new)
+# 18.0: канон добавил восемь форм плетения — самопроверка считает «не меньше двенадцати» (без канона — ровно двенадцать)
+if not os.environ.get('NOKANON'):
+    rep("SPELL_FORMS.length===12&&SPELL_MODS","SPELL_FORMS.length>=12&&SPELL_MODS")
 rep("const WORLD_MAX=1000000;","const WORLD_MAX=20000000;\n/* (14.5) Прежний край мира: полоса Перекроя кончается на миллионе, дальше — Великие Материки. */\nconst PRK_MAX=1000000;")
 rep("const cap=l.ось===\"восток\"?{x:905000,y:Math.round(l.доля*WORLD_MAX)}","const cap=l.ось===\"восток\"?{x:905000,y:Math.round(l.доля*PRK_MAX)}")
 rep(" if(x>=WORLD_MAX||y>=WORLD_MAX)return null;\n /* Глубже в полосе"," if(x>=PRK_MAX||y>=PRK_MAX)return null;\n /* Глубже в полосе")
