@@ -1977,7 +1977,8 @@ LAB.ui.closeAll();
     out.lv6 = IM.level() === 6 && IM.slots() === 5 && IM.modSlots() === 2 && IM.maxGrade() === 3 && IM.selfSurgery() && IM.catLv("med") === 5;
     out.up2 = IM.upgrade("regen", "bench", 2) && IM.lv("regen") === 2 && !IM.upgrade("regen", "bench", 2);
     out.up3 = IM.upgrade("regen", "bench", 4) && IM.lv("regen") === 3;
-    out.mod = IM.addMod("regen", "eco") && g.implantCost("regen") < c1 && /только для направления/.test(IM.compat("regen", "ap")) && IM.addMod("regen", "antisep") && /гнёзда модификаций заняты/.test(IM.compat("regen", "purge"));
+    /* (3.6) регенерация и так останавливает кровь: «антисептическая» ей ни к чему */
+    out.mod = IM.addMod("regen", "eco") && g.implantCost("regen") < c1 && /только для направления/.test(IM.compat("regen", "ap")) && /делает это и без неё/.test(IM.compat("regen", "antisep")) && IM.addMod("regen", "purge") && /гнёзда модификаций заняты/.test(IM.compat("regen", "adren"));
     G.hp = G.hpMax = 9999; G.hp = 100; G.en = 200; G.body.neuro = 0; G.st.bleed = 5; C.useImplant("regen"); out.heal = G.hp - 100 > 30 + G.L * 4 && !G.st.bleed;
     out.extract = IM.extract("regen") && G.implants.indexOf("regen") < 0 && G.inv.imp_regen === 1 && !IM.extract("scan");
     G.bp = G.bp || {}; delete G.bp.imp_regen;
@@ -5558,10 +5559,13 @@ LAB.ui.closeAll();
       fsx.sentWN = 0; fsx.sentWL = []; fsx.grind = 0; fsx.pun = 0;
       f = spawnAt(); if (f) f.calm = true; out.calmKill = f ? kx(f) : -1;
       f = spawnAt(); if (f) f.ally = true; out.allyKill = f ? kx(f) : -1;
-      /* 7. задания выжившего: не больше трёх; «разведать» — заход после того, как взяли */
+      /* 7. (3.6) задания выжившего: после трёх — не отказ, а четвёртое, тяжелее: два пути, по два шага и больше;
+         «разведать» — заход после того, как взяли */
       const npc = { key: "test:npc", n: "Проверочный", prof: "Инженер" };
       G.quests = G.quests.filter(q => q.giver !== npc.key).concat([0, 1, 2].map(i => ({ id: npc.key + ":" + i, giver: npc.key, done: true, type: "kill", short: "x" })));
-      const qn = G.quests.length; g.takeQuest(npc); out.questCap = { none: G.quests.length === qn, said: /больше не о чем/.test(last()) };
+      const ofs = LAB.quests.offers(npc);
+      out.questCap = { tier: LAB.quests.stage(npc), n: ofs.length, steps: ofs.map(q => LAB.quests.steps(q).length), work: ofs.map(q => LAB.quests.workOf(q)), notReady: ofs.every(q => !LAB.quests.ready(q)) };
+      U.closeAll(); g.takeQuest(npc); out.questCap.menu = !!U.top() && /^Поручение:/.test(U.top().title); U.closeAll();
       const vq = { type: "visit", tL: G.L, tF: G.F, seq0: G.visitSeq || 0, giverName: "Проверочный" };
       out.visitBefore = g.questProgress(vq);
       go(G.L, G.F); out.visitAfter = g.questProgress(vq);
@@ -5632,7 +5636,7 @@ LAB.ui.closeAll();
   const wc = holes.waveCut || {};
   ok(wc.a > 0 && wc.a === Math.round(wc.raw * 0.4) && wc.b === wc.a && wc.x11 === wc.want11 && wc.x41 === 0, "волны ОКО: машины одной волны — с одной долей, одиннадцатая волна — на четверть меньше, сорок первая — ничего (" + JSON.stringify(wc) + ")");
   ok(holes.calmKill === 0 && holes.allyKill === 0, "обезвреженные и свои машины — без опыта (" + holes.calmKill + ", " + holes.allyKill + ")");
-  ok(holes.questCap && holes.questCap.none && holes.questCap.said, "выживший даёт не больше трёх поручений");
+  ok(holes.questCap && holes.questCap.tier === 3 && holes.questCap.n === 2 && holes.questCap.menu && holes.questCap.notReady && holes.questCap.steps.every(n => n >= 2) && holes.questCap.work.every(w => w >= 0.8 * (4 + 3.5 * 3) - 0.01), "(3.6) после трёх просьб выживший просит снова — тяжелее: два пути на выбор, по два шага и больше (" + JSON.stringify(holes.questCap) + ")");
   ok(/не разведан/.test(holes.visitBefore) && /разведан, вернитесь/.test(holes.visitAfter), "«разведать этаж» — засчитывается заход после того, как задание взято (" + holes.visitBefore + " → " + holes.visitAfter + ")");
   ok(holes.hid === true && holes.hidMoved === false, "«Затаиться»: укрытие, пока на месте; шаг — и его нет");
   ok(/около половины/.test(holes.scrapText) && holes.scrapGot.scrap === 1 && holes.scrapGot.chip <= 1, "собранное оружие разбирается не богаче рецепта (" + JSON.stringify(holes.scrapGot) + ")");
@@ -5671,12 +5675,15 @@ LAB.ui.closeAll();
       let qf = null;
       for (let k = 0; k < 60 && !qf; k++) { eng.key = "T33-eng-" + k; g.takeQuest(eng); const qq = G.quests[G.quests.length - 1]; if (qq && qq.type === "fetch") qf = qq; else G.quests.pop(); }
       if (qf) {
-        const price = LAB.ITEMS[qf.item].price * qf.need * g.priceK(), gift = qf.reward.gift;
+        /* (3.6) принесённое — дороже скупки, но дешевле покупки: купить и сдать невыгодно */
+        const buy = Math.max(2, Math.round(LAB.ITEMS[qf.item].price * g.priceK())) * qf.need, gift = qf.reward.gift;
         G.inv[qf.item] = (G.inv[qf.item] || 0) + qf.need;
+        const sell = LAB.sellPrice.item(qf.item, { who: "npc", npc: "parts", robot: false }) * qf.need;
         const cnt = () => gift.kind === "ammo" ? (G.ammo[gift.ammo] || 0) : (G.inv[gift.item] || 0);
         const cr0 = G.credits, h0 = cnt();
         g.completeQuest(qf, eng);
-        out.pay = { done: qf.done, above: G.credits - cr0 > price, gift: cnt() - h0 === gift.n, notSame: gift.item !== qf.item };
+        out.pay = { done: qf.done, gain: G.credits - cr0, sell, buy, gift: cnt() - h0 === gift.n, notSame: gift.item !== qf.item };
+        out.pay.between = out.pay.gain >= sell && out.pay.gain < buy;
       }
       /* весточка — награда от получателя, при передаче */
       G.quests = G.quests.filter(q => q.type === "main");
@@ -5705,13 +5712,293 @@ LAB.ui.closeAll();
   });
   ok(!qz.err, "задания 3.5: без ошибок" + (qz.err ? ": " + qz.err : ""));
   ok(qz.three === 3 && qz.fourth && qz.fourth.n === 3 && qz.fourth.said, "поручений сразу — не больше трёх: четвёртое не дают и говорят, как освободить место");
-  ok(qz.abandon && qz.refused && qz.after, "отказ от поручения: место освобождается, а тот, кому отказали, больше ни о чём не просит");
+  ok(qz.abandon && qz.refused && qz.after, "отказ от поручения: место освобождается, а тот, кому отказали, сразу снова не просит");
   ok(qz.rewards && qz.rewards.length === 3 && qz.rewards.every(r => r.cr > 0 && r.xp > 0 && /^Награда — \d+ кредит/.test(r.txt)), "награда названа сразу: кредиты, опыт и вещь (" + (qz.rewards || []).map(r => r.t + ": " + r.txt).join(" | ") + ")");
   ok(qz.rewards && qz.rewards.every(r => /^(medkit_s|bandage|antidote|sorbent|painkiller|medkit_l)$/.test(r.gift || "")), "вещь в награду — из ремесла заказчика: медик даёт лекарства");
   ok(/поручений 3 из 3/.test(qz.invLabel || "") && qz.win && qz.win.head && qz.win.ab && qz.win.rew, "окно заданий: «3 из 3», награда у каждого поручения, пункт «Отказаться от поручения» (" + qz.invLabel + ")");
-  ok(qz.pay && qz.pay.done && qz.pay.above && qz.pay.gift && qz.pay.notSame, "принесённые детали оплачены дороже их цены, вещь в придачу — и не та же деталь (" + JSON.stringify(qz.pay) + ")");
+  ok(qz.pay && qz.pay.done && qz.pay.between && qz.pay.gift && qz.pay.notSame, "(3.6) принесённые детали оплачены дороже скупки, но дешевле покупки; вещь в придачу — и не та же деталь (" + JSON.stringify(qz.pay) + ")");
   ok(/дадут те, кому передадите/.test(qz.courierBefore || "") && qz.courier && qz.courier.n === 1 && qz.courier.done && qz.courier.gain > 0 && qz.courier.gift && qz.courier.fem, "весточка: награду даёт получатель при передаче, по своему ремеслу (" + JSON.stringify(qz.courier) + ")");
   ok(qz.world && qz.world.bodies >= 1.5 && qz.world.humans >= 0.5 && qz.world.capTrader === 0, "на этажах больше тел и живых, а выживший-торговец не стоит у капсулы (" + JSON.stringify(qz.world) + ")");
+
+  console.log("(3.6) Поручения: без предела, всё тяжелее, два пути, главы с выбором, доверие, условия, посылки");
+  const qv = await page.evaluate(async () => {
+    const g = LAB.game, Q = LAB.quests, U = LAB.ui, C = LAB.combat, out = {};
+    const spoken = [], say0 = LAB.say; LAB.say = function (t) { spoken.push(String(t)); };
+    const G = () => g.G, nowM = () => G().day * 1440 + G().min;
+    const k0 = JSON.parse(JSON.stringify({ quests: G().quests, givers: G().givers || {}, credits: G().credits, inv: G().inv, L: G().L, F: G().F, x: G().x, y: G().y, xp: G().xp, lvl: G().lvl, samples: G().samples, rub: G().rub || {}, min: G().min, day: G().day, stats: G().stats, body: G().body, hp: G().hp, visitSeq: G().visitSeq || 0, lastVisit: G().lastVisit || {} }));
+    const fs0 = JSON.stringify(G().fs);
+    /* шаг — так, как его сделал бы игрок: состояние этажа, вещи, счётчики */
+    const doStep = (s, q) => {
+      const gg = G(), key = (s.tL || q.L) + "-" + s.tF;
+      const fx = () => (gg.fs[key] = gg.fs[key] || { doors: {}, taken: {}, foes: {}, objs: {}, drops: [], secrets: {} });
+      const ob = id => { const f = fx(); f.objs = f.objs || {}; return (f.objs[id] = f.objs[id] || {}); };
+      switch (s.type) {
+        case "fetch": case "supply": gg.inv[s.item] = (gg.inv[s.item] || 0) + s.need; break;
+        case "kill": gg.stats.wkills = (gg.stats.wkills || 0) + s.need; break;
+        case "hunt": s.n = s.need; break;
+        case "clear": { const f = fx(); f.foes = f.foes || {}; s.foeIds.forEach(id => { f.foes[id] = { dead: true }; }); if (gg.L === s.tL && gg.F === s.tF) C.foes().forEach(ff => { if (s.foeIds.indexOf(ff.id) >= 0) ff.dead = true; }); break; }
+        case "visit": gg.visitSeq = (gg.visitSeq || 0) + 1; gg.lastVisit = gg.lastVisit || {}; gg.lastVisit[key] = gg.visitSeq; break;
+        case "survey": s.seen = Array.from({ length: s.need }, (_, i) => 1000 + i); break;
+        case "map": fx().mapped = true; break;
+        case "data": ob(s.ids[0]).data = true; break;
+        case "hack": ob(s.ids[0]).hacked = true; break;
+        case "power": fx().power = true; break;
+        case "rubble": fx().rubble = true; break;
+        case "dig": gg.rub = gg.rub || {}; gg.rub[s.rk] = { p: 100, done: 1 }; break;
+        case "robots": fx().robots = true; break;
+        case "lockdown": fx().lockdown = true; break;
+        case "cams": { const f = fx(); f.netXp = f.netXp || {}; f.netXp.camsloop = 1; break; }
+        case "puzzle": ob(s.oid).solved = true; break;
+        case "safe": ob(s.oid).open = true; break;
+        case "secret": { const f = fx(); f.secrets = f.secrets || {}; f.secrets[s.ids[0]] = 1; break; }
+        case "sample": gg.samples[s.sid] = 1; break;
+        case "body": gg.badges = gg.badges || []; gg.badges.push({ o: s.oid, L: s.tL, F: s.tF }); gg.inv.badge = (gg.inv.badge || 0) + 1; break;
+        case "keep": s.got = true; break;
+        case "deliver": case "aid": s.given = true; break;
+        case "boss": { const f = fx(); f.foes = f.foes || {}; f.foes[s.fid] = { dead: true }; break; }
+      }
+    };
+    try {
+      g.enterFloor(1, 4, "down", true); C.stop();
+      G().quests = G().quests.filter(q => q.type === "main");
+      /* 1. ступени 0–12 у троих: ни одно не выполнено при выдаче, труд не меньше положенного,
+         шаги разные, награда — по труду, видов шагов много */
+      const people = [{ key: "Q36-e", n: "Инженер Проверочный", prof: "Инженер" }, { key: "Q36-m", n: "Медик Проверочная", prof: "Медик", female: true }, { key: "Q36-g", n: "Охранник Проверочный", prof: "Охранник" }];
+      const kinds = {}, rows = [], xpw = []; let badReady = 0, badFloor = 0, badText = 0, dup = 0, badSteps = 0;
+      for (const n of people) for (let t = 0; t <= 12; t++) {
+        const r = Q.giver(n); r.done = t; r.ch = [2, 5, 8, 11].filter(x => t > x).length; r.cool = 0; r.seq = 0;
+        const list = Q.offers(n);
+        rows.push(n.prof + " " + t + ": " + list.map(q => Q.steps(q).map(s => s.type).join("+")).join(" | "));
+        list.forEach(q => {
+          const ss = Q.steps(q), cross = q.type === "courier" || q.type === "deep";
+          /* дела в мире не сделаны при выдаче; вещи для заказчика могут быть уже в рюкзаке — их и несут */
+          if (ss.some(s => !Q.KINDS[s.type].bring && Q.KINDS[s.type].ready(s, q))) badReady++;
+          if (!cross && t >= 1 && Q.workOf(q) < 0.8 * (4 + 3.5 * t) - 0.01 && ss.length < 6) badFloor++;
+          if (!cross && ss.length < (t <= 1 ? 1 : t <= 4 ? 2 : t <= 9 ? 3 : 4)) badSteps++;
+          if (!q.text || !q.short || !(q.reward && (q.type === "courier" || (q.reward.cr > 0 && q.reward.xp > 0)))) badText++;
+          const ks = ss.map(s => s.type); if (new Set(ks).size !== ks.length) dup++;
+          ks.forEach(k => { kinds[k] = 1; });
+          if (!cross) xpw.push(q.reward.xp / Q.workOf(q));
+        });
+      }
+      out.esc = { badReady, badFloor, badSteps, badText, dup, kinds: Object.keys(kinds).length, xpw: [Math.min(...xpw), Math.max(...xpw)].map(v => +v.toFixed(2)), rows: rows.filter((_, i) => i % 4 === 0) };
+      /* 2. главы: выбор в конце главы меняет следующую */
+      const ce = Q.chapterDef("eng", 1, ["air"]), ct = Q.chapterDef("eng", 1, ["tools"]);
+      const m2s = Q.chapterDef("med", 2, ["truth", "serum"]), m2b = Q.chapterDef("med", 2, ["truth", "burn"]);
+      out.branch = { eng: ce.intro !== ct.intro, med: m2s.t !== m2b.t && m2s.pick.o[0].f !== m2b.pick.o[0].f, store: Q.chapterDef("store", 2, ["cut", "stock"]).intro !== Q.chapterDef("store", 2, ["honest", "stock"]).intro };
+      /* весь путь главы: два пути, шаги, выбор, следующая глава — по выбору */
+      const nc = { key: "Q36-ch", n: "Инженер Главный", prof: "Инженер" };
+      const rc = Q.giver(nc); rc.done = 2; rc.ch = 0; rc.path = []; rc.seq = 0; rc.cool = 0;
+      U.closeAll(); spoken.length = 0; g.takeQuest(nc);
+      let w = U.top();
+      out.chap = { menu: !!w && /^Поручение:/.test(w.title), paths: w ? w.items.filter(x => /^Путь /.test(x.label)).length : 0, intro: spoken.join(" ").slice(0, 200) };
+      if (w) { w.i = 0; U.activate(); }
+      const qch = Q.active().find(q => q.giver === nc.key);
+      if (qch) {
+        out.chap.title = qch.title;
+        Q.steps(qch).forEach(s => doStep(s, qch));
+        g.completeQuest(qch, nc);
+        w = U.top();
+        out.chap.choice = !!w && /^Выбор: «Обесточено»/.test(w.title);
+        if (w) { const k = w.items.findIndex(x => /мастерские/.test(x.label)); w.i = k; U.activate(); }
+        out.chap.done = qch.done; out.chap.path = rc.path.join(","); out.chap.ch = rc.ch;
+        rc.done = 5;
+        const nxt = Q.offers(nc);
+        out.chap.next = nxt.length ? nxt[0].intro === ct.intro : false;
+      }
+      /* 3. доверие: отказ — падает, сразу не просят, потом — другое; честная работа — растёт */
+      const na = { key: "Q36-a", n: "Повар Проверочный", prof: "Повар" };
+      G().quests = G().quests.filter(q => q.type === "main");
+      U.closeAll(); g.takeQuest(na);
+      const qa = Q.active().find(q => q.giver === na.key);
+      const tr0 = Q.giver(na).trust;
+      g.abandonQuest(qa);
+      out.trust = { took: !!qa, drop: tr0 - Q.giver(na).trust };
+      spoken.length = 0; g.takeQuest(na); out.trust.cool = /отказались от моей просьбы/.test(spoken.join(" "));
+      G().body.food = 90; g.advanceTime(45);
+      U.closeAll(); g.takeQuest(na);
+      const qa2 = Q.active().find(q => q.giver === na.key);
+      out.trust.again = !!qa2 && !!qa && qa2.id !== qa.id;
+      if (qa2) { const tr1 = Q.giver(na).trust; Q.steps(qa2).forEach(s => doStep(s, qa2)); g.completeQuest(qa2, na); out.trust.up = qa2.done && Q.giver(na).trust > tr1; }
+      /* 4. условия: тревога на этаже поручения — без премии «тихо»; срок вышел — без «быстро»;
+         пролилась кровь — без «без крови» */
+      G().quests = G().quests.filter(q => q.type === "main");
+      const ng = { key: "Q36-c3", n: "Охранник Условный", prof: "Охранник" };
+      const rg = Q.giver(ng); rg.done = 7; rg.ch = 3; rg.cool = 0;
+      const qc = Q.offers(ng).find(q => (q.cond || []).some(c => c.k === "quiet"));
+      if (qc) {
+        Q.accept(ng, qc);
+        LAB.oko.setLevel(3, "проверка"); LAB.oko.setLevel(0, "проверка");
+        const fast = qc.cond.find(c => c.k === "fast"); if (fast) { fast.until = nowM(); G().body.food = 90; g.advanceTime(2); }
+        out.cond = { has: qc.cond.map(c => c.k).join("+"), quietLost: qc.cond.find(c => c.k === "quiet").lost, fastLost: fast ? fast.lost : null, text: Q.details(qc).slice(0, 160) };
+        g.abandonQuest(qc);
+      }
+      const ns = { key: "Q36-c4", n: "Генетик Тихий", prof: "Генетик" };
+      let qcl = null;
+      for (let k = 0; k < 12 && !qcl; k++) { const rs = Q.giver(ns); rs.done = 7; rs.ch = 3; rs.cool = 0; rs.seq = k; qcl = Q.offers(ns).find(q => (q.cond || []).some(c => c.k === "clean")) || null; }
+      if (qcl) {
+        Q.accept(ns, qcl);
+        let f = null; for (let r = 3; r < 30 && !f; r++) { const c = C.freeCellNear(G().x + r, G().y, null); if (c && !C.havenAt(c[0], c[1])) f = C.spawnFoe("patrolbot", c[0], c[1], {}); }
+        if (f) C.damageFoe(f, 99999, "kinetic", { quiet: true });
+        out.clean = { killed: !!f && f.dead, lost: qcl.cond.find(c => c.k === "clean").lost };
+        g.abandonQuest(qcl);
+      }
+      /* 5. срочная помощь раненому: опоздали — поручение сорвано */
+      G().quests = G().quests.filter(q => q.type === "main");
+      let qu = null, nu = null;
+      for (let k = 0; k < 60 && !qu; k++) { const nn = { key: "Q36-u" + k, n: "Медик Срочная", prof: "Медик", female: true }; const ru = Q.giver(nn); ru.done = 4; ru.ch = 1; const f = Q.offers(nn).find(q => q.urgent); if (f) { qu = f; nu = nn; } }
+      if (qu) {
+        Q.accept(nu, qu); const tr = Q.giver(nu).trust;
+        out.urgent = { text: /Срочно: успеть до/.test(Q.details(qu)) };
+        qu.urgent = nowM(); G().body.food = 90; g.advanceTime(2);
+        out.urgent.failed = qu.failed === true && qu.late === true; out.urgent.drop = tr - Q.giver(nu).trust;
+      }
+      /* 6. посылка: передать на этаже получателя; вскрыть и оставить себе — поручение сорвано */
+      G().quests = G().quests.filter(q => q.type === "main");
+      let qd = null, nd = null;
+      for (let k = 0; k < 80 && !qd; k++) { const nn = { key: "Q36-d" + k, n: "Кладовщик Посыльный", prof: "Кладовщик" }; const rd = Q.giver(nn); rd.done = 1; rd.cool = 0; const f = Q.offers(nn).find(q => q.type === "deliver"); if (f) { qd = f; nd = nn; } }
+      if (qd) {
+        Q.accept(nd, qd);
+        g.enterFloor(1, qd.tF, "down", true); C.stop();
+        const m = g.CUR.fl.npcs.find(x => x.key === qd.to);
+        out.deliver = { nav: Q.navTargets().some(t => t.n.indexOf(qd.toName) >= 0) };
+        const its = m ? Q.npcItems(m) : [];
+        out.deliver.items = its.map(x => x.label).join(" | ");
+        const give = its.find(x => /^Передать посылку/.test(x.label));
+        if (give) give.fn();
+        out.deliver.given = Q.ready(qd);
+        g.enterFloor(1, 4, "down", true); C.stop();
+        const cr0 = G().credits; g.completeQuest(qd, nd); out.deliver.paid = qd.done && G().credits > cr0;
+      }
+      let qd2 = null, nd2 = null;
+      for (let k = 80; k < 160 && !qd2; k++) { const nn = { key: "Q36-d" + k, n: "Кладовщица Посыльная", prof: "Кладовщик", female: true }; const rd = Q.giver(nn); rd.done = 1; rd.cool = 0; const f = Q.offers(nn).find(q => q.type === "deliver"); if (f) { qd2 = f; nd2 = nn; } }
+      if (qd2) {
+        Q.accept(nd2, qd2); const tr = Q.giver(nd2).trust;
+        g.enterFloor(1, qd2.tF, "down", true); C.stop();
+        const m = g.CUR.fl.npcs.find(x => x.key === qd2.to);
+        const open = m ? Q.npcItems(m).find(x => /^Вскрыть посылку/.test(x.label)) : null;
+        if (open) { U.closeAll(); open.fn(); const w2 = U.top(); const k = w2 ? w2.items.findIndex(x => /^Оставить содержимое себе/.test(x.label)) : -1; if (k >= 0) { w2.i = k; U.activate(); } }
+        out.parcel = { failed: qd2.failed === true, drop: tr - Q.giver(nd2).trust };
+        g.enterFloor(1, 4, "down", true); C.stop();
+      }
+      /* 7. «уничтожить машин»: в счёт — только машины, за которых дали опыт */
+      G().quests = G().quests.filter(q => q.type === "main");
+      const qh = { v: 2, id: "Q36-h:5", giver: "Q36-h", giverName: "Проверочный", gf: false, L: G().L, F: G().F, done: false, stage: 5, tier: 5, steps: [{ type: "hunt", cls: "mech", need: 2, n: 0 }, { type: "kill", need: 1, wk0: G().stats.wkills || 0 }], short: "охота", text: "x", reward: { cr: 1, xp: 1 } };
+      G().quests.push(qh);
+      const spawn = id => { for (let r = 3; r < 30; r++) { const c = C.freeCellNear(G().x + r, G().y, null); if (c && !C.havenAt(c[0], c[1])) { const f = C.spawnFoe(id, c[0], c[1], {}); if (f) return f; } } return null; };
+      const bioT = Object.keys(LAB.FOES).find(k => LAB.FOES[k].kind === "bio" && !(LAB.FOES[k].beh || []).some(b => /camera|turret|stationary/.test(b)));
+      const fb = spawn(bioT); if (fb) C.damageFoe(fb, 99999, "kinetic", { quiet: true });
+      const n1 = qh.steps[0].n;
+      const fm = spawn("patrolbot"); if (fm) C.damageFoe(fm, 99999, "kinetic", { quiet: true });
+      out.hunt = { afterBio: n1, afterMech: qh.steps[0].n, killStep: Q.KINDS.kill.ready(qh.steps[1]) };
+      G().quests = G().quests.filter(q => q.id !== qh.id);
+      /* 8. настоящий терминал: данные скачаны — шаг сделан, «Эхо» говорит, что можно сдать; навигатор знает цель */
+      let at = null;
+      for (let F = 1; F <= 20 && !at; F++) { const fl = LAB.getFloor(G().seed, 1, F); const o = fl.objs.find(x => x.type === "terminal" && x.sub === "sci"); if (o) at = { F, id: o.id }; }
+      if (at) {
+        g.enterFloor(1, at.F, "down", true); C.stop();
+        const o = g.CUR.fl.objs.find(x => x.id === at.id);
+        const st = g.objState(o); st.data = false;
+        const qt = { v: 2, id: "Q36-t:2", giver: "Q36-t", giverName: "Проверочная", gf: true, L: 1, F: at.F, done: false, stage: 2, tier: 2, steps: [{ type: "data", tL: 1, tF: at.F, ids: [o.id], vis: true }, { type: "map", tL: 1, tF: at.F, vis: true }], short: "данные", text: "x", reward: { cr: 1, xp: 1 } };
+        g.CUR.fs.mapped = false;
+        G().quests.push(qt);
+        out.term = { nav: Q.navTargets().map(t => t.n).join(", ") };
+        U.closeAll(); g.objMenu(o);
+        let ww = U.top(), k = ww ? ww.items.findIndex(x => /^Скачать исследовательские данные/.test(x.label)) : -1;
+        spoken.length = 0;
+        if (k >= 0) { ww.i = k; U.activate(); }
+        out.term.dataStep = Q.KINDS.data.ready(qt.steps[0]);
+        U.closeAll(); g.objMenu(o); ww = U.top(); k = ww ? ww.items.findIndex(x => /^Загрузить карту этажа/.test(x.label)) : -1;
+        if (k >= 0) { ww.i = k; U.activate(); }
+        out.term.ready = Q.ready(qt); out.term.said = /можно сдать/.test(spoken.join(" "));
+        U.closeAll();
+        G().quests = G().quests.filter(q => q.id !== qt.id);
+        g.enterFloor(1, 4, "down", true); C.stop();
+      }
+      /* 9. запись и загрузка: заказчики и многошаговое поручение — на месте */
+      G().quests = G().quests.filter(q => q.type === "main");
+      const nl = { key: "Q36-l", n: "Инженер Записанный", prof: "Инженер" };
+      const rl = Q.giver(nl); rl.done = 6; rl.ch = 2; rl.cool = 0; rl.trust = 77;
+      const ql = Q.offers(nl)[0]; Q.accept(nl, ql);
+      g.saveSlot(3); g.loadSlot(3); C.stop();
+      const ql2 = G().quests.find(q => q.id === ql.id);
+      out.save = { quest: !!ql2 && Q.steps(ql2).length === Q.steps(ql).length && !ql2.done, trust: Q.giver(nl).trust === 77, tier: Q.stage(nl) === 6 };
+      if (ql2) { Q.steps(ql2).forEach(s => doStep(s, ql2)); const cr0 = G().credits; g.completeQuest(ql2, nl); out.save.paid = ql2.done && G().credits > cr0; }
+      /* 10. поручение прежней версии (одношаговое) выполняется и считается */
+      G().quests = G().quests.filter(q => q.type === "main");
+      const old = { id: "Q36-old:1", giver: "Q36-old", giverName: "Старый Заказчик", gf: false, L: 1, F: 4, done: false, stage: 1, type: "visit", tL: 1, tF: 5, seq0: G().visitSeq || 0, short: "разведать этаж 5", text: "x", reward: { cr: 33, xp: 5 } };
+      G().quests.push(old);
+      g.enterFloor(1, 5, "down", true); C.stop(); g.enterFloor(1, 4, "up", true); C.stop();
+      const cr1 = G().credits; g.completeQuest(old, { key: "Q36-old", n: "Старый Заказчик" });
+      out.old = { done: old.done, gain: G().credits - cr1, stage: Q.stage({ key: "Q36-old", n: "Старый Заказчик" }) };
+    } catch (e) { out.err = e.message + " " + (e.stack || "").split("\n").slice(1, 3).join(" / "); }
+    U.closeAll();
+    G().fs = JSON.parse(fs0);
+    const gg = G();
+    gg.quests = k0.quests; gg.givers = k0.givers; gg.credits = k0.credits; gg.inv = k0.inv; gg.samples = k0.samples; gg.rub = k0.rub; gg.min = k0.min; gg.day = k0.day; gg.stats = k0.stats; gg.body = k0.body; gg.hp = k0.hp; gg.visitSeq = k0.visitSeq; gg.lastVisit = k0.lastVisit;
+    gg.xp = k0.xp; gg.lvl = k0.lvl;
+    try { g.enterFloor(k0.L, k0.F, "down", true); C.stop(); gg.x = k0.x; gg.y = k0.y; } catch (e) { /* */ }
+    LAB.say = say0;
+    return out;
+  });
+  ok(!qv.err, "поручения 3.6: без ошибок" + (qv.err ? ": " + qv.err : ""));
+  ok(qv.esc && qv.esc.badReady === 0 && qv.esc.badText === 0 && qv.esc.dup === 0, "ни одно дело в мире не сделано в момент выдачи (вещи могут быть уже в рюкзаке); у каждого текст и награда; шаги в поручении не повторяются (" + JSON.stringify(qv.esc && { r: qv.esc.badReady, t: qv.esc.badText, d: qv.esc.dup }) + ")");
+  ok(qv.esc && qv.esc.badFloor === 0 && qv.esc.badSteps === 0, "каждая следующая просьба тяжелее: труд не меньше положенного ступени, шагов — 1, 2, 3, 4 по ступеням (" + (qv.esc ? qv.esc.rows.join(" ; ") : "") + ")");
+  ok(qv.esc && qv.esc.kinds >= 16, "поручения разнообразные: видов шагов — " + (qv.esc && qv.esc.kinds));
+  ok(qv.esc && qv.esc.xpw[1] / qv.esc.xpw[0] <= 1.3, "опыт — по труду: за единицу труда почти одинаково на всех ступенях (" + JSON.stringify(qv.esc && qv.esc.xpw) + ")");
+  ok(qv.branch && qv.branch.eng && qv.branch.med && qv.branch.store, "главы ветвятся: выбор в прошлой главе меняет следующую (" + JSON.stringify(qv.branch) + ")");
+  ok(qv.chap && qv.chap.menu && qv.chap.paths === 2 && qv.chap.title === "Обесточено" && qv.chap.choice && qv.chap.done && qv.chap.path === "tools" && qv.chap.ch === 1 && qv.chap.next, "глава: два пути, в конце — выбор, следующая глава — по выбору (" + JSON.stringify(qv.chap) + ")");
+  ok(qv.trust && qv.trust.took && qv.trust.drop >= 10 && qv.trust.cool && qv.trust.again && qv.trust.up, "доверие: отказ — падает и сразу не просят, потом — другая просьба; честная работа — растёт (" + JSON.stringify(qv.trust) + ")");
+  ok(qv.cond && qv.cond.quietLost === true && (qv.cond.fastLost === null || qv.cond.fastLost === true) && qv.clean && qv.clean.killed && qv.clean.lost === true, "премии: тревога ОКО на этаже поручения снимает «тихо», срок — «быстро», убийство — «без крови» (" + JSON.stringify({ c: qv.cond, k: qv.clean }) + ")");
+  ok(qv.urgent && qv.urgent.text && qv.urgent.failed && qv.urgent.drop > 0, "срочная помощь раненому: срок назван, опоздали — поручение сорвано, доверие ниже (" + JSON.stringify(qv.urgent) + ")");
+  ok(qv.deliver && qv.deliver.nav && /Передать посылку/.test(qv.deliver.items) && /Вскрыть посылку/.test(qv.deliver.items) && qv.deliver.given && qv.deliver.paid, "посылка: навигатор ведёт к получателю, у него — передать или вскрыть; передали — сдали и получили плату (" + JSON.stringify(qv.deliver) + ")");
+  ok(qv.parcel && qv.parcel.failed && qv.parcel.drop >= 25, "вскрыть посылку и оставить себе — поручение сорвано, доверие подорвано (" + JSON.stringify(qv.parcel) + ")");
+  ok(qv.hunt && qv.hunt.afterBio === 0 && qv.hunt.afterMech === 1 && qv.hunt.killStep, "«уничтожить машин»: тварь не в счёт, машина — в счёт; «уничтожить врагов» — любой (" + JSON.stringify(qv.hunt) + ")");
+  ok(qv.term && /поручение: научный терминал/.test(qv.term.nav) && qv.term.dataStep && qv.term.ready && qv.term.said, "настоящий терминал: навигатор знает цель, данные и карта — шаги сделаны, «Эхо» говорит, что можно сдать (" + JSON.stringify(qv.term) + ")");
+  ok(qv.save && qv.save.quest && qv.save.trust && qv.save.tier && qv.save.paid, "запись и загрузка: многошаговое поручение, доверие и ступень на месте, сдаётся (" + JSON.stringify(qv.save) + ")");
+  ok(qv.old && qv.old.done && qv.old.gain === 33 && qv.old.stage === 1, "поручение прежней версии выполняется по-старому и идёт в счёт (" + JSON.stringify(qv.old) + ")");
+
+  console.log("(3.6) Импланты: одна лечилка вместо регенерации и гемостата; опыт кибернетики — раз на чип и на модификацию");
+  const imx = await page.evaluate(() => {
+    const g = LAB.game, IM = LAB.implants, G = g.G, out = {};
+    const k0 = JSON.parse(JSON.stringify({ implants: G.implants, impLv: G.impLv || {}, impMod: G.impMod || {}, cyber: G.cyber || { xp: {} }, inv: G.inv, bp: G.bp || {}, hp: G.hp, hpMax: G.hpMax, en: G.en, body: G.body }));
+    try {
+      /* лечилка одна: гемостата в каталоге нет, регенерация лечит и останавливает кровь */
+      out.gone = !LAB.IMPLANTS.some(d => d.id === "hemostat") && !LAB.ITEMS.imp_hemostat && IM.def("hemostat").id === "regen" && /останавливает кровотечение/.test(IM.def("regen").desc);
+      /* запись прежней версии: гемостат вживлён — становится регенерацией; оба — второй чипом в рюкзак */
+      const old1 = { implants: ["scan", "echo", "hemostat"], inv: { imp_hemostat: 2 }, impLv: { hemostat: 2 }, impMod: { hemostat: ["eco", "lasting"] }, bp: { imp_hemostat: 1 }, cyber: { xp: { med: 20 }, once: { "install:hemostat": 1 } } };
+      IM.fixSave(old1);
+      out.mig1 = old1.implants.indexOf("hemostat") < 0 && old1.implants.indexOf("regen") >= 0 && old1.inv.imp_regen === 2 && !old1.inv.imp_hemostat && old1.impLv.regen === 2 && old1.impMod.regen.join() === "eco" && old1.bp.imp_regen === 1 && old1.cyber.once["install:regen"] === 1;
+      const old2 = { implants: ["scan", "echo", "regen", "hemostat"], inv: {} };
+      IM.fixSave(old2);
+      out.mig2 = old2.implants.filter(id => id === "regen").length === 1 && old2.implants.indexOf("hemostat") < 0 && old2.inv.imp_regen === 1;
+      /* оба импланта больше не встать вместе: подобранный «гемостат» — чип регенерации */
+      G.implants = G.implants.filter(id => id === "scan" || id === "echo"); G.impLv = {}; G.impMod = {}; G.cyber = { xp: {} };
+      IM.install("regen"); const n0 = G.inv.imp_regen || 0; IM.pickup("hemostat"); out.pick = (G.inv.imp_regen || 0) === n0 + 1 && G.implants.filter(id => id === "regen").length === 1;
+      /* счётчик: сколько имплантов вживлено — без системных «Эхо» и без чипов */
+      IM.install("detox"); IM.install("c_aim");
+      out.count = IM.actIn() === 2 && /Имплантов вживлено: 2/.test(IM.cyberText()) && /Чипов в нейрогнёздах: 1/.test(IM.cyberText());
+      /* «вживить — извлечь» и «снять — поставить модификацию»: опыт — только в первый раз */
+      G.implants = G.implants.filter(id => id === "scan" || id === "echo"); G.cyber = { xp: {} }; G.impMod = {};
+      G.hp = G.hpMax = 9999;
+      IM.install("regen"); const x1 = IM.catXp("med");
+      IM.extract("regen"); const x2 = IM.catXp("med");
+      for (let i = 0; i < 5; i++) { g.useItem("imp_regen"); IM.extract("regen"); }
+      const x3 = IM.catXp("med");
+      out.once = { install: x1, extract: x2 - x1, loop: x3 - x2 };
+      g.useItem("imp_regen");
+      G.inv.chip = 9; G.inv.relay = 9;
+      IM.addMod("regen", "eco"); const m1 = IM.catXp("med");
+      for (let i = 0; i < 3; i++) { IM.delMod("regen", "eco"); IM.addMod("regen", "eco"); }
+      out.once.mod = m1 - x3; out.once.modLoop = IM.catXp("med") - m1;
+    } catch (e) { out.err = e.message + " " + (e.stack || "").split("\n")[1]; }
+    G.implants = k0.implants; G.impLv = k0.impLv; G.impMod = k0.impMod; G.cyber = k0.cyber; G.inv = k0.inv; G.bp = k0.bp; G.hp = k0.hp; G.hpMax = k0.hpMax; G.en = k0.en; G.body = k0.body;
+    return out;
+  });
+  ok(!imx.err, "импланты 3.6: без ошибок" + (imx.err ? ": " + imx.err : ""));
+  ok(imx.gone && imx.mig1 && imx.mig2 && imx.pick, "«Гемостат» слит с «Регенерацией»: в каталоге одна лечилка; вживлённый гемостат прежней записи — регенерацией, второй — чипом в рюкзак; ступень, модификации, схема и опыт переходят (" + JSON.stringify({ g: imx.gone, m1: imx.mig1, m2: imx.mig2, p: imx.pick }) + ")");
+  ok(imx.count, "счётчик имплантов: вживлённые — отдельно от чипов и системных имплантов «Эхо»");
+  ok(imx.once && imx.once.install > 0 && imx.once.extract > 0 && imx.once.loop === 0 && imx.once.mod > 0 && imx.once.modLoop === 0, "кибернетика не качается по кругу: «вживить — извлечь» и «снять — поставить модификацию» дают опыт только в первый раз (" + JSON.stringify(imx.once) + ")");
 
   console.log("(3.5) Находки аудита: доклад после загрузки, расчистка по врагам, укрытие и бросок, мины ОКО, страница в капсуле");
   const au = await page.evaluate(async () => {

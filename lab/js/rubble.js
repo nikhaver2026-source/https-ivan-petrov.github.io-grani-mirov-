@@ -274,6 +274,7 @@ function finish(o, how, b) {
   if (gm().gainXP) gm().gainXP(how === "blast" ? 10 : how === "jack" ? 12 : how === "bar" ? 15 : 18);
   var to = o.type === "stairs_down" ? g.F + 1 : g.F - 1;
   if (gm().journal) gm().journal("Разобран завал на лестнице между этажами " + Math.min(g.F, to) + " и " + Math.max(g.F, to) + ".");
+  if (gm().checkQuests) gm().checkQuests(); /* (3.6) завал на лестнице — шаг поручения */
   var txt = DONE[how] + " Лестница " + (o.type === "stairs_down" ? "вниз, на этаж " : "вверх, на этаж ") + to + ", открыта.";
   var got = s.loot ? null : findings("st:" + key(o), how);
   s.loot = 1;

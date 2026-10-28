@@ -981,23 +981,25 @@ function questsItems() {
   var g = G(), cap = gm().QUEST_ACTIVE, act = gm().activeQuests(), items = [];
   g.quests.forEach(function (q) { if (!q.done && q.type === "main") items.push({ label: "Главное: " + q.text, keep: true, fn: function () { say(q.text); } }); });
   /* (3.5) поручений сразу — не больше трёх; счёт — первой строкой после главного */
-  var head = act.length ? "Взятых поручений — " + act.length + " из " + cap + "." + (act.length >= cap ? " Новых не дадут, пока одно не сдано или от него не отказались." : "") : "Поручений нет. Выжившие сами просят о помощи — спросите их; больше " + cap + " сразу не взять.";
+  var head = act.length ? "Взятых поручений — " + act.length + " из " + cap + "." + (act.length >= cap ? " Новых не дадут, пока одно не сдано или от него не отказались." : "") : "Поручений нет. Выжившие сами просят о помощи — спросите их; больше " + cap + " сразу не взять, а каждая следующая просьба того же человека труднее прежней.";
   items.push({ label: head, keep: true, fn: function () { say(head); } });
+  /* (3.6) строка — что сейчас делать и чем кончится; выбор — всё поручение: шаги с отметками, условия */
   act.forEach(function (q) {
-    items.push({ label: q.short + " — " + gm().questProgress(q) + ". Заказчик: " + q.giverName + ", уровень " + q.L + ", этаж " + q.F + ". " + gm().rewardText(q), keep: true, fn: function () { say(q.text || q.short); } });
+    var Q = LAB.quests;
+    items.push({ label: Q ? Q.line(q) : q.short + " — " + gm().questProgress(q) + ". " + gm().rewardText(q), keep: true, fn: function () { say(Q ? Q.details(q) : q.text || q.short); } });
   });
   if (act.length) items.push({ label: "Отказаться от поручения", fn: function () { abandonMenu(); } });
   items.push(back());
   return items;
 }
-/* Отказ — с подтверждением: заказчик больше ни о чём не попросит. */
+/* Отказ — с подтверждением: доверие заказчика падает, новую просьбу он даст не сразу (3.6). */
 function abandonMenu() {
   var build = function () {
     var items = gm().activeQuests().map(function (q) {
       return { label: q.short + ". Заказчик: " + q.giverName, fn: function () {
         menu("Отказаться: " + q.short + "?", [
           /* отказ сказан — оба окна закрываются молча, и сверху снова окно заданий */
-          { label: "Да, отказаться. " + q.giverName + " больше ни о чём не попросит", fn: function () { if (gm().abandonQuest(q)) { closeTop(true); closeTop(true); } else closeTop(); } },
+          { label: "Да, отказаться: " + q.giverName + " огорчится, доверие упадёт, о новом попросит не сразу", fn: function () { if (gm().abandonQuest(q)) { closeTop(true); closeTop(true); } else closeTop(); } },
           { label: "Нет, оставить поручение", fn: function () { closeTop(); } }
         ]);
       } };

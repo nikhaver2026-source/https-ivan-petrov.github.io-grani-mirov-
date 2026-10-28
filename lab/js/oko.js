@@ -356,6 +356,7 @@ function setLevel(lv, why) {
   if (lv === was) return;
   s.lv = lv; s.t = T();
   log("Режим: " + SEC[lv] + (why ? " (" + why + ")" : "") + ".");
+  if (lv >= 2 && lv <= 5 && LAB.quests) LAB.quests.onAlarm(lv); /* (3.6) премия поручений «тихо» */
   var f = fs(), cb = C(), sn = s.seen || s.sus;
   A("alarmLayer", lv === 4 || lv === 5);
   if (lv === 0) { if (was >= 2) speak("normal", true); f.turretAlert = false; return; }

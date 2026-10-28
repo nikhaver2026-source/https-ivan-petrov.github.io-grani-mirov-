@@ -2457,6 +2457,7 @@ function kill(f, quiet) {
       if (cheb(self, heroPos()) <= 1 && clearTo(self.x, self.y, G().x, G().y)) hurtPlayer(Math.round(self.dmg * 1.4), self.kind === "bio" ? "chem" : "phys", self);
     }, 350);
   }
+  if (LAB.quests) LAB.quests.onKill(f, xp); /* (3.6) поручения «уничтожить машин, тварей, стражей…» */
   gm().gainXP(xp);
   gm().checkQuests();
   syncFoes();

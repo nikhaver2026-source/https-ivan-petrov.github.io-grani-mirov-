@@ -89,8 +89,8 @@ var NEW = [
   { id: "spoof", n: "Подмена сигнала", cat: "hack", t: 2, cost: 10, price: 180, desc: "Ваш сигнал — шагах в шести впереди: машины идут туда.", fx: { k: "lure", rng: 6 } },
   { id: "turret", n: "Перехват турели", cat: "hack", t: 3, cost: 18, price: 320, desc: "Ближайшая турель в шести шагах двадцать секунд бьёт по вашим врагам.", fx: { k: "turret", r: 6, ally: 40 } },
   { id: "overload", n: "Замыкание", cat: "hack", t: 3, cost: 16, price: 300, desc: "Перегрузка цепей у роботов в трёх шагах: урон и остановка.", fx: { k: "area", r: 3, dmg: 30, perL: 9, dt: "emp", kind: "mech", freeze: 3 } },
-  /* медицинские */
-  { id: "hemostat", n: "Гемостат", cat: "med", t: 1, cost: 7, price: 110, desc: "Останавливает кровь и пять секунд понемногу лечит.", fx: { k: "heal", hp: 10, perL: 1, bleed: 1, regen: 10 } },
+  /* медицинские; (3.6, просьба игрока) «Гемостат» слит с «Регенерацией»: лечилка одна —
+     она и лечит, и останавливает кровь (GONE, fixSave) */
   { id: "detox", n: "Детокс-железа", cat: "med", t: 1, cost: 6, price: 110, desc: "Выводит яд и токсины.", fx: { k: "heal", tox: 40, poison: 1 } },
   { id: "adrenal", n: "Адреналиновый насос", cat: "med", t: 2, cost: 9, price: 160, desc: "Подлечивает, бодрит и на четыре секунды ускоряет.", fx: { k: "heal", hp: 12, perL: 2, haste: 8, wake: 25 } },
   { id: "neurodamp", n: "Нейрогаситель", cat: "med", t: 2, cost: 4, price: 150, desc: "Снимает нейронагрузку на сорок.", fx: { k: "heal", neuro: 40 } },
@@ -139,6 +139,10 @@ CHIPS.forEach(function (im) { im.passive = 1; im.cost = 0; if (!LAB.IMPLANTS.som
 LAB.IMPLANTS.forEach(function (im) { if (!im.cat) im.cat = "energy"; if (!im.t) im.t = 1; im.minL = im.minL || [0, 1, 3, 6, 15][im.t]; });
 var DEF = {};
 LAB.IMPLANTS.forEach(function (im) { DEF[im.id] = im; });
+/* (3.6) снятые импланты прежних версий и чем они стали */
+var GONE = { hemostat: "regen" };
+function canon(id) { return GONE[id] && DEF[GONE[id]] ? GONE[id] : id; }
+for (var gk in GONE) if (!DEF[gk] && DEF[GONE[gk]]) DEF[gk] = DEF[GONE[gk]];
 function def(id) { return DEF[id] || LAB.IMPLANTS[0]; }
 function isChip(id) { return !!(DEF[id] && DEF[id].passive); }
 /* что за действие — для совместимости модификаций */
@@ -245,6 +249,8 @@ function allPerk(n) {
 function load(id) { var d = def(id); return d.core || d.passive ? 0 : d.t; }
 function usedCap() { return G().implants.reduce(function (a, id) { return a + load(id); }, 0); }
 function chipsIn() { return G().implants.filter(isChip).length; }
+/* (3.6) вживлённых имплантов (без системных «Эхо» и без чипов) — игрок их и считает */
+function actIn() { return G().implants.filter(function (id) { return !isChip(id) && !def(id).core; }).length; }
 
 /* ════════ СТУПЕНЬ ИМПЛАНТА И МОДИФИКАЦИИ ════════ */
 var PW = [1, 1.35, 1.75], EK = [1, 0.9, 0.8];
@@ -272,6 +278,9 @@ function compat(id, m) {
   if (M.cat && M.cat !== d.cat) return "только для направления «" + CATS[M.cat].n + "»";
   if (M.tag && M.tag !== "passive" && t.indexOf(M.tag) < 0) return "этому импланту она ни к чему";
   if (!d.passive && !d.fx && ["eco", "soft", "boost", "twin", "reserve", "quiet", "deep", "marker", "mapper", "analyst"].indexOf(m) < 0) return "этому импланту она ни к чему";
+  /* (3.6) то, что имплант и так делает, модификацией не удвоить */
+  var fx0 = d.fx || {};
+  if ((m === "antisep" && fx0.bleed) || (m === "purge" && fx0.tox) || (m === "adren" && fx0.haste) || (m === "mending" && fx0.regen)) return "имплант делает это и без неё";
   if ((M.need || 0) > catLv(d.cat)) return "нужна кибернетика «" + CATS[d.cat].n + "» ступени " + M.need;
   if (has(id, m)) return "уже стоит";
   if (mods(id).length >= modSlots()) return "все гнёзда модификаций заняты: " + modSlots() + " из " + modSlots();
@@ -625,7 +634,7 @@ function install(id, how, quiet) {
   A("play", "implant");
   applyStatic();
   gain(d.cat, "install", id);
-  var msg = (how || "Вживлено") + ": «" + d.n + "»" + (tagText(id) ? ", " + tagText(id) : "") + ". " + (d.passive ? "Пассивный чип: работает сам. Гнёзд занято " + chipsIn() + " из " + slots() + "." : "Панель имплантов — " + LAB.K("двойное касание четырьмя пальцами.", "клавиша U.") + " Ёмкость: " + usedCap() + " из " + capacity() + ".");
+  var msg = (how || "Вживлено") + ": «" + d.n + "»" + (tagText(id) ? ", " + tagText(id) : "") + ". " + (d.passive ? "Пассивный чип: работает сам. Гнёзд занято " + chipsIn() + " из " + slots() + "." : "Панель имплантов — " + LAB.K("двойное касание четырьмя пальцами.", "клавиша U.") + " Имплантов вживлено: " + actIn() + ", ёмкость: " + usedCap() + " из " + capacity() + ".");
   if (!quiet) say(msg);
   if (LAB.oko && LAB.oko.react) gm().later(function () { LAB.oko.react("implant"); }, 3000);
   if (LAB.ui && LAB.ui.refresh) LAB.ui.refresh();
@@ -640,6 +649,7 @@ function useChip(itemId) {
 }
 /* Подобрали чип с пола: вживляется сам, если есть место, иначе — в рюкзак. */
 function pickup(id) {
+  id = canon(id);
   var g = G(), it = chipOf(id), d = def(id);
   if (!LAB.ITEMS[it]) return "";
   if (!installed(id) && !roomFor(id)) return " " + install(id, "Чип вживился сам", true);
@@ -720,7 +730,7 @@ function addMod(id, m) {
   if (!g.impMod) g.impMod = {};
   g.impMod[id] = mods(id).concat([m]);
   applyStatic();
-  gain(d.cat, "mod");
+  gain(d.cat, "mod", id + "/" + m); /* (3.6) снять и поставить ту же модификацию снова — опыта уже не даст */
   A("play", "term_ok");
   say("Модификация: «" + d.n + "» — " + M.n + ": " + M.d + "." + (d.passive ? "" : " Сейчас — " + gm().implantCost(id) + " энергии."));
   return true;
@@ -735,12 +745,37 @@ function delMod(id, m) {
 function tagText(id) { var s = []; if (lv(id) > 1) s.push("ступень " + lv(id)); mods(id).forEach(function (m) { if (MODS[m]) s.push(MODS[m].n); }); return s.join(", "); }
 function costTxt(need) { var s = []; for (var k in need) s.push(low(LAB.ITEMS[k] ? LAB.ITEMS[k].n : k) + " " + need[k]); return s.join(", "); }
 function chips() { var g = G(); return Object.keys(g.inv).filter(function (k) { return g.inv[k] > 0 && LAB.ITEMS[k] && LAB.ITEMS[k].kind === "implant"; }); }
+/* (3.6) запись прежней версии: гемостат становится регенерацией. Вживлённый — регенерацией
+   (если она уже стоит — чипом регенерации в рюкзак); чипы, ступень, подходящие модификации,
+   схемы и опыт «раз на чип» переходят к ней. */
+var MOD_REGEN = ["eco", "soft", "boost", "twin", "reserve", "quiet", "purge", "adren"];
+function fixSave(g) {
+  if (!g) return;
+  for (var from in GONE) {
+    var to = GONE[from], fc = chipOf(from), tc = chipOf(to);
+    g.inv = g.inv || {};
+    if (g.implants && g.implants.indexOf(from) >= 0) {
+      g.implants = g.implants.filter(function (id) { return id !== from; });
+      if (g.implants.indexOf(to) < 0) g.implants.push(to); else g.inv[tc] = (g.inv[tc] || 0) + 1;
+    }
+    if (g.inv[fc]) { g.inv[tc] = (g.inv[tc] || 0) + g.inv[fc]; delete g.inv[fc]; }
+    if (g.impLv && g.impLv[from]) { g.impLv[to] = Math.max(g.impLv[to] || 1, g.impLv[from]); delete g.impLv[from]; }
+    if (g.impMod && g.impMod[from]) {
+      var old = [].concat(g.impMod[from]);
+      if (!(g.impMod[to] && g.impMod[to].length)) g.impMod[to] = old.filter(function (m) { return MOD_REGEN.indexOf(m) >= 0; });
+      delete g.impMod[from];
+    }
+    if (g.bp && g.bp[fc]) { g.bp[tc] = 1; delete g.bp[fc]; }
+    var once = g.cyber && g.cyber.once;
+    if (once) Object.keys(once).forEach(function (k) { var i = k.indexOf(":" + from); if (i > 0 && i + from.length + 1 === k.length) { once[k.slice(0, i) + ":" + to] = 1; delete once[k]; } });
+  }
+}
 function line(id) { var d = def(id), tg = tagText(id); return d.n + (tg ? ", " + tg : "") + (d.passive ? ", чип" : ", " + gm().implantCost(id) + " энергии") + ". " + d.desc; }
 
 /* ════════ ОКНА ════════ */
 function cyberText() {
   var l = level(), x = totalXp(), nx = l < ALL_XP.length ? ALL_XP[l] : null;
-  return "Кибернетика: общая ступень " + l + (nx != null ? ", до следующей " + (nx - x) + " опыта" : ", высшая") + ". Нейрогнёзд для чипов: " + chipsIn() + " из " + slots() + ". Ёмкость имплантов: " + usedCap() + " из " + capacity() + ". Модификаций на имплант — до " + modSlots() + ". Калибровка — до " + ["первой", "второй", "третьей"][maxGrade() - 1] + " ступени." + (selfSurgery() ? " Извлекать можно самому." : "");
+  return "Кибернетика: общая ступень " + l + (nx != null ? ", до следующей " + (nx - x) + " опыта" : ", высшая") + ". Имплантов вживлено: " + actIn() + ", ёмкость занята: " + usedCap() + " из " + capacity() + ". Чипов в нейрогнёздах: " + chipsIn() + " из " + slots() + ". Модификаций на имплант — до " + modSlots() + ". Калибровка — до " + ["первой", "второй", "третьей"][maxGrade() - 1] + " ступени." + (selfSurgery() ? " Извлекать можно самому." : "");
 }
 function cyberItems() {
   var items = [{ label: cyberText(), info: true, keep: true, fn: function () { say(cyberText()); } }];
@@ -780,7 +815,7 @@ function benchItems(tier) {
   return items;
 }
 function benchMenu(tier) {
-  menu("Импланты у верстака", benchItems(tier), { keep: true, rebuild: function () { return benchItems(tier); }, intro: "Ступени и модификации хранит «Эхо». Вживлено: " + G().implants.length + ". Чипов в рюкзаке: " + chips().reduce(function (a, k) { return a + G().inv[k]; }, 0) + "." });
+  menu("Импланты у верстака", benchItems(tier), { keep: true, rebuild: function () { return benchItems(tier); }, intro: "Ступени и модификации хранит «Эхо». Имплантов вживлено: " + actIn() + ", чипов в нейрогнёздах: " + chipsIn() + ". Чипов в рюкзаке: " + chips().reduce(function (a, k) { return a + G().inv[k]; }, 0) + "." });
 }
 function modItems(id) {
   var items = [];
@@ -834,6 +869,6 @@ LAB.implants = {
   power: power, costK: costK, neuroK: neuroK, reach: reach, stat: stat, dmgK: dmgK, applyStatic: applyStatic, run: run, used: used, tick: tick, onHurt: onHurt,
   scanR: scanR, scanExtra: scanExtra, level: level, catLv: catLv, catXp: catXp, gain: gain, slots: slots, capacity: capacity, modSlots: modSlots, maxGrade: maxGrade, selfSurgery: selfSurgery,
   install: install, useChip: useChip, pickup: pickup, extract: extract, dismantle: dismantle, upgrade: upgrade, addMod: addMod, delMod: delMod, compat: compat,
-  tag: tagText, line: line, chips: chips, craftWhy: craftWhy, crafted: crafted, benchMenu: benchMenu, station: station, cyberMenu: cyberMenu, cyberText: cyberText, upPrice: upPrice, stock: stock
+  tag: tagText, line: line, chips: chips, fixSave: fixSave, actIn: actIn, canon: canon, craftWhy: craftWhy, crafted: crafted, benchMenu: benchMenu, station: station, cyberMenu: cyberMenu, cyberText: cyberText, upPrice: upPrice, stock: stock
 };
 })();

@@ -39,7 +39,7 @@ function newState(seed) {
     ammo: { energy: 0, magnetron: 0, positron: 0 },
     inv: { bandage: 1, fieldkit: 1, ration: 1 }, keys: {}, tier: 0, elev: {}, gate: {}, core: false, cores: {}, codes: {}, melodies: {}, blockSeen: {},
     notes: {}, noteList: [], samples: {}, implants: ["scan", "echo"], faction: null, crafted: 0, bp: {}, bpNpc: {},
-    quests: [], journal: [], fs: {}, maxF: { 1: 1 }, visited: { "1-1": 1 },
+    quests: [], givers: {}, journal: [], fs: {}, maxF: { 1: 1 }, visited: { "1-1": 1 },
     checkpoint: null, day: 1, min: 8 * 60, event: "norm", eventUntil: 8 * 60 + 90,
     st: { poison: 0, slow: 0, shield: 0, haste: 0, cloak: 0, web: 0, jam: 0, deaf: 0, antitox: 0, bleed: 0, navjam: 0 },
     /* тело героя: сытость, бодрость, токсины, нейронагрузка (0–100) */
@@ -192,6 +192,7 @@ function enterFloor(L, F, how, silent) {
     roomCheck(true);
   } else roomCheck(false, false, true);
   if (LAB.combat) LAB.combat.wake();
+  if (Q()) Q().onFloor(silent); /* (3.6) цели поручений на этом этаже */
   UIx("refresh");
   autosave();
 }
@@ -558,6 +559,7 @@ function advanceTime(min, asleep) {
   /* доставка заказов с поверхности и облучение в особых зонах (1.5) */
   if (LAB.supply) LAB.supply.tick();
   if (LAB.zones && !asleep) LAB.zones.minutes(min);
+  if (Q()) Q().onTime(); /* (3.6) сроки поручений: премия «быстро», срочная помощь */
 }
 game.advanceTime = advanceTime;
 
@@ -1768,6 +1770,7 @@ function revealSecret(d) {
   say("Панель поддалась — за ней тайный проход! Найдено тайников: " + G.stats.secrets + ".");
   journal("Найден тайник: уровень " + G.L + ", этаж " + G.F + ".");
   gainXP(25);
+  checkQuests();
   UIx("refresh");
 }
 game.revealSecret = revealSecret;
@@ -1904,7 +1907,7 @@ function puzzleMenu(o) {
         if (st.solved) return; /* (3.5) награда стенда — один раз */
         if (LAB.oko && LAB.oko.react) LAB.oko.react(ok ? "puzzle_ok" : "puzzle_fail");
         if (!ok) { A("play", "term_err"); say("Стенд гаснет и снова загорается: можно попробовать ещё раз."); return; }
-        st.solved = true; A("play", "term_ok"); LAB.UI.fanfare(); gainXP(18 + 10 * (o.diff || 0));
+        st.solved = true; A("play", "term_ok"); LAB.UI.fanfare(); gainXP(18 + 10 * (o.diff || 0)); checkQuests();
         var loot = (o.loot || []).slice(); loot.forEach(function (it, k) { if (!it.id) it.id = o.id + "-p" + k; });
         /* (2.0) за среднюю и сложную задачу — премия кредитами */
         var prize = o.diff ? LAB.credits(15 * o.diff, G.L, G.F) : 0;
@@ -2118,7 +2121,7 @@ function terminalMenu(o) {
       { label: "Взломать (повторите сигналы жестами)", fn: function () {
         UIx("closeAll");
         LAB.mini.hack(hackLength(1 + Math.floor(Math.min(G.L, 20) / 2) + okoDiff()), function (ok) {
-          if (ok) { st.hacked = true; A("play", "term_ok"); gainXP(10); sayq("Доступ получен."); if (LAB.oko) LAB.oko.event("terminal_hack", { x: o.x, y: o.y, o: o }); terminalMenu(o); }
+          if (ok) { st.hacked = true; A("play", "term_ok"); gainXP(10); sayq("Доступ получен."); checkQuests(); if (LAB.oko) LAB.oko.event("terminal_hack", { x: o.x, y: o.y, o: o }); terminalMenu(o); }
           else termFail(o, st, "Доступ запрещён.");
         });
       } },
@@ -2131,7 +2134,7 @@ function terminalMenu(o) {
         var dd = G.L <= 5 ? 0 : G.L <= 30 ? 1 : 2;
         LAB.puzzles.open("termhack", (LAB.hash32(o.id + ":" + CUR.key + ":" + (st.dictN || 0)) % 99991) + 1, function (ok) {
           var ps = LAB.puzzles._last && LAB.puzzles._last.st;
-          if (ok) { st.hacked = true; A("play", "term_ok"); gainXP(10 + 4 * dd); sayq("Доступ получен."); if (LAB.oko) LAB.oko.event("terminal_hack", { x: o.x, y: o.y, o: o }); terminalMenu(o); }
+          if (ok) { st.hacked = true; A("play", "term_ok"); gainXP(10 + 4 * dd); sayq("Доступ получен."); checkQuests(); if (LAB.oko) LAB.oko.event("terminal_hack", { x: o.x, y: o.y, o: o }); terminalMenu(o); }
           else if (ps && ps.tries < ps.limit) {
             if (ps.tries > 0) { st.dictN = (st.dictN || 0) + 1; say("Вы отходите. Терминал записал неверные пароли и сменил свой: в следующий раз — другой словарь."); }
             else say("Вы отходите. Терминал ждёт пароля.");
@@ -2164,7 +2167,7 @@ function terminalMenu(o) {
         LAB.mini.hack(hackLength(1 + Math.floor(Math.min(G.L, 20) / 3) + okoDiff()), function (ok) {
           if (!ok) { termFail(o, st, "Протокол охраны отверг команду."); return; }
           CUR.fs.lockdown = true; A("play", "term_ok"); A("play", "door_unlock");
-          say("Блокировка охраны снята. Двери с блокировкой на этом этаже открываются."); gainXP(6);
+          say("Блокировка охраны снята. Двери с блокировкой на этом этаже открываются."); gainXP(6); checkQuests();
           if (LAB.oko) LAB.oko.event("lockdown", { x: o.x, y: o.y });
         }, { title: "Протокол охраны" });
       } });
@@ -2186,7 +2189,7 @@ function terminalMenu(o) {
           var rc = LAB.combat ? LAB.combat.robotsCalm() : { boss: 0, dropped: 0 };
           A("play", "term_ok");
           say("Прошивка ОКО на этом этаже переписана. Роботы этажа вас больше не трогают." + (rc.dropped ? " Перепрошитые машины выложили то, что несли: слушайте маяки вещей." : "") + (rc.boss ? " Страж уровня чужую прошивку не принял — он по-прежнему враг." : ""));
-          gainXP(20); if (LAB.oko) LAB.oko.event("robots", { x: o.x, y: o.y });
+          gainXP(20); checkQuests(); if (LAB.oko) LAB.oko.event("robots", { x: o.x, y: o.y });
         }
         else termFail(o, st, "Перепрошивка сорвалась.");
       });
@@ -2195,7 +2198,7 @@ function terminalMenu(o) {
   if (o.codeFor) items.push({ label: "Коды доступа этажа", fn: function () { G.codes[o.code] = o.codeRoom; A("play", "term_beep"); say("В базе кодов: дверь «" + o.codeRoom + "» — код " + o.code.split("").join(" ") + ". Код записан в инвентарь: «Пропуска и ключи», «Известные коды». Набирать его у двери — самому."); } });
   if (o.sub === "sci") items.push({ label: objState(o).data ? "Данные уже скачаны" : "Скачать исследовательские данные", fn: function () {
     if (st.data) { say("Данные уже скачаны."); return; }
-    st.data = true; var cr = LAB.credits(15 + Math.min(G.L, 10) * 5, G.L, 1) ; G.credits += cr; A("play", "term_ok"); say("Данные проекта скопированы в «Эхо». За них дадут " + cr + " кредитов — уже начислено."); gainXP(8);
+    st.data = true; var cr = LAB.credits(15 + Math.min(G.L, 10) * 5, G.L, 1) ; G.credits += cr; A("play", "term_ok"); say("Данные проекта скопированы в «Эхо». За них дадут " + cr + " кредитов — уже начислено."); gainXP(8); checkQuests();
   } });
   if (o.sub === "eng") items.push({ label: "Состояние энергосистемы", fn: function () {
     var t = CUR.fl.needPower ? (CUR.fs.power ? "Питание этажа восстановлено." : "Этаж частично обесточен: силовые двери закрыты. Магнетронная установка ждёт настройки.") : "Питание этажа в норме.";
@@ -2355,7 +2358,7 @@ function camerasMenu(o, st) {
       if (!ok) { termFail(o, st, "Видеосервер заметил подмену."); return; }
       var t = camTicks(110);
       cb.cams().forEach(function (f) { if (cb.camState(f) !== "off") cb.camSet(f, "loop", t); });
-      A("play", "term_ok"); netXp("camsloop", 12);
+      A("play", "term_ok"); netXp("camsloop", 12); checkQuests();
       say("Запись всех камер этажа закольцована: примерно " + secs(t) + " ОКО видит пустые коридоры. Потом заметит петлю и перезапустит камеры.");
       if (LAB.oko) LAB.oko.event("cam_loop", { all: true, x: o.x, y: o.y });
     });
@@ -2370,7 +2373,7 @@ function camerasMenu(o, st) {
       if (!ok) { termFail(o, st, "Прошивка камер сорвалась."); return; }
       var t = camTicks(300);
       cb.cams().forEach(function (f) { if (cb.camState(f) !== "off") cb.camSet(f, "ours", t); });
-      A("play", "term_ok"); netXp("camsours", 20);
+      A("play", "term_ok"); netXp("camsours", 20); checkQuests();
       say("Камеры этажа перепрошиты: примерно " + secs(t) + " они докладывают «чисто», а вам говорят, кого видят. Потом проверка целостности ОКО сотрёт прошивку.");
       if (LAB.oko) LAB.oko.event("cam_flash", { all: true, x: o.x, y: o.y });
     });
@@ -2458,6 +2461,7 @@ function keyTurretCmd(o, f) {
 function mapFloor() {
   CUR.fs.mapped = true; CUR.seen = CUR.seen || new Uint8Array(LAB.W * LAB.H);
   for (var i = 0; i < CUR.seen.length; i++) if (CUR.fl.t[i] !== T.WALL) CUR.seen[i] = 1;
+  checkQuests();
 }
 game.mapFloor = mapFloor;
 function terminalLogs(o) {
@@ -2503,7 +2507,7 @@ function magnetronMenu(o) {
     } });
   } else {
     if (CUR.fl.needPower && !CUR.fs.power) items.push({ label: "Подать питание на этаж", fn: function () {
-      CUR.fs.power = true; A("play", "power_on"); say("Питание подано. Силовые двери этажа открываются."); journal("Восстановлено питание этажа " + G.F + "."); gainXP(15); UIx("refresh");
+      CUR.fs.power = true; A("play", "power_on"); say("Питание подано. Силовые двери этажа открываются."); journal("Восстановлено питание этажа " + G.F + "."); gainXP(15); checkQuests(); UIx("refresh");
     } });
     items.push({ label: "Зарядить магнетронные ячейки", fn: function () {
       if (st.cool && st.cool > G.min + G.day * 1440) { say("Установка остывает. Зарядить можно позже."); return; }
@@ -2537,7 +2541,7 @@ function positronMenu(o) {
     } });
   } else {
     if (CUR.fl.needRubble && !CUR.fs.rubble) items.push({ label: "Аннигиляционный импульс: снести завал", fn: function () {
-      CUR.fs.rubble = true; A("play", "pos_pulse"); say("Вспышка без света, удар без звука — и далёкий грохот осыпающихся обломков. Завал на этаже расчищен."); gainXP(15);
+      CUR.fs.rubble = true; A("play", "pos_pulse"); say("Вспышка без света, удар без звука — и далёкий грохот осыпающихся обломков. Завал на этаже расчищен."); gainXP(15); checkQuests();
       if (LAB.rubble) LAB.rubble.doorLoot("pulse"); /* (3.0) из-под обломков — находки */
     } });
     items.push({ label: "Синтезировать позитронный заряд", fn: function () {
@@ -2861,7 +2865,8 @@ function npcMenu(n) {
     } });
     var q = G.quests.filter(function (qq) { return qq.giver === n.key && !qq.done; })[0];
     if (!q) items.push({ label: "Спросить о задании", fn: function () { takeQuest(n); } });
-    else items.push({ label: "Сдать задание: " + q.short, fn: function () { completeQuest(q, n); } });
+    /* (3.6) пока не сделано — как продвигается; сделано — сдать */
+    else items.push({ label: (Q() && !Q().ready(q) ? "Поручение: " + q.short + " — " + Q().progress(q) : "Сдать задание: " + q.short), fn: function () { completeQuest(q, n); } });
     courierItems(n).forEach(function (ci) { items.push(ci); }); /* (3.5) весточки сверху */
     var tr2 = LAB.PROFS[n.prof] && LAB.PROFS[n.prof].trade;
     /* (2.6) медики и целители глубин лечат: за кредиты и по-своему */
@@ -2899,362 +2904,28 @@ function tradeItems(n, kind) {
 }
 
 /* ════════ ЗАДАНИЯ ════════ */
-/* Сколько заданий этого выжившего уже выполнено: этап хранится в записи игры,
-   а не на этаже (этажи из кэша перестраиваются — задания не должны повторяться). */
-function questStage(n) { var c = 0; G.quests.forEach(function (q) { if (q.giver === n.key && q.done && !q.failed) c++; }); return Math.max(c, n.stage || 0); }
-game.questStage = questStage;
-game.takeQuest = function (n) { return takeQuest(n); };
-/* (3.5) у выжившего не больше трёх поручений: прежде этапы шли без конца, и награда
-   росла с каждым — выживший становился неиссякаемым источником кредитов и опыта.
-   (3.5, просьба игрока) Поручения — по месту: первое — здесь, на этом этаже (расчистить
-   помещение, найти тело коллеги и принести жетон, забрать оставленную вещь, принести
-   детали); второе — на другом этаже уровня (разведать, найти тело, забрать вещь,
-   расчистить путь); третье — уровнем ниже: передать весточку выжившим внизу или
-   разведать этаж следующего уровня. Наверх оттуда не вернуться — награду отдают те,
-   кому передали весточку, или «Эхо» переводит её по связи. */
-var QUEST_MAX = 3;
-/* (3.5, просьба игрока) Взятых поручений сразу — не больше трёх: прежде можно было
-   набрать их у всех выживших подряд и бросить. Четвёртое не дадут, пока одно не сдано
-   или от него не отказались (окно заданий). Отказ — всерьёз: заказчик больше ни о чём
-   не просит. Задания, оставшиеся на прошлом уровне, в счёт не идут — их уже не сдать. */
-var QUEST_ACTIVE = 3;
-game.QUEST_ACTIVE = QUEST_ACTIVE;
-function activeQuests() { return G.quests.filter(function (q) { return !q.done && q.type !== "main"; }); }
+/* (3.6) Поручения выживших — quests.js: без предела, каждое следующее тяжелее
+   прежнего, с двумя путями на выбор, главами по ремеслу заказчика, развилками
+   и доверием. Здесь — входы для остальной игры. */
+function Q() { return LAB.quests || null; }
+game.QUEST_ACTIVE = 3;
+game.questStage = function (n) { return Q() ? Q().stage(n) : 0; };
+function takeQuest(n) { if (Q()) Q().take(n); }
+game.takeQuest = takeQuest;
+function completeQuest(q, n) { if (Q()) Q().complete(q, n); }
+game.completeQuest = completeQuest;
+function activeQuests() { return Q() ? Q().active() : G.quests.filter(function (q) { return !q.done && q.type !== "main"; }); }
 game.activeQuests = activeQuests;
-function abandonQuest(q) {
-  if (!q || q.done || q.type === "main") return false;
-  q.done = true; q.failed = true;
-  journal("Отказ от задания: " + q.short + ".");
-  say("Вы отказались от задания «" + q.short + "». " + q.giverName + " больше ни о чём вас не попросит. Взятых поручений — " + activeQuests().length + " из " + QUEST_ACTIVE + ".");
-  UIx("refresh");
-  return true;
-}
-game.abandonQuest = abandonQuest;
-/* (3.5) Награда — по труду и по заказчику. Кредиты — за что (детали, разведка, бой,
-   поиски тела или вещи, путь на другой уровень), далеко ли (другой этаж) и которая это
-   просьба (каждая следующая дальше и опаснее); с глубиной растут, как всё в «Ковчеге»
-   (LAB.credits: достаток этажа и режим сложности). Детали оплачиваются дороже рынка —
-   иначе проще продать. Опыт — за риск: за детали меньше, за бой и дальний путь больше.
-   Вещь — из ремесла заказчика: медик даёт лекарства, техник и охранник — заряды к
-   вашему оружию, инженер — детали или ремнабор, повар — еду, кладовщик — что найдётся,
-   учёные — то, что пригодится в пути. Весточку оплачивают те, кому её передали, —
-   при передаче; доклад по связи — только кредитами: вещь по связи не передать. */
-var REW = { fetch: [12, 12], kill: [12, 8], visit: [40, 28], clear: [24, 16], body: [40, 28], keep: [34, 22], courier: [55, 36], deep: [70, 42] };
-var GIFTS = {
-  med: ["medkit_s", "bandage", "antidote", "sorbent", "painkiller", "medkit_l"],
-  ammo: ["@ammo", "@ammo", "emp", "wrepair"],
-  parts: ["@part", "@part", "fieldkit", "tape"],
-  food: ["ration", "stew", "protein", "noodles"],
-  all: ["medkit_s", "ration", "@ammo", "repairkit", "filter", "@part"],
-  sci: ["filter", "antidote", "neuroblock", "lockpick", "sonar", "iodine"]
-};
-function questReward(q, n, h, L, F) {
-  var b = REW[q.type] || [30, 30], cr = b[0], xp = b[1];
-  if (q.type === "kill") { cr += 7 * q.need; xp += 5 * q.need; }
-  if (q.type === "clear") { cr += 8 * (q.foes || 1); xp += 6 * (q.foes || 1); }
-  if ((q.type === "body" || q.type === "keep") && q.tF !== q.F) { cr += 12; xp += 6; }
-  var sk = 1 + 0.15 * q.stage;
-  var r = { cr: LAB.credits(cr * sk, L, F), xp: Math.round(xp * (1 + 0.4 * L) * (1 + 0.1 * q.stage)) };
-  if (q.type === "fetch") r.cr += Math.round(LAB.ITEMS[q.item].price * q.need * priceK() * 1.3);
-  if (q.type !== "deep") r.gift = questGift(n, h, q.stage, q.item);
-  return r;
-}
-/* Ценность вещи — по просьбе (в базовых ценах, глубина её не меняет: аптечка везде
-   аптечка): первая — скромно, третья — щедро. Дорогое, что не по просьбе, заказчик
-   не отдаёт — даёт следующее из своего; заряды к вашему оружию — всегда. Деталь,
-   которую просили принести, обратно в подарок не отдают. */
-var GIFT_VAL = [30, 50, 80];
-function questGift(n, h, stage, avoid) {
-  var pr = (n && LAB.PROFS[n.prof]) || {}, list = GIFTS[pr.trade || "sci"] || GIFTS.all;
-  var val = GIFT_VAL[Math.min(stage, 2)], start = (h >>> 7) % list.length, id = null, d = null;
-  for (var i = 0; i < list.length && !d; i++) {
-    var pick = list[(start + i) % list.length];
-    if (pick === "@ammo") {
-      var w = curWeapon(), am = w && w.ammo && LAB.AMMO[w.ammo] ? w.ammo : "energy";
-      return { kind: "ammo", ammo: am, n: Math.max(1, Math.min(4, Math.round(val / (LAB.AMMO[am].price || 30)))) };
-    }
-    if (pick === "@part") {
-      var parts = LAB.PARTS.filter(function (p) { return (LAB.PART_DEPTH[p] || 1) <= Math.max(G.L, 1); });
-      pick = parts[(h >>> 11) % parts.length];
-    }
-    var dd = LAB.ITEMS[pick];
-    if (dd && pick !== avoid && (dd.depth || 1) <= Math.max(G.L, 1) && (dd.price || 20) <= val * 1.75) { id = pick; d = dd; }
-  }
-  if (!d) { id = "medkit_s"; d = LAB.ITEMS[id]; }
-  return { kind: "item", item: id, n: Math.max(1, Math.min(4, Math.round(val / (d.price || 20)))) };
-}
-function giftName(it) { return itemName(it).replace(/\.$/, "").replace(/^[А-ЯЁ](?=[а-яё])/, function (c) { return c.toLowerCase(); }); }
-function rewardText(q) {
-  var r = q.reward || {};
-  if (q.type === "courier" && !q.done) return "Награду дадут те, кому передадите весточку.";
-  return "Награда — " + r.cr + " " + plural(r.cr, "кредит", "кредита", "кредитов") + (r.gift ? " и " + giftName(r.gift) : "") + (q.remote ? ", переводом на браслет." : ".");
-}
-game.rewardText = rewardText;
-var KEEPSAKE =["фотоальбом в синей обложке", "рабочий журнал с закладкой", "шкатулку с письмами", "связку ключей от дома", "детский рисунок в рамке", "старые наручные часы", "термос с вмятиной", "тетрадь со стихами", "губную гармошку", "вязаный шарф"];
-function roomLabel(rm) { return rm ? (rm.num ? "помещение " + rm.num + " («" + rm.name + "»)" : "«" + rm.name + "»") : "помещение"; }
-function questFloor(L, F) { return L === G.L && F === G.F ? CUR.fl : LAB.getFloor(G.seed, L, F); }
-function floorState(L, F) { return G.fs[L + "-" + F] || null; }
-/* тело на этаже, чей жетон ещё не взят: { o, who, room } */
-function bodyOn(L, F, h) {
-  var fl = questFloor(L, F); if (!fl || !LAB.agen || !LAB.agen.corpse) return null;
-  var fsx = floorState(L, F), list = fl.objs.filter(function (o) {
-    var st = fsx && fsx.objs && fsx.objs[o.id];
-    /* (3.5) тело, которое уже ищут по другому поручению, второму заказчику не достаётся:
-       иначе одно тело давало две награды */
-    var wanted = G.quests.some(function (q) { return !q.done && q.type === "body" && q.tL === L && q.tF === F && q.oid === o.id; });
-    return o.type === "corpse" && !wanted && !(st && st.badge) && fl.rooms[o.room] && !fl.rooms[o.room].hidden;
-  });
-  if (!list.length) return null;
-  var o = list[h % list.length], id = LAB.agen.corpse(G.seed, L, F, o);
-  return { o: o, who: id.p.fio, sign: id.p.sign, post: id.post, f: !!id.p.f, room: roomLabel(fl.rooms[o.room]) };
-}
-/* помещение для вещи: обычное, не тайное, не у прибытия и лестниц; (3.5) и не то, где
-   стоит сам заказчик (avoid) */
-function keepRoom(L, F, h, avoid) {
-  var fl = questFloor(L, F); if (!fl) return null;
-  var list = [];
-  fl.rooms.forEach(function (m, i) {
-    if (!m || m.hidden || m.rad || m.gas || i === fl.U || i === fl.D || i === fl.E || i === fl.secret || i === avoid) return;
-    var def = LAB.ROOMS[m.type] || {};
-    if (def.special || (def.kind && def.kind !== "locked")) return;
-    list.push(i);
-  });
-  if (!list.length) return null;
-  var rid = list[h % list.length];
-  return { id: rid, label: roomLabel(fl.rooms[rid]) };
-}
-/* живые враги помещения этого этажа (не камеры и не турели) */
-function roomFoes(rid) {
-  var C = LAB.combat; if (!C || !C.foes) return [];
-  return C.foes().filter(function (f) {
-    if (f.dead || f.ally || f.calm || f.boss) return false;
-    if (C.isTurret && C.isTurret(f)) return false;
-    var beh = (f.base && f.base.beh) || [];
-    if (beh.indexOf("camera") >= 0 || beh.indexOf("stationary") >= 0) return false;
-    return CUR.fl.room[idx(f.x, f.y)] === rid;
-  });
-}
-/* помещение этого этажа, где засели машины или твари; (3.5) патрули и идущие по маршруту
-   не в счёт — они там проходом */
-function sitters(rid) { return roomFoes(rid).filter(function (f) { return !f.patrol && !f.route; }); }
-function busyRoom(h) {
-  var cnt = {};
-  CUR.fl.rooms.forEach(function (m, i) { if (m && !m.hidden && i !== CUR.fl.U) { var n = sitters(i).length; if (n) cnt[i] = n; } });
-  var ids = Object.keys(cnt).map(Number);
-  if (!ids.length) return null;
-  var rid = ids[h % ids.length];
-  return { id: rid, n: cnt[rid], ids: sitters(rid).map(function (f) { return f.id; }), label: roomLabel(CUR.fl.rooms[rid]) };
-}
-/* (3.5) сколько из тех, кто сидел в помещении, когда взяли поручение, ещё на ногах: убить их
-   можно где угодно — выманить в коридор тоже расчистка; перепрошитые и усмирённые не в счёт */
-function clearLeft(q) {
-  var here = G.L === q.tL && G.F === q.tF, fsx = floorState(q.tL, q.tF), all = here && LAB.combat ? LAB.combat.foes() : [], left = 0;
-  (q.foeIds || []).forEach(function (id) {
-    if (here) { var f = all.filter(function (x) { return x.id === id; })[0]; if (f && !f.dead && !f.ally && !f.calm) left++; return; }
-    var st = fsx && fsx.foes && fsx.foes[id];
-    if (!(st && st.dead)) left++;
-  });
-  return left;
-}
-function takeQuest(n) {
-  var stg = questStage(n), fem = !!n.female;
-  if (stg >= QUEST_MAX) { say(n.n + ": «Вы и так сделали для меня больше, чем я " + (fem ? "смела" : "смел") + " просить. Просить больше не о чем — берегите себя»."); return; }
-  if (G.quests.some(function (q) { return q.giver === n.key && q.failed; })) { say(n.n + ": «Вы уже отказались от моей просьбы. Дальше я " + (fem ? "сама" : "сам") + "»."); return; }
-  var act = activeQuests().length;
-  if (act >= QUEST_ACTIVE) { say(n.n + ": «Вижу, у вас и так забот хватает. Разберитесь с ними — тогда и поговорим». Взятых поручений — " + act + " из " + QUEST_ACTIVE + ": сдайте одно или откажитесь от него в окне заданий."); return; }
-  if (G.quests.some(function (q) { return q.id === n.key + ":" + stg; })) { say(n.n + ": «Я уже " + (fem ? "просила" : "просил") + " вас об этом»."); return; }
-  var h = LAB.hash32(n.key + ":" + stg);
-  var q = { id: n.key + ":" + stg, giver: n.key, giverName: n.n, gf: fem, L: G.L, F: G.F, done: false, stage: stg };
-  /* куда: 0 — здесь, 1 — на другом этаже уровня, 2 — уровнем ниже (если он есть) */
-  var where = stg === 2 && G.L < LAB.LEVELS_N ? 2 : Math.min(stg, 1);
-  var made = false, tries = [];
-  if (where === 0) tries = ["clear", "body", "keep", "fetch"];
-  else if (where === 1) tries = ["visit", "body", "keep", "kill"];
-  else tries = ["courier", "deep"];
-  /* порядок видов — от зерна выжившего, чтобы у соседей поручения были разные */
-  var rot = h % tries.length; tries = tries.slice(rot).concat(tries.slice(0, rot));
-  if (where < 2) tries.push(where === 0 ? "fetch" : "kill"); /* запасное — всегда выполнимо */
-  for (var ti = 0; ti < tries.length && !made; ti++) made = makeQuest(q, tries[ti], where, h, n);
-  q.reward = questReward(q, n, h, G.L, G.F);
-  if (stg === QUEST_MAX - 1) q.text += " Это последняя просьба.";
-  G.quests.push(q);
-  journal("Задание от " + n.n + ": " + q.short + ".");
-  LAB.UI.ok();
-  say("Задание: " + q.text + " " + rewardText(q) + " Взятых поручений — " + (act + 1) + " из " + QUEST_ACTIVE + ".");
-}
-/* Заполнить задание вида kind; false — здесь такого не выйдет (нет тел, нет машин…). */
-function makeQuest(q, kind, where, h, n) {
-  var tf, b, k, kr;
-  if (kind === "fetch") {
-    var pparts = LAB.PARTS.filter(function (p) { return (LAB.PART_DEPTH[p] || 1) <= Math.max(G.L, 1); });
-    var part = pparts[h % pparts.length], need = 2 + (h % 3);
-    q.type = "fetch"; q.item = part; q.need = need;
-    q.text = n.n + " просит принести " + need + " шт.: «" + LAB.ITEMS[part].n + "». Детали попадаются в ящиках, на телах и у роботов.";
-    q.short = "принести «" + LAB.ITEMS[part].n + "», " + need + " " + plural(need, "штуку", "штуки", "штук");
-    return true;
-  }
-  if (kind === "kill") {
-    k = 3 + (h % 4);
-    /* (3.5) в счёт идут враги, за которых дают опыт: машины, которых ОКО шлёт на
-       замену, после мясорубки не засчитываются */
-    q.type = "kill"; q.need = k; q.wk0 = G.stats.wkills || 0;
-    q.text = n.n + " просит расчистить путь: уничтожить " + k + " врагов, где угодно; присланные ОКО на замену, когда с них уже нечего взять, не в счёт.";
-    q.short = "уничтожить врагов: " + k;
-    return true;
-  }
-  if (kind === "visit") {
-    /* (3.5) этаж — не тот, где стоите: ниже, а у дна уровня — выше; засчитывается
-       заход после того, как задание взято */
-    tf = otherFloor(h);
-    q.type = "visit"; q.tL = G.L; q.tF = tf; q.seq0 = G.visitSeq || 0;
-    q.text = n.n + " просит сходить на этаж " + tf + " этого уровня и вернуться с докладом. Вернуться можно по лестницам или на лифте этажей; после шлюза вниз — уже нельзя.";
-    q.short = "разведать этаж " + tf;
-    return true;
-  }
-  if (kind === "clear") {
-    b = busyRoom(h); if (!b) return false;
-    q.type = "clear"; q.tL = G.L; q.tF = G.F; q.room = b.id; q.roomName = b.label; q.foes = b.n; q.foeIds = b.ids;
-    q.text = n.n + ": «В " + b.label.replace(/^помещение/, "помещении") + " на этом этаже засели " + (b.n === 1 ? "машина или тварь" : "машины и твари") + " — оттуда не пройти. Расчистите его и возвращайтесь».";
-    q.short = "расчистить " + b.label;
-    return true;
-  }
-  if (kind === "body") {
-    tf = where === 0 ? G.F : otherFloor(h);
-    b = bodyOn(G.L, tf, h); if (!b) return false;
-    q.type = "body"; q.tL = G.L; q.tF = tf; q.who = b.who; q.sign = b.sign; q.oid = b.o.id;
-    q.text = n.n + ": «" + (b.f ? "Моя коллега" : "Мой коллега") + ", " + b.post + " " + b.who + ", не " + (b.f ? "вернулась" : "вернулся") + (where === 0 ? ". " + (b.f ? "Её" : "Его") + " видели здесь, на этом этаже" : ". " + (b.f ? "Её" : "Его") + " видели на этаже " + tf) + ", — " + b.room + ". Если " + (b.f ? "её" : "его") + " больше нет, принесите жетон — передадим имя наверх».";
-    q.short = "жетон " + (b.f ? "погибшей" : "погибшего") + " — " + b.sign + ", этаж " + tf;
-    return true;
-  }
-  if (kind === "keep") {
-    tf = where === 0 ? G.F : otherFloor(h);
-    kr = keepRoom(G.L, tf, h, where === 0 ? n.room : -1); if (!kr) return false;
-    var what = KEEPSAKE[(h >>> 3) % KEEPSAKE.length];
-    q.type = "keep"; q.tL = G.L; q.tF = tf; q.room = kr.id; q.what = what; q.got = false;
-    q.text = n.n + ": «Когда всё началось, я " + (n.female ? "оставила" : "оставил") + " " + what + " — " + kr.label + (where === 0 ? " на этом этаже" : ", этаж " + tf) + ". Загляните туда — «Эхо» услышит, где лежит, — и принесите мне».";
-    q.short = "забрать " + what + (where === 0 ? "" : " (этаж " + tf + ")");
-    return true;
-  }
-  if (kind === "courier") {
-    q.type = "courier"; q.cross = true; q.toL = G.L + 1;
-    q.text = n.n + ": «Наши ушли вниз, на " + q.toL + "-й уровень, и не дают о себе знать. Если встретите там кого-то живого — передайте, что мы держимся. Наверх вам будет не вернуться — со мной не рассчитывайтесь: они отблагодарят сами».";
-    q.short = "передать весточку выжившим уровнем ниже";
-    return true;
-  }
-  if (kind === "deep") {
-    q.type = "deep"; q.cross = true; q.remote = true; q.tL = G.L + 1; q.tF = 2 + (h % 6); q.seq0 = G.visitSeq || 0;
-    q.text = n.n + ": «Что там, на " + q.tL + "-м уровне? Дойдите до его " + q.tF + "-го этажа — «Эхо» передаст доклад по связи, и я переведу награду вам на браслет».";
-    q.short = "дойти до этажа " + q.tF + " уровня " + q.tL;
-    return true;
-  }
-  return false;
-}
-/* другой этаж этого уровня: ниже, а у дна уровня — выше */
-function otherFloor(h) {
-  var tf = Math.min(LAB.FLOORS_N, G.F + 2 + (h % 3));
-  if (tf <= G.F) tf = Math.max(1, G.F - 2 - (h % 3));
-  return tf;
-}
-function questProgress(q) {
-  if (q.type === "fetch") return Math.min(G.inv[q.item] || 0, q.need) + " из " + q.need;
-  if (q.type === "kill") return Math.min(questKills(q), q.need) + " из " + q.need;
-  if (q.type === "visit") return (visitDone(q) ? "этаж разведан, вернитесь к " + q.giverName : "этаж " + q.tF + " ещё не разведан");
-  if (q.type === "clear") { var cl = clearLeft(q); return cl ? "осталось врагов: " + cl + " из " + q.foeIds.length : "расчищено, вернитесь к " + q.giverName; }
-  if (q.type === "body") return questReady(q) ? "жетон у вас, вернитесь к " + q.giverName : "этаж " + q.tF + ", тело ещё не найдено";
-  if (q.type === "keep") return q.got ? "вещь у вас, вернитесь к " + q.giverName : "этаж " + q.tF + ", вещь ещё не найдена";
-  if (q.type === "courier") return G.L > q.L ? "передайте любому выжившему здесь" : "выжившие — уровнем ниже";
-  if (q.type === "deep") return visitDone(q) ? "доклад передан" : "этаж " + q.tF + " уровня " + q.tL + " ещё не разведан";
-  return "";
-}
-function questKills(q) { return (G.stats.wkills || 0) - q.wk0; }
-function visitDone(q) { return ((G.lastVisit || {})[q.tL + "-" + q.tF] || 0) > q.seq0; }
-game.questProgress = questProgress;
-function badgeTaken(q) {
-  if ((G.badges || []).some(function (b) { return b.o === q.oid && b.L === q.tL && b.F === q.tF; })) return true;
-  var fsx = floorState(q.tL, q.tF), st = fsx && fsx.objs && fsx.objs[q.oid];
-  return !!(st && st.badge);
-}
-/* (3.5) жетоны, взятые по поручениям «найти тело», — для заказчиков: передать их
-   «в общий котёл» нельзя, иначе за один жетон платили бы дважды */
-function reservedBadges() { return G.quests.filter(function (q) { return !q.done && q.type === "body" && badgeTaken(q); }).length; }
-game.reservedBadges = reservedBadges;
-function questReady(q) {
-  if (q.type === "fetch") return (G.inv[q.item] || 0) >= q.need;
-  if (q.type === "kill") return questKills(q) >= q.need;
-  if (q.type === "visit" || q.type === "deep") return visitDone(q);
-  if (q.type === "clear") return clearLeft(q) === 0;
-  if (q.type === "body") return badgeTaken(q) && (G.inv.badge || 0) > 0;
-  if (q.type === "keep") return !!q.got;
-  return false;
-}
-game.completeQuest = function (q, n) { return completeQuest(q, n); };
-function completeQuest(q, n) {
-  if (q.done) return; /* (3.5) уже сдано — второй раз не платят */
-  if (!questReady(q)) { say("Задание ещё не выполнено: " + questProgress(q) + "."); return; }
-  if (q.type === "fetch") G.inv[q.item] -= q.need;
-  if (q.type === "body") G.inv.badge--; /* жетон — тому, кто просил (questReady: он у вас) */
-  q.done = true;
-  n.stage = (n.stage || 0) + 1;
-  payQuest(q, "Задание выполнено! " + q.giverName + " благодарит.");
-}
-function payQuest(q, head) {
-  if (LAB.ach) LAB.ach.ev("quest", 1);
-  var r = q.reward || { cr: 0, xp: 0 };
-  G.credits += r.cr;
-  LAB.UI.fanfare();
-  if (r.gift) giveItem(r.gift, true);
-  say(head + " Кредитов: плюс " + r.cr + "." + (r.gift ? " В придачу — " + giftName(r.gift) + "." : ""));
-  journal("Выполнено задание: " + q.short + ".");
-  gainXP(r.xp);
-  if (G.faction === "res") { G.inv.medkit_s = (G.inv.medkit_s || 0) + 1; sayq("Сопротивление делится аптечкой."); }
-  UIx("refresh");
-}
-function femGiver(q) { return !!q.gf; }
-/* (3.5) весточка сверху — любому выжившему уровнем ниже: он и благодарит — своим
-   ремеслом и кредитами по своей глубине */
-function courierItems(n) {
-  return G.quests.filter(function (q) { return q.type === "courier" && !q.done && G.L > q.L; }).map(function (q) {
-    return { label: "Передать весточку от " + q.giverName + " (уровень " + q.L + ")", fn: function () {
-      if (q.done) return;
-      q.done = true;
-      q.reward = questReward(q, n, LAB.hash32(n.key + ":" + q.id), G.L, G.F);
-      payQuest(q, n.n + " слушает, не перебивая: «" + q.giverName + "? Жив" + (femGiver(q) ? "а" : "") + "… Спасибо, седьмой. Возьмите — это от всех нас».");
-    } };
-  });
-}
+game.abandonQuest = function (q) { return Q() ? Q().abandon(q) : false; };
+game.rewardText = function (q) { return Q() ? Q().rewardText(q) : ""; };
+game.questProgress = function (q) { return Q() ? Q().progress(q) : ""; };
+game.reservedBadges = function () { return Q() ? Q().reservedBadges() : 0; };
+/* весточки, посылки и помощь раненым — у того, кому они предназначены */
+function courierItems(n) { return Q() ? Q().npcItems(n) : []; }
 game.courierItems = courierItems;
-/* (3.5) зашли в помещение, где оставлена вещь из поручения, — «Эхо» её находит */
-function questRoom(r) {
-  var got = false;
-  G.quests.forEach(function (q) {
-    if (q.done || q.type !== "keep" || q.got || q.tL !== G.L || q.tF !== G.F || q.room !== r.id) return;
-    q.got = true; got = true; A("play", "pick_part");
-    sayq("«Эхо»: вот оно. Вы забираете " + q.what + " — то, о чём просил" + (femGiver(q) ? "а" : "") + " " + q.giverName + ".");
-  });
-  if (got) checkQuests();
-}
-var lastQuestNote = {};
-function checkQuests() {
-  G.quests.forEach(function (q) {
-    if (q.done) return;
-    /* (3.5) доклад по связи платится, как только этаж разведан, — что бы ни помнила
-       память объявлений (после загрузки записи доклад снова не передан) */
-    if (q.remote) {
-      if (!questReady(q)) return;
-      lastQuestNote[q.id] = 1; q.done = true;
-      payQuest(q, "«Эхо» передало доклад наверх. " + q.giverName + " благодарит по связи и переводит награду на браслет.");
-      return;
-    }
-    if (lastQuestNote[q.id]) return;
-    if (q.type === "courier") {
-      if (G.L > q.L) { lastQuestNote[q.id] = 1; sayq("Весточку от " + q.giverName + " можно передать любому выжившему здесь, внизу."); }
-      return;
-    }
-    if (!questReady(q)) return;
-    lastQuestNote[q.id] = 1;
-    LAB.UI.ok(); sayq("Задание «" + q.short + "» можно сдать: " + q.giverName + ", уровень " + q.L + ", этаж " + q.F + ".");
-  });
-}
+/* вошли в помещение: вещь из поручения, осмотр этажа */
+function questRoom(r) { if (Q()) Q().onRoom(r); }
+function checkQuests() { if (Q()) Q().check(); }
 game.checkQuests = checkQuests;
 
 /* ════════ НАВИГАТОР (два пальца вправо) ════════
@@ -3270,6 +2941,8 @@ function navTargets() {
   var down = findObj("stairs_down") || findObj("gate_down") || findObj("reactor");
   var el = findObj("elevator"), up = findObj("stairs_up");
   if (down) list.push({ n: down.type === "stairs_down" ? (stairBlocked(down) ? "лестница вниз (завалена)" : "лестница вниз") : down.type === "gate_down" ? "гермошлюз на уровень ниже" : "пульт реактора", o: down, main: true });
+  /* (3.6) цели поручений на этом этаже: заказчик рассказал, где они */
+  if (Q()) Q().navTargets().forEach(function (t) { list.push(t); });
   if (el && known(el)) list.push({ n: "лифт этажей", o: el });
   if (up && known(up)) list.push({ n: "лестница вверх", o: up });
   var gc = floorItems().filter(function (it) { return it.kind === "gatepass" && CUR.seen && CUR.seen[idx(it.x, it.y)]; })[0];
@@ -3882,7 +3555,7 @@ function loadSlot(n, fromBak) {
   try {
     G = migrate(d.g);
     applyDiff();
-    lastQuestNote = {}; /* (3.5) задания записи объявляются заново */
+    if (Q()) Q().reset(); /* (3.5) задания записи объявляются заново */
     game.session++; game.paused = false; game.descending = false;
     if (LAB.office && LAB.office.clear) LAB.office.clear();
     noteCache = {};
@@ -3933,6 +3606,8 @@ function migrate(g) {
   (g.weapons || []).forEach(function (w) { if (w && w.mods > 0 && !w.mod) w.mod = { power: w.mods }; });
   /* (2.2) ёмкость оружия — по новому правилу: «Искра» — тридцать, лучше оружие — больше */
   (g.weapons || []).forEach(function (w) { LAB.fixCap(w); });
+  /* (3.6) «Гемостат» слит с «Регенерацией»: импланты, чипы и схемы записи — к ней */
+  if (LAB.implants && LAB.implants.fixSave) LAB.implants.fixSave(g);
   /* (3.6) тренировки записей до «Альфы 3.3»: счёт тренировок без предела — каждые три
      давали единицу; столько и засчитано из пяти, что дают тренажёр и тир (fixtures.js) */
   var tr = g.train;
@@ -3956,6 +3631,7 @@ function migrate(g) {
     /* (3.6) поручения выживших — про помещения, тела и вещи прежних этажей: снимаются,
        главное остаётся; выжившие на новых этажах попросят о своём */
     g.quests = (g.quests || []).filter(function (q) { return q && q.type === "main"; });
+    g.givers = {}; /* (3.6) и счёт сделанного у заказчиков: на новых этажах — новые люди */
     g.worldV = WORLD_V; g.relocate = true;
   }
   return g;
@@ -3982,7 +3658,7 @@ function newGame() {
   var seed = "lab-" + Date.now().toString(36) + "-" + Math.floor(Math.random() * 1e6).toString(36);
   G = newState(seed);
   applyDiff();
-  lastQuestNote = {};
+  if (Q()) Q().reset();
   G.wakeSafe = 1; /* (2.1) безопасное пробуждение: в капсульном отсеке никто не тронет (combat.js) */
   game.session++; game.paused = false; game.descending = false;
   if (LAB.office && LAB.office.clear) LAB.office.clear();
