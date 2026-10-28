@@ -710,6 +710,7 @@ function reveal(id) {
   return { t: q.t, x: flat(q.hid), code: hiddenCode(id) };
 }
 /* проявленная плёнка: снимки глубины, сначала непросмотренные */
+function filmLeft() { var R = rec(); return poolOf("photo").filter(function (q) { return !R.read[q.id]; }).length; }
 function develop(n) {
   var R = rec(), pool = poolOf("photo"), fresh = pool.filter(function (q) { return !R.read[q.id]; }), list = fresh.length ? fresh : [];
   var out = [], r = LAB.Rng(G().seed, "film:" + (R.films = (R.films || 0) + 1));
@@ -766,6 +767,6 @@ LAB.library = {
   act: act, noteText: noteText, navTargets: navTargets, examineLine: examineLine,
   cabinetMenu: cabinetMenu, cabinetItems: cabinetItems, shelfBooks: shelfBooks, readText: readText, isRead: isRead,
   codeMemo: codeMemo, deal: deal, byId: byId, pool: poolOf, index: idx, CAT_N: CAT_N, CAT_W: CAT_W, bookEffect: bookEffect,
-  hiddenDocs: hiddenDocs, reveal: reveal, develop: develop, hasAt: hasAt
+  hiddenDocs: hiddenDocs, reveal: reveal, develop: develop, filmLeft: filmLeft, hasAt: hasAt
 };
 })();

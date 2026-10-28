@@ -6406,6 +6406,32 @@ LAB.ui.closeAll();
       out.recryst = (G().inv.c_salt_2 || 0) > s2;
       spoken.length = 0; CL._add(o, 0, "fuel"); CL._heat(o, 0); CL._heat(o, 0);
       out.pyro = /горючее не греют/.test(said());
+      /* (3.6) один состав посуды — две рецептуры (йодид калия и коррозионная колба в корпусе из
+         металлолома): «Эхо» говорит об обеих, а при разливе даёт выбрать */
+      C.ch().xp.tox = Math.max(C.ch().xp.tox || 0, 80); C.ch().xp.pharm = Math.max(C.ch().xp.pharm || 0, 30); C.ch().xp.pyro = Math.max(C.ch().xp.pyro || 0, 80);
+      CL._add(o, 3, "water"); CL._add(o, 3, "acid"); CL._add(o, 3, "salt"); CL._add(o, 3, "salt"); CL._stir(o, 3); /* кислота в воде сама согревает смесь */
+      out.dupJudge = /годится не на одно/.test(String(CL._judge(V(3)) || ""));
+      const co0 = cnt(/^c_corrode/), scr0 = G().inv.scrap || 0; U.closeAll(); CL._bottle(o, 3);
+      out.dupMenu = !!U.top() && U.top().title === "Что разлить" && items().length === 3;
+      click(/корпус из металлолома/); U.closeAll();
+      out.dupCorrode = cnt(/^c_corrode/) > co0 && (G().inv.scrap || 0) === scr0 - 1;
+      /* пиротехника на фосфоре: в сухом стекле он вспыхивает, под водой — нет, и вода такому составу не помеха */
+      give("c_phosphor", 2); give("cap", 1);
+      spoken.length = 0; CL._add(o, 2, "phos"); out.phosDry = /вспыхнул/.test(said());
+      const fl0 = cnt(/^c_flash/); spoken.length = 0;
+      CL._add(o, 0, "water"); CL._add(o, 0, "salt"); CL._add(o, 0, "phos"); CL._stir(o, 0); const phWet = !/вспыхнул/.test(said()); U.closeAll(); CL._bottle(o, 0);
+      out.phosWet = phWet && cnt(/^c_flash/) > fl0;
+      /* перекристаллизация не огрубляет: на столе первой ступени очищенные соли остаются очищенными */
+      const c1 = G().inv.c_salt || 0; delete G().inv.c_salt; const s2b = G().inv.c_salt_2 || 0; give("c_salt_2", 2);
+      stn.tier = 1; spoken.length = 0;
+      CL._add(o, 4, "water"); CL._add(o, 4, "water"); CL._add(o, 4, "salt"); CL._add(o, 4, "salt"); CL._filter(o, 4); CL._evap(o, 4);
+      out.recrystKeep = (G().inv.c_salt_2 || 0) === s2b + 2 && !G().inv.c_salt && /нужен стол ступенью выше/.test(said());
+      stn.tier = 2; if (c1) G().inv.c_salt = c1;
+      /* сорт сырья — как в синтезе: «не ниже очищенного» руками не обойти */
+      give("c_electrolyte", 2); give("c_catalyst", 1);
+      CL._add(o, 5, "elec"); CL._add(o, 5, "elec"); CL._add(o, 5, "cat"); CL._cool(o, 5); CL._stir(o, 5);
+      const en0 = G().ammo.energy || 0; spoken.length = 0; U.closeAll(); CL._bottle(o, 5);
+      out.minG = /не ниже очищенного сорта/.test(said()) && (G().ammo.energy || 0) === en0;
       out.achHand = !!(G().ach && G().ach.d && G().ach.d.hand1) && (G().ach.c.discover || 0) >= 1;
       U.closeAll(); CL.bench(o); out.benchMenu = items().length > 4; U.closeAll();
       /* 3. тайнопись: архив помнит, что она есть; проявить парами йода у стола — и кисточкой проявителя */
@@ -6425,6 +6451,11 @@ LAB.ui.closeAll();
       give("film", 1); give("c_devel", 1); give("c_fixer", 1);
       const nl0 = G().noteList.length; CL.developFilm(o); U.closeAll();
       out.film = !G().inv.film && G().noteList.length > nl0 && G().noteList.slice(nl0).every(e => e.cat === "Фотографии");
+      /* (3.6) новых кадров этой глубины не осталось — плёнка, проявитель и фиксаж целы */
+      give("film", 12); give("c_devel", 12); give("c_fixer", 12);
+      let keptFilm = false;
+      for (let i = 0; i < 12 && !keptFilm; i++) { const f0 = G().inv.film, d0 = G().inv.c_devel; spoken.length = 0; CL.developFilm(o); U.closeAll(); if (G().inv.film === f0) keptFilm = G().inv.c_devel === d0 && /все кадры этой глубины вы уже видели/.test(said()); }
+      out.filmKeep = keptFilm; delete G().inv.film; delete G().inv.c_devel; delete G().inv.c_fixer;
       const rep0 = G().inv.c_report || 0; CL._tissue(o, "c_blood"); U.closeAll();
       out.tissue = (G().inv.c_report || 0) === rep0 + 1;
       const cr0 = G().credits;
@@ -6530,7 +6561,10 @@ LAB.ui.closeAll();
   ok(chx.tables && chx.tables.withT === chx.tables.n && chx.entry && chx.nav, "химический стол — на каждом этаже (" + JSON.stringify(chx.tables) + "), при первом заходе «Эхо» называет помещение, навигатор знает дорогу");
   ok(chx.dilute && chx.splash && chx.neutral && chx.chlorine && chx.pyro, "химия руками: кислоту в воду — струйкой, воду в кислоту — брызги, щёлочь гасит кислоту, хлорка с кислотой — хлор и испорченная посуда, горючее не греют (" + JSON.stringify({ d: chx.dilute, s: chx.splash, n: chx.neutral, c: chx.chlorine, p: chx.pyro }) + ")");
   ok(chx.smelling && chx.discover && chx.recryst && chx.achHand && chx.benchMenu, "узнанная рецептура разливается, неизвестная открывается опытом, перекристаллизация поднимает сорт, достижения считаются (" + JSON.stringify({ judge: chx.judge, s: chx.smelling, d: chx.discover, r: chx.recryst, a: chx.achHand }) + ")");
+  ok(chx.recrystKeep && chx.minG, "перекристаллизация не огрубляет соли на простом столе; сырьё грубее нужного сорта руками не разливается (" + JSON.stringify({ r: chx.recrystKeep, g: chx.minG }) + ")");
+  ok(chx.dupJudge && chx.dupMenu && chx.dupCorrode && chx.phosDry && chx.phosWet, "один состав — две рецептуры: «Эхо» называет обе и при разливе даёт выбрать; фосфор в сухом стекле вспыхивает, под водой — нет, и вспышка из него разливается (" + JSON.stringify({ j: chx.dupJudge, m: chx.dupMenu, c: chx.dupCorrode, d: chx.phosDry, w: chx.phosWet }) + ")");
   ok(chx.hidMark && chx.hidBench && chx.hidItem, "тайнопись: архив помнит, что она есть; проявляется парами йода у стола и проявителем (" + JSON.stringify({ m: chx.hidMark, b: chx.hidBench, i: chx.hidItem }) + ")");
+  ok(chx.filmKeep, "новых кадров этой глубины не осталось — плёнка, проявитель и фиксаж не тратятся");
   ok(chx.film && chx.tissue && chx.report, "плёнка проявляется — снимки в архиве; анализ ткани даёт отчёт, медик его покупает, повар — нет (" + JSON.stringify({ f: chx.film, t: chx.tissue, r: chx.report }) + ")");
   ok(chx.puzAll, "химические задачи: титрование, склянки, методика, хроматограмма, цепочка — на трёх ступенях решаются, опыт химика растёт (" + JSON.stringify(chx.puz) + ")");
   ok(chx.keepOpen && chx.failCb && chx.awayCb && chx.oldKeep, "головоломки: неверный ответ окно не закрывает, три неверных — провал, «отойти» — не провал (" + JSON.stringify({ k: chx.keepOpen, f: chx.failCb, a: chx.awayCb, o: chx.oldKeep }) + ")");

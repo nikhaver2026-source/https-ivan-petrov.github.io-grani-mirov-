@@ -211,9 +211,9 @@ var RX = [
   { id: "silvertest", br: "energy", on: "any", rep: 1, d: "Ляпис с солями в воде — белый осадок: проба на соли",
     test: function (v) { return has(v, "silver") && has(v, "salt") && has(v, "water"); },
     run: function (v) { eat(v, "silver"); eat(v, "salt"); v.ppt = (v.ppt || 0) + 1; return { t: "В прозрачной воде — белые творожистые хлопья: ляпис ловит соли. Так проверяют, есть ли соль в воде.", snd: "ev_glass" }; } },
-  { id: "phosair", br: "pyro", on: "add", d: "Фосфор без воды вспыхивает — его кладут только под воду",
-    test: function (v, c) { return c.sub === "phos" && !(c.before.water > 0); },
-    run: function (v) { eat(v, "phos"); return { t: "Фосфор вспыхнул прямо в сухом стекле — белый дым и жар! Его хранят и кладут только под воду.", snd: "hurt_therm", haz: { hp: 5, noise: 3 } }; } },
+  { id: "phosair", br: "pyro", on: "add", d: "Фосфор на воздухе вспыхивает — его кладут только под воду или в горючее",
+    test: function (v, c) { var b = c.before; return c.sub === "phos" && !(b.water > 0 || b.fuel > 0 || b.oil > 0 || b.solv > 0); },
+    run: function (v) { eat(v, "phos"); return { t: "Фосфор вспыхнул прямо в сухом стекле — белый дым и жар! Его кладут только под воду или в горючее: на воздухе он загорается.", snd: "hurt_therm", haz: { hp: 5, noise: 3 } }; } },
   { id: "pyroheat", br: "pyro", on: "heat", d: "Горючее и пиротехнику не греют — вспышка",
     test: function (v) { return v.t >= 2 && (has(v, "phos") || has(v, "fuel") || (has(v, "perox") && (has(v, "oil") || has(v, "solv")))); },
     run: function () { return { t: "Смесь вспыхивает со свистом — горючее не греют! Пиротехнику мешают холодной и сухой.", snd: "explosion_small", haz: { hp: 10, noise: 10, oko: 1 }, ruin: 1 }; } },
@@ -288,6 +288,9 @@ var PROC = {
   bio: { lo: 2, hi: 2, top: 2, d: "держать тёплым, как тело" }
 };
 var OWN = { l_lockpaste: { lo: 0, hi: 1, top: 1, d: "мешать холодным: паста густеет без нагрева" }, l_reveal: { lo: 0, hi: 2, top: 2, d: "мешать без кипения" } };
+/* (3.6) пиротехника на фосфоре: фосфор на воздухе вспыхивает, поэтому его кладут под воду
+   или в горючее — и вода в таком составе не помеха (сухой нужна остальная пиротехника) */
+["p_flash", "p_thermite", "p_napalm"].forEach(function (id) { OWN[id] = { lo: 0, hi: 1, top: 1, d: "держать холодным и без огня; фосфор — только под водой или в горючем" }; });
 var WATER = { l_fogspray: [2, 4], l_antisept: [2, 3], l_smelling: [1, 2], l_devel: [1, 2], l_fixer: [1, 2] };
 function needOf(rc) {
   var m = {}, asm = {};
@@ -300,11 +303,14 @@ function needOf(rc) {
   return { m: m, asm: asm };
 }
 function procOf(rc) { return OWN[rc.id] || PROC[rc.br]; }
-/* разбор посуды: состав, отклонения, «на пути» */
+/* разбор посуды: состав, отклонения, «на пути». (3.6) Один и тот же состав посуды бывает
+   годен на две рецептуры (йодид калия и коррозионная колба — она ещё и в корпусе из
+   металлолома; регенерирующая сыворотка и культура регенерации): hits — все, известные
+   первыми, а что разлить, игрок выбирает при разливе (прежде всегда выходила первая). */
 function analyze(v) {
-  var best = null, near = null, extras = [];
+  var kh = [], uh = [], near = null;
   C().RC.forEach(function (rc) {
-    if (best || !C().outOk(rc)) return;
+    if (!C().outOk(rc)) return;
     var nd = needOf(rc); if (!nd) return;
     var ok = true, mods = [], cat = 0, k;
     for (k in nd.m) if ((v.m[k] || 0) !== nd.m[k]) ok = false;
@@ -314,14 +320,24 @@ function analyze(v) {
       if (k === "cat" && v.m[k] === 1) { cat = 1; continue; }
       ok = false;
     }
-    if (ok) { best = { rc: rc, nd: nd, mods: mods, cat: cat }; return; }
+    if (ok) { (C().known(rc) ? kh : uh).push({ rc: rc, nd: nd, mods: mods, cat: cat }); return; }
     /* «на пути»: всё, что в посуде, — из этой рецептуры и не больше нужного, и веществ хотя бы два */
     var sub = true, kinds = 0;
     for (k in v.m) { if (k === "water") continue; if (!nd.m[k] || v.m[k] > nd.m[k]) { sub = false; break; } kinds++; }
     if (sub && kinds >= 2 && !near) near = rc;
   });
-  return { hit: best, near: near };
+  var hits = kh.concat(uh);
+  return { hit: hits[0] || null, hits: hits, near: near };
 }
+/* (3.6) ограничения синтеза — и для работы руками: сорт сырья и мутаген в обычных средствах */
+var MING_N = { 2: "очищенного сорта", 3: "особой чистоты" };
+function limitWhy(v, rc) {
+  if (rc.minG && (v.gn ? v.g : 1) < rc.minG) return "сырьё нужно не ниже " + (MING_N[rc.minG] || "очищенного сорта") + ", а в посуде есть грубее";
+  if (v.sat && !C().PROD[rc.out]) return "сырьё с мутагеном в обычные средства не идёт — сначала выведите мутаген из сырья";
+  return "";
+}
+function whyNot(v, rc) { return procWhy(v, rc) || limitWhy(v, rc); }
+function hitName(h) { return C().known(h.rc) ? "«" + low(nm(h.rc)) + "»" : "новое соединение (" + C().BR[h.rc.br].n + ")"; }
 function procWhy(v, rc) {
   var pr = procOf(rc), w = v.m.water || 0, wr = WATER[rc.id];
   if (pr.dry && w > 0) return "в пиротехнике воды быть не должно — " + pr.d;
@@ -338,7 +354,9 @@ function judge(v) {
   if (!total(v)) return "Посуда пуста.";
   var a = analyze(v);
   if (a.hit) {
-    var rc = a.hit.rc, kn = C().known(rc), w = procWhy(v, rc);
+    var ready = a.hits.filter(function (h) { return !whyNot(v, h.rc); });
+    if (ready.length > 1) return "Готово к разливу, и смесь годится не на одно: " + ready.map(hitName).join(" или ") + ". Что разлить — выберете при разливе.";
+    var rc = (ready[0] || a.hit).rc, kn = C().known(rc), w = whyNot(v, rc);
     if (w) return kn ? "Это «" + nm(rc) + "», но " + w + "." : "Смесь ведёт себя необычно — похоже на новый состав (" + C().BR[rc.br].n + "), но " + w + ".";
     return kn ? "Готово к разливу: «" + low(nm(rc)) + "»." : "Смесь ведёт себя иначе, чем всё, что вы делали: новое соединение (" + C().BR[rc.br].n + "). Разлейте — «Эхо» запишет рецептуру.";
   }
@@ -440,12 +458,13 @@ function evaporate(o, i) {
   var rx = react(v, "heat", { before: v.m });
   var out = [rx];
   if (total(v) && saltOnly(v)) {
-    var n = v.m.salt, g0 = v.gn ? v.g : 1, gr = Math.max(1, Math.min(3, g0 + (v.fil ? 1 : 0), C().stationCap(s)));
+    /* (3.6) чище — только после фильтра и не выше, чем позволяет стол; но и не грубее, чем было */
+    var n = v.m.salt, g0 = v.gn ? v.g : 1, fil = !!v.fil, capS = C().stationCap(s), gr = fil && g0 < 3 && capS > g0 ? g0 + 1 : g0;
     C().give(C().matId("c_salt", gr, false), n);
     clearV(v);
     if (!rec().rx.recryst) { rec().rx.recryst = 1; C().gain("tox", 6); }
     A("play", "ev_glass");
-    out.push("Вода ушла, на стенках — кристаллы: " + low(LAB.ITEMS[C().matId("c_salt", gr, false)].n) + ", " + n + " " + pl(n, "порция", "порции", "порций") + "." + (gr > g0 ? " Чище, чем были." : " Отфильтруй вы раствор — вышли бы чище."));
+    out.push("Вода ушла, на стенках — кристаллы: " + low(LAB.ITEMS[C().matId("c_salt", gr, false)].n) + ", " + n + " " + pl(n, "порция", "порции", "порций") + "." + (gr > g0 ? " Чище, чем были." : g0 >= 3 ? " Чище уже некуда." : !fil ? " Отфильтруй вы раствор — вышли бы чище." : " Чище на этом столе не выйдет: нужен стол ступенью выше."));
   } else if (total(v)) {
     ["water", "amm", "perox", "iod"].forEach(function (k) { delete v.m[k]; });
     v.st = 0;
@@ -477,25 +496,38 @@ function dump(o, i) {
   A("play", "water_pour");
   after(o, v, "Вы выливаете всё в слив и споласкиваете стекло." + (acidic ? " Слив коротко шипит — кислота." : ""), 1);
 }
-/* разлить: распознанный состав — в склянки */
+/* разлить: распознанный состав — в склянки; годится на несколько — выбрать, что именно */
 function bottle(o, i) {
-  var v = vOf(o, i), s = C().station(o), g = G();
+  var v = vOf(o, i);
   if (!guard()) return;
   if (!total(v)) { say("Разливать нечего."); return; }
   var a = analyze(v);
   if (!a.hit) { A("play", "ui_error"); say(judge(v)); return; }
-  var rc = a.hit.rc, kn = C().known(rc), w = procWhy(v, rc);
+  var ready = a.hits.filter(function (h) { return !whyNot(v, h.rc); });
+  if (ready.length > 1) {
+    UIx("menu", "Что разлить", ready.map(function (h) {
+      var asm = Object.keys(h.nd.asm).map(function (k) { return ASM[k] + (h.nd.asm[k] > 1 ? ", " + h.nd.asm[k] : ""); });
+      return { label: cap1(hitName(h)) + (asm.length ? ": нужен ещё " + asm.join(" и ") : ""), fn: function () { bottleAs(o, i, h); } };
+    }).concat([{ label: "Назад", fn: function () {} }]), { intro: "Состав в посуде годится не на одно." });
+    return;
+  }
+  bottleAs(o, i, ready[0] || a.hit);
+}
+function bottleAs(o, i, hit) {
+  var v = vOf(o, i), s = C().station(o), g = G();
+  if (!guard()) return;
+  var rc = hit.rc, kn = C().known(rc), w = whyNot(v, rc);
   if (w) { A("play", "ui_error"); say(kn ? "«" + nm(rc) + "»: " + w + "." : "Не выходит: " + w + "."); return; }
   if (C().brLv(rc.br) < rc.lv) { A("play", "ui_error"); say("Состав верный, но рука не та: нужна ступень " + rc.lv + " направления «" + C().BR[rc.br].n + "», у вас " + C().brLv(rc.br) + "."); return; }
   if (s.tier < rc.st && !(C().level() >= 5 && s.tier === rc.st - 1)) { A("play", "ui_error"); say("Для этого состава нужен стол ступени " + rc.st + ": " + C().ST_N[rc.st].n + "."); return; }
   if (s.dirty) { A("play", "ui_error"); say("Стол загрязнён — сначала отмойте его растворителем."); return; }
-  for (var k in a.hit.nd.asm) if ((g.inv[k] || 0) < a.hit.nd.asm[k]) { A("play", "ui_error"); say("Чтобы разлить, нужен ещё " + ASM[k] + ": " + a.hit.nd.asm[k] + "."); return; }
-  if (a.hit.mods.length > 1) { A("play", "ui_error"); say("Две добавки сразу мешают друг другу: оставьте одну."); return; }
-  for (var k2 in a.hit.nd.asm) { g.inv[k2] -= a.hit.nd.asm[k2]; if (!g.inv[k2]) delete g.inv[k2]; }
+  for (var k in hit.nd.asm) if ((g.inv[k] || 0) < hit.nd.asm[k]) { A("play", "ui_error"); say("Чтобы разлить, нужен ещё " + ASM[k] + ": " + hit.nd.asm[k] + "."); return; }
+  if (hit.mods.length > 1) { A("play", "ui_error"); say("Две добавки сразу мешают друг другу: оставьте одну."); return; }
+  for (var k2 in hit.nd.asm) { g.inv[k2] -= hit.nd.asm[k2]; if (!g.inv[k2]) delete g.inv[k2]; }
   var P = C().PROD[rc.out], isP = !!P, gr = v.gn ? v.g : 1, mod = "";
-  if (isP && a.hit.mods.length && (P.mods || []).indexOf(a.hit.mods[0]) >= 0) mod = a.hit.mods[0];
+  if (isP && hit.mods.length && (P.mods || []).indexOf(hit.mods[0]) >= 0) mod = hit.mods[0];
   if (isP && !mod && v.sat && P.mut) mod = "mut";
-  var bonus = (v.cl ? 1 : 0) + (a.hit.cat ? 1 : 0), g0 = gr;
+  var bonus = (v.cl ? 1 : 0) + (hit.cat ? 1 : 0), g0 = gr;
   gr = Math.max(1, Math.min(3, gr + bonus, C().stationCap(s), C().gradeCap(rc.br)));
   var id = isP ? C().prodId(rc.out, gr, mod) : rc.out, n = rc.qty || 1;
   if (!isP) n += gr - 1;
@@ -553,6 +585,8 @@ function developFilm(o) {
   if (!(g.inv.film > 0)) { say("Плёнки нет: отснятые катушки попадаются в фотолабораториях, лабораториях и медблоках."); return; }
   var dv = anyOf("c_devel"), fx = anyOf("c_fixer");
   if (!dv || !fx) { A("play", "ui_error"); say("Нужны фотопроявитель и фиксаж" + (!dv && !fx ? "" : !dv ? " — нет проявителя" : " — нет фиксажа") + ". Их делают здесь же: синтез, энергохимия, или руками — ляпис со щёлочью и водой, тёплым; соли с содой и водой."); return; }
+  /* (3.6) новых кадров этой глубины не осталось — плёнку, проявитель и фиксаж не тратить */
+  if (LAB.library && LAB.library.filmLeft && !LAB.library.filmLeft()) { A("play", "ui_error"); say("«Эхо» сверяет катушку с архивом: все кадры этой глубины вы уже видели — проявлять здесь незачем, плёнку лучше поберечь."); return; }
   [["film"], [dv], [fx]].forEach(function (x) { g.inv[x[0]]--; if (!g.inv[x[0]]) delete g.inv[x[0]]; });
   spend(6); turn();
   var n = 2 + (h32("film:" + g.seed + ":" + (rec().films = (rec().films || 0) + 1)) % 2);
@@ -635,7 +669,7 @@ function journalMenu() {
   items.push({ label: "Назад", close: true, fn: function () {} });
   UIx("menu", "Журнал опытов", items);
 }
-var RULES = "Правила лаборатории. Сначала вода, потом кислота — тонкой струйкой, иначе брызги. Нюхают, помахивая ладонью к себе. Хлорку не смешивают ни с кислотой, ни с нашатырём: ядовитый газ. Фосфор кладут только под воду. Горючее и пиротехнику не греют. Растворитель кипятят только под вытяжкой. Водород из кислоты со стружкой хлопает у огня. Индикатор: красный — кислота, зелёный — нейтрально, синий и фиолетовый — щёлочь. Составы руками: фармакология — тёплое, не кипятить; токсикология — не кипятить; энергохимия — охладить перед разливом; пиротехника — сухо и холодно; биотехнология — тёплое, как тело. И всегда — перемешать. Без единой ошибки в посуде состав выходит на сорт чище. Добавки — стабилизатор, активатор, сорбент — по одной, катализатор — поднимает сорт. Неизвестное открывается опытом: «Эхо» скажет, когда смесь на пути к новому составу.";
+var RULES = "Правила лаборатории. Сначала вода, потом кислота — тонкой струйкой, иначе брызги. Нюхают, помахивая ладонью к себе. Хлорку не смешивают ни с кислотой, ни с нашатырём: ядовитый газ. Фосфор кладут только под воду или в горючее. Горючее и пиротехнику не греют. Растворитель кипятят только под вытяжкой. Водород из кислоты со стружкой хлопает у огня. Индикатор: красный — кислота, зелёный — нейтрально, синий и фиолетовый — щёлочь. Составы руками: фармакология — тёплое, не кипятить; токсикология — не кипятить; энергохимия — охладить перед разливом; пиротехника — сухо и холодно, а с фосфором — под водой или в горючем; биотехнология — тёплое, как тело. И всегда — перемешать. Без единой ошибки в посуде состав выходит на сорт чище. Добавки — стабилизатор, активатор, сорбент — по одной, катализатор — поднимает сорт. Неизвестное открывается опытом: «Эхо» скажет, когда смесь на пути к новому составу.";
 
 /* ════════ ОКНА ════════ */
 function bench(o) {
