@@ -3,9 +3,9 @@
    Уровни по двадцать этажей. Каждый этаж строится из зерна игры заново и
    всегда одинаково: сетка 4×3 ячеек по 56×56 клеток (1.3: прежде 22 —
    коридоры удлинены, чтобы вдоль каждой стены уместилось по десять
-   кабинетов, annex.js); в ячейке — помещение от пяти до десяти шагов в
-   сторону, между соседними — прямой коридор шириной в четыре шага и
-   длиной от сорока двух. С одной стороны коридор
+   кабинетов, annex.js); в ячейке — помещение (3.6: от девяти до
+   пятнадцати шагов в сторону, глубже — больше, SIZE), между соседними —
+   прямой коридор шириной в четыре шага и длиной от тридцати. С одной стороны коридор
    открыт в помещение проходом в два шага, с другой — дверь с табличкой.
    Остов этажа — дерево помещений от точки прибытия; замки ставятся на
    рёбра дерева, ключ к замку всегда лежит до замка (в зоне, достижимой без
@@ -26,18 +26,32 @@ var T_WALL = 0, T_ROOM = 1, T_CORR = 2, T_DOOR = 3;
 LAB.T = { WALL: T_WALL, ROOM: T_ROOM, CORR: T_CORR, DOOR: T_DOOR };
 
 /* (3.2, просьба игрока) Чем ниже блок, тем просторнее — с третьего
-   («Отражение», с 41-го уровня): помещения больше (room — от и до, cap —
-   предел для каждого третьего), коридоры шире (cw) с проходом в три шага,
-   кабинеты у коридоров шире (aw) и глубже (ad, залы — hall), вещей
-   обстановки больше (fx — сверх прежнего). Сетка этажа та же. Выше
-   третьего блока — всё как прежде, тем же потоком случайностей: этажи
-   «Ковчега», «Подножия» и «Колыбели» не меняются. */
-var GROW = {
-  3: { room: [7, 12], cap: 10, sp: [7, 10], cw: 5, aw: [4, 6], ad: [3, 7], hall: [6, 9], fx: 1 },
-  4: { room: [8, 14], cap: 11, sp: [8, 11], cw: 6, aw: [5, 7], ad: [4, 8], hall: [8, 10], fx: 2 },
-  5: { room: [9, 16], cap: 12, sp: [9, 12], cw: 7, aw: [5, 8], ad: [5, 10], hall: [9, 12], fx: 3 }
+   («Отражение», с 41-го уровня): помещения больше, коридоры шире (cw) с
+   проходом в три шага, вещей обстановки больше (fx — сверх прежнего).
+   (3.6, просьба автора: «помещения маленькие — прям расширь») Размеры —
+   своя строка у каждого блока, и у верхних тоже (SIZE[1]): главные
+   помещения (room — от и до, cap — предел для каждого третьего, sp — у
+   прибытия, лифта и лестниц, sec — тайная комната, gate и reactor — зал
+   шлюза и реактора), кабинеты у коридоров (aw — ширина вдоль коридора, ad —
+   глубина, hall — ширина зала, hd — его глубина, avg — средняя ширина,
+   по ней — сколько кабинетов у стены). Прежде главные помещения были от
+   пяти до девяти шагов, кабинеты — от трёх на два до пяти на шесть. Сетка
+   этажа та же. */
+var SIZE = {
+  1: { room: [9, 15], cap: 11, sp: [9, 12], sec: 7, gate: 12, reactor: 16, aw: [5, 8], ad: [5, 9], hall: [9, 12], hd: [8, 12], avg: 6.5 },
+  3: { room: [11, 17], cap: 13, sp: [11, 14], sec: 8, gate: 13, reactor: 17, aw: [6, 9], ad: [6, 10], hall: [10, 13], hd: [9, 13], avg: 7.5 },
+  4: { room: [12, 18], cap: 14, sp: [12, 15], sec: 9, gate: 14, reactor: 18, aw: [7, 10], ad: [7, 11], hall: [11, 14], hd: [10, 14], avg: 8.5 },
+  5: { room: [13, 20], cap: 15, sp: [13, 16], sec: 9, gate: 15, reactor: 19, aw: [7, 11], ad: [8, 12], hall: [12, 15], hd: [11, 15], avg: 9 }
 };
+var GROW = {
+  3: { cw: 5, fx: 1 },
+  4: { cw: 6, fx: 2 },
+  5: { cw: 7, fx: 3 }
+};
+(function () { for (var b in GROW) for (var k in SIZE[b]) GROW[b][k] = SIZE[b][k]; })();
 LAB.floorGrow = function (L) { var b = LAB.blockOf ? LAB.blockOf(L) : 1; return b >= 3 ? GROW[Math.min(5, b)] : null; };
+/* Размеры помещений блока (3.6): у первых двух блоков — SIZE[1], ниже — свои. */
+LAB.roomSize = function (L) { var b = LAB.blockOf ? LAB.blockOf(L) : 1; return b >= 3 ? SIZE[Math.min(5, b)] : SIZE[1]; };
 /* Ширина коридора: у каждого своя (cor.w); у этажей прежних блоков — четыре шага. */
 LAB.corrW = function (c) { return (c && c.w) || CW; };
 
@@ -87,6 +101,7 @@ LAB.LOGIC_KINDS = LOGIC_KINDS;
    потоком случайностей (pz17) — этажи от этого не меняются */
 function logicKinds() { return LOGIC_KINDS.concat(LAB.puzzles2 && LAB.puzzles2.kinds ? LAB.puzzles2.kinds : [], LAB.puzzles3 && LAB.puzzles3.kinds ? LAB.puzzles3.kinds : []); }
 function stationKinds() { return ["sort", "relays", "bulls", "riddle"].concat(logicKinds(), ["chess"]); }
+var CHEM_PZ = ["titr", "vials", "protocol", "spectr", "chain"]; /* (3.6) химические задачи (chempuz.js, KINDS) */
 LAB.logicKinds = logicKinds;
 function puzzleDiff(rz, L, F) {
   var x = rz.next(), d0 = LAB.depth(L, F);
@@ -542,15 +557,16 @@ function genFloor(seed, L, F, attempt) {
   var rooms = [];
   var bossSlot = F === NF ? parent[D] : -1;
   var gw = LAB.floorGrow(L); /* (3.2) с третьего блока — просторнее */
+  var sz = LAB.roomSize(L); /* (3.6) размеры помещений блока — SIZE */
   for (s = 0; s < NS; s++) {
     if (!active[s]) continue;
     var special = s === U || s === D || s === E;
-    var w = gw ? r.int(gw.room[0], gw.room[1]) : r.int(5, 9), hh = gw ? r.int(gw.room[0], gw.room[1]) : r.int(5, 9);
-    if (r.chance(0.35)) { w = Math.min(w, gw ? gw.cap : 7); hh = Math.min(hh, gw ? gw.cap : 7); }
-    if (special) { w = Math.max(gw ? gw.sp[0] : 6, Math.min(gw ? gw.sp[1] : 8, w)); hh = Math.max(gw ? gw.sp[0] : 6, Math.min(gw ? gw.sp[1] : 8, hh)); }
-    if (s === secret) { w = gw ? 6 : 5; hh = gw ? 6 : 5; }
-    if (s === bossSlot) { w = (gw ? gw.room[1] - 1 : 9) + r.int(0, 1); hh = (gw ? gw.room[1] - 1 : 9) + r.int(0, 1); }
-    if (F === NF && s === D) { w = reactor ? 10 : 8; hh = reactor ? 10 : 8; }
+    var w = r.int(sz.room[0], sz.room[1]), hh = r.int(sz.room[0], sz.room[1]);
+    if (r.chance(0.35)) { w = Math.min(w, sz.cap); hh = Math.min(hh, sz.cap); }
+    if (special) { w = Math.max(sz.sp[0], Math.min(sz.sp[1], w)); hh = Math.max(sz.sp[0], Math.min(sz.sp[1], hh)); }
+    if (s === secret) { w = sz.sec; hh = sz.sec; }
+    if (s === bossSlot) { w = sz.room[1] - 1 + r.int(0, 1); hh = sz.room[1] - 1 + r.int(0, 1); }
+    if (F === NF && s === D) { w = reactor ? sz.reactor : sz.gate; hh = w; }
     var pr = placeRoom(r, s, w, hh);
     var rm = { id: s, x0: pr.x0, y0: pr.y0, x1: pr.x1, y1: pr.y1, zone: zone[s], doors: [], mouths: [] };
     rm.cx = Math.floor((rm.x0 + rm.x1) / 2); rm.cy = Math.floor((rm.y0 + rm.y1) / 2);
@@ -1352,10 +1368,13 @@ function genFloor(seed, L, F, attempt) {
     var pzRooms = [], NOPZ = { secret: 1, supply: 1, trial: 1, decon: 1, hazard: 1 };
     fl.rooms.forEach(function (rm) { if (rm && rm.annex && !rm.hidden && !NOPZ[((LAB.ANNEX_ROOMS || {})[rm.type] || {}).kind] && /^(lab|server|work|power|office|leisure)$/.test(LAB.garrison.category(rm))) pzRooms.push(rm.id); });
     rzp.shuffle(pzRooms);
+    /* (3.6) в лабораториях — чаще химические задачи (chempuz.js; список — здесь, чтобы этаж
+       строился одинаково и в игре, и в проверке генератора) */
+    var labPool = CHEM_PZ.concat(CHEM_PZ, CHEM_PZ, stationKinds());
     for (var pq = 0; pq < pzRooms.length && wantP > 0; pq++) {
       var st17 = addObj("puzzle", pzRooms[pq], { seed: rzp.int(1, 99999) });
       if (!st17) continue;
-      pz17(st17, seed, L, F, st17.id, stationKinds());
+      pz17(st17, seed, L, F, st17.id, LAB.garrison.category(fl.rooms[pzRooms[pq]]) === "lab" ? labPool : stationKinds());
       st17.loot = genLoot(rzp, L, F, "desk", "tech").filter(function (it) { return it.kind !== "weapon" && it.kind !== "armor"; });
       wantP--;
     }

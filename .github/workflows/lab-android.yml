@@ -149,6 +149,8 @@ jobs:
           # (2.0) новые головоломки, оружие глубин, реплики ОКО
           node lab/tests/puzzles2.check.js
           node lab/tests/puzzles3.check.js
+          # (3.6) химические задачи: решаемы, устроены по сложности, неверный ответ окно не закрывает
+          node lab/tests/chempuz.check.js
           ACORN="$RUNNER_TEMP/n/node_modules/acorn" node lab/tests/arsenal.check.js --fast
           NODE_PATH="$RUNNER_TEMP/n/node_modules" node lab/tests/oko_lines_a.check.js
           NODE_PATH="$RUNNER_TEMP/n/node_modules" node lab/tests/oko_lines_b.check.js

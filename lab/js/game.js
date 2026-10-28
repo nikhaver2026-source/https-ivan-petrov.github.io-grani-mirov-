@@ -22,7 +22,7 @@ var DIRS = LAB.DIRS;
 /* ════════ СОСТОЯНИЕ ════════ */
 /* Версия мира: этажи построены заново (широкие коридоры, тайные комнаты с
    двумя выходами, турели у дверей) — старые записи этажей к ним не подходят. */
-var WORLD_V = 5; /* (3.5) пятый выпуск мира: тела погибших и выжившие чаще (annex.js, world.js); (3.2) с третьего блока этажи просторнее */
+var WORLD_V = 6; /* (3.6) шестой выпуск мира: помещения и кабинеты на всех глубинах втрое просторнее, обстановки больше — книги, бумаги, звук и связь (world.js, annex.js, library.js); (3.5) тела погибших и выжившие чаще; (3.2) с третьего блока этажи просторнее */
 /* (2.1) Стартовый набор — с ним носитель выходит из капсулы: монтировка и
    заряженный бластер «Искра» (выбран он), надетый защитный комбинезон
    «Ковчег», бинт, походный ремнабор, сухпаёк и кредиты на первую покупку.
@@ -186,6 +186,9 @@ function enterFloor(L, F, how, silent) {
     var head = (how === "gatedown" || how === "start") ? "Уровень " + L + ", " + lev.name + ". " + lev.desc + " Этаж " + F + "." : "Уровень " + L + ", этаж " + F + ".";
     /* (2.0) мастерская этажа — с первого прихода: навигатор знает дорогу */
     if (firstVisit && fl.shop && how !== "respawn" && how !== "restart" && how !== "load") head += " На этаже мастерская: навигатор приведёт к станкам.";
+    /* (3.6) и химический стол — где он, с номером помещения */
+    var chl0 = firstVisit && how !== "respawn" && how !== "restart" && how !== "load" ? fl.objs.filter(function (o) { return o.type === "chemlab"; })[0] : null, rmC = chl0 && chl0.room >= 0 ? fl.rooms[chl0.room] : null;
+    if (rmC) head += " Химический стол — " + (rmC.num ? "помещение " + rmC.num + " («" + rmC.name + "»)" : "«" + rmC.name + "»") + ": навигатор знает дорогу.";
     if (how === "respawn") head = (G.checkpoint && G.checkpoint.cap ? "«Эхо» вернуло вас к капсуле восстановления, к которой вы привязаны." : "«Эхо» вернуло вас к началу уровня.") + " Уровень " + L + ", этаж " + F + ".";
     if (how === "restart") head = "«Эхо» вернуло вас к началу уровня: привязки к капсуле на этом уровне не было. Уровень " + L + ", этаж " + F + ".";
     say(head);
@@ -369,6 +372,7 @@ function noteText(it, L, F) {
   if (it.note === "secret") return LAB.secretNote(it.room, it.side, h);
   if (it.note === "depth" && LAB.depths) return LAB.depths.noteText(it, L, F);
   if (it.note === "agen" && LAB.agen) return LAB.agen.noteText(it); /* записки кабинетов: из частей, с людьми этажа (1.5) */
+  if (it.note === "lib" && LAB.library) return LAB.library.noteText(it); /* (3.6) книги, дела, газеты, записи — по ссылке на библиотеку */
   if (it.note === "riddle") { var rd = riddleFor(it.rid, it.L || L); return LAB.riddleNote ? LAB.riddleNote(rd, it.room, h) : { t: "Отгадка", x: "Замок помещения «" + it.room + "»: ответ — «" + rd.a[0] + "»." }; }
   return { t: "Записка", x: "Неразборчиво." };
 }
@@ -391,7 +395,7 @@ game.noteFull = noteFull;
    Всё найденное — записки, письма, документы и журналы компьютеров,
    фрагменты памяти — заносится в архив: название, автор, место, глубина,
    категория. Поиск — по глубине, категории, автору, первой букве. */
-var DOC_CATS = ["Личные записи", "Свидетельства", "Технические журналы", "Отчёты безопасности", "Исследовательские заметки", "Протоколы экспериментов", "Приказы", "Служебные записки", "Сообщения о поломках", "Переписка", "Записи переговоров", "Архивы персонала", "Секретные документы", "Противоречащие официальной версии", "Документы", "Журналы терминалов", "Загадки и испытания", "Повреждённые записи", "Фрагменты памяти комплекса", "Записи последовательностей"];
+var DOC_CATS = ["Личные записи", "Свидетельства", "Технические журналы", "Отчёты безопасности", "Исследовательские заметки", "Протоколы экспериментов", "Приказы", "Служебные записки", "Сообщения о поломках", "Переписка", "Записи переговоров", "Архивы персонала", "Секретные документы", "Противоречащие официальной версии", "Документы", "Журналы терминалов", "Загадки и испытания", "Повреждённые записи", "Фрагменты памяти комплекса", "Записи последовательностей", "Книги", "Документы архива", "Газеты", "Магнитофонные записи", "Дневники", "Микрофильмы", "Музейные таблички", "Лабораторные журналы"];
 game.DOC_CATS = DOC_CATS;
 function docCat(src, nt) {
   var k = src && src.note, a = String((nt && nt.a) || "").toLowerCase(), dk = src && src.dk;
@@ -1621,6 +1625,8 @@ function doorMenu(d, dir) {
     if (lk && why && lk.type === "rubble" && LAB.rubble && LAB.chem && LAB.chem.blastOk()) items.push({ label: "Подорвать завал подрывным зарядом: шесть секунд, отойдите; слышно на весь этаж", fn: function () { LAB.rubble.blastDoor(d); } });
     /* (3.0) термит прожигает замок под ключ, код, пропуск и блокировку охраны — громко */
     if (lk && why && ["key", "card", "code", "lockdown"].indexOf(lk.type) >= 0 && LAB.chem && LAB.chem.thermiteOk()) items.push({ label: "Прожечь замок термитом. Громко: ОКО услышит", fn: function () { LAB.chem.burnDoor(d, function () { CUR.fs.doors[d.id] = 1; openDoor(d); }); } });
+    /* (3.6) кислотная паста — тихо, полминуты; блокировку охраны (электроника) паста не берёт */
+    if (lk && why && ["key", "card", "code"].indexOf(lk.type) >= 0 && LAB.chem && LAB.chem.pasteOk && LAB.chem.pasteOk()) items.push({ label: "Разъесть замок кислотной пастой. Тихо, полминуты", fn: function () { LAB.chem.pasteDoor(d, function () { CUR.fs.doors[d.id] = 1; openDoor(d); }); } });
     /* отмычка под цвет помещения (1.6): под ключ, код, пропуск и блокировку охраны */
     if (lk && why && ["key", "card", "code", "lockdown"].indexOf(lk.type) >= 0) {
       var pk0 = pickFor(d), havePk = G.inv[pk0] || 0;
@@ -1661,9 +1667,12 @@ game.askRiddle = askRiddle;
 function logicDoor(d) {
   UIx("closeAll");
   if (!LAB.puzzles) { say("Замок молчит."); return; }
-  LAB.puzzles.open(d.lock.kind, d.lock.seed, function (ok) {
+  /* (3.6) попытки кончились — замок сменит задачу: та же задача снова дала бы попытки без конца */
+  var ln = CUR.fs.lockN = CUR.fs.lockN || {};
+  LAB.puzzles.open(d.lock.kind, d.lock.seed + 7919 * (ln[d.id] || 0), function (ok, away) {
+    if (!ok && away) return; /* просто отошли: задача ждёт */
     if (ok) { A("play", "code_ok"); CUR.fs.doors[d.id] = 1; openDoor(d); sayq("Замок принял решение. Дверь открыта."); gainXP(14 + 8 * (d.lock.diff || 0)); }
-    else { A("play", "term_err"); sayq("Замок не принял решение: можно подойти снова."); if (LAB.combat) LAB.combat.noise(3); }
+    else { ln[d.id] = (ln[d.id] || 0) + 1; A("play", "term_err"); sayq("Замок не принял решение и сменил задачу: можно подойти снова."); if (LAB.combat) LAB.combat.noise(3); }
     if (LAB.oko && LAB.oko.react) LAB.oko.react(ok ? "puzzle_ok" : "puzzle_fail");
   }, { title: "Логический замок", diff: d.lock.diff });
 }
@@ -1903,10 +1912,16 @@ function puzzleMenu(o) {
   var dw = o.diff != null && LAB.puzzles && LAB.puzzles.hasDiff && LAB.puzzles.hasDiff(o.kind) ? ", " + ["простая", "средняя", "сложная"][o.diff] : "";
   UIx("menu", "Стенд испытаний: " + (kinds[o.kind] || "головоломка") + dw, [
     { label: "Пройти испытание", fn: function () {
-      var done = function (ok) {
+      var done = function (ok, away) {
         if (st.solved) return; /* (3.5) награда стенда — один раз */
+        if (!ok && away) return; /* (3.6) просто отошли от задачи: не провал */
         if (LAB.oko && LAB.oko.react) LAB.oko.react(ok ? "puzzle_ok" : "puzzle_fail");
-        if (!ok) { A("play", "term_err"); say("Стенд гаснет и снова загорается: можно попробовать ещё раз."); return; }
+        /* (3.6) попытки кончились — у стенда новая задача того же вида */
+        if (!ok) {
+          var fresh = !!(LAB.puzzles && LAB.puzzles.has(o.kind)); /* задача окна (puzzles.js) — по зерну стенда: новое зерно, новая задача */
+          if (fresh) st.pzN = (st.pzN || 0) + 1;
+          A("play", "term_err"); say(fresh ? "Стенд гаснет и снова загорается — с новой задачей: можно попробовать ещё раз." : "Стенд гаснет и снова загорается: можно попробовать ещё раз."); return;
+        }
         st.solved = true; A("play", "term_ok"); LAB.UI.fanfare(); gainXP(18 + 10 * (o.diff || 0)); checkQuests();
         var loot = (o.loot || []).slice(); loot.forEach(function (it, k) { if (!it.id) it.id = o.id + "-p" + k; });
         /* (2.0) за среднюю и сложную задачу — премия кредитами */
@@ -1920,7 +1935,7 @@ function puzzleMenu(o) {
       if (o.kind === "sort") LAB.mini.sortTones(4 + hard, done, { title: "Настройка частот" });
       else if (o.kind === "relays") LAB.mini.relays(4 + hard, done, { title: "Схема реле", seed: o.seed });
       else if (o.kind === "bulls") LAB.mini.bulls(3 + (hard >= 2 ? 1 : 0), done, { title: "Подбор ключа" });
-      else if (LAB.puzzles && LAB.puzzles.has(o.kind)) LAB.puzzles.open(o.kind, o.seed || 1, done, { title: "Стенд испытаний", diff: o.diff });
+      else if (LAB.puzzles && LAB.puzzles.has(o.kind)) LAB.puzzles.open(o.kind, (o.seed || 1) + 7919 * (st.pzN || 0), done, { title: "Стенд испытаний", diff: o.diff });
       else askRiddle(riddleFor(o.seed || 1, G.L), "Загадка стенда", done);
     } },
     { label: "Осмотреть", fn: function () { say(LAB.OBJ.puzzle.desc); } }
@@ -2575,6 +2590,7 @@ function containerMenu(o) {
     if (sn) items.push({ label: "Перечитать записку с кодом", keep: true, fn: function () { say(noteFull(sn).x || sn.t, { read: true }); } });
     /* (3.0) термит прожигает и сейф: громко, а жар портит часть бумаг и кредитов */
     if (LAB.chem && LAB.chem.thermiteOk()) items.push({ label: "Прожечь замок сейфа термитом. Громко, часть бумаг сгорит", fn: function () { LAB.chem.burnSafe(o, function () { openContainer(o); }); } });
+    if (LAB.chem && LAB.chem.pasteOk && LAB.chem.pasteOk()) items.push({ label: "Разъесть замок сейфа кислотной пастой. Тихо, бумаги целы", fn: function () { LAB.chem.pasteSafe(o, function () { openContainer(o); }); } });
   } else if (o.type === "locker" && o.locked && !st.forced) {
     items.push({ label: "Вскрыть шкафчик силой", fn: function () {
       var hasBar = G.weapons.some(function (w) { return w.base === "crowbar"; });
@@ -2943,6 +2959,8 @@ function navTargets() {
   if (down) list.push({ n: down.type === "stairs_down" ? (stairBlocked(down) ? "лестница вниз (завалена)" : "лестница вниз") : down.type === "gate_down" ? "гермошлюз на уровень ниже" : "пульт реактора", o: down, main: true });
   /* (3.6) цели поручений на этом этаже: заказчик рассказал, где они */
   if (Q()) Q().navTargets().forEach(function (t) { list.push(t); });
+  /* (3.6) книжный шкаф, выбранный в библиотечном каталоге */
+  if (LAB.library) LAB.library.navTargets().forEach(function (t) { list.push(t); });
   if (el && known(el)) list.push({ n: "лифт этажей", o: el });
   if (up && known(up)) list.push({ n: "лестница вверх", o: up });
   var gc = floorItems().filter(function (it) { return it.kind === "gatepass" && CUR.seen && CUR.seen[idx(it.x, it.y)]; })[0];
@@ -2953,6 +2971,8 @@ function navTargets() {
   var wb = nearestObj(["workbench"], true), shop = shopObj();
   if (!wb && shop) list.splice(1, 0, { n: "станки мастерской", o: shop, main: true });
   else if (wb) list.splice(wb === shop ? 1 : list.length, 0, { n: "мастерская", o: wb });
+  /* (3.6, жалобы игроков) химический стол — «Эхо» слышит вытяжку с прибытия: ведёт постепенно, а с картой — до места */
+  var chl = nearestObj(["chemlab"], false); if (chl) list.push({ n: "химический стол" + (chl.room >= 0 && CUR.fl.rooms[chl.room] && CUR.fl.rooms[chl.room].num ? ", помещение " + CUR.fl.rooms[chl.room].num : ""), o: chl, main: true });
   var cap = findObj("capsule"); if (cap && known(cap)) list.push({ n: "капсула восстановления", o: cap });
   var t = nearestObj(["terminal"], true); if (t) list.push({ n: "ближайший терминал", o: t });
   var m = nearestObj(["magnetron"], true); if (m && CUR.fl.needPower && !CUR.fs.power) list.push({ n: "магнетронная установка", o: m });
@@ -3565,6 +3585,7 @@ function loadSlot(n, fromBak) {
     game.entered = true;
     UIx("showGame");
     var how = G.relocate ? (G.L === 1 && G.F === 1 ? "start" : (G.F === 1 ? "gatedown" : "down")) : "load";
+    var moved = !!G.relocate; /* (3.6) этажи прежней записи построены заново — сказать после загрузки */
     G.relocate = false;
     enterFloor(G.L, G.F, how, true);
   } catch (e) {
@@ -3582,6 +3603,7 @@ function loadSlot(n, fromBak) {
   autosave();
   var lev = LAB.LEVELS[G.L];
   say("Игра загружена. Уровень " + G.L + ", " + lev.name + ", этаж " + G.F + ". Здоровье " + G.hp + " из " + G.hpMax + ". " + weaponLine(curWeapon()) + ".");
+  if (moved) sayq("Этажи комплекса перестроены: помещения стали просторнее, обстановки в них больше. Вы у входа на свой этаж; уровень, оружие, броня, вещи, кредиты и пропуска — при вас, поручения выживших сняты.");
   roomCheck(true);
   return true;
 }
@@ -3632,6 +3654,9 @@ function migrate(g) {
        главное остаётся; выжившие на новых этажах попросят о своём */
     g.quests = (g.quests || []).filter(function (q) { return q && q.type === "main"; });
     g.givers = {}; /* (3.6) и счёт сделанного у заказчиков: на новых этажах — новые люди */
+    /* (3.6) награды, что ждали у выживших прежних этажей, — сразу в рюкзак: тех людей там больше нет */
+    (g.pickups || []).forEach(function (p) { (p.gifts || []).forEach(function (it) { if (it.kind === "ammo") { if (!g.ammo) g.ammo = {}; g.ammo[it.ammo] = (g.ammo[it.ammo] || 0) + (it.n || 1); } else if (it.kind === "item" && it.item) { if (!g.inv) g.inv = {}; g.inv[it.item] = (g.inv[it.item] || 0) + (it.n || 1); } }); });
+    g.pickups = [];
     g.worldV = WORLD_V; g.relocate = true;
   }
   return g;

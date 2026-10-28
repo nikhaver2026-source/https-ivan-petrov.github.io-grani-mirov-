@@ -983,6 +983,8 @@ function questsItems() {
   /* (3.5) поручений сразу — не больше трёх; счёт — первой строкой после главного */
   var head = act.length ? "Взятых поручений — " + act.length + " из " + cap + "." + (act.length >= cap ? " Новых не дадут, пока одно не сдано или от него не отказались." : "") : "Поручений нет. Выжившие сами просят о помощи — спросите их; больше " + cap + " сразу не взять, а каждая следующая просьба того же человека труднее прежней.";
   items.push({ label: head, keep: true, fn: function () { say(head); } });
+  /* (3.6) награды за поручения, сданные по связи: что ждёт, у кого и где */
+  if (LAB.quests && LAB.quests.pickupLines) LAB.quests.pickupLines().forEach(function (t) { items.push({ label: t, keep: true, fn: function () { say(t); } }); });
   /* (3.6) строка — что сейчас делать и чем кончится; выбор — всё поручение: шаги с отметками, условия */
   act.forEach(function (q) {
     var Q = LAB.quests;

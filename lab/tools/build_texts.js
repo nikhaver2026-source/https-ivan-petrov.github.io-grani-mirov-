@@ -65,3 +65,8 @@ const F = {}, N = {};
 fs.readdirSync(SRC).filter((f) => /^frag_[KPCOMI]\.json$/.test(f)).sort().forEach((f) => { const d = read(f); const e = d.era; delete d.era; F[e] = d; });
 fs.readdirSync(SRC).filter((f) => /^notes_[A-Z]+\.json$/.test(f)).sort().forEach((f) => { [].concat(read(f)).forEach((d) => { const e = d.era; delete d.era; N[e] = d; }); });
 write("annex_frag.js", HDR("подробности помещений, следы хозяев, состояния, износ вещей и части записок по глубинам"), "LAB.ANNEX_F = " + fmt(F) + ";\nLAB.ANNEX_N = " + fmt(N) + ";");
+
+/* ── (3.6) библиотека: книги, документы, газеты, записи, дневники, микрофильмы, таблички, журналы ── */
+const LIB = [];
+fs.readdirSync(SRC).filter((f) => /^lib_.*\.json$/.test(f)).sort().forEach((f) => { (read(f).items || []).forEach((q) => LIB.push(q)); });
+write("library_texts.js", HDR("книги, документы, газеты, записи магнитофонов, дневники, микрофильмы, таблички витрин, лабораторные журналы, этикетки препаратов, карточки вивария и фотографии"), "LAB.LIB = { items: " + fmt(LIB) + " };");

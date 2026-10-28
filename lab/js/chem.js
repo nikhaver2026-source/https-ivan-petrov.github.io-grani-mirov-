@@ -29,6 +29,12 @@
    МОДИФИКАЦИИ СОСТАВА (добавки при синтезе): продлённое действие
    (стабилизатор), усиленное (активатор), без побочного действия (сорбент),
    катализатор поднимает сорт. Мутагенное сырьё даёт состав «на мутагене».
+   (3.6) РЕАКТИВЫ ШКАФОВ: перекись, нашатырь, хлорка, сода, ляпис, йод — для
+   работы руками у стола (chemlab.js), проб, тайнописи и фотодела; новые
+   составы: кислотная паста для замков, щелочной аэрозоль против тумана,
+   коррозионная колба против машин, нюхательная соль, антисептик,
+   проявитель тайнописи, фотопроявитель и фиксаж. Стол — на каждом этаже,
+   навигатор слышит вытяжку.
    ════════════════════════════════════════════════════════════════════ */
 (function () {
 "use strict";
@@ -46,6 +52,7 @@ function low(s) { s = String(s || ""); return s.charAt(0).toLowerCase() + s.slic
 function pl(n, a, b, c) { return gm().plural(n, a, b, c); }
 function h32(s) { return LAB.hash32(String(s)) >>> 0; }
 function dk() { return LAB.dk ? LAB.dk() : {}; }
+function nowMin() { var g = G(); return (g.day || 0) * 1440 + (g.min || 0); }
 
 /* ════════ СЫРЬЁ: семейства и сорта ════════
    org — ткань твари: в тумане насыщается мутагеном. one — без сортов. */
@@ -71,7 +78,14 @@ var FAM = {
   c_ecto:       { n: ["Аномальная взвесь", "Сгущённая взвесь", "Кристаллы взвеси"], icon: "🌫️", depth: 6, price: 50, br: "bio", desc: "Светящаяся взвесь аномалий: свойства меняет, пока на неё смотрят.", src: "аномалии и установки глубин" },
   c_cond:       { n: ["Мутагенный конденсат", "Концентрат мутагена", "Чистый мутаген"], icon: "🟣", depth: 2, price: 18, br: "bio", desc: "Капли мутагена, осевшие из тумана: светятся в темноте. Из него делают антимутаген и всё, что с мутагеном спорит.", src: "помещения с мутагенным туманом; вывод мутагена из тканей щёлочью; твари «Колыбели» и глубже" },
   c_stab:       { n: ["Стабилизатор"], one: 1, icon: "⚖️", depth: 3, price: 16, br: "pharm", desc: "Добавка к синтезу: состав действует вдвое дольше.", src: "склады химии с третьего уровня; соли со щёлочью и растворителем; воск улья" },
-  c_activ:      { n: ["Активатор"], one: 1, icon: "🔆", depth: 5, price: 20, br: "pharm", desc: "Добавка к синтезу: состав действует на треть сильнее, но и побочное действие сильнее.", src: "склады химии с пятого уровня; железа с электролитом и растворителем" }
+  c_activ:      { n: ["Активатор"], one: 1, icon: "🔆", depth: 5, price: 20, br: "pharm", desc: "Добавка к синтезу: состав действует на треть сильнее, но и побочное действие сильнее.", src: "склады химии с пятого уровня; железа с электролитом и растворителем" },
+  /* (3.6) реактивы шкафов: для работы руками, проб, тайнописи и фотодела */
+  c_perox:      { n: ["Перекись"], one: 1, icon: "🫧", depth: 1, price: 6, br: "pharm", desc: "Раствор перекиси в тёмной склянке: шипит на ранах и пенится на крови. Окислитель — подальше от огня и горючего.", src: "медпункты, лаборатории и шкафы с реактивами" },
+  c_ammonia:    { n: ["Нашатырь"], one: 1, icon: "🧴", depth: 1, price: 5, br: "pharm", desc: "Нашатырный спирт: резкий запах приводит в чувство. С хлоркой не смешивать — ядовитые пары.", src: "медпункты, прачечные и шкафы с реактивами" },
+  c_bleach:     { n: ["Хлорка"], one: 1, icon: "🪣", depth: 1, price: 4, br: "tox", desc: "Хлорная известь для дезинфекции: пахнет бассейном. С кислотой и с нашатырём даёт ядовитый газ — их никогда не смешивают.", src: "прачечные, санпропускники, склады и шкафы с реактивами" },
+  c_soda:       { n: ["Сода"], one: 1, icon: "🥄", depth: 1, price: 3, br: "tox", desc: "Пищевая сода — мягкая щёлочь: с кислотой шипит и гасит её. Основа фиксажа.", src: "кухни, медпункты, склады и шкафы с реактивами" },
+  c_silver:     { n: ["Ляпис"], one: 1, icon: "✏️", depth: 1, price: 14, br: "energy", desc: "Нитрат серебра в карандаше: проба на соли и основа фотопроявителя. Пятнает пальцы чёрным.", src: "фотолаборатории, медпункты и шкафы с реактивами" },
+  c_iodine:     { n: ["Кристаллический йод"], one: 1, icon: "🟣", depth: 1, price: 10, br: "tox", desc: "Тёмные кристаллы в притёртой склянке: при нагреве дают фиолетовые пары, на которых проступает тайнопись.", src: "лаборатории, медпункты и шкафы с реактивами" }
 };
 var FAM_IDS = Object.keys(FAM);
 var GRADE_W = [null, "технический сорт", "очищенный сорт", "особая чистота"];
@@ -140,8 +154,21 @@ var PROD = {
   c_bait:      { n: "Феромонная приманка", icon: "🍖", kind: "use", br: "bio", ce: "bait", price: 30, depth: 1, mods: ["long"], desc: "Бросьте — твари поблизости пойдут на запах, а вы в другую сторону. Машинам всё равно." },
   c_culture:   { n: "Культура регенерации", icon: "🧫", kind: "use", cat: "med", br: "bio", ce: "regen2", price: 90, depth: 4, mods: ["long", "strong"], mut: 1, desc: "Две с половиной минуты здоровье понемногу возвращается — до сотни." },
   c_mutagen:   { n: "Мутагенный стимулятор", icon: "🧬", kind: "use", cat: "med", br: "bio", price: 80, depth: 5, mods: ["long", "strong", "clean"], mut: 1, mutAdd: 10, desc: "Гормоны тварей на конденсате мутагена: здоровье плюс 40, энергия плюс 30 и ускорение. Токсины плюс 25, мутация плюс 10.", fx: { heal: 40, en: 30, haste: 40, tox: 25 } },
-  c_ectoserum: { n: "Сыворотка из взвеси", icon: "✨", kind: "use", cat: "med", br: "bio", price: 160, depth: 6, mods: ["strong"], desc: "Здоровье плюс 150, снимает отравление и кровотечение, нейронагрузку и токсины, энергия плюс 50, мутация минус десять.", fx: { heal: 150, cure: true, en: 50, neuro: -50, detox: 50, stopBleed: true }, mutCut: 10 }
+  c_ectoserum: { n: "Сыворотка из взвеси", icon: "✨", kind: "use", cat: "med", br: "bio", price: 160, depth: 6, mods: ["strong"], desc: "Здоровье плюс 150, снимает отравление и кровотечение, нейронагрузку и токсины, энергия плюс 50, мутация минус десять.", fx: { heal: 150, cure: true, en: 50, neuro: -50, detox: 50, stopBleed: true }, mutCut: 10 },
+  /* (3.6) работа руками: составы, которым учит лаборатория */
+  c_lockpaste: { n: "Кислотная паста", icon: "🟡", kind: "use", br: "tox", ce: "lockpaste", price: 60, depth: 2, mods: [], desc: "Густая кислотная паста в тюбике: разъедает механизм замка двери или сейфа — тихо, за полминуты. ОКО ничего не услышит. Встаньте у запертой двери или сейфа." },
+  c_fogspray:  { n: "Щелочной аэрозоль", icon: "💨", kind: "use", br: "tox", ce: "fogspray", price: 45, depth: 2, mods: ["long"], desc: "Баллон щелочного раствора: распылите в помещении с мутагенным туманом — мутаген осядет, и четверть часа туман не вернётся." },
+  c_corrode:   { n: "Коррозионная колба", icon: "🧫", kind: "throw", br: "tox", price: 55, depth: 2, mods: ["long", "strong"], desc: "Солёная кислота в тонком стекле: на шаг вокруг машины ржавеют на глазах — броня вдвое слабее, ход вязнет. Тварям почти не вредит.",
+    gren: { dmg: 4, r: 1, dt: "acid", corrode: 1, slow: 6, self: false, range: 5, fuse: 800, loud: 4 } },
+  c_smelling:  { n: "Нюхательная соль", icon: "🧂", kind: "use", cat: "med", br: "pharm", ce: "smelling", price: 25, depth: 1, mods: [], desc: "Нашатырь на соли: резкий запах приводит в чувство — снимает оглушение и вязкость в ногах, нейронагрузка минус десять, бодрость плюс пятнадцать." },
+  c_antisept:  { n: "Антисептический раствор", icon: "🫧", kind: "use", cat: "med", br: "pharm", ce: "antisept", price: 25, depth: 1, mods: ["strong"], desc: "Разведённая перекись: промыть раны — кровотечение останавливается, клещ-кровосос отваливается, здоровье плюс восемь." },
+  c_reveal:    { n: "Проявитель тайнописи", icon: "🖌️", kind: "use", br: "tox", ce: "reveal", price: 40, depth: 1, mods: [], desc: "Йод на растворителе во флаконе с кисточкой: проводят по документу — проступает то, что написано между строк симпатическими чернилами." },
+  c_devel:     { n: "Фотопроявитель", icon: "🧴", kind: "use", br: "energy", ce: "devel", price: 30, depth: 1, mods: [], desc: "Проявитель на серебре: с ним и с фиксажем у химического стола проявляют найденные фотоплёнки." },
+  c_fixer:     { n: "Фиксаж", icon: "🧴", kind: "use", br: "energy", ce: "fixer", price: 20, depth: 1, mods: [], desc: "Закрепитель для плёнки: без него проявленные кадры чернеют на свету." }
 };
+/* (3.6) плёнка и отчёт анализа — просто вещи */
+if (!LAB.ITEMS.film) LAB.ITEMS.film = { n: "Фотоплёнка", icon: "🎞️", kind: "part", cat: "chem", price: 15, depth: 1, desc: "Катушка в светонепроницаемой кассете: отснятая, но не проявленная. Проявить её можно у химического стола — нужны фотопроявитель и фиксаж." };
+if (!LAB.ITEMS.c_report) LAB.ITEMS.c_report = { n: "Отчёт об анализе ткани", icon: "📋", kind: "part", cat: "chem", price: 40, depth: 1, desc: "Записи анализа ткани с химического стола: медики, генетики и лаборанты среди выживших платят за них хорошо — подойдите и отдайте." };
 var MOD = {
   long:   { n: "продлённого действия", add: "c_stab", d: "действует вдвое дольше" },
   strong: { n: "усиленного действия", add: "c_activ", d: "на треть сильнее, но и побочное действие сильнее" },
@@ -295,7 +322,16 @@ var RC = [
   { id: "b_culture", out: "c_culture", br: "bio", lv: 3, st: 3, f: 1, need: { c_enzyme: 1, c_blood: 2, gel: 1 } },
   { id: "b_mutagen", out: "c_mutagen", br: "bio", lv: 4, st: 4, f: 1, need: { c_gland: 2, c_cond: 1, c_enzyme: 1 } },
   { id: "b_controlled", out: "c_controlled", br: "bio", lv: 4, st: 4, f: 1, minG: 2, need: { c_cond: 1, c_enzyme: 1, c_nerve: 1 } },
-  { id: "b_ectoserum", out: "c_ectoserum", br: "bio", lv: 5, st: 4, f: 1, minG: 2, need: { c_ecto: 1, c_enzyme: 1, c_blood: 2, gel: 2 } }
+  { id: "b_ectoserum", out: "c_ectoserum", br: "bio", lv: 5, st: 4, f: 1, minG: 2, need: { c_ecto: 1, c_enzyme: 1, c_blood: 2, gel: 2 } },
+  /* (3.6) лаборатория: эти рецептуры открываются и опытом у стола (chemlab.js) */
+  { id: "l_smelling", out: "c_smelling", br: "pharm", lv: 0, st: 1, need: { c_ammonia: 1, c_salt: 1 } },
+  { id: "l_antisept", out: "c_antisept", br: "pharm", lv: 0, st: 1, need: { c_perox: 1 } },
+  { id: "l_reveal", out: "c_reveal", br: "tox", lv: 1, st: 1, need: { c_iodine: 1, c_solvent: 1 } },
+  { id: "l_fogspray", out: "c_fogspray", br: "tox", lv: 1, st: 1, f: 1, need: { c_alkali: 2, c_solvent: 1 } },
+  { id: "l_lockpaste", out: "c_lockpaste", br: "tox", lv: 2, st: 1, f: 1, need: { c_acidc: 2, c_salt: 1, gel: 1 } },
+  { id: "l_corrode", out: "c_corrode", br: "tox", lv: 2, st: 2, f: 1, need: { c_acidc: 1, c_salt: 2, scrap: 1 } },
+  { id: "l_fixer", out: "c_fixer", br: "energy", lv: 0, st: 1, need: { c_salt: 2, c_soda: 1 } },
+  { id: "l_devel", out: "c_devel", br: "energy", lv: 1, st: 1, need: { c_silver: 1, c_alkali: 1 } }
 ];
 var RCBY = {};
 RC.forEach(function (rc) { RCBY[rc.id] = rc; });
@@ -416,11 +452,13 @@ function open(o) {
   A("play", "ev_glass");
   var s = station(o);
   menu(cap1(ST[s.tier].n) + ". Химик: ступень " + level(), rootItems(o), { keep: true, rebuild: function () { return rootItems(o); } });
-  if (!G().tut.chem) { G().tut.chem = 1; sayq("«Эхо»: химический стол. Сырьё — вещества лабораторий, жидкости машин и ткани тварей — превращается здесь в лекарства, яды, смазки, гранаты и сыворотки. У сырья три сорта чистоты; чем выше ступень химика и стола, тем чище и сильнее составы."); }
+  if (!G().tut.chem) { G().tut.chem = 1; sayq("«Эхо»: химический стол. Сырьё — вещества лабораторий, жидкости машин и ткани тварей — превращается здесь в лекарства, яды, смазки, гранаты и сыворотки. У сырья три сорта чистоты; чем выше ступень химика и стола, тем чище и сильнее составы. А руками, в пробирках и колбах, состав выходит на сорт чище — и так открываются новые рецептуры."); }
 }
 function rootItems(o) {
   var s = station(o), items = [{ label: stLine(s), info: true, keep: true, fn: function () { say(stLine(station(o))); } }];
   if (s.dirty) items.push({ label: units("c_solvent").length ? "Отмыть стол растворителем" : "Отмыть стол — нужен растворитель", fn: function () { clean(o); } });
+  /* (3.6) руками: пробирки, колбы, реактивы — реакции, пробы, открытия, тайнопись, плёнки, анализ ткани */
+  if (LAB.chemlab) { var busy = LAB.chemlab.busy(o); items.push({ label: "Работа руками: пробирки, колбы, реактивы" + (busy ? ". В посуде: " + busy : ""), fn: function () { LAB.chemlab.bench(o); } }); }
   BR_IDS.forEach(function (b) {
     var ready = RC.filter(function (rc) { return rc.br === b && outOk(rc) && !why(rc, s); }).length;
     items.push({ label: "Синтез: " + BR[b].n + ", ступень " + brLv(b) + (ready ? ". Можно сделать сейчас: " + ready : ""), fn: function () { brMenu(o, b); } });
@@ -724,7 +762,9 @@ function onBite(src) {
 var FOG_N = [null, "лёгкий", "густой", "плотный"], FOG_K = [0, 0.08, 0.18, 0.35];
 function roomOf() { var c = CUR(); if (!c || !c.fl || !G()) return null; var r = c.fl.room[G().y * LAB.W + G().x]; return r >= 0 ? c.fl.rooms[r] : null; }
 function vented(rm) { return !!(LAB.zones && LAB.zones.vented && LAB.zones.vented(rm)); } /* одна проверка на газ и туман — zones.js */
-function fogHere() { var rm = roomOf(); return rm && rm.fog && !vented(rm) ? rm.fog : 0; }
+/* (3.6) щелочной аэрозоль: туман осел — на время его в помещении нет (fs.fogOff) */
+function fogOffAt(rm) { var c = CUR(), fs = c && c.fs; return !!(fs && fs.fogOff && rm && fs.fogOff[rm.id] > nowMin()); }
+function fogHere() { var rm = roomOf(); return rm && rm.fog && !vented(rm) && !fogOffAt(rm) ? rm.fog : 0; }
 function armorChem() { var a = G().armor, d = a ? LAB.ARMORS[a.base] : null; return (d && d.res && d.res.chem) || 0; }
 function fogK() {
   var g = G();
@@ -738,10 +778,10 @@ function fogK() {
 }
 var fogKey = "", tickN = 0;
 function fogCheck(rm) {
-  var key = CUR().key + ":" + (rm && rm.fog && !vented(rm) ? rm.id : -1);
+  var key = CUR().key + ":" + (rm && rm.fog && !vented(rm) && !fogOffAt(rm) ? rm.id : -1);
   if (key === fogKey) return;
   var was = fogKey; fogKey = key;
-  if (!(rm && rm.fog && !vented(rm))) { if (was && was.split(":")[1] !== "-1" && was.split(":")[0] === CUR().key) sayq("Вы вышли из тумана." + (mut() >= 1 ? " " + mutLine() : "")); return; }
+  if (!(rm && rm.fog && !vented(rm) && !fogOffAt(rm))) { if (was && was.split(":")[1] !== "-1" && was.split(":")[0] === CUR().key) sayq("Вы вышли из тумана." + (mut() >= 1 ? " " + mutLine() : "")); return; }
   var k = fogK();
   sayq("Мутагенный туман, " + FOG_N[rm.fog] + ": воздух сладковатый, в горле першит." + (k <= 0 ? " Защита держит: мутация не растёт." : " Без защиты здесь копится мутация" + (rm.fog >= 2 ? ", а ткани в рюкзаке пропитываются мутагеном" : "") + ". Фильтр, респиратор, антитоксин, сыворотка адаптации или костюм химзащиты — спасут."));
   if (!G().tut.fog) { G().tut.fog = 1; gm().later(function () { sayq("«Эхо»: этот туман и превратил часть персонала в тварей. Он тяжелее воздуха и стекает вниз: глубже его больше. Вытяжка в помещении его выгоняет."); }, 2500); }
@@ -840,6 +880,26 @@ function use(id) {
       if (c0 >= 90) { say("Оружие и так в порядке: состояние " + Math.round(c0) + " из 100."); return false; }
       w.cond = Math.min(90, c0 + Math.round(20 * k.mag * potK("energy"))); msg = "Смазка легла ровно: состояние оружия " + Math.round(w.cond) + " из 100."; break;
     case "bait": return throwBait(id, k);
+    /* (3.6) составы лаборатории */
+    case "lockpaste": say("Пастой разъедают замок: встаньте у запертой двери или сейфа и выберите «Разъесть замок кислотной пастой»."); return false;
+    case "fogspray":
+      var rmF = roomOf();
+      if (!(rmF && rmF.fog && !vented(rmF))) { say("Здесь нет мутагенного тумана: аэрозоль нужен там, где воздух сладкий и першит в горле."); return false; }
+      if (fogOffAt(rmF)) { say("Туман здесь уже осел — аэрозоль пока не нужен."); return false; }
+      var fsF = CUR().fs, minsF = Math.round(15 * k.dur);
+      if (!fsF.fogOff) fsF.fogOff = {};
+      fsF.fogOff[rmF.id] = nowMin() + minsF; fogKey = "";
+      msg = "Аэрозоль шипит, сладкий воздух тяжелеет: мутаген оседает каплями на пол. " + minsF + " " + pl(minsF, "минуту", "минуты", "минут") + " туман сюда не вернётся."; break;
+    case "smelling":
+      g.st.slow = 0; g.st.deaf = 0;
+      if (gm().bodyApply) gm().bodyApply({ neuro: -10, wake: 15 }, []);
+      msg = "Резкий запах бьёт в нос — голова проясняется, ноги снова слушаются."; break;
+    case "antisept":
+      var hadP = g.st.parasite > 0, hh = Math.round(8 * k.mag * potK("pharm"));
+      g.st.bleed = 0; g.st.parasite = 0; g.hp = Math.min(g.hpMax, g.hp + hh);
+      msg = "Перекись шипит на ранах: кровь остановилась" + (hadP ? ", клещ-кровосос отвалился" : "") + ", здоровье плюс " + hh + "."; break;
+    case "reveal": return LAB.chemlab ? LAB.chemlab.revealMenu("item", id) : false;
+    case "devel": case "fixer": say("Фотопроявитель и фиксаж нужны у химического стола: «Работа руками» — «Проявить фотоплёнку»."); return false;
     case "thermite": say("Термит прожигает замки: встаньте у запертой двери или сейфа и выберите «Прожечь замок термитом»."); return false;
     case "blast": return LAB.rubble ? LAB.rubble.use(id) : false; /* (3.0) подрывной заряд — у завала (rubble.js) */
     default: return false;
@@ -915,6 +975,8 @@ function safeGrenades() { return rank("pyro") >= 2; }
 function radiusBonus(id) { var d = LAB.ITEMS[id]; return d && d.base && PROD[d.base] && rank("pyro") >= 3 ? 1 : 0; }
 /* Граната задела врага (combat.throwGrenade): ингибитор гасит мутаген в твари. */
 function grenHit(q, f) {
+  /* (3.6) коррозионная колба: машина ржавеет — броня вдвое слабее (один раз), ход вязнет (combat.js, q.slow) */
+  if (q.corrode && f.kind === "mech" && !f.dead && !f.rust) { f.rust = 1; f.arm = Math.max(0, Math.floor((f.arm || 0) / 2)); f.markT = Math.max(f.markT || 0, 6); }
   if (!q.inhibit || f.kind !== "bio" || f.dead || f.inhib) return;
   f.inhib = 1;
   f.dmg = Math.max(1, Math.round(f.dmg * 0.75));
@@ -954,6 +1016,29 @@ function burnSafe(o, openFn) {
   var lost = 0;
   if (o.loot && o.loot.length) o.loot = o.loot.filter(function (it) { if ((it.kind === "note" || it.kind === "credits") && Math.random() < 0.5) { lost++; return false; } return true; });
   say("Термит прожигает дверцу сейфа." + (lost ? " Жар испортил часть содержимого." : ""));
+  if (openFn) openFn();
+  return true;
+}
+
+/* ════════ (3.6) КИСЛОТНАЯ ПАСТА: тихо разъесть замок ════════
+   Двери под ключ, код или пропуск и сейфы: полминуты шипения — и механизм
+   рассыпается. В отличие от термита — тихо: ни машины, ни ОКО не слышат. */
+function pasteIds() { var g = G(); return Object.keys(g.inv).filter(function (k) { return g.inv[k] > 0 && (k === "c_lockpaste" || (PV[k] && PV[k].b === "c_lockpaste")); }); }
+function pasteOk() { return pasteIds().length > 0; }
+function usePaste() { var ids = pasteIds(); if (!ids.length) return false; var g = G(); g.inv[ids[0]]--; if (!g.inv[ids[0]]) delete g.inv[ids[0]]; gain("tox", 4); return true; }
+function pasteDoor(d, openFn) {
+  if (!usePaste()) return false;
+  A("play", "acid_sizzle");
+  if (gm().advanceTime) gm().advanceTime(1);
+  say("Вы выдавливаете пасту в скважину замка. Полминуты тихого шипения — и механизм рассыпается ржавой крошкой. Дверь открыта, и никто ничего не слышал.");
+  if (openFn) openFn();
+  return true;
+}
+function pasteSafe(o, openFn) {
+  if (!usePaste()) return false;
+  A("play", "acid_sizzle");
+  if (gm().advanceTime) gm().advanceTime(1);
+  say("Паста шипит в замочной скважине сейфа: ригели слабеют, дверца поддаётся. Тихо — и бумаги внутри целы.");
   if (openFn) openFn();
   return true;
 }
@@ -1006,12 +1091,13 @@ function drops(f, list, r, dk0) {
    мутагеном. Журнал с рецептурой — изредка. Свой поток случайностей. */
 var CHEM_ROOMS = { chem: 1, med: 1, bio: 1 };
 var POOL = {
-  chem: ["c_solvent", "c_salt", "c_acidc", "c_alkali", "c_solvent", "c_phosphor", "c_enzyme", "c_catalyst", "c_stab", "c_activ"],
-  med: ["c_salt", "c_solvent", "c_blood", "c_salt", "c_stab"],
+  chem: ["c_solvent", "c_salt", "c_acidc", "c_alkali", "c_solvent", "c_phosphor", "c_enzyme", "c_catalyst", "c_stab", "c_activ", "c_perox", "c_ammonia", "c_bleach", "c_soda", "c_silver", "c_iodine"],
+  med: ["c_salt", "c_solvent", "c_blood", "c_salt", "c_stab", "c_perox", "c_ammonia", "c_iodine"],
   bio: ["c_spores", "c_chitin", "c_gland", "c_venom", "c_enzyme", "c_blood"],
   parts: ["c_oil", "c_electrolyte", "c_coolant", "c_fuel", "c_oil"],
   tech: ["c_coolant", "c_electrolyte", "c_catalyst"],
-  food: ["c_salt"],
+  food: ["c_salt", "c_soda"],
+  home: ["c_bleach", "c_soda", "c_ammonia"],
   arms: ["c_fuel", "c_phosphor", "c_oil"]
 };
 var CONT = { crate: 1, locker: 1, desk: 1, cabinet: 1, shelf: 1, fridge: 1, suitlocker: 1 };
@@ -1045,12 +1131,24 @@ function place(ctx) {
     else if (s < NS && s !== ctx.U && !roomDef(rm).special) other.push(s);
   }
   r.shuffle(good); r.shuffle(other);
-  var placed = 0, want = r.chance(0.8) ? 1 + (r.chance(0.25) ? 1 : 0) : 0;
+  /* (3.6, жалобы игроков: «не могу найти химический стол») стол — на каждом этаже: сначала
+     большие лаборатории и медблоки, потом кабинеты того же назначения за незапертой дверью,
+     потом любое обычное помещение. Навигатор слышит вытяжку, «Эхо» называет помещение при входе */
+  var lockedR = {};
+  fl.doors.forEach(function (d) { if (d.lock && d.room != null) lockedR[d.room] = 1; });
+  var placed = 0, want = 1 + (r.chance(0.3) ? 1 : 0);
   var tryAt = function (list, isGood) {
     for (var i = 0; i < list.length && placed < want; i++) { if (ctx.addObj("chemlab", list[i], { good: isGood ? 1 : 0 })) placed++; }
   };
-  tryAt(good, true);
-  if (placed < want && r.chance(0.6)) tryAt(other, false);
+  tryAt(good.filter(function (rid) { return rid < NS && !lockedR[rid]; }), true);
+  tryAt(good.filter(function (rid) { return rid >= NS && !lockedR[rid]; }), true);
+  if (!placed) tryAt(other.filter(function (rid) { return !lockedR[rid]; }), false);
+  if (!placed) tryAt(good, true);
+  if (!placed) {
+    var spare = [];
+    for (s = 0; s < fl.rooms.length; s++) { var rmS = fl.rooms[s]; if (rmS && !rmS.hidden && s !== fl.secret && s !== ctx.U && !roomDef(rmS).special && !lockedR[s]) spare.push(s); }
+    tryAt(r.shuffle(spare), false);
+  }
   /* туман */
   var fp = fogPlan(L), fogRooms = [];
   if (fp && r.chance(fp.p)) {
@@ -1074,6 +1172,13 @@ function place(ctx) {
        Поток случайностей тот же. */
     if (o.type === "fridge" && !(CHEM_ROOMS[tg] && (FAM[fam].org || COLD_FAM[fam]))) return;
     o.loot.push(m);
+  });
+  /* (3.6) отснятые фотоплёнки — в фотолабораториях, лабораториях и медблоках (свой поток) */
+  var rfm = LAB.Rng(ctx.seed, "film36:" + L + ":" + F + ":" + ctx.attempt);
+  fl.objs.forEach(function (o) {
+    if (!CONT[o.type] || !o.loot || o.room == null || o.room < 0 || o.type === "fridge") return;
+    var rmo = fl.rooms[o.room], pf = rmo && /photo/.test(rmo.type || "") ? 0.5 : CHEM_ROOMS[roomTag(fl, o.room)] ? 0.08 : 0.015;
+    if (rfm.chance(pf)) o.loot.push({ kind: "item", item: "film", n: 1 });
   });
   /* склянки на полу лабораторий, конденсат в тумане */
   good.slice(0, 3).forEach(function (rid) { var pool = poolAt(roomTag(fl, rid), L); if (pool.length && r.chance(0.5)) ctx.addItem(mat(r.pick(pool), rid), rid); });
@@ -1107,6 +1212,10 @@ LAB.chem = {
   mut: mut, stage: stage, addMut: addMut, cutMut: cutMut, mutLine: mutLine, fogHere: fogHere, fogPlan: fogPlan, matId: matId, prodId: prodId, gradeAt: gradeAt,
   level: level, brLv: brLv, gain: gain, spec: spec, rank: rank, known: known, learn: learn, station: station,
   brew: function (id, o) { return brew(RCBY[id], o || null); }, forecast: function (id, o) { return forecast(RCBY[id], o ? station(o) : null); }, why: function (id, o) { return why(RCBY[id], o ? station(o) : null); },
-  opt: function () { return ch().opt; }
+  opt: function () { return ch().opt; },
+  /* (3.6) для работы руками (chemlab.js) */
+  units: units, useOne: useOne, gradeCap: gradeCap, stationCap: stationCap, outName: outName, outOk: outOk, give: give, RCBY: RCBY,
+  armorChem: armorChem, fogK: fogK, ch: ch, haveAdd: haveAdd, useAdd: useAdd, countOut: countOut, ST_N: ST,
+  pasteOk: pasteOk, usePaste: usePaste, pasteDoor: pasteDoor, pasteSafe: pasteSafe
 };
 })();

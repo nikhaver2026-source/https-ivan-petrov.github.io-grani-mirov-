@@ -48,8 +48,13 @@ function run(name, cond, build, cb) {
   };
   var menuItems = function () {
     var items = build(state, finish, fail, menuItems);
+    /* (3.6) неверный ответ окно задачи не закрывает: попытки считаются в нём же
+       (прежде окно закрывалось, и задача открывалась заново — с полными попытками) */
+    items.forEach(function (it) { if (it.keep == null) it.keep = true; });
     items.push({ label: "Условие ещё раз", keep: true, fn: function () { say(cond, { read: true }); } });
-    items.push({ label: "Отойти от задачи", fn: function () { if (!state.done) { state.done = true; say("Вы отходите. Задача ждёт."); if (cb) setTimeout(function () { cb(false); }, 30); } } });
+    /* (3.6) отойти — не провал: второй довод cb говорит, что игрок просто отошёл
+       (замок не шумит, ОКО не реагирует, задача ждёт прежняя) */
+    items.push({ label: "Отойти от задачи", fn: function () { if (!state.done) { state.done = true; say("Вы отходите. Задача ждёт."); if (cb) setTimeout(function () { cb(false, true); }, 30); } } });
     return items;
   };
   var open = function () { UIx("menu", name, menuItems(), { intro: "", rebuild: menuItems, puzzle: true }); };

@@ -195,16 +195,15 @@ var DETAIL = {
 function detailDeck(r, era) { var d = (DETAIL[era] || DETAIL.K).slice(); r.shuffle(d); return d; }
 
 LAB.annex = { ROOMS: ROOMS, eraOf: eraOf, loot: annexLoot, DETAIL: DETAIL };
-/* Сколько помещений вдоль одной стены: чаще около десяти, бывает шесть, бывает тринадцать. */
-var COUNT_W = { 5: 1, 6: 3, 7: 5, 8: 8, 9: 12, 10: 15, 11: 12, 12: 8, 13: 4 };
 LAB.annex.place = function (ctx) {
   var fl = ctx.fl, L = ctx.L, F = ctx.F;
   var r = LAB.Rng(ctx.seed, "annex:" + L + ":" + F + ":" + ctx.attempt);
   var era = eraOf(L), lev = LAB.LEVELS[L], secret = fl.secret, still = stillMap(fl);
   /* плотность уровня: где-то кабинеты теснятся, где-то стоят реже */
   var dens = 0.82 + 0.36 * LAB.Rng(ctx.seed, "adens:" + L).next();
-  /* (3.2) с третьего блока кабинеты шире и глубже, залы больше (world.js, GROW) */
-  var gw = LAB.floorGrow ? LAB.floorGrow(L) : null, aw0 = gw ? gw.aw[0] : 3, aw1 = gw ? gw.aw[1] : 5;
+  /* (3.6, просьба автора) кабинеты просторнее на всех глубинах: шире вдоль коридора, глубже,
+     залы — больше (world.js, SIZE); сколько их у стены — по средней ширине */
+  var sz = LAB.roomSize(L), aw0 = sz.aw[0], aw1 = sz.aw[1], minD = Math.max(4, sz.ad[0] - 1);
   /* 1. Ряды помещений вдоль стен коридоров */
   var spots = [], byCorr = {};
   fl.corrs.forEach(function (c) {
@@ -213,23 +212,22 @@ LAB.annex.place = function (ctx) {
     [0, 1].forEach(function (side) {
       var lo = end0 + 1, hi = end1 - 1, sp0 = hi - lo + 1;
       var capN = Math.floor((sp0 + 1) / (aw0 + 1));
-      var want = wing ? r.int(1, 3) : Math.round(parseInt(r.weighted(COUNT_W), 10) * dens);
+      var want = wing ? r.int(1, 2) : Math.round((sp0 + 1) / (sz.avg + 1) * (0.8 + 0.35 * r.next()) * dens);
       var n = Math.max(0, Math.min(capN, want));
       if (n <= 0) return;
       var widths = [], k;
       for (k = 0; k < n; k++) widths.push(aw0);
       var extra = sp0 - (aw0 * n + (n - 1)), guard = 0;
-      /* большой зал на полстены — если вдоль стены есть запас */
-      if (extra >= 5 && !wing && r.chance(0.4)) { var q0 = r.int(0, n - 1), add = Math.min(extra - 1, gw ? r.int(gw.hall[0], gw.hall[1]) - aw0 : r.int(3, 5)); widths[q0] += add; extra -= add; }
-      while (extra > 1 && guard++ < 60) { var q = r.int(0, n - 1); if (widths[q] < aw1) { widths[q]++; extra--; } }
+      /* большой зал — если вдоль стены есть запас */
+      if (extra >= 4 && !wing && r.chance(0.45)) { var q0 = r.int(0, n - 1), add = Math.min(extra - 1, r.int(sz.hall[0], sz.hall[1]) - aw0); if (add > 0) { widths[q0] += add; extra -= add; } }
+      while (extra > 1 && guard++ < 80) { var q = r.int(0, n - 1); if (widths[q] < aw1) { widths[q]++; extra--; } }
       var pos = lo + r.int(0, Math.max(0, extra));
       for (k = 0; k < n; k++) {
         var a0 = pos, a1 = pos + widths[k] - 1;
         pos = a1 + 2;
         if (a1 > hi) break;
-        var big = widths[k] >= (gw ? gw.hall[0] : 6), h = gw ? (big ? r.int(gw.ad[0] + 2, gw.ad[1] + 2) : r.int(gw.ad[0], gw.ad[1])) : big ? r.int(5, 7) : r.int(2, 6), g = null;
-        if (h === 2 && widths[k] > 3) h = 3;
-        for (var hh = h; hh >= 2 && !g; hh--) g = fits(fl, c, side, a0, a1, hh);
+        var big = widths[k] >= sz.hall[0], h = big ? r.int(sz.hd[0], sz.hd[1]) : r.int(sz.ad[0], sz.ad[1]), g = null;
+        for (var hh = h; hh >= minD && !g; hh--) g = fits(fl, c, side, a0, a1, hh);
         if (!g) continue;
         /* дверь: где-нибудь по ширине помещения, не у концов коридора, перед ней свободно */
         var cand = [];
@@ -503,6 +501,86 @@ function deepFx(r, era, rm, n, have, ctx) {
   }
   return put;
 }
+/* (3.6, просьба автора: «расширь помещения и добавь интерактивных объектов») Просторное
+   помещение наполняется по площади — вещами по его назначению: книжные шкафы,
+   архивные стеллажи, подшивки газет, каталоги, магнитофоны, аппараты для
+   микрофильмов, письменные столы с дневниками, шредеры, витрины, решётки
+   вентиляции, селекторы, ячейки хранения, почтовые ящики, лабораторные журналы,
+   кулеры (fixtures_data.js, действия — library.js) и то, на чём сидят и за чем
+   работают. Назначение — по виду, названию и описанию помещения. */
+var FLAVOR = [
+  [/library|reading|techlib|gardenlib|afterreading|fingerread|awlbooks|quietcell|библиот|читал|книг/, "lib"],
+  [/archive|registry|geoarchive|pressarc|invoices|forms|binding|storyarchive|copy|архив|картотек|подшив|накладн|бланк|копироваль/, "arch"],
+  [/school|daycare|nursery|класс|детск|учебн/, "school"],
+  [/memoryhall|uppermemory|stopclock|clockroots|музе|памят|экспонат/, "museum"],
+  [/mailroom|tubestation|courier|почт|курьер/, "mail"],
+  [/radiohut|arklink|voiceshop|soundlost|music|listen|songroom|songvault|echoroom|радиоруб|голос|звук|песен|музык/, "sound"],
+  /* (3.6) виварии и медблоки — свои: клетки, препараты, секционные столы, смотровые окна */
+  [/vivar|aquarium|feed|incub|hatch|вивари|инкубатор|кормоцех|аквариум/, "bio"],
+  [/medpost|firstaid|infirm|healer|medrec|physio|morgue|isolat|медпункт|медблок|лазарет|изолятор|морг|процедурн|амбулатор/, "med"],
+  [/lab|xray|radchem|gaslab|seismo|germlab|srcm|calib|photolab|dosim|herbarium|лаборат|рентген|сейсмо|поверочн|гербари/, "lab"],
+  [/office|shiftboss|\bhr\b|accounting|waiting|reception|inspect|clerkcell|nariad|dispatch|meeting|typing|complaints|inquiry|numbers|thanks|steps|rootdesk|кабинет|приёмн|отдел|бухгалт|нарядн|диспетч|канцеляр|машбюро|справочн|переговорн/, "office"],
+  [/guardbooth|gatehouse|watchbooth|охран|сторож|будк|караул/, "sec"],
+  [/club|chess|tearoom|teahouse|relax|smoke|buffet|kitchenette|restroom|клуб|чайн|курилк|буфет|отдых|уголок/, "rest"],
+  [/settlerroom|lockers|newcomers|lastlodging|drillhut|dryroom|mosscabin|поселен|раздевалк|ночлег|каморк|каюта|жил/, "live"],
+  [/store|stock|suitstore|lostfound|coldstore|pantry|upstore|склад|кладов|находок/, "store"]
+];
+var FILL = {
+  lib: { bookcase: 3, catalog: 1, newspapers: 1, diarydesk: 1, armchair: 1, table: 0.6, lamp: 0.5 },
+  arch: { archive: 3, shredder: 1, microfilm: 0.8, catalog: 0.4, table: 0.6 },
+  school: { bookcase: 1.5, labbook: 0.4, diarydesk: 0.5, table: 0.8, toys: 0.5, drawings: 0.5, blackboard: 0.5, photoboard: 0.5 },
+  museum: { vitrine: 3, newspapers: 0.5, bench: 0.8, memorial: 0.4, photoboard: 1, specimens: 0.5 },
+  mail: { mailboxes: 3, deposit: 1, archive: 0.6 },
+  sound: { recorder: 3, bookcase: 0.5, newspapers: 0.5, armchair: 0.5 },
+  lab: { labbook: 2, bookcase: 0.8, microfilm: 0.4, cooler: 0.6, archive: 0.4, labfiles: 1.2, reagents: 1.2, specimens: 0.8, photoboard: 0.5, obswindow: 0.3, chemsafe: 0.2, acidjar: 0.12 },
+  bio: { cages: 2.5, specimens: 1.5, labbook: 1, labfiles: 0.6, obswindow: 0.6, reagents: 0.4, photoboard: 0.3, cooler: 0.3 },
+  med: { specimens: 0.6, autopsy: 0.5, obswindow: 0.6, labfiles: 0.5, reagents: 0.8, labbook: 0.5, cooler: 0.5, newspapers: 0.4 },
+  office: { diarydesk: 2, shredder: 1, bookcase: 0.8, archive: 0.7, intercom: 0.6, cooler: 0.7, newspapers: 0.5, armchair: 0.5, plants: 0.5, photoboard: 0.4, labfiles: 0.2 },
+  sec: { intercom: 2, grate: 1, newspapers: 0.7, deposit: 0.6 },
+  rest: { newspapers: 2, bookcase: 0.8, vitrine: 0.4, cooler: 0.7, armchair: 1, sofa: 0.7, plants: 0.6 },
+  live: { diarydesk: 1.5, bookcase: 0.6, newspapers: 0.6, grate: 0.6, nightstand: 0.8 },
+  store: { deposit: 0.8, grate: 1, archive: 0.4, mailboxes: 0.3, reagents: 0.4 },
+  hall: { bench: 1, plants: 0.7, newspapers: 0.8, cooler: 0.6, intercom: 0.5, grate: 0.6, poster: 0.6 },
+  any: { grate: 0.6, cooler: 0.3, newspapers: 0.25, bookcase: 0.2, diarydesk: 0.25, archive: 0.1, labbook: 0.08, recorder: 0.08, vitrine: 0.06, deposit: 0.05, chair: 0.4, table: 0.25, photoboard: 0.05, reagents: 0.04, specimens: 0.03 }
+};
+/* чего на глубине быть не может: в поселении «Колыбели» нет кулеров и шредеров, у садовников «Истока» — селекторов */
+var FILL_BAN = { C: { microfilm: 1, shredder: 1, intercom: 1, cooler: 1, deposit: 1, mailboxes: 1, chemsafe: 1 }, I: { shredder: 1, intercom: 1, cooler: 1, deposit: 1, microfilm: 1, mailboxes: 1, chemsafe: 1 }, P: { shredder: 1, cooler: 1 } };
+/* что может стоять в помещении не одно */
+var FILL_MANY = { bookcase: 3, archive: 3, vitrine: 3, chair: 2, table: 2, armchair: 2, bench: 2, labbook: 2, recorder: 2, cages: 2, specimens: 2, labfiles: 2, reagents: 2 };
+/* сколько таких вещей на этаже — в помещениях без своего назначения (у библиотек и архивов — без предела) */
+var FILL_CAP = { bookcase: 6, archive: 4, diarydesk: 8, newspapers: 6, recorder: 3, vitrine: 3, deposit: 3, mailboxes: 2, shredder: 3, microfilm: 2, labbook: 4, intercom: 4, catalog: 0, cooler: 8, grate: 14,
+  specimens: 3, cages: 2, photoboard: 3, autopsy: 1, obswindow: 2, labfiles: 3, reagents: 3, chemsafe: 1, acidjar: 1 };
+/* назначение — по виду и названию помещения (описания говорят о книгах и там, где их одна полка) */
+function flavorOf(rm, def) {
+  var txt = ((rm.type || "") + " " + (rm.name || "") + " " + (def && def.n || "")).toLowerCase();
+  for (var i = 0; i < FLAVOR.length; i++) if (FLAVOR[i][0].test(txt)) return FLAVOR[i][1];
+  return "any";
+}
+LAB.annex.flavor = function (rm) { return rm ? flavorOf(rm, (LAB.ROOMS || {})[rm.type] || null) : "any"; };
+/* own — вещи самого помещения (annex_rooms.js и вариант): они ставятся охотнее; мелочь глубины — реже */
+function fillRoom(ctx, r, rm, fl0, n, have, era, own) {
+  var ban = FILL_BAN[era] || {}, pool = {}, k, put = 0, cnt = {}, fc = ctx.fl.fillN = ctx.fl.fillN || {};
+  var base = FILL[fl0] || FILL.any, plain = fl0 === "any" || fl0 === "hall";
+  for (k in base) pool[k] = base[k];
+  for (k in (own || {})) if (pool[k] == null) pool[k] = 0.8;
+  (GENERIC[era] || GENERIC.K).forEach(function (g) { if (pool[g] == null) pool[g] = 0.3; });
+  ctx.fl.objs.forEach(function (o) { if (o.room === rm.id && o.type === "fx") cnt[o.fx] = (cnt[o.fx] || 0) + 1; });
+  for (var i = 0, guard = 0; i < n && guard < n * 4; guard++) {
+    var live = {};
+    for (k in pool) {
+      if (!(pool[k] > 0) || ban[k] || !LAB.FIX || !LAB.FIX.T[k] || (cnt[k] || 0) >= (FILL_MANY[k] || 1)) continue;
+      if (LAB.library && LAB.library.hasAt && !LAB.library.hasAt(k, era, ctx.L)) continue; /* (3.6) читать на этой глубине нечего — не ставить */
+      if (plain && FILL_CAP[k] != null && (fc[k] || 0) >= FILL_CAP[k]) continue;
+      live[k] = pool[k];
+    }
+    if (!Object.keys(live).length) break;
+    var pick = r.weighted(live);
+    if (ctx.addObj("fx", rm.id, { fx: pick, seed: r.int(1, 99999) })) { cnt[pick] = (cnt[pick] || 0) + 1; fc[pick] = (fc[pick] || 0) + 1; have[pick] = 1; put++; i++; }
+    else break; /* места нет — дальше не тесниться */
+  }
+  return put;
+}
+function roomObjN(fl, id) { var n = 0; fl.objs.forEach(function (o) { if (o.room === id) n++; }); return n; }
 function furnish(ctx, r, s, rm, def, v, gen) {
   var fl = ctx.fl, L = ctx.L, F = ctx.F, special = !!def.kind, era = eraOf(L), gw = LAB.floorGrow ? LAB.floorGrow(L) : null, more = gw ? gw.fx : 0;
   if (def.kind === "supply") { ctx.addObj("supply", rm.id, { prof: null }); return; }
@@ -554,6 +632,11 @@ function furnish(ctx, r, s, rm, def, v, gen) {
   }
   /* (3.2) нижние глубины: ещё вещи своей глубины — в зале больше */
   if (gw && def.kind !== "hazard" && def.kind !== "decon") placed += deepFx(r, era, rm, more + (s.big ? 1 : 0), have, ctx);
+  /* (3.6) просторный кабинет — и вещей в нём больше: по площади и назначению */
+  if (!special || def.kind === "locked") {
+    var want = Math.min(16, 2 + Math.floor(area / 8)), now0 = roomObjN(fl, rm.id);
+    if (now0 < want) placed += fillRoom(ctx, r, rm, flavorOf(rm, def), want - now0, have, era, fxs);
+  }
   if (!placed) { var o2 = ctx.addObj(def.kind === "hazard" ? "crate" : "shelf", rm.id, null); if (o2) o2.loot = annexLoot(r, L, F, lootTag, "shelf", !special); }
   /* состояние: обысканное — почти пустое; брошенное в спешке — с забытыми вещами */
   if (rm.state === "ransacked") fl.objs.forEach(function (q) { if (q.room === rm.id && q.loot && q.loot.length) q.loot = q.loot.filter(function () { return r.chance(0.5); }); });
@@ -613,10 +696,17 @@ function placeMainFixtures(ctx, r, gen) {
     if (!rm || rm.annex) continue;
     if (LAB.FIX && LAB.FIX.forRoom) {
       var gw = LAB.floorGrow ? LAB.floorGrow(ctx.L) : null;
-      var list = LAB.FIX.forRoom(rm.type, r, gw ? 3 + gw.fx : 3), have = {};
+      /* (3.6) помещения больше — и вещей, о которых говорит описание, тоже: по площади */
+      var area = (rm.x1 - rm.x0 + 1) * (rm.y1 - rm.y0 + 1), rdef = LAB.ROOMS[rm.type] || {};
+      var list = LAB.FIX.forRoom(rm.type, r, (gw ? 3 + gw.fx : 3) + Math.floor(area / 45)), have = {};
       for (var i = 0; i < list.length; i++) if (ctx.addObj("fx", rm.id, { fx: list[i], seed: r.int(1, 99999) })) have[list[i]] = 1;
       /* (3.2) нижние глубины: в больших помещениях — и вещи своей глубины */
-      if (gw && rm.type !== "secret" && LAB.ROOMS[rm.type] && !LAB.ROOMS[rm.type].special) deepFx(r, eraOf(ctx.L), rm, gw.fx + 1, have, ctx);
+      if (gw && rm.type !== "secret" && LAB.ROOMS[rm.type] && !rdef.special) deepFx(r, eraOf(ctx.L), rm, gw.fx + 1, have, ctx);
+      /* (3.6) и по назначению помещения — до числа по площади; у лестниц, лифта и шлюза — как в холле */
+      if (rm.type !== "secret" && rm.type !== "reactor" && LAB.ROOMS[rm.type]) {
+        var hall = !!rdef.special, want = hall ? Math.min(7, 2 + Math.floor(area / 25)) : Math.min(18, 4 + Math.floor(area / 10)), now0 = roomObjN(fl, s);
+        if (now0 < want) fillRoom(ctx, r, rm, hall ? "hall" : flavorOf(rm, rdef), want - now0, have, eraOf(ctx.L));
+      }
     }
     if (gen && rm.type !== "secret" && LAB.ROOMS[rm.type]) {
       var dt = gen.mainDetail(rm, holds(fl, rm));

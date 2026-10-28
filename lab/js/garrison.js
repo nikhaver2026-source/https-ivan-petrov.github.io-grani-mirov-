@@ -277,8 +277,9 @@ function place(ctx) {
     }
     if (!r.chance(pr)) { if (ci) stats.rooms++; continue; }
     var n = 1 + (r.chance(Math.min(0.85, cat.n2 + 0.1 + 0.025 * Math.min(L, 10) + d0 * 0.0003)) ? 1 : 0) + (d0 >= 40 && (cat.imp >= 2 || cells.length >= 20) && r.chance(Math.min(0.5, 0.05 + d0 * 0.0004)) ? 1 : 0);
-    /* (3.2) с третьего блока кабинеты больше, а их самих меньше: в просторном — машиной больше */
-    if (gw && cells.length >= 24 && r.chance(0.5)) n++;
+    /* (3.2) с третьего блока кабинеты больше, а их самих меньше: в просторном — машиной больше;
+       (3.6) кабинеты просторнее на всех глубинах — и наверху тоже */
+    if (cells.length >= 24 && r.chance(gw ? 0.5 : 0.4)) n++;
     for (var q = 0; q < n && ci < cells.length; q++, ci++) {
       var role = q < cat.roles.length ? cat.roles[q] : "guard", pool = rolePool(role, L, F), fid2 = r.pick(pool), cc = cells[ci];
       var base = LAB.FOES[fid2];

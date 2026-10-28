@@ -12,8 +12,9 @@ LAB.VERSION = "Альфа 3.6";
    (engine.js — хранилище, game.js — validSave и migrate); старше — с чистого листа, как прежде. */
 LAB.KEEP_FROM = 3.0;
 /* С какой версии этажи строятся так же, как сейчас (game.js, WORLD_V): запись с неё загружается
-   с того же места, а запись старше — у входа на свой этаж, построенный заново (game.js, migrate). */
-LAB.WORLD_SINCE = 3.5;
+   с того же места, а запись старше — у входа на свой этаж, построенный заново (game.js, migrate).
+   (3.6) шестой выпуск мира — помещения просторнее: и запись 3.5 начинается у входа на свой этаж */
+LAB.WORLD_SINCE = 3.6;
 LAB.verNum = function (v) { var m = /(\d+)\.(\d+)/.exec(String(v || "")); return m ? +m[1] + +m[2] / 10 : 0; };
 LAB.keepsSave = function (v) { var n = LAB.verNum(v); return v === LAB.VERSION || (n >= LAB.KEEP_FROM && n <= LAB.verNum(LAB.VERSION)); };
 /* Номер прохождения (2.0): растёт, когда сборка просит пройти игру заново,

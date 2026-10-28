@@ -20,7 +20,9 @@ const ROOT = path.resolve(__dirname, "..");
 const ctx = { console, Math, JSON, Object, Array, String, Number, Uint8Array, Int8Array, Int16Array, Int32Array, Float64Array, Error, Date, RegExp };
 ctx.globalThis = ctx;
 vm.createContext(ctx);
-for (const f of ["js/data.js", "js/texts.js", "js/lore.js", "js/b1.js", "js/b2.js", "js/b3.js", "js/b4.js", "js/b5.js", "js/world.js", "js/mutants.js", "js/depths.js", "js/goods.js", "js/medic.js", "js/arms.js", "js/traps.js", "js/puzzles.js", "js/puzzles2.js", "js/puzzles3.js", "js/annex_rooms.js", "js/annex_var.js", "js/annex_frag.js", "js/annex_gen.js", "js/fixtures_data.js", "js/annex.js", "js/garrison.js", "js/workshop.js", "js/repair.js", "js/implants.js", "js/arsenal.js", "js/chem.js", "js/kitchen.js", "js/floors.js"]) {
+/* (3.6) генератор спрашивает библиотеку, есть ли что читать на глубине (annex.js, fillRoom) — тексты и
+   библиотека грузятся, как в игре, чтобы этажи здесь были те же, что в игре */
+for (const f of ["js/data.js", "js/texts.js", "js/lore.js", "js/b1.js", "js/b2.js", "js/b3.js", "js/b4.js", "js/b5.js", "js/world.js", "js/mutants.js", "js/depths.js", "js/goods.js", "js/medic.js", "js/arms.js", "js/traps.js", "js/puzzles.js", "js/puzzles2.js", "js/puzzles3.js", "js/chempuz.js", "js/annex_rooms.js", "js/annex_var.js", "js/annex_frag.js", "js/annex_gen.js", "js/fixtures_data.js", "js/annex_texts.js", "js/library_texts.js", "js/library.js", "js/annex.js", "js/garrison.js", "js/workshop.js", "js/repair.js", "js/implants.js", "js/arsenal.js", "js/chem.js", "js/kitchen.js", "js/floors.js"]) {
   const p = path.join(ROOT, f);
   if (fs.existsSync(p)) vm.runInContext(fs.readFileSync(p, "utf8"), ctx, { filename: f });
 }
@@ -281,9 +283,9 @@ for (let si = 0; si < seeds; si++) {
    обновите отпечатки; ненарочно — верните прежний поток случайностей генератора. */
 {
   const crypto = require("crypto");
-  /* (3.5) пятый выпуск мира (WORLD_V 5): тела погибших в помещениях (annex.js) и выжившие
-     чаще (world.js, шаги 17 и 26) — отпечатки новые */
-  const FP = { "fpA 1-1": "f03f88aae83208ea", "fpA 10-13": "bf00c1ba63cf5a44", "fpB 20-20": "3a4f6336c26921ce", "fpB 21-7": "e4cfc44a5ab3b83e", "fpC 30-2": "a469748a1ae62721", "fpC 40-13": "b3cd37805c459756" };
+  /* (3.6) шестой выпуск мира (WORLD_V 6): помещения и кабинеты втрое просторнее, обстановки
+     больше — книги, бумаги, исследования, химия (world.js, annex.js, library.js) — отпечатки новые */
+  const FP = { "fpA 1-1": "c53f491e89fbe74c", "fpA 10-13": "21cc6657d19e08d6", "fpB 20-20": "09e8be87ed3b5e11", "fpB 21-7": "422b52b94de0caea", "fpC 30-2": "4e9136fca33fc9d9", "fpC 40-13": "2eb9e8c7613c6f10" };
   for (const k in FP) {
     const m = k.match(/^(\S+) (\d+)-(\d+)$/), fl = LAB.getFloor(m[1], +m[2], +m[3]), h = crypto.createHash("sha1");
     h.update(Buffer.from(fl.t.buffer)); h.update(Buffer.from(fl.room.buffer)); h.update(Buffer.from(fl.corrAt.buffer));

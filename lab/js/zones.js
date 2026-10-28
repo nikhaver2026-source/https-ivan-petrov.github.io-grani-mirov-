@@ -189,7 +189,8 @@ function boxItems(o) {
   var s = st(o), name = LAB.OBJ[o.type].n, items = [];
   if (s.open) items.push({ label: "Пусто: всё уже забрано", info: true, keep: true, fn: function () { say(name + ": пусто."); } });
   else items.push({ label: SEARCH[o.type] || "Обыскать", fn: function () { search(o); } });
-  if (o.type === "cabinet") items.push({ label: "Пролистать папки", fn: function () { readFiles(o); } });
+  /* (3.6) папки картотеки — из архива библиотеки (library.js): дела людей этажа, приказы, отчёты, бывает записка с кодом */
+  if (o.type === "cabinet") items.push({ label: "Пролистать папки", fn: function () { if (LAB.library) LAB.library.cabinetMenu(o); else readFiles(o); } });
   if (o.type === "tubepost") items.push({ label: "Прочитать квитанции", fn: function () { readReceipts(o); } });
   items.push({ label: "Осмотреть", keep: true, fn: function () { say(LAB.fixtures ? LAB.fixtures.examine(o) : name + ". " + LAB.OBJ[o.type].desc); } });
   return items;
@@ -245,8 +246,10 @@ function bookshelfMenu(o) {
   UIx("menu", "Книжная полка", build(), { rebuild: build });
 }
 function shelfItems(o) {
-  var books = dealt("books", TX().books, o, 2 + (o.seed || 0) % 3), s = st(o), items = [];
+  /* (3.6) книги — из общей библиотеки (library.js): разделы, чему учат, архив документов */
+  var LB = LAB.library, books = LB ? LB.shelfBooks(o) : dealt("books", TX().books, o, 2 + (o.seed || 0) % 3), s = st(o), items = [];
   books.forEach(function (b) {
+    if (LB) { items.push({ label: "«" + b.t + "»" + (b.a ? ", " + b.a : "") + " — " + (LB.CAT_W[b.cat] || "книга") + (LB.isRead(b, o) ? ", прочитано" : ""), fn: function () { LB.readText(b, o); } }); return; }
     items.push({ label: "«" + b.t + "»" + (b.a ? ", " + b.a : "") + (s["b_" + b.id] ? " — прочитано" : ""), fn: function () { readBook(o, b); } });
   });
   if (!s.between) items.push({ label: "Поискать между книгами", keep: true, fn: function () {

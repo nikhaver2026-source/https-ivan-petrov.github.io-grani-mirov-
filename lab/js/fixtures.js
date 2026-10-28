@@ -315,6 +315,9 @@ function drinkCombos(o, def, p, label) {
 /* После разборки прибор больше не работает. */
 var SALV_KILLS = { listen: 1, read: 1, scan: 1, cams: 1, play: 1, game: 1, vent: 1, map: 1, neuro: 1, clock: 1, mirror: 1 };
 function run(o, def, kind, p, label, withId) {
+  /* (3.6) книги и бумаги, звук и связь — library.js */
+  if (LAB.library && LAB.library.act && LAB.library.act(o, def, kind, p || {})) return;
+  if (LAB.chempuz && LAB.chempuz.act && LAB.chempuz.act(o, def, kind, p || {})) return; /* (3.6) реактивы, химические замки, банка с кислотой */
   var s = st(o), cnt = (s["n_" + kind] = (s["n_" + kind] || 0) + 1), m = [], rm = roomOf(o);
   /* прочитанное при новом прочтении то же самое; эфир и экраны — каждый раз другие */
   var r = rng(o, kind + ":" + (kind === "read" && p.pool !== "ether" && p.pool !== "screens" ? 0 : cnt));
@@ -678,7 +681,7 @@ function cookMenu(o) {
 
 /* ── обыскать, разобрать, собрать урожай ── */
 var COOKFX = { serving: 1, cauldron: 1, oven: 1, barrels: 1, smoker: 1 };
-var TAGMAP = { cushion: "smoke", top: "store", under: "smoke", med: "med", mattress: "stash", drawer: "paper", guard: "arms", food: "food", home: "home", bread: "food", smoked: "food", barrel: "food", soil: "herbs", seeds: "herbs", bio: "bio", lab: "chem", rad: "rad", arms: "armory", pockets: "smoke", parcel: "tech", cash: "smoke", ore: "parts", tools: "tech", janitor: "janitor", mail: "paper", lost: "smoke", expedition: "protect", laundry: "home" };
+var TAGMAP = { books: "paper", vent: "smoke", cushion: "smoke", top: "store", under: "smoke", med: "med", mattress: "stash", drawer: "paper", guard: "arms", food: "food", home: "home", bread: "food", smoked: "food", barrel: "food", soil: "herbs", seeds: "herbs", bio: "bio", lab: "chem", rad: "rad", arms: "armory", pockets: "smoke", parcel: "tech", cash: "smoke", ore: "parts", tools: "tech", janitor: "janitor", mail: "paper", lost: "smoke", expedition: "protect", laundry: "home" };
 function doSearch(o, def, label, p) {
   var s = st(o);
   if (s["s_" + label]) { say("Здесь вы уже искали."); return; }
@@ -795,6 +798,7 @@ function examine(o) {
     if (o.notes && o.notes.length && !s.notes) out.push(def.a.some(function (a) { return a[0] === "search"; }) ? "Шуршит бумага: кажется, там что-то лежит." : "Сверху лежит сложенная записка.");
     if (rm && rm.owner && !rm.owner.m && h32(o.id) % 4 === 0) out.push("«Эхо» связывает эту вещь с хозяином помещения: " + rm.owner.n + ", " + rm.owner.post + ".");
     if (LAB.stash) { var tl0 = LAB.stash.examineLine(o); if (tl0) out.push(tl0); }
+    if (LAB.library) { var lb0 = LAB.library.examineLine(o); if (lb0) out.push(lb0); }
     return out.join(" ");
   }
   if (o.type === "corpse") { var ct = corpseText(o, identity(o)), tl1 = LAB.stash ? LAB.stash.examineLine(o) : ""; return tl1 ? ct + " " + tl1 : ct; }
