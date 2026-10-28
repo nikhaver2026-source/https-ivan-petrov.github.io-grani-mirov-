@@ -5803,6 +5803,20 @@ LAB.ui.closeAll();
         });
       }
       out.esc = { badReady, badFloor, badSteps, badText, dup, kinds: Object.keys(kinds).length, xpw: [Math.min(...xpw), Math.max(...xpw)].map(v => +v.toFixed(2)), rows: rows.filter((_, i) => i % 4 === 0) };
+      /* (3.6) награда ждала уровнем выше — туда через шлюз не вернуться: при входе на этаж она уже в рюкзаке */
+      {
+        const P = Q.pickups(), inv0 = G().inv.medkit_s || 0;
+        P.push({ id: "t-up", from: "Тестер Наверху", gifts: [{ kind: "item", item: "medkit_s", n: 1 }], key: "x-up", who: "Кто-то", L: G().L - 1, F: 3, room: null });
+        Q.onFloor(true);
+        out.upGift = (G().inv.medkit_s || 0) === inv0 + 1 && !Q.pickups().some(p => p.id === "t-up");
+      }
+      /* (3.6) вторая просьба из двух шагов — и текст о двух шагах, а не прямая речь о первом */
+      let two = 0, badTwo = 0;
+      for (let k = 0; k < 40; k++) {
+        const nn = { key: "Q36-two" + k, n: "Лаборант Двойной", prof: "Лаборант" }, r2 = Q.giver(nn); r2.done = 1; r2.ch = 0; r2.cool = 0; r2.seq = 0;
+        Q.offers(nn).forEach(q => { if (Q.steps(q).length < 2) return; two++; if (!/^Лаборант Двойной: «[^»]/.test(q.text || "") || !/Шаги: 1\)/.test(q.text || "")) badTwo++; });
+      }
+      out.twoStep = { two, bad: badTwo };
       /* 2. главы: выбор в конце главы меняет следующую */
       const ce = Q.chapterDef("eng", 1, ["air"]), ct = Q.chapterDef("eng", 1, ["tools"]);
       const m2s = Q.chapterDef("med", 2, ["truth", "serum"]), m2b = Q.chapterDef("med", 2, ["truth", "burn"]);
@@ -6018,6 +6032,8 @@ LAB.ui.closeAll();
   });
   ok(!qv.err, "поручения 3.6: без ошибок" + (qv.err ? ": " + qv.err : ""));
   ok(qv.esc && qv.esc.badReady === 0 && qv.esc.badText === 0 && qv.esc.dup === 0, "ни одно дело в мире не сделано в момент выдачи (вещи могут быть уже в рюкзаке); у каждого текст и награда; шаги в поручении не повторяются (" + JSON.stringify(qv.esc && { r: qv.esc.badReady, t: qv.esc.badText, d: qv.esc.dup }) + ")");
+  ok(qv.upGift, "награда, что ждала уровнем выше, при входе на этаж — уже в рюкзаке: через шлюз за ней не вернуться");
+  ok(qv.twoStep && qv.twoStep.bad === 0, "вторая просьба из двух шагов называет оба шага (" + JSON.stringify(qv.twoStep) + ")");
   ok(qv.esc && qv.esc.badFloor === 0 && qv.esc.badSteps === 0, "каждая следующая просьба тяжелее: труд не меньше положенного ступени, шагов — 1, 2, 3, 4 по ступеням (" + (qv.esc ? qv.esc.rows.join(" ; ") : "") + ")");
   ok(qv.esc && qv.esc.kinds >= 16, "поручения разнообразные: видов шагов — " + (qv.esc && qv.esc.kinds));
   ok(qv.esc && qv.esc.xpw[1] / qv.esc.xpw[0] <= 1.3, "опыт — по труду: за единицу труда почти одинаково на всех ступенях (" + JSON.stringify(qv.esc && qv.esc.xpw) + ")");
@@ -6192,7 +6208,7 @@ LAB.ui.closeAll();
       const bc = findFx("bookcase", 1);
       U.closeAll(); LB.act(bc, null, "lib", { lib: "case" });
       const list0 = items();
-      out.case = { n: list0.length - 1, cats: list0.slice(1).every(l => / — \S/.test(l)) };
+      out.case = { n: list0.length - 1, cats: list0.slice(1).every(l => / — \S/.test(l)), title: !!U.top() && U.top().title === "Книжный шкаф: книги" };
       const xp0 = G().xp, n0 = G().noteList.length;
       pick(/«/);
       const e1 = G().noteList[G().noteList.length - 1];
@@ -6204,6 +6220,16 @@ LAB.ui.closeAll();
       const q1 = LB.byId(e1.src.lib), txt = LB.noteText(e1.src).x;
       out.case.text = txt.length > 400 && txt.indexOf(String(q1.x || q1.pages[0]).replace(/\s*\n\n+\s*/g, " ").slice(0, 60)) >= 0 && g.docInfo(e1).cat === "Книги";
       U.closeAll();
+      /* (3.6) на этаже книги не повторяются: все шкафы и полки глубокого этажа подряд — ни одной книги дважды */
+      {
+        const back = { L: G().L, F: G().F };
+        g.enterFloor(30, 5, "down", true); C.stop();
+        const bks = g.CUR.fl.objs.filter(q => (q.type === "fx" && q.fx === "bookcase") || q.type === "bookshelf");
+        const seen = {}; let dupB = 0, got = 0, empty = 0;
+        bks.forEach(q => { const list = q.type === "bookshelf" ? LB.shelfBooks(q) : LB.deal(q, "case"); if (!list.length) empty++; list.forEach(b => { got++; if (seen[b.id] && !b.tpl) dupB++; seen[b.id] = 1; }); });
+        out.noRepeat = { fixtures: bks.length, got, empty, dup: dupB };
+        g.enterFloor(back.L, back.F, "down", true); C.stop(); /* назад: следующие проверки — книги верхней глубины */
+      }
       /* 3. чему учат книги: три детектива — «Чутьё»; три о науке — интеллект; техника — схема; химия — рецептура */
       const books = LB.pool("book"), byCat = c => books.filter(b => b.cat === c && !LB.isRead(b, bc));
       byCat("detective").slice(0, 3).forEach(b => { LB.readText(b, bc); U.closeAll(); });
@@ -6323,6 +6349,7 @@ LAB.ui.closeAll();
   });
   ok(!lib.err, "книги и бумаги: проверка без ошибок" + (lib.err ? ": " + lib.err : ""));
   ok(lib.geo && lib.geo.mainMin >= 9 && lib.geo.annAvg >= 38 && lib.geo.perRoom >= 6 && lib.geo.newKinds >= 8, "помещения просторнее: главные — от девяти шагов, кабинеты в среднем втрое больше прежнего, вещей — по площади, новые вещи на этажах (" + JSON.stringify(lib.geo) + ")");
+  ok(lib.noRepeat && lib.noRepeat.dup === 0 && lib.noRepeat.got > 0 && lib.case && lib.case.title, "на этаже книги не повторяются; окно книг — своё, окно шкафа под ним цело (" + JSON.stringify(lib.noRepeat) + ")");
   ok(lib.case && lib.case.n >= 4 && lib.case.cats && lib.case.arch && lib.case.xp && lib.case.same && lib.case.text, "книжный шкаф: книги с разделами, прочитанная — в архиве «Книги», опыт, «прочитано», состав тот же, текст по ссылке (" + JSON.stringify(lib.case) + ")");
   ok(lib.perk && lib.mind === 1 && lib.bp === 1 && lib.chem === 1 && lib.calm, "книги учат: три детектива — «Чутьё», три о науке — интеллект, техника — схема, химия — рецептура, повесть успокаивает (" + JSON.stringify({ perk: lib.perk, mind: lib.mind, bp: lib.bp, chem: lib.chem, calm: lib.calm }) + ")");
   ok(lib.memoItem && lib.memo, "архивные коробки: записка с кодом этажа — код в архиве, замок о нём знает");

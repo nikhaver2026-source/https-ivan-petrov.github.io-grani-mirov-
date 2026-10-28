@@ -74,9 +74,12 @@ function idx() {
 }
 function byId(id) { return idx().by[id] || null; }
 function eraOk(q, e, L) { return String(q.era || "").indexOf(e) >= 0 && (!q.minL || q.minL <= L); }
+/* (3.6) своих книг у «Подножия» и «Колыбели» немного — а на этаже они теперь не повторяются:
+   туда спускали и книги «Ковчега» (у них своя примета — note) */
+var UPBOOKS = { P: "K", C: "K" };
 function poolOf(kind) {
-  var e = era(), L = G().L;
-  return (idx().kind[kind] || []).filter(function (q) { return eraOk(q, e, L); });
+  var e = era(), L = G().L, up = kind === "book" ? UPBOOKS[e] : null;
+  return (idx().kind[kind] || []).filter(function (q) { return eraOk(q, e, L) || (!!up && eraOk(q, up, L)); });
 }
 /* Текст: абзацы, у дневника — записи; у книги с верхних глубин внизу — своя примета */
 function bodyOf(q) { return q.pages ? q.pages.join("\n\n") : String(q.x || ""); }
@@ -84,6 +87,8 @@ function flat(s) { return String(s || "").replace(/\s*\n\n+\s*/g, " "); }
 function note(q) {
   var e = era(), ee = String(q.era || "");
   if (q.kind !== "book") return "";
+  if (e === "P" && ee.indexOf("P") < 0 && ee.indexOf("K") >= 0) return "На форзаце — штамп библиотеки «Ковчега»: книгу принесли сверху. ";
+  if (e === "C" && ee.indexOf("C") < 0 && ee.indexOf("K") >= 0) return "Книга сверху, из «Ковчега»: в «Колыбели» её берегли — корешок подклеен, углы страниц разглажены. ";
   if (e === "O" && ee.indexOf("K") >= 0) return "Книга напечатана зеркально: «Эхо» переворачивает строки. ";
   if (e === "M" && /[KPCO]/.test(ee)) return "На корешке — инвентарный номер Складов памяти, на форзаце — штемпель: «Принято на хранение». ";
   if (e === "I" && /[KPCOM]/.test(ee)) return "Потрёпанный экземпляр: страницы проложены сухими листьями. ";
@@ -242,6 +247,13 @@ function deal(o, which) {
     return { q: q, k: Math.pow(r.next() || 1e-9, 1 / Math.max(0.01, w)) };
   });
   cand.sort(function (x, y) { return y.k - x.k; });
+  /* (3.6) на этаже без повторов: что уже лежит в другой вещи этажа, сюда не попадает (кроме
+     бланков — у каждой вещи в них свои имена и числа). Без бланков вещь берёт не больше трети
+     ещё не разложенного — тексты расходятся по этажу, а не ложатся в первые же шкафы;
+     не осталось ничего — вещь пуста */
+  cand = cand.filter(function (c) { return !used[c.q.id] || c.q.tpl; });
+  var uniq = cand.filter(function (c) { return !c.q.tpl; }).length;
+  if (uniq === cand.length) n = Math.min(n, Math.ceil(uniq / 3));
   var out = cand.slice(0, n).map(function (c) { return c.q; });
   out.forEach(function (q) { used[q.id] = 1; });
   s[key] = out.map(function (q) { return q.id; });
@@ -293,8 +305,10 @@ function readText(q, o) {
   if (first && LAB.oko && LAB.oko.react && q.kind !== "exhibit") LAB.oko.react("note");
 }
 /* окно вещи: тексты, что в ней лежат; собирается заново, когда к нему возвращаются */
-var TITLE = { case: "Книжный шкаф", shelf: "Книжная полка", docs: "Архивный стеллаж", paper: "Подшивка газет", tape: "Магнитофон", diary: "Письменный стол", film: "Аппарат для чтения микрофильмов", exhibit: "Витрина", labbook: "Лабораторный журнал",
-  specimen: "Стеллаж с препаратами", cage: "Клетки вивария", photo: "Стенд с фотографиями", research: "Папки лаборатории", autopsy: "Секционный стол", subject: "Журнал наблюдения" };
+/* (3.6) заголовок — не как у окна самой вещи (fixtures.js): одноимённое окно ui.menu заменяет,
+   и после чтения «назад» выводило бы в игру мимо пунктов вещи («Пошарить за книгами» и т. п.) */
+var TITLE = { case: "Книжный шкаф: книги", shelf: "Книжная полка: книги", docs: "Архивный стеллаж: папки", paper: "Подшивка газет: выпуски", tape: "Магнитофон: бобины", diary: "Письменный стол: тетради", film: "Аппарат для чтения микрофильмов: катушки", exhibit: "Витрина: экспонаты", labbook: "Лабораторный журнал: страницы",
+  specimen: "Стеллаж с препаратами: банки", cage: "Клетки вивария: карточки", photo: "Стенд с фотографиями: снимки", research: "Папки лаборатории: дела", autopsy: "Секционный стол: протоколы", subject: "Журнал наблюдения: записи" };
 var EMPTY = { case: "Шкаф пуст: книги отсюда унесли.", shelf: "Полка пуста.", docs: "Коробки пусты: дела вывезли до карантина.", paper: "Подшивка пуста: остались одни нитки.", tape: "Коробки от бобин пусты.", diary: "В ящике пусто: тетрадь кто-то забрал.", film: "Коробки из-под плёнки пусты.", exhibit: "Таблички сняты, остались одни ножки.", labbook: "Журнал пуст: страницы вырваны.",
   specimen: "Банки пусты, этикетки отклеены.", cage: "Клетки пусты, карточки сорваны с дверец.", photo: "Стенд пуст: снимки сняли, остались кнопки.", research: "Ящики пусты: папки вывезли.", autopsy: "Планшет пуст: протоколы забрали.", subject: "Журнал на цепочке пуст: листы вырваны." };
 function libItems(o, which) {
@@ -418,7 +432,10 @@ function cabinetMenu(o, back) {
   UIx("menu", "Папки картотеки", build(), { rebuild: build });
 }
 /* книжная полка (zones.js): книги — из общей библиотеки */
-function shelfBooks(o) { return deal(o, "shelf"); }
+function shelfBooks(o) {
+  var g = G(); if (g.libNav && g.libNav.id === o.id && g.libNav.key === CUR().key) g.libNav = null; /* (3.6) дошли до полки из каталога */
+  return deal(o, "shelf");
+}
 
 /* ════════ КАТАЛОГ ════════ */
 function catalog(o) {
@@ -428,13 +445,13 @@ function catalog(o) {
     if (!(q.type === "fx" && q.fx === "bookcase") && q.type !== "bookshelf") return;
     var rm = fl.rooms[q.room]; if (!rm || rm.hidden) return;
     var s = st(q), ids = s[q.type === "bookshelf" ? "lib_shelf" : "lib_case"], left = ids ? ids.filter(function (id) { return !rec().read[id]; }).length : -1;
-    list.push({ o: q, rm: rm, d: Math.abs(q.x - g.x) + Math.abs(q.y - g.y), left: left });
+    list.push({ o: q, rm: rm, d: Math.abs(q.x - g.x) + Math.abs(q.y - g.y), left: left, empty: !!ids && !ids.length });
   });
   list.sort(function (a, b) { return a.d - b.d; });
   if (!list.length) { say("Карточки каталога — на книги, которых на этаже больше нет."); return; }
   var items = list.slice(0, 12).map(function (e) {
     var what = e.o.type === "bookshelf" ? "книжная полка" : "книжный шкаф", where = e.rm.num ? "помещение " + e.rm.num + " («" + e.rm.name + "»)" : "«" + e.rm.name + "»";
-    var lbl = cap(what) + ": " + where + ", " + gm().relDir(e.o.x, e.o.y) + (e.left < 0 ? ", вы там не были" : e.left ? ", непрочитанных: " + e.left : ", всё прочитано");
+    var lbl = cap(what) + ": " + where + ", " + gm().relDir(e.o.x, e.o.y) + (e.left < 0 ? ", вы там не были" : e.empty ? ", пусто" : e.left ? ", непрочитанных: " + e.left : ", всё прочитано");
     return { label: lbl, fn: function () { g.libNav = { key: CUR().key, id: e.o.id, n: what + ": " + where }; say("Навигатор поведёт: " + what + ", " + where + ". Цель — в списке навигатора."); } };
   });
   UIx("menu", "Каталог: книжных шкафов и полок на этаже — " + list.length, items);

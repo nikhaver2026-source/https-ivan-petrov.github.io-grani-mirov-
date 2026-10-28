@@ -993,8 +993,8 @@ function finishBuild(q, n, h, chap, path, intro0) {
   var intro;
   if (intro0) intro = intro0;
   else if (chap) intro = gx(chap.intro, fem);
-  else if (t <= 1) intro = simpleIntro(q, n);
-  else {
+  else if (t <= 1 && ss.length === 1) intro = simpleIntro(q, n);
+  else { /* (3.6) и простая просьба из двух шагов говорит о себе, как следующие */
     var r = giver(n), arc = TX().ARCS[q.arc], pool = (r.ch >= (arc ? arc.ch.length : 4) && (t - 11) % 3 === 0 ? TX().TROUBLE[q.arc] : null) || TX().OPEN[q.arc] || TX().OPEN.sci;
     intro = gx(pool[(h >>> 4) % pool.length], fem);
   }
@@ -1004,7 +1004,8 @@ function finishBuild(q, n, h, chap, path, intro0) {
   var body;
   if (ss.length === 1) body = cap1(sDoes(ss[0], q)) + ".";
   else body = "Шаги: " + ss.map(function (s, i) { return (i + 1) + ") " + sDoes(s, q); }).join("; ") + "." + (q.hand === "self" ? " Потом — обратно, за наградой." : " Доклад передаст «Эхо».");
-  q.text = (t <= 1 && !chap ? simpleText(q, n) : q.giverName + ": «" + intro + "» " + body);
+  /* простая прямая речь — только об одном шаге: у второй просьбы бывает и второй шаг (build) */
+  q.text = (t <= 1 && !chap && ss.length === 1 ? simpleText(q, n) : q.giverName + ": «" + intro + "» " + body);
   q.short = chap ? "«" + chap.t + "»" + (ss.length > 1 ? ", шагов: " + ss.length : "") : sShort(ss[0], q) + (ss.length > 1 ? " и ещё " + (ss.length - 1) + " " + pl(ss.length - 1, "дело", "дела", "дел") : "");
   if (chap) q.title = chap.t;
   if (path && chap && chap[path]) q.way = chap[path].l;
@@ -1274,6 +1275,8 @@ function holderFor(q) {
     var m2 = l2.filter(function (m) { return m.key === q.giver; })[0] || l2[h32(q.id + ":hold") % l2.length];
     return holdAt(m2, g.L, F2, fl2);
   }
+  /* у самого заказчика — только если он на этом уровне: выше через шлюз не вернуться */
+  if (q.L !== g.L) return null;
   var fg = null; try { fg = fdef(q.L, q.F); } catch (e2) { fg = null; }
   var gn = people(fg).filter(function (m) { return m.key === q.giver; })[0];
   return gn ? holdAt(gn, q.L, q.F, fg) : null;
@@ -1429,6 +1432,13 @@ function onFloor(silent) {
     if (!stepReady(s, q)) names.push(sShort(s, q));
   });
   if (!silent && names.length) sayq("«Эхо»: здесь цели поручений — " + names.join("; ") + ". Навигатор подскажет дорогу.");
+  /* (3.6) награда ждала выше, а через шлюз туда не вернуться — выживший передал её с оказией */
+  var gone = pickups().filter(function (p) { return p.L < g.L; });
+  if (gone.length) {
+    g.pickups = pickups().filter(function (p) { return p.L >= g.L; });
+    gone.forEach(function (p) { p.gifts.forEach(function (it) { gm().giveItem(it, true); }); journal("Награда получена с оказией: " + giftsName(p.gifts) + " (заказчик — " + p.from + ")."); });
+    if (!silent) sayq("«Эхо»: награду, что ждала вас выше, передали с оказией — " + gone.map(function (p) { return giftsName(p.gifts); }).join("; ") + ". Уже в рюкзаке.");
+  }
   /* (3.6) награда за поручение по связи ждёт здесь */
   var here = pickups().filter(function (p) { return p.L === g.L && p.F === g.F; });
   if (!silent && here.length) sayq("«Эхо»: здесь вас ждёт награда за " + (here.length > 1 ? "поручения" : "поручение") + " — " + here.map(function (p) { return giftsName(p.gifts) + "; выдаст " + p.who + (p.room ? ", " + roomWords(p.room) : ""); }).join("; ") + ".");
