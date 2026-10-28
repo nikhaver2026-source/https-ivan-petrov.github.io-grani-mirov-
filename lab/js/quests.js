@@ -970,7 +970,9 @@ function build(n, t, h, style, chap, path) {
     for (var j = 0; j < out.length && workOf(tmp) < target; j++) { var Kg = KINDS[out[j].type]; if (Kg.grow && Kg.grow(out[j], t)) grown = true; }
     if (!grown) break;
   }
-  while (t >= 2 && workOf(tmp) < target && out.length < 6) if (!add(out.length, out.length >= 3 ? "any" : "far", out.length + 1)) break;
+  /* (3.6) и вторая просьба: на исследованном уровне её единственный шаг бывает лёгким
+     («сходить на этаж, где вы уже были») — тогда ещё шаг, рядом */
+  while (t >= 1 && workOf(tmp) < target && out.length < 6) if (!add(out.length, out.length >= 3 ? "any" : t <= 1 ? "near" : "far", out.length + 1)) break;
   if (out.length === 1 && !chap) { for (var key in out[0]) q[key] = out[0][key]; }
   else q.steps = out;
   /* условия премии: с четвёртой просьбы — одно, с восьмой — два */

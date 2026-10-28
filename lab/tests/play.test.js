@@ -5773,7 +5773,7 @@ LAB.ui.closeAll();
         case "secret": { const f = fx(); f.secrets = f.secrets || {}; f.secrets[s.ids[0]] = 1; break; }
         case "sample": gg.samples[s.sid] = 1; break;
         case "body": gg.badges = gg.badges || []; gg.badges.push({ o: s.oid, L: s.tL, F: s.tF }); gg.inv.badge = (gg.inv.badge || 0) + 1; break;
-        case "keep": s.got = true; break;
+        case "keep": case "ask": s.got = true; break;
         case "deliver": case "aid": s.given = true; break;
         case "boss": { const f = fx(); f.foes = f.foes || {}; f.foes[s.fid] = { dead: true }; break; }
       }
@@ -5980,7 +5980,7 @@ LAB.ui.closeAll();
       }
       /* по связи: узнать у выжившего — расспросили, «Эхо» доложило, награда ждёт у выжившего здесь */
       let qk = null, nk = null;
-      for (let k = 0; k < 120 && !qk; k++) { const nn = { key: "Q36-k" + k, n: "Повар Спрашивающий", prof: "Повар" }; const rk = Q.giver(nn); rk.done = 1; rk.cool = 0; const f = Q.offers(nn).find(q => Q.steps(q).some(s => s.type === "ask")); if (f) { qk = f; nk = nn; } }
+      for (let k = 0; k < 120 && !qk; k++) { const nn = { key: "Q36-k" + k, n: "Повар Спрашивающий", prof: "Повар" }; const rk = Q.giver(nn); rk.done = 1; rk.cool = 0; const f = Q.offers(nn).find(q => Q.steps(q).length === 1 && Q.steps(q)[0].type === "ask"); if (f) { qk = f; nk = nn; } }
       if (qk) {
         spoken.length = 0; Q.accept(nk, qk);
         const sk = Q.steps(qk).find(s => s.type === "ask");
