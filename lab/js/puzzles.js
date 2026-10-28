@@ -6,7 +6,8 @@
    партия: мат в один ход. Всё — окнами меню (стрелки, Enter, свайпы и
    двойное касание), без жестов на слух. Условие можно переслушать.
    open(kind, seed, cb, opts) — запустить; cb(true) — решено, cb(false) —
-   попытки кончились (прерванная головоломка — cb(false)).
+   попытки кончились; cb(false, true, fresh) — игрок отошёл (fresh — задачу
+   уже начали решать, и в следующий раз она должна быть другой).
    ════════════════════════════════════════════════════════════════════ */
 (function () {
 "use strict";
@@ -30,7 +31,7 @@ var KINDS = ["breaker", "decon", "labels", "dosim", "shifts", "tally"];
 /* Окно условия: прочитать, потом — к решению. Условие всегда можно
    переслушать пунктом «Условие ещё раз». */
 function run(name, cond, build, cb) {
-  var state = { tries: 0, limit: 3, done: false };
+  var state = { tries: 0, limit: 3, done: false, touched: false };
   var finish = function (ok, text) {
     if (state.done) return; state.done = true;
     UIx("closeAll");
@@ -46,18 +47,31 @@ function run(name, cond, build, cb) {
     say(why + " Осталось попыток: " + (state.limit - state.tries) + ".");
     return true;
   };
+  /* (3.6) отойти — не провал: второй довод cb говорит, что игрок просто отошёл (замок не
+     шумит, ОКО не реагирует). Нетронутая задача ждёт прежняя; начатая — третий довод cb:
+     в следующий раз задача будет другой, иначе неверные ответы и пробы возвращались бы
+     заново на ту же задачу без конца. Так же — если окно задачи просто закрыли. */
+  var away = function () {
+    if (state.done) return;
+    state.done = true;
+    var fresh = state.touched || state.tries > 0;
+    say(fresh ? "Вы отходите. Начатое решение пропадёт: в следующий раз задача будет другой." : "Вы отходите. Задача ждёт.");
+    if (cb) setTimeout(function () { cb(false, true, fresh); }, 30);
+  };
   var menuItems = function () {
     var items = build(state, finish, fail, menuItems);
     /* (3.6) неверный ответ окно задачи не закрывает: попытки считаются в нём же
-       (прежде окно закрывалось, и задача открывалась заново — с полными попытками) */
-    items.forEach(function (it) { if (it.keep == null) it.keep = true; });
+       (прежде окно закрывалось, и задача открывалась заново — с полными попытками);
+       любое действие в окне решения — задача начата */
+    items.forEach(function (it) {
+      if (it.keep == null) it.keep = true;
+      var f0 = it.fn; if (typeof f0 === "function") it.fn = function () { state.touched = true; return f0.apply(this, arguments); };
+    });
     items.push({ label: "Условие ещё раз", keep: true, fn: function () { say(cond, { read: true }); } });
-    /* (3.6) отойти — не провал: второй довод cb говорит, что игрок просто отошёл
-       (замок не шумит, ОКО не реагирует, задача ждёт прежняя) */
-    items.push({ label: "Отойти от задачи", fn: function () { if (!state.done) { state.done = true; say("Вы отходите. Задача ждёт."); if (cb) setTimeout(function () { cb(false, true); }, 30); } } });
+    items.push({ label: "Отойти от задачи", fn: away });
     return items;
   };
-  var open = function () { UIx("menu", name, menuItems(), { intro: "", rebuild: menuItems, puzzle: true }); };
+  var open = function () { UIx("menu", name, menuItems(), { intro: "", rebuild: menuItems, puzzle: true, onClose: away }); };
   UIx("closeAll");
   UIx("note", name, cond, open, { closeLabel: "К решению", puzzle: true });
   return state;
@@ -390,8 +404,10 @@ function chess(cb, opts) {
       } };
     });
     items.push({ label: "Позиция ещё раз", keep: true, fn: function () { say(cond, { read: true }); } });
-    items.push({ label: "Отойти от доски", fn: function () { if (!done) { done = true; say("Вы отходите: партия ждёт."); if (cb) setTimeout(function () { cb(false); }, 30); } } });
-    UIx("menu", name, items, { puzzle: true });
+    /* (3.6) отойти — как в run(): не провал; после неверного хода — в следующий раз другая позиция */
+    var away = function () { if (done) return; done = true; say(tries ? "Вы отходите. Партию снова отложат: в следующий раз — другая позиция." : "Вы отходите: партия ждёт."); if (cb) setTimeout(function () { cb(false, true, tries > 0); }, 30); };
+    items.push({ label: "Отойти от доски", fn: away });
+    UIx("menu", name, items, { puzzle: true, onClose: away });
   };
   UIx("closeAll");
   A("play", "paper");

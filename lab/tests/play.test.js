@@ -5366,8 +5366,9 @@ LAB.ui.closeAll();
       LAB.ui.closeAll(); C.stop();
       /* ширина коридоров по блокам: 4 выше, 5, 6, 7 — в «Отражении», «Механизме», «Истоке» */
       out.cw = [5, 30, 45, 65, 85].map(L => { const fl = LAB.getFloor(G.seed, L, 3); const ws = {}; fl.corrs.forEach(c => { ws[c.axis === "h" ? c.y1 - c.y0 + 1 : c.x1 - c.x0 + 1] = 1; }); return Object.keys(ws).join("/"); }).join(" ");
-      /* помещения и кабинеты: средняя площадь растёт по блокам */
-      const area = L => { const fl = LAB.getFloor(G.seed, L, 5), m = [], a = []; fl.rooms.forEach(r => { if (!r) return; const s = (r.x1 - r.x0 + 1) * (r.y1 - r.y0 + 1); (r.annex ? a : m).push(s); }); const avg = q => q.reduce((x, y) => x + y, 0) / Math.max(1, q.length); return [Math.round(avg(m)), Math.round(avg(a))]; };
+      /* помещения и кабинеты: средняя площадь растёт по блокам — по шести этажам блока
+         (у соседних блоков размеры частично совпадают, и один этаж бывает выбросом) */
+      const area = L => { const m = [], a = []; for (let F = 3; F <= 8; F++) LAB.getFloor(G.seed, L, F).rooms.forEach(r => { if (!r) return; const s = (r.x1 - r.x0 + 1) * (r.y1 - r.y0 + 1); (r.annex ? a : m).push(s); }); const avg = q => q.reduce((x, y) => x + y, 0) / Math.max(1, q.length); return [Math.round(avg(m)), Math.round(avg(a))]; };
       out.area = [30, 45, 65, 85].map(area);
       /* коридор «Отражения»: «Эхо» называет ширину, в широком — ещё «ближе к стене» */
       go(45, 3);
@@ -6244,9 +6245,9 @@ LAB.ui.closeAll();
       /* 6. витрина: разбить стекло — громко, экспонат забран */
       const vt = findFx("vitrine", 1) || findFx("vitrine", 2);
       if (vt) {
-        U.closeAll(); G().noise = 0; const inv0 = JSON.stringify(G().inv) + G().credits;
+        U.closeAll(); G().noise = 0; const inv0 = JSON.stringify([G().inv, G().ammo, G().credits]); /* в витрине бывают и заряды — они в ammo */
         LB.act(vt, null, "vitrine", {}); pick(/^Разбить стекло/);
-        out.vitrine = !!g.objState(vt).vitOpen && G().noise > 0 && (JSON.stringify(G().inv) + G().credits) !== inv0;
+        out.vitrine = !!g.objState(vt).vitOpen && G().noise > 0 && JSON.stringify([G().inv, G().ammo, G().credits]) !== inv0;
       }
       U.closeAll();
       /* 7. решётка вентиляции: «Эхо» называет помещение, где за стеной машина */
@@ -6256,9 +6257,13 @@ LAB.ui.closeAll();
         const dd = r => Math.abs(r.cx - gr.x) + Math.abs(r.cy - gr.y);
         const rm = fl.rooms.filter(r => r && r.num && r.id !== here && dd(r) <= 14).sort((a, b) => dd(a) - dd(b))[0];
         const f = C.foes().find(q => !q.dead && !q.ally && !q.calm);
+        /* остальных — на время замера «успокоить»: на обжитом этаже за стенами бывает много кого */
+        const calm0 = C.foes().filter(q => q !== f && !q.dead && !q.calm); calm0.forEach(q => { q.calm = true; });
         if (rm && f) { f.x = rm.cx; f.y = rm.cy; f.ally = false; f.calm = false; }
         U.closeAll(); LB.act(gr, null, "grate", {});
+        calm0.forEach(q => { q.calm = false; });
         out.grate = rm && f ? new RegExp("в помещении " + rm.num + "\\b").test(last()) : /шахт/.test(last());
+        if (!out.grate) out.grateSaid = (rm ? rm.num : "-") + ": " + last().slice(0, 240);
       }
       /* 8. селектор: вызов в помещении — машина рядом идёт на звук */
       const ic = findFx("intercom", 1);
@@ -6266,10 +6271,13 @@ LAB.ui.closeAll();
         g.CUR.fl.needPower = false;
         U.closeAll(); LB.act(ic, null, "intercom", {});
         const it0 = items()[0], num = it0 ? +((it0.match(/Помещение (\d+)/) || [])[1]) : 0, rm = g.CUR.fl.rooms.find(r => r && r.num === num);
-        const f = C.foes().find(q => !q.dead && !q.calm && !q.ally && !q.neutral && !q.disguised && !(LAB.FOES[q.type].beh || []).includes("stationary"));
+        let f = C.foes().find(q => !q.dead && !q.calm && !q.ally && !q.neutral && !q.disguised && !(LAB.FOES[q.type].beh || []).includes("stationary"));
+        /* на обжитом этаже машин может уже не остаться — тогда поставить патрульного самим */
+        if (rm && !f) { const c = C.freeCellNear(rm.cx, rm.cy, null); if (c) f = C.spawnFoe("patrolbot", c[0], c[1], {}); }
         if (rm && f) { f.x = rm.cx + 1; f.y = rm.cy; f.state = "idle"; f.lastKnown = null; }
         pick(/^Помещение/);
         out.intercom = !!(rm && f && f.lastKnown && f.lastKnown.x === rm.cx && f.lastKnown.y === rm.cy);
+        if (!out.intercom) out.icSaid = JSON.stringify({ rm: rm && rm.num, f: f && [f.type, f.x, f.y, f.state, f.lastKnown], it0 }) + " " + last().slice(0, 200);
         U.closeAll(); LB.act(ic, null, "intercom", {}); out.intercomCd = /ещё горячее/.test(last());
       }
       /* 9. ячейки хранения: жёлтой отмычкой — открыта */
@@ -6319,7 +6327,7 @@ LAB.ui.closeAll();
   ok(lib.perk && lib.mind === 1 && lib.bp === 1 && lib.chem === 1 && lib.calm, "книги учат: три детектива — «Чутьё», три о науке — интеллект, техника — схема, химия — рецептура, повесть успокаивает (" + JSON.stringify({ perk: lib.perk, mind: lib.mind, bp: lib.bp, chem: lib.chem, calm: lib.calm }) + ")");
   ok(lib.memoItem && lib.memo, "архивные коробки: записка с кодом этажа — код в архиве, замок о нём знает");
   ok(lib.shredWrong && lib.shred, "шредер: не по порядку — снова перемешано; по порядку — документ сложен и лёг в архив");
-  ok(lib.vitrine && lib.grate && lib.intercom && lib.intercomCd && lib.deposit && lib.mail >= 2 && lib.catalog, "витрина, решётка, селектор, ячейки, почта, каталог (" + JSON.stringify({ v: lib.vitrine, g: lib.grate, i: lib.intercom, cd: lib.intercomCd, d: lib.deposit, m: lib.mail, c: lib.catalog }) + ")");
+  ok(lib.vitrine && lib.grate && lib.intercom && lib.intercomCd && lib.deposit && lib.mail >= 2 && lib.catalog, "витрина, решётка, селектор, ячейки, почта, каталог (" + JSON.stringify({ v: lib.vitrine, g: lib.grate, i: lib.intercom, cd: lib.intercomCd, d: lib.deposit, m: lib.mail, c: lib.catalog }) + (lib.grateSaid ? "; решётка: " + lib.grateSaid : "") + (lib.icSaid ? "; селектор: " + lib.icSaid : "") + ")");
   ok(lib.filmOff && lib.filmOn && lib.tornLbl && lib.tornNoTape && lib.tornFixed, "микрофильмы — только при питании; порванная плёнка — изолентой (" + JSON.stringify({ off: lib.filmOff, on: lib.filmOn, lbl: lib.tornLbl, no: lib.tornNoTape, fix: lib.tornFixed }) + ")");
 
   /* (3.6, просьба автора) Химический стол на каждом этаже; химия руками — пробирки, колбы,
@@ -6451,8 +6459,11 @@ LAB.ui.closeAll();
         const sst = g.objState(stand);
         U.closeAll(); spoken.length = 0; g.objMenu(stand); click(/^Пройти испытание/); click(/^К решению/); click(/^Отойти от задачи/); await wait(60);
         out.standAway = !sst.pzN && !/Стенд гаснет/.test(said());
+        /* начали решать и отошли — в следующий раз задача другая (иначе попытки и пробы возвращались бы без конца) */
+        U.closeAll(); spoken.length = 0; g.objMenu(stand); click(/^Пройти испытание/); click(/^К решению/); click(/^Капнуть щёлочь: одну каплю/); click(/^Отойти от задачи/); await wait(60);
+        out.standAway2 = sst.pzN === 1 && /задача будет другой/.test(said()) && !/Стенд гаснет/.test(said());
         U.closeAll(); g.objMenu(stand); click(/^Пройти испытание/); click(/^К решению/); const N1 = CP._last().N(); for (let i = 0; i < 3; i++) click(/^Сдать пробу/); await wait(60);
-        out.standFail = sst.pzN === 1 && /с новой задачей/.test(said());
+        out.standFail = sst.pzN === 2 && /с новой задачей/.test(said());
         U.closeAll(); g.objMenu(stand); click(/^Пройти испытание/); click(/^К решению/); solve.titr(CP._last()); await wait(60);
         out.standSolved = !!sst.solved;
         stand.kind = kind0; stand.diff = diff0;
@@ -6464,6 +6475,11 @@ LAB.ui.closeAll();
       if (ld) {
         U.closeAll(); spoken.length = 0; g.doorMenu(ld); click(/^Решить задачу замка/); click(/^К решению|^К доске/); click(/^Отойти от задачи/); await wait(60);
         out.lockAway = !/не принял решение/.test(said()) && !((g.CUR.fs.lockN || {})[ld.id]);
+        /* начали решать и просто закрыли окно — как «отойти»: замок не шумит, задачу меняет */
+        const k0 = ld.lock.kind; ld.lock.kind = "titr";
+        U.closeAll(); spoken.length = 0; g.doorMenu(ld); click(/^Решить задачу замка/); click(/^К решению/); click(/^Капнуть щёлочь: одну каплю/); U.closeAll(); await wait(60);
+        out.lockAway2 = (g.CUR.fs.lockN || {})[ld.id] === 1 && /задача будет другой/.test(said()) && !/не принял решение/.test(said());
+        ld.lock.kind = k0; delete g.CUR.fs.lockN[ld.id];
       }
       U.closeAll();
       /* 7. обстановка: шкаф с реактивами, химический замок, банка с кислотой, препараты, клетки, смотровое окно */
@@ -6482,9 +6498,10 @@ LAB.ui.closeAll();
       const cs = mk("chemsafe"), crS = G().credits;
       CP.act(cs, LAB.FIX.T.chemsafe, "chemsafe", {}); click(/^К решению/); const Lc = CP._last(); solve[Lc.kind](Lc); await wait(60);
       out.chemsafe = !!g.objState(cs).csOpen && G().credits > crS && (CP.act(cs, LAB.FIX.T.chemsafe, "chemsafe", {}), /открыт и пуст/.test(last()));
-      const aj = mk("acidjar"), invA = JSON.stringify(G().inv) + G().credits;
+      const aj = mk("acidjar"), invA = JSON.stringify([G().inv, G().ammo, G().credits]); /* на дне бывают и заряды — они в ammo */
       CP.act(aj, LAB.FIX.T.acidjar, "acidjar", {}); click(/^К решению/); solve.titr(CP._last()); await wait(60);
-      out.acidjar = !!g.objState(aj).ajDone && (JSON.stringify(G().inv) + G().credits) !== invA;
+      out.acidjar = !!g.objState(aj).ajDone && JSON.stringify([G().inv, G().ammo, G().credits]) !== invA;
+      if (!out.acidjar) out.ajSaid = JSON.stringify(g.objState(aj)) + " " + spoken.slice(-3).join(" / ").slice(0, 300);
       const sp = mk("specimens"), invS = JSON.stringify(G().inv);
       LB.act(sp, null, "sample", {}); const got1 = JSON.stringify(G().inv) !== invS; LB.act(sp, null, "sample", {});
       out.sample = got1 && /пуста/.test(last());
@@ -6517,8 +6534,8 @@ LAB.ui.closeAll();
   ok(chx.film && chx.tissue && chx.report, "плёнка проявляется — снимки в архиве; анализ ткани даёт отчёт, медик его покупает, повар — нет (" + JSON.stringify({ f: chx.film, t: chx.tissue, r: chx.report }) + ")");
   ok(chx.puzAll, "химические задачи: титрование, склянки, методика, хроматограмма, цепочка — на трёх ступенях решаются, опыт химика растёт (" + JSON.stringify(chx.puz) + ")");
   ok(chx.keepOpen && chx.failCb && chx.awayCb && chx.oldKeep, "головоломки: неверный ответ окно не закрывает, три неверных — провал, «отойти» — не провал (" + JSON.stringify({ k: chx.keepOpen, f: chx.failCb, a: chx.awayCb, o: chx.oldKeep }) + ")");
-  ok(chx.standAway !== false && chx.standFail !== false && chx.standSolved !== false && chx.lockAway !== false && (chx.standSolved || chx.lockAway), "стенд: отошли — без последствий, провал — новая задача, решение — награда; логический замок: отошли — не шумит (" + JSON.stringify({ sa: chx.standAway, sf: chx.standFail, ss: chx.standSolved, la: chx.lockAway }) + ")");
-  ok(chx.reagents && chx.reagents.rgGot === 8 && chx.chemsafe && chx.acidjar && chx.sample && chx.freed && chx.knock && chx.paste === true, "обстановка: шкаф с реактивами — раз (и под замком), химический замок, банка с кислотой, образец из банки, крыса на волю, стук в окно бокса, кислотная паста (" + JSON.stringify({ rg: chx.reagents, cs: chx.chemsafe, aj: chx.acidjar, s: chx.sample, f: chx.freed, k: chx.knock, p: chx.paste }) + ")");
+  ok(chx.standAway !== false && chx.standAway2 !== false && chx.standFail !== false && chx.standSolved !== false && chx.lockAway !== false && chx.lockAway2 !== false && (chx.standSolved || chx.lockAway), "стенд: отошли — без последствий, начатую и брошенную задачу сменит, провал — новая задача, решение — награда; логический замок: отошли — не шумит, начатую задачу сменит и при закрытом окне (" + JSON.stringify({ sa: chx.standAway, sa2: chx.standAway2, sf: chx.standFail, ss: chx.standSolved, la: chx.lockAway, la2: chx.lockAway2 }) + ")");
+  ok(chx.reagents && chx.reagents.rgGot === 8 && chx.chemsafe && chx.acidjar && chx.sample && chx.freed && chx.knock && chx.paste === true, "обстановка: шкаф с реактивами — раз (и под замком), химический замок, банка с кислотой, образец из банки, крыса на волю, стук в окно бокса, кислотная паста (" + JSON.stringify({ rg: chx.reagents, cs: chx.chemsafe, aj: chx.acidjar, s: chx.sample, f: chx.freed, k: chx.knock, p: chx.paste }) + (chx.ajSaid ? "; банка: " + chx.ajSaid : "") + ")");
   ok(chx.guide, "руководство: главы «Химия руками» и «Исследования и опыты»");
 
   console.log("Обход этажей одного зерна: вход, такты, осмотр");

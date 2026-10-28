@@ -2770,7 +2770,9 @@ function ambushPoint() {
   }
   return okoPoint({ to: hp, minHero: 12, dmin: 10, dmax: 30, corr: true }) || okoPoint({ to: hp, minHero: 12, dmin: 10, dmax: 30 });
 }
-/* Клетка рядом с точкой засады, которой герой не видит и до которой не меньше семи шагов. */
+/* Клетка рядом с точкой засады, которой герой не видит и до которой не меньше семи шагов.
+   (3.6) Помещения и коридоры стали просторнее, и рядом укрыться бывает негде: тогда — любая
+   укрытая клетка, до которой от засады не больше дюжины шагов, лишь бы не на виду. */
 function hiddenNear(p) {
   var fl = CUR().fl, fs = CUR().fs, hp = heroPos();
   for (var r = 1; r <= 3; r++) {
@@ -2784,7 +2786,7 @@ function hiddenNear(p) {
     }
     if (best) return best;
   }
-  return null;
+  return okoPoint({ from: { x: p[0], y: p[1] }, minHero: 7, dmin: 1, dmax: 12 });
 }
 function strike(n, up) {
   var pool = strikePool(), p = ambushPoint(), got = [], hard = diff().punLvl >= 6;

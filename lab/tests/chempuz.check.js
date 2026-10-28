@@ -8,7 +8,8 @@
    не короче нужного и укладывается в запас операций); решение по
    разгадке (_last) пунктами меню проходит; на части зёрен — неверный
    ответ: окно задачи не закрывается, после третьего — провал; «Отойти от
-   задачи» — провал с пометкой «отошёл». Окна — как в ui.js.
+   задачи» — провал с пометкой «отошёл» (нетронутая задача — без пометки
+   «начата», начатая и закрытая окном — с ней). Окна — как в ui.js.
    Запуск: node lab/tests/chempuz.check.js [число зёрен, не меньше 60] */
 "use strict";
 const fs = require("fs"), path = require("path"), vm = require("vm");
@@ -48,7 +49,7 @@ LAB.ui = {
     items = (items || []).filter(Boolean);
     if (!items.length) return null;
     for (let si = stack.length - 1; si >= 0; si--) if (stack[si].title === title) { stack.splice(si); break; }
-    const w = { title, items, i: 0, keep: !!opts.keep, rebuild: opts.rebuild || null, note: false };
+    const w = { title, items, i: 0, keep: !!opts.keep, rebuild: opts.rebuild || null, onClose: opts.onClose || null, note: false };
     stack.push(w);
     return w;
   },
@@ -57,8 +58,8 @@ LAB.ui = {
     const w = LAB.ui.menu(title, [{ label: String(text), keep: true, fn() {} }, { label: opts.closeLabel || "Закрыть", fn() { if (after) after(); } }], {});
     w.note = true; w.text = String(text);
   },
-  closeTop() { if (!top()) return false; stack.pop(); const t = top(); if (t && t.rebuild) t.items = t.rebuild(); return true; },
-  closeAll() { stack.length = 0; },
+  closeTop() { if (!top()) return false; const w = stack.pop(); if (w.onClose) w.onClose(); const t = top(); if (t && t.rebuild) t.items = t.rebuild(); return true; },
+  closeAll() { while (stack.length) { const w = stack.pop(); if (w.onClose) w.onClose(); } },
   top, refresh() { const t = top(); if (t && t.rebuild) t.items = t.rebuild(); }, render() {}
 };
 function activate(w, idx) {
@@ -115,7 +116,7 @@ for (const kind of CP.KINDS) for (let d = 0; d < 3; d++) for (let s = 1; s <= SE
   const at = kind + "/" + d + "/" + s, res = [];
   stack.length = 0; timers.length = 0;
   try {
-    if (!LAB.puzzles.open(kind, s * 7919 + d, (ok, away) => res.push([ok, !!away]), { diff: d })) { err(at + ": задача не открылась"); continue; }
+    if (!LAB.puzzles.open(kind, s * 7919 + d, (ok, away, fresh) => res.push([ok, !!away, !!fresh]), { diff: d })) { err(at + ": задача не открылась"); continue; }
     const w0 = top();
     if (!w0 || !w0.note) { err(at + ": нет окна условия"); continue; }
     checkText(w0.text, at + " / условие");
@@ -150,8 +151,13 @@ for (const kind of CP.KINDS) for (let d = 0; d < 3; d++) for (let s = 1; s <= SE
       if (r2.length !== 1 || r2[0][0] !== false || r2[0][1]) err(at + ": три неверных ответа — не провал (" + JSON.stringify(r2) + ")");
     }
     if (s === 2) {
-      const r3 = []; stack.length = 0; LAB.puzzles.open(kind, 5 + d, (ok, away) => r3.push([ok, !!away]), { diff: d }); click(/^К решению/, at); click(/^Отойти от задачи/, at); flush();
-      if (r3.length !== 1 || r3[0][0] !== false || !r3[0][1] || top()) err(at + ": «Отойти от задачи» — не «отошёл» (" + JSON.stringify(r3) + ")");
+      const r3 = []; stack.length = 0; LAB.puzzles.open(kind, 5 + d, (ok, away, fresh) => r3.push([ok, !!away, !!fresh]), { diff: d }); click(/^К решению/, at); click(/^Отойти от задачи/, at); flush();
+      if (r3.length !== 1 || r3[0][0] !== false || !r3[0][1] || r3[0][2] || top()) err(at + ": «Отойти от задачи» от нетронутой — не «отошёл, задача ждёт» (" + JSON.stringify(r3) + ")");
+    }
+    /* начали решать (первый пункт) и закрыли окно — «отошёл» и «начата»: в следующий раз задача будет другой */
+    if (s === 3) {
+      const r4 = []; stack.length = 0; LAB.puzzles.open(kind, 7 + d, (ok, away, fresh) => r4.push([ok, !!away, !!fresh]), { diff: d }); click(/^К решению/, at); clickAt(0, at); LAB.ui.closeAll(); flush();
+      if (r4.length !== 1 || r4[0][0] !== false || !r4[0][1] || !r4[0][2] || top()) err(at + ": начатая задача, закрытое окно — не «отошёл, начата» (" + JSON.stringify(r4) + ")");
     }
   } catch (e) { err(at + ": " + e.message); }
 }

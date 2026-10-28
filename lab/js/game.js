@@ -1669,8 +1669,8 @@ function logicDoor(d) {
   if (!LAB.puzzles) { say("Замок молчит."); return; }
   /* (3.6) попытки кончились — замок сменит задачу: та же задача снова дала бы попытки без конца */
   var ln = CUR.fs.lockN = CUR.fs.lockN || {};
-  LAB.puzzles.open(d.lock.kind, d.lock.seed + 7919 * (ln[d.id] || 0), function (ok, away) {
-    if (!ok && away) return; /* просто отошли: задача ждёт */
+  LAB.puzzles.open(d.lock.kind, d.lock.seed + 7919 * (ln[d.id] || 0), function (ok, away, fresh) {
+    if (!ok && away) { if (fresh) ln[d.id] = (ln[d.id] || 0) + 1; return; } /* отошли: нетронутая задача ждёт, начатая сменится */
     if (ok) { A("play", "code_ok"); CUR.fs.doors[d.id] = 1; openDoor(d); sayq("Замок принял решение. Дверь открыта."); gainXP(14 + 8 * (d.lock.diff || 0)); }
     else { ln[d.id] = (ln[d.id] || 0) + 1; A("play", "term_err"); sayq("Замок не принял решение и сменил задачу: можно подойти снова."); if (LAB.combat) LAB.combat.noise(3); }
     if (LAB.oko && LAB.oko.react) LAB.oko.react(ok ? "puzzle_ok" : "puzzle_fail");
@@ -1912,16 +1912,15 @@ function puzzleMenu(o) {
   var dw = o.diff != null && LAB.puzzles && LAB.puzzles.hasDiff && LAB.puzzles.hasDiff(o.kind) ? ", " + ["простая", "средняя", "сложная"][o.diff] : "";
   UIx("menu", "Стенд испытаний: " + (kinds[o.kind] || "головоломка") + dw, [
     { label: "Пройти испытание", fn: function () {
-      var done = function (ok, away) {
+      var done = function (ok, away, fresh) {
         if (st.solved) return; /* (3.5) награда стенда — один раз */
-        if (!ok && away) return; /* (3.6) просто отошли от задачи: не провал */
+        /* (3.6) просто отошли от задачи — не провал; начатая задача в следующий раз сменится */
+        if (!ok && away) { if (fresh) st.pzN = (st.pzN || 0) + 1; return; }
         if (LAB.oko && LAB.oko.react) LAB.oko.react(ok ? "puzzle_ok" : "puzzle_fail");
-        /* (3.6) попытки кончились — у стенда новая задача того же вида */
-        if (!ok) {
-          var fresh = !!(LAB.puzzles && LAB.puzzles.has(o.kind)); /* задача окна (puzzles.js) — по зерну стенда: новое зерно, новая задача */
-          if (fresh) st.pzN = (st.pzN || 0) + 1;
-          A("play", "term_err"); say(fresh ? "Стенд гаснет и снова загорается — с новой задачей: можно попробовать ещё раз." : "Стенд гаснет и снова загорается: можно попробовать ещё раз."); return;
-        }
+        /* (3.6) попытки кончились — у стенда новая задача того же вида: задачи окна, реле и
+           загадки — по зерну стенда (новое зерно — новая задача), настройка частот и подбор
+           ключа и так всякий раз новые */
+        if (!ok) { st.pzN = (st.pzN || 0) + 1; A("play", "term_err"); say("Стенд гаснет и снова загорается — с новой задачей: можно попробовать ещё раз."); return; }
         st.solved = true; A("play", "term_ok"); LAB.UI.fanfare(); gainXP(18 + 10 * (o.diff || 0)); checkQuests();
         var loot = (o.loot || []).slice(); loot.forEach(function (it, k) { if (!it.id) it.id = o.id + "-p" + k; });
         /* (2.0) за среднюю и сложную задачу — премия кредитами */
@@ -1933,10 +1932,10 @@ function puzzleMenu(o) {
       UIx("closeAll");
       var hard = Math.min(3, Math.floor(G.L / 20));
       if (o.kind === "sort") LAB.mini.sortTones(4 + hard, done, { title: "Настройка частот" });
-      else if (o.kind === "relays") LAB.mini.relays(4 + hard, done, { title: "Схема реле", seed: o.seed });
+      else if (o.kind === "relays") LAB.mini.relays(4 + hard, done, { title: "Схема реле", seed: (o.seed || 1) + 7919 * (st.pzN || 0) });
       else if (o.kind === "bulls") LAB.mini.bulls(3 + (hard >= 2 ? 1 : 0), done, { title: "Подбор ключа" });
       else if (LAB.puzzles && LAB.puzzles.has(o.kind)) LAB.puzzles.open(o.kind, (o.seed || 1) + 7919 * (st.pzN || 0), done, { title: "Стенд испытаний", diff: o.diff });
-      else askRiddle(riddleFor(o.seed || 1, G.L), "Загадка стенда", done);
+      else askRiddle(riddleFor((o.seed || 1) + 7919 * (st.pzN || 0), G.L), "Загадка стенда", done);
     } },
     { label: "Осмотреть", fn: function () { say(LAB.OBJ.puzzle.desc); } }
   ]);
@@ -2147,11 +2146,10 @@ function terminalMenu(o) {
       LAB.puzzles && LAB.puzzles.has("termhack") ? { label: "Подобрать пароль по словарю (логическая задача)", fn: function () {
         UIx("closeAll");
         var dd = G.L <= 5 ? 0 : G.L <= 30 ? 1 : 2;
-        LAB.puzzles.open("termhack", (LAB.hash32(o.id + ":" + CUR.key + ":" + (st.dictN || 0)) % 99991) + 1, function (ok) {
-          var ps = LAB.puzzles._last && LAB.puzzles._last.st;
+        LAB.puzzles.open("termhack", (LAB.hash32(o.id + ":" + CUR.key + ":" + (st.dictN || 0)) % 99991) + 1, function (ok, away, fresh) {
           if (ok) { st.hacked = true; A("play", "term_ok"); gainXP(10 + 4 * dd); sayq("Доступ получен."); checkQuests(); if (LAB.oko) LAB.oko.event("terminal_hack", { x: o.x, y: o.y, o: o }); terminalMenu(o); }
-          else if (ps && ps.tries < ps.limit) {
-            if (ps.tries > 0) { st.dictN = (st.dictN || 0) + 1; say("Вы отходите. Терминал записал неверные пароли и сменил свой: в следующий раз — другой словарь."); }
+          else if (away) {
+            if (fresh) { st.dictN = (st.dictN || 0) + 1; say("Вы отходите. Терминал записал попытку и сменил пароль: в следующий раз — другой словарь."); }
             else say("Вы отходите. Терминал ждёт пароля.");
           }
           else termFail(o, st, "Три неверных пароля.");

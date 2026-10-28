@@ -43,7 +43,7 @@ function reward(kind, diff) {
   }
   return "";
 }
-function wrap(kind, diff, cb) { return function (ok, away) { if (ok) { var t = reward(kind, diff); if (t) sayq(t.trim()); } if (cb) cb(ok, away); }; } /* away — игрок просто отошёл (puzzles.js, run) */
+function wrap(kind, diff, cb) { return function (ok, away, fresh) { if (ok) { var t = reward(kind, diff); if (t) sayq(t.trim()); } if (cb) cb(ok, away, fresh); }; } /* away — игрок просто отошёл, fresh — от начатой задачи (puzzles.js, run) */
 
 /* ════════ ТИТРОВАНИЕ ════════ */
 function titr(seed, cb, opts) {
@@ -310,8 +310,8 @@ function chemsafe(o) {
   var s = st(o);
   if (s.csOpen) { say("Шкаф открыт и пуст: ценные реактивы вы уже забрали."); return; }
   var kinds = ["titr", "vials", "spectr", "protocol"], k = kinds[h32(o.id + ":" + CUR().key) % kinds.length], d = Math.min(2, Math.floor(G().L / 12) + (h32("csd:" + o.id) % 2));
-  LAB.puzzles.open(k, (h32("cs:" + o.id + ":" + CUR().key + ":" + (s.pzN || 0)) % 99991) + 1, function (ok, away) {
-    if (!ok && away) return; /* просто отошли: задача ждёт */
+  LAB.puzzles.open(k, (h32("cs:" + o.id + ":" + CUR().key + ":" + (s.pzN || 0)) % 99991) + 1, function (ok, away, fresh) {
+    if (!ok && away) { if (fresh) s.pzN = (s.pzN || 0) + 1; return; } /* отошли: нетронутая задача ждёт, начатая сменится */
     if (!ok) { s.pzN = (s.pzN || 0) + 1; say("Датчик замка гаснет: ячейку нужно промыть и заправить заново — задача будет другой. Попробуйте ещё раз, когда будете готовы."); return; }
     s.csOpen = 1;
     var r = rng(o, "cs"), got = reagentsOf(r, r.int(2, 3), true).map(function (id) { return give(id); });
@@ -327,8 +327,8 @@ function acidjar(o) {
   var s = st(o);
   if (s.ajDone) { say("В банке — нейтральная вода с солью. На дне пусто: вещь вы уже достали."); return; }
   var d = Math.min(2, Math.floor(G().L / 15));
-  LAB.puzzles.open("titr", (h32("aj:" + o.id + ":" + CUR().key + ":" + (s.pzN || 0)) % 99991) + 1, function (ok, away) {
-    if (!ok && away) return;
+  LAB.puzzles.open("titr", (h32("aj:" + o.id + ":" + CUR().key + ":" + (s.pzN || 0)) % 99991) + 1, function (ok, away, fresh) {
+    if (!ok && away) { if (fresh) s.pzN = (s.pzN || 0) + 1; return; }
     if (!ok) { s.pzN = (s.pzN || 0) + 1; say("Кислота всё ещё едкая: лезть туда рукой нельзя. Попробуйте ещё раз — с новой порцией щёлочи."); return; }
     s.ajDone = 1;
     var r = rng(o, "aj"), L = G().L, F = G().F, loot = LAB.annexLoot ? LAB.annexLoot(r, L, F, "stash", "desk", true).filter(function (x) { return x.kind !== "weapon" && x.kind !== "armor"; }).slice(0, 2) : [];
