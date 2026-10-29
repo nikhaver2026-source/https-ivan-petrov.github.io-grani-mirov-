@@ -452,7 +452,7 @@ function weapons() {
     items.push({ label: w.n.charAt(0).toUpperCase() + w.n.slice(1) + ", с уровня " + (LAB.WEAPON_DEPTH[id] || 1), fn: (function (ww) { return function () { LAB.ui.note(ww.n, ww.desc + " Урон — " + LAB.DTYPE_N[ww.dt] + ", дальность " + ww.rng + (ww.ammo !== "none" ? ", питание — " + LAB.AMMO[ww.ammo].n.toLowerCase() : ", без батарей") + ".", weapons); }; })(w) });
   }
   items.push({ label: "Назад", fn: refs });
-  LAB.ui.menu("Оружие", items);
+  LAB.ui.menu("Справочник: оружие", items); /* своё название: «Оружие» — окно инвентаря, одинаковое закрыло бы его */
 }
 function armors() {
   var items = [];
@@ -466,7 +466,7 @@ function armors() {
     }; })(a) });
   }
   items.push({ label: "Назад", fn: refs });
-  LAB.ui.menu("Броня", items);
+  LAB.ui.menu("Справочник: броня", items);
 }
 
 LAB.guide = { open: open, keyboard: keyboard, chapters: CH, keys: KB, sections: SEC, touch: TOUCH, section: section };

@@ -6439,7 +6439,16 @@ LAB.ui.closeAll();
   console.log("(Голос ОКО): записи, выбор голоса, женский род, сбои");
   const ov = await page.evaluate(async () => {
     const out = {}, sleep = ms => new Promise(r => setTimeout(r, ms)), S = LAB.settings, V = LAB.okoVoice;
-    const was = { v: S.okoVoice, fx: S.okoFx };
+    const was = { v: S.okoVoice, fx: S.okoFx, ready: LAB.OKO_VOICED.ready };
+    /* (3.7) пока записаны не все реплики, голоса ОКО в игре нет: синтезатор и никаких его настроек */
+    LAB.OKO_VOICED.ready = false; LAB.ui.closeAll();
+    const lb0 = i => typeof i.label === "function" ? i.label() : i.label;
+    LAB.ui.settings(); const setIt = LAB.ui.top().items, setN = setIt.filter(i => /ОКО/.test(lb0(i))).length;
+    const mixIt = setIt.filter(i => /^Микшер/.test(lb0(i)))[0]; if (mixIt) mixIt.fn();
+    const mixN = mixIt && /Микшер/.test(LAB.ui.top().title) ? LAB.ui.top().items.filter(i => /ОКО/.test(lb0(i))).length : -1;
+    LAB.ui.closeAll();
+    out.off = V.voice() === "tts" && !V.play("ОКО по громкой связи: «Я слушаю ваш пульс по вентиляции, носитель. Он учащается.»", { prio: "event" }) && !V.preview("m") && setN === 0 && mixN === 0;
+    LAB.OKO_VOICED.ready = true;
     const plays = [], orig = LAB.Sound.play;
     LAB.Sound.play = function (id, o) { plays.push({ id: id, o: o || {} }); return orig.apply(this, arguments); };
     LAB.ui.closeAll();
@@ -6499,9 +6508,10 @@ LAB.ui.closeAll();
     out.menu = !!vi && vi.options.map(o => o.v).join(",") === "m,f,tts" && items.some(i => lb(i) === "Сбои и шёпот в голосе ОКО");
     if (vi) { SPOKEN.length = 0; vi.set("f"); out.menuSet = S.okoVoice === "f" && /женским голосом/.test(vi.descOf("f")); vi.set("m"); }
     LAB.ui.closeAll();
-    LAB.Sound.play = orig; S.okoVoice = was.v; S.okoFx = was.fx;
+    LAB.Sound.play = orig; S.okoVoice = was.v; S.okoFx = was.fx; LAB.OKO_VOICED.ready = was.ready;
     return out;
   });
+  ok(ov.off, "пока записаны не все реплики — голоса ОКО нет: синтезатор, в настройках и микшере о нём ни слова");
   ok(ov.def && ov.listed, "голос ОКО по умолчанию — мужской, сбои и шёпот включены; список записей знает реплику обоих голосов");
   ok(ov.rec && ov.hist, "записанная реплика звучит записью ОКО, синтезатор её не читает, текст — в истории объявлений");
   ok(ov.tts, "реплика без записи — синтезатором, как прежде");
@@ -7023,6 +7033,109 @@ LAB.ui.closeAll();
   ok(vc2.set[0] === "ru.late.engine::anna" && vc2.backend === "android" && vc2.voice === "ru.late.engine::anna" && vc2.tts === "system" && /anna/.test(vc2.label || "") && !/::/.test(vc2.label || ""),
     "после перезапуска — тот же голос: игра отдаёт его телефону при запуске и говорит синтезатором телефона (" + JSON.stringify(vc2) + ")");
   await ctxV.close(); await ctxV2.close();
+
+  /* (3.7) Проверка перед сборкой, этап «ошибки»: исправленное не возвращается — кредиты
+     с чипом старателя, фармаколог, разговор с выжившим, счёт этажей, отход от взлома,
+     пройденная игра, привязка к капсуле и записки после перестройки мира, вехи, справочник,
+     звук удара от звуковой атаки, очередь записанного голоса ОКО, id стволов, добыча касс */
+  console.log("(3.7) Проверка перед сборкой: исправленные ошибки");
+  const e1 = await page.evaluate(async () => {
+    const out = {}, sleep = ms => new Promise(r => setTimeout(r, ms)), g = LAB.game, lb = i => typeof i.label === "function" ? i.label() : i.label;
+    LAB.ui.closeAll(); localStorage.removeItem("lab_slot3"); localStorage.removeItem("lab_slot3_bak");
+    g.newGame(); let G = g.G;
+    /* первый этаж — в счёте этажей (веха «пять этажей» — на пятом) */
+    out.floor1 = !!(G.ach && G.ach.c && G.ach.c.floor === 1);
+    /* чип старателя: и в словах — сколько начислено */
+    const st0 = LAB.implants.stat; LAB.implants.stat = function (k) { return k === "loot" ? 0.2 : st0.apply(this, arguments); };
+    const c0 = G.credits, ph = g.giveItem({ kind: "credits", n: 10 }, true); LAB.implants.stat = st0;
+    out.credits = G.credits - c0 === 12 && /^12 кредитов/.test(ph);
+    /* фармаколог второй ступени: стимулятор при сильной интоксикации — без передозировки, токсинов вдвое меньше */
+    const nod = LAB.chem.noOverdose; LAB.chem.noOverdose = () => true;
+    G.body.tox = 75; G.hp = 50; G.inv.stim = 1; SPOKEN.length = 0; g.useItem("stim");
+    out.pharm = !SPOKEN.some(t => /Передозировка/.test(t)) && G.hp > 50 && Math.round(G.body.tox) === 81;
+    LAB.chem.noOverdose = nod; G.body.tox = 0; G.hp = G.hpMax;
+    /* «Поговорить»: первой звучит первая строка рассказа */
+    const prof = Object.keys(LAB.STORIES || {})[0], npc = { key: "t_np", n: "Тестовый выживший", prof: prof, x: G.x, y: G.y, life: 0, view: 0, okoSaw: 1 };
+    if (prof) { SPOKEN.length = 0; g.openTarget({ type: "npc", ref: npc }); const talk = LAB.ui.top().items.filter(i => lb(i) === "Поговорить")[0]; if (talk) talk.fn(); out.talk = SPOKEN.some(t => t.indexOf(LAB.STORIES[prof][0]) >= 0); LAB.ui.closeAll(); }
+    /* отошли от взлома, не ошибившись: ни тревоги, ни шума */
+    const noise0 = LAB.combat.noise; let noised = 0; LAB.combat.noise = function () { noised++; };
+    ["lockpick", "pick_b", "pick_r", "pick_g"].forEach(k => { delete G.inv[k]; }); /* без отмычек — сразу взлом вручную */
+    SPOKEN.length = 0; g.hackDoor({ id: "t_door", x: G.x, y: G.y, lock: { type: "card", tier: 1 } }); await sleep(100);
+    LAB.mini.cancel(); await sleep(150);
+    out.walk = !noised && SPOKEN.some(t => /не потревожив защиту/.test(t)) && !SPOKEN.some(t => /Сработала тревога/.test(t));
+    LAB.combat.noise = noise0;
+    /* пройденная игра: запись не продолжается — сразу новая игра */
+    G.done = true; g.saveSlot(3); G.done = false;
+    SPOKEN.length = 0; const ld = g.loadSlot(3);
+    out.done = ld === false && !!(g.slotInfo(3) || {}).done && SPOKEN.some(t => /пройдена до конца/.test(t)) && /пройдена до конца/.test(g.slotText(3));
+    localStorage.removeItem("lab_slot3"); localStorage.removeItem("lab_slot3_bak");
+    /* запись прежнего мира: привязка — к капсуле этого этажа рядом с ней; записки — под пометкой, новые попадают в архив */
+    const old = JSON.parse(JSON.stringify(G));
+    old.worldV = 1; old.L = 1; old.F = 1; old.x = 0; old.y = 0;
+    old.checkpoint = { L: 1, F: 1, x: 0, y: 0, cap: "o999" };
+    old.noteList = [{ id: "1-1-i5", t: "Старая записка", x: "Код 1 2 3 4.", a: "", L: 1, F: 1, code: "1234" }, { id: "lib:arc1", t: "Глобальный документ", x: "Текст.", a: "", L: 1, F: 1 }];
+    old.notes = { "1-1-i5": 1, "lib:arc1": 1 };
+    localStorage.setItem("lab_slot3", JSON.stringify({ meta: { ver: LAB.VERSION, L: 1, F: 1, diff: old.diff, tb: 0, lvl: old.lvl, hp: old.hp, hpMax: old.hpMax, ms: 0, date: Date.now(), samples: 0 }, g: old }));
+    out.oldLoad = g.loadSlot(3) !== false; G = g.G;
+    const cap = g.CUR.fl.objs.filter(o => o.type === "capsule")[0], cp = G.checkpoint || {};
+    out.cp = !!cap && cp.cap === cap.id && !cp.fix && Math.max(Math.abs(cp.x - cap.x), Math.abs(cp.y - cap.y)) <= 3;
+    const n0 = G.noteList[0], n1 = G.noteList[1];
+    out.notes = !!n0 && n0.id === "w1:1-1-i5" && n0.old === 1 && n0.code === undefined && !!G.notes["w1:1-1-i5"] && !G.notes["1-1-i5"] && !!n1 && n1.id === "lib:arc1" && !!G.notes["lib:arc1"] && g.noteForCode("1234") === null;
+    localStorage.removeItem("lab_slot3"); localStorage.removeItem("lab_slot3_bak");
+    g.newGame(); G = g.G;
+    /* скрытые вехи по уровню не видны заранее */
+    LAB.ach.ev("level", 12); LAB.ach.menu();
+    const achL = (LAB.ui.top().items || []).map(lb).join(" | ");
+    out.ach = !/Колыбел|Отражени|Механизм|Исток/.test(achL);
+    LAB.ui.closeAll();
+    /* справочник: окна оружия и брони — свои, окно оружия из инвентаря не закрывают */
+    LAB.guide.open();
+    const refs = LAB.ui.top().items.filter(i => /^Справочники/.test(lb(i)))[0]; if (refs) refs.fn();
+    const wpn = LAB.ui.top().items.filter(i => lb(i) === "Оружие")[0]; if (wpn) wpn.fn();
+    out.guide = LAB.ui.top().title === "Справочник: оружие";
+    LAB.ui.closeAll();
+    /* звуковая атака — свой звук удара (прежде hurt_sonic не было — тишина) */
+    const pl0 = LAB.Sound.play, ids = []; LAB.Sound.play = function (id) { ids.push(id); return pl0.apply(this, arguments); };
+    LAB.atmos.hurt("sonic", 5); await sleep(50);
+    out.sonic = ids.indexOf("hurt_field") >= 0;
+    /* записанный голос ОКО: реплики по очереди, тишина снимает и очередь */
+    const V = LAB.okoVoice, REC = "Я слушаю ваш пульс по вентиляции, носитель. Он учащается.", K = V.key(REC), rd = LAB.OKO_VOICED.ready, ov0 = LAB.settings.okoVoice;
+    LAB.OKO_VOICED.ready = true; LAB.settings.okoVoice = "m"; V._rng(() => 0.99);
+    if (!LAB.Bank.has("oko_m_" + K)) LAB.Bank.def("oko_m_" + K, ["oko/m/" + K + ".mp3"], { bus: "voice", vary: 0 });
+    for (let i = 0; i < 50 && !LAB.Bank.ready("oko_m_" + K); i++) { LAB.Bank.preload(["oko_m_" + K]); await sleep(100); }
+    ids.length = 0;
+    V.play("ОКО по громкой связи: «" + REC + "»", { prio: "event" }); V.play("ОКО по громкой связи: «" + REC + "»", { prio: "event" });
+    await sleep(400);
+    const first = ids.filter(id => id === "oko_m_" + K).length;
+    LAB.Speech.hush(); await sleep(6500);
+    out.okoQ = LAB.Bank.ready("oko_m_" + K) && first === 1 && ids.filter(id => id === "oko_m_" + K).length === 1;
+    V._rng(null); LAB.OKO_VOICED.ready = rd; LAB.settings.okoVoice = ov0; LAB.Sound.play = pl0;
+    /* стволы разных запусков не совпадают по id */
+    const w1 = LAB.makeWeapon("spark", 1, 0, 1), w2 = LAB.makeWeapon("spark", 1, 0, 1);
+    out.wid = w1.id !== w2.id && /^w\d+_[0-9a-z]+_spark$/.test(w1.id);
+    /* касса и часовая мастерская — ценности или выручка; бюро находок — забытые мелочи */
+    const r = LAB.Rng("t", "loot"), val = [], lost = [];
+    for (let i = 0; i < 30; i++) { val.push.apply(val, LAB.annexLoot(r, 5, 3, "valuable", "desk")); lost.push.apply(lost, LAB.annexLoot(r, 5, 3, "lost", "shelf")); }
+    out.loot = val.every(x => x.kind === "credits" || (LAB.ITEMS[x.item] || {}).cat === "valuable") && lost.every(x => x.kind === "credits" || ["watch", "ring", "pen", "harmonica", "flask", "medal"].indexOf(x.item) >= 0);
+    /* матки не развиваются */
+    out.queen = LAB.mutants.evoCap(LAB.mutants.NEW.u_broodhen) === 0;
+    return out;
+  });
+  ok(e1.floor1, "первый этаж — в счёте этажей для вех (веха «пять этажей» — на пятом)");
+  ok(e1.credits, "чип старателя: в словах — та же сумма, что начислена");
+  ok(e1.pharm, "фармаколог второй ступени: стимулятор без передозировки, токсинов от него вдвое меньше");
+  ok(e1.talk, "«Поговорить» с выжившим начинается с первой строки рассказа");
+  ok(e1.walk, "отошли от взлома, не ошибившись, — ни тревоги, ни шума");
+  ok(e1.done, "пройденная игра: запись не продолжается («игра пройдена до конца»), её слот так и подписан");
+  ok(e1.oldLoad && e1.cp, "запись прежнего мира: привязка к капсуле — к капсуле этого этажа, рядом с ней");
+  ok(e1.notes, "запись прежнего мира: записки этажей — под пометкой (коды прежних этажей не действуют), общие документы — как были");
+  ok(e1.ach, "скрытые вехи по уровню не видны заранее");
+  ok(e1.guide, "справочник: окно «Справочник: оружие» — своё, окно оружия из инвентаря не закрывает");
+  ok(e1.sonic, "звуковая атака — слышен удар");
+  ok(e1.okoQ, "записанный голос ОКО: реплики по очереди, тишина снимает и звучащую, и ждущую");
+  ok(e1.wid, "id стволов не повторяются между запусками игры");
+  ok(e1.loot, "касса и часовая мастерская — ценности или выручка, бюро находок — забытые мелочи");
+  ok(e1.queen, "матки не развиваются");
 
   const real = errors.filter(e => !/favicon|sounds\/|Failed to load resource/.test(e));
   ok(!real.length, "ошибок страницы нет" + (real.length ? ": " + real.slice(0, 5).join(" || ") : ""));

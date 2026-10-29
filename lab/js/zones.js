@@ -18,6 +18,8 @@
 var LAB = window.LAB;
 function gm() { return LAB.game; }
 function G() { return LAB.game.G; }
+/* (3.5) отошли от мини-игры, не ошибившись, — не провал (game.js, walkedAway) */
+function away() { return !!(gm().walkedAway && gm().walkedAway()); }
 function CUR() { return LAB.game.CUR; }
 function say(t, o) { LAB.say(t, o); }
 function sayq(t) { LAB.say(t, { interrupt: false }); }
@@ -200,13 +202,15 @@ function search(o) {
   if (s.open) { say(LAB.OBJ[o.type].n + ": пусто."); return; }
   spend(2);
   /* с набором инструментов обыск тщательнее: находится ещё что-нибудь */
+  /* прибавка — в состоянии этажа (xLoot), а не в добыче этажа в памяти: обыск может перехватить
+     ловушка, а этаж — построиться заново после загрузки; выдаёт её само открытие (game.js) */
   if ((G().inv.toolkit || 0) > 0 && !s.tool && o.type !== "fridge") { /* (3.0) в холодильнике деталей и кредитов не бывает (kitchen.js) */
     s.tool = 1;
     var r = LAB.Rng(G().seed, "tk:" + CUR().key + ":" + o.id);
-    if (r.chance(0.5)) { o.loot = (o.loot || []).slice(); o.loot.push(r.chance(0.5) ? { kind: "item", item: LAB.partAt ? LAB.partAt(r, G().L) : "scrap", n: 1 } : { kind: "credits", n: LAB.credits(5 + r.int(0, 10), G().L, G().F) }); }
+    if (r.chance(0.5)) (s.xLoot = s.xLoot || []).push(r.chance(0.5) ? { kind: "item", item: LAB.partAt ? LAB.partAt(r, G().L) : "scrap", n: 1 } : { kind: "credits", n: LAB.credits(5 + r.int(0, 10), G().L, G().F) });
   }
   /* (3.0) в холодильнике обычно не одна вещь: вторая кладётся при открытии (kitchen.js) */
-  if (o.type === "fridge" && !s.cold2 && LAB.kitchen) { s.cold2 = 1; var x2 = LAB.kitchen.fridgeExtra(o); if (x2) { o.loot = (o.loot || []).slice(); LAB.kitchen.addTo(o.loot, x2); } }
+  if (o.type === "fridge" && !s.cold2 && LAB.kitchen) { s.cold2 = 1; var x2 = LAB.kitchen.fridgeExtra(o); if (x2) (s.xLoot = s.xLoot || []).push(x2); }
   gm().openContainer(o);
   if (st(o).open) ev("search", 1); /* (3.5) в счёт — только состоявшийся обыск: окно ловушки и «Отойти» не считаются */
 }
@@ -362,6 +366,7 @@ function fuseMenu(o) {
   else items.push({ label: live.length ? "Обесточить камеры этажа: рубильники и схема реле (головоломка), камер под током — " + live.length : "Камеры этажа уже обесточены: ремонтник ОКО поднимет рубильники по одной камере", disabled: !live.length, why: "Все камеры этажа и так без питания.", fn: function () {
     UIx("closeAll");
     LAB.mini.relays(5 + Math.min(2, Math.floor(G().L / 25)), function (ok) {
+      if (!ok && away()) { say("Вы отошли от щита. Рубильники как были."); return; }
       if (!ok) { A("play", "alarm_short"); say("Автомат выбило с треском: схема не сошлась. Шум слышно по коридору."); if (cb) cb.noise(8); return; }
       cb.cams().forEach(function (f) { if (cb.camState(f) !== "off") cb.camSet(f, "off"); });
       A("play", "power_off"); A("play", "term_ok");
@@ -376,6 +381,7 @@ function fuseMenu(o) {
   if (locked.length) items.push({ label: "Снять аварийные блокировки ОКО с дверей этажа: " + locked.length + " (взлом)", fn: function () {
     UIx("closeAll");
     LAB.mini.hack(gm().hackLength(2 + Math.floor(Math.min(G().L, 20) / 4)), function (ok) {
+      if (!ok && away()) { say("Вы отошли от щита. Защёлки держат двери."); return; }
       if (!ok) { A("play", "term_err"); say("Защёлки не поддались."); if (LAB.oko) LAB.oko.event("hack_fail", { x: o.x, y: o.y }); return; }
       fs.okoLock = {}; A("play", "door_unlock"); say("Аварийные защёлки дверей отпущены. Двери этажа снова открываются.");
       if (LAB.oko) LAB.oko.event("lockdown");
@@ -413,6 +419,7 @@ function compLock(o) {
         function (next) { LAB.mini.sortTones(5 + Math.min(2, dif), next, { title: "Частоты защиты" }); },
         function (next) { LAB.mini.hack(gm().hackLength(4 + Math.floor(Math.min(G().L, 30) / 5) + dif), next, { title: "Вход в систему" }); }
       ], function (ok) {
+        if (!ok && away()) { say("Вы вышли из системы до того, как защита вас заметила."); return; }
         if (!ok) { A("play", "term_err"); say("Защита сбросила сеанс. ОКО отметило попытку."); if (LAB.oko) LAB.oko.event("hack_fail", { x: o.x, y: o.y }); return; }
         s.open = 1; A("play", "term_ok"); if (gm().gainXP) gm().gainXP(25);
         say("Доступ получен. Гриф «Особой важности».");
@@ -427,6 +434,7 @@ function compLock(o) {
     items.push({ label: "Взломать вход (повторите сигналы)", fn: function () {
       UIx("closeAll");
       LAB.mini.hack(gm().hackLength(2 + Math.floor(Math.min(G().L, 20) / 5)), function (ok) {
+        if (!ok && away()) { say("Вы отошли от входа в систему."); return; }
         if (!ok) { A("play", "term_err"); say("Вход не открылся."); if (LAB.oko) LAB.oko.event("hack_fail", { x: o.x, y: o.y }); return; }
         s.open = 1; A("play", "term_ok"); compMenu(o);
         if (LAB.oko) LAB.oko.event("terminal_hack", { x: o.x, y: o.y, o: o });
@@ -487,6 +495,7 @@ var COMP_ITEMS = {
       { label: shut.length ? "Отпереть режимное помещение с пульта (взлом)" : "Отпирать нечего", disabled: !shut.length, fn: function () {
         UIx("closeAll");
         LAB.mini.hack(gm().hackLength(3 + Math.floor(Math.min(G().L, 25) / 4)), function (ok) {
+          if (!ok && away()) { say("Вы отошли от пульта. Команда не отправлена."); return; }
           if (!ok) { A("play", "term_err"); say("Пульт отверг команду."); if (LAB.oko) LAB.oko.event("hack_fail", { x: o.x, y: o.y }); return; }
           var d = shut.sort(function (a, b) { return (Math.abs(a.x - G().x) + Math.abs(a.y - G().y)) - (Math.abs(b.x - G().x) + Math.abs(b.y - G().y)); })[0];
           fs.doors[d.id] = 1; A("play", "door_unlock");
@@ -503,6 +512,7 @@ var COMP_ITEMS = {
       { label: s.data ? "Данные отдела уже скачаны" : "Скачать данные отдела на носитель (взлом)", disabled: !!s.data, fn: function () {
         UIx("closeAll");
         LAB.mini.hack(gm().hackLength(3 + Math.floor(Math.min(G().L, 25) / 5)), function (ok) {
+          if (!ok && away()) { say("Вы прервали передачу сами, до того как сервер её заметил."); return; }
           if (!ok) { A("play", "term_err"); say("Сервер оборвал передачу."); if (LAB.oko) LAB.oko.event("hack_fail", { x: o.x, y: o.y }); return; }
           s.data = 1; A("play", "term_ok");
           say("Данные отдела на носителе. " + gm().giveItem({ kind: "item", item: "datachip", n: 1 }, true) + " Наверху за такие данные платят: пункт снабжения примет носитель в возвратную капсулу.");
@@ -683,6 +693,7 @@ function trialMenu(o) {
         function (next) { LAB.mini.sortTones(5 + Math.min(2, Math.floor(L / 20) + dif), next, { title: "Задача вторая: частоты" }); },
         function (next) { LAB.mini.relays(5 + Math.min(2, Math.floor(L / 25)), next, { title: "Задача третья: схема", seed: (o.seed || 1) % 99999 }); }
       ], function (ok) {
+        if (!ok && away()) { say("Вы отошли от стенда. Аттестацию можно пройти в любой момент."); return; }
         if (!ok) { A("play", "code_fail"); say("Стенд гаснет: «Аттестация не пройдена. Попробуйте ещё раз»."); return; }
         s.done = 1; A("play", "term_ok"); LAB.UI.fanfare && LAB.UI.fanfare();
         if (gm().gainXP) gm().gainXP(40);

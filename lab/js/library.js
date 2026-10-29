@@ -512,9 +512,9 @@ function shredMenu(o) {
     items.push({ label: "Сложено полосок: " + sh.got.length + " из " + parts.length + ". Какая следующая?", info: true, keep: true, fn: function () { say(sh.got.length ? "Уже сложено: " + sh.got.map(function (i) { return parts[i]; }).join(" ") : "Пока не сложено ни одной полоски. Выберите ту, с которой текст начинается."); } });
     sh.order.forEach(function (i) {
       if (sh.got.indexOf(i) >= 0) return;
-      items.push({ label: "Полоска: «" + parts[i] + "»", fn: function () { shredPick(o, i); } });
+      items.push({ label: "Полоска: «" + parts[i] + "»", keep: true, fn: function () { shredPick(o, i); } }); /* окно остаётся: следующая полоска — тут же */
     });
-    if (sh.got.length) items.push({ label: "Разобрать сложенное и начать сначала", fn: function () { st(o).shred.got = []; spend(1); say("Вы снова раскладываете полоски по столу."); } });
+    if (sh.got.length) items.push({ label: "Разобрать сложенное и начать сначала", keep: true, fn: function () { st(o).shred.got = []; spend(1); say("Вы снова раскладываете полоски по столу."); } });
     return items;
   };
   UIx("menu", "Полоски из шредера", build(), { rebuild: build, intro: "Листы рвали руками вдоль строк, и на каждой полоске — кусок текста. Полоски перемешаны: выбирайте их по порядку, сначала ту, с которой текст начинается." });
@@ -648,6 +648,7 @@ function cellMenu(o, i) {
     if (!LAB.mini || !LAB.mini.hack) { openCell(o, c); return; }
     LAB.mini.hack(gm().hackLength(1 + Math.floor(Math.min(G().L, 30) / 6)), function (ok) {
       if (ok) { A("play", "code_ok"); gm().gainXP(4); openCell(o, c); }
+      else if (gm().walkedAway && gm().walkedAway()) say("Вы отошли от ячейки. Замок цел."); /* (3.5) отошли, не ошибившись, — не провал */
       else { A("play", "code_fail"); s.jamAt = nowMin(); say("Замок не поддался и громко лязгнул. Рядом могли услышать."); if (LAB.combat && LAB.combat.noise) LAB.combat.noise(6); }
     });
   } });

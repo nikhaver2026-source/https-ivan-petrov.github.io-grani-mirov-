@@ -190,6 +190,9 @@ jobs:
           rm -rf "$W" && mkdir -p "$W"
           cp lab/index.html lab/icon-192.png lab/icon-512.png "$W"/
           cp -r lab/js lab/espeak lab/sounds "$W"/
+          # Голос ОКО — только целиком: пока записаны не все реплики (oko_voiced.js, ready),
+          # записей в сборке нет, игра говорит за ОКО синтезатором
+          if ! grep -q 'ready: true' lab/js/oko_voiced.js; then rm -rf "$W"/sounds/oko; echo "голос ОКО записан не весь — записи не в сборке"; fi
           du -sh "$W" "$W"/sounds
           find "$W" -type f | wc -l
 

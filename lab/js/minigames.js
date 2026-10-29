@@ -234,7 +234,7 @@ function rhythmDown(t) {
   if (off <= 140 + Math.min(60, lat * 0.25)) {
     c.streak++;
     tone(1320 + c.streak * 80, 0.07, 0, "sine", 0.14);
-    if (c.streak >= c.need) { clearTimeout(c.timer); setTimeout(function () { say("Ловушка стабильна."); finish(true); }, 250); return; }
+    if (c.streak >= c.need) { clearTimeout(c.timer); c.done = true; setTimeout(function () { if (cur !== c) return; say("Ловушка стабильна."); finish(true); }, 250); return; } /* итог решён: лишнее касание его не перебьёт */
     c.period = Math.max(620, c.period - 40);
   } else {
     c.streak = 0; c.misses++;

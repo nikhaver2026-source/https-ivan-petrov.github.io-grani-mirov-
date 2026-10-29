@@ -39,7 +39,7 @@ function newState(seed) {
     ammo: { energy: 0, magnetron: 0, positron: 0 },
     inv: { bandage: 1, fieldkit: 1, ration: 1 }, keys: {}, tier: 0, elev: {}, gate: {}, core: false, cores: {}, codes: {}, melodies: {}, blockSeen: {},
     notes: {}, noteList: [], samples: {}, implants: ["scan", "echo"], faction: null, crafted: 0, bp: {}, bpNpc: {},
-    quests: [], givers: {}, journal: [], fs: {}, maxF: { 1: 1 }, visited: { "1-1": 1 },
+    quests: [], givers: {}, journal: [], fs: {}, maxF: { 1: 1 }, visited: {}, /* этаж 1-1 отмечает enterFloor: он и первый в счёте этажей */
     checkpoint: null, day: 1, min: 8 * 60, event: "norm", eventUntil: 8 * 60 + 90,
     st: { poison: 0, slow: 0, shield: 0, haste: 0, cloak: 0, web: 0, jam: 0, deaf: 0, antitox: 0, bleed: 0, navjam: 0 },
     /* тело героя: сытость, бодрость, токсины, нейронагрузка (0–100) */
@@ -164,6 +164,16 @@ function enterFloor(L, F, how, silent) {
   if (LAB.combat && LAB.combat.fixDrops) LAB.combat.fixDrops(); /* (3.0) добыча на обстановке — рядом, на пол */
   if (LAB.traps) LAB.traps.enterFloor();
   if (LAB.stash) LAB.stash.enterFloor();
+  /* (3.7) привязка из записи прежнего мира: этаж построен заново — место и капсула
+     прежней планировки не годятся; привязка переходит к капсуле этого этажа */
+  var cpx = G.checkpoint;
+  if (cpx && cpx.fix && cpx.L === L && cpx.F === F) {
+    var cco = cpx.cap ? findObj("capsule") : null, cso = cco || findObj("capsule") || findObj("gate_sealed") || findObj("stairs_up");
+    var csp = cso ? freeNear(cso) : null;
+    if (csp) { cpx.x = csp[0]; cpx.y = csp[1]; }
+    cpx.cap = cco ? cco.id : null;
+    delete cpx.fix;
+  }
   var spot = null, o;
   if (how === "down" || how === "start") { o = findObj("stairs_up") || findObj("wake") || findObj("gate_sealed"); spot = freeNear(o); }
   else if (how === "up") { o = findObj("stairs_down"); spot = freeNear(o); }
@@ -709,7 +719,9 @@ game.aimPenalty = aimPenalty;
 /* Применить к телу: еда, питьё, лекарства. Возвращает фразы итога. */
 function bodyApply(d, msg) {
   var b = body(), v;
-  if (d.overdose && b.tox >= 70) {
+  /* (3.0) фармаколог второй ступени: стимуляторы без передозировки, токсинов от них вдвое меньше (chem.js, SPECS) */
+  var pharm = !!(d.overdose && LAB.chem && LAB.chem.noOverdose());
+  if (d.overdose && b.tox >= 70 && !pharm) {
     G.hp = Math.max(1, G.hp - 15); G.st.slow = Math.max(G.st.slow || 0, 6);
     A("play", "heartbeat");
     msg.push("Передозировка: сердце колотится, в глазах темнеет. Минус 15 здоровья, вы замедлены.");
@@ -725,7 +737,7 @@ function bodyApply(d, msg) {
   if (d.tox) {
     /* (3.7) вдохнутое (air) держит фильтр, съеденное и яд в крови — только антитоксин */
     if ((d.air ? G.st.antitox > 0 : G.st.atoxIn > 0) && !d.overdose) msg.push(d.air ? "Фильтр не пропустил пары." : "Антитоксин не дал отраве подействовать.");
-    else { b.tox += d.tox * (1 - (LAB.implants ? LAB.implants.stat("antitox") : 0)); clampBody(b); msg.push("Токсины " + Math.round(b.tox) + "."); }
+    else { b.tox += d.tox * (pharm ? 0.5 : 1) * (1 - (LAB.implants ? LAB.implants.stat("antitox") : 0)); clampBody(b); msg.push("Токсины " + Math.round(b.tox) + "."); }
   }
   if (d.neuro) { v = b.neuro; b.neuro += d.neuro; clampBody(b); if (Math.round(b.neuro) !== Math.round(v)) msg.push("Нейронагрузка " + Math.round(b.neuro) + "."); }
   if (d.stopBleed && G.st.bleed) { G.st.bleed = 0; msg.push("Кровотечение остановлено."); }
@@ -849,7 +861,7 @@ function giveItem(it, quiet) {
         extra = " Защита " + nw + (nw > cur ? ", выше надетой (" + cur + ")" : nw < cur ? ", ниже надетой (" + cur + ")" : ", как у надетой") + ". Надеть — инвентарь, раздел «Броня».";
       }
       break;
-    case "credits": if (LAB.implants && LAB.implants.stat("loot")) it.n = Math.round(it.n * (1 + LAB.implants.stat("loot"))); G.credits += it.n; break; /* (2.0) чип старателя */
+    case "credits": if (LAB.implants && LAB.implants.stat("loot")) { it.n = Math.round(it.n * (1 + LAB.implants.stat("loot"))); phrase = itemName(it); } G.credits += it.n; break; /* (2.0) чип старателя: и в словах — сколько на деле */
     case "weapon":
       LAB.fixCap(it.w); /* (2.2) оружие из прежней записи — с новой ёмкостью */
       var upgFix = LAB.workshop && LAB.workshop.fixUpg ? LAB.workshop.fixUpg(it.w, G.inv) : ""; /* (3.7) батареи с него — в рюкзак */
@@ -1611,6 +1623,7 @@ function doorMenu(d, dir) {
       UIx("closeAll");
       LAB.mini.hack(hackLength(2 + Math.floor(Math.min(G.L, 20) / 5)), function (ok) {
         if (ok) { if (CUR.fs.okoLock) delete CUR.fs.okoLock[d.id]; A("play", "door_unlock"); openDoor(d); sayq("Блокировка ОКО снята. Дверь открыта."); }
+        else if (walkedAway()) say("Вы отошли от замка. Блокировка ОКО держится, но ОКО ничего не заметило.");
         else { A("play", "term_err"); say("Сигналы сбились. Блокировка держится."); if (LAB.oko) LAB.oko.report("door", d.x, d.y, "seen"); }
       }, { title: "Замок двери" });
     } });
@@ -1706,6 +1719,7 @@ function circuitDoor(d) {
   UIx("closeAll");
   LAB.mini.relays(d.lock.n + (LAB.oko ? Math.min(1, LAB.oko.difficulty()) : 0), function (ok) {
     if (ok) { A("play", "code_ok"); CUR.fs.doors[d.id] = 1; openDoor(d); sayq("Схема погасла. Замок открыт."); gainXP(12); }
+    else if (walkedAway()) say("Вы отошли от схемы. Замок как был.");
     else { A("play", "alarm_short"); say("Схема перегрелась. Попробуйте ещё раз."); if (LAB.combat) LAB.combat.noise(8); }
   }, { title: "Электронный замок", seed: d.lock.seed, ring: d.lock.n >= 6 });
 }
@@ -1715,6 +1729,7 @@ function melodyDoor(d) {
   UIx("closeAll");
   LAB.mini.melody(m, function (ok) {
     if (ok) { A("play", "code_ok"); CUR.fs.doors[d.id] = 1; openDoor(d); sayq("Мелодия совпала. Звуковой замок открыт."); gainXP(14); }
+    else if (walkedAway()) say("Вы отошли от звукового замка.");
     else { A("play", "code_fail"); say("Замок не узнал мелодию. Ещё раз."); if (LAB.combat) LAB.combat.noise(6); }
   }, { title: "Звуковой замок", mirror: LAB.blockOf(G.L) === 3 });
 }
@@ -1746,6 +1761,7 @@ function hackDoorMini(d) {
   UIx("closeAll");
   LAB.mini.hack(hackLength(lv), function (ok) {
     if (ok) { A("play", "code_ok"); CUR.fs.doors[d.id] = 1; openDoor(d); sayq("Замок взломан."); gainXP(8); }
+    else if (walkedAway()) say("Вы отняли руки от замка, не потревожив защиту.");
     else { A("play", "alarm_short"); say("Взлом не удался. Сработала тревога — враги рядом насторожились."); if (LAB.combat) LAB.combat.noise(10); }
   });
 }
@@ -1756,6 +1772,9 @@ game.roomAt = function (x, y) { return roomAt(x, y); };
 game.hackLength = function (lv) { return hackLength(lv); };
 game.autosaveSoon = function () { autosaveSoon(); };
 game.openContainer = function (o) { openContainer(o); };
+/* (3.5) отошли от мини-игры, не ошибившись (minigames.js, cancel): это не провал — без штрафа */
+function walkedAway() { return !!(LAB.mini && LAB.mini.wasCancelled && LAB.mini.wasCancelled()); }
+game.walkedAway = walkedAway;
 function hackLength(lv) {
   var n = 3 + lv;
   if (G.mind >= 16) n--;
@@ -2023,6 +2042,7 @@ function later(fn, ms) { var s0 = game.session; return setTimeout(function () { 
 game.later = later;
 /* Новая игра или загрузка: отложенные фразы и история объявлений прежней игры не звучат. */
 function freshSession() {
+  noteCache = {}; /* тексты записок — свои у каждой игры (новая игра после прежней) */
   LAB.safe(function () { LAB.Speech.later = []; LAB.Speech.held = []; clearTimeout(LAB.Speech.heldTimer); LAB.Speech.heldTimer = null; });
   LAB.safe(function () { if (LAB.history && LAB.history.clear) LAB.history.clear(); });
 }
@@ -2277,6 +2297,7 @@ function turretMenu(o, st) {
   if (mode === "off" && CUR.fs.backupAt && !CUR.fs.cutHold) items.push({ label: "Разомкнуть резервный контур турелей: удержать ритм реле", fn: function () {
     UIx("closeAll");
     LAB.mini.rhythm(3 + Math.min(2, dif), function (ok) {
+      if (!ok && walkedAway()) { say("Вы отошли от контура. Он под током, как и был."); return; }
       if (!ok) { say("Ритм сбился: резервный контур остался под током."); if (LAB.oko) LAB.oko.heat(4); return; }
       CUR.fs.cutHold = true; A("play", "term_ok"); say("Резервный контур разомкнут: турели не оживут сами. Ремонтников ОКО это не остановит.");
     });
@@ -2284,6 +2305,7 @@ function turretMenu(o, st) {
   if (mode === "ours") items.push({ label: "Закрепить перехват: удержать ритм шифрования", fn: function () {
     UIx("closeAll");
     LAB.mini.rhythm(3 + Math.min(2, dif), function (ok) {
+      if (!ok && walkedAway()) { say("Вы отошли от шифрования. Перехват держится, но не закреплён."); return; }
       if (!ok) { say("Ритм сбился. ОКО ближе к своим турелям."); if (LAB.oko) LAB.oko.heat(5); return; }
       A("play", "term_ok"); say("Шифрование удержано: ОКО отложило контрвзлом."); if (LAB.oko) LAB.oko.event("turret_hold");
     });
@@ -2552,6 +2574,7 @@ function positronMenu(o) {
       UIx("closeAll");
       LAB.mini.rhythm(3, function (ok) {
         if (ok) { st.stable = true; A("play", "pos_ok"); gainXP(14); say("Ловушка стабильна. Антивещество держится ровно."); positronMenu(o); }
+        else if (walkedAway()) say("Вы осторожно отступили от ловушки. Она гудит неровно, как и прежде.");
         else { A("play", "pos_fail"); G.hp = Math.max(1, G.hp - Math.round(G.hpMax * 0.12)); say("Выброс энергии! Ловушка сорвалась, вас обожгло. Попробуйте ещё раз."); UIx("refresh"); }
       });
     } });
@@ -2635,6 +2658,7 @@ function safeNoteFor(code) {
   var sp = String(code).split("").join(" ");
   for (var i = G.noteList.length - 1; i >= 0; i--) {
     var n = G.noteList[i];
+    if (n.old) continue; /* записка прежнего мира: её коды — от этажей, которых больше нет */
     var nx = n.code === code ? "" : noteFull(n).x || "";
     if (n.code === code || nx.indexOf(sp) >= 0 || nx.indexOf(code) >= 0) return n;
   }
@@ -2651,6 +2675,13 @@ function openContainer(o) {
   A("container", o.type);
   turns(1, "search"); if (G.dead) return; /* (2.6) пошаговый режим: обыск — ход */
   var loot = (o.loot || []).slice();
+  /* (3.7) прибавка обыска (набор инструментов, вторая вещь холодильника — zones.js) хранится в
+     состоянии этажа: её не теряет ни ловушка, перехватившая обыск, ни загрузка; одинаковое — одной стопкой */
+  (st.xLoot || []).forEach(function (it) {
+    var si = it.kind === "item" ? loot.map(function (x) { return x.kind === "item" && x.item === it.item; }).indexOf(true) : -1;
+    if (si >= 0) loot[si] = Object.assign({}, loot[si], { n: (loot[si].n || 1) + (it.n || 1) }); else loot.push(it);
+  });
+  delete st.xLoot;
   loot.forEach(function (it, k) { if (!it.id) it.id = o.id + "-" + k; }); /* у каждой вещи свой номер: записки из ящиков не сливаются */
   if (o.type === "safe") { gainXP(10); if (LAB.ach) LAB.ach.ev("safe", 1); }
   if (!loot.length) { say(objName(o) + ": ничего полезного."); return; }
@@ -2819,6 +2850,7 @@ function reactorMenu(o) {
       if (LAB.combat && LAB.combat.danger()) { say("Рядом враги. Пульт требует тишины."); return; }
       UIx("closeAll");
       s.run(function (ok) {
+        if (!ok && walkedAway()) { say("Вы отняли руки от пульта. Шаг не начат — «Исток» гудит ровно."); return; }
         if (!ok) { A("play", "pos_fail"); G.hp = Math.max(1, G.hp - Math.round(G.hpMax * 0.1)); say("Сбой! Поле «Истока» хлестнуло по пульту. Попробуйте снова."); UIx("refresh"); return; }
         st[s.k] = true;
         A("play", "term_ok");
@@ -2872,9 +2904,9 @@ function npcMenu(n) {
     if (tr === "ammo") items.push({ label: "Торговля", fn: function () { tradeMenu(n, "ammo"); } });
   } else {
     items.push({ label: "Поговорить", fn: function () {
-      var lines = LAB.STORIES[n.prof] || ["..."];
-      n.talk = ((n.talk || 0) + 1) % lines.length;
-      say(n.n + ": " + lines[n.talk]);
+      var lines = LAB.STORIES[n.prof] || ["..."], ti = (n.talk || 0) % lines.length;
+      n.talk = (ti + 1) % lines.length; /* n.talk — следующая строка: первой звучит вступление */
+      say(n.n + ": " + lines[ti]);
     } });
     items.push({ label: "Спросить о себе", fn: function () {
       var Bk = G.L > 10 ? LAB.blockData(G.L) : null, life = Bk && Bk.life && Bk.life.length ? Bk.life : LAB.LIFE, view = Bk && Bk.view && Bk.view.length ? Bk.view : LAB.VIEW;
@@ -3057,7 +3089,7 @@ function navigate(cycle, fromNpc) {
     var blockDoor = null;
     if (p2) for (var i = 0; i < p2.length; i++) { var dd = doorAt(p2[i][0], p2[i][1]); if (dd && doorBlock(dd)) { blockDoor = dd; break; } }
     if (blockDoor) {
-      var pd = LAB.route(CUR.fl, CUR.fs, G.x, G.y, function (x, y) { return x === blockDoor.x && y === blockDoor.y; }, { goalDoors: true, passDoor: function (d) { return !doorBlock(d) && !(d.lock && d.lock.type === "secret"); } });
+      var pd = LAB.route(CUR.fl, CUR.fs, G.x, G.y, function (x, y) { return x === blockDoor.x && y === blockDoor.y; }, { goalDoors: true, passDoor: function (d) { return !doorBlock(d) && !(d.lock && d.lock.type === "secret" && !secretFound(d)); } });
       var plain = blockDoor.lock && /^(card|key|code)$/.test(blockDoor.lock.type);
       var full = CUR.fs.mapped || fromNpc;
       var wp = !full && pd ? waypoint(pd) : null;
@@ -3369,7 +3401,7 @@ function navMenu() {
     return { label: t.n, fn: function () {
       var path = routeTo(t.cell, t.o);
       if (path && (CUR.fs.mapped || !t.main)) { say("Цель: " + t.n + ". " + describePath(path)); A("navStart", path); }
-      else { navIdx = list.indexOf(t); navLast = Date.now(); navigateTo(t); }
+      else { navigateTo(t); navIdx = list.indexOf(t); navLast = Date.now(); } /* «следующая цель» — после выбранной: navigate(false) сбрасывает счёт на ноль */
     } };
   }));
 }
@@ -3517,7 +3549,7 @@ var SLOT_KEYS = { 1: "lab_slot1", 2: "lab_slot2", 3: "lab_slot3", auto: "lab_aut
 function snapshot() {
   syncFloorState();
   G.stats.ms += Date.now() - (game.t0 || Date.now()); game.t0 = Date.now();
-  return JSON.stringify({ meta: { ver: LAB.VERSION, L: G.L, F: G.F, diff: G.diff, tb: G.tb ? 1 : 0, lvl: G.lvl, hp: G.hp, hpMax: G.hpMax, ms: G.stats.ms, date: Date.now(), samples: Object.keys(G.samples).length }, g: G });
+  return JSON.stringify({ meta: { ver: LAB.VERSION, L: G.L, F: G.F, diff: G.diff, tb: G.tb ? 1 : 0, lvl: G.lvl, hp: G.hp, hpMax: G.hpMax, ms: G.stats.ms, date: Date.now(), samples: Object.keys(G.samples).length, done: G.done ? 1 : 0 }, g: G });
 }
 function saveSlot(n) {
   if (!game.entered || game.loading) return false;
@@ -3562,6 +3594,7 @@ function slotText(n, bak) {
   var m = slotInfo(n, bak);
   var name = (n === "auto" ? "Автозапись" : "Слот " + n) + (bak ? ", резервная копия" : "");
   if (!m) return bak ? "" : name + ": пусто";
+  if (m.done) return name + ": игра пройдена до конца, уровень " + m.L + ", герой " + m.lvl + "-го уровня";
   var mins = Math.round((m.ms || 0) / 60000), h = Math.floor(mins / 60), mm = mins % 60;
   var dt = new Date(m.date);
   var dd = dt.getDate() + "." + (dt.getMonth() + 1 < 10 ? "0" : "") + (dt.getMonth() + 1) + ", " + dt.getHours() + ":" + (dt.getMinutes() < 10 ? "0" : "") + dt.getMinutes();
@@ -3584,6 +3617,8 @@ function loadSlot(n, fromBak) {
   if (!raw) { LAB.UI.error(); say(fromBak ? "Резервной копии нет." : "Слот пуст."); return false; }
   var d = validSave(raw);
   if (!d) { LAB.UI.error(); say("Запись повреждена или не подходит этой версии игры." + (!fromBak && LAB.store.get(SLOT_KEYS[n] + "_bak") ? " Есть резервная копия: «Загрузить игру», пункт «Резервная копия»." : "")); return false; }
+  /* автозапись после финала: ключ повёрнут, мир стоит — продолжать нечего */
+  if (d.g.done) { LAB.UI.error(); say("Эта игра пройдена до конца: ключ «Эхо» повёрнут, «Исток» спит. Начните новую игру — слоты останутся."); return false; }
   /* загрузка с откатом: если запись не поднимется, прежняя игра остаётся как была */
   var prevG = G, prevEntered = game.entered, prevCUR = { fl: CUR.fl, fs: CUR.fs, key: CUR.key, seen: CUR.seen }, prevDiff = S.difficulty, prevTB = S.turnBased;
   game.loading = true;
@@ -3593,7 +3628,6 @@ function loadSlot(n, fromBak) {
     if (Q()) Q().reset(); /* (3.5) задания записи объявляются заново */
     game.session++; game.paused = false; game.descending = false;
     if (LAB.office && LAB.office.clear) LAB.office.clear();
-    noteCache = {};
     freshSession();
     LAB.clearFloorCache();
     game.t0 = Date.now();
@@ -3640,6 +3674,11 @@ function migrate(g) {
   if (!g.melodies) g.melodies = {};
   for (var mk in g.melodies) if (!/^\d+-\d+-/.test(mk)) delete g.melodies[mk];
   if (!g.blockSeen) g.blockSeen = {};
+  /* (3.7) этаж 1-1 прежде был отмечен заранее и в счёт вех «побывать на этажах» не попадал */
+  if (g.ach && g.ach.c && g.visited) { var nv = Object.keys(g.visited).length; if ((g.ach.c.floor || 0) < nv) g.ach.c.floor = nv; }
+  /* (3.7) id оружия прежде повторялись между запусками игры: у одинаковых в рюкзаке — новые */
+  var wSeen = {};
+  (g.weapons || []).forEach(function (w) { if (!w) return; if (wSeen[w.id]) w.id = w.id + "_" + Math.floor(Math.random() * 1e6).toString(36); wSeen[w.id] = 1; });
   /* модули усиления прежних версий — модули мощности */
   (g.weapons || []).forEach(function (w) { if (w && w.mods > 0 && !w.mod) w.mod = { power: w.mods }; });
   /* (2.2) ёмкость оружия — по новому правилу: «Искра» — тридцать, лучше оружие — больше */
@@ -3672,6 +3711,15 @@ function migrate(g) {
     var G0 = G; G = g; noteCache = {};
     (g.noteList || []).forEach(function (n) { if (n.x == null && n.src) { try { var r = noteFull(n); n.t = r.t; n.x = r.x; n.a = r.a; } catch (e) { /* */ } } });
     G = G0; noteCache = {};
+    /* (3.7) прочитанное остаётся в архиве, но ключи записок — номера вещей на этаже
+       («1-1-i5», «term:1-1:o3»): в новом мире те же номера у других вещей, и новая
+       записка не попала бы в архив. Таким ключам — пометка прежнего мира; коды
+       прежних этажей больше ничего не открывают */
+    var FLK = /(^|:)\d+-\d+(-|:|$)/, wpre = "w" + (g.worldV || 0) + ":", ren = {}, nn = {};
+    (g.noteList || []).forEach(function (n) { if (n && typeof n.id === "string" && FLK.test(n.id)) { ren[n.id] = wpre + n.id; n.id = ren[n.id]; n.old = 1; delete n.code; } });
+    for (var nk in (g.notes || {})) nn[ren[nk] || (FLK.test(nk) ? wpre + nk : nk)] = 1;
+    g.notes = nn;
+    if (g.lastDoc && ren[g.lastDoc]) g.lastDoc = ren[g.lastDoc];
     g.fs = {}; g.keys = {}; g.codes = {}; g.decks = {}; g.noteIdx = {}; g.melodies = {};
     /* (3.6) поручения выживших — про помещения, тела и вещи прежних этажей: снимаются,
        главное остаётся; выжившие на новых этажах попросят о своём */
@@ -3680,6 +3728,8 @@ function migrate(g) {
     /* (3.6) награды, что ждали у выживших прежних этажей, — сразу в рюкзак: тех людей там больше нет */
     (g.pickups || []).forEach(function (p) { (p.gifts || []).forEach(function (it) { if (it.kind === "ammo") { if (!g.ammo) g.ammo = {}; g.ammo[it.ammo] = (g.ammo[it.ammo] || 0) + (it.n || 1); } else if (it.kind === "item" && it.item) { if (!g.inv) g.inv = {}; g.inv[it.item] = (g.inv[it.item] || 0) + (it.n || 1); } }); });
     g.pickups = [];
+    /* привязка к капсуле — к той же на новом этаже (enterFloor найдёт её и место рядом) */
+    if (g.checkpoint) g.checkpoint.fix = 1;
     g.worldV = WORLD_V; g.relocate = true;
   }
   return g;

@@ -125,13 +125,13 @@ var CORRECT = [
   "Это Зрачок. Мои машины не там. Слушайте, откуда приходят шаги, а не слова.",
   "Мои слова доходят поздно, его — сразу. Это был он."
 ];
-/* Направление, где сейчас никого нет: ложь Зрачка правдоподобна, но пуста. */
+/* Направление, где сейчас никого нет: ложь Зрачка правдоподобна, но пуста.
+   Стороны — как везде в игре, относительно экрана (LAB.DIRN), а не взгляда. */
 function emptyDir() {
   var g = G(), cb = C(), busy = {};
   (cb && cb.foes ? cb.foes() : []).forEach(function (q) {
     if (q.dead || Math.max(Math.abs(q.x - g.x), Math.abs(q.y - g.y)) > 14) return;
-    var dx = q.x - g.x, dy = q.y - g.y, fx = { N: [0, -1], S: [0, 1], W: [-1, 0], E: [1, 0] }[g.face] || [0, -1];
-    var fwd = dx * fx[0] + dy * fx[1], side = dx * -fx[1] + dy * fx[0];
+    var fwd = g.y - q.y, side = q.x - g.x;
     busy[Math.abs(fwd) >= Math.abs(side) ? (fwd >= 0 ? "впереди" : "за спиной") : (side > 0 ? "справа" : "слева")] = 1;
   });
   var free = DIRS.filter(function (d) { return !busy[d]; });

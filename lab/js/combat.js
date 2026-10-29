@@ -107,6 +107,8 @@ function capRooms(fl) {
   return fl.capR;
 }
 function havenAt(x, y) { var fs = CUR().fs, r; return !!(fs && fs.haven && LAB.inb(x, y) && (r = CUR().fl.room[idx(x, y)]) >= 0 && fs.haven[r]); }
+/* помещение поста: страж кабинета мог выбежать за героем — кабинет его всё равно тот, где пост */
+function postRoom(f) { return f.post && f.post.x != null && LAB.inb(f.post.x, f.post.y) ? CUR().fl.room[idx(f.post.x, f.post.y)] : f.room; }
 function inHaven(x, y) { return havenId >= 0 && CUR().fl.room[idx(x, y)] === havenId; }
 function havenTick() {
   var g = G(), fl = CUR().fl, fs = CUR().fs;
@@ -151,6 +153,10 @@ var MX = ["flee", "howl", "bomber", "trapper", "feeder", "rad", "lure"];
 function makeRuntime(def, st) {
   var base = LAB.FOES[def.type];
   var bdef = def.boss ? LAB.BOSSES[def.boss] : null;
+  /* (проверка перед сборкой) повадки стража уровня — его собственные: патруль, мирный уборщик,
+     мимик считаются по итоговым повадкам, а не по виду-основе (прежде страж с основой-мимиком
+     стоял «ящиком», а стражи с основой-патрульным уходили с поста) */
+  var beh0 = bdef && bdef.beh ? bdef.beh : base.beh;
   var dk = diff();
   /* (2.2) режим сложности: прочность и урон, рост с глубиной (к сотому уровню врага —
      ещё доля grow сверху), обзор, быстрота шага и удара */
@@ -165,9 +171,11 @@ function makeRuntime(def, st) {
     aff: def.aff || null, iq: Math.max(0, Math.min(12, (def.iq || 0) + dk.iq)), carry: def.carry || null, room: def.room,
     shieldMax: def.shieldMax ? Math.round(def.shieldMax * hk) : 0,
     state: "idle", mv: 0, at: 0, hitT: 99, seenT: 99, lost: 0, aim: false, frozen: 0, adapt: {}, minesLeft: 3, summonT: 0, blinkT: 0,
-    lastKnown: null, ambush: false, calm: false, spawned: !!def.spawned,
-    ally: !!def.ally, shots: def.shots || 0, corr: def.corr != null ? def.corr : null, patrol: !!def.patrol || (base.beh.indexOf("patrol") >= 0),
-    neutral: base.beh.indexOf("cleaner") >= 0, disguised: base.beh.indexOf("mimic") >= 0, bag: [], camT: 0, buildT: 0, built: 0, screamT: 0, phaseT: 0, phased: false,
+    /* (проверка перед сборкой) напарник из режима сложности (twinOf): прежде признак не переходил в
+       живого врага, и напарник считался заменой ОКО — мясорубка, номер волны, полная добыча */
+    lastKnown: null, ambush: false, calm: false, spawned: !!def.spawned, twin: !!def.twin,
+    ally: !!def.ally, shots: def.shots || 0, corr: def.corr != null ? def.corr : null, patrol: !!def.patrol || (beh0.indexOf("patrol") >= 0),
+    neutral: beh0.indexOf("cleaner") >= 0, disguised: beh0.indexOf("mimic") >= 0, bag: [], camT: 0, buildT: 0, built: 0, screamT: 0, phaseT: 0, phased: false,
     burrowT: 0, burrowed: false, confused: 0, healT: 0, splitGen: def.splitGen || 0, from: def.from || null, task: def.task || null,
     /* машины ОКО: стражи постов, отряды, патрули смены, дроны слежения */
     guard: def.guard || null, post: def.post ? { x: def.post[0], y: def.post[1] } : null, oko: !!(def.oko || def.squad || def.guard), squad: !!def.squad, fresh: !!def.fresh,
@@ -178,7 +186,7 @@ function makeRuntime(def, st) {
     wv: def.wv || 0, grp: def.grp || null,
     route: null, ri: 0, stuck: 0, exit: null, repT: 0, fixT: 0, heatN: 0, over: 0, nodeT: 0,
     /* (2.0) участок обхода патруля, рабочая машина кабинета, сапёр ОКО */
-    beat: def.beat || null, bi: def.bi || 0, bdir: 1, work: !!def.work, garrison: def.garrison || null, sapper: !!def.sapper || base.beh.indexOf("mines") >= 0,
+    beat: def.beat || null, bi: def.bi || 0, bdir: 1, work: !!def.work, garrison: def.garrison || null, sapper: !!def.sapper || beh0.indexOf("mines") >= 0,
     /* (2.0) страж лестницы, лифта или шлюза (вид объекта) и тварь, обжившая кабинет */
     stairPost: def.stairPost || null, lair: !!def.lair,
     /* (2.2) камера в углу помещения смотрит по комнате — от стены к стене */
@@ -1136,7 +1144,8 @@ function despawn(f) {
   if ((f.carry && f.carry.length) || (f.bag && f.bag.length)) dropCarry(f); /* ключи и карты не уходят с этажа */
   f.dead = true;
   var fs = CUR().fs;
-  if (f.spawned) { f.gone = true; fs.spawned = fs.spawned.filter(function (sd) { return sd.id !== f.id; }); delete fs.foes[f.id]; }
+  /* напарник — житель этажа: ушёл — так и записано, при новом входе его нет (замена уже пришла) */
+  if (f.spawned && !f.twin) { f.gone = true; fs.spawned = fs.spawned.filter(function (sd) { return sd.id !== f.id; }); delete fs.foes[f.id]; }
   else fs.foes[f.id] = { dead: true };
 }
 /* (3.0) Куда упадёт добыча: на клетку, где может встать герой. Если враг
@@ -1379,7 +1388,13 @@ function stalkerTick(f) {
   }
   if (!canMove) return;
   f.mv = 0;
-  if (!see && f.searchR && f.searchR.length) { var sp0 = f.searchR[0]; if (Math.abs(f.x - sp0[0]) + Math.abs(f.y - sp0[1]) <= 1 || !stepToward(f, sp0[0], sp0[1])) f.searchR.shift(); return; }
+  if (!see && f.searchR && f.searchR.length) {
+    var sp0 = f.searchR[0];
+    if (Math.abs(f.x - sp0[0]) + Math.abs(f.y - sp0[1]) <= 1 || !stepToward(f, sp0[0], sp0[1])) f.searchR.shift();
+    /* обыскал все точки — как машина на земле: цель потеряна, следующий след — новый поиск */
+    if (!f.searchR.length) { f.searchR = null; f.state = "idle"; f.lastKnown = null; }
+    return;
+  }
   if (!f.lastKnown) { wander(f); return; }
   if (see && d < 3) { stepAway(f); return; }
   /* за углом дрон не лезет вплотную: зависает в паре шагов и ждёт, пока цель покажется */
@@ -1594,20 +1609,22 @@ function foeTick(f, spotted) {
     return;
   }
   /* ── охота ── */
-  if (has(f, "blocker") && (f.blockOff || 0) <= tickN && foes.some(function (o) { return o !== f && hostile(o) && o.kind === "mech" && o.state === "hunt" && dist(o, heroPos()) < d; })) {
-    var bc = blockCell(f);
-    if (bc && (f.x !== bc[0] || f.y !== bc[1])) {
+  /* (проверка перед сборкой) перекрывать выход — только если он есть (носитель в помещении): прежде
+     привратник без выхода просто стоял — ни шага, ни выстрела */
+  var bc = has(f, "blocker") && (f.blockOff || 0) <= tickN && foes.some(function (o) { return o !== f && hostile(o) && o.kind === "mech" && o.state === "hunt" && dist(o, heroPos()) < d; }) ? blockCell(f) : null;
+  if (bc) {
+    if (f.x !== bc[0] || f.y !== bc[1]) {
       if (canMove) {
         f.mv = 0;
         var bd0 = Math.abs(f.x - bc[0]) + Math.abs(f.y - bc[1]);
         stepToward(f, bc[0], bc[1]);
         if (f.x === bc[0] && f.y === bc[1]) sayOnce("blk" + f.id, f.name.split(",")[0] + " перекрыл выход " + gm().relDir(f.x, f.y) + "!", 9000);
         /* к выходу не пробиться (носитель или другие машины на пути) — гонит носителя, как все */
-        if (Math.abs(f.x - bc[0]) + Math.abs(f.y - bc[1]) >= bd0) { if (++f.blkStuck > 5) { f.blkStuck = 0; f.blockOff = tickN + 40; } } else f.blkStuck = 0;
+        if (Math.abs(f.x - bc[0]) + Math.abs(f.y - bc[1]) >= bd0) { f.blkStuck = (f.blkStuck || 0) + 1; if (f.blkStuck > 5) { f.blkStuck = 0; f.blockOff = tickN + 40; } } else f.blkStuck = 0;
       }
       return;
     }
-    if (bc && canAct && see && d <= Math.max(1, f.rng)) { f.at = 0; attack(f, true); }
+    if (canAct && see && d <= Math.max(1, f.rng)) { f.at = 0; attack(f, true); }
     return;
   }
   var ranged = f.rng > 1;
@@ -1723,6 +1740,9 @@ function spawnFoe(type, x, y, extra) {
   var def = { id: "s" + (fs.sseq = (fs.sseq || 0) + 1), type: type, x: x, y: y, lvl: lvl, hp: sc.hp, maxhp: sc.hp, dmg: sc.dmg, arm: sc.arm, room: CUR().fl.room[idx(x, y)], iq: miq != null ? miq : LAB.foeIQ(base.kind, d0, 0), spawned: true };
   if (fs.spawned.length > 60) fs.spawned = fs.spawned.filter(function (sd) { return !(fs.foes[sd.id] && fs.foes[sd.id].dead); });
   if (extra) for (var k in extra) def[k] = extra[k];
+  /* (проверка перед сборкой) hpK — доля здоровья (половинки распавшейся твари) — в самой записи этажа:
+     прежде она была только у живого врага, и после выхода с этажа или загрузки половинки вставали целыми */
+  if (def.hpK) { def.hp = def.maxhp = Math.max(4, Math.round(def.maxhp * def.hpK)); delete def.hpK; }
   if (def.aff && def.aff.indexOf("armored") >= 0) def.arm = Math.round(def.arm * 1.6) + 3; /* как у машин этажа (world.js) */
   fs.spawned.push(def);
   var f = makeRuntime(def, null);
@@ -2355,7 +2375,7 @@ function kill(f, quiet) {
   if (LAB.oko && LAB.oko.react && !f.ally && !f.boss) {
     var kn = Date.now();
     killTimes = killTimes.filter(function (t) { return kn - t < 20000; }); killTimes.push(kn);
-    LAB.oko.react(killTimes.length >= 3 ? "kill_many" : f.kind !== "mech" ? "kill_bio" : isNetTurret(f) ? "turret_kill" : isCam(f) ? "" : "kill_mech");
+    LAB.oko.react(killTimes.length >= 3 ? "kill_many" : f.kind !== "mech" ? "kill_bio" : has(f, "turret") && !f.shots ? "turret_kill" : has(f, "camera") ? "" : "kill_mech"); /* isNetTurret/isCam — только для живых */
   }
   A("foeDeath", f);
   LAB.vib(30);
@@ -2390,7 +2410,7 @@ function kill(f, quiet) {
     foes.forEach(function (o) { if (o !== f && hostile(o) && o.kind === "mech" && (o.oko || o.patrol || o.route || o.guard)) o.confused = Math.max(o.confused || 0, 12); });
   }
   if (LAB.oko && f.kind === "mech" && !f.ally) LAB.oko.event("kill", { task: f.task, stalker: has(f, "stalker"), camera: has(f, "camera"), guard: f.guard, post: f.post, oko: f.oko, x: f.x, y: f.y,
-    beat: f.beat && !f.sapper ? f.beat : null, corr: f.corr, room: f.room, type: f.type, garrison: f.garrison, wv: f.wv });
+    beat: f.beat && !f.sapper ? f.beat : null, corr: f.corr, room: f.guard === "room" ? postRoom(f) : f.room, type: f.type, garrison: f.garrison, wv: f.wv });
   if (LAB.oko && f.boss) LAB.oko.event("boss");
   if (f.kind === "bio") mutantDeath(f, quiet); /* (2.5) отряд без вожака, павший для падальщиков */
   if (has(f, "commander")) {
@@ -2401,7 +2421,7 @@ function kill(f, quiet) {
   var r = Math.random, L = g.L, dk = diff().loot * sk;
   /* (3.0) добыча — со всех, и с машин, присланных ОКО на замену, тоже; не роняют
      только те, кого призвали сами враги (рой улья, кладки, двойники, половинки) */
-  var looty = (!f.spawned || !!f.oko) && !f.punisher && sk > 0 && !tame;
+  var looty = (!f.spawned || !!f.oko) && !f.twin && !f.punisher && sk > 0 && !tame;
   if (looty) {
     if (f.kind === "mech") {
       if (r() < 0.6 * dk) drops.push({ kind: "item", item: LAB.partAt({ pick: function (a) { return a[Math.floor(r() * a.length)]; }, chance: function (p) { return r() < p; } }, L), n: 1 });
@@ -2439,8 +2459,8 @@ function kill(f, quiet) {
     for (var si = 0; si < 2; si++) {
       var sc = freeCellNear(f.x, f.y, null);
       if (!sc) break;
-      var half = spawnFoe(f.type, sc[0], sc[1], { splitGen: 1, from: f.id });
-      if (half) { half.hp = half.maxhp = Math.max(4, Math.round(half.maxhp * 0.45)); half.state = "hunt"; half.lastKnown = heroPos(); }
+      var half = spawnFoe(f.type, sc[0], sc[1], { splitGen: 1, from: f.id, hpK: 0.45 });
+      if (half) { half.state = "hunt"; half.lastKnown = heroPos(); }
     }
     sayq(f.name.split(",")[0] + " распадается надвое!");
   }
@@ -2981,6 +3001,7 @@ function throwEmp() {
   if (!(g.inv.emp > 0)) { say("ЭМИ-гранат нет."); return; }
   g.inv.emp--;
   unhide("Бросок выдал вас: укрытия больше нет."); /* (3.5) нападение из укрытия — как выстрел */
+  havenFight(); /* (2.3) бой из безопасной зоны у капсулы */
   var v = DIRV[g.face] || DIRV.N, x = g.x, y = g.y;
   for (var i = 1; i <= 4; i++) {
     var nx = x + v[0], ny = y + v[1];
@@ -3168,7 +3189,7 @@ LAB.combat = {
   robotsCalm: robotsCalm, calmAll: calmAll, chaser: chaser, alertMech: alertMech, deployTurret: deployTurret, noiseLure: noiseLure, throwNoise: throwNoise,
   dispatch: dispatch, replacePatrol: replacePatrol, refillRoom: refillRoom, okoPoint: okoPoint, patrols: patrols, sappers: sappers, minePoints: minePoints, drones: drones, repairers: repairers, guards: guards, sendCheck: sendCheck, reroute: reroute, dismiss: dismiss, despawn: despawn,
   tickN: function () { return tickN; }, wakeSafe: function () { return safeHero; }, sheltered: sheltered, refuge: function () { return refugeId; },
-  haven: function () { return havenId; }, havenAt: havenAt, hidden: hidden,
+  haven: function () { return havenId; }, havenAt: havenAt, postRoom: postRoom, hidden: hidden,
   lodR: lodR, lodLevel: lodLevel, search: search, netUp: netUp, camFacing: camFacing,
   quietTurret: quietTurret, jammer: jammer, freeCellNear: freeCellNear, spawnFoe: spawnFoe, damageFoe: damageFoe, unhide: unhide, unmask: unmask, dropCarry: dropCarry, _relayCall: function (f) { relayCall(f); }, _cleanerTick: function (f) { cleanerTick(f); }, isTurret: isTurret, cutTurret: cutTurret, mineTurret: mineTurret, unmineTurrets: unmineTurrets, flankCell: flankCell,
   cutCount: function () { return foes.filter(function (f) { return (isNetTurret(f) && f.cut) || (isCam(f) && f.camOff); }).length; },

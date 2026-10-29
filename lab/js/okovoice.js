@@ -23,8 +23,12 @@ var LAB = window.LAB;
 function S() { return LAB.settings || {}; }
 var R = Math.random;
 
-/* ── какой голос и что записано ── */
-function voice() { var v = S().okoVoice; return v === "f" || v === "tts" ? v : "m"; }
+/* ── какой голос и что записано ──
+   (3.7) Записанный голос — только когда записаны все реплики обоими голосами
+   (oko_voiced.js, ready): до тех пор ОКО говорит синтезатором, настроек голоса нет,
+   а сборки не берут записи — голос ОКО входит в игру только целиком. */
+function ready() { return !!(LAB.OKO_VOICED && LAB.OKO_VOICED.ready); }
+function voice() { if (!ready()) return "tts"; var v = S().okoVoice; return v === "f" || v === "tts" ? v : "m"; }
 function norm(t) { return String(t == null ? "" : t).replace(/\s+/g, " ").trim(); }
 function key(t) {
   t = norm(t);
@@ -188,20 +192,56 @@ function heartBuf(sec) {
   return b;
 }
 
-/* ── сыграть ── */
-var cur = null; /* звучащие части реплики — для тишины по жесту */
+/* ── сыграть: одна реплика за раз ──
+   Реплики идут по очереди, как прежде у синтезатора: следующая — когда договорила
+   прежняя со всеми частями (обрывком, эхом, шёпотом). Пока читается записка, очередь
+   ждёт её конца — сколько бы она ни читалась. Запись, которой ещё нет в памяти,
+   очередь ждёт сама. Тишина (жест, уход в фон, новая игра) снимает звучащую реплику,
+   всю очередь и ту, что ещё грузится. */
+var cur = [];          /* звучащие части реплики */
+var queue = [];        /* ждут своей очереди: { v, k, q, opts, chime, ses } */
+var busyTill = 0, nextT = null, loading = false, gen = 0;
 function playPart(id, o) {
   var h = LAB.Sound.play(id, o);
-  if (h && cur) cur.push(h);
+  if (h) cur.push(h);
   return h;
 }
-function stop() { (cur || []).forEach(function (h) { try { h.stop(0.08); } catch (e) { /* */ } }); cur = []; }
+function stop() {
+  gen++; queue = []; busyTill = 0; loading = false;
+  clearTimeout(nextT); nextT = null;
+  cur.forEach(function (h) { try { h.stop(0.08); } catch (e) { /* */ } }); cur = [];
+}
+function later(ms) { clearTimeout(nextT); nextT = setTimeout(function () { nextT = null; pump(); }, Math.max(30, ms)); }
+function pump() {
+  if (nextT || loading || !queue.length) return;
+  var gm = LAB.game, r = queue[0];
+  /* другая игра — реплики прежней уже ни к чему */
+  if (!gm || !gm.entered || r.ses !== gm.session) { queue = []; return; }
+  if (busyTill > Date.now()) { later(busyTill - Date.now()); return; }
+  if (busy()) { later(500); return; }
+  var id = "oko_" + r.v + "_" + r.k, g0 = gen;
+  if (!bufOf(id) && ctx() && !S().lite) {
+    loading = true;
+    LAB.Bank.preload([id], function () {
+      if (g0 !== gen) return;
+      loading = false;
+      if (!bufOf(id)) queue.shift(); /* запись не загрузилась: слова уже в субтитрах и в истории */
+      pump();
+    });
+    return;
+  }
+  queue.shift();
+  cur = cur.filter(function (h) { return h && !h.stopped; });
+  var sec = start(r.v, r.k, r.q, r.opts, r.chime) || 0;
+  busyTill = Date.now() + Math.round(sec * 1000) + 250;
+  pump();
+}
+/* сыграть реплику; вернуть, сколько секунд она звучит (со всеми частями) */
 function start(v, k, q, opts, chime) {
   var id = "oko_" + v + "_" + k, L = look(chime), g = L.g * okoGain();
   var base = { bus: "voice", vary: 0, prio: 3, gain: g, lp: L.lp || 0, reverb: L.rv, pan: L.pan || 0, wait: 6000 };
   var buf = bufOf(id);
-  cur = [];
-  if (!buf || !ctx() || S().lite) { playPart(id, base); LAB.Bank.preload([id]); return; }
+  if (!buf || !ctx() || S().lite) { var h0 = playPart(id, base); if (!buf) LAB.Bank.preload([id]); return h0 && h0.dur ? h0.dur : buf ? buf.duration : 4; }
   var ex = extras(q, opts && opts.okoKind, chime), lead = 0, main = buf, o;
   if (ex.misfire) {
     var other = pickLoaded(v, k);
@@ -223,18 +263,22 @@ function start(v, k, q, opts, chime) {
   if (ex.wobble) main = wobble(main);
   o = copy(base, { delay: lead });
   if (main === buf) playPart(id, o); else playPart(temp("oko_fx_main", main), o);
-  if (ex.heart) playPart(temp("oko_fx_heart", heartBuf(main.duration + 1.8)), copy(base, { delay: lead, gain: g, lp: 0, reverb: 0, pan: 0 }));
-  if (ex.whisper) whisper(v, ex.whisper, lead + main.duration + 0.12, base, g);
+  var end = lead + main.duration;
+  if (ex.heart) { var hb = heartBuf(main.duration + 1.8); playPart(temp("oko_fx_heart", hb), copy(base, { delay: lead, gain: g, lp: 0, reverb: 0, pan: 0 })); end = Math.max(end, lead + hb.duration); }
+  if (ex.whisper) end = Math.max(end, whisper(v, ex.whisper, lead + main.duration + 0.12, base, g));
+  return end;
 }
+/* ответный шёпот; вернуть, когда он смолкнет (или at, если шёпота нет) */
 function whisper(v, w, at, base, g) {
   var id = "oko_" + v + "_w_" + w;
-  if (!((LAB.OKO_VOICED && LAB.OKO_VOICED.w && LAB.OKO_VOICED.w[v]) || "").split(/\s+/).some(function (x) { return x === w; })) return;
+  if (!((LAB.OKO_VOICED && LAB.OKO_VOICED.w && LAB.OKO_VOICED.w[v]) || "").split(/\s+/).some(function (x) { return x === w; })) return at;
   if (!LAB.Bank.has(id)) LAB.Bank.def(id, ["oko/" + v + "/w_" + w + ".mp3"], { bus: "voice", vary: 0 });
-  if (!LAB.Bank.ready(id)) { LAB.Bank.preload([id]); return; }
-  var p = R() < 0.5 ? -0.65 : 0.65;
+  if (!LAB.Bank.ready(id)) { LAB.Bank.preload([id]); return at; }
+  var p = R() < 0.5 ? -0.65 : 0.65, wb = bufOf(id);
   playPart(id, copy(base, { delay: at, gain: g * 0.22, pan: p, lp: 3600, reverb: 0.2 }));
   /* через полсекунды отвечает другой — с другой стороны, тише и ниже */
   playPart(id, copy(base, { delay: at + 0.6, gain: g * 0.11, pan: -p, lp: 2500, rate: 0.89, reverb: 0.25 }));
+  return at + 0.6 + (wb ? wb.duration / 0.89 : 1);
 }
 /* другая записанная реплика этого голоса, уже в памяти — для обрывка */
 function pickLoaded(v, k) {
@@ -267,17 +311,11 @@ function play(text, opts, chime) {
   var k = key(q), id = "oko_" + v + "_" + k;
   if (!LAB.Bank.has(id)) LAB.Bank.def(id, ["oko/" + v + "/" + k + ".mp3"], { bus: "voice", vary: 0 });
   if (LAB.Speech && LAB.Speech.say) LAB.Speech.say(text, { prio: opts && opts.prio || "event", keep: true, recorded: true });
-  if (busy()) {
-    LAB.Bank.preload([id]);
-    var t0 = Date.now(), wait = function () {
-      if (!LAB.game || !LAB.game.entered) return;
-      if (busy() && Date.now() - t0 < 30000) { setTimeout(wait, 500); return; }
-      if (!busy()) start(v, k, q, opts, chime);
-    };
-    setTimeout(wait, 500);
-    return true;
-  }
-  start(v, k, q, opts, chime);
+  LAB.Bank.preload([id]);
+  queue.push({ v: v, k: k, q: q, opts: opts, chime: chime, ses: LAB.game ? LAB.game.session : 0 });
+  /* как у синтезатора: из отложенного — не больше четырёх, самые свежие */
+  while (queue.length > 4) queue.splice(loading ? 1 : 0, 1);
+  pump();
   return true;
 }
 
@@ -287,7 +325,7 @@ var PREVIEW = "Я слушаю ваш пульс по вентиляции, но
 function preview(v) {
   stop();
   var n = ++previewN;
-  if (v === "tts") return false;
+  if (v === "tts" || !ready()) return false;
   var k = list(v)[key(PREVIEW)] ? key(PREVIEW) : Object.keys(list(v))[0];
   if (!k || !LAB.Bank || !LAB.Sound) return false;
   var id = "oko_" + v + "_" + k, t0 = Date.now();
@@ -305,7 +343,7 @@ function preview(v) {
 }
 
 LAB.okoVoice = {
-  voice: voice, key: key, has: has, fem: fem, quote: quote, play: play, stop: stop, look: look, extras: extras, preview: preview,
+  voice: voice, ready: ready, key: key, has: has, fem: fem, quote: quote, play: play, stop: stop, look: look, extras: extras, preview: preview,
   /* для проверок: свой генератор случайностей и сброс кеша списка записей */
   _rng: function (fn) { R = fn || Math.random; }, _reset: function () { sets = {}; }
 };

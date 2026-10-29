@@ -324,6 +324,7 @@ function sit(o) {
         UIx("closeAll");
         LAB.mini.hack(gm().hackLength(1 + Math.floor(G().L / 3)), function (ok) {
           if (ok) { st.hacked = true; snd("pc_ok", "term_ok"); gm().gainXP(6); desk(o); }
+          else if (gm().walkedAway && gm().walkedAway()) say("Вы убрали руки с клавиатуры. Компьютер ждёт пароля.");
           else { snd("pc_error", "term_err"); say("Доступ запрещён. Компьютер громко пищит."); if (LAB.combat) LAB.combat.noise(8); }
         }, { title: "Взлом входа" });
       } },

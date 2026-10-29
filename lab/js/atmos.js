@@ -527,8 +527,12 @@ function foeDeath(f) {
   sub((f.name || "").split(",")[0] + " — повержен");
 }
 function foeMiss(f, ranged) { play(ranged ? "bullet_by" : "swing_by", { ch: "foe", gain: 0.8, pan: (f.x - G().x) > 0 ? 0.5 : (f.x - G().x) < 0 ? -0.5 : 0 }); }
+/* вид урона без своей записи: звуковой удар — давление, как у поля; прочие — удар */
+var HURT_AS = { sonic: "hurt_field" };
 function hurt(adt, dmg, src) {
-  play("hurt_" + (adt || "phys"), { gain: 0.9 });
+  var hid = "hurt_" + (adt || "phys");
+  if (!has(hid) && !FB[hid]) hid = HURT_AS[adt] || "hurt_phys";
+  play(hid, { gain: 0.9 });
   if (dmg > (G() ? G().hpMax * 0.12 : 20)) play("player_pain", { gain: 0.8, delay: 0.05 });
   heartCheck();
 }

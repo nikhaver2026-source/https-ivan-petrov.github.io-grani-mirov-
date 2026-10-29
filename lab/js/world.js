@@ -264,7 +264,9 @@ LAB.makeWeapon = function (base, lvl, rank, qual, idHint) {
   var b = LAB.WEAPONS[base];
   var k = (1 + 0.14 * (lvl - 1)) * LAB.RANK_MULT[rank] * LAB.QUAL_MULT[qual], mark = LAB.weaponMark(rank, lvl);
   var w = {
-    id: idHint || ("w" + (++weaponSeq) + "_" + base),
+    /* счётчик начинается заново при каждом запуске игры — без случайного хвоста стволы
+       разных запусков получали одинаковые id, и окно ствола брало (и разбирало) чужой */
+    id: idHint || ("w" + (++weaponSeq) + "_" + Math.floor(Math.random() * 1e6).toString(36) + "_" + base),
     base: base, g: b.g, rank: rank, qual: qual, lvl: lvl,
     dmg: Math.max(1, Math.round(b.dmg * k)),
     rng: b.rng, spread: b.spread, cap: LAB.weaponCap(base, rank, lvl, qual), capV: 2,

@@ -143,6 +143,8 @@ jobs:
           G="$D/resources/game"; mkdir -p "$G"
           cp ../index.html ../icon-192.png ../icon-512.png "$G"/
           cp -r ../js ../espeak ../sounds "$G"/
+          # Голос ОКО — только целиком: пока записаны не все реплики (oko_voiced.js, ready), записей в сборке нет.
+          if ! grep -q 'ready: true' ../js/oko_voiced.js; then rm -rf "$G"/sounds/oko; echo "голос ОКО записан не весь — записи не в сборке"; fi
           # Языки интерфейса Chromium: русский и английский.
           find "$D/locales" -name '*.pak' ! -name 'ru.pak' ! -name 'en-US.pak' -delete
           # «Прочти меня» — с меткой UTF-8: её понимает и Блокнот Windows 7.

@@ -176,6 +176,7 @@ function quietRoom(fl, fs, r) {
   if (r == null || r < 0) return false;
   if (fs && fs.haven && fs.haven[r]) return true;
   if (fl.U === r) return true;
+  if (fl.rooms[r] && fl.rooms[r].shop) return true; /* мастерская этажа */
   if (calmOf !== fl) { calmOf = fl; calmSet = {}; fl.objs.forEach(function (q) { if (q.type === "wake" || q.type === "capsule") calmSet[q.room] = 1; }); }
   return !!calmSet[r];
 }

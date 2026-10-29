@@ -729,6 +729,13 @@ function stepReady(s, q) {
   return r;
 }
 function ready(q) { return steps(q).every(function (s) { return stepReady(s, q); }); }
+/* срочная помощь: срок — у шага «помощь», а не у всего поручения; помощь оказана — срок снят */
+function aidDone(q) { return steps(q).filter(function (s) { return s.type === "aid"; }).every(function (s) { return stepReady(s, q); }); }
+function urgentLate(q, now) {
+  if (!q.urgent) return false;
+  if (aidDone(q)) { delete q.urgent; return false; }
+  return now > q.urgent;
+}
 function curStep(q) { var ss = steps(q); for (var i = 0; i < ss.length; i++) if (!stepReady(ss[i], q)) return i; return -1; }
 function sDoes(s, q) { var Kd = KINDS[s.type]; return Kd && Kd.does ? Kd.does(s, q) : ""; }
 function sShort(s, q) { var Kd = KINDS[s.type]; return Kd && Kd.short ? Kd.short(s, q) : s.type; }
@@ -846,7 +853,7 @@ var COND_N = { quiet: "тихо: ОКО не поднимает тревогу �
 function condText(q) {
   var cs = (q.cond || []).filter(function (c) { return !c.lost; });
   var t = cs.length ? "Премия по четверти — " + cs.map(function (c) { return c.k === "fast" ? "быстро: до " + clockAt(c.until) + " по часам «Эхо»" : COND_N[c.k]; }).join("; ") + "." : "";
-  if (q.urgent && !q.done) t += (t ? " " : "") + "Срочно: успеть до " + clockAt(q.urgent) + " по часам «Эхо» — иначе будет поздно.";
+  if (q.urgent && !q.done && !aidDone(q)) t += (t ? " " : "") + "Срочно: успеть до " + clockAt(q.urgent) + " по часам «Эхо» — иначе будет поздно.";
   return t;
 }
 function questFloors(q) {
@@ -1208,7 +1215,11 @@ function finish(q, n, opt, echo) {
   if (opt && opt.f === "chip") { r.cool = nowMin() + 60; r.why = "betray"; }
   var extra = [];
   if (opt && (opt.cr || opt.crAbs)) { var ocr = opt.crAbs || LAB.credits(opt.cr, g.L, g.F); g.credits += ocr; extra.push("Кредитов сверх награды: " + ocr + "."); }
-  if (opt && opt.gift) { var og = opt.gift.ammo ? questGift(me, h32(q.id + ":og"), 1) : { kind: "item", item: opt.gift.item, n: opt.gift.n || 1 }; if (opt.gift.ammo && og.kind === "ammo") og.n = opt.gift.ammo; if (og.kind === "ammo" || LAB.ITEMS[og.item]) { if (later) later.push(og); else { gm().giveItem(og, true); extra.push("В придачу — " + giftName(og) + "."); } } }
+  if (opt && opt.gift) {
+    /* ящик с патронами — заряды текущего оружия (прежде через общий список подарков выпадали и вещи) */
+    var ogw = opt.gift.ammo ? gm().curWeapon() : null, oga = ogw && ogw.ammo && LAB.AMMO[ogw.ammo] ? ogw.ammo : "energy";
+    var og = opt.gift.ammo ? { kind: "ammo", ammo: oga, n: opt.gift.ammo } : { kind: "item", item: opt.gift.item, n: opt.gift.n || 1 };
+    if (og.kind === "ammo" || LAB.ITEMS[og.item]) { if (later) later.push(og); else { gm().giveItem(og, true); extra.push("В придачу — " + giftName(og) + "."); } } }
   var head = opt && opt.say ? me.n + ": «" + gx(opt.say, !!me.female) + "»"
     : echo ? (q.type === "deep" ? "«Эхо» передало доклад наверх. " : "«Эхо» передало доклад: «" + q.short + "». ") + q.giverName + " благодарит по связи."
     : "Задание выполнено! " + q.giverName + " благодарит.";
@@ -1354,7 +1365,7 @@ function check() {
       if (g.L > q.L) { lastNote[q.id] = 1; sayq("Весточку от " + q.giverName + " можно передать любому выжившему здесь, внизу."); }
       return;
     }
-    if (q.urgent && now > q.urgent && !ready(q)) { late(q); return; }
+    if (urgentLate(q, now)) { late(q); return; }
     condTick(q, now);
     var ss = steps(q);
     if (ss.length > 1) ss.forEach(function (s) {
@@ -1382,7 +1393,7 @@ function onTime() {
   var now = nowMin();
   G().quests.forEach(function (q) {
     if (q.done || q.type === "main") return;
-    if (q.urgent && now > q.urgent && !ready(q)) { late(q); return; }
+    if (urgentLate(q, now)) { late(q); return; }
     condTick(q, now);
   });
 }

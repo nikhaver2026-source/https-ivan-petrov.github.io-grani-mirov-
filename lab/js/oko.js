@@ -778,7 +778,7 @@ function lost(data) {
     else f.repl.push({ k: "patrol", t: T() + lossDelay(rnd(80, 160), n), beat: data.beat, corr: data.corr, type: data.type, n: lossBatch(n), at: at });
   } else if (data.guard === "room" && data.room != null && data.room >= 0) {
     /* кабинет опустел — когда в нём не осталось ни одной машины */
-    var left = cb && cb.foes().some(function (q) { return !q.dead && q.room === data.room && q.guard === "room" && q.kind === "mech"; });
+    var left = cb && cb.foes().some(function (q) { return !q.dead && q.guard === "room" && q.kind === "mech" && (cb.postRoom ? cb.postRoom(q) : q.room) === data.room; });
     if (!left && !f.repl.some(function (q) { return q.k === "room" && q.room === data.room; })) f.repl.push({ k: "room", t: T() + roomDelay(), room: data.room, cat: data.garrison || "office", n: Math.max(1, lossBatch(n)), at: at });
   } else if (data.guard && data.post) {
     /* место поста — у машины это {x, y}, в записи замены — пара чисел */
@@ -870,7 +870,10 @@ function punTick(f, now) {
   /* (3.5) каратели вышли на перехват и потеряли носителя — ОКО раз в десять секунд
      наводит их на место, где его видели последним (прежде, обыскав одну точку,
      они бродили без цели, и их тихо отзывали) */
-  if (!f.punGo && now % 20 === 0 && cb.search) {
+  /* (проверка перед сборкой) свой срок: punTick идёт через такт, и при нечётной разнице часов этажа
+     и общего счёта тактов проверка «now % 20» не срабатывала никогда */
+  if (!f.punGo && now >= (f.punSeekT || 0) && cb.search) {
+    f.punSeekT = now + 20;
     var sa = st().seenAt;
     if (sa && sa.L === g.L && sa.F === g.F && now - sa.t < 240) alive.forEach(function (q) {
       if (!q.ambush && q.state !== "hunt" && q.task !== "leave") cb.search(q, { x: sa.x, y: sa.y });

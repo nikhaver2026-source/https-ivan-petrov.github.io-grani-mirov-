@@ -77,6 +77,15 @@ function catPick(r, L, cat) {
   return fresh.length && r.chance(0.4) ? r.pick(fresh) : r.pick(pool);
 }
 function partPick(r, L) { return LAB.partAt ? LAB.partAt(r, L) : "scrap"; }
+/* (3.7) касса, часовая мастерская, серебро, стеклодувня («valuable») и бюро находок («lost»):
+   прежде такие теги уходили в общую ветку склада — вместо ценностей лежали детали. Вещь
+   подменяется из уже вынутого q, как у холодильника: поток случайностей этажа тот же */
+var LOST = ["watch", "ring", "pen", "harmonica", "flask", "medal"];
+function tagItem(tag, q, L, F) {
+  if (tag === "lost") return q < 0.85 ? it(LOST[Math.floor(q / 0.85 * LOST.length) % LOST.length]) : { kind: "credits", n: LAB.credits(4 + Math.floor(q * 100) % 6, L, F) };
+  var pool = itemsOf(L, function (d) { return d.cat === "valuable"; });
+  return q < 0.65 && pool.length ? it(pool[Math.floor(q / 0.65 * pool.length) % pool.length]) : { kind: "credits", n: LAB.credits(15 + Math.floor(q * 1000) % 12, L, F) };
+}
 function it(item, n) { return { kind: "item", item: item, n: n || 1 }; }
 function annexLoot(r, L, F, tag, ot, lean, only) {
   var out = [], n = ot === "safe" ? 3 : lean ? r.int(1, ot === "crate" || ot === "shelf" ? 2 : 1) : ot === "crate" || ot === "shelf" ? r.int(1, 3) : r.int(1, 2);
@@ -107,6 +116,7 @@ function annexLoot(r, L, F, tag, ot, lean, only) {
       case "arms": add(q < 0.5 ? { kind: "ammo", ammo: "energy", n: 1 } : q < 0.7 ? it(r.chance(0.5) ? "bandage" : "emp") : q < 0.85 ? it(catPick(r, L, "valuable")) : cr(10)); break;
       default: /* store, parts */ add(q < 0.5 ? it(partPick(r, L), r.chance(0.3) ? 2 : 1) : q < 0.65 ? it(catPick(r, L, "food")) : q < 0.78 ? it(r.chance(0.4) ? "tape" : r.chance(0.6) ? "rubber" : "fieldkit") : q < 0.9 ? it(catPick(r, L, "valuable")) : cr(8));
     }
+    if ((tag === "valuable" || tag === "lost") && out[k0]) out[k0] = tagItem(tag, q, L, F);
     /* число вещей — прежнее (по нему потом бросают жребий в разграбленных помещениях); негодная вещь так и остаётся негодной */
     var x0 = out[k0];
     if ((cold || cook) && x0 && (x0.kind !== "item" || (x0.item && LAB.ITEMS[x0.item]))) out[k0] = cold ? KI.coldItem(q, L, tag) : KI.cookedItem(q, L);

@@ -26,7 +26,9 @@ var LAB = window.LAB, AE = LAB.AE, Bank = LAB.Bank, S = LAB.settings;
 
 var MOBILE = /Android|iPhone|iPad|iPod/i.test((navigator && navigator.userAgent) || "");
 /* пределы голосов: на телефоне меньше — иначе треск и пропуски */
-var LIMIT = { total: MOBILE ? 40 : 64, fx: MOBILE ? 24 : 40, amb: 8, ui: 32, puzzle: 32, beacon: 8, music: 4, voice: 4 };
+/* голос ОКО: одна реплика за раз (okovoice.js), но в ней до семи частей — треск, обрывок,
+   обратное эхо, слова, сердце, два шёпота; при пределе 4 пятая снимала первую */
+var LIMIT = { total: MOBILE ? 40 : 64, fx: MOBILE ? 24 : 40, amb: 8, ui: 32, puzzle: 32, beacon: 8, music: 4, voice: 8 };
 /* облегчённый режим: голосов сразу меньше — слабому телефону легче; важные
    звуки (выстрел, попадание, шаг, меню) по-прежнему вытесняют неважные */
 var LIMIT_LITE = { total: MOBILE ? 24 : 36, fx: MOBILE ? 14 : 22, amb: 5, ui: 20, puzzle: 24, beacon: 6, music: 3, voice: 4 };
@@ -230,6 +232,8 @@ function runSlot(s, revive) {
   Bank.preload([s.id], function () {
     s.loading = false;
     if (slots[s.name] !== s || !s.want) { if (isLong(s.id)) release(s.id, 500); return; }
+    /* петля уже звучит: её запустил другой заход (устройство пересоздали, пока запись грузилась) */
+    if (s.h && !s.h.stopped) return;
     if (ctxOk() && Bank.ready(s.id)) { s.h = start(s.id, o); if (revive && s.h) st.revived++; }
   });
 }

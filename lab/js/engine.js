@@ -1100,7 +1100,8 @@ var Speech = {
           var er = ev && ev.error;
           self._done(!(er === "interrupted" || er === "canceled"));
         };
-        setTimeout(function () { try { window.speechSynthesis.speak(u); } catch (e) { self._done(true); } }, 20);
+        /* за эти 20 мс фразу могли отменить (действие игрока, тишина) — отменённую не ставить в очередь браузера */
+        setTimeout(function () { if (!self.cur || self.cur.id !== id) return; try { window.speechSynthesis.speak(u); } catch (e) { if (self.cur && self.cur.id === id) self._done(true); } }, 20);
       } catch (e) { this._done(true); }
       return;
     }

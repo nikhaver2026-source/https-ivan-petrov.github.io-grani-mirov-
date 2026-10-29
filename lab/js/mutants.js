@@ -385,7 +385,7 @@ function iqFor(base, depth) {
    прочнее на четверть, бьёт сильнее, панцирь толще. Низшие доходят до
    матёрых, прочие — до древних. Стражи уровней и матки не меняются. */
 var EVO_ADJ = [null, { m: "окрепший", f: "окрепшая" }, { m: "матёрый", f: "матёрая" }, { m: "древний", f: "древняя" }];
-function evoCap(base) { return !base || base.kind !== "bio" ? 0 : base.rank === "low" ? 2 : 3; }
+function evoCap(base) { return !base || base.kind !== "bio" || base.caste === "queen" ? 0 : base.rank === "low" ? 2 : 3; }
 /* С какой ступени тварь встречается на этой глубине (по номеру — одна и та же). */
 function stage0(base, depth, id, boost) {
   if (!base || base.kind !== "bio" || base.caste === "queen") return 0;

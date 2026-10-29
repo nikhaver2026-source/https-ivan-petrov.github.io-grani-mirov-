@@ -68,12 +68,15 @@ function noise(n) { if (LAB.combat && LAB.combat.noise) LAB.combat.noise(n); }
 function giveAll(list) { return list.map(function (it) { return gm().giveItem(it); }); }
 function fxDef(o) { return LAB.FIX && LAB.FIX.T[o.fx]; }
 
-/* ── новые вещи: грибы, травяной сбор, жетоны погибших ── */
+/* ── новые вещи: грибы, травяной сбор, жетоны погибших ──
+   (3.7) только у своей обстановки (грибница, пучки трав, ягодный куст): fxOnly — не в
+   общих находках кабинетов и не на полках снабжения. Иначе ягоды Истока лежали в шкафах
+   «Ковчега», а генератор этажей зависел от этого файла (в проверках мира его нет) */
 var NEW_ITEMS = {
-  mushroom: { n: "Грибы с грибницы", icon: "🍄", kind: "food", cat: "food", desc: "Горсть плотных грибов, пахнущих лесом. Сытость плюс 8, немного здоровья. Разогретые на плите — сытнее.", food: 8, heal: 5, price: 4, eat: "crunch", depth: 3 },
-  herbtea: { n: "Травяной сбор", icon: "🌿", kind: "food", cat: "food", desc: "Пучок сушёных трав: мята, чабрец и что-то незнакомое, пахнущее мёдом. Если заварить — бодрит, успокаивает и выводит токсины.", food: 5, wake: 6, neuro: -10, detox: 6, price: 6, eat: "sip", depth: 1 },
+  mushroom: { n: "Грибы с грибницы", icon: "🍄", kind: "food", cat: "food", fxOnly: true, src: "find", desc: "Горсть плотных грибов, пахнущих лесом. Сытость плюс 8, немного здоровья. Разогретые на плите — сытнее.", food: 8, heal: 5, price: 4, eat: "crunch", depth: 3 },
+  herbtea: { n: "Травяной сбор", icon: "🌿", kind: "food", cat: "food", fxOnly: true, src: "find", desc: "Пучок сушёных трав: мята, чабрец и что-то незнакомое, пахнущее мёдом. Если заварить — бодрит, успокаивает и выводит токсины.", food: 5, wake: 6, neuro: -10, detox: 6, price: 6, eat: "sip", depth: 1 },
   /* (3.2) ягодный куст Истока (fixtures_data.js, berrybush) */
-  berries: { n: "Ягоды Истока", icon: "🫐", kind: "food", cat: "food", desc: "Горсть тёплых тёмных ягод с куста у трубы реактора. Сытость плюс 8, немного здоровья, выводит немного токсинов.", food: 8, heal: 4, detox: 4, price: 6, eat: "crunch" },
+  berries: { n: "Ягоды Истока", icon: "🫐", kind: "food", cat: "food", fxOnly: true, src: "find", desc: "Горсть тёплых тёмных ягод с куста у трубы реактора. Сытость плюс 8, немного здоровья, выводит немного токсинов.", food: 8, heal: 4, detox: 4, price: 6, eat: "crunch" },
   badge: { n: "Жетон погибшего", icon: "🏷️", kind: "misc", cat: "valuable", nosell: true, price: 0, desc: "Металлический жетон с именем и должностью. Выжившие собирают жетоны погибших: отдайте им — родные наверху узнают, что случилось." }
 };
 for (var ik in NEW_ITEMS) if (!LAB.ITEMS[ik]) LAB.ITEMS[ik] = NEW_ITEMS[ik];

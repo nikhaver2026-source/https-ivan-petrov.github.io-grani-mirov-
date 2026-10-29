@@ -147,6 +147,9 @@ var OKO_REACT = {
   sleep: "capsule", bind: "bind", music: "music", play: "music", rest_fx: "rest", rest_drink: "rest", drink_fx: "drink", cook: "eat"
 };
 function progress(a) { var s = S(); if (!s) return 0; return a.count ? (s.c[a.ev + "_n"] || 0) : (s.c[a.ev] || 0); }
+/* скрытая веха — пока не дошли, не видна: счётная открывается с половины пути, «по наибольшему»
+   (уровень) — только полученной (прежде «дойти до Истока» было видно уже со второго уровня) */
+function shown(a) { if (!a.hidden) return true; var p = progress(a); return a.max ? p >= a.need : p >= Math.ceil(a.need / 2); }
 function check(name) {
   var s = S();
   A.forEach(function (a) {
@@ -185,7 +188,7 @@ function rewText(r) {
 /* Окно «Достижения»: полученные, в пути (с успехами), скрытые — числом. */
 function menu() {
   var s = S(); if (!s) return;
-  var got = A.filter(function (a) { return s.d[a.id]; }), open = A.filter(function (a) { return !s.d[a.id] && (!a.hidden || progress(a) > 0); });
+  var got = A.filter(function (a) { return s.d[a.id]; }), open = A.filter(function (a) { return !s.d[a.id] && shown(a); });
   var hid = A.length - got.length - open.length, g = G(), items = [];
   var perks = Object.keys(g.perks || {}).filter(function (k) { return PERKS[k]; });
   items.push({ label: "Получено " + got.length + " из " + A.length + (perks.length ? ". Умения: " + perks.map(function (k) { return PERKS[k].n; }).join(", ") : ""), info: true, keep: true, fn: function () {

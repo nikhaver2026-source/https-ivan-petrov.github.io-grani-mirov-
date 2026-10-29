@@ -8,5 +8,7 @@ LAB.OKO_VOICED = {
   m: "15716212 3526ed88 6bb4dcc7 8a72ff45 aa3d378b",
   /* женский голос: 5 реплик */
   f: "15716212 3526ed88 6bb4dcc7 8a72ff45 aa3d378b",
-  w: { m: "dveri nositel posle zabyvat", f: "dveri nositel posle zabyvat" }
+  w: { m: "dveri nositel posle zabyvat", f: "dveri nositel posle zabyvat" },
+  /* записаны ли все реплики обоими голосами: нет — голос ОКО в игре и в сборках не участвует */
+  ready: false
 };
