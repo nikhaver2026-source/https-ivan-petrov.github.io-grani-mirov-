@@ -535,7 +535,7 @@ function settingsMenu() {
     [{ v: "auto", label: "Автоматически: голос телефона, если он говорит по-русски" }, { v: "system", label: "Системный синтезатор телефона" }, { v: "espeak", label: "Встроенный eSpeak" }];
   var items = [
     { kind: "choice", label: "Синтезатор речи", options: ttsOpts, get: function () { return S.tts; }, set: function (v) { S.tts = v; LAB.saveSettings(); Sp.choose(); } },
-    { label: function () { return "Голос синтезатора: " + (S.tts === "espeak" ? "встроенный eSpeak" : S.voice || autoVoiceName()); }, fn: voiceMenu },
+    { label: function () { return "Голос синтезатора: " + (S.tts === "espeak" ? "встроенный eSpeak" : S.voice ? voiceTitle(S.voice) : autoVoiceName()); }, fn: voiceMenu },
     /* (голос ОКО) okovoice.js: выбранный голос сразу звучит образцом */
     { kind: "choice", label: "Голос ОКО", options: [{ v: "m", label: "мужской" }, { v: "f", label: "женский" }, { v: "tts", label: "синтезатор игры, как прежде" }],
       get: function () { return S.okoVoice || "m"; }, set: function (v) { S.okoVoice = v; LAB.saveSettings(); if (LAB.okoVoice) LAB.okoVoice.preview(v); }, descOf: okoVoiceDesc },
@@ -611,18 +611,28 @@ function vol(label, key) {
 function tog(label, key) {
   return { kind: "toggle", label: label, get: function () { return !!S[key]; }, set: function (v) { S[key] = v ? 1 : 0; LAB.saveSettings(); LAB.AE.applyVolumes(); } };
 }
+/* Имя голоса для игрока: у голосов других движков телефона id — «движок::голос». */
+function voiceTitle(id) {
+  var v = LAB.Speech.listVoices().filter(function (x) { return x.id === id; })[0];
+  return v ? v.name : String(id).replace(/^[^:]*::/, "");
+}
 function autoVoiceName() {
   var a = LAB.Speech.listVoices().filter(function (v) { return v.auto; })[0];
   return a ? "сам выбирается — " + a.name : "по умолчанию";
 }
 function voiceMenu() {
+  /* телефон: прочие движки речи поднимаются позже основного — голоса перечитываются при каждом
+     открытии списка, а не только при запуске игры */
+  if (!LAB.desktop) LAB.Speech.refreshBridge();
   var vs = LAB.Speech.listVoices();
   if (LAB.desktop) { desktopVoiceMenu(vs); return; }
   var ru = vs.filter(function (v) { return /^ru/i.test(v.lang); });
   var list = (ru.length ? ru : vs).slice(0, 60);
   if (!list.length) { say("Голосов телефона не найдено. Игра говорит встроенным eSpeak."); settingsMenu(); return; }
   menu("Голос синтезатора", list.map(function (v) {
-    return { label: v.name, fn: function () { LAB.Speech.setVoice(v.id); setTimeout(function () { say("Так звучит этот голос. Подземная лаборатория."); settingsMenu(); }, 200); } };
+    /* выбранный голос телефона — и синтезатор телефона: игра говорит им и после перезапуска,
+       даже если основной движок телефона по-русски не говорит (как на компьютере) */
+    return { label: v.name, fn: function () { S.tts = "system"; LAB.saveSettings(); LAB.Speech.setVoice(v.id); setTimeout(function () { say("Так звучит этот голос. Подземная лаборатория."); settingsMenu(); }, 200); } };
   }).concat([{ label: "Назад", fn: settingsMenu }]));
 }
 /* Компьютер: все голоса, что стоят у игрока, — голос NVDA, голос JAWS,

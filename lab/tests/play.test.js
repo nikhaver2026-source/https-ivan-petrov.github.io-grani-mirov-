@@ -6966,6 +6966,64 @@ LAB.ui.closeAll();
   });
   ok(ex.items[ex.items.length - 1] === "Выход" && ex.quit === 1, "в главном меню — «Выход», он закрывает игру (" + ex.items.join(", ") + ")");
 
+  /* (ошибка игрока) Голос другого движка речи телефона (не основного) после перезапуска игры
+     пропадал. Мост телефона здесь — подделка: основной движок готов через 0,6 с, второй — через
+     1,5 с. Выбранный голос второго движка сохраняется вместе с «системным синтезатором», при новом
+     запуске игра отдаёт его телефону (а тот ставит его, как поднимется движок, — MainActivity) и
+     говорит синтезатором телефона; список голосов перечитывается при каждом открытии. */
+  console.log("Голос синтезатора телефона после перезапуска");
+  const fakePhone = () => {
+    const t0 = Date.now(), base = [{ id: "aleksandr", name: "aleksandr (русский)", lang: "ru-RU", local: true }];
+    const late = [{ id: "ru.late.engine::anna", name: "Поздний движок: anna (русский)", lang: "ru-RU", local: true }];
+    window.__phone = { set: [] };
+    window.LabTTS = {
+      status: () => (Date.now() - t0 < 600 ? "init" : "ready"),
+      getVoices: () => JSON.stringify(Date.now() - t0 < 1500 ? base : base.concat(late)),
+      setVoice: n => { window.__phone.set.push(String(n)); },
+      speak: (text, rate, vol, id) => { setTimeout(() => { if (window.LabTTSDone) window.LabTTSDone(id); }, 5); },
+      stop: () => {}, isSpeaking: () => false, hasRussian: () => true, log: () => {}
+    };
+  };
+  const ctxV = await browser.newContext({ viewport: { width: 412, height: 860 } });
+  await ctxV.addInitScript(fakePhone);
+  const pv = await ctxV.newPage();
+  pv.on("pageerror", e => errors.push("pageerror (голос телефона): " + e.message));
+  await pv.goto(url);
+  await pv.waitForFunction(() => window.LAB_READY === true);
+  await pv.waitForTimeout(1800);
+  const vc1 = await pv.evaluate(() => {
+    const lb = i => typeof i.label === "function" ? i.label() : i.label;
+    LAB.ui.settings();
+    const vi = LAB.ui.top().items.filter(i => /^Голос синтезатора/.test(lb(i)))[0];
+    vi.fn();
+    const items = LAB.ui.top().items, names = items.map(lb);
+    const anna = items.filter(i => lb(i) === "Поздний движок: anna (русский)")[0];
+    if (anna) anna.fn();
+    const st = JSON.parse(localStorage.getItem("lab_settings") || "{}");
+    LAB.ui.closeAll();
+    return { names: names, saved: st.voice, tts: st.tts, set: window.__phone.set.slice() };
+  });
+  ok(vc1.names.indexOf("Поздний движок: anna (русский)") >= 0 && vc1.saved === "ru.late.engine::anna" && vc1.tts === "system" && vc1.set.indexOf("ru.late.engine::anna") >= 0,
+    "голос второго движка телефона — в списке (перечитан при открытии), выбран и сохранён с системным синтезатором (" + JSON.stringify(vc1) + ")");
+  const ctxV2 = await browser.newContext({ viewport: { width: 412, height: 860 }, storageState: await ctxV.storageState() });
+  await ctxV2.addInitScript(fakePhone);
+  const pv2 = await ctxV2.newPage();
+  pv2.on("pageerror", e => errors.push("pageerror (голос телефона, перезапуск): " + e.message));
+  await pv2.goto(url);
+  await pv2.waitForFunction(() => window.LAB_READY === true);
+  await pv2.waitForTimeout(1200);
+  const vc2 = await pv2.evaluate(() => {
+    const lb = i => typeof i.label === "function" ? i.label() : i.label;
+    const out = { set: window.__phone.set.slice(), backend: LAB.Speech.backend, voice: LAB.settings.voice, tts: LAB.settings.tts };
+    LAB.ui.settings();
+    out.label = LAB.ui.top().items.map(lb).filter(t => /^Голос синтезатора/.test(t))[0];
+    LAB.ui.closeAll();
+    return out;
+  });
+  ok(vc2.set[0] === "ru.late.engine::anna" && vc2.backend === "android" && vc2.voice === "ru.late.engine::anna" && vc2.tts === "system" && /anna/.test(vc2.label || "") && !/::/.test(vc2.label || ""),
+    "после перезапуска — тот же голос: игра отдаёт его телефону при запуске и говорит синтезатором телефона (" + JSON.stringify(vc2) + ")");
+  await ctxV.close(); await ctxV2.close();
+
   const real = errors.filter(e => !/favicon|sounds\/|Failed to load resource/.test(e));
   ok(!real.length, "ошибок страницы нет" + (real.length ? ": " + real.slice(0, 5).join(" || ") : ""));
   ok(!external.length, "I: игра ничего не загружает из сети — все запросы к своим файлам" + (external.length ? ": " + external.slice(0, 3).join(", ") : ""));

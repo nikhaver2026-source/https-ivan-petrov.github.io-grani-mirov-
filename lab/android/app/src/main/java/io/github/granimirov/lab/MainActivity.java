@@ -10,6 +10,8 @@ import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.speech.tts.TextToSpeech;
@@ -76,6 +78,11 @@ public class MainActivity extends Activity {
     private final Map<String, String> labels = new HashMap<>();
     private volatile TextToSpeech speaker;
     private volatile String state = "init";
+    /* Голос, выбранный в игре. Он ставится, как только поднимется его движок: прочие движки
+       речи поднимаются позже основного (после долгого перерыва — на несколько секунд), и прежде
+       выбор, присланный игрой при запуске, пропадал — звучал голос основного движка. */
+    private volatile String wantVoice = null;
+    private final Handler main = new Handler(Looper.getMainLooper());
     private final List<String[]> pending = new ArrayList<>();
     /* инструмент во весь экран: системные панели спрятаны, края экрана — игре */
     private volatile boolean full = false;
@@ -85,6 +92,8 @@ public class MainActivity extends Activity {
         @Override public void onDone(String id) { callJs("LabTTSDone", id); }
         @Override public void onError(String id) { callJs("LabTTSError", id); }
         @Override public void onError(String id, int code) { callJs("LabTTSError", id); }
+        /* фраза оборвана (смена голоса, новая фраза поверх): игра не ждёт её конца понапрасну */
+        @Override public void onStop(String id, boolean interrupted) { callJs("LabTTSDone", id); }
     };
 
     @Override
@@ -111,11 +120,13 @@ public class MainActivity extends Activity {
                         if (st != TextToSpeech.SUCCESS) return;
                         h[0].setOnUtteranceProgressListener(prog);
                         synchronized (others) { others.put(pkg, h[0]); }
+                        if (wantVoice != null) main.post(() -> applyVoice());
                     }, pkg);
                 }
             } catch (Exception ignored) { }
             List<String[]> wait;
             synchronized (pending) { state = "ready"; wait = new ArrayList<>(pending); pending.clear(); }
+            if (wantVoice != null) main.post(() -> applyVoice());
             for (String[] p : wait) say(p[0], Float.parseFloat(p[1]), Float.parseFloat(p[2]), p[3]);
         });
 
@@ -297,6 +308,34 @@ public class MainActivity extends Activity {
         if (t.speak(text, TextToSpeech.QUEUE_FLUSH, p, id) != TextToSpeech.SUCCESS) callJs("LabTTSError", id);
     }
 
+    /* Поставить выбранный голос; true — поставлен (или выбора нет), false — его движок или
+       список голосов ещё не готов. */
+    private boolean applyVoice() {
+        String name = wantVoice;
+        if (name == null) return true;
+        if (!"ready".equals(state)) return false;
+        try {
+            int cut = name.indexOf("::");
+            if (cut > 0) {
+                TextToSpeech t;
+                synchronized (others) { t = others.get(name.substring(0, cut)); }
+                if (t == null) return false;
+                String vn = name.substring(cut + 2);
+                Set<Voice> ov = t.getVoices();
+                if (ov != null) for (Voice v : ov) if (vn.equals(v.getName())) { if (speaker != t) tts.stop(); t.setVoice(v); speaker = t; return true; }
+                return false;
+            }
+            Set<Voice> vs = tts.getVoices();
+            if (vs != null) for (Voice v : vs) if (name.equals(v.getName())) { TextToSpeech sp = speaker; if (sp != null && sp != tts) sp.stop(); tts.setVoice(v); speaker = tts; return true; }
+        } catch (Exception ignored) { }
+        return false;
+    }
+
+    private void retryVoice(final int left) {
+        if (applyVoice() || left <= 0) return;
+        main.postDelayed(() -> retryVoice(left - 1), 500);
+    }
+
     private class Bridge {
         @JavascriptInterface
         public void speak(String text, double rate, double volume, String id) {
@@ -328,13 +367,18 @@ public class MainActivity extends Activity {
             try { TextToSpeech sp = speaker != null ? speaker : tts; return sp.isSpeaking(); } catch (Exception e) { return false; }
         }
 
+        /* Русский голос — у основного движка или у любого другого движка речи телефона. */
         @JavascriptInterface
         public boolean hasRussian() {
             if (!"ready".equals(state)) return true;
-            try {
-                int r = tts.isLanguageAvailable(new Locale("ru", "RU"));
-                return r >= TextToSpeech.LANG_AVAILABLE;
-            } catch (Exception e) { return false; }
+            Locale ru = new Locale("ru", "RU");
+            try { if (tts.isLanguageAvailable(ru) >= TextToSpeech.LANG_AVAILABLE) return true; } catch (Exception ignored) { }
+            synchronized (others) {
+                for (TextToSpeech t : others.values()) {
+                    try { if (t.isLanguageAvailable(ru) >= TextToSpeech.LANG_AVAILABLE) return true; } catch (Exception ignored) { }
+                }
+            }
+            return false;
         }
 
         @JavascriptInterface
@@ -372,24 +416,14 @@ public class MainActivity extends Activity {
             return a.toString();
         }
 
+        /* Голос игрока: запомнить и поставить — сразу или, если его движок ещё не поднялся
+           (так бывает при запуске), чуть позже: попытки — каждые полсекунды до 20 секунд и
+           сразу, как поднимется очередной движок. */
         @JavascriptInterface
         public void setVoice(String name) {
-            if (!"ready".equals(state) || name == null) return;
-            try {
-                int cut = name.indexOf("::");
-                if (cut > 0) {
-                    TextToSpeech t;
-                    synchronized (others) { t = others.get(name.substring(0, cut)); }
-                    String vn = name.substring(cut + 2);
-                    if (t != null) {
-                        Set<Voice> ov = t.getVoices();
-                        if (ov != null) for (Voice v : ov) if (vn.equals(v.getName())) { tts.stop(); t.setVoice(v); speaker = t; return; }
-                    }
-                    return;
-                }
-                Set<Voice> vs = tts.getVoices();
-                if (vs != null) for (Voice v : vs) if (name.equals(v.getName())) { TextToSpeech sp = speaker; if (sp != null && sp != tts) sp.stop(); tts.setVoice(v); speaker = tts; return; }
-            } catch (Exception ignored) { }
+            if (name == null) return;
+            wantVoice = name.isEmpty() ? null : name;
+            main.post(() -> retryVoice(40));
         }
 
         /* Отдача: узор «пауза, вибрация, пауза…» в миллисекундах через запятую. */
