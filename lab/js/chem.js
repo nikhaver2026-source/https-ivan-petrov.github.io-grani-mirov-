@@ -509,14 +509,20 @@ function failP(rc, s, mod) {
 function forecast(rc, s) {
   var c = ch(), p = plan(rc.need, popt(rc)), isP = !!PROD[rc.out];
   if (!p.ok) return null;
-  var g = p.grade, cat = c.opt.cat && units("c_catalyst").length > 0;
+  /* (проверка перед сборкой) прибавка за катализатор — только если он есть сверх того, что берёт
+     сам рецепт: прежде катализатор рецепта засчитывался ещё и прибавкой, даром */
+  var g = p.grade, cat = !!c.opt.cat && units("c_catalyst").some(function (u) { return u.n > (p.take[u.id] || 0); });
   if (cat) g = Math.min(3, g + 1);
   g = Math.max(1, Math.min(g, stationCap(s), gradeCap(rc.br)));
   var mod = "";
   if (isP) {
     var want = c.opt.mod || "", allowed = (PROD[rc.out].mods || []);
-    if (want && allowed.indexOf(want) >= 0 && haveAdd(want)) mod = want;
-    if (!mod && p.sat && PROD[rc.out].mut) mod = "mut";
+    /* (проверка перед сборкой) сырьё с мутагеном даёт состав «на мутагене»: снять мутаген может
+       только добавка «без побочного действия» (сорбент), прочие добавки не встают и не тратятся —
+       прежде любая добавка снимала мутаген, вопреки описанию сырья */
+    var satMut = p.sat && PROD[rc.out].mut;
+    if (want && allowed.indexOf(want) >= 0 && haveAdd(want) && (!satMut || want === "clean")) mod = want;
+    if (!mod && satMut) mod = "mut";
   }
   var n = rc.qty || 1;
   if (!isP) n += g - 1; /* обычные лекарства и батареи: из чистого сырья их выходит больше */
@@ -549,7 +555,7 @@ function brewMenu(rc, o) {
       items.push({ label: "Модификация", kind: "choice", options: opts, get: function () { return PROD[rc.out].mods.indexOf(c.opt.mod) >= 0 ? c.opt.mod : ""; }, set: function (v) { c.opt.mod = v; refresh(); } });
     }
     var fc = !w ? forecast(rc, s) : null;
-    items.push({ label: w ? "Нельзя: " + w + "." : "Выйдет: " + low(outLabel(fc)) + ". Срыв — " + Math.round(failP(rc, s, fc.mod) * 100) + " из ста." + (fc.sat && fc.mod === "mut" ? " Сырьё с мутагеном: состав прибавит мутацию." : fc.sat && !PROD[rc.out].mut ? " Мутаген в сырье поднял сорт." : ""), info: true, keep: true, fn: function () { say(w ? "Нельзя: " + w + "." : "Выйдет: " + low(outLabel(forecast(rc, o ? station(o) : null))) + "."); } });
+    items.push({ label: w ? "Нельзя: " + w + "." : "Выйдет: " + low(outLabel(fc)) + ". Срыв — " + Math.round(failP(rc, s, fc.mod) * 100) + " из ста." + (fc.sat && fc.mod === "mut" ? " Сырьё с мутагеном: состав прибавит мутацию" + (ch().opt.mod && ch().opt.mod !== "clean" ? "; добавка не встанет — мутаген снимает только сорбент" : "") + "." : fc.sat && !PROD[rc.out].mut ? " Мутаген в сырье поднял сорт." : ""), info: true, keep: true, fn: function () { say(w ? "Нельзя: " + w + "." : "Выйдет: " + low(outLabel(forecast(rc, o ? station(o) : null))) + "."); } });
     items.push({ label: "Синтезировать", keep: true, fn: function () { brew(rc, o); } });
     items.push({ label: "Назад", close: true, fn: function () {} });
     return items;

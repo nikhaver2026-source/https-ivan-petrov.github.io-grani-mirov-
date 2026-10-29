@@ -109,15 +109,38 @@ function pair(a, b) {
   return "ничего не происходит";
 }
 function phW(x, d) { return x < 0 ? (d === 0 && x <= -2 ? "кислая, сильно" : "кислая") : x > 0 ? (d === 0 && x >= 2 ? "щелочная, сильно" : "щелочная") : "нейтральная"; }
-/* подпись склянки — по всем пробам: индикатор, запах, пары со всеми остальными */
-function sig(set, k, d) { var s = set[k]; return [phW(s.ph, d), s.sm].concat(set.map(function (o, j) { return j === k ? "" : pair(s.id, o.id); })).join("|"); }
+/* Набор годится, только если пробы различают все склянки: нет иной расстановки веществ по
+   склянкам, при которой все пробы — индикатор, запах, капля с каждой другой — ответили бы так
+   же. (Проверка перед сборкой.) Прежде сравнивались подписи склянок, а на месте самой склянки в
+   подписи стояла пустая строка, и подписи разных склянок не совпадали никогда: неразличимые
+   склянки — вода и раствор соли без ляписа в наборе и подобные — попадались в каждой шестой
+   задаче, и решить её можно было только наугад. */
+var PERMS = {};
+function perms(n) {
+  if (n <= 1) return [[0]];
+  var out = [];
+  perms(n - 1).forEach(function (p) { for (var i = 0; i <= p.length; i++) out.push(p.slice(0, i).concat([n - 1], p.slice(i))); });
+  return out;
+}
+function ambiguous(set, d) {
+  var n = set.length, ps = PERMS[n] || (PERMS[n] = perms(n));
+  return ps.some(function (p) {
+    if (p.every(function (v, i) { return v === i; })) return false;
+    for (var k = 0; k < n; k++) {
+      var a = set[k], b = set[p[k]];
+      if (phW(a.ph, d) !== phW(b.ph, d) || a.sm !== b.sm) return false;
+      for (var j = k + 1; j < n; j++) if (pair(a.id, set[j].id) !== pair(b.id, set[p[j]].id)) return false;
+    }
+    return true;
+  });
+}
 function vials(seed, cb, opts) {
   var r = U.rng(seed, "vials"), d = opts.diff || 0, n = 3 + d, set = null, guard = 0;
   do { var p = VS.slice(); r.shuffle(p); set = p.slice(0, n); guard++; }
-  while (guard < 400 && (function () { var ss = set.map(function (s, k) { return sig(set, k, d); }); return ss.some(function (x, k) { return ss.indexOf(x) !== k; }); })());
+  while (guard < 400 && ambiguous(set, d));
   var budget = [3 * n, 2 * n + 1, 2 * n - 1][d], ans = set.map(function () { return null; }), names = set.slice().sort(function (a, b) { return a.n < b.n ? -1 : 1; });
   cb = wrap("vials", d, cb);
-  last = { kind: "vials", set: set.map(function (s) { return s.n; }), names: names.map(function (s) { return s.n; }), uniq: set.map(function (s, k) { return sig(set, k, d); }) };
+  last = { kind: "vials", set: set.map(function (s) { return s.n; }), names: names.map(function (s) { return s.n; }), amb: ambiguous(set, d) };
   var cond = (opts.title ? opts.title + ". " : "") + (opts.lead || "") + "Неизвестные склянки. " + n + " " + pl(n, "склянка", "склянки", "склянок") + " — ярлыки смыты. Известно, что в них: " + names.map(function (s) { return s.n; }).join(", ") + " — каждое по разу. Можно капнуть индикатор, понюхать (помахивая ладонью) или слить по капле из двух склянок в пробирку. Проб — " + budget + ": каждая тратит реактив. Определите, что где.";
   run("Неизвестные склянки", cond, function (st0, finish, fail) {
     var left = function () { return budget; };
@@ -347,5 +370,5 @@ function act(o, def, kind, p) {
   return false;
 }
 
-LAB.chempuz = { KINDS: KINDS, NAMES: NAMES, act: act, reward: reward, _pair: pair, _sig: sig, _VS: VS, _last: function () { return last; } };
+LAB.chempuz = { KINDS: KINDS, NAMES: NAMES, act: act, reward: reward, _pair: pair, _amb: ambiguous, _VS: VS, _last: function () { return last; } };
 })();

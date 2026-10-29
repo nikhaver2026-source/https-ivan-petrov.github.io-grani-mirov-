@@ -234,9 +234,11 @@ function floorOk(x, y) {
   if (t !== LAB.T.ROOM && t !== LAB.T.CORR) return false;
   return !LAB.solidAt(CUR().fl, x, y);
 }
+/* (проверка перед сборкой) клетка самой ловушки занята, даже если её зона — веер впереди
+   (направленная мина): прежде на мину можно было поставить вторую ловушку */
 function trapOn(x, y, skip) {
   var ts = list();
-  for (var i = 0; i < ts.length; i++) { var tp = ts[i]; if (tp !== skip && onCells(tp, x, y)) return tp; }
+  for (var i = 0; i < ts.length; i++) { var tp = ts[i]; if (tp !== skip && (onCells(tp, x, y) || (tp.x === x && tp.y === y))) return tp; }
   return null;
 }
 function onCells(tp, x, y) {
@@ -583,7 +585,8 @@ function tick() {
     }
     if (d.trig === "prox") {
       var hit = null;
-      for (var j = 0; j < foes.length && !hit; j++) { var f = foes[j]; if (foeOk(d, f) && (tp.own || f.spawned) && cheb(f.x, f.y, tp.x, tp.y) <= (d.pr || 1)) hit = f; }
+      /* (проверка перед сборкой) свои ловушки ОКО и улья своих не ловят — как и при шаге (foeStep) */
+      for (var j = 0; j < foes.length && !hit; j++) { var f = foes[j]; if ((tp.by === "oko" && f.kind === "mech") || (tp.by === "hive" && f.kind === "bio")) continue; if (foeOk(d, f) && (tp.own || f.spawned) && cheb(f.x, f.y, tp.x, tp.y) <= (d.pr || 1)) hit = f; }
       if (hit) { fire(tp, { f: hit }, [tp.x, tp.y]); if (g.dead) return; continue; }
       if (heroOk(d) && cheb(g.x, g.y, tp.x, tp.y) <= (d.pr || 1)) { fire(tp, { hero: true }, [tp.x, tp.y]); if (g.dead) return; continue; }
     }
@@ -616,7 +619,7 @@ function tick() {
   }
   /* перепрошитые машины возвращаются к ОКО */
   foes.forEach(function (f) {
-    if (f.allyT > 0 && --f.allyT === 0) { f.ally = false; f.state = "alert"; f.lastKnown = { x: g.x, y: g.y }; sayq(foeShort(f) + " " + gv({ g: f.g }, "стряхнул", "стряхнула", "стряхнули") + " чужую прошивку и снова слушает ОКО."); }
+    if (f.allyT > 0 && --f.allyT === 0) { f.ally = false; f.hackT = 0; f.state = "alert"; f.lastKnown = { x: g.x, y: g.y }; sayq(foeShort(f) + " " + gv({ g: f.g }, "стряхнул", "стряхнула", "стряхнули") + " чужую прошивку и снова слушает ОКО."); }
     if (f.deafT > 0) f.deafT--;
   });
 }
@@ -832,7 +835,8 @@ function adjacent(x, y, dir) {
   var out = [], ts = list();
   ts.forEach(function (tp) {
     if (!tp.known) return;
-    var hitC = tp.cells ? tp.cells.some(function (q) { return q[0] === x && q[1] === y; }) : (tp.x === x && tp.y === y);
+    /* и сама клетка ловушки: направленную мину видно и снять можно сзади и сбоку, не только с веера */
+    var hitC = (tp.x === x && tp.y === y) || (tp.cells && tp.cells.some(function (q) { return q[0] === x && q[1] === y; }));
     if (hitC) out.push({ type: "trap", ref: tp, dir: dir });
   });
   return out;
@@ -890,7 +894,9 @@ function okoTrap(kind, x, y, o) {
   /* (3.5) в безопасной зоне у капсулы ОКО мин не ставит */
   if (LAB.combat && LAB.combat.havenAt && LAB.combat.havenAt(x, y)) return null;
   var tp = { id: nextId(), t: kind, x: x, y: y, own: 0, by: "oko", known: 0, st: "on", uses: d.uses >= 99 ? 99 : 1 };
-  if (o.dmg) tp.dmgAbs = o.dmg;
+  /* (проверка перед сборкой) урон сапёра — только ловушкам, что ранят: сигнальная растяжка
+     никого не ранит и у ОКО (прежде она отнимала у героя урон сапёра) */
+  if (o.dmg && (d.dmg || d.pd)) tp.dmgAbs = o.dmg;
   if (d.trig === "wire") { tp.cells = wireCells(x, y, o.face || "N"); if (tp.cells.some(function (q) { return trapOn(q[0], q[1], tp); })) return null; }
   list().push(tp);
   return tp;

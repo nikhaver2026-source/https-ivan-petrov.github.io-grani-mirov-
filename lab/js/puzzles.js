@@ -250,8 +250,13 @@ function shifts(seed, cb, opts) {
   var truth = people.slice(); r.shuffle(truth); /* truth[j] дежурил на posts[j] */
   var all = perms(people), cand = [];
   for (var j = 0; j < n; j++) for (var p = 0; p < n; p++) if (truth[j] !== people[p]) cand.push({ t: people[p] + " не дежурил" + (/а$/.test(people[p]) ? "а" : "") + " " + posts[j], ok: function (o) { return o[this.j] !== this.who; }, j: j, who: people[p] });
-  /* «смена X кончилась раньше смены того, кто дежурил Y» — значит, X дежурил не Y */
-  for (var j2 = 0; j2 < n; j2++) for (var j3 = 0; j3 < n; j3++) if (j2 !== j3) cand.push({ t: "смена " + truth[j2] + " кончилась раньше смены того, кто дежурил " + posts[j3], ok: function (o) { return o[this.j] !== this.who; }, j: j3, who: truth[j2] });
+  /* «смена X кончилась раньше смены того, кто дежурил Y» — значит, X дежурил не Y. (Проверка перед
+     сборкой) Такая фраза говорит и о времени: у смен есть настоящий порядок окончания, и фраза
+     берётся, только если она правдива, — прежде две фразы могли противоречить друг другу
+     («Тихонов раньше Брагиной» и «Брагина раньше Тихонова»), почти в каждой четвёртой задаче. */
+  var endOrd = people.slice(), endAt = {}; rng(seed, "shifts-end").shuffle(endOrd);
+  endOrd.forEach(function (p, i) { endAt[p] = i; });
+  for (var j2 = 0; j2 < n; j2++) for (var j3 = 0; j3 < n; j3++) if (j2 !== j3 && endAt[truth[j2]] < endAt[truth[j3]]) cand.push({ t: "смена " + truth[j2] + " кончилась раньше смены того, кто дежурил " + posts[j3], ok: function (o) { return o[this.j] !== this.who; }, j: j3, who: truth[j2] });
   r.shuffle(cand);
   var rules = [], fits = function (o) { return rules.every(function (ru) { return ru.ok(o); }); };
   for (var ci = 0; ci < cand.length; ci++) {
@@ -373,7 +378,8 @@ function describePos(board) {
 function chess(cb, opts) {
   opts = opts || {};
   var g = G(), r = rng(opts.seed || (g ? g.seed + g.L * 7 + g.F : 1), "chess");
-  var pos = POSITIONS[r.int(0, POSITIONS.length - 1)], board = parsePos(pos);
+  /* opts.pos — номер позиции от вызывающего (шахматный столик: после неудачи — следующая) */
+  var pos = POSITIONS[opts.pos != null ? Math.abs(opts.pos) % POSITIONS.length : r.int(0, POSITIONS.length - 1)], board = parsePos(pos);
   var mates = matingMoves(board);
   if (!mates.length) { board = parsePos(POSITIONS[0]); mates = matingMoves(board); }
   var cond = "Отложенная партия, ход белых. " + describePos(board) + " По записи на листке — белые ставят мат в один ход. Найдите его: сначала фигура, потом поле.";

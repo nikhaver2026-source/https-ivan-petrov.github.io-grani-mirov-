@@ -547,11 +547,15 @@ function run(o, def, kind, p, label, withId) {
       var mini = p.mini === "chess" ? (LAB.puzzles && LAB.puzzles.chess) : (LAB.mini && LAB.mini[p.mini]);
       if (!mini) { say("Фигуры перепутаны: партию не начать."); return; }
       UIx("closeAll");
-      var done = function (ok) {
+      /* (проверка перед сборкой) шахматы: после неверного хода — в следующий раз другая позиция,
+         как и обещает доска (s.chessN — счёт неудач); отошли, не сходив, — тишина, а не «не вышло» */
+      var done = function (ok, away, tried) {
         if (ok && !s.won) { s.won = 1; gm().gainXP(12); var cr2 = LAB.credits(6, G().L, G().F); G().credits += cr2; say("Партия за вами. Под доской — забытая ставка: " + cr2 + " кредитов."); ev("game_win", 1); }
-        else say(ok ? "Снова победа. Ставок больше нет — только удовольствие." : "Не вышло. Можно попробовать ещё раз.");
+        else if (ok) say("Снова победа. Ставок больше нет — только удовольствие.");
+        else if (p.mini === "chess") { if (!away || tried) s.chessN = (s.chessN || 0) + 1; if (!away) say("Не вышло. Можно попробовать ещё раз — позиция будет другая."); }
+        else say("Не вышло. Можно попробовать ещё раз.");
       };
-      if (p.mini === "chess") mini(done, { title: def.n, seed: LAB.hash32(CUR().key + ":" + o.id + ":" + (s.won ? 1 : 0)) });
+      if (p.mini === "chess") mini(done, { title: def.n, pos: LAB.hash32(CUR().key + ":" + o.id) + (s.won ? 5 : 0) + (s.chessN || 0) });
       else if (p.mini === "bulls") mini(3 + Math.min(1, Math.floor(G().L / 30)), done, { title: def.n });
       else mini(4 + Math.min(2, Math.floor(G().L / 25)), done, { title: def.n });
       return;

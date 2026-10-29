@@ -509,6 +509,9 @@ function run(id) {
       break;
     }
     case "dash": {
+      /* (проверка перед сборкой) рывок включают из окна имплантов, а шаг при открытом окне не
+         делается — окна закрываются, иначе рывок не срабатывал никогда */
+      if (LAB.ui && LAB.ui.closeAll) LAB.ui.closeAll();
       var steps = (fx.steps || 3) + (has(id, "swift") ? 2 : 0), moved = 0;
       for (var q = 0; q < steps; q++) { if (gm().tryMove(g.face, false)) moved++; else break; }
       t = moved ? d.n + ": " + LAB.stepsW(moved) + " " + (LAB.DIRTO[g.face] || "") + "." : d.n + ": впереди не пройти.";
@@ -574,7 +577,9 @@ function tick() {
   if (st.regenT > 0) { st.regenT--; g.hp = Math.min(g.hpMax, g.hp + (st.regenHp || 1)); }
   var rg = stat("regen");
   if (rg > 0 && tickN % 4 === 0 && Date.now() - (g.lastHurt || 0) > 6000 && g.hp < g.hpMax) g.hp = Math.min(g.hpMax, g.hp + Math.max(1, Math.round(rg)));
-  if (LAB.combat) LAB.combat.foes().forEach(function (f) { if (f.allyT > 0) { f.allyT--; if (!f.allyT && f.hackT) { f.ally = false; f.hackT = 0; } } });
+  /* (проверка перед сборкой) срок перепрошивки (allyT) отсчитывает только такт ловушек (traps.js):
+     прежде он убавлялся и здесь — вдвое быстрее обещанного, а при нечётном остатке машина
+     оставалась союзником навсегда */
 }
 var OFF = { overT: "Разгон оружия закончился.", reflectT: "Зеркальный контур погас.", phaseT: "Вы снова в фазе.", muteT: "Шаги снова слышны.", mimicT: "Мимикрия спала: машины снова вас узнают.", nanoT: "Наноброня рассеялась." };
 function offSay(k) { if (OFF[k]) LAB.say(OFF[k], { interrupt: false }); }

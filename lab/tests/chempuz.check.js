@@ -124,7 +124,7 @@ for (const kind of CP.KINDS) for (let d = 0; d < 3; d++) for (let s = 1; s <= SE
     const L = CP._last();
     /* устройство по сложности */
     if (kind === "titr") { const N = L.N(), lo = [5, 8, 11][d], hi = [8, 12, 16][d]; if (N < lo || N > hi) err(at + ": капель " + N); }
-    if (kind === "vials") { if (L.set.length !== 3 + d) err(at + ": склянок " + L.set.length); if (new Set(L.uniq).size !== L.uniq.length) err(at + ": две склянки не различить пробами"); }
+    if (kind === "vials") { if (L.set.length !== 3 + d) err(at + ": склянок " + L.set.length); if (L.amb !== false) err(at + ": склянки не различить пробами — их можно переставить, и все пробы ответят так же"); }
     if (kind === "protocol" && L.bad.length !== [1, 2, 3][d]) err(at + ": опасных шагов " + L.bad.length);
     if (kind === "spectr") { const target = union(L.mix.map(i => L.ref[i])), same = combos(L.ref, L.k).filter(c => union(c) === target).length; if (same !== 1) err(at + ": хроматограмма раскладывается " + same + " способами"); if (L.mix.length !== L.k) err(at + ": веществ " + L.mix.length); }
     if (kind === "chain") { if (!L.path.length || L.path.length < [2, 3, 4][d]) err(at + ": путь " + L.path.length); if (L.path.length > L.limit) err(at + ": путь длиннее запаса"); }

@@ -2736,7 +2736,7 @@ function sellItems() {
     var sp = Math.round(LAB.ARMORS[a.base].price * 0.4 * LAB.QUAL_MULT[a.qual]);
     items.push({ label: "Продать броню: " + a.name + " — " + sp, fn: function () {
       var i = G.armors.indexOf(a); if (i < 0) { say("Уже продано."); return; }
-      G.armors.splice(i, 1); G.credits += sp + (a.up ? a.up * 30 : 0); A("play", "buy"); say("Продано. Кредитов: " + G.credits + ".");
+      G.armors.splice(i, 1); G.credits += sp + (a.up ? a.up * (LAB.sellPrice && LAB.sellPrice.plate ? LAB.sellPrice.plate() : 30) : 0); A("play", "buy"); say("Продано. Кредитов: " + G.credits + ".");
     } });
   });
   return items;

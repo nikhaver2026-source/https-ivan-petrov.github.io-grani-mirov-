@@ -102,8 +102,12 @@ function weaponSellPrice(w, ctx) {
 }
 function armorValue(a) { var d = LAB.ARMORS[a.base] || { price: 50 }; return d.price * (LAB.QUAL_MULT[a.qual] || 1) * (1 + 0.04 * Math.max(0, (a.lvl || 1) - 1)); }
 /* (2.0) изношенная броня — дешевле, как изношенное оружие */
-function armorSellPrice(a, ctx) { var c = LAB.armorCond ? LAB.armorCond(a) : 100; return Math.max(3, craftCap(a, sellCap(Math.round(armorValue(a) * LAB.SELL_K.armor * (0.35 + 0.65 * c / 100) * ctxK(ctx, "armor") * (LAB.dk().sell || 1)), armorBuyPrice(a))) + (a.up || 0) * 30); }
-LAB.sellPrice = { item: itemSellPrice, ammo: ammoSellPrice, weapon: weaponSellPrice, armor: armorSellPrice };
+/* (проверка перед сборкой) пластина в броне стоит столько, сколько сама пластина на продажу — не
+   дороже её деталей: прежде за каждую шло +30 сверх всех потолков, и «купить детали, собрать
+   пластины, вставить, продать броню» давало кредиты без конца */
+function plateSellPrice(ctx) { return LAB.ITEMS.plate ? itemSellPrice("plate", ctx, true) : 30; }
+function armorSellPrice(a, ctx) { var c = LAB.armorCond ? LAB.armorCond(a) : 100; return Math.max(3, craftCap(a, sellCap(Math.round(armorValue(a) * LAB.SELL_K.armor * (0.35 + 0.65 * c / 100) * ctxK(ctx, "armor") * (LAB.dk().sell || 1)), armorBuyPrice(a))) + (a.up || 0) * plateSellPrice(ctx)); }
+LAB.sellPrice = { item: itemSellPrice, ammo: ammoSellPrice, weapon: weaponSellPrice, armor: armorSellPrice, plate: plateSellPrice };
 function buyK() { return gm().priceK ? gm().priceK() : 1; }
 function itemBuyPrice(id) { return Math.max(2, Math.round(LAB.ITEMS[id].price * buyK())); }
 function ammoBuyPrice(k) { return Math.max(2, Math.round((LAB.AMMO[k].price || 30) * buyK() * (G().faction === "sec" ? 0.85 : 1))); }
@@ -283,15 +287,19 @@ function makeStock(o) {
   }
   /* броня и комбинезоны: защитный пункт — костюмы от излучения и химии */
   var arm = [];
+  /* (проверка перед сборкой) у вещей каждого привоза — свои id: прежде новый привоз выдавал броню
+     и оружие с теми же id, что и прошлый, и после загрузки надетая броня подменялась купленной
+     позже копией, а продажа снимала не ту вещь */
+  var rid = (objSt(o).restocks ? "r" + objSt(o).restocks + "_" : "") + CUR().key + o.id;
   var radPool = ["radcape", "radsuit", "hazmat", "reactorsuit"].filter(function (b) { return LAB.ARMORS[b] && LAB.ARMORS[b].depth <= Math.max(2, L); });
-  if (prof === "guard" && radPool.length) arm.push(LAB.makeArmor(r.pick(radPool), LAB.foeLevel(L, g.F), 1 + r.int(0, 2), "sa1_" + CUR().key + o.id));
-  if (prof === "guard" || prof === "all" || r.chance(0.5)) arm.push(LAB.genArmor(r, L, g.F, { id: "sa2_" + CUR().key + o.id }));
-  if (prof !== "guard" && radPool.length && r.chance(0.35)) arm.push(LAB.makeArmor(r.pick(radPool), LAB.foeLevel(L, g.F), 1, "sa3_" + CUR().key + o.id));
+  if (prof === "guard" && radPool.length) arm.push(LAB.makeArmor(r.pick(radPool), LAB.foeLevel(L, g.F), 1 + r.int(0, 2), "sa1_" + rid));
+  if (prof === "guard" || prof === "all" || r.chance(0.5)) arm.push(LAB.genArmor(r, L, g.F, { id: "sa2_" + rid }));
+  if (prof !== "guard" && radPool.length && r.chance(0.35)) arm.push(LAB.makeArmor(r.pick(radPool), LAB.foeLevel(L, g.F), 1, "sa3_" + rid));
   /* оружие: в оружейном пункте — два ствола, в общем — иногда один */
   var wpn = [];
   var nW = prof === "arms" ? 2 : prof === "all" && r.chance(0.5) ? 1 : 0;
   for (var wi = 0; wi < nW; wi++) wpn.push(LAB.genWeapon(r, L, g.F, { bonus: 0.05, channel: "buy" }));
-  wpn.forEach(function (w, i) { w.id = "sw" + i + "_" + CUR().key + o.id; });
+  wpn.forEach(function (w, i) { w.id = "sw" + i + "_" + rid; });
   /* схемы: одна — та, которой у вас нет */
   var bps = LAB.RECIPES.filter(function (rc) { return rc.bp && (rc.minL || 1) <= Math.max(L, 2) && !(g.bp && g.bp[rc.id]); });
   var bp = bps.length && (prof === "tech" || prof === "guard" || r.chance(0.4)) ? r.pick(bps).id : null;

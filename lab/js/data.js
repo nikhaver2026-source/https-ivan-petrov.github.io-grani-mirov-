@@ -672,6 +672,9 @@ LAB.genArmor = function (r, L, F, opts) {
   opts = opts || {};
   var pool = [], k;
   for (k in LAB.ARMORS) if (LAB.ARMORS[k].depth <= L && (opts.min == null || LAB.ARMORS[k].depth >= opts.min)) pool.push(k);
+  /* (проверка перед сборкой) брони такой глубины нет — любая доступная: прежде пустой выбор ронял
+     окно торгового терминала почти на половине уровней */
+  if (!pool.length && opts.min != null && !opts.base) return LAB.genArmor(r, L, F, { bonus: opts.bonus, id: opts.id });
   /* чаще попадается броня своей глубины */
   var near = pool.filter(function (x) { return LAB.ARMORS[x].depth >= L - (L > 10 ? 12 : 2); });
   var base = opts.base || (near.length && r.chance(0.65) ? r.pick(near) : r.pick(pool));

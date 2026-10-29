@@ -525,8 +525,11 @@ function bottleAs(o, i, hit) {
   if (hit.mods.length > 1) { A("play", "ui_error"); say("Две добавки сразу мешают друг другу: оставьте одну."); return; }
   for (var k2 in hit.nd.asm) { g.inv[k2] -= hit.nd.asm[k2]; if (!g.inv[k2]) delete g.inv[k2]; }
   var P = C().PROD[rc.out], isP = !!P, gr = v.gn ? v.g : 1, mod = "";
-  if (isP && hit.mods.length && (P.mods || []).indexOf(hit.mods[0]) >= 0) mod = hit.mods[0];
-  if (isP && !mod && v.sat && P.mut) mod = "mut";
+  /* (проверка перед сборкой) сырьё с мутагеном: снимает мутаген только сорбент («без побочного
+     действия»), другая добавка в такой смеси пропадает — состав выйдет «на мутагене» */
+  var satMut = isP && v.sat && P.mut;
+  if (isP && hit.mods.length && (P.mods || []).indexOf(hit.mods[0]) >= 0 && (!satMut || hit.mods[0] === "clean")) mod = hit.mods[0];
+  if (isP && !mod && satMut) mod = "mut";
   var bonus = (v.cl ? 1 : 0) + (hit.cat ? 1 : 0), g0 = gr;
   gr = Math.max(1, Math.min(3, gr + bonus, C().stationCap(s), C().gradeCap(rc.br)));
   var id = isP ? C().prodId(rc.out, gr, mod) : rc.out, n = rc.qty || 1;
@@ -584,7 +587,7 @@ function developFilm(o) {
   if (!guard()) return;
   if (!(g.inv.film > 0)) { say("Плёнки нет: отснятые катушки попадаются в фотолабораториях, лабораториях и медблоках."); return; }
   var dv = anyOf("c_devel"), fx = anyOf("c_fixer");
-  if (!dv || !fx) { A("play", "ui_error"); say("Нужны фотопроявитель и фиксаж" + (!dv && !fx ? "" : !dv ? " — нет проявителя" : " — нет фиксажа") + ". Их делают здесь же: синтез, энергохимия, или руками — ляпис со щёлочью и водой, тёплым; соли с содой и водой."); return; }
+  if (!dv || !fx) { A("play", "ui_error"); say("Нужны фотопроявитель и фиксаж" + (!dv && !fx ? "" : !dv ? " — нет проявителя" : " — нет фиксажа") + ". Их делают здесь же: синтез, энергохимия, или руками — ляпис со щёлочью и водой, соли с содой и водой; оба состава охладить перед тем, как разлить."); return; }
   /* (3.6) новых кадров этой глубины не осталось — плёнку, проявитель и фиксаж не тратить */
   if (LAB.library && LAB.library.filmLeft && !LAB.library.filmLeft()) { A("play", "ui_error"); say("«Эхо» сверяет катушку с архивом: все кадры этой глубины вы уже видели — проявлять здесь незачем, плёнку лучше поберечь."); return; }
   [["film"], [dv], [fx]].forEach(function (x) { g.inv[x[0]]--; if (!g.inv[x[0]]) delete g.inv[x[0]]; });
