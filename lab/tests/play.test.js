@@ -1798,7 +1798,7 @@ LAB.ui.closeAll();
     k0 = n0(); out.research = W.research("spec", b) && n0() === k0 + 1;
     out.expNo = !W.research("exp", b);
     /* модуль: сборка — шаг 2 — установка; несовместимость; гнёзда; снятие в запас */
-    ["m_range", "m_cap", "m_quiet", "m_acc"].forEach(id => W.learn(id, "", true));
+    ["m_range", "m_reload", "m_quiet", "m_acc"].forEach(id => W.learn(id, "", true));
     G.weapons = G.weapons.slice(0, 1);
     G.weapons.push(LAB.makeWeapon("spark", 2, 0, 1, "w_ws")); G.wi = 1;
     const w = G.weapons[1], r0 = w.rng, c0 = w.cap;
@@ -1808,8 +1808,9 @@ LAB.ui.closeAll();
     out.meleeNo = !!LAB.ui.top() && LAB.ui.top().items.some(i => /монтировка.*нельзя: ближнему бою дальность не нужна/i.test(label(i)) && i.disabled);
     pick(/в руках/);
     out.range = w.rng === r0 + 2 && !!LAB.ui.top() && LAB.ui.top().title === "Мастерская";
-    g.craft(rec("m_cap")); pick(/в руках/);
-    out.cap = w.cap > c0;
+    g.craft(rec("m_reload")); pick(/в руках/);
+    /* (3.7) модуль встаёт, а ёмкость от модулей не растёт: её поднимает только верстак */
+    out.cap = !!(w.mod && w.mod.reload === 1) && w.cap === c0;
     g.craft(rec("m_quiet")); pick(/в руках/);
     out.slots = W.used(w) === 3 && /гнёзда заняты/.test(W.compat(w, "acc"));
     W.uninstall(w, "range"); out.unmod = w.rng === r0 && (G.inv.m_range || 0) >= 1;
@@ -2772,18 +2773,37 @@ LAB.ui.closeAll();
       Object.keys(LAB.WEAPONS).filter(k => LAB.chargeGun(LAB.WEAPONS[k])).every(k => cb0(k) >= 30) && mk("spark", 1, 0, 3).cap > mk("spark", 1, 0, 1).cap;
     out.capPhys = mk("g_twinbarrel", 30, 0).cap === 2 && mk("k_bonebow", 30, 0).cap === 1 && mk("kpistol", 2, 0).cap === 8;
     out.capTxt = [cb0("spark"), cb0("heavy"), cb0("gauss"), cb0("pcannon"), cb0("i_sourcebeam")].join(",");
-    const bw = mk("spark", 1, 0), W5 = LAB.workshop;
-    out.big = W5.install(bw, "bigcell") === "" && bw.cap === 45 && W5.install(bw, "hugecell") === "" && bw.cap === 75;
-    /* расточка батарейного отсека: ступень — плюс пятнадцать процентов, не выше оснастки верстака */
+    const W5 = LAB.workshop, GONE = ["m_cap", "m_bigcell", "m_hugecell"];
+    /* (3.7) батареи и модуль ёмкости зарядов не прибавляют: в оружие не встают, не собираются и не
+       продаются на прилавках, но прежние можно продать и разобрать */
+    out.noBat = ["cap", "bigcell", "hugecell"].every(k => /такого модуля нет/.test(W5.compat(mk("spark", 1, 0), k))) &&
+      !GONE.some(id => LAB.RECIPES.some(rc => rc.out === id)) && GONE.every(id => LAB.ITEMS[id] && LAB.ITEMS[id].gone && !LAB.srcOk(LAB.ITEMS[id], "buy") && LAB.ITEMS[id].price > 0 && /не встаёт/.test(LAB.ITEMS[id].desc));
+    const pw = mk("spark", 1, 0); W5.install(pw, "power"); out.modCap = pw.cap === 30;
+    /* ёмкость — у верстака, ступень за ступенью до предела вида, ступень — не выше оснастки */
     const invB = JSON.stringify(G.inv);
-    Object.assign(G.inv, { cell: 30, wire: 10, scrap: 10, cap: 10, chip: 10, magnet: 10, powercell: 5, supercond: 5 });
+    Object.assign(G.inv, { cell: 30, wire: 10, scrap: 20, cap: 10, chip: 10, magnet: 10, powercell: 5, supercond: 5, servo: 5 });
     const bw2 = mk("spark", 1, 0), bays = [];
-    out.bayLow = W5.bayBore(bw2, { tier: 1, dmg: false }) && !W5.bayBore(bw2, { tier: 1, dmg: false }) && bw2.bay === 1;
+    out.bayLow = W5.bayBore(bw2, { tier: 1, dmg: false }) && !W5.bayBore(bw2, { tier: 1, dmg: false }) && bw2.bay === 1 && bw2.cap === 35;
     for (let i = 0; i < 5; i++) { W5.bayBore(bw2, { tier: 5, dmg: false }); bays.push(bw2.cap); }
-    out.bay = bays.join(",");
+    out.bay = bays.join(",") + " " + bw2.bay;
+    out.bayTxt = /на пределе вида — 50 выстрелов/.test(W5.profile(bw2)) && /до 50 выстрелов за 4 ступени/.test(W5.profile(mk("spark", 1, 0)));
+    const kp = mk("kpistol", 2, 0), mags = [];
+    for (let i = 0; i < 3; i++) { W5.bayBore(kp, { tier: 5, dmg: false }); mags.push(kp.cap); }
+    out.mag = mags.join(",");
+    const pp = mk("ppistol", 7, 0), pos = [pp.cap]; W5.bayBore(pp, { tier: 5, dmg: false }); pos.push(pp.cap); W5.bayBore(pp, { tier: 5, dmg: false }); pos.push(pp.cap);
+    out.pos = pos.join(",");
+    const tw = mk("g_twinbarrel", 16, 0), eel = mk("k_eeljar", 31, 0);
+    out.noUpg = !W5.bayBore(tw, { tier: 5, dmg: false }) && tw.cap === 2 && /два ствола/.test(W5.capLine(tw)) && !W5.bayBore(eel, { tier: 5, dmg: false }) && /живой угорь/.test(W5.capLine(eel));
+    /* ступень и качество оружия поднимают и предел: «Искра» Б-3 — дальше пятидесяти */
+    out.markCap = W5.capMax(mk("spark", 25, 0)) > 50 && W5.capMax(mk("spark", 1, 0, 3)) > 50;
+    /* оружие прежней записи: батареи и модуль ёмкости — в рюкзак, расточка сверх ступеней вида — деталями */
+    const oldW = mk("spark", 1, 0); W5.recalc(oldW); oldW.mod = { hugecell: 1, bigcell: 2, cap: 1, power: 1 }; oldW.bay = 5; oldW.cap = 130; oldW.charge = 130;
+    const invU = {}, said = W5.fixUpg(oldW, invU);
+    out.mig = oldW.cap === 50 && oldW.charge === 50 && oldW.bay === 4 && !oldW.mod.hugecell && !oldW.mod.bigcell && !oldW.mod.cap && oldW.mod.power === 1 && W5.used(oldW) === 1 &&
+      invU.m_hugecell === 1 && invU.m_bigcell === 2 && invU.m_cap === 1 && invU.supercond === 1 && invU.powercell === 1 && /в рюкзаке/.test(said) && W5.fixUpg(oldW, invU) === "";
+    out.migTxt = said;
+    G.inv.m_hugecell = 1; const sv0 = G.inv.supercond || 0; W5.salvage("m_hugecell", { tier: 1, dmg: false }); out.salvGone = !G.inv.m_hugecell && (G.inv.supercond || 0) === sv0 + 1;
     G.inv = JSON.parse(invB);
-    out.bigNo = /не от энергобатарей/.test(W5.compat(LAB.makeWeapon("kpistol", 2, 0, 1), "bigcell"));
-    out.bigRec = ["m_bigcell", "m_hugecell"].every(id => LAB.RECIPES.some(rc => rc.out === id)) && LAB.RECIPES.find(rc => rc.out === "m_bigcell").cls === "base";
     /* ловушки: вещи, схемы, полки */
     const T = LAB.traps;
     out.nTypes = T.ids.length;
@@ -2908,8 +2928,10 @@ LAB.ui.closeAll();
   ok(!tr.hasCap || (tr.respawnCap && tr.respawnStart), "гибель: к привязанной капсуле, без привязки — к началу уровня");
   ok(tr.blaster === "30,32,35,42" && tr.blName, "бластер: «Искра» первой ступени — 30 зарядов, ступень — плюс восемь процентов (" + tr.blaster + ")");
   ok(tr.capOrder && tr.capPhys, "ёмкость: чем лучше оружие, тем больше, у всего на батареях и зарядах — не меньше тридцати; огнестрел — как прежде (" + tr.capTxt + ")");
-  ok(tr.bayLow && tr.bay === "39,44,48,53,53", "батарейный отсек: ступень расточки — плюс пятнадцать процентов, не выше оснастки верстака, пять ступеней (" + tr.bay + ")");
-  ok(tr.big && tr.bigNo && tr.bigRec, "ёмкая и сверхъёмкая энергобатареи собираются у верстака и добавляют бластеру зарядов");
+  ok(tr.noBat && tr.modCap, "(3.7) батареи и модуль ёмкости зарядов не прибавляют: в оружие не встают, не собираются, на прилавках их нет; модули ёмкость не меняют");
+  ok(tr.bayLow && tr.bay === "40,45,50,50,50 4" && tr.bayTxt, "(3.7) ёмкость — у верстака: «Искра» Б-1 — 30, 35, 40, 45, 50, дальше — предел вида; ступень — не выше оснастки верстака (" + tr.bay + ")");
+  ok(tr.mag === "10,12,12" && tr.pos === "59,74,74" && tr.noUpg && tr.markCap, "(3.7) у каждого вида свой предел: магазин пистолета 8 → 12, позитронному — одна ступень, двустволка и живой угорь не меняются; ступень и качество поднимают предел (" + tr.mag + "; " + tr.pos + ")");
+  ok(tr.mig && tr.salvGone, "(3.7) оружие прежней записи: батареи и модуль ёмкости сняты — в рюкзаке, лишняя расточка вернула детали, ёмкость — до предела вида; снятое разбирается (" + tr.migTxt + ")");
   ok(tr.nTypes >= 25 && tr.items && tr.recipes && tr.cat && tr.wsGroup, "ловушки и мины: " + tr.nTypes + " видов, у всех вещь, описание и схема сборки, своя полка снабжения");
   ok(tr.placed && tr.wait && tr.armed, "капкан ставится под ноги и взводится, когда герой отойдёт");
   ok(tr.caught && tr.sprung, "робот попадается в капкан: ранен и стоит; капкан можно взвести снова");
@@ -6357,17 +6379,34 @@ LAB.ui.closeAll();
       let mf = null; for (let L = 3; L <= 8 && !mf; L++) mf = findFx("microfilm", L);
       if (mf) { g.CUR.fl.needPower = true; g.CUR.fs.power = false; U.closeAll(); LB.act(mf, null, "lib", { lib: "film", power: true }); out.filmOff = /нет питания/.test(last()); g.CUR.fs.power = true; LB.act(mf, null, "lib", { lib: "film", power: true }); out.filmOn = /Катушка/.test(items().join(" ")); }
       U.closeAll();
-      /* 13. магнитофон: порванную плёнку клеят изолентой */
-      let rt = null, tq = null;
-      for (let f = 2; f <= 20 && !tq; f++) {
+      /* 13. магнитофон (3.7): порванную плёнку изолентой не склеить — клеят монтажной лентой,
+         или бобину забирают на продажу; коробка с монтажной лентой бывает у магнитофона */
+      let rt = null, tq = null, bx = null;
+      for (let f = 2; f <= 20 && (!tq || !bx); f++) {
         g.enterFloor(1, f, "down", true); C.stop();
-        for (const o of g.CUR.fl.objs.filter(q => q.type === "fx" && q.fx === "recorder")) { const tl = LB.deal(o, "tape"); const t = tl.find(q => LAB.hash32(o.id + ":" + q.id + ":" + g.CUR.key) % 3 === 0); if (t) { rt = o; tq = t; break; } }
+        for (const o of g.CUR.fl.objs.filter(q => q.type === "fx" && q.fx === "recorder")) {
+          if (!bx && (LAB.hash32(o.id + ":splice:" + g.CUR.key) >>> 0) % 2 === 0) bx = { o, f };
+          if (tq) continue;
+          const tl = LB.deal(o, "tape"); const t = tl.find(q => (LAB.hash32(o.id + ":" + q.id + ":" + g.CUR.key) >>> 0) % 3 === 0); if (t) { rt = o; tq = t; out.tornF = f; }
+        }
       }
       if (tq) {
-        walk(rt); G().inv.tape = 0; U.closeAll(); LB.act(rt, null, "lib", { lib: "tape" });
-        out.tornLbl = items().some(l => /плёнка порвана/.test(l)); pick(/плёнка порвана/); out.tornNoTape = /изолент/.test(last());
-        G().inv.tape = 1; U.closeAll(); LB.act(rt, null, "lib", { lib: "tape" }); pick(/плёнка порвана/); pick(/^Склеить/);
-        out.tornFixed = G().inv.tape === 0 && !!g.objState(rt)["fix_" + tq.id] && LB.isRead(tq, rt);
+        g.enterFloor(1, out.tornF, "down", true); C.stop(); rt = g.CUR.fl.objs.find(q => q.id === rt.id);
+        walk(rt); G().inv.tape = 3; G().inv.splice = 0; U.closeAll(); LB.act(rt, null, "lib", { lib: "tape" });
+        out.tornLbl = items().some(l => /плёнка порвана/.test(l)); pick(/плёнка порвана/);
+        out.tornNoTape = /Изолентой её не склеить/.test(last()) && !items().some(l => /^Склеить/.test(l)) && G().inv.tape === 3;
+        G().inv.splice = 1; U.closeAll(); LB.act(rt, null, "lib", { lib: "tape" }); pick(/плёнка порвана/); pick(/^Склеить монтажной лентой/);
+        out.tornFixed = G().inv.splice === 0 && G().inv.tape === 3 && !!g.objState(rt)["fix_" + tq.id] && LB.isRead(tq, rt);
+        /* ту же бобину, будь она снова порвана, — забрать: в рюкзак, на продажу, из списка магнитофона пропадает */
+        delete g.objState(rt)["fix_" + tq.id]; G().inv.reel_torn = 0; U.closeAll(); LB.act(rt, null, "lib", { lib: "tape" }); pick(/плёнка порвана/); pick(/^Забрать бобину/);
+        U.closeAll(); LB.act(rt, null, "lib", { lib: "tape" });
+        out.tornTaken = G().inv.reel_torn === 1 && !items().some(l => l.indexOf(tq.t) >= 0) && LAB.supply.catOf("reel_torn") === "valuable" && LAB.ITEMS.reel_torn.price > 0;
+      }
+      if (bx) {
+        g.enterFloor(1, bx.f, "down", true); C.stop(); bx.o = g.CUR.fl.objs.find(q => q.id === bx.o.id); walk(bx.o); const sp0 = G().inv.splice || 0;
+        U.closeAll(); LB.act(bx.o, null, "lib", { lib: "tape" }); pick(/Коробка с монтажной лентой/);
+        U.closeAll(); LB.act(bx.o, null, "lib", { lib: "tape" });
+        out.spliceBox = (G().inv.splice || 0) > sp0 && !items().some(l => /Коробка с монтажной лентой/.test(l));
       }
       U.closeAll();
     } catch (e) { out.err = e.message + " " + (e.stack || "").split("\n").slice(1, 3).join(" / "); }
@@ -6387,7 +6426,7 @@ LAB.ui.closeAll();
   ok(lib.memoItem && lib.memo, "архивные коробки: записка с кодом этажа — код в архиве, замок о нём знает");
   ok(lib.shredWrong && lib.shred, "шредер: не по порядку — снова перемешано; по порядку — документ сложен и лёг в архив");
   ok(lib.vitrine && lib.grate && lib.intercom && lib.intercomCd && lib.deposit && lib.mail >= 2 && lib.catalog, "витрина, решётка, селектор, ячейки, почта, каталог (" + JSON.stringify({ v: lib.vitrine, g: lib.grate, i: lib.intercom, cd: lib.intercomCd, d: lib.deposit, m: lib.mail, c: lib.catalog }) + (lib.grateSaid ? "; решётка: " + lib.grateSaid : "") + (lib.icSaid ? "; селектор: " + lib.icSaid : "") + ")");
-  ok(lib.filmOff && lib.filmOn && lib.tornLbl && lib.tornNoTape && lib.tornFixed, "микрофильмы — только при питании; порванная плёнка — изолентой (" + JSON.stringify({ off: lib.filmOff, on: lib.filmOn, lbl: lib.tornLbl, no: lib.tornNoTape, fix: lib.tornFixed }) + ")");
+  ok(lib.filmOff && lib.filmOn && lib.tornLbl && lib.tornNoTape && lib.tornFixed && lib.tornTaken && lib.spliceBox, "микрофильмы — только при питании; порванную плёнку изолентой не склеить: монтажной лентой — да, а бобину можно забрать на продажу; коробка с лентой — у магнитофона (" + JSON.stringify({ off: lib.filmOff, on: lib.filmOn, lbl: lib.tornLbl, no: lib.tornNoTape, fix: lib.tornFixed, take: lib.tornTaken, box: lib.spliceBox }) + ")");
 
   /* (3.6, просьба автора) Химический стол на каждом этаже; химия руками — пробирки, колбы,
      реактивы, реакции и опасности; химические задачи; исследования и опыты — препараты,

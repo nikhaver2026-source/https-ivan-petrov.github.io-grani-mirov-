@@ -216,6 +216,38 @@ LAB.weaponCap = function (base, rank, lvl, qual) {
   var q = qual == null ? 1 : qual;
   return Math.round(LAB.capBase(base) * (1 + 0.08 * (LAB.weaponMark(rank, lvl) - 1)) * (1 + 0.05 * (q - 1)));
 };
+/* (3.7, просьба игрока) Предел ёмкости — свой у каждого вида. Ёмкость поднимает
+   только верстак: расточка отсека, удлинённый магазин или баллон побольше —
+   ступень за ступенью. UPG — доля прибавки к своей ёмкости оружия на последней
+   ступени и число ступеней: «Искра» Б-1 — с тридцати до пятидесяти за четыре
+   ступени; чем сложнее и тяжелее оружие, тем меньше запас, у позитронного —
+   одна ступень на четверть. Двустволка, самострел и живое жало ёмкости не
+   меняют. Ступень и качество оружия поднимают его ёмкость, а с ней и предел.
+   Батареи и модули ёмкости ничего не прибавляют: батарея только заряжает. */
+var UPG = {
+  blaster: [2 / 3, 4], laser: [0.5, 3], ion: [0.5, 3], bio: [0.5, 3], nano: [0.5, 3], kinetic: [0.5, 2], melee: [0.5, 2],
+  plasma: [0.4, 2], thermo: [0.4, 2], cryo: [0.4, 2], magnetron: [0.4, 2], sonic: [0.4, 2],
+  gauss: [0.3, 2], phase: [0.3, 2], grav: [0.3, 2], positron: [0.25, 1]
+};
+var UPG_KIND = { g_twinbarrel: [0, 0], k_bonebow: [0, 0], k_sting: [0, 0], k_eeljar: [0, 0], k_lumen: [0, 0], k_amberwand: [0, 0], zaslon: [1 / 3, 2], k_alphamg: [0.5, 3] };
+/* почему ёмкость не меняется — у тех, кому верстак не поможет */
+var UPG_NO = { g_twinbarrel: "два ствола — два патрона", k_bonebow: "самострел заряжают по одной игле", k_sting: "живое жало: игл в нём столько, сколько выросло",
+  k_eeljar: "живой угорь: разрядов в нём столько, сколько он накопит", k_lumen: "живой орган: его свет не прибавить", k_amberwand: "жезл из цельной смолы: отсека в нём не расточить" };
+/* fam: bay — отсек батарей и ячеек, mag — магазин патронов, игл, капсул и картриджей, tank — газовый баллон */
+var MAG_AMMO = { slug: 1, buckshot: 1, k_needle: 1, k_capsule: 1, m_nanocart: 1, g_seiscell: 1 };
+LAB.capPlan = function (base) {
+  var b = LAB.WEAPONS[base];
+  if (!b || !b.cap || !b.ammo || b.ammo === "none") return null;
+  var k = UPG_KIND[base] || (LAB.isBlaster(b) ? UPG.blaster : UPG[b.cls]) || [0.4, 2];
+  return { u: k[0], steps: k[1], fam: b.ammo === "g_gascan" ? "tank" : MAG_AMMO[b.ammo] ? "mag" : "bay", why: UPG_NO[base] || "" };
+};
+/* ёмкость экземпляра на ступени n — от его собственной ёмкости cap0 (вид, ступень, качество) */
+LAB.capAt = function (base, cap0, n) {
+  var p = LAB.capPlan(base);
+  if (!p || !p.steps || !cap0) return cap0 || 0;
+  n = Math.max(0, Math.min(p.steps, n || 0));
+  return Math.round(cap0 * (1 + p.u * n / p.steps));
+};
 /* Оружие из прежней записи — с ёмкостью по новому правилу: база
    пересчитывается, модули и расточка мастерской остаются, заряд — в той же
    доле (полный — полный). */

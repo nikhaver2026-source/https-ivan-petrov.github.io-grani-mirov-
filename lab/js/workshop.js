@@ -9,8 +9,8 @@
    документы, разговоры с инженерами, разбор устройств, исследование на
    верстаке, установки глубин, разбор редких компонентов.
    Оружие: модули (мощность, точность, дальность, перезарядка, радиатор,
-   ёмкость, бронебойность, подавление электроники, глушитель,
-   стабилизатор), износ и ремонт, перегрев ствола. У каждой детали —
+   бронебойность, подавление электроники, глушитель, стабилизатор),
+   ёмкость у верстака до предела вида, износ и ремонт, перегрев ствола. У каждой детали —
    где её найти и для чего она нужна.
    ════════════════════════════════════════════════════════════════════ */
 (function () {
@@ -103,25 +103,35 @@ var MODS = {
   range:  { item: "m_range", n: "удлинитель ствола", max: 2, price: 50, desc: "Плюс два шага дальности." },
   reload: { item: "m_reload", n: "модуль быстрой перезарядки", max: 2, price: 50, desc: "Перезарядка на треть быстрее, выстрелы чуть чаще." },
   cool:   { item: "m_cool", n: "радиатор", max: 2, price: 45, desc: "Ствол греется медленнее: больше выстрелов подряд без перегрева." },
-  cap:    { item: "m_cap", n: "модуль ёмкости", max: 2, price: 55, desc: "Батарея держит на тридцать процентов больше выстрелов: чем ёмче само оружие, тем больше прибавка." },
-  /* (1.5) ёмкие энергобатареи для бластера и другого оружия на энергобатареях */
-  bigcell: { item: "m_bigcell", n: "ёмкая энергобатарея", max: 2, price: 70, desc: "Штатный аккумулятор бластера — на побольше: плюс половина ёмкости оружия. Одна энергобатарея по-прежнему заряжает оружие целиком. Для бластеров и всего оружия на энергобатареях." },
-  hugecell: { item: "m_hugecell", n: "сверхъёмкая энергобатарея", max: 1, price: 160, desc: "Накопитель на сверхпроводнике: плюс вся ёмкость оружия, зарядов вдвое больше. Для бластеров и всего оружия на энергобатареях." },
   pierce: { item: "m_pierce", n: "бронебойный модуль", max: 2, price: 60, desc: "Пробивает броню: каждый модуль — плюс треть пробития (до девяти десятых)." },
   emp:    { item: "m_emp", n: "модуль подавления электроники", max: 2, price: 60, desc: "Плюс четверть урона по роботам, турелям и камерам." },
   quiet:  { item: "m_quiet", n: "глушитель", max: 2, price: 50, desc: "Выстрел тише на треть за каждый модуль: враги слышат его только вблизи." },
   stab:   { item: "m_stab", n: "стабилизатор", max: 1, price: 120, desc: "Износ вдвое меньше, осечек в два с половиной раза меньше, точность плюс три процента, очередь — плюс тринадцать." }
 };
-var MOD_ORDER = ["power", "acc", "range", "reload", "cool", "cap", "bigcell", "hugecell", "pierce", "emp", "quiet", "stab"];
-/* (2.2, просьба игрока) Расточка батарейного отсека — ёмкость прямо в
-   мастерской: ступень — плюс пятнадцать процентов ёмкости оружия. Ступеней
-   пять, и каждая требует оснастки не ниже себя: базовый верстак растачивает
-   до первой, специализированный — до второй, экспериментальный стенд — до
-   третьей, станок с программным управлением — до четвёртой, молекулярный
-   синтезатор — до пятой. Модули ёмкости и ёмкие батареи — сверх этого. */
-var BAY_K = 0.15, BAY_MAX = 5;
+var MOD_ORDER = ["power", "acc", "range", "reload", "cool", "pierce", "emp", "quiet", "stab"];
+/* (3.7, просьба игрока) Ёмкость оружия поднимает только верстак — расточкой
+   отсека, удлинённым магазином или баллоном побольше, ступень за ступенью и до
+   предела, своего у каждого вида (world.js, capPlan). Ступень требует оснастки
+   не ниже себя: базовый верстак — первую, специализированный — вторую,
+   экспериментальный стенд — третью, станок с программным управлением —
+   четвёртую. Прежде отсек растачивали на пять ступеней у любого оружия, а
+   модуль ёмкости, ёмкая и сверхъёмкая энергобатареи прибавляли сверх того —
+   «Искра» доходила до сотни с лишним выстрелов. */
 var BAY_COST = [null, { cell: 1, wire: 1, scrap: 1 }, { cell: 2, cap: 1, wire: 1 }, { cell: 2, chip: 1, magnet: 1 }, { powercell: 1, cell: 2, chip: 1 }, { supercond: 1, powercell: 1, chip: 1 }];
+var MAG_COST = [null, { scrap: 2, wire: 1 }, { scrap: 3, magnet: 1 }, { scrap: 3, servo: 1, magnet: 1 }];
 MOD_ORDER.forEach(function (k) { var m = MODS[k]; LAB.ITEMS[m.item] = { n: cap1(m.n), icon: "🔩", kind: "wmodule", mod: k, desc: m.desc + " Ставится у верстака: пункт «Установить модуль».", price: m.price }; });
+/* (3.7) Прежние батареи и модуль ёмкости в оружие больше не встают: с оружия
+   прежней записи их снимают (fixUpg), и они лежат в рюкзаке — продать или
+   разобрать у верстака на детали. Не продаются и не собираются (src: find). */
+var GONE_MODS = {
+  cap: { item: "m_cap", n: "Модуль ёмкости", price: 55, parts: { cell: 2, wire: 1 },
+    desc: "Плата добавочных ячеек от старых образцов оружия. В оружие не встаёт: отсек рассчитан на свою батарею, а ёмкость поднимает только верстак — расточкой отсека или удлинённым магазином. Её разбирают у верстака на ячейки и провод или продают." },
+  bigcell: { item: "m_bigcell", n: "Ёмкая энергобатарея", price: 70, parts: { cell: 2, cap: 2, wire: 1 },
+    desc: "Аккумулятор на полторы обычных батареи. В оружие не встаёт: отсек рассчитан на свою батарею, а ёмкость поднимает только верстак — расточкой отсека. Её разбирают у верстака на ячейки и конденсаторы или продают." },
+  hugecell: { item: "m_hugecell", n: "Сверхъёмкая энергобатарея", price: 160, parts: { cell: 3, supercond: 1, cap: 2, chip: 1 },
+    desc: "Накопитель на сверхпроводнике. В оружие не встаёт: отсек под него не рассчитан, а ёмкость поднимает только верстак — расточкой отсека. Его разбирают у верстака на детали — сверхпроводник в нём дорогой — или продают." }
+};
+for (var gmk in GONE_MODS) { var gm0 = GONE_MODS[gmk]; LAB.ITEMS[gm0.item] = { n: gm0.n, icon: "🔋", kind: "wmodule", gone: true, src: "find", desc: gm0.desc, price: gm0.price }; }
 
 /* ════════ РЕЦЕПТЫ ════════ */
 var R_NEW = [
@@ -138,9 +148,6 @@ var R_NEW = [
   { id: "m_range", out: "m_range", n: "Удлинитель ствола", need: { lens: 1, magnet: 1, scrap: 2 }, cls: "spec", bp: true, minL: 2 },
   { id: "m_reload", out: "m_reload", n: "Модуль быстрой перезарядки", need: { servo: 1, cap: 1, wire: 1 }, cls: "spec", bp: true, minL: 2 },
   { id: "m_cool", out: "m_cool", n: "Радиатор", need: { scrap: 2, wire: 1, ceramic: 1 }, cls: "spec", bp: true, minL: 3 },
-  { id: "m_cap", out: "m_cap", n: "Модуль ёмкости", need: { cell: 2, wire: 1 }, cls: "spec", bp: true },
-  { id: "m_bigcell", out: "m_bigcell", n: "Ёмкая энергобатарея", need: { cell: 2, cap: 2, wire: 1 }, cls: "base", desc: "Две аккумуляторные ячейки и конденсаторы в одном корпусе: бластер держит в полтора раза больше зарядов." },
-  { id: "m_hugecell", out: "m_hugecell", n: "Сверхъёмкая энергобатарея", need: { cell: 3, supercond: 1, cap: 2, chip: 1 }, cls: "spec", minL: 5, desc: "Накопитель на сверхпроводнике: зарядов вдвое больше." },
   { id: "m_pierce", out: "m_pierce", n: "Бронебойный модуль", need: { magnet: 1, panel: 1, scrap: 1 }, cls: "spec", bp: true, minL: 3 },
   { id: "m_emp", out: "m_emp", n: "Модуль подавления электроники", need: { relay: 1, chip: 1, magnet: 1 }, cls: "spec", bp: true, minL: 2 },
   { id: "m_quiet", out: "m_quiet", n: "Глушитель", need: { scrap: 2, gel: 1, wire: 1 }, cls: "spec", bp: true },
@@ -488,14 +495,11 @@ function recalc(w) {
   var m = w.mod || {};
   w.dmg = Math.max(1, Math.round(w.dmg0 * Math.pow(1.15, m.power || 0)));
   w.rng = w.rng0 + (w.rng0 > 1 ? 2 * (m.range || 0) : 0);
-  if (w.cap0) { w.cap = Math.round(w.cap0 * (1 + capK(w))); if (w.charge > w.cap) w.charge = w.cap; }
+  if (w.cap0) { w.cap = LAB.capAt(w.base, w.cap0, w.bay); if (w.charge > w.cap) w.charge = w.cap; }
   w.mods = used(w);
 }
-/* (2.2) Прибавка к ёмкости — доля ёмкости самого оружия (w.cap0: вид,
-   ступень и качество): расточенный отсек — плюс пятнадцать процентов за
-   ступень, модуль ёмкости — тридцать, ёмкая батарея — половина, сверхъёмкая
-   — вся ёмкость. Чем лучше оружие, тем больше выстрелов даёт та же работа. */
-function capK(w, bay) { var m = w.mod || {}; return BAY_K * (bay != null ? bay : w.bay || 0) + 0.3 * (m.cap || 0) + 0.5 * (m.bigcell || 0) + (m.hugecell || 0); }
+/* (3.7) Ёмкость — своя ёмкость оружия (w.cap0: вид, ступень и качество) и ступени
+   ёмкости у верстака, до предела вида (world.js, capAt). Модули и батареи её не меняют. */
 /* Почему модуль не встаёт: "" — встаёт. */
 function compat(w, mk) {
   var b = LAB.WEAPONS[w.base] || {}, M = MODS[mk];
@@ -506,8 +510,7 @@ function compat(w, mk) {
   switch (mk) {
     case "range": if (melee(w)) return "ближнему бою дальность не нужна"; break;
     case "acc": if (melee(w)) return "удар вплотную и так точен"; break;
-    case "reload": case "cap": if (!battery(w)) return "у этого оружия нет батареи"; break;
-    case "bigcell": case "hugecell": if (w.ammo !== "energy") return "это оружие питается не от энергобатарей"; break;
+    case "reload": if (!battery(w)) return "у этого оружия нет батареи"; break;
     case "cool": if (!heats(w)) return "это оружие не греется"; break;
     case "quiet": if (b.cls === "positron") return "аннигиляцию не заглушить"; if (melee(w) && w.dt !== "shock") return "удар и так тихий"; break;
     case "pierce": if (b.noarmor) return "позитронному пучку броня и так не помеха"; break;
@@ -544,7 +547,7 @@ function profile(w) {
   s.push(melee(w) ? "ближний бой" : "дальность " + w.rng + " " + gm().plural(w.rng, "шаг", "шага", "шагов"));
   var cd = LAB.weaponCd(w) * gapK(w) / 1000;
   s.push((melee(w) ? "удар" : "выстрел") + " раз в " + String(Math.round(cd * 10) / 10).replace(".", ",") + " " + (cd === 1 ? "секунду" : "секунды"));
-  if (battery(w)) s.push(w.cap + " " + gm().plural(w.cap, "выстрел", "выстрела", "выстрелов") + " в заряде, питание: " + (LAB.AMMO[w.ammo] ? LAB.AMMO[w.ammo].n.toLowerCase() : w.ammo));
+  if (battery(w)) { s.push(w.cap + " " + gm().plural(w.cap, "выстрел", "выстрела", "выстрелов") + " в заряде, питание: " + (LAB.AMMO[w.ammo] ? LAB.AMMO[w.ammo].n.toLowerCase() : w.ammo)); if (capLine(w)) s.push(capLine(w)); }
   else s.push("без батарей");
   if (b.noarmor) s.push("броня не помогает");
   else if (pierce(w) >= 0.5) s.push("пробивает броню");
@@ -721,43 +724,93 @@ function reforge(kind, x, b) {
   return true;
 }
 function capWord(w) { return battery(w) && w.cap ? ", " + w.cap + " " + gm().plural(w.cap, "выстрел", "выстрела", "выстрелов") + " в заряде" : ""; }
-/* ════════ БАТАРЕЙНЫЙ ОТСЕК (2.2) ════════ */
-function bayOk(w) { return !!(w && w.cap > 0 && LAB.chargeGun(LAB.WEAPONS[w.base])); }
+/* ════════ ЁМКОСТЬ ОРУЖИЯ (2.2; 3.7 — до предела вида) ════════
+   Отсек батарей и ячеек растачивают, магазин патронов, игл, капсул и картриджей
+   удлиняют, газовый баллон ставят побольше. Ступень за ступенью — до предела
+   вида; ступень — не выше оснастки верстака. */
+var FAM = {
+  bay: { job: "расточка отсека", stepN: "ступень расточки", cost: BAY_COST,
+    t1: "Расточка, этап 1 из 2: старый отсек вскрыт, контакты сняты.", t2: "Этап 2 из 2: отсек под батарею побольше, контакты на месте." },
+  mag: { job: "удлинённый магазин", stepN: "ступень магазина", cost: MAG_COST,
+    t1: "Магазин, этап 1 из 2: подаватель и пружина сняты, корпус разрезан.", t2: "Этап 2 из 2: вставка вварена, пружина длиннее и туже." },
+  tank: { job: "баллон побольше", stepN: "ступень баллона", cost: MAG_COST,
+    t1: "Баллон, этап 1 из 2: вентиль перекрыт, старый баллон снят.", t2: "Этап 2 из 2: баллон побольше на месте, штуцер затянут, утечки нет." }
+};
+function shots(n) { return n + " " + gm().plural(n, "выстрел", "выстрела", "выстрелов"); }
+function plan(w) { return w && w.cap > 0 ? LAB.capPlan(w.base) : null; }
+function bayOk(w) { var p = plan(w); return !!(p && p.steps > 0); }
+/* предел этого экземпляра — его ёмкость на последней ступени */
+function capMax(w) { var p = plan(w); if (!p) return 0; base(w); return LAB.capAt(w.base, w.cap0, p.steps); }
 /* сколько выстрелов станет после следующей ступени */
-function bayNext(w) { base(w); return Math.round(w.cap0 * (1 + capK(w, (w.bay || 0) + 1))); }
+function bayNext(w) { base(w); return LAB.capAt(w.base, w.cap0, (w.bay || 0) + 1); }
+/* о ёмкости — для профиля оружия */
+function capLine(w) {
+  var p = plan(w); if (!p) return "";
+  if (!p.steps) return "ёмкость не меняется" + (p.why ? ": " + p.why : "");
+  var n = Math.min(p.steps, w.bay || 0), mx = capMax(w);
+  if (n >= p.steps) return "ёмкость на пределе вида — " + shots(mx);
+  return "у верстака ёмкость поднимается до " + shots(mx) + (n ? ", пройдено ступеней " + n + " из " + p.steps : " за " + p.steps + " " + gm().plural(p.steps, "ступень", "ступени", "ступеней"));
+}
 function bayBore(w, b) {
-  var n = (w.bay || 0) + 1;
-  if (n > BAY_MAX) { say(cap1(w.name) + ": отсек расточен до предела, " + BAY_MAX + " ступеней из " + BAY_MAX + "."); return false; }
+  var p = plan(w);
+  if (!p) { say(cap1(w.name) + ": ни батареи, ни магазина — поднимать нечего."); return false; }
+  if (!p.steps) { say(cap1(w.name) + ": ёмкость не меняется — " + p.why + "."); return false; }
+  var F = FAM[p.fam] || FAM.bay, n = (w.bay || 0) + 1;
+  if (n > p.steps) { say(cap1(w.name) + ": " + shots(w.cap) + " — предел этого вида, больше в него не войдёт."); return false; }
   b = b || nearBench();
-  if (!b || effTier(b) < n) { LAB.UI.error(); say(b ? tierWhy(b, n) : "Расточка отсека — у верстака."); return false; }
-  var need = BAY_COST[n];
-  if (!haveAll(need)) { LAB.UI.error(); say("Для расточки не хватает: " + costLack(need) + "."); return false; }
+  if (!b || effTier(b) < n) { LAB.UI.error(); say(b ? tierWhy(b, n) : cap1(F.job) + " — у верстака."); return false; }
+  var need = F.cost[n];
+  if (!haveAll(need)) { LAB.UI.error(); say(cap1(F.job) + ": не хватает " + costLack(need) + "."); return false; }
   take(need);
   base(w);
   var c0 = w.cap, full = w.charge >= c0;
   w.bay = n; recalc(w);
   if (full) w.charge = w.cap;
   seq([
-    { t: "Расточка, этап 1 из 2: старый отсек вскрыт, контакты сняты.", snd: "pry" },
-    { t: "Этап 2 из 2: отсек под батарею побольше, контакты на месте. " + cap1(w.name) + ": " + c0 + " → " + w.cap + " " + gm().plural(w.cap, "выстрел", "выстрела", "выстрелов") + " в заряде. Ступень расточки " + n + " из " + BAY_MAX + ".", snd: "craft" }
+    { t: F.t1, snd: "pry" },
+    { t: F.t2 + " " + cap1(w.name) + ": " + c0 + " → " + shots(w.cap) + ", " + F.stepN + " " + n + " из " + p.steps + (n >= p.steps ? " — предел этого вида." : "."), snd: "craft" }
   ]);
   return true;
 }
 function bayItems(b) {
   var g = G(), et = effTier(b), items = [];
   g.weapons.forEach(function (w) {
-    if (!bayOk(w)) return;
-    var n = (w.bay || 0) + 1, need = BAY_COST[n];
-    if (n > BAY_MAX) { items.push({ label: w.name + ": " + w.cap + " выстрелов в заряде, отсек расточен до предела", info: true, keep: true, fn: function () {} }); return; }
-    var lack = et < n ? " — нужен " + TIER[n].n : haveAll(need) ? "" : " — не хватает";
-    items.push({ label: w.name + ": " + w.cap + " → " + bayNext(w) + " выстрелов в заряде, ступень " + n + " из " + BAY_MAX + ". Нужно: " + costText(need) + lack, keep: true, fn: function () { bayBore(w, b); } });
+    var p = plan(w); if (!p) return;
+    if (!p.steps) { items.push({ label: w.name + ": " + shots(w.cap) + ", ёмкость не меняется — " + p.why, info: true, keep: true, fn: function () {} }); return; }
+    var n = (w.bay || 0) + 1, F = FAM[p.fam] || FAM.bay;
+    if (n > p.steps) { items.push({ label: w.name + ": " + shots(w.cap) + " — предел этого вида", info: true, keep: true, fn: function () {} }); return; }
+    var need = F.cost[n], lack = et < n ? " — нужен " + TIER[n].n : haveAll(need) ? "" : " — не хватает";
+    items.push({ label: w.name + ": " + w.cap + " → " + shots(bayNext(w)) + ", " + F.job + ", ступень " + n + " из " + p.steps + ", предел — " + capMax(w) + ". Нужно: " + costText(need) + lack, keep: true, fn: function () { bayBore(w, b); } });
   });
-  if (!items.length) items.push({ label: "Растачивать нечего: у вас нет оружия на батареях и зарядах.", info: true, keep: true, fn: function () {} });
+  if (!items.length) items.push({ label: "Поднимать нечего: у вас нет оружия на батареях, зарядах или патронах.", info: true, keep: true, fn: function () {} });
   return items.concat([back()]);
 }
 function bayMenu() {
   var b = bench(cur.o), et = effTier(b);
-  menu("Батарейный отсек", bayItems(b), { keep: true, intro: "Ступень расточки — плюс пятнадцать процентов ёмкости оружия: чем лучше оружие, тем больше прибавка. Этот верстак растачивает до ступени " + Math.min(BAY_MAX, et) + " из " + BAY_MAX + ".", rebuild: function () { return bayItems(b); } });
+  menu("Ёмкость оружия", bayItems(b), { keep: true, intro: "Ёмкость поднимает только верстак: батареи и модули зарядов не прибавляют, батарея только заряжает. У каждого вида свой предел и своё число ступеней. Ступень — не выше оснастки верстака: этот поднимает до ступени " + Math.min(4, et) + ".", rebuild: function () { return bayItems(b); } });
+}
+/* (3.7) Оружие прежней записи: модуль ёмкости и ёмкие батареи снимаются и ложатся в
+   рюкзак — продать или разобрать; ступени расточки сверх ступеней вида возвращают свои
+   детали; ёмкость — по новому правилу. Один раз на оружие. Что сказать — или "". */
+function fixUpg(w, inv) {
+  if (!w || w.upgV === 3 || !LAB.WEAPONS[w.base]) return "";
+  w.upgV = 3;
+  var m = w.mod || {}, off = [], back = {}, k, i;
+  for (k in GONE_MODS) if (m[k]) {
+    off.push(GONE_MODS[k].n.toLowerCase() + (m[k] > 1 ? " ×" + m[k] : ""));
+    if (inv) inv[GONE_MODS[k].item] = (inv[GONE_MODS[k].item] || 0) + m[k];
+    delete m[k];
+  }
+  var p = LAB.capPlan(w.base), top = p ? p.steps : 0, was = w.bay || 0;
+  if (was > top) { for (i = top + 1; i <= was; i++) for (k in BAY_COST[i]) back[k] = (back[k] || 0) + BAY_COST[i][k]; w.bay = top; }
+  if (!off.length && was === (w.bay || 0)) { if (w.dmg0 != null) recalc(w); return ""; }
+  if (inv) for (k in back) inv[k] = (inv[k] || 0) + back[k];
+  recalc(w);
+  var s = [];
+  if (off.length) s.push("снято: " + off.join(", ") + " — в рюкзаке");
+  if (Object.keys(back).length) s.push("ступени расточки сверх предела вида возвращены деталями: " + costText(back));
+  var top2 = p && p.steps && (w.bay || 0) >= p.steps;
+  return cap1(w.name) + ": " + s.join("; ") + ". Теперь " + shots(w.cap) + (top2 ? " — предел этого вида." : ", " + capLine(w) + ".");
 }
 function upgItems(b) {
   var g = G(), nl = lvlNow(), et = effTier(b), items = [];
@@ -797,9 +850,10 @@ var SALV = {
   decoy_e: { relay: 1, cell: 1 }, disruptor: { optic: 1, cap: 1 }, lockpick: { scrap: 1 }, filter: { scrap: 1 }, repairkit: { scrap: 2 },
   wrepair: { scrap: 1, wire: 1 }, plate: { scrap: 2, panel: 1 }, okokey: { chip: 1, relay: 1 }
 };
+for (var gsk in GONE_MODS) SALV[GONE_MODS[gsk].item] = GONE_MODS[gsk].parts; /* (3.7) прежние батареи и модуль ёмкости */
 /* что понимаешь, разбирая: оружие и устройства раскрывают схемы */
 var ANALYZE = {
-  laser: "m_acc", gauss: "m_pierce", ion: "m_emp", pulse: "m_reload", heavy: "m_cool", plasma: "m_cool", thermo: "m_cool", cryo: "m_cool", spark: "m_cap",
+  laser: "m_acc", gauss: "m_pierce", ion: "m_emp", pulse: "m_reload", heavy: "m_cool", plasma: "m_cool", thermo: "m_cool", cryo: "m_cool", spark: "m_reload",
   mpistol: "m_range", mrifle: "m_range", cutter: "m_quiet", vibro: "m_quiet", baton: "w_suppressor", mresonator: "m_stab", ppistol: "bat_p", pcannon: "bat_p",
   kpistol: "w_needle", needle: "m_pierce", suppressor: "m_emp",
   noise: "decoy_e", jammer: "disruptor", turret_kit: "turret_kit2", okokey: "m_emp", decoder: "m_acc", sonar: "m_range"
@@ -934,7 +988,7 @@ function seq(lines, done) {
 function afterCraft(rc, msg) {
   var it = LAB.ITEMS[String(rc.out)];
   if (LAB.tutor && (rc.out === "noise" || rc.out === "decoy_e")) LAB.tutor.ev("decoy");
-  if (it && it.kind === "wmodule") { pickWeapon(it.mod, msg + " Шаг 2 из 2: выберите оружие для установки или оставьте модуль в запасе."); return; }
+  if (it && it.kind === "wmodule" && !it.gone) { pickWeapon(it.mod, msg + " Шаг 2 из 2: выберите оружие для установки или оставьте модуль в запасе."); return; }
   if (clsOf(rc) === "exp") {
     seq([
       { t: "Опытная сборка, этап 1 из 3: корпус и крепёж.", snd: "pry" },
@@ -1022,7 +1076,6 @@ function groupOf(rc) {
   if (rc.group === "restore") return "Восстановление деталей";
   if (KIT_OUT[o]) return "Ремкомплекты";
   if (d && d.kind === "implant") return "Чипы имплантов";
-  if (o === "m_bigcell" || o === "m_hugecell") return "Батареи и боеприпасы"; /* ёмкие энергобатареи бластера */
   if (d && d.kind === "wmodule") return "Модули оружия";
   if (d && d.kind === "trap") return "Ловушки и мины";
   if (o.indexOf("armor:") === 0) return "Броня";
@@ -1060,7 +1113,7 @@ function rootItems(b) {
   items.push({ label: "Ремонт брони" + ((g.armors || []).some(function (a) { return LAB.armorCond(a) < 100; }) ? ": есть изношенная" : ""), fn: armorMenu });
   if (R && R.opened("engkit") > 0 && R.opened("engkit") < R.KITS.engkit.uses) items.push({ label: "Пополнить инженерный кейс: " + costText(refillCost(b)) + ". В начатом ремонтов " + R.opened("engkit") + " из " + R.KITS.engkit.uses, keep: true, fn: function () { refillKit(b); } });
   if (!b.drawer) items.push({ label: "Ящик под верстаком: обрезки и крепёж — забрать", keep: true, fn: function () { takeDrawer(b, cur.o); } });
-  if (g.weapons.some(bayOk)) items.push({ label: "Батарейный отсек: расточить под батарею побольше — больше выстрелов в заряде", fn: bayMenu });
+  if (g.weapons.some(plan)) items.push({ label: "Ёмкость оружия: расточить отсек, удлинить магазин — до предела каждого вида", fn: bayMenu });
   if (et >= 4) items.push({ label: et >= 5 ? "Модернизация и перековка оружия и брони" : "Модернизация оружия и брони под глубину", fn: upgMenu });
   if (LAB.implants) items.push({ label: "Работа с имплантами: " + (et >= 2 ? "калибровка, настройка, извлечение, " : "") + "разбор чипов", fn: function () { LAB.implants.benchMenu(et); } });
   items.push({ label: "Разбор предметов на детали", fn: salvMenu });
@@ -1233,7 +1286,7 @@ LAB.workshop = {
   cond: cond, compat: compat, install: install, uninstall: uninstall, slots: slots, used: used, modsLine: modsLine, profile: profile,
   repairWeapon: repairWeapon, repairCost: repairCost, repairArmor: repairArmor, armorCost: armorCost, refillKit: refillKit, takeDrawer: takeDrawer,
   needOf: needOf, craftBonus: craftBonus, craftQual: craftQual, craftTimes: craftTimes, specName: specName, SPEC: SPEC, shopMin: shopMin,
-  modernize: modernize, reforge: reforge, recalc: recalc, bayBore: bayBore, BAY_MAX: BAY_MAX, setBatch: function (v) { batch = !!v; }, salvage: salvage, salvageBattery: salvageBattery, onScrap: onScrap,
+  modernize: modernize, reforge: reforge, recalc: recalc, bayBore: bayBore, capMax: capMax, capLine: capLine, fixUpg: fixUpg, GONE_MODS: GONE_MODS, setBatch: function (v) { batch = !!v; }, salvage: salvage, salvageBattery: salvageBattery, onScrap: onScrap,
   analyzeProto: analyzeProto, research: research, fixBench: fixBench, throwDevice: throwDevice, drops: drops, partLine: partLine, partsGuide: partsGuide,
   srcOf: srcOf, uses: uses, heats: heats, hmax: hmax, MODS: MODS, MOD_ORDER: MOD_ORDER, TIER: TIER,
   _at: function (o) { cur = o ? { o: o, key: CUR().key } : null; }

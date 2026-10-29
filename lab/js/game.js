@@ -851,9 +851,11 @@ function giveItem(it, quiet) {
     case "credits": if (LAB.implants && LAB.implants.stat("loot")) it.n = Math.round(it.n * (1 + LAB.implants.stat("loot"))); G.credits += it.n; break; /* (2.0) чип старателя */
     case "weapon":
       LAB.fixCap(it.w); /* (2.2) оружие из прежней записи — с новой ёмкостью */
+      var upgFix = LAB.workshop && LAB.workshop.fixUpg ? LAB.workshop.fixUpg(it.w, G.inv) : ""; /* (3.7) батареи с него — в рюкзак */
       G.weapons.push(it.w);
       if (LAB.oko && LAB.oko.react) later(function () { LAB.oko.react("weapon"); }, 2500);
       if (!G.tut.weapon && hintsOn()) { G.tut.weapon = 1; extra = LAB.K(" Сменить оружие — двойное касание двумя пальцами. Вынуть — касание тремя пальцами."," Выбрать оружие — Q и E или цифры от 1 до 9. Достать — R."); }
+      if (upgFix) extra += " " + upgFix;
       break;
     case "pass":
       if (it.tier > G.tier) { G.tier = it.tier; extra = " Теперь открываются двери с картридером " + LAB.TIERS[it.tier].short + (it.tier > 1 ? " и ниже." : "."); }
@@ -3601,6 +3603,7 @@ function loadSlot(n, fromBak) {
   autosave();
   var lev = LAB.LEVELS[G.L];
   say("Игра загружена. Уровень " + G.L + ", " + lev.name + ", этаж " + G.F + ". Здоровье " + G.hp + " из " + G.hpMax + ". " + weaponLine(curWeapon()) + ".");
+  if (G.upgNote) { sayq(G.upgNote); G.upgNote = null; }
   if (moved) sayq("Этажи комплекса перестроены: помещения стали просторнее, обстановки в них больше. Вы у входа на свой этаж; уровень, оружие, броня, вещи, кредиты и пропуска — при вас, поручения выживших сняты.");
   roomCheck(true);
   return true;
@@ -3626,6 +3629,13 @@ function migrate(g) {
   (g.weapons || []).forEach(function (w) { if (w && w.mods > 0 && !w.mod) w.mod = { power: w.mods }; });
   /* (2.2) ёмкость оружия — по новому правилу: «Искра» — тридцать, лучше оружие — больше */
   (g.weapons || []).forEach(function (w) { LAB.fixCap(w); });
+  /* (3.7) ёмкость — только у верстака, до предела вида: батареи и модуль ёмкости
+     сняты с оружия и лежат в рюкзаке, лишние ступени расточки вернули детали */
+  if (LAB.workshop && LAB.workshop.fixUpg) {
+    g.inv = g.inv || {};
+    var upgSaid = (g.weapons || []).map(function (w) { return LAB.workshop.fixUpg(w, g.inv); }).filter(Boolean);
+    if (upgSaid.length) g.upgNote = "Ёмкость оружия теперь поднимает только верстак, до предела каждого вида; батареи только заряжают. " + upgSaid.join(" ") + " Снятое в оружие не встаёт: его продают или разбирают у верстака на детали.";
+  }
   /* (3.6) «Гемостат» слит с «Регенерацией»: импланты, чипы и схемы записи — к ней */
   if (LAB.implants && LAB.implants.fixSave) LAB.implants.fixSave(g);
   /* (3.6) тренировки записей до «Альфы 3.3»: счёт тренировок без предела — каждые три

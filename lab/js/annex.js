@@ -66,7 +66,7 @@ for (var rk in ROOMS) { ROOMS[rk].annex = true; if (!LAB.ROOMS[rk]) LAB.ROOMS[rk
    защита, инструменты, детали — смотря что за помещение. */
 function itemsOf(L, test) {
   var out = [];
-  for (var k in LAB.ITEMS) { var d = LAB.ITEMS[k]; if (!d.price || d.surf || d.nosell || d.cold || d.kit) continue; if ((d.depth || 1) > L) continue; if (test(d, k)) out.push(k); } /* (3.0) cold — только холодильники, kit — только у чайника (kitchen.js) */
+  for (var k in LAB.ITEMS) { var d = LAB.ITEMS[k]; if (!d.price || d.surf || d.nosell || d.cold || d.kit || d.fxOnly) continue; if ((d.depth || 1) > L) continue; if (test(d, k)) out.push(k); } /* (3.0) cold — только холодильники, kit — только у чайника (kitchen.js); (3.7) fxOnly — только у своей вещи (монтажная лента — у магнитофона) */
   return out;
 }
 function catPick(r, L, cat) {
