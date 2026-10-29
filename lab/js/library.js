@@ -365,10 +365,8 @@ function readPage(o, q, i) {
    зажуёт. Клеят тонкой монтажной лентой, срезав концы наискось и сведя встык; коробка с
    ней бывает у самого магнитофона. Или бобину забирают: запись цела, и её купят связисты
    и архивисты — склеят на монтажном столе и перепишут. */
-LAB.ITEMS.splice = { n: "Монтажная лента для плёнки", icon: "🎞️", kind: "tool", cat: "tool", fxOnly: true, src: "find", depth: 1, price: 10,
-  desc: "Тонкая клейкая лента для магнитофонной плёнки и лезвие в картонной коробке: концы срезают наискось и клеят встык. Моток — на одну склейку, у магнитофона, где порвана плёнка." };
-LAB.ITEMS.reel_torn = { n: "Бобина с порванной плёнкой", icon: "📼", kind: "valuable", cat: "valuable", fxOnly: true, src: "find", depth: 1, price: 22,
-  desc: "Запись цела, порвана только плёнка посередине. Связисты и архивисты купят бобину: склеят на монтажном столе и перепишут." };
+/* монтажная лента (splice) и бобина с порванной плёнкой (reel_torn) — в общей таблице вещей (data.js):
+   из них же клеят петлю с песней слоя (b1.js) */
 function torn(o, q) { return h32(o.id + ":" + q.id + ":" + CUR().key) % 3 === 0; }
 function spliceBox(o) { return h32(o.id + ":splice:" + CUR().key) % 2 === 0; }
 var TORN_WHY = "Плёнка порвана посередине, концы закручиваются в пальцах. Изолентой её не склеить: толстая лента не пройдёт между роликами, клей сползёт на головки, и склейку зажуёт. Плёнку клеят тонкой монтажной лентой, срезав концы наискось.";
@@ -519,7 +517,7 @@ function shredMenu(o) {
     if (sh.got.length) items.push({ label: "Разобрать сложенное и начать сначала", fn: function () { st(o).shred.got = []; spend(1); say("Вы снова раскладываете полоски по столу."); } });
     return items;
   };
-  UIx("menu", "Полоски из шредера", build(), { rebuild: build, intro: "Полоски перемешаны. Выбирайте их по порядку: сначала ту, с которой текст начинается." });
+  UIx("menu", "Полоски из шредера", build(), { rebuild: build, intro: "Листы рвали руками вдоль строк, и на каждой полоске — кусок текста. Полоски перемешаны: выбирайте их по порядку, сначала ту, с которой текст начинается." });
 }
 function shredPick(o, i) {
   var s = st(o), sh = s.shred, parts = shredParts(o);
@@ -559,7 +557,9 @@ function vitrine(o) {
   UIx("menu", "Дверца витрины", items);
 }
 function vitLoot(o, head) {
-  var r = rng(o, "vit"), L = G().L, F = G().F, loot = LAB.annexLoot ? LAB.annexLoot(r, L, F, "stash", "desk", true).filter(function (x) { return x.kind !== "weapon" && x.kind !== "armor"; }).slice(0, 2) : [];
+  /* (3.7, нелогичность) в витрине — экспонаты: ценные вещи, а не аптечки, батареи и кредиты */
+  var r = rng(o, "vit"), L = G().L, F = G().F, loot = [], k = 1 + (r.chance(0.35) ? 1 : 0);
+  for (var i = 0; i < k; i++) { var v = LAB.annexPick && LAB.annexPick(r, L, "valuable"); if (v && LAB.ITEMS[v]) loot.push({ kind: "item", item: v, n: 1 }); }
   if (!loot.length) loot.push({ kind: "credits", n: LAB.credits(20, L, F) });
   var got = loot.map(function (it) { return gm().giveItem(it); });
   say(head + " В витрине: " + got.join(" "));

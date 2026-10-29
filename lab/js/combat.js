@@ -1971,16 +1971,19 @@ function attack(f, seen) {
 }
 function poison(t) {
   var g = G();
-  if (g.st.antitox > 0) { sayOnce("atox", "Фильтр не пропустил яд."); return; }
+  /* (3.7, нелогичность) яд укуса и жала в кровь: маска от него не спасает, только антитоксин */
+  if (g.st.atoxIn > 0) { sayOnce("atox", "Антитоксин гасит яд: отравления нет."); return; }
   if (gm().armorSpecial("antitox")) t = Math.ceil(t / 2);
   if (!g.st.poison) { sayq("Вы отравлены. Антидот или большая аптечка снимут яд, сорбент ослабит его."); A("play", "poisoned"); }
   g.st.poison = Math.max(g.st.poison, t);
   /* яд копится в крови токсинами */
-  toxins(3 + Math.round(t / 3));
+  toxins(3 + Math.round(t / 3), true);
 }
-function toxins(n) {
+/* toxins(n, blood): blood — яд в крови (его держит только антитоксин), иначе — пары и брызги химии
+   (их держит и фильтр) */
+function toxins(n, blood) {
   var g = G();
-  if (!g.body || g.st.antitox > 0 || n <= 0) return;
+  if (!g.body || (blood ? g.st.atoxIn > 0 : g.st.antitox > 0) || n <= 0) return;
   if (gm().armorSpecial("antitox")) n = Math.ceil(n / 2);
   g.body.tox = Math.min(100, g.body.tox + n);
   if (gm().bodyWarn) gm().bodyWarn();
@@ -2084,7 +2087,8 @@ function statusTick(onlyTimers) {
   if (gm().bodyTick) { gm().bodyTick(); if (G().dead) return; }
   if (st.slow > 0) st.slow--;
   if (st.deaf > 0) st.deaf--;
-  if (st.antitox > 0) { st.antitox--; if (!st.antitox) sayq("Фильтр противогаза отработал."); }
+  if (st.antitox > 0) { st.antitox--; if (!st.antitox) sayq(st.atoxSrc === "drug" ? "Антитоксин перестал действовать." : "Фильтр противогаза отработал."); }
+  if (st.atoxIn > 0) { st.atoxIn--; if (!st.atoxIn && st.antitox > 0) st.atoxSrc = "mask"; } /* (3.7) лекарство кончилось раньше фильтра */
   if (st.radBlock > 0) { st.radBlock--; if (!st.radBlock) sayq("Йодид калия больше не защищает от облучения."); }
   if (LAB.zones && LAB.zones.tick) LAB.zones.tick(); /* облучение и газ, пока стоите в особой зоне (1.5) */
   if (LAB.implants) LAB.implants.tick(); /* (2.0) действие имплантов во времени, чип регенерации */
@@ -2442,7 +2446,9 @@ function kill(f, quiet) {
   }
   if (!quiet) {
     var verb = f.kind === "mech" ? (f.g === "f" ? "уничтожена" : "уничтожен") : f.kind === "anom" ? (f.g === "f" ? "развеяна" : "развеян") : (f.g === "f" ? "убита" : "убит");
-    sayq(f.name.split(",")[0] + " " + verb + "." + (f.punisher ? " Каратель сгорает изнутри: ОКО стёрло его начинку." : drops.length ? " Что-то упало." : ""));
+    /* (3.7) батарея с твари — не из её брюха: твари тащат к себе тёплое и гудящее, что найдут у погибших */
+    var batN = drops.some(function (d) { return d.nth27; }) && f.kind !== "mech" ? (f.kind === "anom" ? " На том месте осталась энергобатарея: аномалии тянутся к заряду и держат его в себе." : " " + (f.g === "f" ? "При ней" : f.g === "p" ? "При них" : "При нём") + " — энергобатарея: твари тащат к себе тёплое и гудящее, что найдут у погибших.") : "";
+    sayq(f.name.split(",")[0] + " " + verb + "." + (f.punisher ? " Каратель сгорает изнутри: ОКО стёрло его начинку." : drops.length ? " Что-то упало." + batN : ""));
   }
   if (corrHint) { sayq("«Эхо»: с каждого " + (NTH_W[corrHint] || corrHint + "-го") + " уничтоженного врага падает энергобатарея."); corrHint = 0; }
   if (f.boss) {

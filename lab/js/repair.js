@@ -79,7 +79,8 @@ function leftText(id) {
 /* ════════ ЧТО МОЖНО ПОЧИНИТЬ ════════ */
 function near(o) { var g = G(); return Math.max(Math.abs(o.x - g.x), Math.abs(o.y - g.y)) <= 2; }
 function nearObjs(test) { var c = CUR(); return c && c.fl ? c.fl.objs.filter(function (o) { return near(o) && test(o); }) : []; }
-function brokenMachine(o) { return (o.type === "coffee" || o.type === "drinks" || o.type === "snacks") && o.broken && !gm().objState(o).fixed; }
+/* (3.7) кофейный автомат не сломан — у него пустой бак: ремнабор воду не заменит (office.js, coffeeDry) */
+function brokenMachine(o) { return (o.type === "drinks" || o.type === "snacks") && o.broken && !gm().objState(o).fixed; }
 function targets(id) {
   var g = G(), K = KITS[id], cap = capOf(K), out = [];
   if (K.w) g.weapons.forEach(function (w, i) { var c = wcond(w); if (c < cap - 0.5) out.push({ k: "w", w: w, i: i, c: c, on: i === g.wi }); });

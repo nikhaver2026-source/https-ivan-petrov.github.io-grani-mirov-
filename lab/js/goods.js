@@ -74,7 +74,7 @@ var ITEMS = {
   armymed:   { n: "Армейская аптечка с поверхности", icon: "⛑️", kind: "use", cat: "med", desc: "Аптечка с карантинного склада наверху: здоровье плюс 75, снимает отравление и кровотечение.", heal: 75, cure: true, stopBleed: true, price: 60, depth: 1, surf: true },
 
   /* защита: расходники */
-  respirator:{ n: "Респиратор с угольным фильтром", icon: "😷", kind: "use", cat: "protect", desc: "Пять минут яды, споры и газ не действуют.", fx: { antitox: 600 }, price: 40, depth: 1 },
+  respirator:{ n: "Респиратор с угольным фильтром", icon: "😷", kind: "use", cat: "protect", desc: "Пять минут газ, споры и ядовитые пары не действуют: дышите через угольный фильтр. Яд укуса и съеденное он не остановит.", fx: { antitox: 600 }, price: 40, depth: 1 },
   tape:      { n: "Изолента", icon: "🎗️", kind: "use", cat: "protect", desc: "Моток изоленты. Вплотную к камере ОКО — заклеить объектив: камера ослепнет, пока ремонтник не отклеит.", price: 8, depth: 1 },
 
   /* инструменты: не тратятся */
@@ -124,7 +124,8 @@ var REC = [
   { id: "respirator", out: "respirator", n: "Респиратор с угольным фильтром", need: { filtercart: 1, rubber: 1 }, cls: "base" },
   { id: "antirad", out: "antirad", n: "Антирадин", need: { reagent: 2, gel: 1 }, cls: "spec" },
   { id: "iodine", out: "iodine", n: "Йодид калия", need: { reagent: 1, gel: 1 }, cls: "base" },
-  { id: "dosimeter", out: "dosimeter", n: "Дозиметр «Сосна»", need: { chip: 1, wire: 1, cap: 1 }, cls: "spec" },
+  /* (3.7, нелогичность) дозиметр без счётчика Гейгера не собрать: его продают и находят, а из
+     микросхемы, провода и конденсатора прежде выходил «дозиметр» без датчика */
   { id: "tape", out: "tape", n: "Изолента", need: { rubber: 1 }, cls: "base" }
 ];
 REC.forEach(function (rc) { if (!LAB.RECIPES.some(function (q) { return q.id === rc.id; })) LAB.RECIPES.push(rc); });

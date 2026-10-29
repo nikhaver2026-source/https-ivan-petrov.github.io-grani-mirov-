@@ -75,8 +75,8 @@ function takeDrink(o, d, pre) {
   g.inv[d.id] = (g.inv[d.id] || 0) + 1;
   /* (3.5) стакан помнит глубину, где его купили: лечит, как автомат той глубины (game.js, useItem);
      прежде стакан за десять кредитов с первого уровня глубоко внизу лечил, как тамошний */
-  if (LAB.ITEMS[d.id] && LAB.ITEMS[d.id].cup) { g.cupL = g.cupL || {}; (g.cupL[d.id] = g.cupL[d.id] || []).push(g.L); }
-  say(pre + " " + LAB.ITEMS[d.id].n + " — в рюкзаке, раздел «Еда и напитки»" + (o.type === "coffee" ? ", под крышкой не остынет" : "") + ". Выпить — " + LAB.K("инвентарь, «Еда и напитки», или присев на диван, в кресло, на койку: там напиток действует лучше.", "клавиша G или инвентарь, «Еда и напитки», или присев на диван, в кресло, на койку: там напиток действует лучше.") + " Кредитов " + g.credits + ".");
+  if (LAB.ITEMS[d.id] && LAB.ITEMS[d.id].cup) { g.cupL = g.cupL || {}; (g.cupL[d.id] = g.cupL[d.id] || []).push(g.L); g.cupT = g.cupT || {}; (g.cupT[d.id] = g.cupT[d.id] || []).push((g.day || 0) * 1440 + (g.min || 0)); } /* (3.7) и когда куплен: стакан остывает */
+  say(pre + " " + LAB.ITEMS[d.id].n + " — в рюкзаке, раздел «Еда и напитки»" + (o.type === "coffee" ? ", под крышкой продержится горячим с полчаса" : "") + ". Выпить — " + LAB.K("инвентарь, «Еда и напитки», или присев на диван, в кресло, на койку: там напиток действует лучше.", "клавиша G или инвентарь, «Еда и напитки», или присев на диван, в кресло, на койку: там напиток действует лучше.") + " Кредитов " + g.credits + ".");
   gm().journal("Взят с собой напиток: " + d.n + ".");
   UIx("refresh");
   gm().autosaveSoon();
@@ -104,6 +104,7 @@ function drink(o, d, wait, pre) {
 }
 /* Сломанный автомат: по нему можно стукнуть — иногда выпадает напиток. */
 function brokenMenu(o) {
+  if (o.type === "coffee") { coffeeDry(o); return; }
   var st = gm().objState(o);
   var why = o.type === "coffee" ? "Табло кофейного автомата мигает: «Нет воды. Обратитесь к оператору»." : "Автомат с напитками обесточен наполовину: табло темно, внутри гудит компрессор.";
   UIx("menu", machineName(o) + " — не работает", [
@@ -123,6 +124,43 @@ function brokenMenu(o) {
     { label: "Отойти", fn: function () {} }
   ]);
   say(machineName(o) + ". " + why);
+}
+
+/* (3.7, нелогичность) У кофейного автомата не поломка, а пустой бак: «Нет воды». Прежде
+   от удара он «сам выдавал» кофе, а ремнабор его «чинил». Без воды ничего не сварится:
+   бак заливают из-под крана, если в помещении раковина, или двумя бутылками воды. От
+   удара — разве что забытая сдача в лотке. */
+function coffeeDry(o) {
+  var st = gm().objState(o), g = G(), sink = !!(LAB.kitchen && LAB.kitchen.sinkHere && LAB.kitchen.sinkHere(o)), wb = g.inv.water || 0;
+  var why = "Табло кофейного автомата мигает: «Нет воды. Обратитесь к оператору». Бак за задней крышкой пуст: без воды автомат ничего не сварит.";
+  var items = [];
+  if (sink) items.push({ label: "Залить воду в бак из-под крана: раковина здесь же", fn: function () { coffeeFill(o, "tap"); } });
+  if (wb >= 2) items.push({ label: "Залить в бак две бутылки воды — у вас " + wb, fn: function () { coffeeFill(o, "water"); } });
+  else if (!sink) items.push({ label: "Залить воду в бак: нужны две бутылки воды" + (wb ? ", у вас одна" : "") + ", раковины в помещении нет", info: true, keep: true, fn: function () { say("Бак берёт два литра: нужны две бутылки воды или раковина рядом."); } });
+  items.push({ label: "Стукнуть по автомату", fn: function () {
+    st.hits = (st.hits || 0) + 1;
+    snd("vend_hit", "bump_device");
+    if (LAB.combat) LAB.combat.noise(5);
+    if (!st.change) {
+      st.change = 1;
+      var c = 2 + (LAB.hash32(G().seed + ":" + CUR().key + ":" + o.id + ":change") >>> 0) % 7;
+      g.credits = (g.credits || 0) + c;
+      say("Насос всхлипнул впустую: воды нет. Зато в лотке сдачи звякнула забытая мелочь — " + c + " " + gm().plural(c, "кредит", "кредита", "кредитов") + ". Шум разнёсся по этажу.");
+    } else say("Насос всхлипнул впустую: без воды автомат ничего не выдаст. Шум разнёсся по этажу.");
+  } });
+  items.push({ label: "Осмотреть", fn: function () { say(why); } });
+  items.push({ label: "Отойти", fn: function () {} });
+  UIx("menu", machineName(o) + " — нет воды", items);
+  say(machineName(o) + ". " + why);
+}
+function coffeeFill(o, how) {
+  var st = gm().objState(o), g = G();
+  if (how === "water") { if (!((g.inv.water || 0) >= 2)) { say("Нужны две бутылки воды."); return; } g.inv.water -= 2; }
+  st.fixed = 1; st.water = 1;
+  if (gm().advanceTime) gm().advanceTime(2);
+  snd("kettle_pour", "pc_click"); setTimeout(function () { snd("coffee_idle", "vend"); }, 900);
+  UIx("closeAll");
+  say((how === "tap" ? "Вы носите воду из-под крана в бак кружкой, пока не стало полно. " : "Вы выливаете в бак две бутылки воды. ") + "Насос загудел, табло мигнуло и зажглось: «Готов». Автомат снова варит.");
 }
 
 /* ════════ АВТОМАТ С ЕДОЙ ════════

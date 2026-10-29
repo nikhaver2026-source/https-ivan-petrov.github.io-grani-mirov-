@@ -783,7 +783,7 @@ function toolsItems() {
     var d = LAB.ITEMS[k];
     return { label: d.n + ": " + g.inv[k] + ". " + d.desc, fn: function () { gm().useItem(k); } };
   });
-  if (!items.length) items.push({ label: "Ничего нет. Респираторы, изоленту, дозиметры и инструменты продают пункты снабжения; их собирают у верстака и находят в кабинетах.", info: true, keep: true, fn: function () {} });
+  if (!items.length) items.push({ label: "Ничего нет. Респираторы, изоленту, дозиметры и инструменты продают пункты снабжения и находят в кабинетах; респираторы и изоленту собирают у верстака.", info: true, keep: true, fn: function () {} });
   items.push(back());
   return items;
 }

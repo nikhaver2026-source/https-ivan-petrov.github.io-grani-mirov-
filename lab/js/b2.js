@@ -613,7 +613,8 @@ B({ recipes: [
   { id: "k_r_hush", out: "k_hush", n: "Глушилка мачт", need: { chip: 2, wire: 2, k_root: 1 }, minL: 29 },
   { id: "k_r_tuner", out: "weapon:k_tuner", n: "Камертонная пушка", need: { k_root: 2, magnet: 2, lens: 1 }, minL: 30 },
   { id: "k_r_saltplate", out: "armor:k_saltplate", n: "Солевой панцирь", need: { k_salt: 4, ceramic: 2, scrap: 3 }, minL: 31 },
-  { id: "k_r_honey", out: "k_honey", n: "Мёд ульев", need: { k_wax: 2, reagent: 1 }, minL: 32 },
+  /* (3.7, нелогичность) мёд отжимают из сотов улья (fixtures.js, honeycomb), а не варят из воска с реагентом */
+  { id: "k_r_honey", out: "k_honey", n: "Мёд ульев", need: { honeycomb: 3 }, minL: 32 },
   { id: "k_r_hivegun", out: "weapon:k_hivegun", n: "Ульевой пистолет", need: { k_wax: 2, chip: 2, cap: 1 }, minL: 32 },
   { id: "k_r_quiet", out: "armor:k_quiet", n: "Плащ «Тишь»", need: { k_wax: 3, k_root: 2, wire: 3 }, minL: 33 },
   { id: "k_r_bonemail", out: "armor:k_bonemail", n: "Костяная кольчуга", need: { k_bone: 5, supercond: 1, chip: 2 }, minL: 37 }

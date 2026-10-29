@@ -723,7 +723,8 @@ function bodyApply(d, msg) {
   if (d.wake) { v = b.wake; b.wake += d.wake; clampBody(b); if (Math.round(b.wake) !== Math.round(v)) msg.push("Бодрость " + Math.round(b.wake) + "."); }
   if (d.detox && b.tox > 0) { b.tox -= d.detox; clampBody(b); msg.push(b.tox > 0 ? "Токсины " + Math.round(b.tox) + "." : "Токсины выведены."); }
   if (d.tox) {
-    if (G.st.antitox > 0 && !d.overdose) msg.push("Фильтр не пропустил токсины.");
+    /* (3.7) вдохнутое (air) держит фильтр, съеденное и яд в крови — только антитоксин */
+    if ((d.air ? G.st.antitox > 0 : G.st.atoxIn > 0) && !d.overdose) msg.push(d.air ? "Фильтр не пропустил пары." : "Антитоксин не дал отраве подействовать.");
     else { b.tox += d.tox * (1 - (LAB.implants ? LAB.implants.stat("antitox") : 0)); clampBody(b); msg.push("Токсины " + Math.round(b.tox) + "."); }
   }
   if (d.neuro) { v = b.neuro; b.neuro += d.neuro; clampBody(b); if (Math.round(b.neuro) !== Math.round(v)) msg.push("Нейронагрузка " + Math.round(b.neuro) + "."); }
@@ -755,7 +756,7 @@ game.bodyAlerts = bodyAlerts;
 function bodyStatus() {
   if (!game.entered) return;
   var b = body(), st = [];
-  if (G.st.poison) st.push("отравление"); if (G.st.bleed) st.push("кровотечение"); if (G.st.slow) st.push("замедление"); if (G.st.deaf) st.push("звон в ушах"); if (G.st.antitox) st.push("фильтр противогаза действует"); if (G.st.radBlock) st.push("йодид калия защищает");
+  if (G.st.poison) st.push("отравление"); if (G.st.bleed) st.push("кровотечение"); if (G.st.slow) st.push("замедление"); if (G.st.deaf) st.push("звон в ушах"); if (G.st.antitox) st.push(G.st.atoxIn > 0 ? "антитоксин действует" : "фильтр противогаза действует"); if (G.st.radBlock) st.push("йодид калия защищает");
   if (G.st.trapHeld > 0) st.push("нога в ловушке");
   if (LAB.stash) st = st.concat(LAB.stash.status()); /* (2.5) клещ, метка улья */
   var hpw = G.hp >= G.hpMax * 0.8 ? "в порядке" : G.hp >= G.hpMax * 0.5 ? "ранены" : G.hp >= G.hpMax * 0.25 ? "тяжело ранены" : "при смерти";
@@ -3256,7 +3257,11 @@ function useItem(id) {
   var od = d.overdose && body().tox >= 70 && !(LAB.chem && LAB.chem.noOverdose()); /* передозировка: стимулятор не лечит, а бьёт по сердцу; (3.0) фармакологу не грозит */
   /* стакан из автомата лечит, как сам автомат: с глубиной больше — (3.5) той глубины, где куплен */
   var cupL = d.cup ? (G.cupL && G.cupL[id] && G.cupL[id].length ? G.cupL[id].shift() : G.L) : 0;
-  var hv = d.cup ? Math.round(d.heal * (1 + (Math.min(cupL, G.L) - 1) * 0.15)) : d.heal;
+  /* (3.7, нелогичность) стакан под крышкой горячий с полчаса, остывший — слабее: прежде «не остывал» никогда */
+  var cupT = d.cup && G.cupT && G.cupT[id] && G.cupT[id].length ? G.cupT[id].shift() : null;
+  var cold = cupT != null && (G.day || 0) * 1440 + (G.min || 0) - cupT > 40;
+  var hv = d.cup ? Math.round(d.heal * (1 + (Math.min(cupL, G.L) - 1) * 0.15) * (cold ? 0.6 : 1)) : d.heal;
+  if (cold) { msg.push("Напиток остыл: греет и бодрит слабее."); d = coldCup(d); }
   if (hv && LAB.chem) hv = Math.round(hv * LAB.chem.healK(id, d)); /* (3.0) фармакология: лекарства в умелых руках лечат сильнее */
   if (d.heal && !od) { var before = G.hp; G.hp = Math.min(G.hpMax, G.hp + (/^medkit|^bandage/.test(id) && LAB.ach && LAB.ach.has("medic") ? Math.round(hv * 1.17) : hv)); if (G.hp > before || !food) msg.push("Здоровье плюс " + (G.hp - before) + ", теперь " + G.hp + " из " + G.hpMax + "."); }
   if (d.en) { var e0 = G.en; G.en = Math.min(G.enMax, G.en + d.en); msg.push("Энергия имплантов " + G.en + (G.en > e0 ? "" : ", и так полная") + "."); }
@@ -3277,13 +3282,22 @@ function useItem(id) {
   return true;
 }
 game.useItem = useItem;
+/* (3.7) остывший стакан: бодрость, сытость и энергия — на шесть десятых */
+function coldCup(d) { var c = {}; for (var k in d) c[k] = d[k]; ["wake", "food", "en"].forEach(function (k) { if (c[k]) c[k] = Math.round(c[k] * 0.6); }); return c; }
 /* Предметы с действием fx (мастерская и блоки). */
 function useFx(id, d) {
   var fx = d.fx, msg = [];
   if (fx.pick) { say("Отмычку применяют у двери под ключ: " + LAB.K("двойное касание у двери.", "Enter у двери.")); return false; }
   if (fx.map) { mapFloor(); msg.push("Карта этажа загружена в «Эхо»: навигатор ведёт до целей целиком."); }
   if (fx.jam) { G.st.jam = Math.max(G.st.jam || 0, fx.jam); msg.push("Глушилка включена: камеры и датчики ОКО вас не видят."); }
-  if (fx.antitox) { G.st.antitox = Math.max(G.st.antitox || 0, fx.antitox); if (G.st.poison) { G.st.poison = 0; msg.push("Яд вышел."); } msg.push("Яды и споры пока не действуют."); }
+  /* (3.7, нелогичность) респиратор и фильтр защищают дыхание — газ, споры, ядовитые пары (st.antitox);
+     яд укуса и съеденное они не останавливают, и яд, что уже в крови, от маски не выходит. Антитоксин —
+     лекарство (fx.cure): снимает отравление и на время гасит и вдохнутое, и то, что в крови (st.atoxIn) */
+  if (fx.antitox) {
+    G.st.antitox = Math.max(G.st.antitox || 0, fx.antitox);
+    if (fx.cure) { G.st.atoxIn = Math.max(G.st.atoxIn || 0, fx.antitox); G.st.atoxSrc = "drug"; msg.push("Яды, споры и туман пока не действуют."); }
+    else { if (!(G.st.atoxIn > 0)) G.st.atoxSrc = "mask"; msg.push("Дышите через фильтр: газ, споры и ядовитые пары пока не действуют. От укуса и от съеденного фильтр не спасёт."); }
+  }
   if (fx.shield) { G.st.shield = Math.max(G.st.shield, fx.shield); G.st.shieldT = 40; msg.push("Щит: " + G.st.shield + "."); }
   if (fx.haste) { G.st.haste = Math.max(G.st.haste, fx.haste); msg.push("Ускорение."); }
   if (fx.cloak) { G.st.cloak = Math.max(G.st.cloak, fx.cloak); msg.push("Маскировка."); }
@@ -3296,6 +3310,7 @@ function useFx(id, d) {
   if (fx.cure) bodyApply({ detox: 25 }, msg);
   bodyApply(fx, msg);
   G.inv[id]--;
+  if (d.leaves && LAB.ITEMS[d.leaves]) { G.inv[d.leaves] = (G.inv[d.leaves] || 0) + 1; msg.push(LAB.ITEMS[d.leaves].n + " — в рюкзаке."); } /* (3.7) выпитый термос остаётся пустым */
   if (LAB.chem) LAB.chem.afterUse(id); /* (3.0) мутация от составов на мутагене, антимутагенное действие */
   A("play", fx.heal ? "heal" : fx.map ? "scan" : "inject");
   say(d.n + ". " + msg.join(" ") + " Осталось: " + (G.inv[id] || 0) + ".");
@@ -3726,7 +3741,7 @@ function characterText() {
   lines.push("Сытость " + Math.round(bb.food) + " из 100: " + bodyWord("food") + ". Бодрость " + Math.round(bb.wake) + ": " + bodyWord("wake") + ". Токсины " + Math.round(bb.tox) + ": " + bodyWord("tox") + ". Нейронагрузка " + Math.round(bb.neuro) + ": " + bodyWord("neuro") + ".");
   lines.push("Аптечки " + (G.inv.medkit_s || 0) + ", большие аптечки " + (G.inv.medkit_l || 0) + ", бинты " + (G.inv.bandage || 0) + ", стимуляторы " + (G.inv.stim || 0) + ", антидоты " + (G.inv.antidote || 0) + ", сорбенты " + (G.inv.sorbent || 0) + ", еды " + FOODS().reduce(function (a, k) { return a + (G.inv[k] || 0); }, 0) + ".");
   var st = [];
-  if (G.st.poison) st.push("отравление"); if (G.st.bleed) st.push("кровотечение"); if (G.st.slow) st.push("замедление"); if (G.st.deaf) st.push("звон в ушах"); if (G.st.antitox) st.push("фильтр противогаза"); if (G.st.shield) st.push("силовой щит " + G.st.shield); if (G.st.haste) st.push("ускорение"); if (G.st.cloak) st.push("маскировка"); if (LAB.combat && LAB.combat.hidden && LAB.combat.hidden()) st.push("в укрытии"); if (LAB.stash) st = st.concat(LAB.stash.status());
+  if (G.st.poison) st.push("отравление"); if (G.st.bleed) st.push("кровотечение"); if (G.st.slow) st.push("замедление"); if (G.st.deaf) st.push("звон в ушах"); if (G.st.antitox) st.push(G.st.atoxIn > 0 ? "антитоксин" : "фильтр противогаза"); if (G.st.shield) st.push("силовой щит " + G.st.shield); if (G.st.haste) st.push("ускорение"); if (G.st.cloak) st.push("маскировка"); if (LAB.combat && LAB.combat.hidden && LAB.combat.hidden()) st.push("в укрытии"); if (LAB.stash) st = st.concat(LAB.stash.status());
   if (st.length) lines.push("Состояние: " + st.join(", ") + ".");
   lines.push("Энергия имплантов " + G.en + " из " + G.enMax + ". Уровень героя " + G.lvl + ", опыт " + G.xp + " из " + LAB.xpNeed(G.lvl) + ". Сила " + G.str + ", ловкость " + G.agi + ", интеллект " + G.mind + ", харизма " + G.cha + ". Кредиты " + G.credits + ".");
   if (LAB.chem) lines.push(LAB.chem.line()); /* (3.0) ступени химии */

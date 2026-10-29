@@ -119,6 +119,7 @@ function annexLoot(r, L, F, tag, ot, lean, only) {
   return out.filter(function (x) { return x && (x.kind !== "item" || (x.item && LAB.ITEMS[x.item])); });
 }
 LAB.annexLoot = annexLoot;
+LAB.annexPick = catPick; /* (3.7) вещь раздела по глубине — для находок обстановки (fixtures.js, library.js) */
 
 /* ════════ ПОСТРОЕНИЕ ════════
    Вдоль каждой стены каждого коридора — ряд помещений: где больше, где

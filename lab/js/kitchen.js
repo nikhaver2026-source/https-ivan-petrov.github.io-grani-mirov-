@@ -51,14 +51,17 @@ function dec(id) { var g = G(); g.inv[id]--; if (!(g.inv[id] > 0)) delete g.inv[
    попадают — этажи прежних записей те же; src: find — не на прилавках;
    brew — заваривают кипятком. */
 var ITEMS = {
-  milk:      { n: "Молоко «за вредность»", icon: "🥛", kind: "food", cat: "food", cold: 1, src: "find", acc: "молоко", desc: "Треугольный пакет молока: его выдавали тем, кто работает с вредными веществами. Сытость плюс 8, выводит токсины. Можно долить в чай или кофе у чайника.", food: 8, heal: 4, detox: 6, price: 4, eat: "gulp", depth: 1 },
-  kefir:     { n: "Кефир в бутылке", icon: "🍶", kind: "food", cat: "food", cold: 1, src: "find", acc: "кефир", desc: "Стеклянная бутылка с крышечкой из фольги. Сытость плюс 12, выводит токсины.", food: 12, heal: 5, detox: 4, price: 5, eat: "gulp", depth: 1 },
-  dsausage:  { n: "Докторская колбаса", icon: "🥓", kind: "food", cat: "food", cold: 1, src: "find", desc: "Полбатона варёной колбасы в бумаге из буфета. Сытость плюс 28, здоровье плюс 5.", food: 28, heal: 5, price: 10, eat: "chew", depth: 1 },
-  eggs:      { n: "Варёные яйца", icon: "🥚", kind: "food", cat: "food", cold: 1, src: "find", desc: "Три крутых яйца в бумажном кульке, на скорлупе карандашом — дата. Сытость плюс 18, энергия имплантов плюс 6.", food: 18, en: 6, price: 6, eat: "chew", depth: 1 },
-  lunchbox:  { n: "Обед в контейнере", icon: "🍱", kind: "food", cat: "food", cold: 1, src: "find", desc: "Пластиковый контейнер на защёлках: гречка с котлетой, принесённая из дома. Сытость плюс 34, здоровье плюс 6. Разогретый на плите — сытнее.", food: 34, heal: 6, price: 12, eat: "chew", depth: 1 },
+  milk:      { n: "Молоко «за вредность»", icon: "🥛", kind: "food", cat: "food", cold: 1, src: "find", acc: "молоко", desc: "Треугольный пакет молока: его выдавали тем, кто работает с вредными веществами. Сытость плюс 8, выводит токсины. Можно долить в чай или кофе у чайника. Три недели в холодильнике: бывает, что и скисло.", food: 8, heal: 4, detox: 6, stale: 0.3, price: 4, eat: "gulp", depth: 1 },
+  kefir:     { n: "Кефир в бутылке", icon: "🍶", kind: "food", cat: "food", cold: 1, src: "find", acc: "кефир", desc: "Стеклянная бутылка с крышечкой из фольги. Сытость плюс 12, выводит токсины. Бывает, что и перекис.", food: 12, heal: 5, detox: 4, stale: 0.1, price: 5, eat: "gulp", depth: 1 },
+  dsausage:  { n: "Докторская колбаса", icon: "🥓", kind: "food", cat: "food", cold: 1, src: "find", desc: "Полбатона варёной колбасы в бумаге из буфета. Сытость плюс 28, здоровье плюс 5. Три недели в холодильнике: бывает, что и заветрилась.", food: 28, heal: 5, stale: 0.25, price: 10, eat: "chew", depth: 1 },
+  eggs:      { n: "Варёные яйца", icon: "🥚", kind: "food", cat: "food", cold: 1, src: "find", desc: "Три крутых яйца в бумажном кульке, на скорлупе карандашом — дата, и дата давняя: бывает, что и несвежие. Сытость плюс 18, энергия имплантов плюс 6.", food: 18, en: 6, stale: 0.15, price: 6, eat: "chew", depth: 1 },
+  lunchbox:  { n: "Обед в контейнере", icon: "🍱", kind: "food", cat: "food", cold: 1, src: "find", desc: "Пластиковый контейнер на защёлках: гречка с котлетой, принесённая из дома. Сытость плюс 34, здоровье плюс 6. Разогретый на плите — сытнее. Три недели в холодильнике: бывает, что и прокис.", food: 34, heal: 6, stale: 0.35, price: 12, eat: "chew", depth: 1 },
   lemon:     { n: "Лимон", icon: "🍋", kind: "food", cat: "food", cold: 1, src: "find", desc: "Лимон, начатый с одного бока. Так — кисло, зато выводит токсины; долька в горячий чай — вкуснее.", food: 2, detox: 6, wake: 3, price: 4, eat: "chew", depth: 1 },
   teabag:    { n: "Чайный пакетик", icon: "🍵", kind: "food", cat: "food", kit: 1, src: "find", brew: "tea", desc: "Пакетик чёрного чая на ниточке. Заваривают кипятком: подойдите к чайнику.", price: 1, depth: 1 },
   instcoffee:{ n: "Растворимый кофе", icon: "☕", kind: "food", cat: "food", kit: 1, src: "find", brew: "cof", desc: "Растворимый кофе на одну кружку, в бумажном пакетике. Заваривают кипятком: подойдите к чайнику.", price: 2, depth: 1 },
+  /* (3.7) пустой термос буровиков — после выпитого (b1.js, g_thermos: leaves); чай в него наливают у
+     вскипевшего чайника (thermos ниже), а не собирают на верстаке */
+  g_thermos_e:{ n: "Пустой термос", icon: "🫙", kind: "tool", cat: "tool", fxOnly: true, src: "find", desc: "Стальной термос буровиков с пробкой на цепочке. Чай в него наливают у вскипевшего чайника: две кружки кипятка и пакетик чая, с сахаром — слаще.", price: 12, depth: 12 },
   sugar:     { n: "Сахар-рафинад", icon: "🧊", kind: "food", cat: "food", kit: 1, src: "find", desc: "Кусочек сахара. В чай или кофе — слаще и сытнее; можно и так разгрызть: энергия имплантов плюс 5.", food: 2, en: 5, price: 1, eat: "crunch", depth: 1 }
 };
 if (LAB.ITEMS) for (var ik in ITEMS) if (!LAB.ITEMS[ik]) LAB.ITEMS[ik] = ITEMS[ik];
@@ -157,6 +160,12 @@ function isBoiling(o) {
 function isHot(s) { return s.kt != null && nowMin() < s.kt; }
 function cupCold(c) { return !c || nowMin() - c.t >= CUP_MIN; }
 function sinkHere(o) { return CUR().fl.objs.some(function (q) { return q.type === "sink" && q.room === o.room && o.room != null && o.room >= 0; }); }
+function samNear() {
+  var fl = CUR() && CUR().fl;
+  if (!fl) return null;
+  for (var i = 0; i < fl.objs.length; i++) { var q = fl.objs[i]; if (q.type === "fx" && q.fx === "samovar" && cheb(q) <= 1) return q; }
+  return null;
+}
 function kettleNear() {
   var fl = CUR() && CUR().fl;
   if (!fl) return null;
@@ -257,6 +266,7 @@ function items(o) {
     if (has(s, "tea")) out.push({ label: "Заварить чай", fn: function () { brew(o, "tea"); } });
     if (has(s, "cof")) out.push({ label: "Заварить растворимый кофе", fn: function () { brew(o, "cof"); } });
     if (g.inv.herbtea > 0) out.push({ label: "Заварить травяной сбор", fn: function () { brew(o, "herb"); } });
+    if (g.inv.g_thermos_e > 0 && s.kw >= 2 && has(s, "tea")) out.push({ label: "Налить чай в термос: две кружки кипятка и пакетик чая" + (has(s, "sug") ? ", с сахаром" : ""), fn: function () { thermos(o); } });
     if (g.inv.noodles > 0) out.push({ label: "Залить кипятком лапшу", fn: function () { soak(o, "noodles"); } });
     if (g.inv.soupcup > 0) out.push({ label: "Залить кипятком суп-концентрат", fn: function () { soak(o, "soupcup"); } });
     out.push({ label: "Налить кружку кипятка", fn: function () { brew(o, "water"); } });
@@ -338,14 +348,33 @@ function brew(o, base, own) {
   }, 1800);
   return true;
 }
+/* (3.7, нелогичность) Термос буровиков наполняют здесь: прежде «термос с горячим сладким
+   чаем» собирали на верстаке из биогеля, реагента и лома. Две кружки кипятка, пакетик чая
+   и, если есть, кусочек сахара. */
+function thermos(o) {
+  var s = kst(o), g = G();
+  if (!isHot(s) || (s.kw || 0) < 2) { say("Нужны две кружки кипятка: долейте воды и вскипятите."); return false; }
+  if (!(g.inv.g_thermos_e > 0)) { say("Пустого термоса у вас нет."); return false; }
+  if (danger()) { if (LAB.UI && LAB.UI.error) LAB.UI.error(); say("Не до чая: рядом опасность."); return false; }
+  if (!useSup(s, "tea")) { say("Чая нет: ни у чайника, ни в рюкзаке."); return false; }
+  var sweet = has(s, "sug") && useSup(s, "sug");
+  s.kw -= 2; dec("g_thermos_e"); g.inv.g_thermos = (g.inv.g_thermos || 0) + 1;
+  UIx("closeAll");
+  at("kettle_pour", o);
+  spend(2); turns(1);
+  say("Вы заливаете в термос две кружки кипятка, опускаете пакетик" + (sweet ? " и кусочек сахара" : "") + " и закручиваете пробку. Термос с чаем — в рюкзаке.");
+  if (gm().autosaveSoon) gm().autosaveSoon();
+  return true;
+}
 /* Лапша и суп-концентрат: залить кипятком — и есть. */
 var SOAK = { noodles: "Лапша набухает в кипятке; вы едите её, обжигаясь.", soupcup: "Порошок расходится в кипятке густым супом; вы пьёте его маленькими глотками." };
-function soak(o, id) {
-  var s = kst(o), g = G(), d = LAB.ITEMS[id];
-  if (!isHot(s) || !s.kw) { say("Кипятка нет: сначала вскипятите чайник."); return false; }
+function soak(o, id, sam) {
+  var s = sam ? sst(o) : kst(o), g = G(), d = LAB.ITEMS[id];
+  if (sam ? !sHot(s) || !s.sw : !isHot(s) || !s.kw) { say(sam ? "Кипятка нет: самовар холодный или пуст." : "Кипятка нет: сначала вскипятите чайник."); return false; }
   if (!(g.inv[id] > 0) || !d) { say("Этого в рюкзаке нет."); return false; }
   if (danger()) { if (LAB.UI && LAB.UI.error) LAB.UI.error(); say("Не до еды: рядом опасность."); return false; }
-  dec(id); s.kw--;
+  dec(id);
+  if (!sam) s.kw--; else if (!s.sk) s.sw--;
   UIx("closeAll");
   at("kettle_pour", o);
   spend(4); turns(1);
@@ -353,7 +382,7 @@ function soak(o, id) {
   gm().bodyApply({ food: Math.round((d.food || 0) * 1.25), wake: (d.wake || 0) + 3, detox: d.detox || 0 }, m);
   if (d.heal) { var h0 = g.hp; g.hp = Math.min(g.hpMax, g.hp + d.heal + 3); if (g.hp > h0) m.push("Здоровье " + g.hp + "."); }
   gm().later(function () { if (G() === g) A("play", id === "noodles" ? "eat_chew" : "drink_sip"); }, 1600);
-  say(SOAK[id] + " С кипятком из чайника — сытнее. " + m.join(" "));
+  say(SOAK[id] + " С кипятком из " + (sam ? "самовара" : "чайника") + " — сытнее. " + m.join(" "));
   ev("cook");
   if (gm().autosaveSoon) gm().autosaveSoon();
   return true;
@@ -434,11 +463,166 @@ function examine(o) {
   return out.join(" ");
 }
 
+/* ════════ САМОВАР ════════
+   (3.7, нелогичность) Прежде любой самовар был «ещё тёплым: угли в трубе не догорели» и
+   наливал чай раз в час без конца — и в брошенной чайной буровиков, и в закусочной, где
+   по описанию помещения он пуст. Теперь — по помещению:
+   · за самоваром смотрят (угли подкладывают по очереди, меняют по графику, не догорают) —
+     он горячий, воду доливают и чай заваривают здешние: стакан — раз в час, как прежде;
+   · пустой по описанию — воды в нём нет;
+   · брошенный — холодный, воды на несколько стаканов, в ведёрке у трубы — щепа и угли на
+     одну-две растопки. Растопить — четверть часа, горячим держится два часа и остывает.
+     Без воды не растапливают: самовар распаяется. Воду доливают из-под крана, если в
+     помещении раковина, или из бутылки; чай — из пачки на подносе или свой пакетик, без
+     чая — кипяток.
+   Состояние у вещи этажа (objState): sw — воды, стаканов; sh — горячий до (минута игры);
+   sf — растопок; sk — за самоваром смотрят; tea, sug — на подносе; sAt — когда пили. */
+var SMAX = 8, SHOT = 120, SFIRE = 15, SGAP_K = 60, SGAP = 20;
+/* стакан чаю из самовара — как прежде: мера из описания самовара (fixtures_data.js) */
+function samoFx() { var d = LAB.FIX && LAB.FIX.T && LAB.FIX.T.samovar, a = d && d.a && d.a[0]; return (a && a[2] && a[2].fx) || { wake: 16, neuro: -14, heal: 8, food: 6 }; }
+function sst(o) {
+  var s = gm().objState(o);
+  if (s.sw == null) {
+    var r = LAB.Rng(G().seed, "samovar37:" + CUR().key + ":" + o.id), rm = o.room != null && o.room >= 0 ? CUR().fl.rooms[o.room] : null, d = (rm && rm.desc) || "";
+    s.sk = /подкладыва|по графику|не догора|всегда горяч|до сих пор т[её]пл/i.test(d) ? 1 : 0;
+    s.sw = s.sk ? SMAX : /самовар[^.]*пуст/i.test(d) ? 0 : r.int(3, 6);
+    s.sf = s.sk ? 0 : r.int(1, 2);
+    s.tea = s.sk ? 0 : r.chance(0.7) ? r.int(2, 6) : 0;
+    s.sug = s.sk ? 0 : r.chance(0.6) ? r.int(3, 8) : 0;
+  }
+  return s;
+}
+function sHot(s) { return !!s.sk || (s.sh != null && nowMin() < s.sh); }
+function glasses(n) { return n + " " + pl(n, "стакан", "стакана", "стаканов"); }
+function samLine(o) {
+  var s = sst(o), out = [], p = [];
+  if (s.sk) out.push("Самовар горячий, пыхтит: за ним здесь смотрят — угли подкладывают, воду доливают, чай заваривают.");
+  else if (!s.sw) out.push("Самовар пуст: краник сух, медь звенит от щелчка.");
+  else if (sHot(s)) out.push("Самовар горячий: кипятка — на " + glasses(s.sw) + ".");
+  else out.push((s.sh != null ? "Самовар остыл: угли прогорели. Воды — на " : "Самовар холодный: воды — на ") + glasses(s.sw) + ".");
+  if (!s.sk) out.push(s.sf > 0 ? "В ведёрке у трубы — щепа и угли на " + s.sf + " " + pl(s.sf, "растопку", "растопки", "растопок") + "." : "Щепы и углей больше нет: растапливать нечем.");
+  if (s.tea) p.push("пачка чая, " + s.tea + " " + pl(s.tea, "пакетик", "пакетика", "пакетиков"));
+  if (s.sug) p.push("сахар, " + s.sug + " " + pl(s.sug, "кусочек", "кусочка", "кусочков"));
+  if (p.length) out.push("На подносе: " + p.join("; ") + ".");
+  return out.join(" ");
+}
+function samItems(o) {
+  var s = sst(o), g = G(), out = [], hot = sHot(s);
+  out.push({ label: samLine(o), info: true, keep: true, fn: function () { say(samLine(o)); } });
+  if (hot && s.sw > 0) {
+    if (s.sk || has(s, "tea")) {
+      out.push({ label: "Налить стакан чаю", fn: function () { samDrink(o, "tea", false); } });
+      if (!s.sk && has(s, "sug")) out.push({ label: "Налить стакан чаю с сахаром", fn: function () { samDrink(o, "tea", true); } });
+    }
+    if (has(s, "cof")) out.push({ label: "Заварить растворимый кофе", fn: function () { samDrink(o, "cof", false); } });
+    if (g.inv.herbtea > 0) out.push({ label: "Заварить травяной сбор", fn: function () { samDrink(o, "herb", false); } });
+    if (g.inv.noodles > 0) out.push({ label: "Залить кипятком лапшу", fn: function () { soak(o, "noodles", true); } });
+    if (g.inv.soupcup > 0) out.push({ label: "Залить кипятком суп-концентрат", fn: function () { soak(o, "soupcup", true); } });
+    if (!s.sk) out.push({ label: "Налить стакан кипятку", fn: function () { samDrink(o, "water", false); } });
+  }
+  if (!hot && !s.sk) {
+    if (s.sw > 0 && s.sf > 0) out.push({ label: "Растопить самовар: щепа и угли в трубу, раздуть — четверть часа", fn: function () { samFire(o); } });
+    else if (s.sf > 0) out.push({ label: "Растопить нельзя: без воды самовар распаяется", info: true, keep: true, fn: function () { say("Без воды самовар не растапливают: распаяется. Сначала налейте воды."); } });
+  }
+  if (!s.sk && s.sw < SMAX) {
+    if (sinkHere(o)) out.push({ label: "Налить воды из-под крана: до краёв", fn: function () { samFill(o, "tap"); } });
+    else if (g.inv.water > 0) out.push({ label: "Долить воды из бутылки: на два стакана", fn: function () { samFill(o, "bottle"); } });
+  }
+  if (s.tea || s.sug) out.push({ label: "Забрать с подноса с собой: " + [s.tea ? "чай" : "", s.sug ? "сахар" : ""].filter(Boolean).join(" и "), fn: function () { samTake(o); } });
+  out.push({ label: "Осмотреть", keep: true, fn: function () { say(samExamine(o)); } });
+  return out;
+}
+function samMenu(o) {
+  UIx("menu", "Самовар", samItems(o), { focus: 1, rebuild: function () { return samItems(o); } });
+  return true;
+}
+function samFire(o) {
+  var s = sst(o);
+  if (sHot(s)) { say("Самовар и так горячий."); return false; }
+  if (!(s.sw > 0)) { say("Без воды самовар не растапливают: распаяется."); return false; }
+  if (!(s.sf > 0)) { say("Растапливать нечем: щепа и угли кончились."); return false; }
+  if (danger()) { if (LAB.UI && LAB.UI.error) LAB.UI.error(); say("Не до самовара: рядом опасность."); return false; }
+  s.sf--;
+  UIx("closeAll");
+  at("kettle_boil", o);
+  noise(2);
+  spend(SFIRE); turns(2);
+  s.sh = nowMin() + SHOT;
+  say("Вы закладываете в трубу щепу и угли, поджигаете и раздуваете. Минут через пятнадцать самовар запел, а потом зашумел: вскипел. Горячим продержится часа два.");
+  if (gm().autosaveSoon) gm().autosaveSoon();
+  return true;
+}
+function samFill(o, how) {
+  var s = sst(o), g = G();
+  if (how === "bottle" && !(g.inv.water > 0)) { say("Бутылки с водой нет."); return false; }
+  UIx("closeAll");
+  if (how === "tap") { s.sw = SMAX; at("kettle_fill", o); spend(3); }
+  else { dec("water"); s.sw = Math.min(SMAX, s.sw + 2); at("kettle_pour", o); spend(1); }
+  say((how === "tap" ? "Вы носите воду из-под крана, пока самовар не наполнился до краёв: " : "Вы доливаете в самовар бутылку воды: ") + "воды — на " + glasses(s.sw) + "." + (sHot(s) ? " Угли ещё горят: вода догреется." : ""));
+  return true;
+}
+function samDrink(o, base, sweet) {
+  var s = sst(o), g = G();
+  if (!sHot(s)) { say("Самовар холодный: сначала растопите его."); return false; }
+  if (!(s.sw > 0)) { say("Самовар пуст."); return false; }
+  if (danger()) { if (LAB.UI && LAB.UI.error) LAB.UI.error(); say("Не до чая: рядом опасность."); return false; }
+  var gap = s.sk ? SGAP_K : SGAP, left = s.sAt != null ? gap - (nowMin() - s.sAt) : 0;
+  if (left > 0) { say("Вы только что пили: следующий стакан — примерно через " + left + " " + pl(left, "минуту", "минуты", "минут") + "."); return false; }
+  if (base === "tea" && !s.sk && !useSup(s, "tea")) { say("Чая нет: ни на подносе, ни в рюкзаке."); return false; }
+  if (base === "cof" && !useSup(s, "cof")) { say("Растворимого кофе у вас нет."); return false; }
+  if (base === "herb") { if (!(g.inv.herbtea > 0)) { say("Травяного сбора нет."); return false; } dec("herbtea"); }
+  var sug = sweet && !s.sk && useSup(s, "sug");
+  if (!s.sk) s.sw--;
+  s.sAt = nowMin();
+  var e = {}, k, m = [], src = base === "tea" ? samoFx() : BASE[base];
+  for (k in src) e[k] = src[k];
+  if (sug) for (k in ADD.sug) e[k] = (e[k] || 0) + ADD.sug[k];
+  UIx("closeAll");
+  at("kettle_pour", o);
+  spend(base === "water" ? 3 : 8); turns(1);
+  gm().bodyApply({ wake: e.wake || 0, neuro: e.neuro || 0, detox: e.detox || 0, food: e.food || 0 }, m);
+  if (e.heal) { var h0 = g.hp; g.hp = Math.min(g.hpMax, g.hp + e.heal); if (g.hp > h0) m.push("Здоровье " + g.hp + "."); }
+  if (e.en) { g.en = Math.min(g.enMax, g.en + e.en); m.push("Энергия имплантов " + g.en + "."); }
+  gm().later(function () { if (G() === g) A("play", "drink_sip"); }, 900);
+  say(SAM_T[base] + (sug ? " Сладко." : "") + (m.length ? " " + m.join(" ") : ""));
+  ev("drink_fx");
+  if (LAB.oko && LAB.oko.react) LAB.oko.react("drink");
+  if (gm().autosaveSoon) gm().autosaveSoon();
+  return true;
+}
+function samTake(o) {
+  var s = sst(o), got = [];
+  [["tea", "teabag"], ["sug", "sugar"]].forEach(function (p) {
+    if (!(s[p[0]] > 0)) return;
+    got.push(gm().giveItem({ kind: "item", item: p[1], n: s[p[0]] }, true));
+    s[p[0]] = 0;
+  });
+  if (!got.length) { say("Забирать нечего."); return false; }
+  say("Вы забираете с подноса: " + got.join(", ") + ". Заварить можно у любого чайника или самовара.");
+  UIx("refresh");
+  return true;
+}
+var SAM_T = {
+  tea: "Чай крепкий, с дымком. Вы пьёте, грея ладони о стакан.",
+  cof: "Растворимый кофе на самоварном кипятке горчит, зато сон как рукой сняло.",
+  herb: "Травы в стакане самоварного кипятка пахнут мятой и мёдом: дышится легче, мысли успокаиваются.",
+  water: "Стакан кипятку из самовара — и тот согревает."
+};
+function samExamine(o) {
+  var def = LAB.FIX && LAB.FIX.T && LAB.FIX.T.samovar;
+  return (def ? def.n + ". " + def.d : "Самовар.") + " " + samLine(o) + (sst(o).sk ? "" : sinkHere(o) ? " Раковина здесь же: воду носить недалеко." : " Раковины здесь нет: воду придётся носить в бутылке.");
+}
+
 /* ── из рюкзака: пакетик чая или кофе — у чайника ── */
 function useItem(id) {
   var d = LAB.ITEMS[id], o = kettleNear();
   if (!d || !d.brew) return false;
-  if (!o) { say(d.n + ". Заваривают кипятком: подойдите к чайнику."); return false; }
+  if (!o) {
+    var sm = samNear();
+    if (sm && sHot(sst(sm))) return samDrink(sm, d.brew, false);
+    say(d.n + ". Заваривают кипятком: подойдите к чайнику" + (sm ? " или растопите самовар." : "."));
+    return false;
+  }
   var s = kst(o);
   if (!isHot(s)) { say("Чайник холодный: сначала вскипятите его."); menu(o); return false; }
   return brew(o, d.brew, true);
@@ -446,7 +630,8 @@ function useItem(id) {
 
 LAB.kitchen = {
   coldItem: coldItem, cookedItem: cookedItem, fridgeExtra: fridgeExtra, addTo: addTo,
-  menu: menu, examine: examine, useItem: useItem, boil: boil, brew: brew, drink: drink, cupMenu: cupMenu,
+  menu: menu, examine: examine, useItem: useItem, boil: boil, brew: brew, drink: drink, cupMenu: cupMenu, sinkHere: sinkHere,
+  samovar: samMenu, samExamine: samExamine, samFire: samFire, samDrink: samDrink, samFill: samFill, samState: function (o) { return sst(o); },
   state: function (o) { return kst(o); },
   /* для проверок: кипение без ожидания, сброс */
   _boilNow: function (o) { var s = kst(o); delete boiling[kkey(o)]; s.kt = nowMin() + HOT_MIN; return s; },

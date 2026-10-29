@@ -230,6 +230,7 @@ function menu(o) {
   var def = fxDef(o);
   if (!def) return false;
   if (o.fx === "kettle" && LAB.kitchen) return LAB.kitchen.menu(o); /* (3.0) чайник — своё меню: вскипятить, заварить, сахар (kitchen.js) */
+  if (o.fx === "samovar" && LAB.kitchen && LAB.kitchen.samovar) return LAB.kitchen.samovar(o); /* (3.7) самовар — вода, растопка, остывание (kitchen.js) */
   /* (3.5) окно вещи собирается заново, когда к нему возвращаются (поели с плиты,
      прочли письмо, обыскали ящик): пункты — как вещь выглядит сейчас */
   var build = function () { return menuItems(o, def); };
@@ -266,6 +267,7 @@ function actionItem(o, def, a, s) {
     case "search": return s["s_" + label] ? { label: label + ": уже обыскано", info: true, keep: true, fn: function () { say("Здесь вы уже искали."); } } : { label: label, fn: function () { doSearch(o, def, label, p); } };
     case "salvage": return s.salv ? { label: "Разобрано на детали", info: true, keep: true, fn: function () { say(def.n + ": разобрано, остался остов."); } } : { label: label, fn: function () { doSalvage(o, def, p); } };
     case "harvest": {
+      if (harvGone(o, p, s)) return { label: p.none || label + ": больше нет", info: true, keep: true, fn: function () { say(p.none || "Здесь больше нечего брать."); } };
       var left = s.harvAt ? p.every - (nowMin() - s.harvAt) : 0;
       return left > 0 ? { label: label + ": созреет через " + minW(left), info: true, keep: true, fn: function () { say("Ещё рано: созреет через " + minW(left) + "."); } } : { label: label, fn: function () { doHarvest(o, def, p); } };
     }
@@ -430,9 +432,9 @@ function run(o, def, kind, p, label, withId) {
       spend(2); snd("ev_vent_rattle", null);
       /* (3.0) вытяжка выгоняет и туман мутагена: он тяжёлый и стекает снова — тем скорее, чем гуще; вентиль на трубе тумана не держит */
       var fogV = rm && rm.fog && o.fx !== "valves";
-      if (rm && (rm.gas || fogV)) { var fs = CUR().fs; fs.vented = fs.vented || {}; fs.vented[rm.id] = nowMin() + (fogV ? Math.round(120 / rm.fog) : 120); say(rm.gas ? "Вытяжка загудела, сквозняк потянул воздух в решётку: газ уходит. Часа два здесь можно дышать." + (fogV ? " Туман мутагена тянется следом." : "") : "Вытяжка загудела: сладковатый туман мутагена тянется в решётку. Он тяжелее воздуха и стечёт сюда снова — " + (rm.fog >= 3 ? "минут через сорок." : rm.fog >= 2 ? "примерно через час." : "часа через два.")); (function () { var ve = fs.ventEv = fs.ventEv || {}; if (!ve[rm.id]) { ve[rm.id] = 1; ev("vent", 1); } })() /* (3.5) в счёт вехи — каждое помещение один раз */; }
+      if (rm && (rm.gas || fogV)) { var fs = CUR().fs; fs.vented = fs.vented || {}; fs.vented[rm.id] = nowMin() + (fogV ? Math.round(120 / rm.fog) : 120); say(rm.gas && o.fx === "valves" ? "Вы закручиваете пропускающий вентиль до упора: шипение стихает, газ из трубы больше не идёт, а тот, что успел натечь, оседает и уходит в щели. Часа два здесь можно дышать." : rm.gas ? "Вытяжка загудела, сквозняк потянул воздух в решётку: газ уходит. Часа два здесь можно дышать." + (fogV ? " Туман мутагена тянется следом." : "") : "Вытяжка загудела: сладковатый туман мутагена тянется в решётку. Он тяжелее воздуха и стечёт сюда снова — " + (rm.fog >= 3 ? "минут через сорок." : rm.fog >= 2 ? "примерно через час." : "часа через два.")); (function () { var ve = fs.ventEv = fs.ventEv || {}; if (!ve[rm.id]) { ve[rm.id] = 1; ev("vent", 1); } })() /* (3.5) в счёт вехи — каждое помещение один раз */; }
       else if (rm && rm.fog) say("Вентиль перекрыт, но туман мутагена идёт не из трубы, а из вентиляции. Его выгоняет только вытяжка.");
-      else say("Вентилятор загудел, воздух посвежел. Газа здесь нет, но дышать стало легче.");
+      else say(o.fx === "valves" ? "Вы закручиваете пропускающий вентиль до упора: шипение стихло. Газа в помещении нет: шёл пар." : "Вентилятор загудел, воздух посвежел. Газа здесь нет, но дышать стало легче.");
       noise(2);
       return;
     }
@@ -442,10 +444,18 @@ function run(o, def, kind, p, label, withId) {
       return;
     }
     case "scan": {
-      var g = G(), nw = g.weapons.length;
-      snd(nw ? "alarm_short" : "term_beep", "term_beep");
-      say(nw ? "Рамка звенит на весь пост: металл. «Эхо» насчитывает " + nw + " " + pl(nw, "ствол", "ствола", "стволов") + " и батареи в рюкзаке." : "Рамка молчит: металла при вас почти нет.");
-      if (nw) noise(4);
+      /* (3.7, нелогичность) рамка звенит на металл: оружие, батареи, лом и детали, броня с металлом;
+         прежде она насчитывала «стволы» даже у дубинки и «батареи» в пустом рюкзаке */
+      var g = G(), nw = g.weapons.length, met = [], bat = 0, sc = 0, ak;
+      for (ak in (g.ammo || {})) bat += g.ammo[ak] > 0 ? g.ammo[ak] : 0;
+      ["scrap", "magnet", "wire", "lead", "servo"].forEach(function (k) { sc += g.inv[k] > 0 ? g.inv[k] : 0; });
+      if (nw) met.push(nw + " " + pl(nw, "единица", "единицы", "единиц") + " оружия");
+      if (bat) met.push("батареи и заряды");
+      if (sc) met.push("лом и детали");
+      if (g.armor && !CLOTH[g.armor.base]) met.push("броня");
+      snd(met.length ? "alarm_short" : "term_beep", "term_beep");
+      say(met.length ? "Рамка звенит на весь пост: металл. «Эхо» насчитывает: " + met.join(", ") + "." : "Рамка молчит: металла при вас почти нет.");
+      if (met.length) noise(4);
       return;
     }
     case "cams": {
@@ -480,9 +490,11 @@ function run(o, def, kind, p, label, withId) {
          с одного пресса: прежде лом покупали у инженера и без конца перепродавали пластины */
       var inv = G().inv, made = s.plates || 0;
       if (made >= 2) { say("Матрица пресса стёрлась: ровной пластины он больше не выправит."); return; }
-      if ((inv.scrap || 0) < 4) { say("Нужно четыре куска металлолома: пресс выправляет пластину из лома. У вас " + (inv.scrap || 0) + "."); return; }
-      inv.scrap -= 4; inv.plate = (inv.plate || 0) + 1; s.plates = made + 1; spend(10); snd("pry", null); noise(8);
-      say("Пресс ухает, лом сминается в ровный лист. Бронепластина готова: её вставляют в надетую броню." + (s.plates >= 2 ? " Матрица пресса стёрлась: это была последняя." : " Матрицы хватит ещё на одну."));
+      /* (3.7, нелогичность) бронепластина — сталь и слой керамики, как у верстака (data.js, plate): прежде пресс
+         «выправлял» её из одного лома */
+      if ((inv.scrap || 0) < 4 || (inv.ceramic || 0) < 1) { say("Нужно четыре куска металлолома и керамокомпозит: пресс сминает лом в лист и вдавливает в него слой керамики. У вас лома " + (inv.scrap || 0) + ", керамокомпозита " + (inv.ceramic || 0) + "."); return; }
+      inv.scrap -= 4; inv.ceramic -= 1; if (!(inv.ceramic > 0)) delete inv.ceramic; inv.plate = (inv.plate || 0) + 1; s.plates = made + 1; spend(10); snd("pry", null); noise(8);
+      say("Пресс ухает, лом сминается в ровный лист, и плита вдавливает в него слой керамики. Бронепластина готова: её вставляют в надетую броню." + (s.plates >= 2 ? " Матрица пресса стёрлась: это была последняя." : " Матрицы хватит ещё на одну."));
       return;
     }
     case "map": {
@@ -512,6 +524,7 @@ function run(o, def, kind, p, label, withId) {
       var a0 = G().armor;
       if (!a0) { say("Броня не надета: подшивать нечего."); return; }
       if (s.mended) { say("Нитки кончились: катушка пуста."); return; }
+      if (!SEWN[a0.base]) { say("Это не сшить: " + (LAB.ARMORS[a0.base] ? LAB.ARMORS[a0.base].n : "броня") + " — пластины, рама и крепления, а не ткань. Её чинят у верстака или ремнабором."); return; }
       if (LAB.armorCond(a0) >= 85) { say("Швы и крепления брони целы: подшивать нечего. Остальное — у верстака."); return; }
       s.mended = 1; spend(20);
       a0.cond = Math.min(85, LAB.armorCond(a0) + 25);
@@ -661,10 +674,15 @@ function tuneInst(o, p, s) {
   setTimeout(function () { say({ lullaby: "Колыбель качается, мелодия тянется сама.", bell: "Колокол гудит долго: звук уходит по коридорам.", piano: "Клавиши чуть расстроены, но мелодия узнаётся.", guitar: "Струны отзываются тепло, одна дребезжит.", accordion: "Меха вздыхают, аккорды плывут по комнате." }[p.inst] + " " + m.join(" ")); }, 600 + seq.length * 400);
   ev("play", 1);
 }
-/* Разогреть еду на плите или в печи: сытнее и бодрит. */
+/* Разогреть еду на плите или в печи: сытнее и бодрит.
+   (3.7, нелогичность) Только то, что греют: консервы, каши, хлеб, колбасу, обед в контейнере,
+   пайки, грибы. Прежде на плите «разогревали» таблетки глюкозы, витамины, газировку, кефир,
+   яблоки и сок — «тёплая еда пахнет домом». Лапшу и суп-концентрат заливают кипятком у
+   чайника или самовара (kitchen.js), лапшу — ещё и из крана автомата с едой (office.js). */
+var COOK_OK = { stew: 1, ration: 1, bread: 1, porridge: 1, fishcan: 1, sandwich: 1, freshbread: 1, sausage: 1, dsausage: 1, lunchbox: 1, mre: 1, pemmican: 1, mushroom: 1 };
 function cookMenu(o) {
-  var g = G(), foods = Object.keys(LAB.ITEMS).filter(function (k) { return LAB.ITEMS[k].kind === "food" && g.inv[k] > 0 && (LAB.ITEMS[k].food || 0) >= 5; });
-  if (!foods.length) { say("Разогревать нечего: в рюкзаке нет еды."); return; }
+  var g = G(), foods = Object.keys(LAB.ITEMS).filter(function (k) { return COOK_OK[k] && LAB.ITEMS[k].kind === "food" && g.inv[k] > 0; });
+  if (!foods.length) { say("Разогревать нечего: в рюкзаке нет того, что греют, — консервов, каши, хлеба, колбасы, пайка, обеда в контейнере или грибов." + (g.inv.noodles > 0 || g.inv.soupcup > 0 ? " Лапшу и суп-концентрат заливают кипятком у чайника или у самовара, лапшу — ещё и из крана автомата с едой." : "")); return; }
   UIx("menu", "Разогреть", foods.map(function (k) {
     var d = LAB.ITEMS[k];
     return { label: d.n + " (" + g.inv[k] + ")", fn: function () {
@@ -673,7 +691,10 @@ function cookMenu(o) {
       var m = []; gm().bodyApply({ food: Math.round((d.food || 0) * 1.3), detox: d.detox || 0, wake: 4 }, m);
       if (d.heal) { g.hp = Math.min(g.hpMax, g.hp + d.heal + 2); m.push("Здоровье " + g.hp + "."); }
       if (d.en) { g.en = Math.min(g.enMax, g.en + d.en); }
-      say("Тёплая еда пахнет домом. Вы едите, обжигаясь. " + m.join(" "));
+      /* (3.7) прокисшее и на плите остаётся прокисшим: подогрев не спасает */
+      var sour = d.stale && Math.random() < d.stale;
+      if (sour) gm().bodyApply({ tox: 15 }, m);
+      say((sour ? "Подогрели, но оно несвежее: подташнивает. " : "Тёплая еда пахнет домом. Вы едите, обжигаясь. ") + m.join(" "));
       ev("cook", 1);
     } };
   }));
@@ -681,7 +702,24 @@ function cookMenu(o) {
 
 /* ── обыскать, разобрать, собрать урожай ── */
 var COOKFX = { serving: 1, cauldron: 1, oven: 1, barrels: 1, smoker: 1 };
-var TAGMAP = { books: "paper", vent: "smoke", cushion: "smoke", top: "store", under: "smoke", med: "med", mattress: "stash", drawer: "paper", guard: "arms", food: "food", home: "home", bread: "food", smoked: "food", barrel: "food", soil: "herbs", seeds: "herbs", bio: "bio", lab: "chem", rad: "rad", arms: "armory", pockets: "smoke", parcel: "tech", cash: "smoke", ore: "parts", tools: "tech", janitor: "janitor", mail: "paper", lost: "smoke", expedition: "protect", laundry: "home" };
+var TAGMAP = { books: "paper", vent: "smoke", cushion: "smoke", top: "store", under: "smoke", med: "med", mattress: "stash", drawer: "paper", guard: "arms", food: "food", home: "home", bread: "food", smoked: "food", barrel: "food", soil: "stash", seeds: "herbs", bio: "bio", lab: "chem", rad: "rad", arms: "armory", pockets: "smoke", parcel: "tech", cash: "smoke", ore: "parts", tools: "tech", janitor: "janitor", mail: "paper", lost: "smoke", expedition: "protect", laundry: "home" };
+/* (3.7, нелогичность) Что лежит там, где ищут: прежде в барабанах стиральных машин находили еду
+   и лекарства, в банках с семенами — аптечки, в ящиках с кернами и в вагонетке с породой —
+   микросхемы, на щите с инструментами — батареи и носители данных. Земля в кадке, «будто её
+   недавно копали», — чей-то тайник (TAGMAP: soil → stash). */
+function oneOf(r, L, list) { var ok = list.filter(function (e) { return LAB.ITEMS[e[0]] && (LAB.ITEMS[e[0]].depth || 1) <= Math.max(L, e[2] || 1); }); var sum = 0, x; ok.forEach(function (e) { sum += e[1]; }); x = r.next() * sum; for (var i = 0; i < ok.length; i++) { x -= ok[i][1]; if (x < 0) return ok[i][0]; } return ok.length ? ok[0][0] : "scrap"; }
+var OWN_LOOT = {
+  laundry: function (r, L, F) { /* забытое в карманах белья: мелочь, а то и ценная вещица */
+    if (r.chance(0.6)) return [{ kind: "credits", n: LAB.credits(3 + r.int(0, 5), L, F) }];
+    var v = LAB.annexPick && LAB.annexPick(r, L, "valuable"); return v ? [{ kind: "item", item: v, n: 1 }] : [{ kind: "credits", n: LAB.credits(4, L, F) }];
+  },
+  seeds: function (r, L) { return [{ kind: "item", item: oneOf(r, L, [["herbtea", 5], ["nuts", 4]]), n: r.chance(0.3) ? 2 : 1 }]; },
+  ore: function (r, L) { /* порода: кварц и слюда звучащего слоя, обломки буровых коронок */
+    var min = L >= 13 ? (L >= 18 && r.chance(0.4) ? "g_mica" : "g_quartz") : null;
+    return [{ kind: "item", item: min && LAB.ITEMS[min] && r.chance(0.5) ? min : "scrap", n: 1 + (r.chance(0.3) ? 1 : 0) }];
+  },
+  tools: function (r, L) { return [{ kind: "item", item: oneOf(r, L, [["wirecutters", 3], ["toolkit", 2], ["fieldkit", 3], ["tape", 3]]), n: 1 }]; }
+};
 function doSearch(o, def, label, p) {
   var s = st(o);
   if (s["s_" + label]) { say("Здесь вы уже искали."); return; }
@@ -693,12 +731,13 @@ function doSearch(o, def, label, p) {
   if (LAB.combat && LAB.combat.spendTurns) { LAB.combat.spendTurns(1, "search"); if (G().dead) return; }
   var r = rng(o, "search:" + label), L = G().L, F = G().F, loot = [];
   if (risk(p.risk, r)) return;
-  var tag = TAGMAP[p.tag] || "store";
+  var tag = TAGMAP[p.tag] || "store", own = OWN_LOOT[p.tag];
   /* (3.0) холодильная камера — как холодильник; котлы, печь, бочки, коптильня, лотки — только съестное */
   var only = o.fx === "coldroom" ? "cold" : COOKFX[o.fx] ? "cooked" : null;
   /* (2.5, просьба игрока) в тумбочке, под матрасом, в ящике — почти всегда что-то есть, бывает и две вещи */
   var n = p.tag === "mattress" || p.tag === "cash" ? 2 : r.chance(LAB.ach && LAB.ach.has("searcher") ? 0.97 : 0.88) ? (r.chance(0.25) ? 2 : 1) : 0;
-  if (n && LAB.annexLoot) loot = LAB.annexLoot(r, L, F, tag, n > 1 ? "crate" : "desk", true, only).slice(0, n).filter(function (x) { return x.kind !== "weapon" && x.kind !== "armor"; });
+  if (n && own) loot = own(r, L, F, n);
+  else if (n && LAB.annexLoot) loot = LAB.annexLoot(r, L, F, tag, n > 1 ? "crate" : "desk", true, only).slice(0, n).filter(function (x) { return x.kind !== "weapon" && x.kind !== "armor"; });
   if (p.tag === "cash" || (p.tag === "cushion" && r.chance(0.5))) loot.push({ kind: "credits", n: LAB.credits(p.tag === "cash" ? 20 : 3 + r.int(0, 6), L, F) });
   if (p.tag === "lost" && r.chance(0.6)) { var vv = ["watch", "ring", "pen", "harmonica"].filter(function (k) { return LAB.ITEMS[k]; }); if (vv.length) loot.push({ kind: "item", item: r.pick(vv), n: 1 }); }
   /* записки, что лежали здесь с самого начала (annex.js) */
@@ -727,15 +766,17 @@ function risk(kind, r) {
   if (!kind) return false;
   var g = G(), a = g.armor ? LAB.ARMORS[g.armor.base] : null, res = a && a.res ? a.res : {};
   var m = [];
-  if (kind === "shock") {
-    if ((g.inv.rubber || 0) > 0 || (a && /insulated|exo|bastion/.test(g.armor.base))) return false;
+  if (kind === "shock" || kind === "hv") {
+    if ((g.inv.wirecutters || 0) > 0 || (g.inv.rubber || 0) > 0 || (a && /insulated|exo|bastion/.test(g.armor.base))) return false;
+    /* (3.7, нелогичность) «Не влезай — убьёт»: обмотка трансформатора под напряжением бьёт сильнее искры */
+    if (kind === "hv") { if (!r.chance(0.6)) return false; var dh = r.int(16, 28); g.hp = Math.max(1, g.hp - dh); snd("hurt_shock", null); say("Разряд с обмотки бьёт в руку и отбрасывает вас от сетки! Минус " + dh + " здоровья. Под напряжением режут изолированными кусачками или в диэлектрической броне."); return false; }
     if (!r.chance(0.45)) return false;
-    var dm = r.int(5, 11); g.hp = Math.max(1, g.hp - dm); snd("hurt_shock", null); say("Искра бьёт в пальцы! Минус " + dm + " здоровья. С прорезиненной тканью на руках было бы безопасно."); return false;
+    var dm = r.int(5, 11); g.hp = Math.max(1, g.hp - dm); snd("hurt_shock", null); say("Искра бьёт в пальцы! Минус " + dm + " здоровья. С изолированными кусачками или прорезиненной тканью на руках было бы безопасно."); return false;
   }
   if (kind === "spark") { if (!r.chance(0.35)) return false; var d2 = r.int(3, 6); g.hp = Math.max(1, g.hp - d2); snd("hurt_shock", null); say("Обломок искрит и жалит руку. Минус " + d2 + " здоровья."); return false; }
   if (kind === "cut") { if ((g.inv.rubber || 0) > 0 || !r.chance(0.4)) return false; var d3 = r.int(2, 4); g.hp = Math.max(1, g.hp - d3); say("Острый край режет палец. Минус " + d3 + " здоровья."); return false; }
   if (kind === "bite") { if ((res.bio || 0) >= 0.3 || !r.chance(0.4)) return false; var d4 = r.int(4, 8); g.hp = Math.max(1, g.hp - d4); snd("hit_flesh", null); say("Что-то в клетке кусает за руку! Минус " + d4 + " здоровья."); return false; }
-  if (kind === "tox") { gm().bodyApply({ tox: 6 }, m); if (m.length) say("Пары раствора щиплют горло. " + m.join(" ")); return false; }
+  if (kind === "tox") { gm().bodyApply({ tox: 6, air: true }, m); if (m.length) say("Пары раствора щиплют горло. " + m.join(" ")); return false; }
   if (kind === "sting") { if ((res.bio || 0) >= 0.3 || !r.chance(0.5)) return false; var d5 = r.int(2, 4); g.hp = Math.max(1, g.hp - d5); say("Пчела-машина жалит разрядом. Минус " + d5 + " здоровья."); return false; }
   return false;
 }
@@ -751,13 +792,22 @@ function doSalvage(o, def, p) {
   say("Вы разбираете на ощупь, винт за винтом. Получено: " + giveAll(loot).join(" "));
   ev("salvage", 1);
 }
+/* (3.7, нелогичность) Сушёные травы под потолком не отрастают: их несколько пучков (max), и
+   всё. Живое — яблоня, грибница, куст, улей — даёт снова, когда созреет (every). */
+function harvMax(o, p) { return p.max ? p.max + h32(o.id + ":harvN") % 2 : 0; }
+function harvGone(o, p, s) { return !!p.max && (s.harvN || 0) >= harvMax(o, p); }
 function doHarvest(o, def, p) {
   var s = st(o), r = rng(o, "harv:" + nowMin());
+  if (harvGone(o, p, s)) { say(p.none || "Здесь больше нечего брать."); return; }
   if (s.harvAt && nowMin() - s.harvAt < (p.every || 0)) { say("Ещё рано: созреет через " + minW(p.every - (nowMin() - s.harvAt)) + "."); return; } /* (3.5) */
   if (risk(p.risk, r)) return;
-  s.harvAt = nowMin(); spend(2); snd("paper", null);
-  var it = { kind: "item", item: LAB.ITEMS[p.item] ? p.item : "apple", n: r.chance(0.3) ? 2 : 1 };
-  say("Собрано: " + gm().giveItem(it));
+  s.harvAt = nowMin(); s.harvN = (s.harvN || 0) + 1; spend(2); snd("paper", null);
+  var it = { kind: "item", item: LAB.ITEMS[p.item] ? p.item : "apple", n: p.max ? 1 : r.chance(0.3) ? 2 : 1 };
+  var got = [gm().giveItem(it)];
+  /* глубоко внизу у механических ульев ОКО в рамке — и пластинка воска (b2.js, k_wax) */
+  if (p.extra && LAB.ITEMS[p.extra] && G().L >= (p.extraL || 1) && r.chance(0.6)) got.push(gm().giveItem({ kind: "item", item: p.extra, n: 1 }));
+  var rest = p.max ? harvMax(o, p) - s.harvN : -1;
+  say("Собрано: " + got.join(" ") + (rest === 0 ? " Это последний." : rest > 0 ? " Осталось ещё " + rest + "." : ""));
   ev("harvest", 1);
 }
 function doRespect(o, s) {
@@ -767,11 +817,19 @@ function doRespect(o, s) {
   say("Вы стоите молча. «Эхо» тоже молчит — впервые за долгое время по своей воле. " + m.join(" "));
   ev("respect", 1);
 }
+/* (3.7, нелогичность) на манекене — защитный костюм, как сказано в описании: скафандр, комбинезон
+   от излучения, изолирующий костюм; прежде с манекена снимали любую броню вплоть до экзоскелета */
+var DUMMY = ["bio", "radsuit", "hazmat", "reactorsuit"];
+function dummySuit(r, L) { var ok = DUMMY.filter(function (k) { return LAB.ARMORS[k] && (LAB.ARMORS[k].depth || 1) <= Math.max(2, L); }); return ok.length ? r.pick(ok) : "suit"; }
+/* мягкая броня — ткань, её подшивают на швейной машинке; остальное — пластины и рамы. Без металла
+   (рамка досмотра молчит) — только ткань: в жилете пластины, в фартуке и комбинезонах от излучения — свинец */
+var CLOTH = { suit: 1, bio: 1, stealth: 1, thermal: 1, k_quiet: 1, o_blindspot: 1, o_shadowveil: 1, o_anechoic: 1, m_apron: 1, m_okocloak: 1, i_mutecloak: 1, i_phaseweave: 1 };
+var SEWN = { suit: 1, vest: 1, bio: 1, stealth: 1, thermal: 1, radcape: 1, radsuit: 1, hazmat: 1, g_rigrobe: 1, k_quiet: 1, o_blindspot: 1, o_shadowveil: 1, o_anechoic: 1, m_apron: 1, m_okocloak: 1, i_mutecloak: 1, i_phaseweave: 1 };
 function doStrip(o, def, s) {
   if (s.strip) { say(def.n + ": здесь уже ничего не висит."); return; } /* (3.5) */
   s.strip = 1;
   var r = rng(o, "strip"), L = G().L, F = G().F;
-  var a = o.fx === "mannequin" ? LAB.genArmor(r, L, F, {}) : LAB.makeArmor(L > 10 && L <= 20 && LAB.ARMORS.g_rigrobe ? "g_rigrobe" : "suit", LAB.foeLevel(L, F), r.chance(0.5) ? 0 : 1);
+  var a = o.fx === "mannequin" ? LAB.makeArmor(dummySuit(r, L), LAB.foeLevel(L, F), r.chance(0.5) ? 0 : 1) : LAB.makeArmor(L > 10 && L <= 20 && LAB.ARMORS.g_rigrobe ? "g_rigrobe" : "suit", LAB.foeLevel(L, F), r.chance(0.5) ? 0 : 1);
   say((o.fx === "mannequin" ? "Вы снимаете с манекена костюм. " : "С вешалки — рабочая одежда, ещё крепкая. ") + gm().giveItem({ kind: "armor", a: a }));
 }
 
@@ -790,11 +848,12 @@ function examine(o) {
   if (o.type === "fx") {
     var def = fxDef(o); if (!def) return "Вещь обстановки.";
     if (o.fx === "kettle" && LAB.kitchen) return LAB.kitchen.examine(o);
+    if (o.fx === "samovar" && LAB.kitchen && LAB.kitchen.samExamine) return LAB.kitchen.samExamine(o);
     out.push(def.n + ". " + def.d);
     var w = wearOf(o); if (w) out.push(w);
     if (s.salv) out.push("Её уже разобрали на детали: остался остов.");
     for (var k in s) if (k.indexOf("s_") === 0) { out.push("Здесь вы уже искали."); break; }
-    if (s.harvAt) { var left = 0; def.a.forEach(function (a) { if (a[0] === "harvest") left = a[2].every - (nowMin() - s.harvAt); }); out.push(left > 0 ? "Следующий урожай — через " + minW(left) + "." : "Снова можно собирать."); }
+    if (s.harvAt) { var left = 0, gone = ""; def.a.forEach(function (a) { if (a[0] !== "harvest") return; left = a[2].every - (nowMin() - s.harvAt); if (harvGone(o, a[2], s)) gone = a[2].none || "Брать больше нечего."; }); out.push(gone ? gone : left > 0 ? "Следующий урожай — через " + minW(left) + "." : "Снова можно собирать."); }
     if (o.notes && o.notes.length && !s.notes) out.push(def.a.some(function (a) { return a[0] === "search"; }) ? "Шуршит бумага: кажется, там что-то лежит." : "Сверху лежит сложенная записка.");
     if (rm && rm.owner && !rm.owner.m && h32(o.id) % 4 === 0) out.push("«Эхо» связывает эту вещь с хозяином помещения: " + rm.owner.n + ", " + rm.owner.post + ".");
     if (LAB.stash) { var tl0 = LAB.stash.examineLine(o); if (tl0) out.push(tl0); }
@@ -813,7 +872,7 @@ function examine(o) {
     else out.push("Похоже, внутри пусто — но проверить можно.");
   }
   if (o.type === "comp" && LAB.COMPS) { var cd = LAB.COMPS[o.kind] || LAB.COMPS.archive; out.push(cd.desc + (o.locked ? " Вход по паролю." : " Не заблокирован.")); }
-  if (o.broken) out.push("Не работает: внутри что-то перегорело.");
+  if (o.broken && !s.fixed) out.push(o.type === "coffee" ? "Не работает: в баке нет воды." : "Не работает: внутри что-то перегорело.");
   if (rm && rm.owner && (o.type === "desk" || o.type === "cabinet" || o.type === "locker")) out.push("На " + (o.type === "desk" ? "краю стола" : "дверце") + " — бирка: «" + rm.owner.n + "».");
   if (isBox && !s.open && LAB.stash) { var tl2 = LAB.stash.examineLine(o); if (tl2) out.push(tl2); }
   return out.join(" ");

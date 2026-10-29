@@ -6428,6 +6428,181 @@ LAB.ui.closeAll();
   ok(lib.vitrine && lib.grate && lib.intercom && lib.intercomCd && lib.deposit && lib.mail >= 2 && lib.catalog, "витрина, решётка, селектор, ячейки, почта, каталог (" + JSON.stringify({ v: lib.vitrine, g: lib.grate, i: lib.intercom, cd: lib.intercomCd, d: lib.deposit, m: lib.mail, c: lib.catalog }) + (lib.grateSaid ? "; решётка: " + lib.grateSaid : "") + (lib.icSaid ? "; селектор: " + lib.icSaid : "") + ")");
   ok(lib.filmOff && lib.filmOn && lib.tornLbl && lib.tornNoTape && lib.tornFixed && lib.tornTaken && lib.spliceBox, "микрофильмы — только при питании; порванную плёнку изолентой не склеить: монтажной лентой — да, а бобину можно забрать на продажу; коробка с лентой — у магнитофона (" + JSON.stringify({ off: lib.filmOff, on: lib.filmOn, lbl: lib.tornLbl, no: lib.tornNoTape, fix: lib.tornFixed, take: lib.tornTaken, box: lib.spliceBox }) + ")");
 
+  /* (3.7, просьба автора: «плёнка, склеенная изолентой, работать не будет — найди такого рода
+     нелогичности и переработай») Кофейный автомат без воды, термос, остывший стакан, плита,
+     самовар по помещению, улей и сушёные травы, рецепты, пресс, швейная машинка, манекен, рамка
+     досмотра, фильтр и антитоксин, находки по месту, скоропортящееся, разбор приборов */
+  console.log("(3.7) Нелогичности: кухня, самовар, улей, рецепты, обстановка, фильтр");
+  const nl = await page.evaluate(async () => {
+    const g = LAB.game, K = LAB.kitchen, U = LAB.ui, CB = LAB.combat, out = {};
+    const G = () => g.G;
+    const spoken = [], say0 = LAB.say; LAB.say = function (t) { spoken.push(String(t)); };
+    const said = () => spoken.join(" "), last = () => spoken[spoken.length - 1] || "";
+    const label = i => typeof i.label === "function" ? i.label() : i.label;
+    const items = () => (U.top() && U.top().items || []).map(label);
+    const click = re => { const w = U.top(); const k = w ? w.items.findIndex(i => re.test(label(i))) : -1; if (k < 0) return false; w.i = k; U.activate(); return true; };
+    const now = () => (G().day || 0) * 1440 + (G().min || 0);
+    const k0 = JSON.parse(JSON.stringify({ L: G().L, F: G().F, x: G().x, y: G().y, inv: G().inv, ammo: G().ammo, credits: G().credits, xp: G().xp, lvl: G().lvl, body: G().body, hp: G().hp, st: G().st, min: G().min, day: G().day, stats: G().stats, ach: G().ach, cupL: G().cupL || null, cupT: G().cupT || null }));
+    const arm0 = G().armor, arms0 = G().armors.slice(), wps0 = G().weapons, fs0 = JSON.stringify(G().fs);
+    const fl = g.CUR.fl, made = [];
+    const ri = g.CUR.room >= 0 ? g.CUR.room : fl.rooms.findIndex(r => r && !r.hidden), R = fl.rooms[ri], d0 = R.desc, gas0 = R.gas;
+    const mk = (fx, ty) => {
+      const o = { id: "t37_" + (ty || fx) + "_" + made.length, type: ty || "fx", x: G().x, y: G().y, room: ri };
+      if (!ty) o.fx = fx;
+      fl.objs.push(o); made.push(o);
+      const ct = g.CUR.fs.ctrap = g.CUR.fs.ctrap || {}; ct[o.id] = { k: "" }; /* без пакостей: проверяем находки, а не ловушки */
+      return o;
+    };
+    try {
+      CB.stop(); CB.foes().forEach(f => { f.dead = true; }); U.closeAll(); K._reset();
+      G().hp = Math.max(1, G().hpMax - 30); G().body.food = 30; G().body.tox = 10; G().dead = false;
+      /* 1. кофейный автомат: не сломан — в баке нет воды; от удара — забытая сдача, раз; две бутылки воды — и варит */
+      const cf = mk(null, "coffee"); cf.broken = true;
+      g.objMenu(cf); out.cofTitle = U.top() ? U.top().title : ""; out.cofMenu = items();
+      const cr0 = G().credits; click(/^Стукнуть по автомату/); out.cofKick = G().credits > cr0;
+      const cr1 = G().credits; spoken.length = 0; g.objMenu(cf); click(/^Стукнуть по автомату/); out.cofKick2 = G().credits === cr1 && /Насос всхлипнул впустую: без воды/.test(said());
+      out.cofDbg = [cr0, cr1, G().credits, said().slice(0, 160)];
+      G().inv.water = 2; g.objMenu(cf); out.cofFill = click(/^Залить в бак две бутылки воды/) && !G().inv.water && !!g.objState(cf).fixed;
+      g.objMenu(cf); out.cofWorks = !!(U.top() && !/нет воды/.test(U.top().title)); U.closeAll();
+      /* 2. термос: выпитый — пустой; чай в него наливают у вскипевшего чайника, на верстаке его не собрать */
+      G().inv.g_thermos = 1; delete G().inv.g_thermos_e;
+      g.useItem("g_thermos"); out.thermEmpty = !G().inv.g_thermos && G().inv.g_thermos_e === 1;
+      const kt = mk("kettle"), ks = K.state(kt); ks.kw = 3; ks.tea = 1; ks.sug = 1; ks.cup = null; K._boilNow(kt);
+      g.objMenu(kt); out.thermLbl = items().some(l => /^Налить чай в термос/.test(l));
+      click(/^Налить чай в термос/); out.thermFull = G().inv.g_thermos === 1 && !G().inv.g_thermos_e && ks.kw === 1 && ks.tea === 0;
+      out.thermRecipe = !LAB.RECIPES.some(r => r.out === "g_thermos"); U.closeAll();
+      /* 3. стакан из автомата остывает: через сорок минут — слабее */
+      G().inv.cup_cappuccino = 1; G().cupL = { cup_cappuccino: [1] }; G().cupT = { cup_cappuccino: [now() - 90] };
+      spoken.length = 0; g.useItem("cup_cappuccino"); out.cupCold = /Напиток остыл/.test(said());
+      G().inv.cup_cappuccino = 1; G().cupL = { cup_cappuccino: [1] }; G().cupT = { cup_cappuccino: [now()] };
+      spoken.length = 0; g.useItem("cup_cappuccino"); out.cupHot = !/Напиток остыл/.test(said());
+      /* 4. плита греет только то, что греют: не глюкозу, кефир и газировку; лапшу заливают кипятком */
+      Object.keys(G().inv).forEach(k => { const d = LAB.ITEMS[k]; if (d && d.kind === "food") delete G().inv[k]; });
+      Object.assign(G().inv, { glucose: 2, stew: 1, kefir: 1, soda_baikal: 1 });
+      const sv = mk("stove"); g.objMenu(sv); click(/^Разогреть еду/); out.cookMenu = items();
+      out.cook = out.cookMenu.some(l => /^Тушёнка/.test(l)) && !out.cookMenu.some(l => /Глюкоз|Кефир|Байкал/.test(l)); U.closeAll();
+      delete G().inv.stew; G().inv.noodles = 1; spoken.length = 0;
+      g.objMenu(sv); click(/^Разогреть еду/); out.cookNone = /Разогревать нечего/.test(said()) && /Лапшу и суп-концентрат заливают кипятком/.test(said()); U.closeAll();
+      Object.keys(G().inv).forEach(k => { const d = LAB.ITEMS[k]; if (d && d.kind === "food") delete G().inv[k]; });
+      /* 5. самовар — по помещению: брошенный холодный (растопить, остывает), пустой — без воды, за которым смотрят — горячий */
+      R.desc = "Чайная. На столе — самовар и гранёные стаканы.";
+      const s1 = mk("samovar"), ss1 = K.samState(s1);
+      out.samCold = !ss1.sk && ss1.sw >= 3 && ss1.sf >= 1 && ss1.sh == null;
+      g.objMenu(s1); const sm1 = items(); U.closeAll();
+      out.samColdMenu = sm1.some(l => /^Растопить самовар/.test(l)) && !sm1.some(l => /^Налить стакан/.test(l));
+      ss1.tea = 0; G().inv.teabag = 1;
+      out.samFire = K.samFire(s1) && ss1.sh > now();
+      const w1 = ss1.sw; out.samTea = K.samDrink(s1, "tea", false) && ss1.sw === w1 - 1 && !G().inv.teabag;
+      G().inv.teabag = 1; out.samGap = !K.samDrink(s1, "tea", false);
+      G().min = (G().min || 0) + 200;
+      g.objMenu(s1); const sm2 = items(); U.closeAll();
+      out.samCooled = !sm2.some(l => /^Налить стакан/.test(l)) && /остыл/.test(sm2[0] || "");
+      R.desc = "Закусочная у клети. А самовар рядом пуст и звенит, если по нему щёлкнуть.";
+      const s2 = mk("samovar"), ss2 = K.samState(s2); out.samEmpty = ss2.sw === 0 && !K.samFire(s2) && /распаяется/.test(last());
+      R.desc = "Посреди чайной — медный самовар, и он до сих пор тёплый: угли в трубу подкладывают по очереди.";
+      const s3 = mk("samovar"), ss3 = K.samState(s3), w3 = ss3.sw;
+      out.samKept = ss3.sk === 1 && K.samDrink(s3, "tea", false) && ss3.sw === w3;
+      R.desc = d0;
+      /* 6. улей — соты, а не батончик с овсом; мёд ульев отжимают из сотов; сушёные травы не отрастают */
+      delete G().inv.honeycomb; delete G().inv.honeybar;
+      const hv = mk("beehive"); g.objMenu(hv); click(/^Вынуть рамку/); U.closeAll();
+      out.hive = G().inv.honeycomb >= 1 && !G().inv.honeybar;
+      const rec = id => LAB.RECIPES.find(r => r.id === id);
+      out.honeyRec = !!(rec("k_r_honey") && rec("k_r_honey").need.honeycomb === 3 && !rec("k_r_honey").need.k_wax);
+      delete G().inv.herbtea;
+      const hb = mk("herbs"); let hn = 0;
+      for (let i = 0; i < 6; i++) { g.objMenu(hb); if (click(/^Взять пучок лечебных трав$/)) hn++; U.closeAll(); }
+      g.objMenu(hb); out.herbsNone = items().some(l => /Пучков не осталось/.test(l)); U.closeAll();
+      out.herbs = (hn === 3 || hn === 4) && G().inv.herbtea === hn;
+      /* 7. рецепты: синьки и дозиметра на верстаке нет; петля — из плёнки и монтажной ленты; фильтр и скафандр — не из биогеля */
+      const tp = rec("g_r_tape"), fi = rec("filter"), bi = rec("a_bio");
+      out.recipes = !rec("g_r_blueprint") && !rec("dosimeter") && !rec("g_r_thermos") && !!tp && tp.need.reel_torn === 1 && tp.need.splice === 1 && !tp.need.wire
+        && !!fi && fi.need.sorbent === 1 && !fi.need.gel && !!bi && bi.need.rubber === 3 && !bi.need.gel;
+      /* 8. пресс: бронепластина — лом и керамика, как у верстака */
+      const pr = mk("press"); G().inv.scrap = 4; delete G().inv.ceramic; delete G().inv.plate;
+      g.objMenu(pr); click(/^Выправить бронепластину/); U.closeAll(); out.pressNo = !G().inv.plate && G().inv.scrap === 4;
+      G().inv.ceramic = 1; g.objMenu(pr); click(/^Выправить бронепластину/); U.closeAll(); out.press = G().inv.plate === 1 && !G().inv.ceramic && !G().inv.scrap;
+      /* 9. швейная машинка: кирасу не сшить, комбинезон — да */
+      const sw = mk("sewing"), a1 = LAB.makeArmor("composite", 1, 0); a1.cond = 40; G().armor = a1;
+      spoken.length = 0; g.objMenu(sw); click(/^Подшить надетую броню/); U.closeAll(); out.sewRigid = a1.cond === 40 && /не сшить/.test(said());
+      const a2 = LAB.makeArmor("suit", 1, 0); a2.cond = 40; G().armor = a2;
+      g.objMenu(sw); click(/^Подшить надетую броню/); U.closeAll(); out.sewSoft = a2.cond === 65;
+      out.sewDbg = [a1.cond, a2.cond, said().slice(0, 200)];
+      /* 10. манекен — в защитном костюме: с него снимают костюм, а не экзоскелет */
+      const mn = mk("mannequin"), na = G().armors.length;
+      g.objMenu(mn); click(/^Снять костюм с манекена/); U.closeAll();
+      const got = G().armors[G().armors.length - 1];
+      out.dummy = G().armors.length === na + 1 && ["bio", "radsuit", "hazmat", "reactorsuit"].indexOf(got && got.base) >= 0;
+      /* 11. рамка досмотра звенит на металл, а не на «стволы» */
+      const fr = mk("frame"), am0 = G().ammo;
+      G().weapons = []; G().ammo = {}; ["scrap", "magnet", "wire", "lead", "servo"].forEach(k => { delete G().inv[k]; }); G().armor = a2;
+      spoken.length = 0; g.objMenu(fr); click(/^Пройти через рамку/); U.closeAll(); out.frameQuiet = /Рамка молчит/.test(said());
+      G().weapons = wps0.slice(0, 1); G().ammo = { energy: 2 };
+      spoken.length = 0; g.objMenu(fr); click(/^Пройти через рамку/); U.closeAll();
+      out.frameLoud = /Рамка звенит.*1 единица оружия, батареи и заряды/.test(said()) && !/ствол/.test(said());
+      G().weapons = wps0; G().ammo = am0;
+      /* 12. респиратор держит дыхание, но не яд укуса и не съеденное; антитоксин — лекарство */
+      G().st.antitox = 0; G().st.atoxIn = 0; G().st.poison = 6; G().inv.respirator = 1;
+      g.useItem("respirator"); out.maskPoison = G().st.poison === 6 && G().st.antitox > 0 && !(G().st.atoxIn > 0);
+      G().body.tox = 10; g.bodyApply({ tox: 10 }, []); out.maskEat = G().body.tox > 10;
+      const t1 = G().body.tox; g.bodyApply({ tox: 10, air: true }, []); out.maskAir = G().body.tox === t1;
+      G().inv.c_antitox = 1; g.useItem("c_antitox"); out.drug = !G().st.poison && G().st.atoxIn > 0;
+      const t2 = G().body.tox; g.bodyApply({ tox: 10 }, []); out.drugEat = G().body.tox === t2;
+      G().st.antitox = 0; G().st.atoxIn = 0; G().st.poison = 0;
+      /* 13. вентиль перекрывают, а не «вытяжка загудела» */
+      R.gas = 1; const vl = mk("valves"); spoken.length = 0;
+      g.objMenu(vl); click(/^Перекрыть пропускающий вентиль/); U.closeAll();
+      out.valve = /закручиваете пропускающий вентиль/.test(said()) && !/Вытяжка/.test(said()); R.gas = gas0;
+      /* 14. находки по месту: в барабанах — мелочь и ценности, в банках — травы и семечки, в вагонетке — порода, на щите — инструмент */
+      const scan = (fx, re) => {
+        const got = {};
+        for (let i = 0; i < 6; i++) {
+          const o = mk(fx), inv0 = Object.assign({}, G().inv), c0 = G().credits;
+          g.objMenu(o); click(re); U.closeAll();
+          Object.keys(G().inv).forEach(k => { if ((G().inv[k] || 0) > (inv0[k] || 0)) got[k] = 1; });
+          if (G().credits > c0) got.credits = 1;
+        }
+        return Object.keys(got);
+      };
+      const cat = k => LAB.ITEMS[k] ? LAB.ITEMS[k].cat || LAB.ITEMS[k].kind : k;
+      const wash = scan("washer", /^Проверить барабаны/), seeds = scan("seedjars", /^Перебрать банки/), ore = scan("minecart", /^Порыться в вагонетке/), tools = scan("toolwall", /^Снять с щита/);
+      out.loot = { wash, seeds, ore, tools };
+      out.lootOk = wash.length > 0 && wash.every(k => k === "credits" || cat(k) === "valuable") && seeds.length > 0 && seeds.every(k => /^(herbtea|nuts)$/.test(k))
+        && ore.length > 0 && ore.every(k => /^(scrap|g_quartz|g_mica)$/.test(k)) && tools.length > 0 && tools.every(k => /^(wirecutters|toolkit|fieldkit|tape)$/.test(k));
+      /* 15. данные: скоропортящееся бывает несвежим; разбор без невозможных деталей; шредер — полоски рвали руками */
+      const T = LAB.FIX.T, sal = fx => (T[fx].a.find(a => a[0] === "salvage") || [])[2] || {};
+      out.stale = ["milk", "dsausage", "lunchbox", "eggs"].every(k => LAB.ITEMS[k].stale > 0);
+      out.salv = !sal("lamp").parts.lens && !sal("transformer").parts.magnet && sal("transformer").risk === "hv" && !sal("gears").parts.servo && !sal("gearwall").parts.servo && !sal("boiler").parts.cap;
+      out.texts = /рвали руками/.test(T.shredder.d) && /монтажной лентой/.test(LAB.ITEMS.g_tapeloop.desc) && /слепок пальца/.test(LAB.ITEMS.pick_g.desc);
+    } catch (e) { out.err = e.message + " " + (e.stack || "").split("\n").slice(1, 3).join(" / "); }
+    U.closeAll();
+    made.forEach(o => { const i = fl.objs.indexOf(o); if (i >= 0) fl.objs.splice(i, 1); });
+    R.desc = d0; R.gas = gas0;
+    G().fs = JSON.parse(fs0);
+    const gg = G();
+    ["inv", "ammo", "credits", "xp", "lvl", "body", "hp", "st", "min", "day", "stats", "ach", "cupL", "cupT"].forEach(k => { gg[k] = k0[k]; });
+    gg.armor = arm0; gg.armors = arms0; gg.weapons = wps0;
+    try { g.enterFloor(k0.L, k0.F, "down", true); CB.stop(); gg.x = k0.x; gg.y = k0.y; } catch (e) { /* */ }
+    LAB.say = say0;
+    return out;
+  });
+  ok(!nl.err, "нелогичности: проверка без ошибок" + (nl.err ? ": " + nl.err : ""));
+  ok(/нет воды/.test(nl.cofTitle) && nl.cofKick && nl.cofKick2 && nl.cofFill && nl.cofWorks, "кофейный автомат: в баке нет воды — удар даёт разве что забытую сдачу, раз; две бутылки воды — и он варит (" + JSON.stringify({ t: nl.cofTitle, k: nl.cofKick, k2: nl.cofKick2, f: nl.cofFill, w: nl.cofWorks, d: nl.cofDbg }) + ")");
+  ok(nl.thermEmpty && nl.thermLbl && nl.thermFull && nl.thermRecipe, "термос: выпитый — пустой, чай в него наливают у вскипевшего чайника, на верстаке его не собрать");
+  ok(nl.cupCold && nl.cupHot, "стакан из автомата горячий с полчаса, остывший — слабее");
+  ok(nl.cook && nl.cookNone, "плита греет только то, что греют; лапшу и суп-концентрат — кипятком (" + (nl.cookMenu || []).join(" | ") + ")");
+  ok(nl.samCold && nl.samColdMenu && nl.samFire && nl.samTea && nl.samGap && nl.samCooled && nl.samEmpty && nl.samKept, "самовар: брошенный — холодный, растопить, остывает; пустой — без воды не растопить; за которым смотрят — горячий (" + JSON.stringify({ c: nl.samCold, m: nl.samColdMenu, f: nl.samFire, t: nl.samTea, g: nl.samGap, o: nl.samCooled, e: nl.samEmpty, k: nl.samKept }) + ")");
+  ok(nl.hive && nl.honeyRec && nl.herbs && nl.herbsNone, "улей — соты, мёд ульев — из сотов; сушёные травы не отрастают");
+  ok(nl.recipes, "рецепты: синька и дозиметр — только находки и покупки; петля с песней — из плёнки и монтажной ленты; фильтр и скафандр — не из биогеля");
+  ok(nl.pressNo && nl.press, "пресс: бронепластина — четыре лома и керамокомпозит");
+  ok(nl.sewRigid && nl.sewSoft, "швейная машинка: кирасу не сшить, комбинезон — подшить (" + JSON.stringify(nl.sewDbg) + ")");
+  ok(nl.dummy, "манекен — в защитном костюме: снимается костюм");
+  ok(nl.frameQuiet && nl.frameLoud, "рамка досмотра звенит на металл: оружие, батареи, лом, броню");
+  ok(nl.maskPoison && nl.maskEat && nl.maskAir && nl.drug && nl.drugEat, "респиратор держит дыхание, но не яд укуса и не съеденное; антитоксин — лекарство (" + JSON.stringify({ p: nl.maskPoison, e: nl.maskEat, a: nl.maskAir, d: nl.drug, de: nl.drugEat }) + ")");
+  ok(nl.valve, "вентиль закручивают — газ не идёт; «вытяжка» тут ни при чём");
+  ok(nl.lootOk, "находки по месту: барабаны, банки с семенами, вагонетка, щит с инструментами (" + JSON.stringify(nl.loot) + ")");
+  ok(nl.stale && nl.salv && nl.texts, "скоропортящееся бывает несвежим; разбор без невозможных деталей; шредер, петля, зелёная отмычка — тексты по делу");
+
   /* (3.6, просьба автора) Химический стол на каждом этаже; химия руками — пробирки, колбы,
      реактивы, реакции и опасности; химические задачи; исследования и опыты — препараты,
      клетки вивария, смотровые окна, тайнопись, плёнка, анализ тканей; головоломки не
