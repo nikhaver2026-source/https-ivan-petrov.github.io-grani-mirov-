@@ -6341,10 +6341,12 @@ LAB.ui.closeAll();
         /* остальных — на время замера «успокоить»: на обжитом этаже за стенами бывает много кого */
         const calm0 = C.foes().filter(q => q !== f && !q.dead && !q.calm); calm0.forEach(q => { q.calm = true; });
         if (rm && f) { f.x = rm.cx; f.y = rm.cy; f.ally = false; f.calm = false; }
-        U.closeAll(); LB.act(gr, null, "grate", {});
+        const sp0 = spoken.length; U.closeAll(); LB.act(gr, null, "grate", {});
         calm0.forEach(q => { q.calm = false; });
-        out.grate = rm && f ? new RegExp("в помещении " + rm.num + "\\b").test(last()) : /шахт/.test(last());
-        if (!out.grate) out.grateSaid = (rm ? rm.num : "-") + ": " + last().slice(0, 240);
+        /* (3.7) фраза решётки, а не последняя сказанная: изредка в шахте мяукает кот, и следом звучит достижение */
+        const gSaid = spoken.slice(sp0).filter(t => /разбирает звуки из шахты|Из шахты тянет/.test(t)).pop() || last();
+        out.grate = rm && f ? new RegExp("в помещении " + rm.num + "\\b").test(gSaid) : /шахт/.test(gSaid);
+        if (!out.grate) out.grateSaid = (rm ? rm.num : "-") + ": " + gSaid.slice(0, 240);
       }
       /* 8. селектор: вызов в помещении — машина рядом идёт на звук */
       const ic = findFx("intercom", 1);
