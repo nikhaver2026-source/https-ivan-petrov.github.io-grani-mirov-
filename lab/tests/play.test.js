@@ -84,8 +84,8 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     LAB.ui.closeTop(true); LAB.ui.closeAll(); LAB.ui.mainMenu(true);
     return out;
   });
-  ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.ver === "Альфа 3.6" && news.items.some(l => /^Альфа 3\.5$/.test(l)) && news.items.some(l => /^Альфа 3\.2$/.test(l)) && news.items.some(l => /^Альфа 3\.1$/.test(l)) && news.items.some(l => /^Альфа 3\.0$/.test(l)) && news.items.some(l => /^Альфа 2\.6$/.test(l)) && news.items.some(l => /^Альфа 2\.5$/.test(l)) && news.items.some(l => /^Альфа 2\.2$/.test(l)) && news.items.some(l => /^Альфа 2\.1$/.test(l)) && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
-  ok(/Что нового: /.test(news.note) && /Набор опыта вернулся/.test(news.text) && !/меньше опыта|даются труднее|урез/.test(news.text) && /тело восстанавливается не быстрее одного полного отдыха в час/.test(news.text) && /изнашиваются на треть медленнее/.test(news.text) && /Сохранения прежней версии не сброшены/.test(news.text) && /Настройки остались прежними/.test(news.text) && !/Качаться на машинах ОКО не выйдет/.test(news.text) && !/ОКО меняется с глубиной/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
+  ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.ver === "Альфа 3.7" && news.items.some(l => /^Альфа 3\.6$/.test(l)) && news.items.some(l => /^Альфа 3\.5$/.test(l)) && news.items.some(l => /^Альфа 3\.2$/.test(l)) && news.items.some(l => /^Альфа 3\.1$/.test(l)) && news.items.some(l => /^Альфа 3\.0$/.test(l)) && news.items.some(l => /^Альфа 2\.6$/.test(l)) && news.items.some(l => /^Альфа 2\.5$/.test(l)) && news.items.some(l => /^Альфа 2\.2$/.test(l)) && news.items.some(l => /^Альфа 2\.1$/.test(l)) && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
+  ok(/Что нового: /.test(news.note) && /Помещения стали просторнее/.test(news.text) && /Химия руками/.test(news.text) && /Поручения выживших — без предела/.test(news.text) && /Сохранения прежней версии не сброшены/.test(news.text) && /этажи построены заново/.test(news.text) && /Настройки остались прежними/.test(news.text) && !/Набор опыта вернулся/.test(news.text) && !/Качаться на машинах ОКО не выйдет/.test(news.text) && !/ОКО меняется с глубиной/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей; выпущенное в 3.6 — в своём разделе");
 
   console.log("Настройки");
   await page.evaluate(() => { LAB.ui.top().i = 0; });
@@ -2373,6 +2373,36 @@ LAB.ui.closeAll();
   }
   ok(kept && kept.ver === kept.cur && kept.slot && kept.auto && kept.kept >= 2 && !kept.wiped && kept.from === "Альфа 3.2" && /Сохранения прежней версии остались/.test(kept.intro || ""),
     "записи «Альфы 3.2» при смене версии не стёрты, игрок слышит, что сохранения остались (" + JSON.stringify(kept).slice(0, 260) + ")");
+  /* (3.7) запись выпущенной «Альфы 3.6» (этажи пятого выпуска): не стёрта, а главное меню честно
+     говорит, что этажи построены заново, — загрузка ставит героя у входа на свой этаж */
+  let kept36 = null;
+  {
+    const st36 = await page.context().storageState();
+    const d36 = JSON.parse(fs.readFileSync(path.join(__dirname, "fixtures", "alfa-3.2-save.json"), "utf8"));
+    d36.meta.ver = "Альфа 3.6"; d36.g.worldV = 5;
+    const raw36 = JSON.stringify(d36);
+    const runNow = await page.evaluate(() => String(LAB.RUN));
+    st36.origins.forEach(o => {
+      const ls = o.localStorage, setK = (n, v) => { const e = ls.find(q => q.name === n); if (e) e.value = v; else ls.push({ name: n, value: v }); };
+      setK("lab_ver", "Альфа 3.6"); setK("lab_run", runNow); setK("lab_slot1", raw36); setK("lab_auto", raw36); setK("lab_prologue_seen", "1");
+    });
+    const ctx36 = await browser.newContext({ storageState: st36 });
+    const page36 = await ctx36.newPage();
+    page36.on("pageerror", e => errors.push("pageerror (запись 3.6): " + e.message));
+    try {
+      await page36.goto(url); await page36.waitForFunction(() => window.LAB_READY === true, null, { timeout: 60000 });
+      kept36 = await page36.evaluate(raw => {
+        const L = localStorage, fs0 = LAB.freshStart;
+        LAB.ui.mainMenu(true);
+        const intro = LAB.ui.top() ? LAB.ui.top().intro : "";
+        const m = LAB.game._migrate(JSON.parse(raw).g);
+        return { ver: L.getItem("lab_ver"), cur: LAB.VERSION, slot: L.getItem("lab_slot1") === raw, kept: fs0.kept, wiped: fs0.wiped, from: fs0.from, intro, relocate: m.relocate === true && m.worldV === 6 };
+      }, raw36);
+    } catch (e) { kept36 = { err: String(e && e.message || e).slice(0, 200) }; }
+    await ctx36.close();
+  }
+  ok(kept36 && kept36.ver === kept36.cur && kept36.cur === "Альфа 3.7" && kept36.slot && kept36.kept >= 2 && !kept36.wiped && kept36.from === "Альфа 3.6" && /Сохранения прежней версии остались/.test(kept36.intro || "") && /этажи построены заново/.test(kept36.intro || "") && kept36.relocate,
+    "запись выпущенной «Альфы 3.6» при переходе на 3.7 не стёрта; главное меню говорит, что этажи построены заново, загрузка ставит у входа на свой этаж (" + JSON.stringify(kept36).slice(0, 300) + ")");
   /* (2.0) прохождение заново: та же версия, прежнее прохождение — сохранения стёрты, настройки остались */
   let run = null;
   {
