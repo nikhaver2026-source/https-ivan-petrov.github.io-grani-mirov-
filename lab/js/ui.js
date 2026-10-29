@@ -212,7 +212,8 @@ function adjust(it, dir) {
 }
 function readAll() {
   var w = top(); if (!w) return;
-  say(w.title + ". " + w.items.map(function (it, i) { return (i + 1) + ". " + itemText(it); }).join(". "));
+  /* пункт, что кончается точкой или другим знаком, второй точки не получает («ступени.. 2.») */
+  say(w.title + ". " + w.items.map(function (it, i) { var t = itemText(it); return (i + 1) + ". " + t + (/[.!?…:;]$/.test(t) ? "" : "."); }).join(" "));
 }
 
 /* ════════ ОТРИСОВКА (для зрячих помощников) ════════
