@@ -5396,10 +5396,12 @@ LAB.ui.closeAll();
       LAB.ui.closeAll(); C.stop();
       /* ширина коридоров по блокам: 4 выше, 5, 6, 7 — в «Отражении», «Механизме», «Истоке» */
       out.cw = [5, 30, 45, 65, 85].map(L => { const fl = LAB.getFloor(G.seed, L, 3); const ws = {}; fl.corrs.forEach(c => { ws[c.axis === "h" ? c.y1 - c.y0 + 1 : c.x1 - c.x0 + 1] = 1; }); return Object.keys(ws).join("/"); }).join(" ");
-      /* помещения и кабинеты: средняя площадь растёт по блокам — по шести этажам блока
-         (у соседних блоков размеры частично совпадают, и один этаж бывает выбросом) */
-      const area = L => { const m = [], a = []; for (let F = 3; F <= 8; F++) LAB.getFloor(G.seed, L, F).rooms.forEach(r => { if (!r) return; const s = (r.x1 - r.x0 + 1) * (r.y1 - r.y0 + 1); (r.annex ? a : m).push(s); }); const avg = q => q.reduce((x, y) => x + y, 0) / Math.max(1, q.length); return [Math.round(avg(m)), Math.round(avg(a))]; };
-      out.area = [30, 45, 65, 85].map(area);
+      /* помещения и кабинеты: средняя площадь растёт по блокам — по двенадцати уровням блока, с каждого
+         по этажу (у соседних блоков размеры частично совпадают, а плотность кабинетов у каждого
+         уровня своя: на тесном они уже, и один уровень бывает выбросом — по шести этажам одного
+         уровня проверка падала примерно в одном мире из восьми) */
+      const area = b => { const m = [], a = []; [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17].forEach((d, j) => LAB.getFloor(G.seed, b + d, 3 + j % 6).rooms.forEach(r => { if (!r) return; const s = (r.x1 - r.x0 + 1) * (r.y1 - r.y0 + 1); (r.annex ? a : m).push(s); })); const avg = q => q.reduce((x, y) => x + y, 0) / Math.max(1, q.length); return [Math.round(avg(m)), Math.round(avg(a))]; };
+      out.area = [21, 41, 61, 81].map(area);
       /* коридор «Отражения»: «Эхо» называет ширину, в широком — ещё «ближе к стене» */
       go(45, 3);
       const fl = g.CUR.fl, cor = fl.corrs.find(c => !c.hidden && c.len >= 14);
