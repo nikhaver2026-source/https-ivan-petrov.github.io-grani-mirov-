@@ -130,7 +130,7 @@ PACKS = {
   "lab_ambpack": ("Ambience Pack 1: Sci-Fi Horror", "OpenGameArt", CC0, "https://opengameart.org/content/ambience-pack-1-sci-fi-horror"),
   "lab_horratm": ("Post Apocalyptic Wastelands", "Juhani Junkala", CC0, "https://opengameart.org/content/horror-atmosphere"),
   "lab_factory": ("Factory ambiance", "OpenGameArt", CC0, "https://opengameart.org/content/factory-ambiance"),
-  "lab_elevreactor": ("Elevator to reactor", "OpenGameArt", CC0, "https://opengameart.org/content/elevator-to-reactor-loop"),
+  "lab_elevreactor": ("Elevator To Reactor (Loop)", "Hazmat Harry", CC0, "https://opengameart.org/content/elevator-to-reactor-loop"),
   "lab_heartmach": ("Heart of Machine", "Alexandr Zhelanov", "CC BY 3.0", "https://opengameart.org/content/heart-of-machine"),
   "lab_bleakterm": ("Bleak Terminal", "ruskerdax", CC0, "https://opengameart.org/content/bleak-terminal"),
   "lab_ghostsmach": ("Ghosts in the Machine", "ruskerdax", CC0, "https://opengameart.org/content/ghosts-in-the-machine"),
@@ -159,6 +159,9 @@ PACKS = {
   "lab_km_lazarus": ("Return of Lazarus", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Return_of_Lazarus_(ISRC_USUAN1200090).mp3"),
   "lab_km_shadow6": ("Shadowlands 6 - The Pit", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Shadowlands_6_-_The_Pit_(ISRC_USUAN1700039).mp3"),
   "lab_km_shadow7": ("Shadowlands 7 - Codex", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Shadowlands_7_-_Codex_(ISRC_USUAN1700040).mp3"),
+  # (выбор автора 29.10) Музыка уровней 3 и 6 — в стерео.
+  "lab_km_scp2": ("SCP-x2x (Unseen Presence)", "Kevin MacLeod (incompetech.com)", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:Spc_X2x_(Unseen_Presence)_by_Kevin_MacLeod.ogg"),
+  "lab_km_shadow5": ("Shadowlands 5 - Antechamber", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Shadowlands_5_-_Antechamber_(ISRC_USUAN1700038).mp3"),
   # (заход H и запас захода F) Музыка глубоких блоков: по четыре трека на блок.
   "lab_km_celeste": ("Mary Celeste", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Mary_Celeste_(ISRC_USUAN1500016).mp3"),
   "lab_km_scp3": ("SCP-x3x (I Am Not OK)", "Kevin MacLeod (incompetech.com)", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:Scp_X3x_(I_Am_Not_OK)_by_Kevin_MacLeod.ogg"),
@@ -1062,8 +1065,9 @@ E("evl_steam", "loop", [S(B, "bsb_lab_steam", "3016*")], seg=(20, 16), xf=2.0, v
 E("evl_quake", "loop", [S(B, "bsb_lab_rumble", "3114*")], seg=(0, 10), xf=2.0, v=0.4)
 
 # ═════ МУЗЫКА (петли в памяти: моно, до 170 секунд; в памяти — только звучащая) ═════
-# Меню и пролог — в стерео (выбор автора 29.10): «We're Lost» и «The World Fell Silent»;
-# в облегчённом режиме игра сводит их в моно сама (Bank.mono).
+# Меню, пролог и уровни 3, 6, 10 — в стерео (выбор автора 29.10): «We're Lost», «The World
+# Fell Silent», «SCP-x2x», «Shadowlands 5», «Elevator To Reactor»; в облегчённом режиме игра
+# сводит их в моно сама (Bank.mono).
 # Каждая запись должна звучать и на динамике телефона: заметная доля звука —
 # выше 350 Гц (проверка в сборке). Гул ниже динамик не играет — такой музыки
 # игрок не слышит вовсе.
@@ -1071,14 +1075,16 @@ E("mus_menu", "music", [S(C, "lab_werelost*", "*.mp3")], v=1.0, max=170, ch=2)
 E("mus_prologue", "music", [S(C, "lab_silent_the_world_fell_silent.flac", "*.flac")], v=1.0, max=170, ch=2)
 E("mus_l1", "music", [S(C, "lab_km_sanctum", "*.mp3", start=40)], v=1.0, max=170)
 E("mus_l2", "music", [S(C, "lab_km_hive", "*.mp3", start=15)], v=1.0, max=170)
-E("mus_l3", "music", [S(C, "lab_km_metaphysik", "*.mp3", start=90)], v=1.0, max=170)
+# Уровни 3 и 6 — гул почти весь ниже 350 Гц: на динамике телефона тише прочих, в наушниках
+# — во всю силу; низ не срезан — автор выбрал их такими (quiet=True).
+E("mus_l3", "music", [S(C, "lab_km_scp2", "*.ogg")], v=1.0, max=170, ch=2, quiet=True)
 E("mus_l4", "music", [S(C, "lab_km_beast", "*.mp3", start=125)], v=1.0, max=170)
 E("mus_l5", "music", [S(C, "lab_km_chaosnp", "*.mp3", start=155)], v=1.0, max=170)
-E("mus_l6", "music", [S(C, "lab_heartmach*", "*.ogg")], v=1.0)
+E("mus_l6", "music", [S(C, "lab_km_shadow5", "*.mp3")], v=1.0, max=170, ch=2, quiet=True)
 E("mus_l7", "music", [S(C, "lab_km_icedemon", "*.mp3", start=65)], v=1.0, max=170)
 E("mus_l8", "music", [S(C, "lab_km_lazarus", "*.mp3", start=60)], v=1.0, max=170)
 E("mus_l9", "music", [S(C, "lab_km_shadow6", "*.mp3", start=30)], v=1.0, max=170)
-E("mus_l10", "music", [S(C, "lab_torment_realm_of_torment_1.flac", "*.flac")], v=1.0)
+E("mus_l10", "music", [S(C, "lab_elevreactor*", "*.mp3")], v=1.0, max=170, ch=2)
 E("mus_ending", "music", [S(C, "lab_km_shadow7", "*.mp3", start=15)], v=1.0, max=170)
 
 # капсулы восстановления: спокойная музыка, по одной дорожке (1.5)
@@ -1394,7 +1400,8 @@ def build():
                 if kind == "music":
                     hear = audible_db(a)
                     print("   %s: на динамике телефона (выше 350 Гц) %.1f дБ" % (id_, hear))
-                    if hear < AUDIBLE_MIN: MISSING.append("ТИХО НА ТЕЛЕФОНЕ %s: %.1f дБ выше 350 Гц (нужно не ниже %.0f)" % (id_, hear, AUDIBLE_MIN))
+                    # quiet=True — выбор автора: запись звучит как есть, хоть на динамике телефона и тише
+                    if hear < AUDIBLE_MIN and not o.get("quiet"): MISSING.append("ТИХО НА ТЕЛЕФОНЕ %s: %.1f дБ выше 350 Гц (нужно не ниже %.0f)" % (id_, hear, AUDIBLE_MIN))
                 outs.append(a)
         if not outs:
             MISSING.append("ПУСТО " + id_); continue

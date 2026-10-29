@@ -1069,6 +1069,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `elevatording_0.ogg`
 
+## Elevator To Reactor (Loop)
+
+Автор: Hazmat Harry. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/elevator-to-reactor-loop
+
+Файлы: `elevator_to_reactor_0.mp3`
+
 ## EM Fields Pack 1
 
 Автор: dklon. Лицензия: CC BY 3.0. Источник: https://opengameart.org/content/em-fields-pack-1
@@ -1531,12 +1537,6 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `418194_3656686-hq.ogg`
 
-## Heart of Machine
-
-Автор: Alexandr Zhelanov. Лицензия: CC BY 3.0. Источник: https://opengameart.org/content/heart-of-machine
-
-Файлы: `Heart_of_Machine.ogg`
-
 ## Heart of the Beast
 
 Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Heart_of_the_Beast_(ISRC_USUAN1100209).mp3
@@ -1993,12 +1993,6 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `445775_8292592-hq.ogg`
 
-## Metaphysik
-
-Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Metaphysik_(ISRC_USUAN1400056).mp3
-
-Файлы: `Metaphysik_%28ISRC_USUAN1400056%29.mp3`
-
 ## Minigun Burst Audio
 
 Автор: rob762x51. Лицензия: CC0 1.0. Источник: https://freesound.org/s/165042/
@@ -2269,12 +2263,6 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `855248_71257-hq.ogg`
 
-## Realm of Torment
-
-Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/realm-of-torment
-
-Файлы: `realm_of_torment_1.flac`
-
 ## Reminiscing
 
 Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Reminiscing_(ISRC_USUAN1100097).mp3
@@ -2491,6 +2479,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `531861_7542558-hq.ogg`
 
+## SCP-x2x (Unseen Presence)
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 4.0. Источник: https://commons.wikimedia.org/wiki/File:Spc_X2x_(Unseen_Presence)_by_Kevin_MacLeod.ogg
+
+Файлы: `Spc_X2x_%28Unseen_Presence%29_by_Kevin_MacLeod.ogg`
+
 ## SCP-x3x (I Am Not OK)
 
 Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 4.0. Источник: https://commons.wikimedia.org/wiki/File:Scp_X3x_(I_Am_Not_OK)_by_Kevin_MacLeod.ogg
@@ -2586,6 +2580,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Shadowlands_4_-_Breath_(ISRC_USUAN1700037).mp3
 
 Файлы: `Shadowlands_4_-_Breath_%28ISRC_USUAN1700037%29.mp3`
+
+## Shadowlands 5 - Antechamber
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Shadowlands_5_-_Antechamber_(ISRC_USUAN1700038).mp3
+
+Файлы: `Shadowlands_5_-_Antechamber_%28ISRC_USUAN1700038%29.mp3`
 
 ## Shadowlands 6 - The Pit
 
