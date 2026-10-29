@@ -5479,7 +5479,8 @@ LAB.ui.closeAll();
       /* «Механизм»: стена шестерён разбирается на детали */
       go(65, 4);
       const gear = g.CUR.fl.objs.find(o => o.type === "fx" && o.fx === "gearwall") || { id: "t_gear", type: "fx", fx: "gearwall", x: G.x, y: G.y, room: g.CUR.room };
-      const sv0 = G.inv.servo || 0; out.gear = use(gear, /^Снять пару малых шестерён/); out.servo = (G.inv.servo || 0) > sv0;
+      /* (3.7) шестерни — лом и крепёж, а не сервопривод: моторчика в стене шестерён нет */
+      const sv0 = G.inv.servo || 0, sc0 = G.inv.scrap || 0; out.gear = use(gear, /^Снять пару малых шестерён/); out.gearParts = (G.inv.scrap || 0) > sc0 && (G.inv.servo || 0) === sv0;
       /* табельные часы: отметка — ОКО считает своим на смене, раз на часы */
       const pc = g.CUR.fl.objs.find(o => o.type === "fx" && o.fx === "punchclock") || { id: "t_punch", type: "fx", fx: "punchclock", x: G.x, y: G.y, room: g.CUR.room };
       LAB.oko.state().heat = 50; out.punch = use(pc, /^Пробить отметку/); const h1 = LAB.oko.state().heat;
@@ -5507,7 +5508,7 @@ LAB.ui.closeAll();
     ok(/Вода тёплая/.test(grow.spring) && grow.springHp, "тёплый родник Истока лечит (" + grow.spring.slice(0, 60) + ")");
     ok(grow.berries && /Собрано: /.test(grow.bush), "ягодный куст: ягоды Истока в рюкзак");
     ok(grow.clockTitle === "Часы, идущие назад", "часы, идущие назад: своя запись (" + grow.clockTitle + ")");
-    ok(grow.servo, "стену шестерён Механизма разбирают на детали");
+    ok(grow.gearParts, "стену шестерён Механизма разбирают на детали: шестерни — лом, а не сервопривод");
     ok(/своим на смене/.test(grow.punch) && grow.punchHeat === "50→42→42", "табельные часы: отметка — ОКО подозревает меньше, один раз (" + grow.punchHeat + ")");
     ok(grow.migDown, "запись прежнего выпуска мира: этаж строится заново, носитель — у входа");
   }
