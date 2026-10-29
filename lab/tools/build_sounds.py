@@ -139,10 +139,10 @@ PACKS = {
   "lab_desolate": ("Desolate", "Matthew Pablo", "CC BY 3.0", "https://opengameart.org/content/desolate"),
   "lab_searching": ("Searching", "OpenGameArt", CC0, "https://opengameart.org/content/searching"),
   "lab_insistent": ("Insistent", "OpenGameArt", CC0, "https://opengameart.org/content/insistent-background-loop"),
-  "lab_werelost": ("We're lost", "OpenGameArt", CC0, "https://opengameart.org/content/were-lost"),
+  "lab_werelost": ("We're Lost", "ruskerdax", CC0, "https://opengameart.org/content/were-lost"),
   "lab_lethal": ("Lethal Injection", "Marcelo Fernandez", "CC BY 3.0", "https://opengameart.org/content/lethal-injection"),
   "lab_shadows": ("Shadows Awaken Within", "OpenGameArt", CC0, "https://opengameart.org/content/shadows-awaken-within"),
-  "lab_silent": ("The World Fell Silent", "OpenGameArt", CC0, "https://opengameart.org/content/the-world-fell-silent"),
+  "lab_silent": ("The World Fell Silent", "Tsorthan Grove", CC0, "https://opengameart.org/content/the-world-fell-silent"),
   "lab_bleeding": ("Bleeding Out", "OpenGameArt", CC0, "https://opengameart.org/content/bleeding-out"),
   "lab_tomb": ("Forgotten tomb ambience", "OpenGameArt", CC0, "https://opengameart.org/content/forgoten-tomb-ambience"),
   "lab_torment": ("Realm of Torment", "OpenGameArt", CC0, "https://opengameart.org/content/realm-of-torment"),
@@ -1062,11 +1062,13 @@ E("evl_steam", "loop", [S(B, "bsb_lab_steam", "3016*")], seg=(20, 16), xf=2.0, v
 E("evl_quake", "loop", [S(B, "bsb_lab_rumble", "3114*")], seg=(0, 10), xf=2.0, v=0.4)
 
 # ═════ МУЗЫКА (петли в памяти: моно, до 170 секунд; в памяти — только звучащая) ═════
+# Меню и пролог — в стерео (выбор автора 29.10): «We're Lost» и «The World Fell Silent»;
+# в облегчённом режиме игра сводит их в моно сама (Bank.mono).
 # Каждая запись должна звучать и на динамике телефона: заметная доля звука —
 # выше 350 Гц (проверка в сборке). Гул ниже динамик не играет — такой музыки
 # игрок не слышит вовсе.
-E("mus_menu", "music", [S(C, "lab_km_shadow1", "*.mp3", start=30)], v=1.0, max=170)
-E("mus_prologue", "music", [S(C, "lab_km_scp5", "*.ogg", start=10)], v=1.0, max=170)
+E("mus_menu", "music", [S(C, "lab_werelost*", "*.mp3")], v=1.0, max=170, ch=2)
+E("mus_prologue", "music", [S(C, "lab_silent_the_world_fell_silent.flac", "*.flac")], v=1.0, max=170, ch=2)
 E("mus_l1", "music", [S(C, "lab_km_sanctum", "*.mp3", start=40)], v=1.0, max=170)
 E("mus_l2", "music", [S(C, "lab_km_hive", "*.mp3", start=15)], v=1.0, max=170)
 E("mus_l3", "music", [S(C, "lab_km_metaphysik", "*.mp3", start=90)], v=1.0, max=170)
@@ -1378,9 +1380,9 @@ def build():
                             a = np.stack([a[:, 0] * (k / max(r0, 1e-9)), a[:, 1] * (k / max(r1, 1e-9))], axis=1).astype(np.float32)
                     elif kind == "music":
                         # Музыка — петля в памяти (не поток: поток в WebView молчит):
-                        # моно, не длиннее 110 секунд, конец сведён в начало.
+                        # моно (ch=2 — стерео), не длиннее 110 секунд, конец сведён в начало.
                         lo2 = dict(lo); lo2.setdefault("af", "highpass=f=55")
-                        a = process_one(path, lo2, kind, None, ch=1)
+                        a = process_one(path, lo2, kind, None, ch=o.get("ch", 1))
                         mx_s = o.get("max", 110)
                         a = a[: int((mx_s + 4.0) * SR)]
                         a = loopify(a, 4.0)

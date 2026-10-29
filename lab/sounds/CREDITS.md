@@ -2503,12 +2503,6 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `SCP-x4x_%28Mind_Leech%29_by_Kevin_MacLeod.ogg`
 
-## SCP-x5x (Outer Thoughts)
-
-Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 4.0. Источник: https://commons.wikimedia.org/wiki/File:SCP-x5x_(Outer_Thoughts)_by_Kevin_MacLeod.ogg
-
-Файлы: `SCP-x5x_%28Outer_Thoughts%29_by_Kevin_MacLeod.ogg`
-
 ## Scrap metal dropping / crashing
 
 Автор: SamsterBirdies. Лицензия: CC0 1.0. Источник: https://freesound.org/s/587443/
@@ -2586,12 +2580,6 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: SonoFxAudio. Лицензия: CC BY 4.0. Источник: https://freesound.org/s/679546/
 
 Файлы: `679546_14263543-hq.ogg`
-
-## Shadowlands 1 - Horizon
-
-Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Shadowlands_1_-_Horizon_(ISRC_USUAN1700034).mp3
-
-Файлы: `Shadowlands_1_-_Horizon_%28ISRC_USUAN1700034%29.mp3`
 
 ## Shadowlands 4 - Breath
 
@@ -2857,6 +2845,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `The_Hive_%28ISRC_USUAN1100711%29.mp3`
 
+## The World Fell Silent
+
+Автор: Tsorthan Grove. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/the-world-fell-silent
+
+Файлы: `the_world_fell_silent.flac`
+
 ## throw swish x12 HZA 07-03-2019.wav
 
 Автор: hz37. Лицензия: CC0 1.0. Источник: https://freesound.org/s/463763/
@@ -2964,6 +2958,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: Sanderboah. Лицензия: CC0 1.0. Источник: https://freesound.org/s/696374/
 
 Файлы: `696374_13017680-hq.ogg`
+
+## We're Lost
+
+Автор: ruskerdax. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/were-lost
+
+Файлы: `ruskerdax_-_were_lost.mp3`
 
 ## welder 4.wav
 
