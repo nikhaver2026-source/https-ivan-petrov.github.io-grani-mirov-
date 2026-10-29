@@ -14,26 +14,30 @@ GEMINI_API_KEY; ни в журнал, ни в файлы они не попад�
      знаков; интонация — по виду реплики и глубине (STYLE ниже);
   2. запрос к Gemini TTS (gemini-3.8-flash-tts): каждая реплика — свой кусок со своей
      интонацией; ответ — одна запись WAV 24 кГц;
-  3. разметка на слух (Gemini, oko_align.py): где какая реплика и что в ней слышно;
-     граница — самая длинная пауза у стыка; реплика, услышанная не так (сходство
-     текста меньше 0,8) или слишком короткая или длинная для своих слов, — не
-     принимается и пойдёт в следующий пакет (после трёх неудач — остаётся синтезатору);
+  3. нарезка (seg.py): запись делится на куски по паузам, Gemini записывает, что
+     слышно в каждом куске, куски по порядку раскладываются по репликам; реплика,
+     услышанная не так (сходство текста меньше 0,8 — бывает, Gemini переиначивает
+     реплику) или слишком короткая или длинная для своих слов, — не принимается и
+     пойдёт в следующий пакет (после трёх неудач — остаётся синтезатору);
   4. обработка proc.py (механика, второй голос, эхо, −18 LUFS) → sounds/oko/<голос>/<отпечаток>.mp3;
   5. в конце — manifest.py (js/oko_voiced.js).
-Сырые записи и журнал — в --work (по умолчанию /tmp/okovoice_work), не в репозитории.
+Сырые записи (рядом — <запись>.json: состав пакета и что принято) и журнал — в --work
+(по умолчанию /tmp/okovoice_work), не в репозитории; recut.py нарезает их заново.
 Квота кончилась у всех ключей (429) — круг останавливается: продолжить можно завтра.
 """
-import argparse, base64, difflib, json, os, re, subprocess, sys, time, urllib.request, urllib.error, wave
+import argparse, base64, json, os, re, subprocess, sys, time, urllib.request, urllib.error, wave
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, "..", ".."))
 sys.path.insert(0, HERE)
-import proc  # noqa: E402
+import proc, seg  # noqa: E402
 
 TTS_URL = "https://generativelanguage.googleapis.com/v1beta/interactions"
 TTS_MODEL = "gemini-3.8-flash-tts"
-ASR_MODELS = ["gemini-2.5-flash", "gemini-3.5-flash"]
+# «что слышно» в кусках записи: облегчённые модели (flash-lite) сбиваются в номерах кусков,
+# gemini-3.7-flash отвечает минутами
+ASR_MODELS = os.environ.get("OKOVOICE_ASR", "gemini-3.5-flash").split(",")
 VOICE = {"m": "Alnilam", "f": "Achernar"}
 
 # Интонации: коротко (документация Gemini советует так), с «natural pace» — иначе речь тянется.
@@ -103,21 +107,32 @@ class Quota(Exception):
     pass
 
 
+REST = {}  # (модель, ключ) → до какого времени ключ отдыхает после 429
+
+
 def post(url, body, ks, start, timeout):
-    """Запрос с перебором ключей: 429/403/5xx — следующий ключ; у всех 429 — Quota."""
+    """Запрос с перебором ключей: 429/403/5xx — следующий ключ; у всех 429 — Quota.
+    Ключ, получивший 429, десять минут не трогается для этой модели."""
     last429 = 0
+    model = url.rsplit("/", 1)[-1].split(":")[0]
     for i in range(len(ks)):
         n = (start + i) % len(ks)
+        if REST.get((model, n), 0) > time.time():
+            last429 += 1
+            continue
         req = urllib.request.Request(url, data=json.dumps(body, ensure_ascii=False).encode("utf-8"),
                                      headers={"x-goog-api-key": ks[n], "Content-Type": "application/json"})
         try:
             with urllib.request.urlopen(req, timeout=timeout) as r:
                 return json.loads(r.read().decode("utf-8")), n
         except urllib.error.HTTPError as e:
-            msg = clean(e.read().decode("utf-8", "replace")[:160], ks)
+            raw = clean(e.read().decode("utf-8", "replace"), ks)
+            m = re.search(r'"message":\s*"([^"]{0,140})', raw)
+            msg = m.group(1) if m else raw[:140].splitlines()[0] if raw else ""
             if e.code == 429:
                 last429 += 1
-            log(f"   ключ №{n + 1}: {e.code} {msg.splitlines()[0] if msg else ''}")
+                REST[(model, n)] = time.time() + 600
+            log(f"   ключ №{n + 1}: {e.code} {msg}")
             if e.code in (403, 404, 429, 500, 503):
                 continue
             raise
@@ -153,29 +168,27 @@ def tts(batch, voice, ks, start):
     return None, n
 
 
-def align(wav16, texts, ks):
-    lines = "\n".join(f"{i + 1}) {t}" for i, t in enumerate(texts))
-    prompt = ("В записи один голос по порядку произносит эти реплики:\n" + lines + "\n\n"
-              "Для каждой реплики укажи, на какой секунде записи она начинается и на какой кончается "
-              "(с точностью до сотых), и запиши, что именно слышно в этом отрезке. Смех, вздохи и паузы "
-              "внутри реплики считай её частью. Ответ — только JSON-массив объектов "
-              '{"n": номер, "start": секунды, "end": секунды, "heard": "текст"}.')
-    data = base64.b64encode(open(wav16, "rb").read()).decode()
-    for model in ASR_MODELS:
-        body = {"contents": [{"parts": [{"inline_data": {"mime_type": "audio/wav", "data": data}}, {"text": prompt}]}],
-                "generationConfig": {"responseMimeType": "application/json", "temperature": 0}}
-        if model.startswith("gemini-2.5"):
-            body["generationConfig"]["thinkingConfig"] = {"thinkingBudget": 0}
-        try:
-            d, _ = post(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent", body, ks, 0, 300)
-        except Quota:
-            continue
-        if not d:
-            continue
-        try:
-            return sorted(json.loads(d["candidates"][0]["content"]["parts"][0]["text"]), key=lambda r: r["n"])
-        except Exception:
-            continue
+def asr(chunks, ks, lines=None):
+    """Что слышно в каждом куске записи (seg.body) — список строк или None.
+    Модель занята (503 у всех ключей) — ещё две попытки через 30 и 90 с."""
+    for wait in (0, 30, 90):
+        time.sleep(wait)
+        quota = 0
+        for model in ASR_MODELS:
+            try:
+                d, _ = post(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+                            seg.body(chunks, lines), ks, 0, 300)
+            except Quota:
+                quota += 1
+                continue
+            if not d:
+                continue
+            try:
+                return seg.parse(d["candidates"][0]["content"]["parts"][0]["text"], len(chunks))
+            except Exception:
+                continue
+        if quota == len(ASR_MODELS):
+            break
     return None
 
 
@@ -185,46 +198,89 @@ def read(path):
         return sr, np.frombuffer(w.readframes(n), dtype=np.int16).astype(np.float32) / 32768.0
 
 
-def cut(x, sr, marks, n):
-    """Границы реплик — по самой длинной паузе у стыка соседних (не дальше середин кусков)."""
-    fr = int(sr * 0.01); m = len(x) // fr
-    db = 20 * np.log10(np.sqrt(np.mean(x[:m * fr].reshape(m, fr) ** 2, axis=1)) + 1e-12)
-    quiet = db < max(-48.0, db.max() - 38.0)
-    gaps, i = [], 0
-    while i < m:
-        if quiet[i]:
-            j = i
-            while j < m and quiet[j]:
-                j += 1
-            if j - i >= 8 and i > 0 and j < m:
-                gaps.append((j - i, i, j))
-            i = j
-        else:
-            i += 1
-    cuts = [0]
-    for a, b in zip(marks[:-1], marks[1:]):
-        ea, sb = a["end"], b["start"]
-        lo = max(min(ea, sb) - 0.35, (a["start"] + ea) / 2)
-        hi = min(max(ea, sb) + 0.35, (sb + b["end"]) / 2)
-        near = [g for g in gaps if g[2] / 100 > lo and g[1] / 100 < hi]
-        c = (max(near)[1] + max(near)[2]) // 2 if near else int((ea + sb) * 50)
-        cuts.append(max(c, cuts[-1] + 10))
-    cuts.append(m)
-    return [x[a * fr:b * fr] for a, b in zip(cuts[:-1], cuts[1:])]
+def fits(say, d):
+    """Длина отрезка правдоподобна для слов реплики."""
+    return 0.035 * len(say) <= d <= 0.25 * len(say) + 1.5
 
 
-def sim(a, b):
-    f = lambda t: re.sub(r"[^а-яё ]", "", t.lower().replace("ё", "е"))
-    return difflib.SequenceMatcher(None, f(a), f(b)).ratio()
+def cut_batch(raw, items, voice, ks, state):
+    """Нарезать запись пакета, принятые реплики — в игру; итог — в <запись>.json рядом.
+    Нет ответа на «что слышно» (квота, перегрузка) — -1: запись ждёт, её нарежет recut()."""
+    side = raw[:-4] + ".json"
+    rows = [{"k": it["k"], "say": it["say"], "style": it["style"], "kind": it["kind"]} for it in items]
+    json.dump({"voice": voice, "items": rows}, open(side, "w", encoding="utf-8"), ensure_ascii=False)
+    sr, x = read(raw)
+    res = seg.split(x, sr, [it["say"] for it in items], lambda c, lines=None: asr(c, ks, lines))
+    if res is None:
+        log("   «что слышно» не ответило — запись сохранена, нарежется позже")
+        return -1
+    ok = 0
+    for it, row, (sx, heard, s) in zip(items, rows, res):
+        d = len(sx) / sr if sx is not None else 0.0
+        row.update(heard=heard, sim=round(s, 3), dur=round(d, 2), ok=bool(sx is not None and s >= 0.8 and fits(it["say"], d)))
+        if not row["ok"]:
+            state[voice + it["k"]] = state.get(voice + it["k"], 0) + 1
+            log(f"   ✗ {it['k']} (сходство {s:.2f}, {d:.1f} с): {it['say'][:60]}")
+            continue
+        tmp = os.path.join(os.path.dirname(raw), f"{voice}_{it['k']}.wav")
+        proc.write(tmp, sr, sx)
+        proc.process(tmp, os.path.join(ROOT, "sounds", "oko", voice, it["k"] + ".mp3"))
+        os.remove(tmp)
+        ok += 1
+    json.dump({"voice": voice, "items": rows}, open(side, "w", encoding="utf-8"), ensure_ascii=False)
+    return ok
 
 
-def todo(voice, lines, fem, state):
+def sidecars(work):
+    """Сохранённые записи пакетов: [(запись.wav, состав и итог)] по времени."""
+    out = []
+    for f in sorted(os.listdir(work)):
+        if re.fullmatch(r"\d{4}_\d{6}_[mf]\.json", f) and os.path.exists(os.path.join(work, f[:-5] + ".wav")):
+            out.append((os.path.join(work, f[:-5] + ".wav"), json.load(open(os.path.join(work, f), encoding="utf-8"))))
+    return out
+
+
+def recut(work, ks, every=False):
+    """Нарезать сохранённые записи: ещё не нарезанные (и с непринятыми репликами; every — все).
+    Принятая реплика заменяет прежний файл; не принятая — удаляется, если звучала из этой же
+    записи (её запишут снова). Нет ответа на «что слышно» — дальше не идём. → (принято, всего)."""
+    owner = {}
+    for raw, d in sidecars(work):
+        for r in d["items"]:
+            if r.get("ok"):
+                owner[d["voice"] + r["k"]] = raw
+    got = total = 0
+    for raw, d in sidecars(work):
+        rows = d["items"]
+        done = bool(rows) and all("sim" in r for r in rows)
+        if done and (not every or all(r.get("ok") for r in rows)):
+            continue
+        v = d["voice"]
+        log(f"── нарезка {os.path.basename(raw)}: {len(rows)} реплик")
+        ok = cut_batch(raw, rows, v, ks, {})
+        if ok < 0:
+            break
+        for r in json.load(open(raw[:-4] + ".json", encoding="utf-8"))["items"]:
+            mp3 = os.path.join(ROOT, "sounds", "oko", v, r["k"] + ".mp3")
+            if r.get("ok"):
+                owner[v + r["k"]] = raw
+            elif owner.get(v + r["k"], raw) == raw:
+                owner.pop(v + r["k"], None)
+                if os.path.exists(mp3):
+                    os.remove(mp3)
+        log(f"   принято {ok} из {len(rows)}")
+        got += ok; total += len(rows)
+    return got, total
+
+
+def todo(voice, lines, fem, state, wait=()):
+    """Реплики без записи; wait — те, чья запись уже есть и ждёт нарезки."""
     have = set(f[:8] for f in os.listdir(os.path.join(ROOT, "sounds", "oko", voice))) if os.path.isdir(os.path.join(ROOT, "sounds", "oko", voice)) else set()
     out = []
     for x in lines:
         say = fem.get(x["text"], x["text"]) if voice == "f" and x["kind"] != "pupil" else x["text"]
         k = key(say)
-        if k in have or state.get(voice + k, 0) >= 3:
+        if k in have or voice + k in wait or state.get(voice + k, 0) >= 3:
             continue
         out.append(dict(x, say=say, k=k, style=style(x)))
     return out
@@ -260,10 +316,18 @@ def main():
     fem = fem_map()
     sp = os.path.join(a.work, "state.json")
     state = json.load(open(sp)) if os.path.exists(sp) else {}
+    ks = keys_env()
+    if not ks and not a.dry:
+        sys.exit("нет ключей Gemini в окружении (GEMINI_API_KEYS)")
+    if not a.dry:  # сначала — записи, что ждут нарезки с прошлых запусков
+        got, total = recut(a.work, ks)
+        if total:
+            log(f"дорезано: принято {got} из {total}")
+    wait = set(d["voice"] + r["k"] for _, d in sidecars(a.work) for r in d["items"] if "sim" not in r)
     voices = ["m", "f"] if a.voice == "both" else [a.voice]
     plan = []
     for v in voices:
-        t = todo(v, lines, fem, state)
+        t = todo(v, lines, fem, state, wait)
         log(f"голос {v} ({VOICE[v]}): без записи {len(t)} реплик")
         plan += [(v, b) for b in batches(t, a.chars)]
     # голоса — по очереди пакетами, чтобы оба росли вместе
@@ -275,9 +339,6 @@ def main():
     log(f"пакетов: {len(inter)}; за этот запуск — не больше {a.requests}")
     if a.dry:
         return
-    ks = keys_env()
-    if not ks:
-        sys.exit("нет ключей Gemini в окружении (GEMINI_API_KEYS)")
     start, made, req = 0, 0, 0
     for v, b in inter:
         if req >= a.requests:
@@ -293,29 +354,10 @@ def main():
             log("   запись не вышла"); continue
         start = (start + 1) % len(ks)
         raw = os.path.join(a.work, f"{tag}_{v}.wav"); open(raw, "wb").write(wav)
-        w16 = raw[:-4] + "_16k.wav"
-        subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", raw, "-ar", "16000", "-ac", "1", w16], check=True)
-        marks = align(w16, [x["say"] for x in b], ks)
-        if not marks or len(marks) != len(b):
-            log(f"   разметка не сошлась ({len(marks) if marks else 0} из {len(b)}) — пакет пойдёт снова")
-            for x in b: state[v + x["k"]] = state.get(v + x["k"], 0) + 1
-            json.dump(state, open(sp, "w")); continue
-        sr, x = read(raw)
-        segs = cut(x, sr, marks, len(b))
-        ok = 0
-        for it, seg, mk in zip(b, segs, marks):
-            d = len(seg) / sr
-            s = sim(it["say"], mk.get("heard", ""))
-            if s < 0.8 or not (0.035 * len(it["say"]) <= d <= 0.25 * len(it["say"]) + 1.5):
-                state[v + it["k"]] = state.get(v + it["k"], 0) + 1
-                log(f"   ✗ {it['k']} (сходство {s:.2f}, {d:.1f} с): {it['say'][:60]}")
-                continue
-            tmp = os.path.join(a.work, f"{v}_{it['k']}.wav")
-            proc.write(tmp, sr, seg)
-            proc.process(tmp, os.path.join(ROOT, "sounds", "oko", v, it["k"] + ".mp3"))
-            ok += 1
-        made += ok
-        log(f"   принято {ok} из {len(b)}")
+        ok = cut_batch(raw, b, v, ks, state)
+        if ok >= 0:
+            made += ok
+            log(f"   принято {ok} из {len(b)}")
         json.dump(state, open(sp, "w"))
     subprocess.run([sys.executable, os.path.join(HERE, "manifest.py")], check=True)
     log(f"итог запуска: запросов записи {req}, новых реплик {made}")
