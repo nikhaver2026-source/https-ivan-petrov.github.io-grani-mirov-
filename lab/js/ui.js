@@ -441,6 +441,11 @@ function liteSet(v) {
   S.lite = v ? 1 : 0; LAB.saveSettings();
   if (LAB.AE.applyLite) LAB.AE.applyLite();
 }
+function okoVoiceDesc(v) {
+  if (v === "tts") return "Слова ОКО читает синтезатор игры, как и всё остальное.";
+  return (v === "f" ? "ОКО говорит записанным женским голосом и о себе — в женском роде." : "ОКО говорит записанным мужским голосом.") +
+    " Реплики с номером этажа или названием помещения читает синтезатор. Текст любой реплики — в истории объявлений.";
+}
 function liteDesc(v) {
   /* частота звука выбирается при запуске: устройство уже работает с другой — нужен перезапуск */
   var rate = !!LAB.AE.ctx && LAB.AE.liteCtx !== !!v;
@@ -531,6 +536,11 @@ function settingsMenu() {
   var items = [
     { kind: "choice", label: "Синтезатор речи", options: ttsOpts, get: function () { return S.tts; }, set: function (v) { S.tts = v; LAB.saveSettings(); Sp.choose(); } },
     { label: function () { return "Голос синтезатора: " + (S.tts === "espeak" ? "встроенный eSpeak" : S.voice || autoVoiceName()); }, fn: voiceMenu },
+    /* (голос ОКО) okovoice.js: выбранный голос сразу звучит образцом */
+    { kind: "choice", label: "Голос ОКО", options: [{ v: "m", label: "мужской" }, { v: "f", label: "женский" }, { v: "tts", label: "синтезатор игры, как прежде" }],
+      get: function () { return S.okoVoice || "m"; }, set: function (v) { S.okoVoice = v; LAB.saveSettings(); if (LAB.okoVoice) LAB.okoVoice.preview(v); }, descOf: okoVoiceDesc },
+    { kind: "toggle", label: "Сбои и шёпот в голосе ОКО", get: function () { return !!S.okoFx; }, set: function (v) { S.okoFx = v ? 1 : 0; LAB.saveSettings(); },
+      descOf: function (v) { return v ? "Изредка ОКО заикается, теряет звук, заговаривает обрывком старой программы; перед зловещими словами — обратное эхо, после — ответный шёпот." : "ОКО говорит ровно, без сбоев и шёпота."; } },
     { kind: "slider", label: "Скорость речи", min: 0, max: 100, step: 5, get: function () { return S.ratePct == null ? 50 : +S.ratePct; }, set: function (v) { S.ratePct = v; S.rate = LAB.rateFromPct(v); LAB.saveSettings(); }, fmt: function (v) { return Math.round(v) + " процентов" + (v === 50 ? ", обычная" : ""); } },
     /* (2.6) режим сложности выбирают только в начале новой игры (diffMenu); здесь — какой он у этой игры */
     { label: function () { return gm() && gm().entered ? "Режим сложности этой игры: " + LAB.dk().n.toLowerCase() + ". Он выбран в начале игры и не меняется" : "Режим сложности выбирают в начале новой игры: «Начать игру» в главном меню"; }, info: true, fn: function () {
@@ -577,6 +587,7 @@ function settingsMenu() {
 function mixerMenu() {
   var items = [
     vol("Речь", "voiceVol"),
+    vol("Голос ОКО: его записанные слова, вдобавок к громкости речи", "okoVol"),
     vol("Окружение: фон уровня и помещений", "ambVol"),
     vol("Интерфейс: окна и сигналы", "uiVol"),
     vol("Сигналы головоломок: тоны взлома, реле, замков — на время головоломки музыка и фон стихают", "puzzleVol"),

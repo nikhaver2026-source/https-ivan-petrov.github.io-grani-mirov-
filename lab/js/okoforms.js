@@ -144,7 +144,7 @@ function pupilFake() {
   if (LAB.oko && LAB.oko.hushed && LAB.oko.hushed()) return false;
   var dir = emptyDir(), t = pick(FAKE).replace(/\{dir\}/g, dir);
   var fr = frame("squad", "pupil");
-  if (LAB.oko && LAB.oko.voice) LAB.oko.voice(fr.lead + ": «" + t + "»", { prio: "event", keep: true }, fr.chime, fr.gap);
+  if (LAB.oko && LAB.oko.voice) LAB.oko.voice(fr.lead + ": «" + t + "»", { prio: "event", keep: true, okoKind: "pupil" }, fr.chime, fr.gap);
   var o = okoSt(); o.pupilN = (o.pupilN || 0) + 1;
   /* настоящее ОКО поправляет издалека — тем реже, чем глубже */
   if (Math.random() < 0.6 - 0.35 * f.t) {
@@ -153,7 +153,7 @@ function pupilFake() {
       var g2 = G();
       if (!LAB.game.entered || !g2 || g2.dead || g2.L !== L0 || g2.F !== F0) return;
       var fr2 = frame("check");
-      if (LAB.oko && LAB.oko.voice) LAB.oko.voice(fr2.lead + ": «" + pick(CORRECT) + "»", { prio: "event", keep: true }, fr2.chime, fr2.gap);
+      if (LAB.oko && LAB.oko.voice) LAB.oko.voice(fr2.lead + ": «" + fem(pick(CORRECT)) + "»", { prio: "event", keep: true, okoKind: "correct" }, fr2.chime, fr2.gap);
     }, 6000 + Math.round(Math.random() * 4000));
   }
   return true;
@@ -175,10 +175,19 @@ function price(kind) {
   var base = kind === "rest" ? 40 + (g.L - 61) * 4 : 60 + (g.L - 61) * 5;
   return Math.round(base * (dk.price || 1) * Math.pow(1.6, n));
 }
+/* Слова Счетовода в сделке — одним списком (их озвучивает и конвейер голоса ОКО, tools/okovoice). */
+var DEAL = {
+  rest: ["Сделка. Сторож подождёт три минуты — и ни секундой больше. Счёт закрыт.", "Оплачено. Три минуты тишины записаны на твоё имя. Сторож ворчит, но подписал.", "Договорились. Сторож отходит на три минуты. Время — тоже товар, и ты его купил."],
+  heat: ["Списано. Четверть того, что я о тебе думал, — в архив. Остальное оставлю себе.", "Готово: я забыл. Не всё, конечно. Забыть всё стоит дороже, чем у тебя есть."],
+  no: ["Как знаешь. Цены растут быстрее тебя.", "Без сделки так без сделки. Я записал и это."],
+  poor: "Мало. Забвение дорогое — дороже памяти."
+};
 function countSay(t) {
   var fr = frame("buy", "count");
-  if (LAB.oko && LAB.oko.voice) LAB.oko.voice(fr.lead + ": «" + t + "»", { prio: "event", keep: true }, fr.chime, fr.gap);
+  if (LAB.oko && LAB.oko.voice) LAB.oko.voice(fr.lead + ": «" + fem(t) + "»", { prio: "event", keep: true, okoKind: "deal" }, fr.chime, fr.gap);
 }
+/* (голос ОКО) женский голос ОКО говорит о себе в женском роде (oko_fem.js) */
+function fem(t) { return LAB.okoVoice ? LAB.okoVoice.fem(t) : t; }
 function dealMenu() {
   var g = G(), fs = CUR().fs;
   if (!dealsOpen()) { LAB.say("Счетовод молчит: торговаться здесь не с кем."); return; }
@@ -191,19 +200,19 @@ function dealMenu() {
     fs.wReady = Math.max(fs.wReady || 0, T) + 360; /* такты по полсекунды: три минуты */
     if (LAB.oko && LAB.oko.log) LAB.oko.log("Счетовод: выход единиц отложен по договору.");
     A("play", "vend_coin");
-    countSay(pick(["Сделка. Сторож подождёт три минуты — и ни секундой больше. Счёт закрыт.", "Оплачено. Три минуты тишины записаны на твоё имя. Сторож ворчит, но подписал.", "Договорились. Сторож отходит на три минуты. Время — тоже товар, и ты его купил."]));
+    countSay(pick(DEAL.rest));
     if (LAB.ui && LAB.ui.closeAll) LAB.ui.closeAll();
   } });
   if (!fs.dealHeat) items.push({ label: "Забыть подозрение: ОКО забудет четверть — " + ph + " кредитов", fn: function () {
-    if ((g.credits || 0) < ph) { if (LAB.UI) LAB.UI.error(); countSay("Мало. Забвение дорогое — дороже памяти."); return; }
+    if ((g.credits || 0) < ph) { if (LAB.UI) LAB.UI.error(); countSay(DEAL.poor); return; }
     g.credits -= ph; fs.dealHeat = 1;
     var o = okoSt(); o.heat = Math.max(0, (o.heat || 0) - 25);
     if (LAB.oko && LAB.oko.log) LAB.oko.log("Счетовод: часть подозрений списана.");
     A("play", "vend_coin");
-    countSay(pick(["Списано. Четверть того, что я о тебе думал, — в архив. Остальное оставлю себе.", "Готово: я забыл. Не всё, конечно. Забыть всё стоит дороже, чем у тебя есть."]));
+    countSay(pick(DEAL.heat));
     if (LAB.ui && LAB.ui.closeAll) LAB.ui.closeAll();
   } });
-  items.push({ label: "Отказаться", fn: function () { countSay(pick(["Как знаешь. Цены растут быстрее тебя.", "Без сделки так без сделки. Я записал и это."])); if (LAB.ui && LAB.ui.closeTop) LAB.ui.closeTop(); } });
+  items.push({ label: "Отказаться", fn: function () { countSay(pick(DEAL.no)); if (LAB.ui && LAB.ui.closeTop) LAB.ui.closeTop(); } });
   if (LAB.ui && LAB.ui.menu) LAB.ui.menu("Сделка со Счетоводом", items, { intro: "Счетовод ОКО торгуется: кредиты — за время или за забытое подозрение. На этом этаже передышку можно купить дважды, забвение — один раз." });
 }
 /* Волна встала в очередь — Счетовод напоминает, что время продаётся. */
@@ -315,6 +324,8 @@ LAB.okoForms = {
   cur: cur, frame: frame, chatty: chatty, silent: silent, sounds: sounds,
   dispatched: dispatched, pupilFake: pupilFake, dealsOpen: dealsOpen, dealMenu: dealMenu, price: price, offerDeal: offerDeal,
   tick: tick, warnTick: warnTick, entered: entered, floorIn: floorIn, guideLines: guideLines,
+  /* тексты для конвейера голоса ОКО (tools/okovoice) */
+  TEXTS: { FAKE: FAKE, CORRECT: CORRECT, DEAL: DEAL, DIRS: DIRS },
   _reset: function () { nextFake = 0; lastWarn = 0; }
 };
 })();

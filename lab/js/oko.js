@@ -139,12 +139,18 @@ function voice(t, opts, chime, gap) {
    далёкий и зеркальный в Отражении, разумы города) — и слова через gap мс:
    в Отражении слова настоящего ОКО доходят поздно. true — сигнал этой глубины. */
 function chimeSay(t, opts, chime, gap) {
-  if (!chime) { LAB.say(t, opts); return; }
+  if (!chime) { okoSay(t, opts, null); return; }
   var F = LAB.okoForms, key = chime === true ? (F ? F.frame("check").chime : "oko") : chime;
   if (key) A("okoChime", key, F ? F.cur().t : 0);
   /* слова — только если носитель ещё на этом этаже: поздние слова не догоняют его на другом */
   var L0 = G().L, F0 = G().F;
-  setTimeout(function () { var g = G(); if (!LAB.game.entered || !g || g.L !== L0 || g.F !== F0) return; LAB.say(t, opts); }, gap == null ? 450 : gap);
+  setTimeout(function () { var g = G(); if (!LAB.game.entered || !g || g.L !== L0 || g.F !== F0) return; okoSay(t, opts, chime); }, gap == null ? 450 : gap);
+}
+/* (голос ОКО) Слова ОКО — его записанным голосом (okovoice.js), если реплика записана;
+   иначе — синтезатором, как прежде. */
+function okoSay(t, opts, chime) {
+  if (LAB.okoVoice && LAB.okoVoice.play(t, opts, chime)) return;
+  LAB.say(t, opts);
 }
 function release() {
   holdT = null;
@@ -156,7 +162,7 @@ function release() {
     if (!LAB.game.entered || G().dead) { held = []; return; }
     if (hushed()) { holdT = setTimeout(release, 600); return; } /* следом началась новая головоломка — ждём и её */
     var list = held; held = [];
-    list.forEach(function (h, i) { if (i === 0 && h.chime) chimeSay(h.t, h.o, h.chime, h.gap); else LAB.say(h.t, h.o); });
+    list.forEach(function (h, i) { if (i === 0 && h.chime) chimeSay(h.t, h.o, h.chime, h.gap); else okoSay(h.t, h.o, h.chime); });
   }, 1500);
 }
 function speak(kind, force, data) {
@@ -179,11 +185,13 @@ function speak(kind, force, data) {
   var line = pickFrom[Math.floor(Math.random() * pickFrom.length)];
   recent.push(line);
   while (recent.length > Math.min(6, Math.max(1, arr.length - 1))) recent.shift();
-  var t = line.replace(/\{L\}/g, String(G().L)).replace(/\{F\}/g, String(G().F)).replace(/\{room\}/g, data && data.room ? data.room : "");
+  /* (голос ОКО) женский голос ОКО говорит о себе в женском роде (oko_fem.js) */
+  var said = LAB.okoVoice ? LAB.okoVoice.fem(line) : line;
+  var t = said.replace(/\{L\}/g, String(G().L)).replace(/\{F\}/g, String(G().F)).replace(/\{room\}/g, data && data.room ? data.room : "");
   o.lastSay = now;
   if (LAB.tutor && !hushed()) LAB.tutor.ev("oko");
   var fr = LAB.okoForms ? LAB.okoForms.frame(kind) : { lead: "ОКО по громкой связи", chime: true, gap: 450 };
-  voice(fr.lead + ": «" + t + "»", { prio: "event", keep: true }, fr.chime, fr.gap);
+  voice(fr.lead + ": «" + t + "»", { prio: "event", keep: true, okoKind: kind }, fr.chime, fr.gap);
   if (LAB.game.journal && (kind === "turret_hack" || kind === "robots" || kind === "boss")) LAB.game.journal("ОКО: «" + t + "»");
   return true;
 }
@@ -1043,6 +1051,8 @@ LAB.oko = {
   state: st, lines: lines, wave: wave, shift: shift, react: react, minesOrder: minesOrder, minesLater: minesLater, REACT: REACT,
   report: report, level: level, levelName: function () { return SEC[level()]; }, setLevel: setLevel, sec: sec, log: log, logText: logText, T: T,
   hushed: hushed, voice: voice,
+  /* основные реплики — для конвейера голоса ОКО (tools/okovoice) */
+  BASE: BASE,
   /* (3.2) последние записи журнала безопасности строками — для «Записи тревог поста» (zones.js) */
   logLines: function (n) { var f = fs(), L = (f && f.slog) || [], pad = function (v) { return (v < 10 ? "0" : "") + v; }; return L.slice(-(n || 5)).map(function (e) { return pad(e.h) + ":" + pad(e.mi) + ". " + e.t; }); },
   /* (3.0) передышка между волнами — для проверок */

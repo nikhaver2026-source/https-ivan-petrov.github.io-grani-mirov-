@@ -6431,6 +6431,87 @@ LAB.ui.closeAll();
   ok(lib.vitrine && lib.grate && lib.intercom && lib.intercomCd && lib.deposit && lib.mail >= 2 && lib.catalog, "витрина, решётка, селектор, ячейки, почта, каталог (" + JSON.stringify({ v: lib.vitrine, g: lib.grate, i: lib.intercom, cd: lib.intercomCd, d: lib.deposit, m: lib.mail, c: lib.catalog }) + (lib.grateSaid ? "; решётка: " + lib.grateSaid : "") + (lib.icSaid ? "; селектор: " + lib.icSaid : "") + ")");
   ok(lib.filmOff && lib.filmOn && lib.tornLbl && lib.tornNoTape && lib.tornFixed && lib.tornTaken && lib.spliceBox, "микрофильмы — только при питании; порванную плёнку изолентой не склеить: монтажной лентой — да, а бобину можно забрать на продажу; коробка с лентой — у магнитофона (" + JSON.stringify({ off: lib.filmOff, on: lib.filmOn, lbl: lib.tornLbl, no: lib.tornNoTape, fix: lib.tornFixed, take: lib.tornTaken, box: lib.spliceBox }) + ")");
 
+  /* (голос ОКО, просьба автора: «чтобы ОКО разговаривало не синтезатором, который озвучивает игру, а
+     своим голосом»; «реализуй настройку, чтобы игрок мог выбрать, каким голосом будет
+     разговаривать ОКО, мужским или женским») Запись вместо синтезатора, синтезатор — для
+     незаписанного, выбор голоса в настройках, женский род у женского голоса, Зрачок — голосом
+     другого пола, сбои и шёпот, тишина по жесту */
+  console.log("(Голос ОКО): записи, выбор голоса, женский род, сбои");
+  const ov = await page.evaluate(async () => {
+    const out = {}, sleep = ms => new Promise(r => setTimeout(r, ms)), S = LAB.settings, V = LAB.okoVoice;
+    const was = { v: S.okoVoice, fx: S.okoFx };
+    const plays = [], orig = LAB.Sound.play;
+    LAB.Sound.play = function (id, o) { plays.push({ id: id, o: o || {} }); return orig.apply(this, arguments); };
+    LAB.ui.closeAll();
+    const REC = "Я слушаю ваш пульс по вентиляции, носитель. Он учащается.", K = V.key(REC);
+    const say = (t, o) => { SPOKEN.length = 0; plays.length = 0; LAB.oko.voice(t, Object.assign({ prio: "event", keep: true }, o || {}), true, 0); };
+    const okoIds = () => plays.map(p => p.id).filter(id => /^oko_(m|f|fx)_/.test(id));
+    out.def = V.voice() === "m" && S.okoFx === 1;
+    out.listed = V.has(REC, "m") && V.has(REC, "f") && !V.has("Тестовая реплика без записи.", "m");
+    V._rng(() => 0.99);
+    S.okoVoice = "m"; say("ОКО по громкой связи: «" + REC + "»"); await sleep(250);
+    out.rec = okoIds()[0] === "oko_m_" + K && !SPOKEN.some(t => t.indexOf(REC) >= 0);
+    out.hist = LAB.history.list.some(h => h.text === "ОКО по громкой связи: «" + REC + "»");
+    say("ОКО по громкой связи: «Тестовая реплика без записи.»"); await sleep(250);
+    out.tts = SPOKEN.some(t => /Тестовая реплика без записи/.test(t)) && !okoIds().length;
+    S.okoVoice = "f"; say("ОКО по громкой связи: «" + REC + "»"); await sleep(250);
+    out.f = okoIds()[0] === "oko_f_" + K;
+    out.fem = V.fem("Я стал тише. Это не слабость. Ну… немного слабость.") === "Я стала тише. Это не слабость. Ну… немного слабость." &&
+      V.fem("Ещё один пост пуст. Я поставлю новый.") === "Ещё один пост пуст. Я поставлю новый." && V.fem("Это был не я, носитель. Там никого нет.") === "Это была не я, носитель. Там никого нет.";
+    plays.length = 0; V.play("Зрачок, вплотную: «" + REC + "»", { prio: "event" }, "pupil"); await sleep(150);
+    const pp = plays.filter(p => /^oko_m_/.test(p.id))[0];
+    out.pupil = !!pp && pp.id === "oko_m_" + K && Math.abs(pp.o.pan) > 0.5;
+    /* speak(): реплика проходит через женский род (подмена fem видна в словах) */
+    const fem0 = V.fem; V.fem = t => "ЖЕН " + t;
+    SPOKEN.length = 0; LAB.oko.state().lastSay = 0; LAB.oko.speak("taunt", true); await sleep(800);
+    out.speakFem = SPOKEN.some(t => /: «ЖЕН /.test(t));
+    V.fem = fem0;
+    S.okoVoice = "tts"; say("ОКО по громкой связи: «" + REC + "»"); await sleep(250);
+    out.ttsMode = SPOKEN.some(t => t.indexOf(REC) >= 0) && !okoIds().length;
+    S.okoVoice = "m";
+    /* сбои: запись в памяти — обратное эхо, сбой, сердце под словами о пульсе; выключены — ровно */
+    for (let i = 0; i < 50 && !LAB.Bank.ready("oko_m_" + K); i++) await sleep(100);
+    out.loaded = LAB.Bank.ready("oko_m_" + K);
+    V._rng(() => 0.01);
+    say("ОКО по громкой связи: «" + REC + "»", { okoKind: "taunt" }); await sleep(300);
+    const ids = okoIds();
+    out.fx = ids.indexOf("oko_fx_swell") >= 0 && ids.indexOf("oko_fx_main") >= 0 && ids.indexOf("oko_fx_heart") >= 0;
+    const mainP = plays.filter(p => p.id === "oko_fx_main")[0], swP = plays.filter(p => p.id === "oko_fx_swell")[0];
+    out.order = !!mainP && !!swP && mainP.o.delay > (swP.o.delay || 0);
+    S.okoFx = 0; say("ОКО по громкой связи: «" + REC + "»", { okoKind: "taunt" }); await sleep(250);
+    out.fxOff = okoIds().length === 1 && okoIds()[0] === "oko_m_" + K;
+    S.okoFx = 1;
+    const ex = V.extras("Тревога по всему этажу.", "alarm", true);
+    out.urgent = (!ex.glitch || ex.glitch === "stutter") && !ex.misfire && !ex.swell && !ex.wobble;
+    V._rng(null);
+    /* тишина (четыре пальца вниз) гасит и записанный голос */
+    V._rng(() => 0.99);
+    say("ОКО по громкой связи: «" + REC + "»"); await sleep(250);
+    const h = plays.filter(p => p.id === "oko_m_" + K).length;
+    let stopped = 0; const st0 = V.stop; V.stop = function () { stopped++; return st0.apply(this, arguments); };
+    LAB.Speech.hush(); V.stop = st0;
+    out.hush = h === 1 && stopped === 1;
+    V._rng(null);
+    /* настройки: «Голос ОКО» — мужской, женский, синтезатор; сбои и шёпот; громкость в микшере */
+    LAB.ui.settings();
+    const items = LAB.ui.top().items, lb = i => typeof i.label === "function" ? i.label() : i.label;
+    const vi = items.filter(i => lb(i) === "Голос ОКО")[0];
+    out.menu = !!vi && vi.options.map(o => o.v).join(",") === "m,f,tts" && items.some(i => lb(i) === "Сбои и шёпот в голосе ОКО");
+    if (vi) { SPOKEN.length = 0; vi.set("f"); out.menuSet = S.okoVoice === "f" && /женским голосом/.test(vi.descOf("f")); vi.set("m"); }
+    LAB.ui.closeAll();
+    LAB.Sound.play = orig; S.okoVoice = was.v; S.okoFx = was.fx;
+    return out;
+  });
+  ok(ov.def && ov.listed, "голос ОКО по умолчанию — мужской, сбои и шёпот включены; список записей знает реплику обоих голосов");
+  ok(ov.rec && ov.hist, "записанная реплика звучит записью ОКО, синтезатор её не читает, текст — в истории объявлений");
+  ok(ov.tts, "реплика без записи — синтезатором, как прежде");
+  ok(ov.f && ov.fem && ov.speakFem, "женский голос: своя запись; о себе — в женском роде («я стала тише», «Это была не я»), «Я поставлю новый» (о посте) не тронут; реплики speak() проходят через женский род");
+  ok(ov.pupil, "Зрачок — голосом другого пола, вплотную сбоку");
+  ok(ov.ttsMode, "«синтезатор игры» в настройке — слова ОКО снова читает синтезатор");
+  ok(ov.loaded && ov.fx && ov.order && ov.fxOff && ov.urgent, "сбои и шёпот: обратное эхо до слов, сбой, сердце под словами о пульсе; выключены — ровно; тревоги — без обрывов (" + JSON.stringify({ l: ov.loaded, fx: ov.fx, o: ov.order, off: ov.fxOff, u: ov.urgent }) + ")");
+  ok(ov.hush, "тишина по жесту гасит и записанный голос ОКО");
+  ok(ov.menu && ov.menuSet, "в настройках — «Голос ОКО»: мужской, женский, синтезатор игры; и «Сбои и шёпот в голосе ОКО»");
+
   /* (3.7, просьба автора: «плёнка, склеенная изолентой, работать не будет — найди такого рода
      нелогичности и переработай») Кофейный автомат без воды, термос, остывший стакан, плита,
      самовар по помещению, улей и сушёные травы, рецепты, пресс, швейная машинка, манекен, рамка

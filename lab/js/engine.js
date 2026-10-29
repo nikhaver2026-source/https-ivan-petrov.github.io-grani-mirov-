@@ -87,7 +87,10 @@ var DEF = {
   /* (2.2, просьба игрока) игра в фоне — свёрнутое окно, другое окно или
      приложение: 0 — звук выключается, а окно на компьютере сворачивается;
      1 — звук звучит тише, окно остаётся (main.js) */
-  bgDim: 0
+  bgDim: 0,
+  /* (голос ОКО) m — мужской, f — женский (записи, okovoice.js), tts — синтезатор
+     игры; сбои и шёпот в голосе ОКО; громкость голоса ОКО (микшер) */
+  okoVoice: "m", okoFx: 1, okoVol: 1
 };
 var saved = {};
 try { saved = JSON.parse(store.get("lab_settings") || "{}") || {}; } catch (e) { saved = {}; }
@@ -887,6 +890,9 @@ var Speech = {
     var P = this.PRIO, prio = this._prio(opts), user = this.isUser();
     /* важное — в историю объявлений (точка и запятая на клавиатуре) */
     if (!opts.hist && (opts.keep || prio >= P.urgent) && LAB.history) LAB.history.add(text);
+    /* (голос ОКО) реплику ОКО говорит его записанный голос (okovoice.js): здесь — только история
+       объявлений и субтитры, без синтезатора и без живой области чтеца экрана */
+    if (opts.recorded) { if (LAB.showCaption) LAB.showCaption(text); return; }
     var noteOn = this.noteBusy() && !opts.note;
     var readOn = this.reading && (this.speaking || this.queue.length > 0) && !user && prio < P.urgent && !opts.note;
     if (noteOn || readOn) {
@@ -1158,8 +1164,8 @@ var Speech = {
     });
     if (this.held.length) this._armHeld();
   },
-  /* Тишина: четыре пальца вниз. Отложенное тоже забывается. */
-  hush: function () { this.later = []; this.held = []; clearTimeout(this.heldTimer); this.heldTimer = null; this.stop(); },
+  /* Тишина: четыре пальца вниз. Отложенное тоже забывается; замолкает и записанный голос ОКО. */
+  hush: function () { this.later = []; this.held = []; clearTimeout(this.heldTimer); this.heldTimer = null; this.stop(); if (LAB.okoVoice) LAB.okoVoice.stop(); },
   busy: function () { return this.speaking || this.queue.length > 0; },
   /* Самопроверка очереди (tests/sound.test.js): поддельный синтезатор — порядок
      по важности, повторы, устаревшее, повтор после сбоя, сторож зависания,
