@@ -1208,6 +1208,20 @@ function genFloor(seed, L, F, attempt) {
     if (bf) {
       bf.hp = bf.maxhp = Math.round(bf.maxhp * bdef.mult);
       bf.dmg = Math.round(bf.dmg * 1.5);
+      /* (3.7, нелогичность) страж не слабее обычных врагов своего уровня: здоровье — не меньше двух с половиной
+         здоровий сильнейшего из них, удар — не слабее его удара. Прежде страж на слабой основе уступал паре
+         обычных врагов этажа: финальная «Заглушка» и Безбережница — двум буровым автоматам. Сильные стражи —
+         как были. Случайностей не тратит: этажи прежние. */
+      var bTop = { hp: 0, dmg: 0 };
+      lev.foes.forEach(function (fid) {
+        var b0 = LAB.FOES[fid];
+        if (!b0 || b0.beh.some(function (k) { return k === "turret" || k === "camera" || k === "cleaner" || k === "relay" || k === "observer"; })) return;
+        var s0 = LAB.scaleFoe(b0, bf.lvl);
+        if (s0.hp > bTop.hp) bTop.hp = s0.hp;
+        if (s0.dmg > bTop.dmg) bTop.dmg = s0.dmg;
+      });
+      bf.hp = bf.maxhp = Math.max(bf.maxhp, Math.round(2.5 * bTop.hp));
+      bf.dmg = Math.max(bf.dmg, bTop.dmg);
       bf.arm = Math.round(bf.arm * 1.3) + 2;
       bf.lvl += 2;
     } else return null;
