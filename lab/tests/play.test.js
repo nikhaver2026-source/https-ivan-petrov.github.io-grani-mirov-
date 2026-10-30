@@ -27,7 +27,8 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
 (async () => {
   await new Promise(r => server.listen(0, r));
   const url = `http://127.0.0.1:${server.address().port}/index.html`;
-  const opts = { args: ["--autoplay-policy=no-user-gesture-required"] };
+  /* (3.7) --expose-gc и точные сведения о памяти: проверка I4 меряет удержанную память, а не мусор до сборки */
+  const opts = { args: ["--autoplay-policy=no-user-gesture-required", "--js-flags=--expose-gc", "--enable-precise-memory-info"] };
   if (fs.existsSync("/opt/pw-browsers/chromium")) opts.executablePath = "/opt/pw-browsers/chromium";
   let browser;
   try { browser = await pw.chromium.launch(opts); } catch (e) { delete opts.executablePath; browser = await pw.chromium.launch(opts); }
@@ -2264,7 +2265,7 @@ LAB.ui.closeAll();
     const sig = x => [x.surf, x.amb, (x.foes || []).slice().sort().join("+")].join("|");
     out.depths = lv.length === 6 && new Set(lv.map(sig)).size === 6 && new Set(lv.map(x => x.amb)).size >= 5;
     /* I4: память не растёт без предела — кэш этажей ограничен, обход двухсот этажей не раздувает кучу */
-    const heap = () => (performance.memory ? performance.memory.usedJSHeapSize : 0);
+    const heap = () => { if (window.gc) { window.gc(); window.gc(); } return performance.memory ? performance.memory.usedJSHeapSize : 0; };
     const tour = n => { for (let i = 0; i < n; i++) { const Lv = 1 + (i % 10), Fv = 1 + (i * 7) % 20; LAB.getFloor(G.seed, Lv, Fv); } };
     tour(100); await wait(200); const h1 = heap(); tour(200); await wait(200); const h2 = heap();
     out.memory = performance.memory ? { mb: Math.round((h2 - h1) / 1048576), ok: h2 - h1 < 64 * 1048576 } : { mb: "нет данных", ok: false, na: true };
@@ -3365,13 +3366,17 @@ LAB.ui.closeAll();
       out.rows.push({ L, F, n: all.length, patrols: all.filter(f => f.beat).length, drones: all.filter(f => f.beat && beh(f).indexOf("fly") >= 0).length,
         rooms, roomsAll: annex, stair: all.filter(f => f.stairPost).length, bio: all.filter(f => kind(f) === "bio").length, anom: all.filter(f => kind(f) === "anom").length, types: new Set(all.map(f => f.type)).size });
     }
+    /* (3.7) «глубже — разнообразнее и больше» — в среднем по четырём мирам: у одного зерна первый этаж
+       бывает людным, а последний — просторным и редким */
+    const avg = (L, F) => { let n = 0, t = 0; for (let i = 0; i < 4; i++) { const f2 = LAB.getFloor("dense" + i, L, F); n += f2.foes.length; t += new Set(f2.foes.map(f => f.type)).size; } return { n: Math.round(n / 4), types: Math.round(t / 4) }; };
+    out.avg1 = avg(1, 1); out.avgZ = avg(100, 20);
     return out;
   });
   const rowsTxt = dense.rows.map(r => r.L + "-" + r.F + ": " + r.n + " врагов, патрулей " + r.patrols + " (дронов " + r.drones + "), кабинетов под охраной " + r.rooms + " из " + r.roomsAll + ", у лестниц " + r.stair + ", тварей " + r.bio + (r.anom ? ", аномалий " + r.anom : "") + ", видов " + r.types).join("; ");
   ok(dense.rows.every(r => r.n >= 150 && r.patrols >= 5 && r.stair >= 1 && r.bio >= 1 && r.rooms >= r.roomsAll * 0.6), "охрана плотная на всех уровнях: робот почти в каждом кабинете, патрули, стражи у лестниц, твари — " + rowsTxt);
   ok(dense.rows.some(r => r.drones >= 1), "по коридорам летают патрульные дроны");
-  const d1 = dense.rows[0], dz = dense.rows[dense.rows.length - 1];
-  ok(dz.types > d1.types && dz.n >= d1.n, "чем глубже, тем разнообразнее и больше: видов " + d1.types + " → " + dz.types + ", врагов " + d1.n + " → " + dz.n);
+  const d1 = dense.avg1, dz = dense.avgZ;
+  ok(dz.types > d1.types && dz.n >= d1.n, "чем глубже, тем разнообразнее и больше (в среднем по четырём мирам): видов " + d1.types + " → " + dz.types + ", врагов " + d1.n + " → " + dz.n);
 
   const repl = await page.evaluate(() => {
     const g = LAB.game, G = g.G, C = LAB.combat, O = LAB.oko, out = {};
@@ -5399,7 +5404,7 @@ LAB.ui.closeAll();
     ok(/^ОКО издалека: «[^»]*(не я|Не верьте|Зрачок|пусто|поздно)/.test(okf.fix), "настоящее ОКО поправляет Зрачка издалека" + (okf.fix ? "" : " (поправки не было)") + (/^ОКО издалека: «[^»]*(не я|Не верьте|Зрачок|пусто|поздно)/.test(okf.fix) ? "" : " (" + okf.fix.slice(0, 120) + ")"));
     ok(/^Выход единиц: \d+/.test(okf.realLog) && okf.term, "настоящий выход машин — в журнале безопасности терминала (" + okf.realLog.slice(0, 80) + ")");
     ok(okf.deals === "011100", "Счетовод торгуется с 66-го по 78-й уровень (" + okf.deals + ")");
-    ok(okf.dealItems.length === 3 && /^Передышка: Сторож подождёт три минуты — \d+ кредитов$/.test(okf.dealItems[0]) && /^Забыть подозрение/.test(okf.dealItems[1]), "сделка со Счетоводом: передышка, забытое подозрение, отказ (" + okf.dealItems.join(" / ").slice(0, 120) + ")");
+    ok(okf.dealItems.length === 3 && /^Передышка: Сторож подождёт три минуты — \d+ кредит(а|ов)?$/.test(okf.dealItems[0]) && /^Забыть подозрение/.test(okf.dealItems[1]), "сделка со Счетоводом: передышка, забытое подозрение, отказ (" + okf.dealItems.join(" / ").slice(0, 120) + ")");
     ok(okf.deal.paid === okf.deal.pr && okf.deal.ready >= 360 && okf.deal.n === 1 && okf.deal.log && /Счетовод ОКО: «(Сделка|Оплачено|Договорились)/.test(okf.deal.said), "передышка куплена: кредиты списаны, Сторож ждёт три минуты, в журнале — договор (" + okf.deal.paid + " кр., " + okf.deal.ready + " тактов)");
     ok(okf.pr2 > okf.deal.pr, "вторая передышка на этаже дороже (" + okf.deal.pr + " → " + okf.pr2 + ")");
     ok(/^ОКО, шёпотом, прямо в ухо: «/.test(okf.warn) && okf.warn.indexOf(okf.warnName) >= 0 && okf.warnChime === 0, "Исток: ОКО шёпотом предупреждает о машине из-за стены (" + okf.warn.slice(0, 100) + ")");
@@ -5642,7 +5647,7 @@ LAB.ui.closeAll();
       const npc = { key: "test:npc", n: "Проверочный", prof: "Инженер" };
       G.quests = G.quests.filter(q => q.giver !== npc.key).concat([0, 1, 2].map(i => ({ id: npc.key + ":" + i, giver: npc.key, done: true, type: "kill", short: "x" })));
       const ofs = LAB.quests.offers(npc);
-      out.questCap = { tier: LAB.quests.stage(npc), n: ofs.length, steps: ofs.map(q => LAB.quests.steps(q).length), work: ofs.map(q => LAB.quests.workOf(q)), notReady: ofs.every(q => !LAB.quests.ready(q)) };
+      out.questCap = { tier: LAB.quests.stage(npc), n: ofs.length, chap: ofs.some(q => !!q.chap), steps: ofs.map(q => LAB.quests.steps(q).length), work: ofs.map(q => LAB.quests.workOf(q)), notReady: ofs.every(q => !LAB.quests.ready(q)) };
       U.closeAll(); g.takeQuest(npc); out.questCap.menu = !!U.top() && /^Поручение:/.test(U.top().title); U.closeAll();
       const vq = { type: "visit", tL: G.L, tF: G.F, seq0: G.visitSeq || 0, giverName: "Проверочный" };
       out.visitBefore = g.questProgress(vq);
@@ -5704,7 +5709,7 @@ LAB.ui.closeAll();
   ok(holes.restChain && holes.restChain.n >= 2 && holes.restChain.gain <= holes.restChain.full + holes.restChain.n && holes.restChain.gain >= holes.restChain.full - holes.restChain.n, "сидеть подряд целый час — вместе не больше одного полного отдыха (" + JSON.stringify(holes.restChain) + ")");
   ok(holes.restSearch && holes.restSuspect, "пока ОКО прочёсывает этаж — отдыха нет; тревога снята (подозрение) — отдыхать можно (" + JSON.stringify({ s: holes.restSearch, u: holes.restSuspect }) + ")");
   ok(holes.restPun && holes.restAmbush, "каратели идут по следу — отдыха нет; в засаде — можно (" + JSON.stringify({ p: holes.restPun, a: holes.restAmbush }) + ")");
-  ok(holes.restFresh && !/ — /.test(holes.restFresh) && / — вы недавно отдыхали: поможет на \d+ процентов, в полную силу — через (1 час|\d+ мину)/.test(holes.restNote || ""), "пункт отдыха сам говорит, на сколько поможет и когда в полную силу (" + holes.restNote + ")");
+  ok(holes.restFresh && !/ — /.test(holes.restFresh) && / — вы недавно отдыхали: поможет на \d+ процент(а|ов)?, в полную силу — через (1 час|\d+ мину)/.test(holes.restNote || ""), "пункт отдыха сам говорит, на сколько поможет и когда в полную силу (" + holes.restNote + ")");
   ok(/ — накачано 2 из 5 единиц$/.test(holes.gymNote || "") && / — больше ничего не даст$/.test(holes.gymCapNote || ""), "пункт тренажёра: сколько прибавок из пяти взято, на пределе — «больше ничего не даст» (" + holes.gymNote + " / " + holes.gymCapNote + ")");
   ok(holes.gymCap && holes.gymCap.same && holes.gymCap.said && holes.gymGap, "тренажёр: предел в пять единиц и перерыв три часа");
   ok(holes.invBack === "Инвентарь" && holes.invFood === "Еда и напитки", "инвентарь: после аптечки — снова инвентарь, «Еда» открывается (" + holes.invBack + " → " + holes.invFood + ")");
@@ -5714,7 +5719,8 @@ LAB.ui.closeAll();
   const wc = holes.waveCut || {};
   ok(wc.a > 0 && wc.a === Math.round(wc.raw * 0.4) && wc.b === wc.a && wc.x11 === wc.want11 && wc.x41 === 0, "волны ОКО: машины одной волны — с одной долей, одиннадцатая волна — на четверть меньше, сорок первая — ничего (" + JSON.stringify(wc) + ")");
   ok(holes.calmKill === 0 && holes.allyKill === 0, "обезвреженные и свои машины — без опыта (" + holes.calmKill + ", " + holes.allyKill + ")");
-  ok(holes.questCap && holes.questCap.tier === 3 && holes.questCap.n === 2 && holes.questCap.menu && holes.questCap.notReady && holes.questCap.steps.every(n => n >= 2) && holes.questCap.work.every(w => w >= 0.8 * (4 + 3.5 * 3) - 0.01), "(3.6) после трёх просьб выживший просит снова — тяжелее: два пути на выбор, по два шага и больше (" + JSON.stringify(holes.questCap) + ")");
+  /* (3.7) глава истории даёт и один путь, если второму на этом этаже нечего делать (quests.js, need) */
+  ok(holes.questCap && holes.questCap.tier === 3 && (holes.questCap.n === 2 || (holes.questCap.n === 1 && holes.questCap.chap)) && holes.questCap.menu && holes.questCap.notReady && holes.questCap.steps.every(n => n >= 2) && holes.questCap.work.every(w => w >= 0.8 * (4 + 3.5 * 3) - 0.01), "(3.6) после трёх просьб выживший просит снова — тяжелее: два пути на выбор (у главы истории — и один), по два шага и больше (" + JSON.stringify(holes.questCap) + ")");
   /* (3.6) разведку «Эхо» докладывает по связи само: «вернитесь» не нужно */
   ok(/не разведан/.test(holes.visitBefore) && /разведан/.test(holes.visitAfter) && !/не разведан/.test(holes.visitAfter), "«разведать этаж» — засчитывается заход после того, как задание взято (" + holes.visitBefore + " → " + holes.visitAfter + ")");
   ok(holes.hid === true && holes.hidMoved === false, "«Затаиться»: укрытие, пока на месте; шаг — и его нет");

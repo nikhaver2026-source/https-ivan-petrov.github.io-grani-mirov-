@@ -1345,7 +1345,7 @@ function minePoints(at, n, from) {
     var u = q[qi++], x = u % W, y = (u / W) | 0;
     if (dm[u] >= 2 && dm[u] <= 14 && fl.t[u] !== LAB.T.DOOR && canStand(null, x, y)) {
       var nearD = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(function (v) { return LAB.inb(x + v[0], y + v[1]) && fl.t[idx(x + v[0], y + v[1])] === LAB.T.DOOR; });
-      var far = Math.abs(x - hp.x) + Math.abs(y - hp.y) >= 5 && !LAB.los(fl, fs, x, y, hp.x, hp.y);
+      var far = Math.abs(x - hp.x) + Math.abs(y - hp.y) >= 5 && !inSight(fl, fs, hp, x, y);
       if (far && (!reach || reach[u] >= 0) && !(LAB.traps && LAB.traps.at && LAB.traps.at(x, y))) cand.push([x, y, nearD ? 0 : 1, dm[u]]);
     }
     if (dm[u] >= 16) continue;
@@ -2769,6 +2769,9 @@ function alertMech(x, y, radius) {
    открытым и незапертым дверям), не на виду у героя и не ближе minHero
    шагов к нему; лучше — у двери, будто машина вошла с другого этажа. */
 function okoPass(d) { var st = CUR().fs.doors[d.id]; if (d.lock && d.lock.type === "secret") return false; return st === 2 || !d.lock || st === 1; }
+/* (3.7) «Не на виду» — ни вы клетку, ни с клетки вас: прямая по Брезенхэму несимметрична, и клетка,
+   откуда героя не видно, бывала у героя на виду (засада карателей вставала в прямой видимости) */
+function inSight(fl, fs, hp, x, y) { return LAB.los(fl, fs, hp.x, hp.y, x, y) || LAB.los(fl, fs, x, y, hp.x, hp.y); }
 function okoPoint(o) {
   o = o || {};
   var fl = CUR().fl, fs = CUR().fs, W = LAB.W, H = LAB.H, hp = heroPos();
@@ -2780,7 +2783,7 @@ function okoPoint(o) {
     var u = q[qi++], x = u % W, y = (u / W) | 0;
     if (u !== s0 && fl.t[u] !== LAB.T.DOOR && canStand(null, x, y) && !inRefuge(x, y) && !havenAt(x, y) && (!o.corr || fl.corrAt[u] >= 0)) { /* (3.0) corr — только в коридоре */
       var dh = Math.abs(x - hp.x) + Math.abs(y - hp.y);
-      if (dh >= minH && (o.hidden === false || !LAB.los(fl, fs, x, y, hp.x, hp.y))) {
+      if (dh >= minH && (o.hidden === false || !inSight(fl, fs, hp, x, y))) {
         any.push([x, y, dm[u]]);
         if (dm[u] >= dmin && dm[u] <= dmax) {
           band.push([x, y]);
@@ -2887,7 +2890,7 @@ function replacePatrol(q) {
   (q.beat || []).forEach(function (pt) {
     var d = Math.abs(pt[0] - hp.x) + Math.abs(pt[1] - hp.y);
     if (d < 12 || d <= bd || havenAt(pt[0], pt[1])) return; /* (2.3) не в безопасной зоне у капсулы */
-    if (d < 24 && LAB.los(fl, fs, hp.x, hp.y, pt[0], pt[1])) return;
+    if (d < 24 && inSight(fl, fs, hp, pt[0], pt[1])) return;
     best = pt; bd = d;
   });
   if (!best) return [];
@@ -2991,7 +2994,7 @@ function ambushPoint() {
     var c = path[i], j = idx(c[0], c[1]);
     if (fl.t[j] === LAB.T.DOOR) { if (!okoPass(fl.doorAt[j])) break; continue; }
     if (i < 9 || fl.corrAt[j] < 0 || !canStand(null, c[0], c[1]) || havenAt(c[0], c[1]) || inRefuge(c[0], c[1])) continue;
-    if (Math.abs(c[0] - hp.x) + Math.abs(c[1] - hp.y) < 9 || LAB.los(fl, fs, hp.x, hp.y, c[0], c[1])) continue;
+    if (Math.abs(c[0] - hp.x) + Math.abs(c[1] - hp.y) < 9 || inSight(fl, fs, hp, c[0], c[1])) continue;
     return [c[0], c[1]];
   }
   return okoPoint({ to: hp, minHero: 12, dmin: 10, dmax: 30, corr: true }) || okoPoint({ to: hp, minHero: 12, dmin: 10, dmax: 30 });
@@ -3006,13 +3009,14 @@ function hiddenNear(p) {
     for (var dy = -r; dy <= r; dy++) for (var dx = -r; dx <= r; dx++) {
       if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
       var x = p[0] + dx, y = p[1] + dy;
-      if (!canStand(null, x, y) || Math.abs(x - hp.x) + Math.abs(y - hp.y) < 7 || LAB.los(fl, fs, hp.x, hp.y, x, y)) continue;
+      if (!canStand(null, x, y) || Math.abs(x - hp.x) + Math.abs(y - hp.y) < 7 || inSight(fl, fs, hp, x, y)) continue;
       var d = Math.abs(dx) + Math.abs(dy);
       if (d < bd) { bd = d; best = [x, y]; }
     }
     if (best) return best;
   }
-  return okoPoint({ from: { x: p[0], y: p[1] }, minHero: 7, dmin: 1, dmax: 12 });
+  /* (3.7) рядом укрыться негде — укрытая клетка подальше, но всё равно не на виду */
+  return okoPoint({ from: { x: p[0], y: p[1] }, minHero: 7, dmin: 1, dmax: 12 }) || okoPoint({ from: { x: p[0], y: p[1] }, minHero: 7, dmin: 1, dmax: 40 });
 }
 function strike(n, up) {
   var pool = strikePool(), p = ambushPoint(), got = [], hard = diff().punLvl >= 6;
@@ -3020,7 +3024,8 @@ function strike(n, up) {
   for (var i = 0; i < n; i++) {
     /* вся группа — не на виду: рядом с точкой засады, за углом или за дверью */
     var c = i === 0 && canStand(null, p[0], p[1]) ? p : (hiddenNear(p) || freeCellNear(p[0], p[1], null));
-    if (!c) break;
+    /* (3.7) укрытия нет — каратель не встаёт у вас на виду: засада меньше */
+    if (!c || (c !== p && inSight(CUR().fl, CUR().fs, heroPos(), c[0], c[1]))) break;
     /* при гибели каратель сгорает — и взрывается; в тяжёлых режимах ещё и бронирован */
     var sp = spawnFoe(pool[i % pool.length], c[0], c[1], { oko: true, squad: true, punisher: true, lvlUp: up, aff: hard ? ["volatile", "armored"] : ["volatile"], fresh: !!CUR().fs.robots });
     if (!sp) break;

@@ -32,6 +32,8 @@ function A(name) { var a = LAB.atmos; if (a && typeof a[name] === "function") { 
 function say(t, o) { LAB.say(t, o); }
 function menu(title, items, opts) { return LAB.ui.menu(title, items, opts); }
 function T() { var fs = CUR().fs; return fs ? (fs.okoT || 0) : 0; }
+/* (3.7) Сколько ещё ждать: такты этажа (полсекунды) — в секундах со склонением (LAB.plural); прежде «Ещё 1 секунд» */
+function secW(t) { var s = Math.ceil(t / 2); return s + " " + LAB.plural(s, "секунда", "секунды", "секунд"); }
 
 /* Номер глубины: 0 — «Ковчег» (уровни 1–10), 1–5 — глубины под Ядром. */
 function depthOf(L) { return L <= 10 ? 0 : LAB.blockOf(L); }
@@ -371,7 +373,7 @@ function mirrorMenu(o) {
     { label: "Отойти", fn: function () {} }
   ]); return; }
   var left = (st.lockT || 0) - T();
-  if (left > 0) { LAB.UI.error(); say("Терминал гудит отражённым сигналом: журнал перестраивается. Ещё " + Math.ceil(left / 2) + " секунд."); return; }
+  if (left > 0) { LAB.UI.error(); say("Терминал гудит отражённым сигналом: журнал перестраивается. Ещё " + secW(left) + "."); return; }
   A("play", "term_on");
   var items = [
     { label: "Прочитать журнал целиком", fn: function () { LAB.ui.note("Журнал событий этажа", "Сеть этажа: " + pz.freq + " герц. " + pz.list.map(entryText).join(" ")); } },
@@ -389,7 +391,7 @@ function checkMirror(o, st, pz) {
      а после ошибки сверять снова — только когда журнал перестроится */
   if (st.done) { say("Журнал уже сверен: отражённый контур молчит."); return; }
   var leftM = (st.lockT || 0) - T();
-  if (leftM > 0) { LAB.UI.error(); say("Терминал гудит отражённым сигналом: журнал перестраивается. Ещё " + Math.ceil(leftM / 2) + " секунд."); return; }
+  if (leftM > 0) { LAB.UI.error(); say("Терминал гудит отражённым сигналом: журнал перестраивается. Ещё " + secW(leftM) + "."); return; }
   var wrong = 0;
   pz.list.forEach(function (e, i) { if (st.cls[i] !== e.cls) wrong++; });
   if (!wrong) {
@@ -510,7 +512,7 @@ function nodeMenu(o) {
   var st = gm().objState(o), seq = nodeSeq(o), w = W();
   if (st.done) { menu("Древний узел — молчит, удовлетворённый", [{ label: "Прислушаться", fn: function () { A("play", "ev_rift_pulse"); say("Узел гудит низко и ровно. Он помнит вас."); } }, { label: "Отойти", fn: function () {} }]); return; }
   var left = (st.sleepT || 0) - T();
-  if (left > 0) { say("Узел погас и остывает. Ещё " + Math.ceil(left / 2) + " секунд."); return; }
+  if (left > 0) { say("Узел погас и остывает. Ещё " + secW(left) + "."); return; }
   A("at", "ev_rift_pulse", o.x, o.y, { gain: 0.9, rate: 0.8 });
   var items = [];
   items.push({ label: "Прислушаться к узлу", keep: true, fn: function () {

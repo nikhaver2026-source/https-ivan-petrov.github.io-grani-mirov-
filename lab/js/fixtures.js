@@ -265,7 +265,8 @@ function gen(kind, o, r, sub) {
     }
     case "debts": {
       var dl = [], its = DEBT[e] || DEBT.K;
-      for (i = 0; i < r.int(4, 6); i++) { var pd = randPerson(r); dl.push(pd.sur + " — " + r.int(2, 40) + " кредитов, " + r.pick(its) + ", " + r.pick(GIVEN) + "."); }
+      /* (3.7) сумма — со склонением; порядок обращений к r прежний: в тетради те же люди, суммы и вещи */
+      for (i = 0; i < r.int(4, 6); i++) { var pd = randPerson(r), dn = r.int(2, 40); dl.push(pd.sur + " — " + dn + " " + pl(dn, "кредит", "кредита", "кредитов") + ", " + r.pick(its) + ", " + r.pick(GIVEN) + "."); }
       return { t: "Тетрадь долгов", x: dl.join(" ") + (r.chance(0.4) ? " " + fromPool("tx:debts", LAB.FIX.TX.debts) : "") };
     }
     case "gauges": {
@@ -279,7 +280,8 @@ function gen(kind, o, r, sub) {
       if (e === "C") return { t: "Оттиски", x: "Вместо снимков — оттиски ладоней в глине, подписанные выпуклыми буквами: " + [randPerson(r).first, randPerson(r).first, randPerson(r).first].join(", ") + ". Пальцы сами ложатся в чужие ладони." };
       return { t: "Снимок", x: "«Эхо» описывает снимок: " + r.pick(PHOTO.who) + " " + r.pick(PHOTO.where) + ", " + r.pick(PHOTO.what) + ". На обороте: " + R(r.pick(PHOTO.cap), c) + "." };
     }
-    case "sleeprec": { var ps = randPerson(r); return { t: "Запись сна", x: "Запись сна: " + ps.fio + ", " + LAB.agen.DAYS[c.wd] + ". Глубокий сон — " + r.int(40, 140) + " минут, быстрый — " + r.int(10, 60) + ". Пометка врача: «" + r.pick(SLEEP) + "»" }; }
+    /* (3.7) минуты — со склонением; порядок обращений к r прежний */
+    case "sleeprec": { var ps = randPerson(r), sm = r.int(40, 140); return { t: "Запись сна", x: "Запись сна: " + ps.fio + ", " + LAB.agen.DAYS[c.wd] + ". Глубокий сон — " + sm + " " + pl(sm, "минута", "минуты", "минут") + ", быстрый — " + r.int(10, 60) + ". Пометка врача: «" + r.pick(SLEEP) + "»" }; }
     case "complaints": { var cl = lines("repair", 2, r, fromPool); return { t: "Жалобы и заявки", x: (cl.length ? cl.join(" ") + " " : "") + fromPool("tx:complaints", LAB.FIX.TX.complaints) }; }
     case "letters": case "typed": case "copier": {
       var nt = NT(); if (nt && nt.topics && nt.topics.length && r.chance(0.75)) {
@@ -380,7 +382,8 @@ function fxNote(kind, p) {
   var t;
   if (kind === "rest") {
     var mR = (p && p.m) || 10, kR = restK(mR);
-    return kR >= 1 ? "" : " — вы недавно отдыхали: поможет на " + Math.max(1, Math.round(kR * 100)) + " процентов, в полную силу — через " + minW(restLeft(mR));
+    var pcR = Math.max(1, Math.round(kR * 100)); /* (3.7) «на 21 процент», а не «процентов» */
+    return kR >= 1 ? "" : " — вы недавно отдыхали: поможет на " + pcR + " " + pl(pcR, "процент", "процента", "процентов") + ", в полную силу — через " + minW(restLeft(mR));
   }
   if (kind === "train") {
     t = trainSt();
@@ -433,7 +436,8 @@ function run(o, def, kind, p, label, withId) {
       /* здоровье — доля от полного, но не меньше пяти единиц: даже стул и скамья дают передохнуть телу;
          отдыхали недавно — и здоровья та же доля, но хоть единица */
       if (p.hp) { var hv = Math.max(1, Math.round(Math.max(5, G().hpMax * p.hp) * rk)); G().hp = Math.min(G().hpMax, G().hp + hv); m.push("Здоровье " + G().hp + "."); }
-      if (rk < 1) m.push("Вы отдыхали недавно, и тело восстановилось лишь на " + Math.max(1, Math.round(rk * 100)) + " процентов: в полную силу отдых поможет через " + minW(leftR) + ".");
+      var pcK = Math.max(1, Math.round(rk * 100)); /* (3.7) со склонением */
+      if (rk < 1) m.push("Вы отдыхали недавно, и тело восстановилось лишь на " + pcK + " " + pl(pcK, "процент", "процента", "процентов") + ": в полную силу отдых поможет через " + minW(leftR) + ".");
       if (p.unslow && G().st.slow) { G().st.slow = 0; m.push("Ноги снова слушаются."); }
       snd("chair_sit", null);
       if (withId && LAB.ITEMS[withId] && G().inv[withId] > 0) {
@@ -611,7 +615,8 @@ function run(o, def, kind, p, label, withId) {
       UIx("closeAll"); spend(15);
       s.served = 1;
       var w = r.next();
-      if (w < 0.35) { var cr = LAB.credits(8 + r.int(0, 10), G().L, G().F); G().credits += cr; say("Табло: «Номер " + s.ticket + ", окно четыре». Окно выдаёт конверт: возврат излишне удержанного. " + cr + " кредитов."); }
+      /* (3.7) кредиты — со склонением (pl): прежде «41 кредитов» */
+      if (w < 0.35) { var cr = LAB.credits(8 + r.int(0, 10), G().L, G().F); G().credits += cr; say("Табло: «Номер " + s.ticket + ", окно четыре». Окно выдаёт конверт: возврат излишне удержанного. " + cr + " " + pl(cr, "кредит", "кредита", "кредитов") + "."); }
       else if (w < 0.6) { gm().mapFloor(); say("Табло: «Номер " + s.ticket + "». Из окна выезжает схема этажа с печатью «Копия верна». «Эхо» запоминает её."); }
       else say("Табло: «Номер " + s.ticket + "». Окно отвечает: «Ваш вопрос рассмотрен. Отказано. Спасибо за ожидание». Вам вежливо возвращают талон с дыркой.");
       ev("queue", 1);
@@ -649,7 +654,7 @@ function run(o, def, kind, p, label, withId) {
       /* (проверка перед сборкой) шахматы: после неверного хода — в следующий раз другая позиция,
          как и обещает доска (s.chessN — счёт неудач); отошли, не сходив, — тишина, а не «не вышло» */
       var done = function (ok, away, tried) {
-        if (ok && !s.won) { s.won = 1; gm().gainXP(12); var cr2 = LAB.credits(6, G().L, G().F); G().credits += cr2; say("Партия за вами. Под доской — забытая ставка: " + cr2 + " кредитов."); ev("game_win", 1); }
+        if (ok && !s.won) { s.won = 1; gm().gainXP(12); var cr2 = LAB.credits(6, G().L, G().F); G().credits += cr2; say("Партия за вами. Под доской — забытая ставка: " + cr2 + " " + pl(cr2, "кредит", "кредита", "кредитов") + "."); ev("game_win", 1); }
         else if (ok) say("Снова победа. Ставок больше нет — только удовольствие.");
         else if (p.mini === "chess") { if (!away || tried) s.chessN = (s.chessN || 0) + 1; if (!away) say("Не вышло. Можно попробовать ещё раз — позиция будет другая."); }
         else say("Не вышло. Можно попробовать ещё раз.");
@@ -1124,7 +1129,7 @@ function badgeItem(n) {
     var cr = LAB.credits(5, g.L, g.F) * k; g.credits += cr; gm().gainXP(6 * k);
     g.stats.badges = (g.stats.badges || 0) + k;
     gm().journal && gm().journal("Передано жетонов погибших: " + k + ".");
-    say((n && n.n ? n.n + " берёт жетоны" : "Жетоны берут") + " бережно, читает каждое имя вслух. «Мы передадим наверх. Спасибо, седьмой». Вам дают " + cr + " кредитов из общего котла.");
+    say((n && n.n ? n.n + " берёт жетоны" : "Жетоны берут") + " бережно, читает каждое имя вслух. «Мы передадим наверх. Спасибо, седьмой». Вам дают " + cr + " " + pl(cr, "кредит", "кредита", "кредитов") + " из общего котла.");
     ev("badges_given", k);
   } };
 }

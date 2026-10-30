@@ -183,7 +183,9 @@ function tuneGesture(g) {
     c.delta = Math.max(-25, Math.min(25, c.delta + st));
     tuneSet();
     var after = Math.abs(c.delta);
-    if (S.verbose) LAB.UI.blip(after < before ? 1100 : 500, 0.05, 0.06);
+    /* (3.7, нелогичность) писк «ближе — дальше» — подсказка игры: молчит, только когда подсказки «только по запросу»
+       (прежде его гасила настройка «Подсказки», теперь это «Подсказки об управлении в окнах» — не о резонаторе) */
+    if (!LAB.tutor || LAB.tutor.level() >= 1) LAB.UI.blip(after < before ? 1100 : 500, 0.05, 0.06);
     return;
   }
   if (g.kind === "tap" && g.n === 1) {
@@ -338,6 +340,12 @@ function relaysGesture(g) {
    Ключ — несколько разных цифр от 1 до 6. После каждой попытки: сколько
    цифр на своём месте (высокие сигналы) и сколько есть, но не на месте
    (низкие сигналы). */
+/* (3.7) «пять разных цифр», «три разные цифры», «одна цифра» — словами и с верным склонением (прежде «5 разные цифры») */
+function keyDigits(n) {
+  var w = ["ноль", "одна", "две", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять", "десять"][n] || String(n);
+  var m10 = n % 10, m100 = n % 100, one = m10 === 1 && m100 !== 11, few = m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14);
+  return w + (one ? (n === 1 ? " цифра" : " разная цифра") : few ? " разные цифры" : " разных цифр");
+}
 function bulls(len, cb, opts) {
   opts = opts || {};
   len = Math.max(3, Math.min(5, len || 3));
@@ -347,7 +355,7 @@ function bulls(len, cb, opts) {
   var c = { type: "bulls", name: opts.title || "Подбор ключа", cb: cb, key: key, len: len, d: [], i: 0, tries: 0, limit: opts.limit || (len === 3 ? 9 : len === 4 ? 11 : 13), hist: [] };
   for (var k = 0; k < len; k++) c.d.push(k + 1);
   cur = c; puzzleDuck();
-  say((opts.title || "Подбор ключа") + ". Ключ — " + len + " разные цифры от одной до шести. После каждой попытки высокий сигнал — цифра на своём месте, низкий — цифра есть, но не там. " +
+  say(LAB.dot(opts.title || "Подбор ключа") + " Ключ — " + keyDigits(len) + " от одной до шести. После каждой попытки высокий сигнал — цифра на своём месте, низкий — цифра есть, но не там. " +
     LAB.K("Свайп вверх и вниз — цифра, влево и вправо — позиция, двойное касание — проверить, касание — что набрано и прошлые попытки.", "Стрелки вверх и вниз — цифра, влево и вправо — позиция, цифры от 1 до 6 — набрать сразу, Enter — проверить, пробел — что набрано, Escape — отойти.") + " Попыток: " + c.limit + ".", { interrupt: true });
 }
 function bullsGesture(g) {
@@ -410,7 +418,7 @@ function sortGesture(g) {
   if (g.kind === "tap" && g.n === 1) { sortPlay(c); return; }
   if (g.kind === "dtap" && g.n === 1) {
     if (sorted(c)) { c.done = true; sortPlay(c); setTimeout(function () { if (cur !== c) return; say("Частоты выстроены."); finish(true); }, c.n * 380 + 200); }
-    else { tone(160, 0.25, 0, "sawtooth", 0.08); say("Ещё не по порядку. Послушайте все тона: касание."); }
+    else { tone(160, 0.25, 0, "sawtooth", 0.08); say("Ещё не по порядку. Послушайте все тона: " + LAB.K("касание.", "пробел.")); } /* (3.7) на клавиатуре — пробел */
   }
 }
 function sorted(c) { for (var i = 1; i < c.n; i++) if (c.arr[i] < c.arr[i - 1]) return false; return true; }

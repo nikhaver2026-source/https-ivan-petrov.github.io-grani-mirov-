@@ -379,7 +379,7 @@ function gameKey(e, k) {
     case "h": game.useMedkit(); return true;
     case "c": LAB.ui.character(); return true;
     case "i": LAB.ui.inventory(); return true;
-    case "j": LAB.ui.inventory("Задания"); return true;
+    case "j": if (LAB.ui.quests) LAB.ui.quests(); else LAB.ui.inventory("Задания"); return true; /* (3.7, нелогичность) сразу задания */
     case "u": LAB.ui.implants(); return true;
     case "t": game.quickStatus(); return true;
     case "z": repeatLast(); return true;
@@ -427,7 +427,7 @@ function uiKey(e, k) {
   }
   var act = { ArrowDown: "next", s: "next", ArrowUp: "prev", w: "prev", ArrowRight: "inc", d: "inc", ArrowLeft: "dec", a: "dec",
     Enter: "select", " ": "repeat", Tab: "all", Home: "first", End: "last", Escape: "back", Backspace: "back", x: "hush", z: "repeat",
-    c: "char", i: "inv", F1: "guide", ".": "histBack", ",": "histFwd" }[k];
+    c: "char", i: "inv", j: "quests", F1: "guide", ".": "histBack", ",": "histFwd" }[k];
   if (!act) return false;
   if (ui.key) ui.key(act); else ui.gesture({ kind: act === "back" ? "back" : "tap", n: 1 });
   return true;

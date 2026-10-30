@@ -251,6 +251,11 @@ function usedCap() { return G().implants.reduce(function (a, id) { return a + lo
 function chipsIn() { return G().implants.filter(isChip).length; }
 /* (3.6) вживлённых имплантов (без системных «Эхо» и без чипов) — игрок их и считает */
 function actIn() { return G().implants.filter(function (id) { return !isChip(id) && !def(id).core; }).length; }
+/* (3.7, нелогичность) встроенные в «Эхо» (сканер, эхолокация) — отдельно, и одними словами в инвентаре и в
+   «Кибернетике»: прежде в инвентаре «Импланты: 2» (все вместе), а в «Кибернетике» «Имплантов вживлено: 0» */
+function coreList() { return G().implants.filter(function (id) { return def(id).core; }); }
+function coreIn() { return coreList().length; }
+function countText() { var c = coreIn(), p = chipsIn(); return "вживлено " + actIn() + (c ? ", встроенных в «Эхо» " + c : "") + (p ? ", чипов " + p : ""); }
 
 /* ════════ СТУПЕНЬ ИМПЛАНТА И МОДИФИКАЦИИ ════════ */
 var PW = [1, 1.35, 1.75], EK = [1, 0.9, 0.8];
@@ -789,7 +794,7 @@ function line(id) { var d = def(id), tg = tagText(id); return d.n + (tg ? ", " +
 /* ════════ ОКНА ════════ */
 function cyberText() {
   var l = level(), x = totalXp(), nx = l < ALL_XP.length ? ALL_XP[l] : null;
-  return "Кибернетика: общая ступень " + l + (nx != null ? ", до следующей " + (nx - x) + " опыта" : ", высшая") + ". Имплантов вживлено: " + actIn() + ", ёмкость занята: " + usedCap() + " из " + capacity() + ". Чипов в нейрогнёздах: " + chipsIn() + " из " + slots() + ". Модификаций на имплант — до " + modSlots() + ". Калибровка — до " + ["первой", "второй", "третьей"][maxGrade() - 1] + " ступени." + (selfSurgery() ? " Извлекать можно самому." : "");
+  return "Кибернетика: общая ступень " + l + (nx != null ? ", до следующей " + (nx - x) + " опыта" : ", высшая") + ". Имплантов вживлено: " + actIn() + ", ёмкость занята: " + usedCap() + " из " + capacity() + (coreIn() ? "; и ещё встроенных в «Эхо»: " + coreIn() + " — " + coreList().map(function (id) { return low(def(id).n); }).join(" и ") + ", ёмкости они не занимают" : "") + ". Чипов в нейрогнёздах: " + chipsIn() + " из " + slots() + ". Модификаций на имплант — до " + modSlots() + ". Калибровка — до " + ["первой", "второй", "третьей"][maxGrade() - 1] + " ступени." + (selfSurgery() ? " Извлекать можно самому." : "");
 }
 function cyberItems() {
   var items = [{ label: cyberText(), info: true, keep: true, fn: function () { say(cyberText()); } }];
@@ -810,7 +815,7 @@ function benchItems(tier) {
     var d = def(id), n = lv(id) + 1;
     if (!upgradable(id)) return;
     var why = n > maxGrade() ? "нужна общая ступень кибернетики " + (n === 2 ? 2 : 5) : tier < UP_TIER[n] ? (n === 3 ? "нужен станок с программным управлением" : "нужны станки") : "";
-    items.push({ label: "Калибровка: «" + d.n + "» — " + lvWord(n) + " ступень: сила в " + (n === 2 ? "1,35" : "1,75") + " раза больше первой, энергии на " + (n === 2 ? "десятую часть" : "пятую часть") + " меньше. " + (why ? cap1(why) : "Нужно: " + costTxt(UP_COST[n])), keep: true, disabled: !!why, why: why ? cap1(why) + "." : "", fn: function () { upgrade(id, "bench", tier); } });
+    items.push({ label: "Калибровка: «" + d.n + "» — " + lvWord(n) + " ступень: сила в " + (n === 2 ? "1,35" : "1,75") + " раза больше первой, энергии на " + (n === 2 ? "десятую часть" : "пятую часть") + " меньше. " + (why ? cap1(why) : "Нужно: " + costTxt(UP_COST[n])), keep: true, disabled: !!why, info: !!why, why: why ? cap1(why) + "." : "", fn: function () { upgrade(id, "bench", tier); } }); /* (3.7, нелогичность) info: причина уже в строке — без «— недоступно» */
   });
   if (tier >= 2) g.implants.forEach(function (id) {
     if (id === "echo") return;
@@ -838,7 +843,7 @@ function modItems(id) {
     if (has(id, m)) return;
     var M = MODS[m], why = compat(id, m);
     if (/ни к чему|только для направления|чипу подходят|для чипов/.test(why)) return; /* чужие не показываем */
-    items.push({ label: M.n + " — " + M.d + ". " + (why ? "Нельзя: " + why : "Нужно: " + costTxt(M.cost) + (lackOf(M.cost) ? " — не хватает" : "")), keep: true, disabled: !!why, why: why ? "Нельзя: " + why + "." : "", fn: function () { addMod(id, m); } });
+    items.push({ label: M.n + " — " + M.d + ". " + (why ? "Нельзя: " + why : "Нужно: " + costTxt(M.cost) + (lackOf(M.cost) ? " — не хватает" : "")), keep: true, disabled: !!why, info: !!why, why: why ? "Нельзя: " + why + "." : "", fn: function () { addMod(id, m); } }); /* (3.7, нелогичность) info: «Нельзя: …» уже в строке — без «— недоступно» */
   });
   items.push({ label: "Назад", close: true, fn: function () {} });
   return items;
@@ -883,6 +888,6 @@ LAB.implants = {
   power: power, costK: costK, neuroK: neuroK, reach: reach, stat: stat, dmgK: dmgK, applyStatic: applyStatic, run: run, used: used, tick: tick, onHurt: onHurt,
   scanR: scanR, scanExtra: scanExtra, level: level, catLv: catLv, catXp: catXp, gain: gain, slots: slots, capacity: capacity, modSlots: modSlots, maxGrade: maxGrade, selfSurgery: selfSurgery,
   install: install, useChip: useChip, pickup: pickup, extract: extract, dismantle: dismantle, upgrade: upgrade, addMod: addMod, delMod: delMod, compat: compat,
-  tag: tagText, line: line, chips: chips, fixSave: fixSave, actIn: actIn, canon: canon, craftWhy: craftWhy, crafted: crafted, benchMenu: benchMenu, station: station, cyberMenu: cyberMenu, cyberText: cyberText, upPrice: upPrice, stock: stock
+  tag: tagText, line: line, chips: chips, fixSave: fixSave, actIn: actIn, countText: countText, canon: canon, craftWhy: craftWhy, crafted: crafted, benchMenu: benchMenu, station: station, cyberMenu: cyberMenu, cyberText: cyberText, upPrice: upPrice, stock: stock
 };
 })();

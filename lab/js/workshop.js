@@ -1140,8 +1140,11 @@ function open(o) {
   menu("Мастерская", rootItems(b), { intro: benchLine(b) + " Деталей у вас: " + partsTotal() + ". Рецептов: " + kn.length + (unk ? ", неизвестных схем: " + unk : "") + ".", rebuild: function () { return rootItems(b); } });
 }
 function recLabel(rc, b) {
-  var why = check(rc, b), g = G();
-  var st = !why ? "можно собрать" : rc.minL && g.L < rc.minL ? "с уровня " + rc.minL : /^Не хватает/.test(why) ? "нужно: " + missText(rc) : CLS_T[clsOf(rc)] > effTier(b) ? (b.dmg || reserve() ? "станки не работают" : "нужен " + TIER[CLS_T[clsOf(rc)]].n) : "нельзя";
+  var why = check(rc, b), g = G(), IM = LAB.implants;
+  /* (3.7, нелогичность) чипу не хватает кибернетики (implants.craftWhy, тоже «Не хватает…»): прежде строка звучала
+     «нужно: .» — недостающих деталей нет; теперь — какой ступени какого направления ждёт схема */
+  var cyb = rc.cyb && IM && IM.craftWhy(rc) ? "нужна кибернетика «" + (IM.CATS[rc.cyb] ? IM.CATS[rc.cyb].n : rc.cyb) + "», ступень " + (rc.cybN || 0) : "";
+  var st = !why ? "можно собрать" : rc.minL && g.L < rc.minL ? "с уровня " + rc.minL : cyb ? cyb : /^Не хватает:/.test(why) ? "нужно: " + (missText(rc) || needText(rc)) : CLS_T[clsOf(rc)] > effTier(b) ? (b.dmg || reserve() ? "станки не работают" : "нужен " + TIER[CLS_T[clsOf(rc)]].n) : "нельзя";
   var ds = outDesc(rc);
   return rc.n + " — " + st + ". " + cap1(CLS_N[clsOf(rc)]) + "." + (ds ? " " + ds : "");
 }
@@ -1169,7 +1172,7 @@ function pickWeapon(mk, intro) {
   var items = g.weapons.map(function (w, i) {
     var why = compat(w, mk);
     return { label: gm().weaponLine(w) + (i === g.wi ? ", в руках" : "") + (why ? " — нельзя: " + why : " — можно, свободных гнёзд " + (slots(w) - used(w)) + " из " + slots(w)),
-      disabled: !!why, why: why ? "Нельзя: " + why + "." : "",
+      disabled: !!why, info: !!why, why: why ? "Нельзя: " + why + "." : "", /* (3.7, нелогичность) «нельзя: …» уже в строке — без «— недоступно» */
       fn: function () {
         if (!(g.inv[M.item] > 0)) { say("Модуля в запасе нет."); return; }
         var r = install(w, mk);

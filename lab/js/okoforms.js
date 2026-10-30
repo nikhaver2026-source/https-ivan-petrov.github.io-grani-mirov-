@@ -193,7 +193,8 @@ function dealMenu() {
   if (!dealsOpen()) { LAB.say("Счетовод молчит: торговаться здесь не с кем."); return; }
   var items = [];
   var pr = price("rest"), ph = price("heat");
-  if ((fs.dealRest || 0) < 2) items.push({ label: "Передышка: Сторож подождёт три минуты — " + pr + " кредитов", fn: function () {
+  /* (3.7) кредиты — со склонением (LAB.plural): прежде «41 кредитов» */
+  if ((fs.dealRest || 0) < 2) items.push({ label: "Передышка: Сторож подождёт три минуты — " + pr + " " + LAB.plural(pr, "кредит", "кредита", "кредитов"), fn: function () {
     if ((g.credits || 0) < pr) { if (LAB.UI) LAB.UI.error(); countSay("Не хватает " + (pr - (g.credits || 0)) + ". Я считаю точно — и ты считай."); return; }
     g.credits -= pr; fs.dealRest = (fs.dealRest || 0) + 1;
     var T = LAB.oko && LAB.oko.T ? LAB.oko.T() : 0;
@@ -203,7 +204,7 @@ function dealMenu() {
     countSay(pick(DEAL.rest));
     if (LAB.ui && LAB.ui.closeAll) LAB.ui.closeAll();
   } });
-  if (!fs.dealHeat) items.push({ label: "Забыть подозрение: ОКО забудет четверть — " + ph + " кредитов", fn: function () {
+  if (!fs.dealHeat) items.push({ label: "Забыть подозрение: ОКО забудет четверть — " + ph + " " + LAB.plural(ph, "кредит", "кредита", "кредитов"), fn: function () {
     if ((g.credits || 0) < ph) { if (LAB.UI) LAB.UI.error(); countSay(DEAL.poor); return; }
     g.credits -= ph; fs.dealHeat = 1;
     var o = okoSt(); o.heat = Math.max(0, (o.heat || 0) - 25);
@@ -221,7 +222,8 @@ function offerDeal() {
   if (!dealsOpen() || fs.dealOffered || silent()) return;
   if (Date.now() - (o.dealSaid || 0) < 240000) return;
   fs.dealOffered = 1; o.dealSaid = Date.now();
-  countSay("Волна в очереди. Хочешь передышки — договоримся у терминала безопасности. Три минуты — " + price("rest") + " кредитов.");
+  var pr = price("rest");
+  countSay("Волна в очереди. Хочешь передышки — договоримся у терминала безопасности. Три минуты — " + pr + " " + LAB.plural(pr, "кредит", "кредита", "кредитов") + ".");
 }
 
 /* ── ИСТОК: ОКО ПРЕДУПРЕЖДАЕТ ШЁПОТОМ ── */

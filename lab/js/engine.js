@@ -122,7 +122,15 @@ LAB.vib = function (p) {
     if (navigator.vibrate) navigator.vibrate(p);
   } catch (e) { /* без вибрации */ }
 };
+/* (3.7, нелогичность) Есть ли чем вибрировать: приложение для Android (мост) или браузер телефона.
+   На компьютере navigator.vibrate бывает, а вибромотора нет — настройку «Вибрация» там не показывают */
+LAB.canVib = function () {
+  try { return !!(window.LabTTS && window.LabTTS.vibrate) || (!LAB.desktop && typeof navigator.vibrate === "function" && /Android|Mobile/i.test(navigator.userAgent || "")); } catch (e) { return false; }
+};
 LAB.safe = function (fn, fb) { try { return fn(); } catch (e) { try { console.warn("[Лаборатория]", e); } catch (_) { /* */ } return fb; } };
+/* (3.7, нелогичность) Склейка фраз: точка в конце — только если там ещё нет знака (и за кавычкой тоже).
+   Прежде клеили «фраза» + ". " — и звучало «3 шт.. Заварить», «Тарасова Д.. В два часа», «Что нового?. Сейчас». */
+LAB.dot = function (s) { s = String(s == null ? "" : s).replace(/\s+$/, ""); return !s || /[.!?…:;][»"”')]*$/.test(s) ? s : s + "."; };
 
 /* ════════ АУДИО-ДВИЖОК ════════ */
 function vol01(v) { return v == null ? 1 : Math.max(0, Math.min(1, +v)); }
@@ -1039,6 +1047,9 @@ var Speech = {
     while (this.queue.length && this.queue[0].ttl && now - this.queue[0].t > this.queue[0].ttl) { this.queue.shift(); this.dropped++; }
     if (!this.queue.length) { this._idle(); if (!this.queue.length) return; }
     var item = this.queue[0], self = this;
+    /* (3.7, нелогичность) голос робота включили посреди игры: eSpeak догружается — прежде он грузился только
+       при запуске, и до перезапуска машины говорили обычным голосом. Эта фраза — обычным, следующие — роботом */
+    if (item.robot && settings.robotVoice && this.espSt === "off") this.loadESpeak();
     var useEsp = this.backend === "espeak" || (item.robot && settings.robotVoice && this.espSt === "ready") || (item.viaEsp && this.backend !== "test");
     if (useEsp && this.espSt !== "ready") {
       if (this.espSt === "failed") {
@@ -1277,7 +1288,8 @@ var History = {
   ago: function (t) {
     var s = Math.round((Date.now() - t) / 1000);
     if (s < 15) return "Только что";
-    if (s < 60) return (Math.round(s / 5) * 5) + " секунд назад";
+    /* (3.7) 58–59 секунд округлялись до «60 секунд назад» — это уже минута */
+    if (Math.round(s / 5) * 5 < 60) return (Math.round(s / 5) * 5) + " секунд назад";
     var m = Math.round(s / 60);
     if (m === 1) return "Минуту назад";
     var n10 = m % 10, n100 = m % 100;
@@ -1294,7 +1306,7 @@ var History = {
       this.pos = to;
     }
     var it = this.list[this.pos];
-    Speech.say(it.text + " " + this.ago(it.t) + ", " + (this.pos + 1) + " из " + n + ".", { hist: true });
+    Speech.say(LAB.dot(it.text) + " " + this.ago(it.t) + ", " + (this.pos + 1) + " из " + n + ".", { hist: true });
   },
   clear: function () { this.list = []; this.pos = -1; }
 };

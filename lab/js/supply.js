@@ -21,6 +21,11 @@ function pl(n, a, b, c) { return gm().plural(n, a, b, c); }
 function cr(n) { return n + " " + pl(n, "кредит", "кредита", "кредитов"); }
 function now() { var g = G(); return g.min + g.day * 1440; }
 function era() { return LAB.SUPPLY[LAB.supplyEra(G().L)]; }
+/* (3.7, нелогичность) Строка-сведение: звучит и не закрывает окно (прежде — «недоступный» пункт: «… — недоступно»).
+   Кредиты — такой строкой первой в окне, а не в заголовке: после покупки заголовок с числом становился другим,
+   menu() не узнавал окно, и «Назад» открывал новое поверх старых, а Escape вёл в них — с прежней суммой. */
+function infoLine(t) { return { label: t, info: true, keep: true, fn: function () { say(LAB.dot(t)); } }; }
+function creditsLine() { return infoLine("У вас " + cr(G().credits)); }
 
 /* ════════ ЧТО ЕСТЬ ЧТО ════════ */
 /* Раздел вещи: еда, лекарства, защита, инструменты, ценности, детали, модули, устройства. */
@@ -136,10 +141,10 @@ function bpPrice(rc) { return Math.round((90 + 25 * (rc.minL || 1)) * Math.min(4
 function sellMenu(ctx, back) {
   ctx = ctx || { who: "terminal" };
   var build = function () { return sellCats(ctx, back); };
-  UIx("menu", (ctx.name || "Скупка") + ". Кредитов " + G().credits, build(), { keep: true, rebuild: build });
+  UIx("menu", ctx.name || "Скупка", build(), { keep: true, rebuild: build });
 }
 function sellCats(ctx, back) {
-  var g = G(), items = [], inv = {};
+  var g = G(), items = [creditsLine()], inv = {};
   Object.keys(g.inv).forEach(function (id) { if (g.inv[id] > 0 && sellable(id)) { var c = catOf(id); (inv[c] = inv[c] || []).push(id); } });
   if (g.weapons.length) items.push({ label: "Оружие: " + g.weapons.length + (g.weapons.length < 2 ? " — последнее не продаётся" : ""), fn: function () { sellWeapons(ctx, back); } });
   if (g.armors.length) items.push({ label: "Броня и комбинезоны: " + g.armors.length + (g.armor ? ", одна надета" : ""), fn: function () { sellArmors(ctx, back); } });
@@ -151,8 +156,11 @@ function sellCats(ctx, back) {
   });
   var am = Object.keys(g.ammo).filter(function (k) { return g.ammo[k] > 0 && LAB.AMMO[k]; });
   if (am.length) items.push({ label: "Батареи и боеприпасы: " + am.reduce(function (a, k) { return a + g.ammo[k]; }, 0), fn: function () { sellAmmo(ctx, back); } });
-  if (!items.length) items.push({ label: "Продавать нечего", disabled: true, fn: function () {} });
-  items.push({ label: "Назад", fn: function () { if (back) back(); } });
+  if (items.length < 2) items.push(infoLine("Продавать нечего"));
+  /* (3.7, нелогичность) окно скупки закрывается, и открывается то, откуда пришли: у торгового терминала
+     (game.js открывает скупку вместо своего окна) окно терминала прежде вставало поверх скупки, и Escape
+     из терминала вёл обратно в скупку */
+  items.push({ label: "Назад", fn: function () { if (back) { UIx("closeTop", true); back(); } else UIx("closeTop"); } });
   return items;
 }
 function soldSay(what, p) {
@@ -180,7 +188,7 @@ function sellItems(ctx, cat, back) {
         G().inv[id] = 0; G().credits += sum; soldSay(d.n.charAt(0).toLowerCase() + d.n.slice(1) + ", " + n + " шт.", sum);
       } });
     });
-    if (!items.length) items.push({ label: "Здесь больше нечего продать", disabled: true, fn: function () {} });
+    if (!items.length) items.push(infoLine("Здесь больше нечего продать"));
     items.push({ label: "Назад", fn: function () { sellMenu(ctx, back); } });
     return items;
   };
@@ -198,7 +206,7 @@ function sellAmmo(ctx, back) {
         G().ammo[k]--; G().credits += p1; soldSay(nm.charAt(0).toLowerCase() + nm.slice(1), p1);
       } });
     });
-    if (!items.length) items.push({ label: "Батарей больше нет", disabled: true, fn: function () {} });
+    if (!items.length) items.push(infoLine("Батарей больше нет"));
     items.push({ label: "Назад", fn: function () { sellMenu(ctx, back); } });
     return items;
   };
@@ -248,7 +256,7 @@ function sellArmors(ctx, back) {
         else go();
       } });
     });
-    if (!items.length) items.push({ label: "Брони больше нет", disabled: true, fn: function () {} });
+    if (!items.length) items.push(infoLine("Брони больше нет"));
     items.push({ label: "Назад", fn: function () { sellMenu(ctx, back); } });
     return items;
   };
@@ -343,7 +351,7 @@ function postMenu(o) {
   var st = stockOf(o), prof = st.prof, P = LAB.SUPPLY_PROFILES[prof];
   if (LAB.ach) LAB.ach.ev("post", 1);
   var build = function () {
-    var g = G(), items = [], ready = (g.orders || []).filter(function (q) { return q.st === "ready"; });
+    var g = G(), items = [creditsLine()], ready = (g.orders || []).filter(function (q) { return q.st === "ready"; });
     if (ready.length) items.push({ label: "Забрать заказ: " + ready.map(function (q) { return q.name; }).join(", "), fn: function () { pickup(o); } });
     items.push({ label: "Прилавок: товар этажа, профиль — " + P.n, fn: function () { counterMenu(o); } });
     items.push({ label: "Заказать с поверхности: доставка " + deliveryText(), fn: function () { orderMenu(o); } });
@@ -354,7 +362,7 @@ function postMenu(o) {
     items.push({ label: "Отойти", fn: function () {} });
     return items;
   };
-  UIx("menu", postName(o) + ". Кредитов " + G().credits, build(), { keep: true, rebuild: build });
+  UIx("menu", postName(o), build(), { keep: true, rebuild: build });
 }
 function counterMenu(o) {
   var st = stockOf(o), prof = st.prof;
@@ -411,11 +419,12 @@ function counterMenu(o) {
         } });
       }
     }
-    if (items.length === 0) items.push({ label: "Прилавок пуст: новый привоз — через несколько часов", disabled: true, fn: function () {} });
+    if (items.length === 0) items.push(infoLine("Прилавок пуст: новый привоз — через несколько часов"));
+    items.unshift(creditsLine());
     items.push({ label: "Назад", fn: function () { postMenu(o); } });
     return items;
   };
-  UIx("menu", "Прилавок. Кредитов " + G().credits, build(), { keep: true, rebuild: build });
+  UIx("menu", "Прилавок", build(), { keep: true, rebuild: build });
 }
 
 /* ════════ ЗАКАЗ С ПОВЕРХНОСТИ ════════
@@ -450,7 +459,8 @@ function orderMenu(o) {
     var g = G(), items = [], pend = (g.orders || []).filter(function (q) { return q.st !== "done"; }).length;
     surfaceCatalog().forEach(function (e) {
       var p = orderPrice(e), nm = orderName(e);
-      items.push({ label: nm + (e.id && LAB.ITEMS[e.id].surf ? ", с поверхности" : "") + " — " + cr(p), fn: function () {
+      /* (3.7) «Свежий хлеб с поверхности» — без второго «, с поверхности» */
+      items.push({ label: nm + (e.id && LAB.ITEMS[e.id].surf && !/поверхност/i.test(nm) ? ", с поверхности" : "") + " — " + cr(p), fn: function () {
         if ((G().orders || []).filter(function (q) { return q.st !== "done"; }).length >= 4) { LAB.UI.error(); say("В пути уже четыре заказа: магистраль больше не берёт. Заберите прибывшие."); return; }
         if (G().credits < p) { LAB.UI.error(); say("Не хватает кредитов: нужно " + p + ", у вас " + G().credits + "."); return; }
         G().credits -= p;
@@ -462,7 +472,7 @@ function orderMenu(o) {
         gm().autosaveSoon();
       } });
     });
-    items.unshift({ label: "В пути и ждут: " + pend + " из 4. Кредитов " + g.credits, disabled: true, fn: function () {} });
+    items.unshift(infoLine("В пути и ждут: " + pend + " из 4. У вас " + cr(g.credits)));
     items.push({ label: "Назад", fn: function () { postMenu(o); } });
     return items;
   };

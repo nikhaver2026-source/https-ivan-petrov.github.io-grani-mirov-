@@ -186,7 +186,7 @@ ORDER.forEach(function (k) {
   d.id = k; d.item = itemOf(k);
   if (!LAB.ITEMS[d.item]) LAB.ITEMS[d.item] = { n: cap1(d.n), icon: "🪤", kind: "trap", cat: "trap", trap: k, desc: d.d, price: d.price, depth: d.depth };
   if (LAB.RECIPES && !LAB.RECIPES.some(function (q) { return q.id === "t_" + k; })) {
-    var rc = { id: "t_" + k, out: d.item, n: cap1(d.n), need: d.need, cls: d.cls || "spec", desc: d.d.split(". ")[0] + "." };
+    var rc = { id: "t_" + k, out: d.item, n: cap1(d.n), need: d.need, cls: d.cls || "spec", desc: dot1(d.d.split(". ")[0]) }; /* (3.7) без «секунд..» */
     if (d.bp) rc.bp = true;
     /* (3.7, нелогичность) схема — не раньше самой ловушки (depth): растяжку с гранатой, мину и ЭМИ-мину прежде собирали на уровень раньше */
     if (d.minL || (d.depth || 1) > 1) rc.minL = Math.max(d.minL || 1, d.depth || 1);

@@ -130,8 +130,9 @@ jobs:
         working-directory: lab/desktop
         run: |
           ICONARG=""; [ -n "$ICON" ] && ICONARG="--icon=$ICON"
+          # (3.7) Версия в свойствах программы — как в package.json: 3.7.0 и номер сборки (прежде было 1.0.0).
           npx @electron/packager . lab --platform=win32 --arch=$ARCH --electron-version=$ELECTRON --out=out --overwrite \
-            --executable-name="${EXE%.exe}" --app-version=1.0.0 --build-version=1.0.0.${GITHUB_RUN_NUMBER} \
+            --executable-name="${EXE%.exe}" --app-version=3.7.0 --build-version=3.7.0.${GITHUB_RUN_NUMBER} \
             --win32metadata.ProductName="Подземная лаборатория" --win32metadata.FileDescription="Подземная лаборатория Альфа 3.7" \
             --win32metadata.CompanyName="Грани Миров" \
             --extra-resource=sapi --extra-resource=sr \

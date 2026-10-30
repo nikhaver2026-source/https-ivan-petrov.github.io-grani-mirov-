@@ -15,6 +15,8 @@
 var LAB = window.LAB, S = LAB.settings;
 function say(t, o) { LAB.say(t, o); }
 function sayq(t) { LAB.say(t, { interrupt: false }); }
+/* (3.7, нелогичность) склейка фраз: точка — только если на конце ещё нет знака (LAB.dot, engine.js) */
+function dot(s) { return LAB.dot(s); }
 function gm() { return LAB.game; }
 function G() { return LAB.game.G; }
 function $(id) { return document.getElementById(id); }
@@ -78,22 +80,52 @@ function reveal() {
     stack.pop(); if (t.onClose) LAB.safe(t.onClose); t = top();
   }
 }
+/* (3.7, нелогичность) Окно заменяют окном с тем же заголовком (пункт «Назад» открывает родителя заново,
+   выбор голоса — настройки): фокус — на том же пункте, что был у прежнего окна, как после Escape, а не на
+   первом. Тот же пункт — по метке id, по тексту; число в нём сменилось («Еда и напитки: 3» — «: 2») — по
+   тексту без чисел; значение сменилось («Голос синтезатора: …») — по началу до двоеточия или тире. Из
+   нескольких подходящих — ближайший к прежнему месту; не нашёлся — прежнее место, если пунктов столько же. */
+function sameFocus(old, items) {
+  var it0 = old.items[old.i];
+  if (!it0) return 0;
+  var txt = function (it) { return LAB.safe(function () { return String(itemText(it)); }, ""); };
+  var t0 = txt(it0), texts = items.map(txt);
+  var num = function (t) { return t.replace(/\d+([.,]\d+)?/g, "#"); };
+  var head = function (t) { return t.split(/:| — /)[0].trim(); };
+  var near = function (ok) { var b = -1; texts.forEach(function (t, k) { if (ok(t, k) && (b < 0 || Math.abs(k - old.i) < Math.abs(b - old.i))) b = k; }); return b; };
+  var k = it0.id != null ? near(function (t, j) { return items[j].id === it0.id; }) : -1;
+  if (k < 0) k = near(function (t) { return t === t0; });
+  if (k < 0) k = near(function (t) { return num(t) === num(t0); });
+  if (k < 0 && head(t0).length >= 3) k = near(function (t) { return head(t) === head(t0); });
+  if (k < 0) k = items.length === old.items.length ? old.i : 0;
+  return k;
+}
+/* (3.7, нелогичность) подсказка об управлении окнами до начала игры (главное меню, настройки, руководство)
+   звучит один раз за запуск: отметка записи (G.tut.win) есть только в игре, и прежде в меню она звучала в каждом окне */
+var menuHint = false;
 function menu(title, items, opts) {
   opts = opts || {};
   items = (items || []).filter(Boolean);
   if (!items.length) return;
   /* то же окно уже открыто ниже (пункт «Назад» открывает родителя заново) —
      заменяем его, а не копим: «назад» и пункт «Назад» ведут в одно место */
-  for (var si = stack.length - 1; si >= 0; si--) if (stack[si].title === title && !stack[si].root) { stack.splice(si); break; }
-  var w = { title: title, items: items, i: Math.max(0, Math.min(items.length - 1, opts.focus || 0)), keep: !!opts.keep, root: !!opts.root, rebuild: opts.rebuild || null, onClose: opts.onClose || null, onFocus: opts.onFocus || null, silentOpen: !!opts.silent, intro: opts.intro || "", puzzle: !!opts.puzzle, stamp: null };
+  var old = null;
+  for (var si = stack.length - 1; si >= 0; si--) if (stack[si].title === title && !stack[si].root) { old = stack[si]; stack.splice(si); break; }
+  var f0 = opts.focus != null ? opts.focus : old ? sameFocus(old, items) : 0;
+  var w = { title: title, items: items, i: Math.max(0, Math.min(items.length - 1, f0 || 0)), keep: !!opts.keep, root: !!opts.root, rebuild: opts.rebuild || null, onClose: opts.onClose || null, onFocus: opts.onFocus || null, silentOpen: !!opts.silent, intro: opts.intro || "", puzzle: !!opts.puzzle, stamp: null };
   stack.push(w);
   settle(w);
   if (LAB.input && LAB.input.stopAll) LAB.input.stopAll(); /* ходьба и очередь с удержания — стоп */
   LAB.UI.open();
   render();
-  var hl = LAB.tutor ? LAB.tutor.level() : 2;
-  if (!w.silentOpen) say(title + ". " + (w.intro ? w.intro + " " : "") + itemText(w.items[w.i]) + (S.verbose && hl >= 1 && (hl >= 3 || !G().tut.win) ? LAB.K(". Свайп вправо и влево — пункты, двойное касание — выбрать, два пальца вниз — закрыть.", ". Стрелки вверх и вниз — пункты, Enter — выбрать, Escape — закрыть.") : ""));
-  if (gm() && gm().entered) G().tut.win = 1;
+  var hl = LAB.tutor ? LAB.tutor.level() : 2, inGame = !!(gm() && gm().entered);
+  if (!w.silentOpen) {
+    /* (3.7, нелогичность) без двойных знаков: «Что нового?. …», «Здоровье 100 из 100.. Стрелки…» */
+    var hint = S.verbose && hl >= 1 && (hl >= 3 || (inGame ? !G().tut.win : !menuHint));
+    var said = dot(title) + " " + (w.intro ? dot(w.intro) + " " : "") + itemText(w.items[w.i]);
+    say(hint ? dot(said) + LAB.K(" Свайп вправо и влево — пункты, двойное касание — выбрать, два пальца вниз — закрыть.", " Стрелки вверх и вниз — пункты, Enter — выбрать, Escape — закрыть.") : said);
+    if (inGame) G().tut.win = 1; else if (hint) menuHint = true;
+  }
   /* (1.5) окну важно, какой пункт перед игроком: книги капсулы считают прочитанные страницы */
   if (w.onFocus) LAB.safe(function () { w.onFocus(w.i); });
   return w;
@@ -112,7 +144,7 @@ function closeTop(silent) {
   render();
   var t = top();
   if (t && !silent) {
-    if (!quiet) say(t.title + ". " + itemText(t.items[t.i]));
+    if (!quiet) say(dot(t.title) + " " + itemText(t.items[t.i]));
   } else if (!t && !silent && !quiet && screen === "game") say("Игра.");
   return true;
 }
@@ -142,17 +174,20 @@ function activate() {
     if (w.rebuild && rebuildWin(w)) {
       var j = -1; w.items.forEach(function (x, k) { if (j < 0 && itemText(x) === was) j = k; });
       render();
-      if (j < 0) { LAB.UI.error(); say("Здесь всё изменилось. " + w.title + ". " + itemText(w.items[w.i])); return; }
+      if (j < 0) { LAB.UI.error(); say("Здесь всё изменилось. " + dot(w.title) + " " + itemText(w.items[w.i])); return; }
       w.i = j; it = w.items[j];
       if (it.disabled) { LAB.UI.error(); say(it.why || "Недоступно."); return; }
     } else {
       LAB.UI.error(); stack.splice(stack.indexOf(w), 1); if (w.onClose) LAB.safe(w.onClose); reveal(); render(); tt = top();
-      say("Здесь всё уже изменилось: откройте окно заново." + (tt ? " " + tt.title + ". " + itemText(tt.items[tt.i]) : ""));
+      say("Здесь всё уже изменилось: откройте окно заново." + (tt ? " " + dot(tt.title) + " " + itemText(tt.items[tt.i]) : ""));
       return;
     }
   }
   LAB.UI.click();
-  var keep = w.keep || it.keep, n0 = LAB.Speech.sayN || 0;
+  /* (3.7, нелогичность) строка-сведение без своего действия («Журнал пуст», «Деталей нет», «Брони нет»)
+     называет себя: прежде молчала. И строка-сведение окна не закрывает (keep), даже без пометки keep */
+  if ((it.info || it.keep) && String(it.fn).replace(/\s+/g, "") === "function(){}") { say(itemText(it)); return; }
+  var keep = w.keep || it.keep || it.info, n0 = LAB.Speech.sayN || 0;
   /* пункт выполняется, пока его окно ещё открыто: открыл новое окно — это
      остаётся под ним (жест «назад» вернёт сюда); не открыл — окно закрывается */
   LAB.safe(function () { it.fn(); });
@@ -161,7 +196,7 @@ function activate() {
     stack.splice(wi, 1); reveal(); render();
     if ((LAB.Speech.sayN || 0) === n0 && !(LAB.mini && LAB.mini.active())) {
       var t = top();
-      if (t) say(t.title + ". " + itemText(t.items[t.i])); else if (screen === "game") say("Игра.");
+      if (t) say(dot(t.title) + " " + itemText(t.items[t.i])); else if (screen === "game") say("Игра.");
     }
   }
   if (keep && top() === w && w.rebuild) { if (rebuildWin(w)) render(); else { stack.splice(stack.indexOf(w), 1); if (w.onClose) LAB.safe(w.onClose); reveal(); render(); } }
@@ -213,7 +248,7 @@ function adjust(it, dir) {
 function readAll() {
   var w = top(); if (!w) return;
   /* пункт, что кончается точкой или другим знаком, второй точки не получает («ступени.. 2.») */
-  say(w.title + ". " + w.items.map(function (it, i) { var t = itemText(it); return (i + 1) + ". " + t + (/[.!?…:;]$/.test(t) ? "" : "."); }).join(" "));
+  say(dot(w.title) + " " + w.items.map(function (it, i) { return (i + 1) + ". " + dot(itemText(it)); }).join(" "));
 }
 
 /* ════════ ОТРИСОВКА (для зрячих помощников) ════════
@@ -495,13 +530,15 @@ function diffConfirm(k) {
     { label: "Выбрать другой режим", close: true, fn: function () {} }
   ], { intro: d.desc + " " + TB_INTRO, focus: S.turnBased ? 1 : 0 });
 }
-var TB_INTRO = "Бой выбирают здесь же, на всю игру. Пошаговый бой: враги ходят только после ваших действий, а перезарядка, смена оружия, лечение, обыск, броски и импланты стоят ходов. Зато всё дороже: цены выше на четверть, скупка, кредиты, добыча и лечебные припасы скромнее, энергобатарея падает с врага на одного позже, у капсулы прибытия их на одну меньше.";
+/* (3.7, нелогичность) и о сроках: в пошаговом бою они идут ходами (такт — ход), а игра называет их секундами */
+var TB_TIME = "Сроки ОКО и действие вещей — глушилок, стимуляторов, защиты — в пошаговом бою идут ходами: где игра называет секунды, считайте по два ваших хода на секунду.";
+var TB_INTRO = "Бой выбирают здесь же, на всю игру. Пошаговый бой: враги ходят только после ваших действий, а перезарядка, смена оружия, лечение, обыск, броски и импланты стоят ходов. Зато всё дороже: цены выше на четверть, скупка, кредиты, добыча и лечебные припасы скромнее, энергобатарея падает с врага на одного позже, у капсулы прибытия их на одну меньше. " + TB_TIME;
 /* Пункт «Назад», «Отмена» в окнах главного меню: окно пункта ещё сверху — закрыть
    его, и прозвучит то окно, куда вернулись (прежде называлось закрываемое) */
 function reopenMain() {
   var t = top();
   if (t && !t.root) { closeTop(); return; }
-  if (screen === "menu" && !t) mainMenu(true); else if (t) say(t.title + ". " + itemText(t.items[t.i]));
+  if (screen === "menu" && !t) mainMenu(true); else if (t) say(dot(t.title) + " " + itemText(t.items[t.i]));
 }
 
 function loadMenu() {
@@ -531,11 +568,14 @@ function saveMenu() {
 }
 
 /* ════════ НАСТРОЙКИ ════════ */
+/* (3.7, нелогичность) Голоса не приложения для компьютера — голоса телефона (приложение для Android, браузер
+   телефона) или браузера (браузер на компьютере): прежде и на компьютере звучало «голос телефона» */
+function voicesOf() { return !LAB.desktop && (!!window.LabTTS || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "")) ? "телефона" : "браузера"; }
 function settingsMenu() {
-  var Sp = LAB.Speech;
+  var Sp = LAB.Speech, dev = voicesOf();
   var ttsOpts = LAB.desktop ?
     [{ v: "auto", label: "Автоматически: голос чтеца экрана или установленный русский синтезатор" }, { v: "system", label: "Голос компьютера, выбранный в списке голосов" }, { v: "espeak", label: "Встроенный eSpeak" }] :
-    [{ v: "auto", label: "Автоматически: голос телефона, если он говорит по-русски" }, { v: "system", label: "Системный синтезатор телефона" }, { v: "espeak", label: "Встроенный eSpeak" }];
+    [{ v: "auto", label: "Автоматически: голос " + dev + ", если он говорит по-русски" }, { v: "system", label: "Системный синтезатор " + dev }, { v: "espeak", label: "Встроенный eSpeak" }];
   var items = [
     { kind: "choice", label: "Синтезатор речи", options: ttsOpts, get: function () { return S.tts; }, set: function (v) { S.tts = v; LAB.saveSettings(); Sp.choose(); } },
     { label: function () { return "Голос синтезатора: " + (S.tts === "espeak" ? "встроенный eSpeak" : S.voice ? voiceTitle(S.voice) : autoVoiceName()); }, fn: voiceMenu },
@@ -546,8 +586,9 @@ function settingsMenu() {
     okoOn() && { kind: "toggle", label: "Сбои и шёпот в голосе ОКО", get: function () { return !!S.okoFx; }, set: function (v) { S.okoFx = v ? 1 : 0; LAB.saveSettings(); },
       descOf: function (v) { return v ? "Изредка ОКО заикается, теряет звук, заговаривает обрывком старой программы; перед зловещими словами — обратное эхо, после — ответный шёпот." : "ОКО говорит ровно, без сбоев и шёпота."; } },
     { kind: "slider", label: "Скорость речи", min: 0, max: 100, step: 5, get: function () { return S.ratePct == null ? 50 : +S.ratePct; }, set: function (v) { S.ratePct = v; S.rate = LAB.rateFromPct(v); LAB.saveSettings(); }, fmt: function (v) { return Math.round(v) + " процентов" + (v === 50 ? ", обычная" : ""); } },
-    /* (2.6) режим сложности выбирают только в начале новой игры (diffMenu); здесь — какой он у этой игры */
-    { label: function () { return gm() && gm().entered ? "Режим сложности этой игры: " + LAB.dk().n.toLowerCase() + ". Он выбран в начале игры и не меняется" : "Режим сложности выбирают в начале новой игры: «Начать игру» в главном меню"; }, info: true, fn: function () {
+    /* (2.6) режим сложности выбирают только в начале новой игры (diffMenu); здесь — какой он у этой игры;
+       (3.7, нелогичность) строка-сведение окна не закрывает (keep) */
+    { label: function () { return gm() && gm().entered ? "Режим сложности этой игры: " + LAB.dk().n.toLowerCase() + ". Он выбран в начале игры и не меняется" : "Режим сложности выбирают в начале новой игры: «Начать игру» в главном меню"; }, info: true, keep: true, fn: function () {
       if (gm() && gm().entered) say(LAB.dk().n + ". " + LAB.dk().desc + " Во время игры режим не меняется: чтобы сыграть в другом, начните новую игру. Сохранение помнит режим, в котором его сделали.");
       else say("Режим сложности выбирают, когда начинают новую игру, — один раз на всю игру. Сохранение помнит режим, в котором его сделали.");
     } },
@@ -556,15 +597,19 @@ function settingsMenu() {
     vol("Громкость атмосферы", "ambVol"),
     vol("Громкость маяков", "beaconVol"),
     vol("Громкость речи", "voiceVol"),
-    tog("Вибрация", "haptics"),
+    /* (3.7, нелогичность) вибрация — только там, где есть чем вибрировать (телефон): на компьютере пункт был, а толку нет */
+    LAB.canVib() && tog("Вибрация", "haptics"),
     /* (3.0) пошаговый бой, как и режим сложности, выбирают в начале новой игры; здесь — какой он у этой игры */
-    { label: function () { return gm() && gm().entered ? "Бой в этой игре: " + (S.turnBased ? "пошаговый" : "обычный") + ". Выбран в начале игры и не меняется" : "Пошаговый или обычный бой выбирают в начале новой игры, вместе с режимом сложности"; }, info: true, fn: function () {
-      say(gm() && gm().entered ? (S.turnBased ? "Пошаговый бой: враги ходят только после ваших действий, а всё дороже." : "Обычный бой: враги действуют сами, не дожидаясь вас.") + " Сменить нельзя: для другого боя начните новую игру." : TB_INTRO);
+    { label: function () { return gm() && gm().entered ? "Бой в этой игре: " + (S.turnBased ? "пошаговый" : "обычный") + ". Выбран в начале игры и не меняется" : "Пошаговый или обычный бой выбирают в начале новой игры, вместе с режимом сложности"; }, info: true, keep: true, fn: function () {
+      say(gm() && gm().entered ? (S.turnBased ? "Пошаговый бой: враги ходят только после ваших действий, а всё дороже. " + TB_TIME : "Обычный бой: враги действуют сами, не дожидаясь вас.") + " Сменить нельзя: для другого боя начните новую игру." : TB_INTRO);
     } },
     tog("Двери без замка открываются сами", "autoDoors"),
     tog("Читать записки сразу", "autoRead"),
-    tog("Голос робота у машин", "robotVoice"),
-    tog("Подсказки", "verbose"),
+    /* (3.7, нелогичность) включили посреди игры — eSpeak догружается сразу (прежде — только при запуске игры) */
+    { kind: "toggle", label: "Голос робота у машин", get: function () { return !!S.robotVoice; }, set: function (v) { S.robotVoice = v ? 1 : 0; LAB.saveSettings(); if (v) LAB.safe(function () { LAB.Speech.loadESpeak(); }); } },
+    /* (3.7, нелогичность) имя — по делу: настройка гасит только подсказку об управлении в окнах (прежде — «Подсказки»,
+       хотя подсказками игры правит «Частота подсказок») */
+    tog("Подсказки об управлении в окнах", "verbose"),
     tog("Субтитры звуков на экране", "subtitles"),
     { kind: "choice", label: LAB.desktop ? "Облегчённый режим для слабых компьютеров" : "Облегчённый режим для слабых телефонов",
       options: [{ v: 0, label: "выключен" }, { v: 1, label: "включён" }],
@@ -602,7 +647,7 @@ function mixerMenu() {
     vol("Маяки предметов", "beaconVol"),
     { kind: "slider", label: "Пространственные эффекты: отзвук помещений", min: 0, max: 1.5, step: 0.1, get: function () { return S.spaceVol == null ? 1 : +S.spaceVol; }, set: function (v) { S.spaceVol = Math.round(v * 10) / 10; LAB.saveSettings(); LAB.AE.applyVolumes(); }, fmt: function (v) { return Math.round(v * 100) + " процентов" + (Math.round(v * 10) === 10 ? ", как задумано" : v === 0 ? ", сухо" : ""); } },
     vol("Все звуковые эффекты вместе", "fxVol"),
-    { kind: "slider", label: "Низкие частоты", min: -12, max: 9, step: 3, get: function () { return +S.bass || 0; }, set: function (v) { S.bass = v; LAB.saveSettings(); if (LAB.AE.applyMix) LAB.AE.applyMix(); }, fmt: function (v) { return v === 0 ? "как записано" : (v > 0 ? "плюс " : "минус ") + Math.abs(v) + " децибел"; } },
+    { kind: "slider", label: "Низкие частоты", min: -12, max: 9, step: 3, get: function () { return +S.bass || 0; }, set: function (v) { S.bass = v; LAB.saveSettings(); if (LAB.AE.applyMix) LAB.AE.applyMix(); }, fmt: function (v) { return v === 0 ? "как записано" : (v > 0 ? "плюс " : "минус ") + Math.abs(v) + " " + LAB.plural(Math.abs(v), "децибел", "децибела", "децибел"); } }, /* (3.7) «плюс 3 децибела» */
     { kind: "choice", label: "Динамический диапазон", options: [{ v: 0, label: "широкий: громкое громче, тихое тише" }, { v: 1, label: "обычный" }, { v: 2, label: "сжатый: тихое слышно, громкое не оглушает — для наушников и тихой игры" }],
       get: function () { return S.drc == null ? 1 : +S.drc; }, set: function (v) { S.drc = v; LAB.saveSettings(); if (LAB.AE.applyMix) LAB.AE.applyMix(); } },
     { label: "Назад", fn: settingsMenu }
@@ -632,7 +677,7 @@ function voiceMenu() {
   if (LAB.desktop) { desktopVoiceMenu(vs); return; }
   var ru = vs.filter(function (v) { return /^ru/i.test(v.lang); });
   var list = (ru.length ? ru : vs).slice(0, 60);
-  if (!list.length) { say("Голосов телефона не найдено. Игра говорит встроенным eSpeak."); settingsMenu(); return; }
+  if (!list.length) { say("Голосов " + voicesOf() + " не найдено. Игра говорит встроенным eSpeak."); settingsMenu(); return; }
   menu("Голос синтезатора", list.map(function (v) {
     /* выбранный голос телефона — и синтезатор телефона: игра говорит им и после перезапуска,
        даже если основной движок телефона по-русски не говорит (как на компьютере) */
@@ -706,12 +751,22 @@ function exitMenu() {
 /* ════════ ИНВЕНТАРЬ (три пальца вниз) ════════ */
 /* (3.5) Окна инвентаря собираются заново (rebuild), когда к ним возвращаются:
    съели, вставили пластину, разобрали — числа в пунктах уже новые. */
-function inventory(focus) {
+function inventory(focus, silent) {
   if (!gm().entered) return;
-  var items = invItems();
-  /* focus — номер пункта или начало его названия («Задания») */
+  var items = invItems(), o = { rebuild: invItems, silent: !!silent };
+  /* focus — номер пункта или начало его названия («Задания»); (3.7, нелогичность) без него «Назад» из раздела
+     возвращает на тот же раздел (menu: фокус прежнего окна инвентаря), а открытый заново — на первый */
   if (typeof focus === "string") { var fi = -1; items.forEach(function (it, i) { if (fi < 0 && it.label.indexOf(focus) === 0) fi = i; }); focus = fi < 0 ? 0 : fi; }
-  menu("Инвентарь", items, { focus: focus || 0, rebuild: invItems });
+  if (focus != null) o.focus = focus;
+  menu("Инвентарь", items, o);
+}
+/* (3.7, нелогичность) J — сразу окно заданий (прежде — инвентарь с фокусом на «Заданиях»); под ним молча
+   открыт инвентарь на «Заданиях», рядом с «Журналом»: Escape и «Назад» ведут туда, как из любого раздела */
+function quests() {
+  if (!gm().entered) return;
+  closeAll();
+  inventory("Задания", true);
+  questsMenu();
 }
 function invItems() {
   var g = G();
@@ -736,7 +791,9 @@ function invItems() {
     { label: "Задания: поручений " + gm().activeQuests().length + " из " + gm().QUEST_ACTIVE, fn: questsMenu },
     { label: "Журнал", fn: journalMenu },
     { label: "Достижения" + (LAB.ach && g.ach ? ": " + Object.keys(g.ach.d || {}).length + " из " + LAB.ach.LIST.length : ""), fn: function () { if (LAB.ach) LAB.ach.menu(); } },
-    { label: "Импланты: " + g.implants.length + ", образцы: " + Object.keys(g.samples).length, fn: implants },
+    /* (3.7, нелогичность) счёт — как в «Кибернетике» (implants.countText): вживлённые, встроенные в «Эхо» сканер
+       и эхолокация, чипы — порознь; прежде здесь «Импланты: 2», а там «Имплантов вживлено: 0» */
+    { label: "Импланты: " + (LAB.implants && LAB.implants.countText ? LAB.implants.countText() : g.implants.length) + ", образцы: " + Object.keys(g.samples).length, fn: implants },
     { label: "Кредиты: " + g.credits, info: true, keep: true, fn: function () { say("Кредиты: " + g.credits + ". Тратятся в торговых терминалах и у выживших."); } }
   ];
   return items;
@@ -841,7 +898,7 @@ function valuablesMenu() {
   var g = G(), tot = 0;
   /* (3.7, нелогичность) то, что не продаётся (жетон погибшего, nosell), — без цены и не в сумме */
   catIds("valuable").forEach(function (k) { if (g.inv[k] > 0 && !LAB.ITEMS[k].nosell) tot += (LAB.sellPrice ? LAB.sellPrice.item(k, { who: "supply" }) : Math.round(LAB.ITEMS[k].price * 0.7)) * g.inv[k]; });
-  menu("Ценности", valuablesItems(), { rebuild: valuablesItems, intro: tot ? "Всё вместе стоит около " + tot + " кредитов." : "" });
+  menu("Ценности", valuablesItems(), { rebuild: valuablesItems, intro: tot ? "Всё вместе стоит примерно " + tot + " " + LAB.plural(tot, "кредит", "кредита", "кредитов") + "." : "" }); /* (3.7) «примерно 41 кредит», не «около 41 кредитов» */
 }
 function valuablesItems() {
   var g = G();
@@ -931,7 +988,7 @@ function partsItems() {
     var line = LAB.workshop ? LAB.workshop.partLine(k) : LAB.ITEMS[k].n + ": " + g.inv[k];
     return { label: line, keep: true, fn: function () { say(LAB.ITEMS[k].desc + " " + line); } };
   });
-  if (!items.length) items.push({ label: "Деталей нет. Ищите в ящиках, у роботов и на полу.", keep: true, fn: function () {} });
+  if (!items.length) items.push({ label: "Деталей нет. Ищите в ящиках, у роботов и на полу.", info: true, keep: true, fn: function () {} });
   if (LAB.workshop) items.push({ label: "Все детали этой глубины: где найти и для чего", fn: function () { LAB.workshop.partsGuide(); } });
   items.push(back());
   return items;
@@ -954,7 +1011,7 @@ function passesItems() {
   items.push({ label: "Пропуск доступа: " + (g.tier ? LAB.TIERS[g.tier].n : "нет"), keep: true, fn: function () { say(g.tier ? LAB.TIERS[g.tier].n + ": открывает двери с картридером этого цвета и ниже." : "Пропуска нет."); } });
   items.push({ label: "Пропуск лифта этажей уровня " + g.L + ": " + (g.elev[g.L] ? "есть" : "нет"), keep: true, fn: function () { say(g.elev[g.L] ? "Лифт этажей уровня " + g.L + " вас повезёт." : "Пропуск лифта лежит на втором этаже уровня."); } });
   if (!LAB.isReactorLevel(g.L)) items.push({ label: "Шлюзовая ключ-карта уровня " + g.L + ": " + (g.gate[g.L] ? "есть" : "нет"), keep: true, fn: function () { say(g.gate[g.L] ? "Гермошлюз на последнем этаже уровня откроется. Пройти можно только вниз." : "Ключ-карта — на последнем этаже уровня, у шлюза: у стража или спрятана."); } });
-  else items.push({ label: (gm().trueSource && gm().trueSource(g.L) ? "Ключ настоящего «Истока»" : "Ключ доступа к реактору «Исток»") + ": " + (gm().hasCore(g.L) ? "есть" : "нет"), keep: true, fn: function () {} }); /* (3.7, нелогичность) на последнем уровне — не реактор */
+  else items.push({ label: (gm().trueSource && gm().trueSource(g.L) ? "Ключ настоящего «Истока»" : "Ключ доступа к реактору «Исток»") + ": " + (gm().hasCore(g.L) ? "есть" : "нет"), info: true, keep: true, fn: function () {} }); /* (3.7, нелогичность) на последнем уровне — не реактор */
   Object.keys(g.keys).forEach(function (k) { items.push({ label: g.keys[k], keep: true, fn: function () { say(g.keys[k] + "."); } }); });
   var codes = Object.keys(g.codes);
   if (codes.length) items.push({ label: "Известные коды: " + codes.length, keep: true, fn: function () { say(codes.map(function (c) { return "«" + g.codes[c] + "» — " + c.split("").join(" "); }).join("; ") + "."); } });
@@ -995,7 +1052,7 @@ function docListMenu(title, list, back) {
     var d = gm().docInfo(n);
     return { label: docLabel(n, d), fn: function () { openDoc(n, function () { docListMenu(title, list, back); }); } };
   });
-  if (!items.length) items.push({ label: "Документов нет.", keep: true, fn: function () {} });
+  if (!items.length) items.push({ label: "Документов нет.", info: true, keep: true, fn: function () {} });
   items.push({ label: "Назад", fn: function () { (back || notesMenu)(); } });
   menu(title + ": " + list.length, items);
 }
@@ -1022,7 +1079,7 @@ function notesMenu() {
     { label: "По первой букве названия", fn: function () { docGroups("Документы по первой букве", function (n, d) { var c = String(d.t || "").replace(/^[«"„\s]+/, "").charAt(0).toUpperCase(); return c ? "на «" + c + "»" : ""; }); } }
   ];
   if (last) items.push({ label: "Прослушать снова: «" + gm().docInfo(last).t + "»", fn: function () { openDoc(last, notesMenu); } });
-  if (!g.noteList.length) items = [{ label: "Документов пока нет. Записки, письма и журналы, которые вы найдёте, попадут сюда.", keep: true, fn: function () {} }];
+  if (!g.noteList.length) items = [{ label: "Документов пока нет. Записки, письма и журналы, которые вы найдёте, попадут сюда.", info: true, keep: true, fn: function () {} }];
   items.push(back());
   menu("Архив документов", items);
 }
@@ -1056,7 +1113,7 @@ function abandonMenu() {
         ]);
       } };
     });
-    if (!items.length) items.push({ label: "Отказываться не от чего.", keep: true, fn: function () {} });
+    if (!items.length) items.push({ label: "Отказываться не от чего.", info: true, keep: true, fn: function () {} });
     items.push({ label: "Назад", fn: function () {} });
     return items;
   };
@@ -1066,7 +1123,7 @@ function journalMenu() { menu("Журнал", journalItems(), { rebuild: journal
 function journalItems() {
   var g = G();
   var items = g.journal.slice(0, 40).map(function (t) { return { label: t, keep: true, fn: function () { say(t); } }; });
-  if (!items.length) items.push({ label: "Журнал пуст.", keep: true, fn: function () {} });
+  if (!items.length) items.push({ label: "Журнал пуст.", info: true, keep: true, fn: function () {} });
   items.push(back());
   return items;
 }
@@ -1087,7 +1144,7 @@ function note(title, text, after, opts) {
   A("play", "paper");
   var w = menu(title, items, { silent: true, puzzle: !!opts.puzzle });
   if (w) w.note = true;
-  say(title + ". " + text, { interrupt: !opts.queue, read: true, note: true });
+  say(dot(title) + " " + text, { interrupt: !opts.queue, read: true, note: true });
 }
 
 /* ════════ МАСТЕРСКАЯ ════════ */
@@ -1164,7 +1221,7 @@ function gesture(g) {
       if (g.dir === "R") { move(1); return true; }
       if (g.dir === "L") { move(-1); return true; }
       var it = w.items[w.i];
-      if (g.dir === "U") { if (!adjust(it, 1)) say(w.title + ". Пункт " + (w.i + 1) + " из " + w.items.length + ": " + itemText(it)); return true; }
+      if (g.dir === "U") { if (!adjust(it, 1)) say(dot(w.title) + " Пункт " + (w.i + 1) + " из " + w.items.length + ": " + itemText(it)); return true; }
       if (g.dir === "D") { if (!adjust(it, -1)) { if (!closeTop()) LAB.UI.error(); } return true; }
     }
     if (g.kind === "dtap") { activate(); return true; }
@@ -1195,7 +1252,7 @@ function key(act) {
   /* записка читается, а игрок ходит по ней клавишами — чтение целиком уступает выбранному абзацу */
   if (w.note && LAB.Speech.noteBusy() && /^(next|prev|first|last|inc|dec|repeat)$/.test(act)) LAB.Speech.endNote();
   var quiet = false;
-  var where = function () { return w.title + ". Пункт " + (w.i + 1) + " из " + n + ": " + itemText(w.items[w.i]); };
+  var where = function () { return dot(w.title) + " Пункт " + (w.i + 1) + " из " + n + ": " + itemText(w.items[w.i]); };
   switch (act) {
     case "next": move(1); return true;
     case "prev": move(-1); return true;
@@ -1220,6 +1277,11 @@ function key(act) {
       var want = act === "char" ? "Персонаж" : "Инвентарь";
       if (w.title === want) closeTop(); else { closeAll(); if (act === "char") character(); else inventory(); }
       return true;
+    /* (3.7, нелогичность) J и в окнах — окно заданий, как C и I; в самих заданиях — назад */
+    case "quests":
+      if (screen !== "game") return true;
+      if (w.title === "Задания") closeTop(); else quests();
+      return true;
     case "guide":
       if (LAB.guide && w.title !== "Руководство") LAB.guide.open();
       return true;
@@ -1232,7 +1294,7 @@ LAB.ui = {
   key: key, pageOpen: pageOpen,
   menu: menu, closeTop: closeTop, closeAll: closeAll, layer: layer, gesture: gesture, refresh: refresh, render: render,
   note: note, craft: craft, ending: ending, levelBanner: levelBanner, showGame: showGame, mainMenu: mainMenu, prologue: prologue, pages: pages,
-  character: character, inventory: inventory, implants: implants, settings: settingsMenu, loadMenu: loadMenu, saveMenu: saveMenu,
+  character: character, inventory: inventory, quests: quests, implants: implants, settings: settingsMenu, loadMenu: loadMenu, saveMenu: saveMenu,
   navMenu: navMenu, screen: function () { return screen; }, setScreen: setScreen, top: top, activate: activate, move: move,
   startGame: startGame, diffMenu: diffMenu, rebuildTop: rebuildTop,
   /* (3.0) открыта ли головоломка (её окно или окно внутри неё): ОКО тогда молчит */

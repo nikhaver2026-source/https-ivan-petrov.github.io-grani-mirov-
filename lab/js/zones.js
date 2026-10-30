@@ -365,7 +365,9 @@ function fuseMenu(o) {
   var all = cb && cb.cams ? cb.cams() : [], live = all.filter(function (f) { return cb.camState(f) !== "off"; });
   /* (2.2) камер нет вовсе — так и сказать (прежде щит говорил «уже обесточены») */
   if (!all.length) items.push({ label: "Камер на этаже нет" + (cb && cb.camsBroken && cb.camsBroken() ? ": все разбиты" : "") + " — обесточивать нечего", info: true, keep: true, fn: function () { say("Автоматы камер на щите стоят без нагрузки: на этаже нет ни одной целой камеры ОКО."); } });
-  else items.push({ label: live.length ? "Обесточить камеры этажа: рубильники и схема реле (головоломка), камер под током — " + live.length : "Камеры этажа уже обесточены: ремонтник ОКО поднимет рубильники по одной камере", disabled: !live.length, why: "Все камеры этажа и так без питания.", fn: function () {
+  else items.push({ label: live.length ? "Обесточить камеры этажа: рубильники и схема реле (головоломка), камер под током — " + live.length : "Камеры этажа уже обесточены: ремонтник ОКО поднимет рубильники по одной камере", info: !live.length, keep: !live.length, fn: function () {
+    /* (3.7, нелогичность) обесточивать нечего — строка-сведение, а не «… — недоступно» */
+    if (!live.length) { say("Все камеры этажа и так без питания: ремонтник ОКО поднимет рубильники по одной камере."); return; }
     UIx("closeAll");
     LAB.mini.relays(5 + Math.min(2, Math.floor(G().L / 25)), function (ok) {
       if (!ok && away()) { say("Вы отошли от щита. Рубильники как были."); return; }
@@ -494,7 +496,9 @@ var COMP_ITEMS = {
     var shut = fl.doors.filter(function (d) { return d.annex && d.lock && d.lock.type !== "secret" && d.lock.type !== "hazard" && fs.doors[d.id] !== 1 && fs.doors[d.id] !== 2; });
     return [
       { label: "Двери этажа: что заперто", fn: function () { spend(1); var all = fl.doors.filter(function (d) { return d.lock && d.lock.type !== "secret" && fs.doors[d.id] !== 1 && fs.doors[d.id] !== 2; }); say("Заперто дверей: " + all.length + ". " + (shut.length ? "Режимные помещения у коридоров: " + shut.map(function (d) { return "«" + fl.rooms[d.room].name + "» " + gm().relDir(d.x, d.y); }).join("; ") + "." : "Режимные помещения открыты.")); } },
-      { label: shut.length ? "Отпереть режимное помещение с пульта (взлом)" : "Отпирать нечего", disabled: !shut.length, fn: function () {
+      { label: shut.length ? "Отпереть режимное помещение с пульта (взлом)" : "Отпирать нечего", info: !shut.length, keep: !shut.length, fn: function () {
+        /* (3.7, нелогичность) строка-сведение, а не «Отпирать нечего — недоступно» */
+        if (!shut.length) { say("Отпирать нечего: запертых режимных помещений на этаже нет."); return; }
         UIx("closeAll");
         LAB.mini.hack(gm().hackLength(3 + Math.floor(Math.min(G().L, 25) / 4)), function (ok) {
           if (!ok && away()) { say("Вы отошли от пульта. Команда не отправлена."); return; }
@@ -511,7 +515,8 @@ var COMP_ITEMS = {
   },
   server: function (o, s) {
     return [
-      { label: s.data ? "Данные отдела уже скачаны" : "Скачать данные отдела на носитель (взлом)", disabled: !!s.data, fn: function () {
+      { label: s.data ? "Данные отдела уже скачаны" : "Скачать данные отдела на носитель (взлом)", info: !!s.data, keep: !!s.data, fn: function () {
+        if (s.data) { say("Данные отдела уже скачаны."); return; } /* (3.7, нелогичность) строка-сведение */
         UIx("closeAll");
         LAB.mini.hack(gm().hackLength(3 + Math.floor(Math.min(G().L, 25) / 5)), function (ok) {
           if (!ok && away()) { say("Вы прервали передачу сами, до того как сервер её заметил."); return; }
@@ -540,14 +545,16 @@ var COMP_ITEMS = {
   main: function (o, s) {
     var fl = CUR().fl, fs = CUR().fs;
     var items = [];
-    items.push({ label: s.bp ? "Схема уже скачана" : "Скачать схему защитного костюма для мастерской", disabled: !!s.bp, fn: function () {
+    items.push({ label: s.bp ? "Схема уже скачана" : "Скачать схему защитного костюма для мастерской", info: !!s.bp, keep: !!s.bp, fn: function () {
+      if (s.bp) { say("Схема уже скачана."); return; } /* (3.7, нелогичность) строка-сведение */
       var rc = protBlueprint();
       if (!rc) { say("Все схемы защиты из этой системы у вас уже есть. Взамен — кредиты по ведомости особого отдела. " + gm().giveItem({ kind: "credits", n: LAB.credits(60, G().L, G().F) }, true)); s.bp = 1; return; }
       G().bp = G().bp || {}; G().bp[rc.id] = 1; s.bp = 1; A("play", "term_ok");
       say("Схема «" + rc.n + "» записана в «Эхо». Её собирают у подходящего верстака.");
       ev("blueprint", 1);
     } });
-    items.push({ label: s.allOpen ? "Допуск этажа выдан" : "Выдать себе допуск ко всем режимным помещениям этажа", disabled: !!s.allOpen, fn: function () {
+    items.push({ label: s.allOpen ? "Допуск этажа выдан" : "Выдать себе допуск ко всем режимным помещениям этажа", info: !!s.allOpen, keep: !!s.allOpen, fn: function () {
+      if (s.allOpen) { say("Допуск этажа уже выдан."); return; } /* (3.7, нелогичность) строка-сведение */
       var n = 0;
       fl.doors.forEach(function (d) { if (d.annex && d.lock && ["code", "key", "card"].indexOf(d.lock.type) >= 0 && fs.doors[d.id] !== 2) { fs.doors[d.id] = 1; n++; } });
       s.allOpen = 1; A("play", "door_unlock");
@@ -642,7 +649,7 @@ function reportDoc(r) {
     "Инвентаризация закончена. Недостача: один чайник, две кружки, книга «Справочник монтажника». Кружки нашлись в серверной.",
     "Вентиляция этажа работает с перебоями. Пока ремонтники ищут причину, рекомендую не оставлять двери лабораторий открытыми."
   ]);
-  return { t: "Отчёт номер " + n, x: "Отчёт номер " + n + ". Составил: " + who + ". " + body };
+  return { t: "Отчёт номер " + n, x: "Отчёт номер " + n + ". Составил: " + LAB.dot(who) + " " + body }; /* (3.7) «Тарасова Д.», не «Д..» */
 }
 function invoiceDoc(r) {
   var n = r.int(1000, 9999);
@@ -659,7 +666,7 @@ function incidentDoc(r) {
     "Курение в неположенном месте. Нарушитель объяснил, что курил «для храбрости» перед дежурством у шахты. Строгий выговор.",
     "Из вивария пропал образец. Через сутки найден в вентиляции соседнего этажа живым и, по словам лаборанта, «довольным»."
   ]);
-  return { t: "Протокол происшествия", x: "Протокол. Составил: " + who + ". " + body };
+  return { t: "Протокол происшествия", x: "Протокол. Составил: " + LAB.dot(who) + " " + body };
 }
 /* Документ из архива объекта этой глубины, если есть (тексты блоков и lore.js). */
 function loreDoc(r, secret) {

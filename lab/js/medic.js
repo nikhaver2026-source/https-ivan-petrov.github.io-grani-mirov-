@@ -235,20 +235,34 @@ function place(ctx) {
      (пока лечат, облучаешься), не среди тел и не за тайной дверью; главные помещения
      без врагов — раньше кабинетов у коридоров. */
   if (L === 1 && F <= 2) return;
-  var med = [], quiet = [], medA = [], quietA = [], open4 = open0;
+  var med = [], quiet = [], medA = [], quietA = [], busy = [], open4 = open0;
   fl.rooms.forEach(function (rm, i) {
     if (!rm || capRooms[i] || i === fl.secret || rm.hidden) return;
     var kind = roomDef(rm).kind;
     if (kind === "supply" || kind === "trial" || kind === "hazard" || kind === "decon") return;
     /* и не у лестниц, лифта и прибытия: там посты ОКО и их смена */
     if (rm.rad || rm.gas || bodyRoom0[i] || (open4 && !open4[i]) || i === ctx.U || i === fl.D || i === fl.E) return;
-    var foes = fl.foes.some(function (f) { return f.room === rm.id || fl.room[f.y * W + f.x] === rm.id; });
-    if (foes || !cellsOf(rm).length) return;
+    var here = fl.foes.filter(function (f) { return f.room === rm.id || fl.room[f.y * W + f.x] === rm.id; });
+    if (!cellsOf(rm).length) return;
     var isMed = roomKind(fl, rm) === "med";
+    if (here.length) { if (!here.some(function (f) { return f.boss || f.stairPost; })) busy.push({ rm: rm, med: isMed, n: here.length }); return; }
     if (rm.annex) (isMed ? medA : quietA).push(rm); else (isMed ? med : quiet).push(rm);
   });
   if (!r.chance(med.length + medA.length >= 3 ? 0.7 : 0.5)) return;
   var spot = med.length ? r.pick(med) : quiet.length ? r.pick(quiet) : medA.length ? r.pick(medA) : quietA.length ? r.pick(quietA) : null;
+  /* (3.7) Тихого помещения нет: охрана ОКО заняла все, а пост дезактивации целителю больше не место
+     (глубже — на каждом шестом этаже). Тогда целитель занимает помещение, а охрана, камеры и отряды
+     туда не встают — как у штабов фракций (world.js, шаг 25в); что враг нёс (ключ, пропуск), остаётся
+     на полу там, где он стоял. Медицинское и большое — раньше, где врагов меньше — раньше. */
+  if (!spot && busy.length) {
+    busy.sort(function (a, b) { return (b.med ? 1 : 0) - (a.med ? 1 : 0) || (a.rm.annex ? 1 : 0) - (b.rm.annex ? 1 : 0) || a.n - b.n || a.rm.id - b.rm.id; });
+    spot = busy[0].rm;
+    fl.foes = fl.foes.filter(function (f) {
+      if (f.room !== spot.id && fl.room[f.y * W + f.x] !== spot.id) return true;
+      (f.carry || []).forEach(function (it) { ctx.addItem(it, spot.id, [f.x, f.y]); });
+      return false;
+    });
+  }
   if (!spot) return;
   var pid = r.pick(BY_ERA[e]);
   /* (3.7, нелогичность) не второй такой же на этаже: целитель-медик рядом с выжившим медиком

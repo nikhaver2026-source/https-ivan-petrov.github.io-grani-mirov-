@@ -1165,12 +1165,17 @@ function offers(n) {
     if (cq) out.push(cq);
     return out;
   }
-  var hb = h32(h + ":b"), qb = build(n, t, hb, sb, chap, chap ? "b" : null);
-  if (qb) {
-    qb.style = sb;
+  /* (3.7) второй путь — не повтор первого. Прежде путь с теми же шагами просто выпадал, и с третьей
+     ступени заказчик нередко давал один путь вместо двух; теперь — ещё попытки: другим зерном, а вне
+     главы и другим подходом (стилем) */
+  var sig = function (q) { return steps(q).map(function (s) { return s.type + (s.tF || ""); }).sort().join(","); };
+  var styles = chap ? [sb] : [sb].concat(["force", "tech", "search", "trade"].filter(function (x) { return x !== sa && x !== sb; }));
+  for (var a = 0; a < 6; a++) {
+    var sbi = styles[a % styles.length], hb = h32(h + ":b" + (a ? ":" + a : "")), qb = build(n, t, hb, sbi, chap, chap ? "b" : null);
+    if (!qb) continue;
+    qb.style = sbi;
     finishBuild(qb, n, hb, chap, chap ? "b" : null, qa ? qa.intro : null);
-    var sig = function (q) { return steps(q).map(function (s) { return s.type + (s.tF || ""); }).sort().join(","); };
-    if (!qa || sig(qa) !== sig(qb)) out.push(qb);
+    if (!qa || sig(qa) !== sig(qb)) { out.push(qb); break; }
   }
   return out;
 }
