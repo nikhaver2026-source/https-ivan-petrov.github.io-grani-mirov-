@@ -5544,7 +5544,10 @@ LAB.ui.closeAll();
       const fs2 = findFloor(fl => !!fxRest(fl));
       if (fs2) {
         go(fs2[0], fs2[1]);
+        /* тревога этажа — в тактах самого этажа: от прежних проверок на нём она могла остаться */
+        LAB.oko.setLevel(0, "проверка");
         const ch = fxRest(g.CUR.fl); near(ch);
+        out.restWhy = g.restBlock ? g.restBlock() : null;
         const nowM = () => (G.day || 0) * 1440 + (G.min || 0), pr = LAB.FIX.T[ch.fx].a.find(q => q[0] === "rest")[2] || {};
         const mR = pr.m || 10, full = Math.max(5, Math.round(G.hpMax * pr.hp)), share = k => Math.max(1, Math.round(full * Math.min(1, k)));
         G.restAt = -1e9; G.hp = 10;
@@ -5694,7 +5697,7 @@ LAB.ui.closeAll();
   });
   ok(!holes.err, "сценарии прошли без ошибок" + (holes.err ? ": " + holes.err : ""));
   ok(holes.secret && holes.secret.first === 1 && holes.secret.more === 0 && holes.secret.xp1 && holes.secret.xpMore === 0, "тайник: опыт и счёт — один раз, повтор из старого окна ничего не даёт (" + JSON.stringify(holes.secret) + ")");
-  ok(holes.rest1 && holes.rest2 && holes.rest2.gain === holes.rest2.want && holes.rest2.time && holes.rest2.said, "отдых: сразу снова — можно, но здоровья лишь доля, время идёт (" + JSON.stringify(holes.rest2) + ")");
+  ok(holes.rest1 && holes.rest2 && holes.rest2.gain === holes.rest2.want && holes.rest2.time && holes.rest2.said, "отдых: сразу снова — можно, но здоровья лишь доля, время идёт (" + JSON.stringify(holes.rest2) + (holes.restWhy ? "; " + holes.restWhy : "") + ")");
   ok(holes.restAlarm, "отдых при тревоге — отказ");
   ok(holes.rest20 && holes.rest20.gain === holes.rest20.want && holes.rest20.time && holes.rest20.said, "отдых через двадцать минут — на долю с точным сроком полной силы (" + JSON.stringify(holes.rest20) + ")");
   ok(holes.rest61 && holes.rest61.need > 0 && holes.rest61.gain >= holes.rest61.need && !holes.rest61.part, "отдых через час — в полную силу (" + JSON.stringify(holes.rest61) + ")");
