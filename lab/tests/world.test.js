@@ -283,9 +283,10 @@ for (let si = 0; si < seeds; si++) {
    обновите отпечатки; ненарочно — верните прежний поток случайностей генератора. */
 {
   const crypto = require("crypto");
-  /* (3.6) шестой выпуск мира (WORLD_V 6): помещения и кабинеты втрое просторнее, обстановки
-     больше — книги, бумаги, исследования, химия (world.js, annex.js, library.js) — отпечатки новые */
-  const FP = { "fpA 1-1": "c53f491e89fbe74c", "fpA 10-13": "21cc6657d19e08d6", "fpB 20-20": "09e8be87ed3b5e11", "fpB 21-7": "422b52b94de0caea", "fpC 30-2": "4e9136fca33fc9d9", "fpC 40-13": "2eb9e8c7613c6f10" };
+  /* (3.7) седьмой выпуск мира (WORLD_V 7): обстановка по смыслу помещений — меню в кафетериях,
+     урожай только в садах, ценности не под подушками (fixtures_data.js, annex.js) — отпечатки новые;
+     (3.6) шестой выпуск: помещения и кабинеты втрое просторнее, обстановки больше */
+  const FP = { "fpA 1-1": "b714d9abb5b31201", "fpA 10-13": "5dda7b1e425869cf", "fpB 20-20": "9f35e8e587ec2e59", "fpB 21-7": "130ca311ef66040c", "fpC 30-2": "e47f9d2c73975c1e", "fpC 40-13": "a2fe468b63b21724" };
   for (const k in FP) {
     const m = k.match(/^(\S+) (\d+)-(\d+)$/), fl = LAB.getFloor(m[1], +m[2], +m[3]), h = crypto.createHash("sha1");
     h.update(Buffer.from(fl.t.buffer)); h.update(Buffer.from(fl.room.buffer)); h.update(Buffer.from(fl.corrAt.buffer));

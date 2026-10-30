@@ -1490,6 +1490,11 @@ function genFloor(seed, L, F, attempt) {
     }
   }
 
+  /* 27. (3.7, нелогичность) Помещение, куда шаги выше поставили электрическое (стенд испытаний,
+     автомат, химический стол), — не «обесточено» (annex.js, unlit): уже при постройке этажа,
+     а не только при входе на него (stash.js) — и проверки видят этаж таким, как игрок. */
+  if (LAB.annex && LAB.annex.unlit) LAB.annex.unlit(fl, L);
+
   fl.sample = d0;
   fl.turrets = turrets;
   return fl;

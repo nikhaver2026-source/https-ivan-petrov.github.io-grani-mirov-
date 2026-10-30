@@ -2397,7 +2397,7 @@ LAB.ui.closeAll();
         LAB.ui.mainMenu(true);
         const intro = LAB.ui.top() ? LAB.ui.top().intro : "";
         const m = LAB.game._migrate(JSON.parse(raw).g);
-        return { ver: L.getItem("lab_ver"), cur: LAB.VERSION, slot: L.getItem("lab_slot1") === raw, kept: fs0.kept, wiped: fs0.wiped, from: fs0.from, intro, relocate: m.relocate === true && m.worldV === 6 };
+        return { ver: L.getItem("lab_ver"), cur: LAB.VERSION, slot: L.getItem("lab_slot1") === raw, kept: fs0.kept, wiped: fs0.wiped, from: fs0.from, intro, relocate: m.relocate === true && m.worldV === 7 };
       }, raw36);
     } catch (e) { kept36 = { err: String(e && e.message || e).slice(0, 200) }; }
     await ctx36.close();
@@ -5489,7 +5489,7 @@ LAB.ui.closeAll();
       LAB.ui.closeAll();
       /* запись прежнего выпуска мира: этажи построены заново, носитель — у входа на свой этаж */
       const dn = JSON.parse(JSON.stringify(G)); dn.worldV = 4; dn.L = 50; dn.F = 5; dn.fs = { "50-5": { objs: { k: 1 } } }; dn.relocate = false;
-      const m2 = g._migrate(dn); out.migDown = m2.worldV === 6 && m2.relocate === true && !m2.fs["50-5"];
+      const m2 = g._migrate(dn); out.migDown = m2.worldV === 7 && m2.relocate === true && !m2.fs["50-5"];
     } catch (e) { out.err = String(e && e.stack || e).slice(0, 400); }
     LAB.keysMode = km; LAB.ui.closeAll(); C.stop();
     g.enterFloor(keep.L, keep.F, "down", true); C.stop(); G = g.G;
