@@ -135,7 +135,7 @@ for (var gmk in GONE_MODS) { var gm0 = GONE_MODS[gmk]; LAB.ITEMS[gm0.item] = { n
 
 /* ════════ РЕЦЕПТЫ ════════ */
 var R_NEW = [
-  { id: "bat_s", out: "ammo:slug", n: "Обойма стальных пуль", need: { scrap: 2 }, cls: "base" },
+  { id: "bat_s", out: "ammo:slug", n: "Обойма стальных пуль", need: { scrap: 2 }, cls: "base", minL: 2 }, /* (3.7, нелогичность) с глубины обойм (AMMO.slug) */
   { id: "wrepair", out: "wrepair", n: "Ремонтный набор оружия", need: { scrap: 2, wire: 1 }, cls: "base" },
   { id: "fieldkit", out: "fieldkit", n: "Походный ремнабор", need: { scrap: 2, wire: 1, tape: 1 }, cls: "base" },
   { id: "engkit", out: "engkit", n: "Инженерный ремкомплект", need: { servo: 1, chip: 1, relay: 1, scrap: 2, wire: 1 }, cls: "spec", minL: 2 },
@@ -151,7 +151,7 @@ var R_NEW = [
   { id: "m_pierce", out: "m_pierce", n: "Бронебойный модуль", need: { magnet: 1, panel: 1, scrap: 1 }, cls: "spec", bp: true, minL: 3 },
   { id: "m_emp", out: "m_emp", n: "Модуль подавления электроники", need: { relay: 1, chip: 1, magnet: 1 }, cls: "spec", bp: true, minL: 2 },
   { id: "m_quiet", out: "m_quiet", n: "Глушитель", need: { scrap: 2, gel: 1, wire: 1 }, cls: "spec", bp: true },
-  { id: "m_stab", out: "m_stab", n: "Стабилизатор", need: { servo: 1, chip: 1, proto: 1 }, cls: "exp", bp: true, minL: 3 },
+  { id: "m_stab", out: "m_stab", n: "Стабилизатор", need: { servo: 1, chip: 1, proto: 1 }, cls: "exp", bp: true, minL: 5 }, /* (3.7, нелогичность) экспериментальный компонент — в сейфах с пятого уровня */
   { id: "w_kpistol", out: "weapon:kpistol", n: "Кинетический пистолет", need: { scrap: 3, magnet: 1, cap: 1, servo: 1 }, cls: "spec", bp: true, minL: 2 },
   { id: "w_suppressor", out: "weapon:suppressor", n: "ЭМ-подавитель «Тишь»", need: { chip: 1, relay: 2, cap: 2, wire: 1 }, cls: "spec", bp: true, minL: 3 },
   { id: "w_needle", out: "weapon:needle", n: "Бронебойный карабин «Игла»", need: { scrap: 3, magnet: 2, panel: 1, servo: 1, powercell: 1 }, cls: "spec", bp: true, minL: 4 },

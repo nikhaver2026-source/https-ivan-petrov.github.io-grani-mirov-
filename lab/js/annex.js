@@ -689,7 +689,8 @@ function furnish(ctx, r, s, rm, def, v, gen) {
     /* (2.5, просьба игрока) пустое хранилище — редкость: одно из десяти */
     if (LAB.CONTAINERS.indexOf(ot) >= 0) o.loot = special || ot === "safe" || r.chance(0.9) ? annexLoot(r, L, F, lootTag, ot, !special) : [];
     if (ot === "safe") {
-      var mains = fl.rooms.filter(function (m, i) { return m && i < 12 && i !== fl.secret; }).map(function (m) { return m.id; });
+      /* (3.7, нелогичность) записка с кодом сейфа — в главном помещении (не в кабинете с номером 10 или 11) */
+      var mains = fl.rooms.filter(function (m, i) { return m && !m.annex && i !== fl.secret; }).map(function (m) { return m.id; });
       ctx.addItem({ kind: "note", note: "safe", code: o.code, room: rm.name }, farMain(r, fl, mains, rm));
     }
     if (ot === "comp" && extra.kind === "main") o.loot = annexLoot(r, L, F, "classified", "desk");
@@ -785,7 +786,7 @@ function placeMainFixtures(ctx, r, gen) {
       /* (3.2) нижние глубины: в больших помещениях — и вещи своей глубины */
       if (gw && rm.type !== "secret" && LAB.ROOMS[rm.type] && !rdef.special) deepFx(r, eraOf(ctx.L), rm, gw.fx + 1, have, ctx);
       /* (3.6) и по назначению помещения — до числа по площади; у лестниц, лифта и шлюза — как в холле */
-      if (rm.type !== "secret" && rm.type !== "reactor" && LAB.ROOMS[rm.type]) {
+      if (rm.type !== "secret" && rm.type !== "reactor" && rm.type !== "source" && LAB.ROOMS[rm.type]) { /* (3.7) source — зал настоящего «Истока» (world.js) */
         var hall = !!rdef.special, want = hall ? Math.min(7, 2 + Math.floor(area / 25)) : Math.min(18, 4 + Math.floor(area / 10)), now0 = roomObjN(fl, s);
         if (now0 < want) fillRoom(ctx, r, rm, hall ? "hall" : flavorOf(rm, rdef), want - now0, have, eraOf(ctx.L));
       }

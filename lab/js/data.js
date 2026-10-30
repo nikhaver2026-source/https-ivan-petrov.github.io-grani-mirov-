@@ -198,6 +198,10 @@ LAB.ROOMS = {
   gatein: { n: "Шлюзовая камера", desc: "Камера под гермошлюзом. Створки наверх сведены намертво: пути назад нет.", special: true },
   secret: { n: "Тайная комната", desc: "Тесное помещение, о котором нет ни слова на схемах этажа.", special: true },
   reactor:{ n: "Позитронный реактор «Исток»", desc: "Огромный зал, в центре — кольцо реактора. Его низкий гул чувствуется всем телом.", special: true },
+  /* (3.7, нелогичность) на 11-1 приходят не шлюзом, а Швом из-под реактора Ядра (world.js, game.js: descend);
+     на 100-20 — не реактор, а сам Исток: «Ниже — Исток. Не реактор» (b5.js) */
+  seamin: { n: "Дно Шва", desc: "Колодец Шва кончается здесь: скобы уходят вверх, в гул, а край провала над головой сомкнулся. Пути назад нет.", special: true },
+  source: { n: "Исток", desc: "Место, где миры касаются. Посреди — пульт: стальная рама «Глубины», а на ней магнетронные катушки и позитронная ловушка, которые машины ОКО снесли сюда по одной. Каждый звук здесь слышен дважды.", special: true },
 
   /* уровень 1 */
   entry:   { n: "Проходная", desc: "Турникеты, рамка досмотра и стойка дежурного.", obj: { terminal: .5, desk: .5, crate: .2 } },
@@ -504,7 +508,7 @@ LAB.RANKS = ["Обычный", "Необычный", "Редкий", "Эпиче
 LAB.RANK_MULT = [1, 1.2, 1.45, 1.75, 2.1, 2.6];
 
 LAB.AMMO = {
-  energy:    { n: "Энергобатарея", icon: "🔋", desc: "Батарея для бластеров, лазеров, ионного и плазменного оружия, гаусс-винтовки, крио и резака.", price: 30, depth: 1 },
+  energy:    { n: "Энергобатарея", icon: "🔋", desc: "Батарея для всего оружия с энергоблоком: бластеров, лазеров, ионного и плазменного оружия, гаусс-винтовки, криопушки, термоизлучателя, резака, гвоздемёта, пневмогарпуна и прочих стволов на батареях.", price: 30, depth: 1 }, /* (3.7, нелогичность) все стволы: прежде не было термоизлучателя и прочих */
   magnetron: { n: "Магнетронная ячейка", icon: "🧲", desc: "Ячейка для магнетронного оружия. Её заряжает магнетронная установка.", price: 55, depth: 3 },
   positron:  { n: "Позитронный заряд", icon: "⚛️", desc: "Магнитная ловушка с антивеществом для позитронного оружия. Делается на позитронной установке.", price: 140, depth: 7 }
 };
@@ -606,9 +610,12 @@ LAB.RECIPES = [
   { id: "sorbent", out: "sorbent", n: "Энтеросорбент", need: { reagent: 1 } },
   { id: "neuroblock", out: "neuroblock", n: "Нейроблокатор", need: { reagent: 3 } },
   { id: "bat_e", out: "ammo:energy", n: "Энергобатарея", need: { cap: 1, wire: 1, scrap: 1 } },
-  { id: "bat_m", out: "ammo:magnetron", n: "Магнетронная ячейка", need: { magnet: 1, cap: 1, wire: 1 } },
+  /* (3.7, нелогичность) рецепт — не раньше глубины того, что он собирает, и его деталей (minL): прежде магнетронная
+     ячейка собиралась с первого уровня (оружие под неё — с третьего), пластина и керамическая броня — до керамики,
+     броня пятого-десятого уровня — раньше, чем её можно найти */
+  { id: "bat_m", out: "ammo:magnetron", n: "Магнетронная ячейка", need: { magnet: 1, cap: 1, wire: 1 }, minL: 3 },
   { id: "emp", out: "emp", n: "ЭМИ-граната", need: { cap: 2, chip: 1, scrap: 1 } },
-  { id: "plate", out: "plate", n: "Бронепластина", need: { scrap: 4, ceramic: 1 }, desc: "Вставляется в надетую броню: плюс десять процентов к защите, не больше пяти пластин в одну броню." },
+  { id: "plate", out: "plate", n: "Бронепластина", need: { scrap: 4, ceramic: 1 }, minL: 3, desc: "Вставляется в надетую броню: плюс десять процентов к защите, не больше пяти пластин в одну броню." },
   { id: "decoder", out: "decoder", n: "Декодер пропусков", need: { chip: 3, wire: 2 } },
   { id: "wmod", out: "wmod", n: "Модуль усиления оружия", need: { chip: 2, lens: 1, cap: 1 }, desc: "Плюс 15 процентов к урону оружия в руках, не больше трёх модулей." },
   /* самоделки: турель, приманка, глушилка ОКО, отмычка, фильтр, зонд, ремкомплект */
@@ -630,17 +637,17 @@ LAB.RECIPES = [
   { id: "w_cryo", out: "weapon:cryo", n: "Криопушка", need: { cap: 3, reagent: 2, magnet: 1, scrap: 3 }, minL: 5 },
   /* броня: собирается под глубину, на которой вы её делаете */
   { id: "a_vest", out: "armor:vest", n: "Бронежилет охраны", need: { scrap: 5, wire: 2 } },
-  { id: "a_bio", out: "armor:bio", n: "Скафандр «Карантин»", need: { rubber: 3, filtercart: 1, scrap: 1, wire: 1 } }, /* (3.7) герметичный скафандр — из прорезиненной ткани и фильтрующего патрона, а не из биогеля и реагента */
-  { id: "a_ablative", out: "armor:ablative", n: "Абляционная броня «Зеркало»", need: { lens: 2, ceramic: 2, scrap: 3 } },
-  { id: "a_composite", out: "armor:composite", n: "Композитная кираса", need: { ceramic: 3, scrap: 6, plate: 1 } },
-  { id: "a_magnetic", out: "armor:magnetic", n: "Магнитный экран «Щит-М»", need: { magnet: 4, wire: 3, chip: 2 } },
-  { id: "a_stealth", out: "armor:stealth", n: "Нанофибра «Тень»", need: { chip: 3, lens: 2, gel: 2, wire: 2 } },
-  { id: "a_thermal", out: "armor:thermal", n: "Термокостюм «Полюс»", need: { wire: 4, reagent: 2, cap: 2, scrap: 3 } },
-  { id: "a_insulated", out: "armor:insulated", n: "Диэлектрический доспех «Изолятор»", need: { ceramic: 3, wire: 3, scrap: 3 } },
-  { id: "a_exo", out: "armor:exo", n: "Экзоскелет «Атлант»", need: { scrap: 10, supercond: 2, cap: 4, magnet: 2, chip: 2 }, minL: 5 },
-  { id: "a_bastion", out: "armor:bastion", n: "Силовой каркас «Бастион»", need: { supercond: 3, cap: 5, chip: 3, ceramic: 3 }, minL: 7 },
-  { id: "a_positron", out: "armor:positron", n: "Позитронный контур «Аннигилятор»", need: { supercond: 4, magnet: 5, lens: 3, chip: 3 }, minL: 8 },
-  { id: "a_ark", out: "armor:ark", n: "Кокон «Исток»", need: { supercond: 6, ceramic: 6, chip: 5, lens: 4, magnet: 4 }, minL: 9 }
+  { id: "a_bio", out: "armor:bio", n: "Скафандр «Карантин»", need: { rubber: 3, filtercart: 1, scrap: 1, wire: 1 }, minL: 2 }, /* (3.7) герметичный скафандр — из прорезиненной ткани и фильтрующего патрона, а не из биогеля и реагента */
+  { id: "a_ablative", out: "armor:ablative", n: "Абляционная броня «Зеркало»", need: { lens: 2, ceramic: 2, scrap: 3 }, minL: 3 },
+  { id: "a_composite", out: "armor:composite", n: "Композитная кираса", need: { ceramic: 3, scrap: 6, plate: 1 }, minL: 4 },
+  { id: "a_magnetic", out: "armor:magnetic", n: "Магнитный экран «Щит-М»", need: { magnet: 4, wire: 3, chip: 2 }, minL: 5 },
+  { id: "a_stealth", out: "armor:stealth", n: "Нанофибра «Тень»", need: { chip: 3, lens: 2, gel: 2, wire: 2 }, minL: 5 },
+  { id: "a_thermal", out: "armor:thermal", n: "Термокостюм «Полюс»", need: { wire: 4, reagent: 2, cap: 2, scrap: 3 }, minL: 6 },
+  { id: "a_insulated", out: "armor:insulated", n: "Диэлектрический доспех «Изолятор»", need: { ceramic: 3, wire: 3, scrap: 3 }, minL: 6 },
+  { id: "a_exo", out: "armor:exo", n: "Экзоскелет «Атлант»", need: { scrap: 10, supercond: 2, cap: 4, magnet: 2, chip: 2 }, minL: 7 },
+  { id: "a_bastion", out: "armor:bastion", n: "Силовой каркас «Бастион»", need: { supercond: 3, cap: 5, chip: 3, ceramic: 3 }, minL: 8 },
+  { id: "a_positron", out: "armor:positron", n: "Позитронный контур «Аннигилятор»", need: { supercond: 4, magnet: 5, lens: 3, chip: 3 }, minL: 9 },
+  { id: "a_ark", out: "armor:ark", n: "Кокон «Исток»", need: { supercond: 6, ceramic: 6, chip: 5, lens: 4, magnet: 4 }, minL: 10 }
 ];
 
 /* ── БРОНЯ ──

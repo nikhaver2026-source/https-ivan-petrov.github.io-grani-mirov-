@@ -682,17 +682,23 @@ function genFloor(seed, L, F, attempt) {
   /* 8. Типы помещений. */
   var names = r.shuffle(lev.rooms.slice());
   var ni = 0;
+  /* (3.7, нелогичность) на первом уровне под Ядром приходят Швом из-под реактора, а не шлюзом (seamin —
+     дно Шва); на последнем уровне в конце не реактор, а сам Исток (source: «Исток. Не реактор», b5.js) */
+  var seamIn = F === 1 && L > 1 && LAB.isReactorLevel(L - 1) && !LAB.isFinalLevel(L - 1);
   for (s = 0; s < NS; s++) {
     var rmm = rooms[s];
     if (!rmm) continue;
     var type;
     if (s === secret) type = "secret";
-    else if (s === U) type = (L === 1 && F === 1) ? "wake" : (F === 1 ? "gatein" : "stair");
-    else if (s === D) type = F === NF ? (reactor ? "reactor" : "gate") : "stair";
+    else if (s === U) type = (L === 1 && F === 1) ? "wake" : (F === 1 ? (seamIn ? "seamin" : "gatein") : "stair");
+    else if (s === D) type = F === NF ? (reactor ? (LAB.isFinalLevel(L) && L !== 10 ? "source" : "reactor") : "gate") : "stair";
     else if (s === E) type = "lift";
     else { type = names[ni % names.length]; ni++; }
     rmm.type = type;
     rmm.name = LAB.ROOMS[type].n;
+    /* (3.7, нелогичность) лестничных клеток на этаже две — у подъёма и у спуска: их имена различимы и в
+       записках, ключах и отгадках («В помещении «Лестничная клетка» тянет холодом…» — какой из двух?) */
+    if (type === "stair") rmm.name = s === U ? "Лестничная клетка подъёма" : "Лестничная клетка спуска";
     rmm.surf = lev.surf; /* у каждого уровня свой пол */
   }
   /* (2.0) Мастерская — на первом этаже уровня и на каждом третьем: ближайшее
@@ -744,9 +750,16 @@ function genFloor(seed, L, F, attempt) {
     if (!rq) continue;
     if (rq.type === "secret") { rq.sign = ""; continue; }
     var rdef = LAB.ROOMS[rq.type];
-    rn++;
-    rq.num = rn;
-    rq.sign = (rdef.special ? "" : "Помещение " + rn + ". ") + rq.name + (rdef.sign ? ". " + (typeof rdef.sign === "string" ? rdef.sign : r.pick(rdef.sign)) : "");
+    /* (3.7, нелогичность) у лестничных клеток, лифтового холла и шлюза номера на табличке нет — и в счёт
+       помещений они не идут: прежде видимые номера шли с пропусками («Помещение 1», за ним «4»), а тексты
+       звали «помещение 3 («Лифтовой холл»)», которого нет ни на одной табличке */
+    if (!rdef.special) { rn++; rq.num = rn; }
+    var sg8 = rdef.sign ? (typeof rdef.sign === "string" ? rdef.sign : r.pick(rdef.sign)) : "";
+    /* (3.7, нелогичность) надпись, что начинается с имени («Мастерская. Инструмент — на место»), — без
+       повтора имени: прежде на табличке было «Мастерская. Мастерская. Инструмент — на место» */
+    if (sg8.indexOf(rq.name + ". ") === 0) sg8 = sg8.slice(rq.name.length + 2);
+    else if (sg8 === rq.name) sg8 = "";
+    rq.sign = (rdef.special ? "" : "Помещение " + rn + ". ") + rq.name + (sg8 ? ". " + sg8 : "");
   }
 
   var fl = {
@@ -948,7 +961,11 @@ function genFloor(seed, L, F, attempt) {
       door2.lock.pass = "gate" + L;
       if (!reactor && lev.card === "hidden") {
         var hs = spots.filter(function (n) { return n !== U && n !== E && n !== parent[D]; });
-        placeRequirement({ kind: "gatepass", L: L }, hs.length ? r.pick(hs) : r.pick(spots), lc);
+        /* (3.7, нелогичность) записки уровней говорят: карту спрятали «у шлюза» (в школе, в щитовой, в кормушке
+           у шлюза) — она в помещении, соседнем по коридору с залом стража; нет такого — как прежде, на этаже.
+           Жребий вынимается один, как прежде: поток случайностей тот же */
+        var hsG = hs.filter(function (n) { return hopsFrom(parent[D])[n] === 1; });
+        placeRequirement({ kind: "gatepass", L: L }, hsG.length ? r.pick(hsG) : hs.length ? r.pick(hs) : r.pick(spots), lc);
         cardHidden = true;
       }
     }
@@ -1301,6 +1318,36 @@ function genFloor(seed, L, F, attempt) {
   /* (3.5) живые — не там, где тела (морги, прозекторские): после перемешивания, чтобы
      поток случайностей этажа не сдвинулся */
   quietRooms = quietRooms.filter(function (q9) { return !fl.objs.some(function (o9) { return o9.type === "corpse" && o9.room === q9; }); });
+  /* (3.7, нелогичность) Станция имплантов и штаб фракции на своих этажах — всегда: помещения для них
+     выбираются до выживших (прежде выжившие и робот занимали тихие помещения первыми, и штабы вставали
+     в каждой второй–десятой игре, «Инженерный корпус» и «Свободные машины» — почти никогда). Тихих не
+     хватило — помещение начальной зоны (свой поток случайностей); врагов из этих помещений в конце
+     постройки уводит шаг 25в. Штаб «Сопротивления» — на пятом уровне, на зарядной станции, как пишет
+     Зоя Кравец (texts.js: записки 3-8 и 5-3), а не на четвёртом. На прочих этажах поток не меняется. */
+  var implantFloors = { "2-5": 1, "3-12": 1, "4-10": 1, "5-15": 1, "6-5": 1, "7-12": 1, "8-10": 1, "9-6": 1 };
+  var implantHere = L <= 10 ? !!implantFloors[L + "-" + F] : (L % 2 === 1 && F === 3 + (hash32("impl" + L) % 15));
+  var hqFloors = { "2-10": "sec", "3-15": "sci", "5-6": "eng", "5-3": "res", "6-9": "free" }, hqHere = hqFloors[L + "-" + F] || "";
+  var calmRooms = [];
+  function calmRoom(pref, rc) {
+    var qs = quietRooms.filter(function (q9) { return !rooms[q9].shop && (!pref || rooms[q9].type === pref); }); /* не в мастерской этажа */
+    if (qs.length) { quietRooms.splice(quietRooms.indexOf(qs[0]), 1); return qs[0]; }
+    var zs = [], far = [];
+    for (var s9 = 0; s9 < NS; s9++) {
+      if (!rooms[s9] || !main[s9] || s9 === U || s9 === D || s9 === E || s9 === secret || s9 === bossSlot || rooms[s9].shop || calmRooms.indexOf(s9) >= 0) continue;
+      if (pref && rooms[s9].type !== pref) continue;
+      (zone[s9] === -1 ? zs : far).push(s9);
+    }
+    if (zs.length) return rc.pick(zs);
+    if (pref) return calmRoom(null, rc);
+    /* в начальной зоне только лестница и лифт — помещение за замком */
+    return far.length ? rc.pick(far) : -1;
+  }
+  var implRoom = -1, hqRoom = -1;
+  if (implantHere || hqHere) {
+    var rcalm = Rng(seed, "calm37:" + L + ":" + F + ":" + attempt);
+    if (implantHere) { implRoom = calmRoom(null, rcalm); if (implRoom >= 0) calmRooms.push(implRoom); }
+    if (hqHere) { hqRoom = calmRoom(hqHere === "res" ? "charging" : null, rcalm); if (hqRoom >= 0) calmRooms.push(hqRoom); }
+  }
   /* (3.5, просьба игрока: живых больше) выжившие — чаще и до двоих на этаже: в «Ковчеге» и
      «Подножии» люди прячутся по помещениям, глубже их меньше. У второго — своё зерно и свой
      ключ (L-F-s2): поручения у каждого свои. */
@@ -1329,11 +1376,9 @@ function genFloor(seed, L, F, attempt) {
     if (cR) objCell[idx(cR[0], cR[1])] = 1;
     if (cR) fl.npcs.push({ id: "n" + fl.npcs.length, robot: true, type: rtype, n: LAB.ROBOT_NPC[rtype].n, x: cR[0], y: cR[1], room: nr, key: L + "-" + F + "-r" });
   }
-  var implantFloors = { "2-5": 1, "3-12": 1, "4-10": 1, "5-15": 1, "6-5": 1, "7-12": 1, "8-10": 1, "9-6": 1 };
-  var implantHere = L <= 10 ? !!implantFloors[L + "-" + F] : (L % 2 === 1 && F === 3 + (hash32("impl" + L) % 15));
-  if (implantHere && quietRooms.length) addObj("implantlab", quietRooms[0]);
-  var hqFloors = { "2-10": "sec", "3-15": "sci", "5-6": "eng", "4-16": "res", "6-9": "free" };
-  if (hqFloors[L + "-" + F] && quietRooms.length > 1) addObj("hq", quietRooms[1], { faction: hqFloors[L + "-" + F] });
+  /* (3.7, нелогичность) станция и штаб — в помещениях, выбранных до выживших (выше) */
+  if (implRoom >= 0) addObj("implantlab", implRoom);
+  if (hqRoom >= 0) addObj("hq", hqRoom, { faction: hqHere });
 
   /* торговые терминалы — по расписанию; мастерская — на первом этаже уровня и на каждом третьем */
   var svcRooms = [];
@@ -1510,6 +1555,16 @@ function genFloor(seed, L, F, attempt) {
       objCell[idx(sv9.x, sv9.y)] = 1; fl.npcs.push(sv9); humans++;
     }
   }
+  /* 25в. (3.7, нелогичность) В штабе фракции и у станции имплантов врагов нет (шаг 17): кого туда
+     поставили охрана, посты, камеры и отряды, уходит — кроме стража этажа. Что враг нёс (ключ,
+     пропуск), остаётся на полу там, где он стоял: та же комната, тот же путь до замка. */
+  calmRooms.forEach(function (cr) {
+    fl.foes = fl.foes.filter(function (f9) {
+      if (f9.room !== cr || f9.boss) return true;
+      (f9.carry || []).forEach(function (it9) { addItem(it9, cr, [f9.x, f9.y]); });
+      return false;
+    });
+  });
   /* 26. (3.0) Заваленная лестница вниз (rubble.js): на этом же этаже — гидравлический
      домкрат или подрывной заряд, там, куда можно дойти, не открывая других замков,
      кроме тех, что и так стоят на пути к лестнице; не в тайной комнате, не у самой

@@ -339,13 +339,24 @@ function drop(its, x, y, pick) {
   if (pick && gm().autoPickup) gm().later(function () { if (G() === g && g.x === cell[0] && g.y === cell[1]) gm().autoPickup(); }, 900);
 }
 /* Взрыв, когда героя на этаже уже нет: находки — у лестницы того этажа. */
+/* (3.7, нелогичность) на свободную клетку рядом: не стена, не дверь и не обстановка — прежде находки ложились
+   слева от лестницы, даже если там стояли капсула или шкаф, и поднять их было нельзя (подбирают, наступив) */
+function freeNear(fl, x0, y0) {
+  var ok = function (x, y) { if (!LAB.inb(x, y)) return false; var i = y * LAB.W + x, t = fl.t[i]; return t !== LAB.T.WALL && t !== LAB.T.DOOR && !(fl.objAt && fl.objAt[i]) && !(LAB.solidAt && LAB.solidAt(fl, x, y)); };
+  var x1 = x0 + (x0 > 1 ? -1 : 1);
+  if (ok(x1, y0)) return [x1, y0];
+  for (var r = 1; r <= 4; r++) for (var dy = -r; dy <= r; dy++) for (var dx = -r; dx <= r; dx++) if (Math.max(Math.abs(dx), Math.abs(dy)) === r && ok(x0 + dx, y0 + dy)) return [x0 + dx, y0 + dy];
+  return [x1, y0];
+}
 function dropFar(L, F, o, k) {
   var g = G(), fs = gm().fsFor ? gm().fsFor(L, F) : null, s = g.rub[k];
   if (!fs || s.loot) return;
   var r0 = findings("st:" + k, "blast");
   s.loot = 1;
   if (!fs.drops) fs.drops = [];
-  r0.items.forEach(function (it) { it.id = "d" + (fs.dseq = (fs.dseq || 0) + 1); it.x = o.x + (o.x > 1 ? -1 : 1); it.y = o.y; fs.drops.push(it); });
+  var fl = null; try { fl = LAB.getFloor(g.seed, L, F); } catch (e) { fl = null; }
+  var c = fl ? freeNear(fl, o.x, o.y) : [o.x + (o.x > 1 ? -1 : 1), o.y];
+  r0.items.forEach(function (it) { it.id = "d" + (fs.dseq = (fs.dseq || 0) + 1); it.x = c[0]; it.y = c[1]; fs.drops.push(it); });
 }
 
 /* ── завал в проходе (с 3-го уровня): заряд вместо позитронной установки ── */

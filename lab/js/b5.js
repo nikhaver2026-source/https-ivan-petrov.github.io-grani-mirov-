@@ -457,7 +457,7 @@ B({
 /* ── МАСТЕРСКАЯ И БРОНЯ ── */
 B({
   recipes: [
-    { id: "i_r_bell", out: "i_bell", n: "Колокольчик Смены А", need: { scrap: 2, i_layerstring: 1 } },
+    { id: "i_r_bell", out: "i_bell", n: "Колокольчик Смены А", need: { scrap: 2, i_layerstring: 1 }, minL: 82 }, /* (3.7, нелогичность) с глубины струны слоя и самого колокольчика */
     { id: "i_r_lullaby", out: "i_lullaby", n: "Запись колыбельной", need: { i_soundlump: 1, chip: 1 }, minL: 84 },
     { id: "i_r_sap", out: "i_sap", n: "Сок первого дерева", need: { i_treefiber: 2, gel: 2 }, minL: 86 },
     { id: "i_r_bead", out: "i_silencebead", n: "Бусина тишины", need: { i_soundlump: 2, lens: 1 }, minL: 87 },

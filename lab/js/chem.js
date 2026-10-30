@@ -77,7 +77,8 @@ var FAM = {
   c_catalyst:   { n: ["Платиновый катализатор", "Очищенный платиновый катализатор", "Наноструктурный катализатор"], icon: "💠", depth: 5, price: 40, br: "energy", desc: "Сетка катализатора: ведёт реакцию куда нужно. Добавка к синтезу поднимает сорт состава.", src: "роботы с модификациями и стражи, склады глубоких уровней; амальгама и нанопаста" },
   c_ecto:       { n: ["Аномальная взвесь", "Сгущённая взвесь", "Кристаллы взвеси"], icon: "🌫️", depth: 6, price: 50, br: "bio", desc: "Светящаяся взвесь аномалий: свойства меняет, пока на неё смотрят.", src: "аномалии и установки глубин" },
   c_cond:       { n: ["Мутагенный конденсат", "Концентрат мутагена", "Чистый мутаген"], icon: "🟣", depth: 2, price: 18, br: "bio", desc: "Капли мутагена, осевшие из тумана: светятся в темноте. Из него делают антимутаген и всё, что с мутагеном спорит.", src: "помещения с мутагенным туманом; вывод мутагена из тканей щёлочью; твари «Колыбели» и глубже" },
-  c_stab:       { n: ["Стабилизатор"], one: 1, icon: "⚖️", depth: 3, price: 16, br: "pharm", desc: "Добавка к синтезу: состав действует вдвое дольше.", src: "склады химии с третьего уровня; соли со щёлочью и растворителем; воск улья" },
+  /* (3.7, нелогичность) «Стабилизатор состава»: просто «Стабилизатор» — модуль оружия (workshop.js, m_stab) */
+  c_stab:       { n: ["Стабилизатор состава"], one: 1, icon: "⚖️", depth: 3, price: 16, br: "pharm", desc: "Добавка к синтезу: состав действует вдвое дольше.", src: "склады химии с третьего уровня; соли со щёлочью и растворителем; воск улья" },
   c_activ:      { n: ["Активатор"], one: 1, icon: "🔆", depth: 5, price: 20, br: "pharm", desc: "Добавка к синтезу: состав действует на треть сильнее, но и побочное действие сильнее.", src: "склады химии с пятого уровня; железа с электролитом и растворителем" },
   /* (3.6) реактивы шкафов: для работы руками, проб, тайнописи и фотодела */
   c_perox:      { n: ["Перекись"], one: 1, icon: "🫧", depth: 1, price: 6, br: "pharm", desc: "Раствор перекиси в тёмной склянке: шипит на ранах и пенится на крови. Окислитель — подальше от огня и горючего.", src: "медпункты, лаборатории и шкафы с реактивами" },
@@ -1183,7 +1184,7 @@ function fogPlan(L) {
 }
 function place(ctx) {
   var fl = ctx.fl, L = ctx.L, F = ctx.F, r = LAB.Rng(ctx.seed, "chem27:" + L + ":" + F + ":" + ctx.attempt);
-  var NS = 12, good = [], other = [], bio = [], s;
+  var good = [], other = [], bio = [], s;
   var capRoom = {};
   fl.objs.forEach(function (o) { if ((o.type === "capsule" || o.type === "wake" || o.type === "medvend") && o.room != null) capRoom[o.room] = 1; });
   for (s = 0; s < fl.rooms.length; s++) {
@@ -1192,7 +1193,9 @@ function place(ctx) {
     var tag = roomTag(fl, s);
     if (CHEM_ROOMS[tag]) good.push(s);
     if (tag === "bio") bio.push(s);
-    else if (s < NS && s !== ctx.U && !roomDef(rm).special) other.push(s);
+    /* (3.7, нелогичность) главное помещение — то, что не кабинет (!rm.annex), а не «номер меньше двенадцати»:
+       когда крайняя ячейка этажа пуста, кабинеты получают номера 10 и 11 (annex.js) */
+    else if (!rm.annex && s !== ctx.U && !roomDef(rm).special) other.push(s);
   }
   r.shuffle(good); r.shuffle(other);
   /* (3.6, жалобы игроков: «не могу найти химический стол») стол — на каждом этаже: сначала
@@ -1204,21 +1207,31 @@ function place(ctx) {
   var tryAt = function (list, isGood) {
     for (var i = 0; i < list.length && placed < want; i++) { if (ctx.addObj("chemlab", list[i], { good: isGood ? 1 : 0 })) placed++; }
   };
-  tryAt(good.filter(function (rid) { return rid < NS && !lockedR[rid]; }), true);
-  tryAt(good.filter(function (rid) { return rid >= NS && !lockedR[rid]; }), true);
-  if (!placed) tryAt(other.filter(function (rid) { return !lockedR[rid]; }), false);
-  if (!placed) tryAt(good, true);
+  /* (3.7, нелогичность) за столом работают подолгу — он не в газу и не под излучением: прежде единственный стол
+     этажа стоял, бывало, в камере поверки газоанализаторов с газом третьей ступени. Такие помещения — только
+     если других нет совсем */
+  var safe = function (rid) { var m = fl.rooms[rid]; return !!m && !m.gas && !m.rad; };
+  tryAt(good.filter(function (rid) { return !fl.rooms[rid].annex && !lockedR[rid] && safe(rid); }), true);
+  tryAt(good.filter(function (rid) { return fl.rooms[rid].annex && !lockedR[rid] && safe(rid); }), true);
+  if (!placed) tryAt(other.filter(function (rid) { return !lockedR[rid] && safe(rid); }), false);
+  if (!placed) tryAt(good.filter(safe), true);
   if (!placed) {
     var spare = [];
-    for (s = 0; s < fl.rooms.length; s++) { var rmS = fl.rooms[s]; if (rmS && !rmS.hidden && s !== fl.secret && s !== ctx.U && !roomDef(rmS).special && !lockedR[s]) spare.push(s); }
+    for (s = 0; s < fl.rooms.length; s++) { var rmS = fl.rooms[s]; if (rmS && !rmS.hidden && s !== fl.secret && s !== ctx.U && !roomDef(rmS).special && !lockedR[s] && safe(s)) spare.push(s); }
     tryAt(r.shuffle(spare), false);
   }
+  if (!placed) tryAt(good, true);
   /* туман */
   var fp = fogPlan(L), fogRooms = [];
   if (fp && r.chance(fp.p)) {
     /* (3.7, нелогичность) туман не ставится туда, где живут: пока говорили, торговали или лечились
        у жителя, у героя росла мутация, а сам житель стоял в тумане без защиты */
-    var setFog = function (rid, d) { var rm2 = fl.rooms[rid]; if (!rm2 || capRoom[rid] || rid === ctx.U || rm2.fog || fl.npcs.some(function (n) { return n.room === rid; })) return false; rm2.fog = d; fogRooms.push(rid); return true; };
+    /* (3.7, нелогичность) и не на последний стол без тумана: хоть один химический стол этажа — в чистом воздухе
+       (прежде туман наводился на лаборатории прежде всего — туда, где и стоят столы) */
+    var chemR = {};
+    fl.objs.forEach(function (o) { if (o.type === "chemlab" && o.room != null) chemR[o.room] = 1; });
+    var lastTable = function (rid) { if (!chemR[rid]) return false; for (var k in chemR) if (+k !== rid && fl.rooms[+k] && !fl.rooms[+k].fog) return false; return true; };
+    var setFog = function (rid, d) { var rm2 = fl.rooms[rid]; if (!rm2 || capRoom[rid] || rid === ctx.U || rm2.fog || fl.npcs.some(function (n) { return n.room === rid; }) || lastTable(rid)) return false; rm2.fog = d; fogRooms.push(rid); return true; };
     var labs = good.filter(function (rid) { return roomTag(fl, rid) === "chem"; });
     var src = r.shuffle(bio.slice()).concat(r.shuffle(labs));
     for (var fi = 0, want2 = r.int(fp.n0, fp.n1); fi < src.length && fogRooms.length < want2; fi++) setFog(src[fi], r.int(fp.d0, fp.d1));

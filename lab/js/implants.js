@@ -618,7 +618,11 @@ LAB.IMPLANTS.forEach(function (im) {
   var id = "imp_" + im.id;
   LAB.ITEMS[id] = { n: im.passive ? im.n : "Чип импланта «" + im.n + "»", icon: im.passive ? "🔷" : "💠", kind: "implant", cat: "implant", implant: im.id, price: Math.max(80, im.price || 0),
     desc: im.desc + (im.passive ? " Пассивный: работает сам в нейрогнезде." : " Имплант: применяется с панели.") + " Направление — " + CATS[im.cat].n + "." };
-  if (!LAB.RECIPES.some(function (q) { return q.id === id; })) LAB.RECIPES.push({ id: id, out: id, n: LAB.ITEMS[id].n, need: OLD_NEED[im.id] || recipeNeed(im), cls: CLS_BY_T[im.t], bp: true, minL: im.minL, cyb: im.cat, cybN: Math.max(0, im.t - 1), desc: im.desc });
+  /* (3.7, нелогичность) схема — не раньше своих деталей (PART_DEPTH; экспериментальный компонент — особый, его
+     дают сейфы и синтезатор): прежде «Чип кожного панциря» собирался с первого уровня из бронепанели третьего */
+  var need0 = OLD_NEED[im.id] || recipeNeed(im), pd = im.minL || 1;
+  for (var pk0 in need0) if (pk0 !== "proto") pd = Math.max(pd, LAB.PART_DEPTH[pk0] || 1);
+  if (!LAB.RECIPES.some(function (q) { return q.id === id; })) LAB.RECIPES.push({ id: id, out: id, n: LAB.ITEMS[id].n, need: need0, cls: CLS_BY_T[im.t], bp: true, minL: pd, cyb: im.cat, cybN: Math.max(0, im.t - 1), desc: im.desc });
 });
 function chipOf(id) { return "imp_" + id; }
 /* мастерская спрашивает: хватает ли кибернетики, чтобы собрать */

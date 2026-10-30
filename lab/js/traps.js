@@ -159,7 +159,7 @@ var T = {
     d: "Стопор из шестерён города машин: надолго заклинивает колёса и ноги роботов, а тварям рвёт лапы. Взводится снова.",
     hit: "Шестерни прихватили ногу!" },
   logic: { n: "логическая мина", g: "f", depth: 62, mine: true, price: 340, trig: "step", who: "mech", ally: 30, uses: 1, loud: 2, stealth: 0.9, cue: "beep", snd: "robot_hello",
-    need: { m_relay: 2, m_okochip: 1, chip: 1 }, cls: "exp", bp: true, minL: 62,
+    need: { m_relay: 2, m_okochip: 1, chip: 1 }, cls: "exp", bp: true, minL: 68, /* (3.7, нелогичность) чип ОКО — с шестьдесят восьмого */
     d: "Реле с противоречивым приказом и чипом ОКО, похожее на сервисный люк: наступивший робот получает новую прошивку и пятнадцать секунд бьёт своих. Стража уровня не перепрошить — только оглушить. На живых не реагирует." },
   /* ── Исток: корни и время ── */
   roots: { n: "корневая ловушка", g: "f", depth: 86, price: 380, trig: "step", who: "all", air: true, r: 1, hold: 14, drain: 6, uses: 3, regrow: 20, loud: 1, stealth: 0.5, cue: "tick", snd: "vine_attack",
@@ -188,7 +188,8 @@ ORDER.forEach(function (k) {
   if (LAB.RECIPES && !LAB.RECIPES.some(function (q) { return q.id === "t_" + k; })) {
     var rc = { id: "t_" + k, out: d.item, n: cap1(d.n), need: d.need, cls: d.cls || "spec", desc: d.d.split(". ")[0] + "." };
     if (d.bp) rc.bp = true;
-    if (d.minL) rc.minL = d.minL;
+    /* (3.7, нелогичность) схема — не раньше самой ловушки (depth): растяжку с гранатой, мину и ЭМИ-мину прежде собирали на уровень раньше */
+    if (d.minL || (d.depth || 1) > 1) rc.minL = Math.max(d.minL || 1, d.depth || 1);
     LAB.RECIPES.push(rc);
   }
 });

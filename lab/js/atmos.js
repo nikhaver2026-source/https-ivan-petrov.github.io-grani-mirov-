@@ -266,7 +266,7 @@ var ROOM_LOOP = {
   repair: "room_factory", ring: "room_ring", detector: "room_ring", accdesk: "room_server", targetroom: "room_ring", vacuum: "room_compressor", reactorhall: "room_reactor",
   containment: "room_magnetron", chiefdesk: "room_server", bastion: "room_server", annihilation: "room_reactor", reactor: "room_reactor", kitchen: "room_fridge", canteen: "room_fridge",
   laundry: "room_drip", showers: "room_drip", wintergarden: "room_fountain", medbay: "room_medical", medpost: "room_medical", surgery: "room_medical", isolator: "room_medical",
-  lift: "room_elevator", gate: "room_gate", gatein: "room_gate", stair: "room_stairwell", testbench: "room_hum", arsenal: "room_hum", ballistics: "room_server", armorlab: "room_factory",
+  lift: "room_elevator", gate: "room_gate", gatein: "room_gate", seamin: "room_stairwell", source: "room_reactor", stair: "room_stairwell", /* (3.7) дно Шва и зал Истока (world.js) */ testbench: "room_hum", arsenal: "room_hum", ballistics: "room_server", armorlab: "room_factory",
   /* общие помещения и испытательные залы */
   cafeteria: "room_fridge", workroom: "room_server", headoffice: "room_hum", testing: "room_hum", psych: "room_hum", decon: "room_drip",
   sleeplab: "room_medical", isolation: "room_hum", classroom: "room_hum", darkfarm: "room_drip", climate: "room_drip", aeroponics: "room_bubbles",

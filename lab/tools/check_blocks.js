@@ -62,7 +62,8 @@ const W_SND = S(["w_melee", "w_shock", "w_vibro", "w_cutter", "w_blaster_s", "w_
 const W_CLS = S(["melee", "blaster", "laser", "ion", "plasma", "magnetron", "positron", "gauss", "cryo", "thermo", "sonic", "bio", "phase", "nano", "grav"]);
 const DT = S(["kinetic", "shock", "energy", "laser", "ion", "plasma", "magnetron", "positron", "gauss", "cryo", "thermo", "emp", "sonic", "bio", "phase", "nano", "grav"]);
 const ARMOR_SPECIAL = S(["antitox", "deflect", "stealth", "frost", "strength", "regshield", "sonicguard", "okoghost", "thorns", "phaseveil"]);
-const ITEM_FX = S(["heal", "en", "cure", "unslow", "shield", "haste", "cloak", "antitox", "map", "scan", "emp", "noise", "deploy", "jam", "pick", "mend"]);
+/* (3.7) gren — граната с уроном и действием (combat.throwGrenade), как у арсенала: гравитационная граната блока V */
+const ITEM_FX = S(["heal", "en", "cure", "unslow", "shield", "haste", "cloak", "antitox", "map", "scan", "emp", "noise", "deploy", "jam", "pick", "mend", "gren"]);
 const ITEM_KIND = S(["use", "throw", "deploy"]);
 const TRADE = S(["med", "parts", "ammo", "all"]);
 const BEACON = S(["npc_eng", "npc_sci", "npc_guard", "npc_med", "npc_trade", "npc_robot"]);
@@ -253,6 +254,7 @@ for (let n = 1; n <= 5; n++) {
     if (!it.fx || !Object.keys(it.fx).length) E(b, `item ${id}: нет fx`); else for (const k in it.fx) if (!ITEM_FX.has(k)) E(b, `item ${id}: fx.${k} не из списка`);
     if (it.fx && (it.fx.emp || it.fx.noise) && it.kind !== "throw") E(b, `item ${id}: emp и noise — kind throw`);
     if (it.fx && it.fx.deploy && it.kind !== "deploy") E(b, `item ${id}: deploy — kind deploy`);
+    if (it.fx && it.fx.gren && (it.kind !== "throw" || !it.fx.gren.dt || !num(it.fx.gren.dmg, 0, 80) || !num(it.fx.gren.r, 0, 3))) E(b, `item ${id}: gren — kind throw, dt, dmg 0–80, r 0–3`);
   });
   const rcs = LAB.RECIPES.filter(r => (r.minL || 0) >= L0 && (r.minL || 0) <= L1 && r.id.indexOf(PREFIX[n]) === 0);
   st.recipes = rcs.length;

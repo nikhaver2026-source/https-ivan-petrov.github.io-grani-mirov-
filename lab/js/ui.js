@@ -730,6 +730,7 @@ function invItems() {
     { label: "Детали: " + cnt(LAB.PARTS), fn: partsMenu },
     { label: "Химия: сырьё: " + (LAB.chem ? LAB.chem.matCount() : 0), fn: function () { if (LAB.chem) LAB.chem.invMenu(); } }, /* (3.0) */
     { label: "Модули оружия в запасе: " + cnt(modIds()), fn: modsMenu },
+    { label: "Выбросить вещь из рюкзака", fn: dropMenu }, /* (3.7, нелогичность) прежде вещь можно было только продать */
     { label: "Пропуска и ключи", fn: passesMenu },
     { label: "Архив документов: " + g.noteList.length, fn: notesMenu },
     { label: "Задания: поручений " + gm().activeQuests().length + " из " + gm().QUEST_ACTIVE, fn: questsMenu },
@@ -741,6 +742,29 @@ function invItems() {
   return items;
 }
 function back(fn) { return { label: "Назад", fn: fn || function () { inventory(); } }; }
+/* (3.7, нелогичность) Выбросить вещь: список всего, что лежит в рюкзаке (game.dropItem кладёт её на пол у героя);
+   то, что выбросить нельзя, — с причиной */
+function dropMenu() { menu("Выбросить вещь", dropItems(), { rebuild: dropItems, intro: "Вещь ляжет на пол у ваших ног; поднять — отойти и снова наступить." }); }
+function dropItems() {
+  var g = G(), ids = Object.keys(g.inv).filter(function (k) { return g.inv[k] > 0 && LAB.ITEMS[k]; });
+  ids.sort(function (a, b) { return LAB.ITEMS[a].n < LAB.ITEMS[b].n ? -1 : 1; });
+  var items = ids.map(function (k) {
+    var d = LAB.ITEMS[k], why = gm().dropWhy ? gm().dropWhy(k) : "";
+    return { label: d.n + ": " + g.inv[k] + (why ? ". Нельзя: " + why : ""), keep: !!why, fn: function () { if (why) { say(why); return; } dropOne(k); } };
+  });
+  if (!items.length) items.push({ label: "Рюкзак пуст: выбрасывать нечего.", info: true, keep: true, fn: function () {} });
+  items.push(back());
+  return items;
+}
+function dropOne(k) {
+  var g = G(), d = LAB.ITEMS[k], n = g.inv[k] || 0;
+  if (n <= 1) { gm().dropItem(k, false); dropMenu(); return; }
+  menu("Выбросить: " + d.n, [
+    { label: "Одну штуку", fn: function () { gm().dropItem(k, false); dropMenu(); } },
+    { label: "Все: " + n + " шт.", fn: function () { gm().dropItem(k, true); dropMenu(); } },
+    { label: "Назад", fn: dropMenu }
+  ]);
+}
 function weaponsMenu() { menu("Оружие", weaponsItems(), { rebuild: weaponsItems }); }
 function weaponsItems() {
   var g = G();
@@ -930,7 +954,7 @@ function passesItems() {
   items.push({ label: "Пропуск доступа: " + (g.tier ? LAB.TIERS[g.tier].n : "нет"), keep: true, fn: function () { say(g.tier ? LAB.TIERS[g.tier].n + ": открывает двери с картридером этого цвета и ниже." : "Пропуска нет."); } });
   items.push({ label: "Пропуск лифта этажей уровня " + g.L + ": " + (g.elev[g.L] ? "есть" : "нет"), keep: true, fn: function () { say(g.elev[g.L] ? "Лифт этажей уровня " + g.L + " вас повезёт." : "Пропуск лифта лежит на втором этаже уровня."); } });
   if (!LAB.isReactorLevel(g.L)) items.push({ label: "Шлюзовая ключ-карта уровня " + g.L + ": " + (g.gate[g.L] ? "есть" : "нет"), keep: true, fn: function () { say(g.gate[g.L] ? "Гермошлюз на последнем этаже уровня откроется. Пройти можно только вниз." : "Ключ-карта — на последнем этаже уровня, у шлюза: у стража или спрятана."); } });
-  else items.push({ label: "Ключ доступа к реактору «Исток»: " + (gm().hasCore(g.L) ? "есть" : "нет"), keep: true, fn: function () {} });
+  else items.push({ label: (gm().trueSource && gm().trueSource(g.L) ? "Ключ настоящего «Истока»" : "Ключ доступа к реактору «Исток»") + ": " + (gm().hasCore(g.L) ? "есть" : "нет"), keep: true, fn: function () {} }); /* (3.7, нелогичность) на последнем уровне — не реактор */
   Object.keys(g.keys).forEach(function (k) { items.push({ label: g.keys[k], keep: true, fn: function () { say(g.keys[k] + "."); } }); });
   var codes = Object.keys(g.codes);
   if (codes.length) items.push({ label: "Известные коды: " + codes.length, keep: true, fn: function () { say(codes.map(function (c) { return "«" + g.codes[c] + "» — " + c.split("").join(" "); }).join("; ") + "."); } });
