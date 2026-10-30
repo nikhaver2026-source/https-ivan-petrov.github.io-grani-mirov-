@@ -83,11 +83,21 @@ function partsCap(p, out) {
 function craftedHeld(key, held) { var n = (G().craftN && G().craftN[key]) || 0; return Math.max(0, Math.min(n, held)); }
 /* продана одна штука: если найденных уже нет — значит, собранная */
 function soldOne(key, held) { var c = G().craftN; if (c && c[key] > 0 && craftedHeld(key, held) >= held) c[key]--; }
+/* (3.7, нелогичность) Начатый многоразовый ремнабор (походный, инженерный) — по остатку ремонтов: так уходит
+   последний набор, он и начатый (пока наборов больше, продаётся целый). Прежде начатый уходил как новый:
+   два ремонта из трёх — и продать за полную цену. */
+function kitLeftK(id) {
+  var R = LAB.repair, K = R && R.KITS && R.KITS[id];
+  if (!K || !(K.uses > 1) || !R.opened) return 1;
+  var o = R.opened(id);
+  return o > 0 ? o / K.uses : 1;
+}
 function itemSellPrice(id, ctx, asCrafted) {
   var d = LAB.ITEMS[id], cat = catOf(id), held = G().inv[id] || 0;
   var p = sellCap(Math.max(1, Math.round(d.price * (LAB.SELL_K[cat] || LAB.SELL_K[d.kind] || 0.4) * depthSellK() * ctxK(ctx, cat))), itemBuyPrice(id));
   if (asCrafted == null) asCrafted = held > 0 && craftedHeld(id, held) >= held;
-  return asCrafted ? partsCap(p, id) : p;
+  p = asCrafted ? partsCap(p, id) : p;
+  return held === 1 ? Math.max(1, Math.round(p * kitLeftK(id))) : p;
 }
 function ammoSellPrice(k, ctx, asCrafted) {
   var a = LAB.AMMO[k], held = G().ammo[k] || 0, p = sellCap(Math.max(1, Math.round((a.price || 30) * LAB.SELL_K.ammo * depthSellK() * ctxK(ctx, "ammo"))), Math.round((a.price || 30) * buyK()));
@@ -133,7 +143,8 @@ function sellCats(ctx, back) {
   Object.keys(g.inv).forEach(function (id) { if (g.inv[id] > 0 && sellable(id)) { var c = catOf(id); (inv[c] = inv[c] || []).push(id); } });
   if (g.weapons.length) items.push({ label: "Оружие: " + g.weapons.length + (g.weapons.length < 2 ? " — последнее не продаётся" : ""), fn: function () { sellWeapons(ctx, back); } });
   if (g.armors.length) items.push({ label: "Броня и комбинезоны: " + g.armors.length + (g.armor ? ", одна надета" : ""), fn: function () { sellArmors(ctx, back); } });
-  ["implant", "wmodule", "part", "valuable", "med", "protect", "food", "gadget", "trap", "tool"].forEach(function (c) {
+  /* (3.7, нелогичность) и химсырьё («chem»): у него есть цена и раздел, а продать его было негде; потолок скупки — общий */
+  ["implant", "wmodule", "part", "valuable", "med", "protect", "food", "gadget", "trap", "tool", "chem"].forEach(function (c) {
     var ids = inv[c]; if (!ids || !ids.length) return;
     var n = ids.reduce(function (a, k) { return a + (g.inv[k] || 0); }, 0);
     items.push({ label: CAT_N[c] + ": " + n + (ctxK(ctx, c) > 1.05 ? " — здесь платят дороже" : ""), fn: function () { sellItems(ctx, c, back); } });
@@ -161,7 +172,8 @@ function sellItems(ctx, cat, back) {
         var p1 = itemSellPrice(id, ctx); soldOne(id, G().inv[id]);
         G().inv[id]--; G().credits += p1; soldSay(d.n.charAt(0).toLowerCase() + d.n.slice(1), p1);
       } });
-      var allP = function (n) { var c = craftedHeld(id, n); return (n - c) * itemSellPrice(id, ctx, false) + c * itemSellPrice(id, ctx, true); };
+      /* (3.7, нелогичность) среди всех — и начатый ремнабор: за него — по остатку ремонтов (kitLeftK) */
+      var allP = function (n) { var c = craftedHeld(id, n), one = itemSellPrice(id, ctx, false); return (n - c) * one + c * itemSellPrice(id, ctx, true) - Math.round(one * (1 - kitLeftK(id))); };
       if (g.inv[id] > 1) items.push({ label: "Продать все: " + d.n + " (" + g.inv[id] + ") — " + cr(allP(g.inv[id])), fn: function () {
         var n = G().inv[id] || 0; if (!n) { say("Больше нет."); return; }
         var sum = allP(n), cn = G().craftN; if (cn && cn[id]) cn[id] = Math.max(0, cn[id] - craftedHeld(id, n));
@@ -264,6 +276,7 @@ function shelfPool(L) {
     if (!d.price || d.surf || d.nosell || d.kind === "valuable" || id === "proto" || id === "okokey") continue;
     if (["food", "use", "throw", "deploy", "tool", "part", "wmodule", "trap"].indexOf(d.kind) < 0) continue;
     if (!LAB.srcOk(d, "buy")) continue; /* (2.0) только верстак или только находка — не на прилавке */
+    if (LAB.chemVariant(d)) continue; /* (3.7, нелогичность) сорта и модификации составов — только химический стол */
     var dep = d.depth || (d.kind === "part" ? LAB.PART_DEPTH[id] || 1 : 1);
     if (dep > L || dep >= 99) continue;
     var c = catOf(id);
@@ -414,9 +427,12 @@ function deliveryText() { var m = era() === LAB.SUPPLY[5] ? "непредска�
 function surfaceCatalog() {
   var L = G().L, out = [];
   for (var id in LAB.ITEMS) { var d = LAB.ITEMS[id]; if (d.surf) out.push({ id: id }); }
-  ["medkit_s", "medkit_l", "trauma", "antirad", "iodine", "radaway", "respirator", "dosimeter", "tape", "decoder", "lockpick", "jammer", "filter", "wrepair", "fieldkit", "repairkit", "engkit", "toolkit", "wirecutters", "lead", "rubber", "filtercart"].forEach(function (id) { var d = LAB.ITEMS[id]; if (d && (d.depth || 1) <= Math.max(L, 3)) out.push({ id: id }); });
-  ["energy", "magnetron", "slug"].forEach(function (k) { if (LAB.AMMO[k] && (LAB.AMMO[k].depth || 1) <= L + 1) out.push({ ammo: k }); });
-  ["radcape", "radsuit", "hazmat", "reactorsuit"].forEach(function (b) { if (LAB.ARMORS[b] && LAB.ARMORS[b].depth <= Math.max(L, 2) + 1) out.push({ armor: b }); });
+  /* (3.7, нелогичность) заказ — не раньше той глубины, где вещь, заряд или костюм появляются (depth): прежде
+     с поверхности везли магнетронные ячейки и обоймы на уровень раньше оружия под них, а вещи третьего
+     уровня — с первого (свинцовый комбинезон «Свинец» по-прежнему с первого: он нужен у горячих камер) */
+  ["medkit_s", "medkit_l", "trauma", "antirad", "iodine", "radaway", "respirator", "dosimeter", "tape", "decoder", "lockpick", "jammer", "filter", "wrepair", "fieldkit", "repairkit", "engkit", "toolkit", "wirecutters", "lead", "rubber", "filtercart"].forEach(function (id) { var d = LAB.ITEMS[id]; if (d && (d.depth || 1) <= L) out.push({ id: id }); });
+  ["energy", "magnetron", "slug"].forEach(function (k) { if (LAB.AMMO[k] && (LAB.AMMO[k].depth || 1) <= L) out.push({ ammo: k }); });
+  ["radcape", "radsuit", "hazmat", "reactorsuit"].forEach(function (b) { if (LAB.ARMORS[b] && LAB.ARMORS[b].depth <= Math.max(L, 2)) out.push({ armor: b }); });
   return out;
 }
 /* (3.7, нелогичность) броня заказа — той ступени, где её оплатили (прежде — где забрали: «свинец» со

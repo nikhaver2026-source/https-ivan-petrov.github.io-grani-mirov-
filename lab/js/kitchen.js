@@ -108,7 +108,7 @@ function pickW(list, u, L) {
 }
 function medPick(u, L) {
   var pool = [];
-  for (var k in LAB.ITEMS) { var d = LAB.ITEMS[k]; if (d.cat === "med" && d.price && !d.surf && !d.nosell && (d.depth || 1) <= L) pool.push(k); }
+  for (var k in LAB.ITEMS) { var d = LAB.ITEMS[k]; if (d.cat === "med" && d.price && !d.surf && !d.nosell && (d.depth || 1) <= L && !LAB.chemVariant(d)) pool.push(k); } /* (3.7, нелогичность) сорта и модификации составов — только химический стол */
   pool.sort();
   return pool.length ? pool[Math.floor(u * pool.length)] : "gel";
 }

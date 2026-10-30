@@ -836,7 +836,7 @@ function cameraTick(f) {
       f.camT = 40;
       A("foeSound", f, "alert");
       sayOnce("cam", has(f, "deaf") ? f.name.split(",")[0] + " " + gm().relDir(f.x, f.y) + " " + gw(f, "услышал", "услышала", "услышало") + " ваши шаги!" : "Камера ОКО " + gm().relDir(f.x, f.y) + " заметила вас!", 5000, "urgent");
-      if (LAB.oko) LAB.oko.event("camera", { x: G().x, y: G().y });
+      if (LAB.oko) LAB.oko.event("camera", { x: G().x, y: G().y, ear: has(f, "deaf") });
     }
   } else if (f.glimT <= 0 && f.camT <= 0 && camSees(f, 3)) {
     f.glimT = 30;

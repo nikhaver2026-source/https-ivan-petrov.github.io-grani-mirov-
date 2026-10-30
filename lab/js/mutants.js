@@ -459,6 +459,9 @@ function calmRooms(fl) {
   var out = {};
   fl.objs.forEach(function (o) { if (/^(wake|capsule|stairs_up|elevator|workbench|gate_sealed)$/.test(o.type) && o.room >= 0) out[o.room] = 1; });
   if (fl.U >= 0) out[fl.U] = 1;
+  /* (3.7, нелогичность) и не туда, где живут люди и мирные роботы: прежде отряд тварей садился
+     в каюту к программисту */
+  (fl.npcs || []).forEach(function (n) { if (n.room >= 0) out[n.room] = 1; });
   return out;
 }
 function packsFor(L) { return PACKS.filter(function (p) { return p.lv[0] <= L && L <= p.lv[1] && (!p.lead || LAB.FOES[p.lead]) && p.members.every(function (m) { return !!LAB.FOES[m[0]]; }); }); }

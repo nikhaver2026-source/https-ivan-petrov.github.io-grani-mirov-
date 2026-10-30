@@ -320,7 +320,8 @@ function npcTip(n) {
   if (!g.bpNpc[n.key]) {
     var rc = unknownPick(2, "npc:" + n.key, "spec");
     g.bpNpc[n.key] = 1;
-    if (rc) { say(n.n + ": «" + tip + " А вот схема, пригодится: " + rc.n.toLowerCase() + "»."); learn(rc.id, "Рассказал выживший: " + n.n + ".", true); gm().later(function () { A("play", "term_ok"); sayq("Новая схема мастерской: «" + rc.n + "»."); }, 400); return true; }
+    /* (3.7, нелогичность) «Рассказала выжившая» — в роде жителя */
+    if (rc) { say(n.n + ": «" + tip + " А вот схема, пригодится: " + rc.n.toLowerCase() + "»."); learn(rc.id, (n.female ? "Рассказала выжившая: " : "Рассказал выживший: ") + n.n + ".", true); gm().later(function () { A("play", "term_ok"); sayq("Новая схема мастерской: «" + rc.n + "»."); }, 400); return true; }
   }
   say(n.n + ": «" + tip + "»");
   return false;

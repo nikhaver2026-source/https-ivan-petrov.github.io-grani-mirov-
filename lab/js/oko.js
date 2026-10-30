@@ -364,7 +364,7 @@ function waveDown(id) {
    потеряна: проверка последнего места и маршрутов рядом, затем — снова
    штатный режим. Глушилка и заглушенная панель ОКО сообщения не пускают. */
 var SEC = ["штатное наблюдение", "подозрение", "подтверждённое нарушение", "локальная тревога", "комплексная тревога", "аварийная блокировка", "восстановление"];
-var SRCN = { observer: "Скрытый наблюдатель", camera: "Камера", robot: "Охранный робот", cleaner: "Робот-уборщик", drone: "Дрон слежения", noise: "Акустический датчик", terminal: "Терминал", door: "Датчик двери", lift: "Камера лифта", wreck: "Робот-уборщик", lost: "Связь с единицей", relay: "Узел связи" };
+var SRCN = { observer: "Скрытый наблюдатель", camera: "Камера", ear: "Слуховое окно", robot: "Охранный робот", cleaner: "Робот-уборщик", drone: "Дрон слежения", noise: "Акустический датчик", terminal: "Терминал", door: "Датчик двери", lift: "Камера лифта", wreck: "Робот-уборщик", lost: "Связь с единицей", relay: "Узел связи" };
 function sec() {
   var f = fs();
   if (!f.sec) f.sec = { lv: 0, t: 0, seen: null, sus: null, conf: [], loss: 0 };
@@ -465,7 +465,7 @@ function report(src, x, y, kind, what, quiet) {
     s.seen = { x: x, y: y, t: now, src: src };
     if (!fresh) return true; /* то же подтверждение — не чаще раза в три секунды */
     s.conf = s.conf.filter(function (t) { return now - t < 120; }); s.conf.push(now);
-    heat(src === "camera" ? 5 : src === "terminal" ? 6 : 3);
+    heat(src === "camera" || src === "ear" ? 5 : src === "terminal" ? 6 : 3);
     log((SRCN[src] || "Датчик") + ", " + place(x, y) + ": носитель обнаружен.");
     var to = s.lv < 2 || s.lv === 6 ? 2 : s.lv;
     if (s.conf.length >= 3 || (o.heat >= 45 && s.lv >= 2 && s.lv !== 6)) to = Math.max(to, 3);
@@ -707,7 +707,8 @@ function event(kind, data) {
       if (data.x != null) { report("terminal", data.x, data.y, "suspect", "блокировка дверей снята"); wave(rnd(12, 20), 1 + (o.heat >= 50 ? 1 : 0), "hunt", { x: data.x, y: data.y }); }
       break;
     case "camera":
-      report("camera", data.x != null ? data.x : g.x, data.y != null ? data.y : g.y, data.glimpse ? "suspect" : "seen", data.glimpse ? "движение на краю обзора" : "");
+      /* (3.7, нелогичность) «Слуховое окно» (ear) слышит, а не видит: в журнале — оно, и реплики о камере ОКО не звучат (nocam) */
+      report(data.ear ? "ear" : "camera", data.x != null ? data.x : g.x, data.y != null ? data.y : g.y, data.glimpse ? "suspect" : "seen", data.glimpse ? "движение на краю обзора" : "");
       if (o.heat >= 30 && !f.droneAt && C() && !C().drones().length) f.droneAt = T() + rnd(10, 30);
       break;
     case "cleaner":

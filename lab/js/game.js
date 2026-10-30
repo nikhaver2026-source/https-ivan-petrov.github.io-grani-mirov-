@@ -234,7 +234,8 @@ game.objName = objName;
 /* (3.0) Завал на лестнице: разобран — лестница как лестница (rubble.js). */
 function stairBlocked(o) { return !!(o && o.blocked) && (!LAB.rubble || LAB.rubble.blocked(o)); }
 game.stairBlocked = stairBlocked;
-function npcName(n) { return n.robot ? n.n : n.prof + " " + n.n; }
+/* (3.7, нелогичность) профессия — в роде жителя: «Певчая Хора Нина Соколова» (LAB.profName, data.js) */
+function npcName(n) { return n.robot ? n.n : (LAB.profName ? LAB.profName(n) : n.prof) + " " + n.n; }
 game.npcName = npcName;
 
 function lockText(d) {
@@ -324,17 +325,28 @@ function itemName(it) {
   return "Вещь";
 }
 game.itemName = itemName;
+/* (3.7, нелогичность) звук подбора и маяк — по виду вещи: прежде всё, что не деталь и не лекарство, звенело
+   склянкой стимулятора — хлеб и тушёнка, слиток и медаль, кусачки, капканы, турели, модули оружия, домкрат;
+   а обоймы пуль, картечь и газовый баллон звучали зарядкой батареи. Еда — шуршит («food»: atmos.js берёт
+   запись бумаги, маяк — автоматов с едой на своей высоте), ценности — звенят монетой, железо (ловушки, мины,
+   турели, домкрат, физические заряды) — пластиной, инструменты, модули и средства защиты — деталью,
+   жетон погибшего — ключом; живые заряды (иглы, споровые капсулы) — деталью */
+var KIND_ORG_AMMO = { k_needle: 1, k_capsule: 1 };
 function itemKind(it) {
-  if (it.kind === "ammo") return it.ammo === "energy" ? "bat" : it.ammo === "magnetron" ? "mag" : it.ammo === "positron" ? "pos" : "bat";
+  if (it.kind === "ammo") return it.ammo === "energy" ? "bat" : it.ammo === "magnetron" ? "mag" : it.ammo === "positron" ? "pos" : KIND_ORG_AMMO[it.ammo] ? "part" : LAB.physAmmo && LAB.physAmmo(it.ammo) ? "plate" : "bat";
   if (it.kind === "item") {
     var k = it.item;
     if (k === "medkit_s" || k === "medkit_l" || /^medkit_|^nanomed$|^bandage|^herb_/.test(k)) return "med";
     if (k === "stim" || k === "antidote" || k === "energy_d") return "stim";
-    if (k === "emp" || k === "noise") return "gren";
+    if (k === "emp" || k === "noise" || k === "c_blast") return "gren";
     if (k === "plate" || k === "repairkit" || k === "wrepair" || k === "fieldkit" || k === "engkit") return "plate"; /* ремкомплекты звенят железом */
     if (LAB.ITEMS[k] && LAB.ITEMS[k].kind === "implant") return "chip";
     if (k === "decoder" || k === "lockpick" || /^pick_/.test(k) || k === "jammer" || k === "sonar" || k === "okokey") return "decoder";
     var dd = LAB.ITEMS[k];
+    if (dd && dd.kind === "food") return "food";
+    if (dd && (dd.kind === "valuable" || dd.cat === "valuable")) return k === "badge" ? "key" : "cr";
+    if (dd && (dd.kind === "trap" || dd.kind === "deploy" || dd.rubble)) return "plate";
+    if (dd && (dd.kind === "tool" || dd.kind === "wmodule" || dd.cat === "protect")) return "part";
     if (dd && dd.kind !== "part") return dd.fx && dd.fx.heal ? "med" : dd.kind === "throw" ? "gren" : "stim";
     return "part";
   }
@@ -714,6 +726,8 @@ function bodyTick() {
   var b = body();
   bodyTickN++;
   if (bodyTickN % 4 === 0 && b.neuro > 0) b.neuro = Math.max(0, b.neuro - 1);
+  /* (3.7, нелогичность) долг за покой, отданный зеркальному лекарю (medic.js), тает вместе с нагрузкой */
+  if (b.nerveN > 0 && b.neuro < b.nerveN) { b.nerveCr = b.neuro > 0 ? Math.round(b.nerveCr * b.neuro / b.nerveN) : 0; b.nerveN = b.neuro > 0 ? b.neuro : 0; }
   if (b.tox >= 80 && bodyTickN % 6 === 0) {
     G.hp -= b.tox >= 100 ? 2 : 1;
     A("play", "poison_tick");
@@ -891,6 +905,9 @@ function giveItem(it, quiet) {
     case "ammo": G.ammo[it.ammo] = (G.ammo[it.ammo] || 0) + (it.n || 1); break;
     case "item":
       G.inv[it.item] = (G.inv[it.item] || 0) + (it.n || 1);
+      /* (3.7, нелогичность) выброшенное своё собранное (dropItem) и подобранное — снова собранное: иначе
+         «собрать — бросить — поднять» снимало потолок скупки собранного (supply.js, craftN) */
+      if (it.crafted) { G.craftN = G.craftN || {}; G.craftN[it.item] = (G.craftN[it.item] || 0) + Math.min(it.crafted, it.n || 1); }
       if (it.item === "plate" && !G.tut.plate && hintsOn()) { G.tut.plate = 1; extra = " Пластину вставляют в надетую броню: инвентарь, раздел «Броня»."; }
       break;
     case "armor":
@@ -2580,6 +2597,16 @@ function rumor() {
 }
 
 /* ── МАГНЕТРОН ── */
+/* (3.7, нелогичность) Установка — не вечный двигатель: у резонатора (у ловушки) — ресурс на несколько зарядок,
+   заряды с установки скупают как собранные (craftN: потолок — по цене деталей рецепта), и заряжает она только
+   на той глубине, где есть оружие под эти заряды (AMMO.depth). Прежде установка «заряжала» ячейки из ничего
+   раз в два-три часа без конца, а позитронная уже с третьего уровня выдавала заряды по сто сорок кредитов:
+   сон в капсуле и продажа печатали кредиты */
+var MAG_MAX = 4, POS_MAX = 3;
+function plantGive(ammo, n) {
+  G.ammo[ammo] = (G.ammo[ammo] || 0) + n;
+  G.craftN = G.craftN || {}; G.craftN["ammo:" + ammo] = (G.craftN["ammo:" + ammo] || 0) + n;
+}
 function magnetronMenu(o) {
   var st = objState(o), items = [];
   A("play", "mag_hum_short");
@@ -2595,10 +2622,13 @@ function magnetronMenu(o) {
     if (CUR.fl.needPower && !CUR.fs.power) items.push({ label: "Подать питание на этаж", fn: function () {
       CUR.fs.power = true; A("play", "power_on"); say("Питание подано. Силовые двери этажа открываются."); journal("Восстановлено питание этажа " + G.F + "."); gainXP(15); checkQuests(); UIx("refresh");
     } });
-    items.push({ label: "Зарядить магнетронные ячейки", fn: function () {
+    var magD = LAB.AMMO.magnetron.depth || 1, magLeft = MAG_MAX - (st.made || 0);
+    items.push({ label: "Зарядить магнетронные ячейки" + (G.L < magD ? "" : magLeft > 0 ? ": резонатор выдержит ещё " + magLeft + " " + plural(magLeft, "зарядку", "зарядки", "зарядок") : ": резонатор выработан"), fn: function () {
+      if (G.L < magD) { say("На такой глубине резонатор держит только питание этажа: на заряд ячеек его мощности не хватает."); return; }
+      if ((st.made || 0) >= MAG_MAX) { say("Резонатор выработан: магнетрон больше не выходит на режим заряда. Питание этажа и перегрузка ещё работают."); return; }
       if (st.cool && st.cool > G.min + G.day * 1440) { say("Установка остывает. Зарядить можно позже."); return; }
-      st.cool = G.min + G.day * 1440 + 120;
-      G.ammo.magnetron += 2; A("play", "pick_mag"); say("Заряжено две магнетронные ячейки. Всего: " + G.ammo.magnetron + ".");
+      st.cool = G.min + G.day * 1440 + 120; st.made = (st.made || 0) + 1;
+      plantGive("magnetron", 2); A("play", "pick_mag"); say("Заряжено две магнетронные ячейки. Всего: " + G.ammo.magnetron + "." + (st.made >= MAG_MAX ? " Резонатор выработан: больше эта установка ячеек не зарядит." : ""));
     } });
     items.push({ label: "Перегрузка: ЭМИ-импульс по роботам рядом", fn: function () {
       if (st.over && st.over > G.min + G.day * 1440) { say("Установка ещё не остыла после перегрузки."); return; }
@@ -2631,10 +2661,13 @@ function positronMenu(o) {
       CUR.fs.rubble = true; A("play", "pos_pulse"); say("Вспышка без света, удар без звука — и далёкий грохот осыпающихся обломков. Завал на этаже расчищен."); gainXP(15); checkQuests();
       if (LAB.rubble) LAB.rubble.doorLoot("pulse"); /* (3.0) из-под обломков — находки */
     } });
-    items.push({ label: "Синтезировать позитронный заряд", fn: function () {
+    var posD = LAB.AMMO.positron.depth || 1, posLeft = POS_MAX - (st.made || 0);
+    items.push({ label: "Синтезировать позитронный заряд" + (G.L < posD ? "" : posLeft > 0 ? ": ловушки хватит ещё на " + posLeft + " " + plural(posLeft, "заряд", "заряда", "зарядов") : ": ловушка истощена"), fn: function () {
+      if (G.L < posD) { say("Ловушка этой установки слишком мала: антивещества хватает на импульс и томографию, а заряд для оружия она не удержит. Такие заряды синтезируют установки глубже."); return; }
+      if ((st.made || 0) >= POS_MAX) { say("Ловушка истощена: на новый заряд антивещества не набрать. Импульс и томография ещё работают."); return; }
       if (st.cool && st.cool > G.min + G.day * 1440) { say("Ловушка восстанавливается. Позже."); return; }
-      st.cool = G.min + G.day * 1440 + 180;
-      G.ammo.positron += 1; A("play", "pick_pos"); say("Позитронный заряд готов. Всего: " + G.ammo.positron + ".");
+      st.cool = G.min + G.day * 1440 + 180; st.made = (st.made || 0) + 1;
+      plantGive("positron", 1); A("play", "pick_pos"); say("Позитронный заряд готов. Всего: " + G.ammo.positron + "." + (st.made >= POS_MAX ? " Ловушка истощена: больше эта установка зарядов не даст." : ""));
     } });
     items.push({ label: "Позитронная томография этажа", fn: function () {
       mapFloor();
@@ -2781,7 +2814,11 @@ function vendingItems(o) {
   /* батареи и расходники своей глубины */
   for (var ak in LAB.AMMO) if (["energy", "magnetron", "positron"].indexOf(ak) < 0 && (LAB.AMMO[ak].depth || 1) <= G.L && (LAB.AMMO[ak].depth || 1) > G.L - 25) goods.push(["ammo:" + ak, 1]);
   /* (1.5) товары с разделом cat — еда, лекарства, защита, инструменты, ценности — у пунктов снабжения */
-  for (var ik in LAB.ITEMS) { var idf = LAB.ITEMS[ik]; if (idf.kind !== "part" && !idf.cat && idf.depth && idf.depth <= G.L && idf.depth > G.L - 20 && LAB.srcOk(idf, "buy")) goods.push([ik, 1]); }
+  /* (3.7, нелогичность) без повторов — отмычки уже в списке выше (прежде синяя, зелёная и красная звучали
+     дважды) — и без вариантов химии: сорт выше первого и модификации — работа химического стола
+     (LAB.chemVariant); прежде с третьего уровня в терминале было до двухсот строк составов всех сортов */
+  var inGoods = {}; goods.forEach(function (x) { inGoods[x[0]] = 1; });
+  for (var ik in LAB.ITEMS) { var idf = LAB.ITEMS[ik]; if (!inGoods[ik] && !LAB.chemVariant(idf) && idf.kind !== "part" && !idf.cat && idf.depth && idf.depth <= G.L && idf.depth > G.L - 20 && LAB.srcOk(idf, "buy")) goods.push([ik, 1]); }
   var items = goods.map(function (g) {
     var id = g[0], isAmmo = id.indexOf("ammo:") === 0, name = isAmmo ? LAB.AMMO[id.slice(5)].n : LAB.ITEMS[id].n;
     var base = isAmmo ? (LAB.AMMO[id.slice(5)].price || 40) : LAB.ITEMS[id].price;
@@ -2954,28 +2991,56 @@ function finale(o) {
 game.finale = finale;
 
 /* ════════ ВЫЖИВШИЕ ════════ */
+/* (3.7, нелогичность) память жителя — в состоянии этажа (fs.npc, по ключу жителя): прежде она жила в
+   объекте этажа, и после загрузки записи или возврата на этаж, вытесненный из памяти, разговор
+   начинался заново, а ОКО снова отзывалось о том же выжившем */
+function npcMem(n) {
+  var fs = CUR.fs;
+  if (!fs || !n || !n.key) { if (n && !n.mem) n.mem = {}; return n ? n.mem : {}; }
+  var m = fs.npc || (fs.npc = {});
+  return m[n.key] || (m[n.key] = {});
+}
+/* реплика жителя: род ([м|ж]) и своё имя ({имя}, {фамилия} — «Меня зовут… {имя}») */
+function npcLine(s, n) {
+  var parts = String(n.n || "").split(" ");
+  return gx(s, n.female).replace(/\{имя\}/g, n.first || parts[0] || "").replace(/\{фамилия\}/g, n.last || parts.slice(1).join(" "));
+}
+/* название профессии в середине фразы: строчная — только первая буква («боец «Альфы»», «лекарь смены В») */
+function lowFirst(s) { s = String(s || ""); return s.charAt(0).toLowerCase() + s.slice(1); }
+game.lowFirst = lowFirst;
+/* архивариус хранит опись образцов (texts.js) — и рассказывает о ней */
+function sampleTalk() {
+  var have = Object.keys(G.samples || {}).length, it = CUR.fl.items.filter(function (x) { return x.kind === "sample"; })[0];
+  var here = !it ? "" : G.samples[it.sid] ? " Образец этого этажа уже у вас." : CUR.fl.room[idx(it.x, it.y)] === CUR.fl.secret ? " Образец этого этажа — в тайной комнате: ищите потайной ход." : " Образец этого этажа ещё не найден.";
+  return "Опись образцов. Вами найдено: " + have + "." + here;
+}
 function npcMenu(n) {
-  var items = [];
-  /* (2.0) живой человек рядом с носителем — ОКО это не нравится */
-  if (!n.robot && !n.okoSaw) { n.okoSaw = 1; if (LAB.oko && LAB.oko.react) later(function () { LAB.oko.react("survivor"); }, 4000); }
+  var items = [], mem = npcMem(n);
+  /* (2.0) живой человек рядом с носителем — ОКО это не нравится; (3.7) один раз — и после загрузки тоже */
+  if (!n.robot && !n.okoSaw && !mem.oko) { mem.oko = 1; n.okoSaw = 1; if (LAB.oko && LAB.oko.react) later(function () { LAB.oko.react("survivor"); }, 4000); }
   if (n.robot) {
-    var lines = LAB.ROBOT_LINES[n.type] || ["..."];
-    /* (2.6) живые целители (улей, отражение) говорят не голосом машины */
-    items.push({ label: "Поговорить", fn: function () { say(lines[Math.floor(Math.random() * lines.length)], { robot: !LAB.ROBOT_NPC[n.type].alive }); } });
-    var tr = LAB.ROBOT_NPC[n.type].trade;
-    if (tr === "med" && LAB.medic) items.push({ label: "Лечение", fn: function () { LAB.medic.healMenu(n); } });
+    var rd = LAB.ROBOT_NPC[n.type] || {}, lines = LAB.ROBOT_LINES[n.type] || ["..."];
+    /* (2.6) живые целители (улей, отражение) говорят не голосом машины; (3.7, нелогичность) реплики —
+       по кругу, без повторов подряд: прежде случайные, и улей трижды подряд говорил одно и то же */
+    items.push({ label: "Поговорить", fn: function () { var ti = (mem.t || 0) % lines.length; mem.t = (ti + 1) % lines.length; say(lines[ti], { robot: !rd.alive }); } });
+    /* (3.7, нелогичность) описание робота прежде не звучало нигде — теперь его можно осмотреть */
+    if (rd.desc) items.push({ label: "Осмотреть", fn: function () { say(rd.desc); } });
+    var tr = rd.trade, heals = !!(LAB.medic && LAB.medic.profileOf(n));
+    if (heals) items.push({ label: "Лечение", fn: function () { LAB.medic.healMenu(n); } });
     /* (3.7, нелогичность) торгуют все роботы-торговцы — и деталями, и всем подряд, а не только батареями:
-       прежде «Прохор», «Гроссмейстер» и Старый косарь обещали детали, а окна торговли у них не было */
-    if (tr && tr !== "med") items.push({ label: "Торговля", fn: function () { tradeMenu(n, tr); } });
+       прежде «Прохор», «Гроссмейстер» и Старый косарь обещали детали, а окна торговли у них не было;
+       робот с лекарствами, который не лечит («Голубь»), их продаёт */
+    if (tr && !heals) items.push({ label: "Торговля", fn: function () { tradeMenu(n, tr); } });
+    if (n.type === "archivist") items.push({ label: "Спросить об образцах", fn: function () { say(sampleTalk(), { robot: true }); } });
   } else {
     items.push({ label: "Поговорить", fn: function () {
-      var lines = LAB.STORIES[n.prof] || ["..."], ti = (n.talk || 0) % lines.length;
-      n.talk = (ti + 1) % lines.length; /* n.talk — следующая строка: первой звучит вступление */
-      say(n.n + ": " + gx(lines[ti], n.female));
+      var lines = LAB.STORIES[n.prof] || ["..."], ti = (mem.t != null ? mem.t : n.talk || 0) % lines.length;
+      mem.t = n.talk = (ti + 1) % lines.length; /* следующая строка: первой звучит вступление */
+      say(n.n + ": " + npcLine(lines[ti], n));
     } });
     items.push({ label: "Спросить о себе", fn: function () {
       var Bk = G.L > 10 ? LAB.blockData(G.L) : null, life = Bk && Bk.life && Bk.life.length ? Bk.life : LAB.LIFE, view = Bk && Bk.view && Bk.view.length ? Bk.view : LAB.VIEW;
-      say(n.n + ", " + n.prof.toLowerCase() + ". " + capital(gx(life[n.life % life.length], n.female)) + ". «" + gx(view[n.view % view.length], n.female) + "»");
+      say(n.n + ", " + lowFirst(LAB.profName ? LAB.profName(n) : n.prof) + ". " + capital(gx(life[n.life % life.length], n.female)) + ". «" + gx(view[n.view % view.length], n.female) + "»");
     } });
     var q = G.quests.filter(function (qq) { return qq.giver === n.key && !qq.done; })[0];
     if (!q) items.push({ label: "Спросить о задании", fn: function () { takeQuest(n); } });
@@ -2983,15 +3048,17 @@ function npcMenu(n) {
     else items.push({ label: (Q() && !Q().ready(q) ? "Поручение: " + q.short + " — " + Q().progress(q) : "Сдать задание: " + q.short), fn: function () { completeQuest(q, n); } });
     courierItems(n).forEach(function (ci) { items.push(ci); }); /* (3.5) весточки сверху */
     var tr2 = LAB.PROFS[n.prof] && LAB.PROFS[n.prof].trade;
-    /* (2.6) медики и целители глубин лечат: за кредиты и по-своему */
-    if (tr2 === "med" && LAB.medic) items.push({ label: "Лечение", fn: function () { LAB.medic.healMenu(n); } });
+    /* (2.6) медики и целители глубин лечат: за кредиты и по-своему; (3.7, нелогичность) — только те, кто
+       лечит (heal), а не всякий, кто торгует лекарствами */
+    if (LAB.medic && LAB.medic.profileOf(n)) items.push({ label: "Лечение", fn: function () { LAB.medic.healMenu(n); } });
     if (tr2) items.push({ label: "Торговля", fn: function () { tradeMenu(n, tr2); } });
     if (LAB.workshop && LAB.workshop.isEng(n)) items.push({ label: "Спросить о мастерской", fn: function () { LAB.workshop.npcTip(n); } });
     var bdg = LAB.fixtures && LAB.fixtures.badgeItem ? LAB.fixtures.badgeItem(n) : null; if (bdg) items.push(bdg);
     items.push({ label: "Спросить дорогу", fn: function () { navigate(false, true); } });
   }
-  var alive = n.robot && LAB.ROBOT_NPC[n.type] && LAB.ROBOT_NPC[n.type].alive;
-  items.push({ label: "Попрощаться", fn: function () { say(alive ? LAB.ROBOT_NPC[n.type].bye || "Вас провожают тихим гулом." : n.robot ? "До свидания. Протокол помощи ожидает." : "Береги себя, седьмой.", { robot: !!n.robot && !alive }); } });
+  /* (3.7, нелогичность) прощание — по виду робота (bye, data.js и блоки): прежде все прощались «Протокол помощи ожидает» */
+  var rdx = n.robot ? LAB.ROBOT_NPC[n.type] || {} : null;
+  items.push({ label: "Попрощаться", fn: function () { say(rdx ? rdx.bye || (rdx.alive ? "Вас провожают тихим гулом." : "До свидания.") : "Береги себя, седьмой.", { robot: !!rdx && !rdx.alive }); } });
   UIx("menu", npcName(n), items);
 }
 function capital(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
@@ -3001,24 +3068,55 @@ function tradeMenu(n, kind) {
   var build = function () { return tradeItems(n, kind); };
   UIx("menu", "Торговля: " + npcName(n), build(), { keep: true, rebuild: build });
 }
+var TRADE_GOODS = {
+  med: ["medkit_s", "medkit_l", "bandage", "antidote", "sorbent", "stim", "neuroblock", "painkiller", "coagulant", "antirad", "iodine"],
+  food: ["stew", "ration", "noodles", "crackers", "nuts", "choco", "glucose", "medkit_s", "bread", "porridge", "fishcan", "water"],
+  parts: ["scrap", "wire", "chip", "cap", "lens", "magnet", "relay", "cell", "servo", "optic", "lead", "rubber"],
+  ammo: ["ammo:energy", "ammo:magnetron", "ammo:slug", "emp", "wrepair", "fieldkit", "tape"],
+  all: ["medkit_s", "bandage", "ration", "ammo:energy", "chip", "gel", "reagent", "cap", "relay", "wrepair", "repairkit", "respirator", "water"]
+};
+/* Что продаёт житель этого вида на глубине L (и quests.js: заказчик не просит то, что продаёт сам).
+   (3.7, нелогичность) торговец зарядами продаёт и ячейки своей глубины (звуковые и фазовые в «Отражении»):
+   прежде «Камертон» обещал их, а в окне были одни батареи. Торговец деталями — и детали глубин
+   (гидроцилиндры, смолу, шестерни: LAB.PART_DEPTH) не выше двадцати уровней: прежде их не продавал
+   никто, хотя «Прохор», «Речник» и «Гроссмейстер» их обещали. Детали и ячейки своего блока —
+   с первого его уровня: на 41-м «Камертон» обещал фазовые ячейки, а их продавали с 44-го. */
+function tradeGoods(kind, L) {
+  L = Math.max(L || 1, 1);
+  var goods = (TRADE_GOODS[kind] || TRADE_GOODS.all).slice(), own = {}, blk = L > 10 ? LAB.blockOf(L) : 0;
+  var ownBlock = function (dp) { return blk > 0 && dp > 10 && LAB.blockOf(dp) === blk; };
+  if (kind === "parts") for (var pk in LAB.PART_DEPTH) {
+    var pd = LAB.PART_DEPTH[pk], pi = LAB.ITEMS[pk];
+    if (pd <= 10 || pk === "proto" || !pi || !pi.price || goods.indexOf(pk) >= 0) continue;
+    if ((pd <= L && pd > L - 20) || ownBlock(pd)) { goods.push(pk); own[pk] = 1; }
+  }
+  if (kind === "ammo") for (var ak in LAB.AMMO) {
+    var ad = LAB.AMMO[ak], dp = ad.depth || 1;
+    if (["energy", "magnetron", "slug", "positron"].indexOf(ak) >= 0 || ad.loot === false) continue;
+    if ((dp <= L && dp > L - 25) || ownBlock(dp)) { goods.push("ammo:" + ak); own["ammo:" + ak] = 1; }
+  }
+  /* (3.7) и всё прочее — по глубине */
+  return goods.filter(function (id) { var d = id.indexOf("ammo:") === 0 ? LAB.AMMO[id.slice(5)] : LAB.ITEMS[id]; return !!d && (own[id] || (d.depth || 1) <= L); });
+}
+game.tradeGoods = tradeGoods;
+function crW(p) { return p + " " + plural(p, "кредит", "кредита", "кредитов"); }
 function tradeItems(n, kind) {
-  var goods = kind === "med" ? ["medkit_s", "medkit_l", "bandage", "antidote", "sorbent", "stim", "neuroblock", "painkiller", "coagulant", "antirad", "iodine"] : kind === "food" ? ["stew", "ration", "noodles", "crackers", "nuts", "choco", "glucose", "medkit_s", "bread", "porridge", "fishcan", "water"] : kind === "parts" ? ["scrap", "wire", "chip", "cap", "lens", "magnet", "relay", "cell", "servo", "optic", "lead", "rubber"] : kind === "ammo" ? ["ammo:energy", "ammo:magnetron", "ammo:slug", "emp", "wrepair", "fieldkit", "tape"] : ["medkit_s", "bandage", "ration", "ammo:energy", "chip", "gel", "reagent", "cap", "relay", "wrepair", "repairkit", "respirator", "water"];
-  /* (3.7, нелогичность) торговец зарядами продаёт и ячейки своей глубины (звуковые и фазовые в «Отражении»):
-     прежде «Камертон» обещал их, а в окне были одни батареи */
-  if (kind === "ammo") for (var ak in LAB.AMMO) { var ad = LAB.AMMO[ak]; if (["energy", "magnetron", "slug", "positron"].indexOf(ak) < 0 && (ad.depth || 1) <= G.L && (ad.depth || 1) > G.L - 25 && ad.loot !== false) goods.push("ammo:" + ak); }
-  goods = goods.filter(function (id) { var d = id.indexOf("ammo:") === 0 ? LAB.AMMO[id.slice(5)] : LAB.ITEMS[id]; return !!d && (d.depth || 1) <= Math.max(G.L, 1); }); /* (3.7) и заряды — по глубине */
+  var goods = tradeGoods(kind, G.L);
   var k = priceK() * (n.robot ? 1 : 0.9 * chaK() * resK());
   var items = goods.map(function (id) {
     var isAmmo = id.indexOf("ammo:") === 0, name = isAmmo ? LAB.AMMO[id.slice(5)].n : LAB.ITEMS[id].n;
     var base = isAmmo ? (LAB.AMMO[id.slice(5)].price || 40) : LAB.ITEMS[id].price;
     var p = Math.max(2, Math.round(base * k));
-    return { label: "Купить: " + name + " — " + p, fn: function () { buy(id, p); } };
+    /* (3.7, нелогичность) цена — с единицей: «— 25 кредитов», а не «— 25» */
+    return { label: "Купить: " + name + " — " + crW(p), fn: function () { buy(id, p); } };
   });
   /* (1.5) продать можно всё: выживший своё берёт дороже */
   items.push({ label: "Продать: оружие, броню, детали, ценности и всё остальное", fn: function () {
     if (LAB.supply) LAB.supply.sellMenu({ who: "npc", npc: kind, robot: !!n.robot, name: "Скупка: " + npcName(n) }, function () { tradeMenu(n, kind); });
   } });
-  items.unshift({ label: "У вас " + G.credits + " кредитов", disabled: true, fn: function () {} });
+  /* (3.7, нелогичность) строка-сведение, не «недоступный пункт»; «1 кредит», а не «1 кредитов» */
+  var info0 = "У вас " + crW(G.credits || 0);
+  items.unshift({ label: info0, info: true, keep: true, fn: function () { say(info0 + "."); } });
   return items;
 }
 

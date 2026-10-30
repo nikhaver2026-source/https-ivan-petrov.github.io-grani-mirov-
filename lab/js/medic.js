@@ -123,8 +123,17 @@ function place(ctx) {
      с кофе, едой и напитками и торговцы переходят в ближайшее помещение той же
      зоны (туда, куда так же можно дойти) и остаются какими были. */
   var SHOP = { vending: 1, coffee: 1, snacks: 1, drinks: 1 };
-  var trader = function (n) { return n.robot ? (LAB.ROBOT_NPC[n.type] || {}).trade === "ammo" : !!(LAB.PROFS[n.prof] || {}).trade; };
+  /* (3.7, нелогичность) торговец-робот — любой, у кого есть окно торговли (не целитель): прежде
+     торговцем считался только продавец батарей, и Старый косарь оставался у капсулы */
+  var trader = function (n) { if (n.robot) { var rd0 = LAB.ROBOT_NPC[n.type] || {}; return !!rd0.trade && !rd0.heal; } return !!(LAB.PROFS[n.prof] || {}).trade; };
   var ctr = function (rm) { return [(rm.x0 + rm.x1) / 2, (rm.y0 + rm.y1) / 2]; };
+  /* (3.7, нелогичность) житель переходит только туда, где спокойно: без врагов, не к лестницам,
+     лифту и прибытию, не в излучение и газ, не к телам и не за тайную дверь. Нет такого
+     помещения — остаётся у капсулы (прежде торговцы попадали к отрядам тварей и стражам поста) */
+  var foeRoom0 = {}, bodyRoom0 = {}, open0 = LAB.openRooms ? LAB.openRooms(fl) : null;
+  fl.foes.forEach(function (f) { if (f.room != null && f.room >= 0) foeRoom0[f.room] = 1; var rf = fl.room[f.y * W + f.x]; if (rf >= 0) foeRoom0[rf] = 1; });
+  fl.objs.forEach(function (o) { if (o.type === "corpse" && o.room != null && o.room >= 0) bodyRoom0[o.room] = 1; });
+  var calmFor = function (i) { var m = fl.rooms[i]; return !!m && !foeRoom0[i] && i !== ctx.U && i !== fl.D && i !== fl.E && !m.rad && !m.gas && !bodyRoom0[i] && (!open0 || !!open0[i]); };
   Object.keys(capRooms).forEach(function (rk) {
     var rid = +rk, rm = fl.rooms[rid], c0 = ctr(rm);
     var away = fl.objs.filter(function (o) { return o.room === rid && SHOP[o.type]; }).concat(fl.npcs.filter(function (n) { return n.room === rid && trader(n); }));
@@ -136,8 +145,8 @@ function place(ctx) {
     /* сперва большие помещения этажа, потом кабинеты у коридоров; ближние — раньше */
     to.sort(function (a, b) { var p = ctr(fl.rooms[a]), q = ctr(fl.rooms[b]); return (fl.rooms[a].annex ? 1 : 0) - (fl.rooms[b].annex ? 1 : 0) || Math.abs(p[0] - c0[0]) + Math.abs(p[1] - c0[1]) - Math.abs(q[0] - c0[0]) - Math.abs(q[1] - c0[1]) || a - b; });
     away.forEach(function (t) {
-      var npc = fl.npcs.indexOf(t) >= 0;
-      for (var i = 0; i < to.length && i < 30; i++) if (ctx.moveTo(t, to[i], npc)) { if (npc) used[t.y * W + t.x] = 1; return; }
+      var npc = fl.npcs.indexOf(t) >= 0, to2 = npc ? to.filter(calmFor) : to;
+      for (var i = 0; i < to2.length && i < 30; i++) if (ctx.moveTo(t, to2[i], npc)) { if (npc) used[t.y * W + t.x] = 1; return; }
     });
   });
 
@@ -211,21 +220,37 @@ function place(ctx) {
     addItemAt({ kind: "item", item: id, n: n, n0: n, med26: 1 }, rm.id, r.pick(cells));
   }
 
-  /* 4. Целитель — свой на каждой глубине; встаёт в медицинской комнате, нет её — в тихой */
+  /* 4. Целитель — свой на каждой глубине; встаёт в медицинской комнате, нет её — в тихой.
+     (3.7, нелогичность) Не в посту дезактивации (душевая — не врачебный кабинет: прежде туда
+     вставала половина целителей — охрана ОКО обходит такие посты), не в излучении и газе
+     (пока лечат, облучаешься), не среди тел и не за тайной дверью; главные помещения
+     без врагов — раньше кабинетов у коридоров. */
   if (L === 1 && F <= 2) return;
-  var med = [], quiet = [];
+  var med = [], quiet = [], medA = [], quietA = [], open4 = open0;
   fl.rooms.forEach(function (rm, i) {
     if (!rm || capRooms[i] || i === fl.secret || rm.hidden) return;
     var kind = roomDef(rm).kind;
-    if (kind === "supply" || kind === "trial" || kind === "hazard") return;
-    var foes = fl.foes.some(function (f) { return fl.room[f.y * W + f.x] === rm.id; });
+    if (kind === "supply" || kind === "trial" || kind === "hazard" || kind === "decon") return;
+    /* и не у лестниц, лифта и прибытия: там посты ОКО и их смена */
+    if (rm.rad || rm.gas || bodyRoom0[i] || (open4 && !open4[i]) || i === ctx.U || i === fl.D || i === fl.E) return;
+    var foes = fl.foes.some(function (f) { return f.room === rm.id || fl.room[f.y * W + f.x] === rm.id; });
     if (foes || !cellsOf(rm).length) return;
-    if (roomKind(fl, rm) === "med") med.push(rm); else quiet.push(rm);
+    var isMed = roomKind(fl, rm) === "med";
+    if (rm.annex) (isMed ? medA : quietA).push(rm); else (isMed ? med : quiet).push(rm);
   });
-  if (!r.chance(med.length >= 3 ? 0.7 : 0.5)) return;
-  var spot = med.length ? r.pick(med) : quiet.length ? r.pick(quiet) : null;
+  if (!r.chance(med.length + medA.length >= 3 ? 0.7 : 0.5)) return;
+  var spot = med.length ? r.pick(med) : quiet.length ? r.pick(quiet) : medA.length ? r.pick(medA) : quietA.length ? r.pick(quietA) : null;
   if (!spot) return;
   var pid = r.pick(BY_ERA[e]);
+  /* (3.7, нелогичность) не второй такой же на этаже: целитель-медик рядом с выжившим медиком
+     рассказывал те же истории, бывало и два медицинских дроида — тогда другой целитель глубины */
+  var dupHeal = function (p) {
+    var P0 = HEALERS[p]; if (!P0) return true;
+    if (P0.kind === "human") { var pf0 = P0.prof || "Медик"; return fl.npcs.some(function (q) { return !q.robot && q.prof === pf0; }); }
+    var ty0 = LAB.ROBOT_NPC[p] ? p : "meddroid";
+    return fl.npcs.some(function (q) { return q.robot && q.type === ty0; });
+  };
+  if (dupHeal(pid)) { var alt = BY_ERA[e].filter(function (p) { return p !== pid && !dupHeal(p); }); if (!alt.length) return; pid = alt[0]; }
   var cell = null;
   for (var tries = 0; tries < 8 && !cell; tries++) { var fc = ctx.freeCell(spot.id); if (fc && freeAt(fc[0], fc[1])) cell = fc; }
   if (!cell) return;
@@ -246,7 +271,11 @@ var HEALERS = {
   hive:     { n: "Улей-лекарь", kind: "alive", k: 0.85, pay: "gel", svc: "" },
   mirror:   { n: "Зеркальный лекарь", kind: "alive", k: 1, pay: "nerve", svc: "neuro" },
   surgeon:  { n: "Хирургический автомат «Скальпель»", kind: "machine", k: 1.1, pay: "parts", svc: "tox rad" },
-  keeper:   { prof: "Хранительница колодца", g: "f", kind: "human", k: 1.05, pay: "time", svc: "tox rad neuro" }
+  keeper:   { prof: "Хранительница колодца", g: "f", kind: "human", k: 1.05, pay: "time", svc: "tox rad neuro" },
+  /* (3.7, нелогичность) дроид-смотритель и «Мята» лечат по-своему, а не как безымянный дроид
+     «Протокол помощи активен»: смотритель снимает тяжесть тишиной, «Мята» — соком первого дерева */
+  niche:    { n: "Дроид-смотритель тихих ниш", kind: "machine", k: 0.95, pay: "bat", svc: "neuro" },
+  mint:     { n: "Садовник «Мята»", kind: "machine", k: 0.95, pay: "gel", svc: "tox" }
 };
 var BY_ERA = [["meddroid", "medic"], ["rescuer", "meddroid"], ["hive", "medic"], ["mirror", "medic"], ["surgeon", "medic"], ["keeper", "medic"]];
 /* слова при встрече (окно лечения) и в разговоре */
@@ -258,7 +287,9 @@ var GREET = {
   hive: "Тёплый улей в стене гудит тише: пчёлы-химеры узнают вас по запаху крови. Улей лечит за кредиты или за биогель — им он кормит личинок.",
   mirror: "Ваше отражение в белом халате улыбается: «Ваши раны я знаю лучше вас — они же мои. Кредиты возьму, если вам так спокойнее, но лучше отдайте немного покоя — и я заберу боль».",
   surgeon: "Протокол «Скальпель». Пациент, лягте на стол. Оплата — кредиты или детали.",
-  keeper: "У колодца тишины время течёт медленно. Ложитесь — и раны затянутся, пока идут часы. Беру кредиты или время: его здесь слишком много."
+  keeper: "У колодца тишины время течёт медленно. Ложитесь — и раны затянутся, пока идут часы. Беру кредиты или время: его здесь слишком много.",
+  niche: "Тише. Ложитесь, я перевяжу. Лечение — за кредиты или энергобатареи: заряд нужен, чтобы обходить ниши. Тяжесть в голове тоже сниму — тишиной.",
+  mint: "Садовник «Мята». Полив, перевязка, сок первого дерева: он и кровь от отравы чистит. Лечу за кредиты или за биогель — им я кормлю дерево."
 };
 var LINES = {
   rescuer: ["Под землёй главное — не паниковать и считать вдохи.", "Мы вытаскивали людей из-под завалов, а теперь вот — вас. Работа та же.", "Детали для насоса — лучшая плата. Кредитами тут сыт не будешь.", "Обвал слышно за минуту: сначала сыплется пыль, потом стонет крепь."],
@@ -269,8 +300,8 @@ var LINES = {
 };
 /* люди-целители — профессии выживших (в случайных встречах этажа их нет: nosurv) */
 put(LAB.PROFS, {
-  "Горноспасатель": { trade: "med", beacon: "npc_med", heal: "rescuer", nosurv: true },
-  "Хранительница колодца": { trade: "med", beacon: "npc_med", heal: "keeper", nosurv: true }
+  "Горноспасатель": { trade: "med", beacon: "npc_med", heal: "rescuer", arc: "med", nosurv: true },
+  "Хранительница колодца": { trade: "med", beacon: "npc_med", heal: "keeper", arc: "med", nosurv: true }
 });
 LAB.STORIES = LAB.STORIES || {};
 put(LAB.STORIES, { "Горноспасатель": LINES.rescuer, "Хранительница колодца": LINES.keeper });
@@ -278,7 +309,7 @@ put(LAB.STORIES, { "Горноспасатель": LINES.rescuer, "Хранит�
 put(LAB.ROBOT_NPC, {
   hive: { n: "Улей-лекарь", trade: "med", beacon: "npc_med", alive: true, heal: "hive", bye: "Улей провожает вас ровным гулом.", desc: "Тёплый живой улей в стене: соты, мёд и пчёлы-химеры, которые садятся на раны." },
   mirror: { n: "Зеркальный лекарь", trade: "med", beacon: "npc_med", alive: true, heal: "mirror", bye: "Отражение кивает вам вслед и снова замирает в стекле.", desc: "Ваше отражение в белом халате: стоит в старом зеркале и ждёт пациента." },
-  surgeon: { n: "Хирургический автомат «Скальпель»", trade: "med", beacon: "npc_robot", heal: "surgeon", desc: "Операционный стол на шарнирах с дюжиной манипуляторов. Прошивку ОКО он сжёг сам." }
+  surgeon: { n: "Хирургический автомат «Скальпель»", trade: "med", beacon: "npc_med", heal: "surgeon", bye: "Протокол «Скальпель» завершён. Следующий пациент.", desc: "Операционный стол на шарнирах с дюжиной манипуляторов. Прошивку ОКО он сжёг сам." }
 });
 if (LAB.ROBOT_NPC && LAB.ROBOT_NPC.meddroid && !LAB.ROBOT_NPC.meddroid.heal) LAB.ROBOT_NPC.meddroid.heal = "meddroid";
 LAB.ROBOT_LINES = LAB.ROBOT_LINES || {};
@@ -292,6 +323,9 @@ function makeHealer(r, pid, L, F, rm, c, fl) {
     var prof = P.prof || "Медик";
     var female = P.g === "f" ? true : P.g === "m" ? false : r.chance(0.5);
     var first = r.pick(female ? LAB.NAMES.f : LAB.NAMES.m), last = r.pick(female ? LAB.NAMES.sf : LAB.NAMES.sm);
+    /* (3.7, нелогичность) не тёзка того, кто уже живёт на этаже */
+    var nameTaken = function () { return fl.npcs.some(function (q) { return q.n === first + " " + last; }); };
+    for (var tn = 0; tn < 20 && nameTaken(); tn++) { first = r.pick(female ? LAB.NAMES.f : LAB.NAMES.m); last = r.pick(female ? LAB.NAMES.sf : LAB.NAMES.sm); }
     return { id: id, robot: false, n: first + " " + last, first: first, last: last, female: female, prof: prof, heal: pid,
       x: c[0], y: c[1], room: rm.id, tier: 1 + Math.floor(L / 3), key: key, life: r.int(0, 99), view: r.int(0, 99) };
   }
@@ -333,7 +367,9 @@ function vendPrice(id) {
   return Math.max(2, Math.round(base * pk()));
 }
 function vendItems() {
-  var g = G(), items = [{ label: "У вас " + cr(g.credits || 0) + ". Аптечек с собой: " + kitsFor(g.L).map(function (id) { return g.inv[id] || 0; }).reduce(function (a, b) { return a + b; }, 0) + ", энергобатарей: " + (g.ammo.energy || 0) + ".", disabled: true, fn: function () {} }];
+  /* (3.7, нелогичность) строка-сведение — не «недоступный пункт»: чтец не добавляет «недоступно» */
+  var g = G(), info0 = "У вас " + cr(g.credits || 0) + ". Аптечек с собой: " + kitsFor(g.L).map(function (id) { return g.inv[id] || 0; }).reduce(function (a, b) { return a + b; }, 0) + ", энергобатарей: " + (g.ammo.energy || 0) + ".";
+  var items = [{ label: info0, info: true, keep: true, fn: function () { say(info0); } }];
   kitsFor(g.L).forEach(function (id) {
     var d = LAB.ITEMS[id], p = vendPrice(id);
     items.push({ label: d.n + " — " + cr(p) + ". " + d.desc, fn: function () { gm().buy(id, p); } });
@@ -348,17 +384,18 @@ function vendMenu(o) {
 }
 
 /* ── целитель ── */
+/* (3.7, нелогичность) лечит тот, у кого это записано (heal у жителя, профессии или робота): прежде
+   врачом считался любой, кто торгует лекарствами, — поселенец «Садитесь, посмотрю» и дрон «Голубь».
+   Робот с лекарствами без целителя — торговец (окно «Торговля», game.js). */
 function profileOf(n) {
   if (!n) return null;
   if (n.heal && HEALERS[n.heal]) return n.heal;
   if (n.robot) {
     var rd = LAB.ROBOT_NPC[n.type] || {};
-    if (rd.heal && HEALERS[rd.heal]) return rd.heal;
-    return rd.trade === "med" ? "droid" : null;
+    return rd.heal && HEALERS[rd.heal] ? rd.heal : null;
   }
   var pd = LAB.PROFS[n.prof] || {};
-  if (pd.heal && HEALERS[pd.heal]) return pd.heal;
-  return pd.trade === "med" ? "medic" : null;
+  return pd.heal && HEALERS[pd.heal] ? pd.heal : null;
 }
 function title(n) { return gm().npcName ? gm().npcName(n) : n.n; }
 /* сколько стоит в кредитах: от недостающего здоровья, глубины и режима */
@@ -372,10 +409,13 @@ function partHp() { var g = G(); return Math.min(g.hpMax - g.hp, Math.max(25, Ma
 var FOOD = ["ration", "stew", "mre", "fishcan", "protein", "crackers", "noodles", "nuts", "choco", "bread", "porridge", "sausage", "glucose"];
 var GEL = ["gel", "reagent"];
 var PARTS = ["scrap", "wire", "chip", "relay", "cap", "cell", "servo", "lens", "magnet", "optic"];
+/* (3.7, нелогичность) еда и детали в оплату идут по цене, по которой их продают жители (с харизмой
+   и скидкой «Сопротивления»): прежде — по полной, и купленное у повара дешевле платило за лечение дороже */
+function npcK() { var m = gm(); return 0.9 * (m && m.chaK ? m.chaK() : 1) * (m && m.resK ? m.resK() : 1); }
 function goodsPay(list, credits) {
-  var g = G(), need = credits, plan = {}, ids = list.filter(function (id) { return LAB.ITEMS[id] && LAB.ITEMS[id].price; });
+  var g = G(), need = credits, plan = {}, ids = list.filter(function (id) { return LAB.ITEMS[id] && LAB.ITEMS[id].price; }), nk = npcK();
   for (var i = 0; i < ids.length && need > 0; i++) {
-    var id = ids[i], v = Math.max(1, LAB.ITEMS[id].price * pk()), have = g.inv[id] || 0;
+    var id = ids[i], v = Math.max(1, LAB.ITEMS[id].price * pk() * nk), have = g.inv[id] || 0;
     while (need > 0 && have > (plan[id] || 0)) { plan[id] = (plan[id] || 0) + 1; need -= v; }
   }
   var parts = Object.keys(plan).map(function (id) { return LAB.ITEMS[id].n + " — " + plan[id]; });
@@ -386,7 +426,7 @@ function goodsPay(list, credits) {
    сами (priceK), а батареи, еда, детали, покой и время — по этой мере. */
 function altK() { var dk = LAB.dk ? LAB.dk() : {}; return (dk.price || 1) * (1 + 0.1 * era(G().L)); }
 function altPay(P, credits, hp) {
-  var g = G(), b = g.body || {}, ak = altK();
+  var g = G(), b = g.body || {}, ak = altK(), cr0 = credits;
   credits = credits * ak;
   if (P.pay === "bat") {
     var nb = Math.max(1, Math.ceil(credits / ((LAB.AMMO.energy.price || 30) * pk()))), hv = g.ammo.energy || 0;
@@ -402,8 +442,11 @@ function altPay(P, credits, hp) {
   if (P.pay === "nerve") {
     var cost = Math.max(5, Math.min(60, Math.round(hp / g.hpMax * 50 * ak))), now = Math.round(b.neuro || 0), wk = Math.ceil(cost / 2), wn = Math.round(b.wake == null ? 100 : b.wake);
     var nOk = now + cost <= 85, wOk = wn - wk >= 5;
+    /* (3.7, нелогичность) отданный покой — долг перед отражением: снять ту же нейронагрузку у него
+       кредитами стоит не меньше, чем лечение кредитами (nerveDebt); долг тает вместе с нагрузкой
+       (game.js, bodyTick). Прежде «покой, потом кредиты за покой» выходило вдвое дешевле лечения */
     return { ok: nOk && wOk, label: "своим покоем: нейронагрузка плюс " + cost + " (сейчас " + now + (nOk ? "" : ", это слишком много") + "), бодрость минус " + wk + " (сейчас " + wn + (wOk ? "" : ", сил не хватит") + ")",
-      take: function () { b.neuro = Math.min(100, (b.neuro || 0) + cost); b.wake = Math.max(0, (b.wake == null ? 100 : b.wake) - wk); } };
+      take: function () { b.neuro = Math.min(100, (b.neuro || 0) + cost); b.wake = Math.max(0, (b.wake == null ? 100 : b.wake) - wk); b.nerveN = (b.nerveN || 0) + cost; b.nerveCr = (b.nerveCr || 0) + cr0; } };
   }
   /* (3.5) время идёт наяву: сытость и бодрость тратятся (прежде — как во сне в капсуле,
      даром); и пока на этаже тревога или рядом враг, часами лечиться некогда */
@@ -427,10 +470,25 @@ function payCredits(p) {
   g.credits -= p;
   return true;
 }
+/* (3.7, нелогичность) в бою не лечат: окно ставит мир на паузу, и медик вылечивал до конца, пока
+   охранный робот шёл на вас в двух клетках (оплату временем и переодевание бой и прежде не пускал) */
+function fightNow() {
+  if (!(LAB.combat && LAB.combat.danger && LAB.combat.danger())) return false;
+  if (LAB.UI) LAB.UI.error();
+  say("Рядом враги — не до лечения.");
+  return true;
+}
+/* долг за отданный отражению покой: снять ту же нейронагрузку стоит не меньше лечения кредитами */
+function nerveDebt(P, b) {
+  if (P.pay !== "nerve" || !(b.nerveN > 0) || !(b.nerveCr > 0)) return 0;
+  return Math.round(b.nerveCr * Math.min(1, (b.neuro || 0) / b.nerveN));
+}
 function healItems(n) {
   var pid = profileOf(n), P = HEALERS[pid], g = G(), b = g.body || {}, items = [];
   var miss = g.hpMax - g.hp, part = partHp(), svc = " " + P.svc + " ";
-  items.push({ label: "Здоровье " + g.hp + " из " + g.hpMax + ". У вас " + cr(g.credits || 0) + ".", disabled: true, fn: function () {} });
+  /* (3.7, нелогичность) строка-сведение, а не «недоступный пункт» */
+  var info0 = "Здоровье " + g.hp + " из " + g.hpMax + ". У вас " + cr(g.credits || 0) + ".";
+  items.push({ label: info0, info: true, keep: true, fn: function () { say(info0); } });
   if (miss > 0) {
     var pf = healCost(P, miss);
     items.push({ label: "Вылечить полностью: плюс " + miss + " здоровья, кровотечение и отравление — " + cr(pf), fn: function () {
@@ -475,8 +533,12 @@ function healItems(n) {
   if (svc.indexOf(" rad ") >= 0 && (b.rad || 0) >= 5) { var pr = svcCost(P, 10 + b.rad * 0.35); items.push({ label: "Вывести облучение: " + Math.round(b.rad) + " — " + cr(pr), fn: function () { if (!payCredits(pr)) return; b.rad = 0; A("play", "heal"); say("Лучевая нагрузка снята."); done(); } }); }
   /* (3.0) мутаген: капельница с ингибитором — до сорока за раз; дешевле антимутагена не бывает */
   if (svc.indexOf(" tox ") >= 0 && (b.mut || 0) >= 5) { var pm = svcCost(P, 15 + b.mut * 0.5); items.push({ label: "Вывести мутаген: мутация " + Math.round(b.mut) + ", минус сорок за раз — " + cr(pm), fn: function () { if (!payCredits(pm)) return; b.mut = Math.max(0, b.mut - 40); A("play", "inject"); say("Капельница с ингибитором: мутация " + Math.round(b.mut) + "."); done(); } }); }
-  if (svc.indexOf(" neuro ") >= 0 && (b.neuro || 0) >= 10) { var pn = svcCost(P, 8 + b.neuro * 0.3); items.push({ label: "Снять нейронагрузку: " + Math.round(b.neuro) + " — " + cr(pn), fn: function () { if (!payCredits(pn)) return; b.neuro = 0; A("play", "heal"); say("Нейронагрузка снята: в голове тихо."); done(); } }); }
-  if (miss <= 0 && !g.st.bleed && !g.st.poison) items.push({ label: "Вы здоровы: лечить нечего", disabled: true, fn: function () {} });
+  if (svc.indexOf(" neuro ") >= 0 && (b.neuro || 0) >= 10) { var pn = svcCost(P, 8 + b.neuro * 0.3) + nerveDebt(P, b); items.push({ label: "Снять нейронагрузку: " + Math.round(b.neuro) + " — " + cr(pn), fn: function () { if (!payCredits(pn)) return; b.neuro = 0; b.nerveN = 0; b.nerveCr = 0; A("play", "heal"); say("Нейронагрузка снята: в голове тихо."); done(); } }); }
+  /* (3.7, нелогичность) «здоровы» — только когда лечить и правда нечего: прежде строка стояла рядом
+     с «Вывести токсины» и «Вывести мутаген» */
+  if (items.length === 1) items.push({ label: "Вы здоровы: лечить нечего", info: true, keep: true, fn: function () { say("Вы здоровы: лечить нечего."); } });
+  /* в бою — ни одной услуги */
+  items.forEach(function (it, i) { if (i === 0 || it.info) return; var f0 = it.fn; it.fn = function () { if (fightNow()) return; f0(); }; });
   items.push({ label: "Отойти", fn: function () {} });
   return items;
 }
@@ -484,10 +546,12 @@ function done() { UIx("refresh"); if (gm().autosaveSoon) gm().autosaveSoon(); }
 function healMenu(n) {
   var pid = profileOf(n);
   if (!pid) return false;
+  if (fightNow()) return true;
   var greet = GREET[pid] || GREET.droid, P = HEALERS[pid];
   var build = function () { return healItems(n); };
-  UIx("menu", "Лечение: " + title(n), build(), { keep: true, rebuild: build, intro: greet });
-  if (P.kind === "machine") A("play", "term_ok");
+  /* (3.7, нелогичность) машина здоровается голосом машины: прежде её приветствие читал обычный голос окна */
+  if (P.kind === "machine") { A("play", "term_ok"); say(greet, { robot: true }); UIx("menu", "Лечение: " + title(n), build(), { keep: true, rebuild: build }); }
+  else UIx("menu", "Лечение: " + title(n), build(), { keep: true, rebuild: build, intro: greet });
   return true;
 }
 

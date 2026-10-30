@@ -117,15 +117,15 @@ function gradeAt(L, r) {
    граната (combat.throwGrenade). mods — какие модификации допустимы;
    mut — ткани с мутагеном дают состав «на мутагене» (мутация при приёме). */
 var PROD = {
-  c_antimut:   { n: "Антимутаген", icon: "💉", kind: "use", cat: "med", br: "pharm", ce: "antimut", price: 70, depth: 2, mods: ["strong", "clean"], desc: "Ингибитор мутагена на щёлочи и конденсате: мутация минус тридцать." },
-  c_adapt:     { n: "Сыворотка адаптации", icon: "🧬", kind: "use", cat: "med", br: "bio", ce: "adapt", price: 60, depth: 2, mods: ["long"], desc: "Полторы минуты туман мутагена не берёт вас, а мутация не растёт." },
-  c_controlled:{ n: "Сыворотка управляемой мутации", icon: "🧬", kind: "use", cat: "med", br: "bio", ce: "ctrl", price: 140, depth: 5, mods: ["long", "strong"], mut: 1, desc: "Пять минут — сила в руках, тварям без разума вы свой, раны затягиваются; лекарства не слабеют. Мутация плюс пять." },
-  c_clarity:   { n: "Ноотроп «Ясность»", icon: "💊", kind: "use", cat: "med", br: "pharm", price: 40, depth: 2, mods: ["strong"], mut: 1, desc: "Нейронагрузка минус 25, бодрость плюс 20, и слух обостряется — «Эхо» прослушивает всё вокруг.", fx: { neuro: -25, wake: 20, scan: 1 } },
-  c_regen:     { n: "Регенерирующая сыворотка", icon: "💉", kind: "use", cat: "med", br: "pharm", ce: "regen", price: 60, depth: 3, mods: ["long", "strong"], mut: 1, desc: "Полминуты раны затягиваются сами — около шестидесяти здоровья." },
-  c_antitox:   { n: "Универсальный антитоксин", icon: "🧪", kind: "use", cat: "med", br: "tox", price: 45, depth: 2, mods: ["long", "strong"], desc: "Снимает отравление, выводит 60 токсинов, и минуту яды, споры и туман не действуют.", fx: { cure: true, detox: 60, antitox: 120 } },
-  c_repel:     { n: "Репеллент", icon: "🧴", kind: "use", br: "tox", ce: "repel", price: 35, depth: 2, mods: ["long"], desc: "Минуту твари без разума не чуют вас дальше шага. Разумных, стражей и машин не обманет." },
-  c_coat_tox:  { n: "Ядовитая смазка", icon: "🦂", kind: "use", br: "tox", ce: "coat", price: 40, depth: 1, mods: ["long", "strong"], desc: "Для клинка, дубинки или стальных пуль: пятнадцать попаданий травят тварей и бьют их на пятую часть сильнее." },
-  c_coat_acid: { n: "Кислотная смазка", icon: "🟢", kind: "use", br: "tox", ce: "coat", price: 55, depth: 3, mods: ["long", "strong"], desc: "Для оружия ближнего боя и стальных пуль: пятнадцать попаданий сквозь броню, а машин — сильнее." },
+  c_antimut:   { n: "Антимутаген", icon: "💉", kind: "use", cat: "med", br: "pharm", ce: "antimut", price: 70, depth: 2, mods: ["strong", "clean"], desc: "Ингибитор мутагена на щёлочи и конденсате: мутация минус {m:30}." },
+  c_adapt:     { n: "Сыворотка адаптации", icon: "🧬", kind: "use", cat: "med", br: "bio", ce: "adapt", price: 60, depth: 2, mods: ["long"], desc: "{T:180} туман мутагена не берёт вас, а мутация не растёт." },
+  c_controlled:{ n: "Сыворотка управляемой мутации", icon: "🧬", kind: "use", cat: "med", br: "bio", ce: "ctrl", price: 140, depth: 5, mods: ["long", "strong"], mut: 1, mutAdd: 5, desc: "{T:600} — сила в руках, тварям без разума вы свой, раны затягиваются; лекарства не слабеют." },
+  c_clarity:   { n: "Ноотроп «Ясность»", icon: "💊", kind: "use", cat: "med", br: "pharm", price: 40, depth: 2, mods: ["strong"], mut: 1, desc: "Нейронагрузка минус {m:25}, бодрость плюс {m:20}, и слух обостряется — «Эхо» прослушивает всё вокруг.", fx: { neuro: -25, wake: 20, scan: 1 } },
+  c_regen:     { n: "Регенерирующая сыворотка", icon: "💉", kind: "use", cat: "med", br: "pharm", ce: "regen", price: 60, depth: 3, mods: ["long", "strong"], mut: 1, desc: "{T:60} раны затягиваются сами — около {rg:60:2:2} здоровья." },
+  c_antitox:   { n: "Универсальный антитоксин", icon: "🧪", kind: "use", cat: "med", br: "tox", price: 45, depth: 2, mods: ["long", "strong"], desc: "Снимает отравление, выводит {m:60} токсинов, и {t:120} яды, споры и туман не действуют.", fx: { cure: true, detox: 60, antitox: 120 } },
+  c_repel:     { n: "Репеллент", icon: "🧴", kind: "use", br: "tox", ce: "repel", price: 35, depth: 2, mods: ["long"], desc: "{T:120} твари без разума не чуют вас дальше шага. Разумных, стражей и машин не обманет." },
+  c_coat_tox:  { n: "Ядовитая смазка", icon: "🦂", kind: "use", br: "tox", ce: "coat", price: 40, depth: 1, mods: ["long", "strong"], desc: "Для клинка, дубинки или стальных пуль: {n:15:попадание,попадания,попаданий} травят тварей и бьют их {pc:20} сильнее." },
+  c_coat_acid: { n: "Кислотная смазка", icon: "🟢", kind: "use", br: "tox", ce: "coat", price: 55, depth: 3, mods: ["long", "strong"], desc: "Для оружия ближнего боя и стальных пуль: {n:15:попадание,попадания,попаданий} сквозь броню, а машин — {pc:15} сильнее." },
   c_toxgren:   { n: "Ядовитая граната", icon: "☠️", kind: "throw", br: "tox", price: 50, depth: 2, mods: ["long", "strong", "clean"], desc: "Травит всех на шаг вокруг, над местом падения долго висит ядовитый туман. Машинам почти не вредит.",
     gren: { dmg: 10, r: 1, dt: "bio", gas: 14, self: true, range: 5, fuse: 900, loud: 5 } },
   c_acidflask: { n: "Кислотная колба", icon: "⚗️", kind: "throw", br: "tox", price: 55, depth: 3, mods: ["long", "strong", "clean"], desc: "Лопается и разъедает панцири и броню всем на шаг вокруг.",
@@ -134,10 +134,10 @@ var PROD = {
     gren: { dmg: 18, r: 2, dt: "bio", gas: 20, stun: 4, self: true, range: 6, fuse: 1000, loud: 6 } },
   c_inhibit:   { n: "Ингибиторная граната", icon: "🟪", kind: "throw", br: "tox", price: 90, depth: 3, mods: ["long", "strong"], desc: "Облако ингибитора на два шага: мутаген в тварях гаснет — они слабеют, их бьют сильнее, и идут они вяло. Машинам и вам — ничего.",
     gren: { dmg: 6, r: 2, dt: "bio", inhibit: 1, slow: 8, self: false, range: 6, fuse: 900, loud: 4 } },
-  c_fuelamp:   { n: "Топливная ампула", icon: "🔋", kind: "use", br: "energy", price: 35, depth: 3, mods: ["strong"], desc: "Энергия имплантов плюс 50, бодрость плюс 5. Нервы не нагружает.", en: 50, wake: 5 },
-  c_coolgel:   { n: "Охлаждающий гель", icon: "❄️", kind: "use", br: "energy", ce: "cool", price: 30, depth: 1, mods: ["long"], desc: "Мгновенно остужает оружие в руках, и полминуты оно не греется." },
-  c_overcharge:{ n: "Перегрузочная капсула", icon: "⚡", kind: "use", br: "energy", ce: "over", price: 60, depth: 2, mods: ["long", "strong"], desc: "В энергоблок оружия: следующие шесть выстрелов на батареях — в полтора раза сильнее." },
-  c_gunoil:    { n: "Оружейная смазка", icon: "🛢️", kind: "use", br: "energy", ce: "oil", price: 30, depth: 1, mods: ["strong"], desc: "Оружие в руках чище и надёжнее: плюс двадцать к состоянию, не выше девяноста." },
+  c_fuelamp:   { n: "Топливная ампула", icon: "🔋", kind: "use", br: "energy", price: 35, depth: 3, mods: ["strong"], desc: "Энергия имплантов плюс {m:50}, бодрость плюс {m:5}. Нервы не нагружает.", en: 50, wake: 5 },
+  c_coolgel:   { n: "Охлаждающий гель", icon: "❄️", kind: "use", br: "energy", ce: "cool", price: 30, depth: 1, mods: ["long"], desc: "Мгновенно остужает оружие в руках, и {t:60} оно не греется." },
+  c_overcharge:{ n: "Перегрузочная капсула", icon: "⚡", kind: "use", br: "energy", ce: "over", price: 60, depth: 2, mods: ["long", "strong"], desc: "В энергоблок оружия: следующие {n:6:выстрел,выстрела,выстрелов} на батареях — {over} сильнее." },
+  c_gunoil:    { n: "Оружейная смазка", icon: "🛢️", kind: "use", br: "energy", ce: "oil", price: 30, depth: 1, mods: ["strong"], desc: "Оружие в руках чище и надёжнее: плюс {m:20} к состоянию, не выше девяноста." },
   c_smoke:     { n: "Дымовая шашка", icon: "🌫️", kind: "throw", br: "pyro", price: 30, depth: 1, mods: ["long"], desc: "На два шага вокруг враги и камеры вас теряют, а машины путаются. Урона нет.",
     gren: { dmg: 0, r: 2, dt: "kinetic", smoke: true, blind: 16, confuse: 4, self: false, range: 5, fuse: 700, loud: 3 } },
   c_flash:     { n: "Фосфорная вспышка", icon: "🎆", kind: "throw", br: "pyro", price: 45, depth: 4, mods: ["long"], desc: "Вспышка слепит всех на два шага вокруг, твари замирают. Урона нет, вас не заденет.",
@@ -150,18 +150,18 @@ var PROD = {
   /* (3.0) подрывной заряд: соли-окислитель, масло-горючее, провод запала. Только у химического
      стола и на этаже с заваленной лестницей (world.js, шаг 26): в прилавках его нет (src) */
   c_blast:     { n: "Подрывной заряд", icon: "💥", kind: "use", br: "pyro", ce: "blast", price: 50, depth: 1, mods: [], src: "craft", desc: "Шашка горноспасателей: разносит завал на лестнице или в проходе. Запал горит шесть секунд — отойдите: на два шага вокруг заденет. Слышно на весь этаж." },
-  c_salve:     { n: "Хитиновая мазь", icon: "🐚", kind: "use", br: "bio", ce: "salve", price: 45, depth: 2, mods: ["long", "strong"], mut: 1, desc: "Схватывается на коже коркой: щит на 30 урона, держится полминуты." },
+  c_salve:     { n: "Хитиновая мазь", icon: "🐚", kind: "use", br: "bio", ce: "salve", price: 45, depth: 2, mods: ["long", "strong"], mut: 1, desc: "Схватывается на коже коркой: щит на {m:30} урона, держится {t:60}." },
   c_bait:      { n: "Феромонная приманка", icon: "🍖", kind: "use", br: "bio", ce: "bait", price: 30, depth: 1, mods: ["long"], desc: "Бросьте — твари поблизости пойдут на запах, а вы в другую сторону. Машинам всё равно." },
-  c_culture:   { n: "Культура регенерации", icon: "🧫", kind: "use", cat: "med", br: "bio", ce: "regen2", price: 90, depth: 4, mods: ["long", "strong"], mut: 1, desc: "Две с половиной минуты здоровье понемногу возвращается — до сотни." },
-  c_mutagen:   { n: "Мутагенный стимулятор", icon: "🧬", kind: "use", cat: "med", br: "bio", price: 80, depth: 5, mods: ["long", "strong", "clean"], mut: 1, mutAdd: 10, desc: "Гормоны тварей на конденсате мутагена: здоровье плюс 40, энергия плюс 30 и ускорение. Токсины плюс 25, мутация плюс 10.", fx: { heal: 40, en: 30, haste: 40, tox: 25 } },
-  c_ectoserum: { n: "Сыворотка из взвеси", icon: "✨", kind: "use", cat: "med", br: "bio", price: 160, depth: 6, mods: ["strong"], desc: "Здоровье плюс 150, снимает отравление и кровотечение, нейронагрузку и токсины, энергия плюс 50, мутация минус десять.", fx: { heal: 150, cure: true, en: 50, neuro: -50, detox: 50, stopBleed: true }, mutCut: 10 },
+  c_culture:   { n: "Культура регенерации", icon: "🧫", kind: "use", cat: "med", br: "bio", ce: "regen2", price: 90, depth: 4, mods: ["long", "strong"], mut: 1, desc: "{T:300} здоровье понемногу возвращается — до {rg:300:3:1}." },
+  c_mutagen:   { n: "Мутагенный стимулятор", icon: "🧬", kind: "use", cat: "med", br: "bio", price: 80, depth: 5, mods: ["long", "strong", "clean"], mut: 1, mutAdd: 10, desc: "Гормоны тварей на конденсате мутагена: здоровье плюс {m:40}, энергия плюс {m:30} и ускорение. Токсины плюс {x:25}.", fx: { heal: 40, en: 30, haste: 40, tox: 25 } },
+  c_ectoserum: { n: "Сыворотка из взвеси", icon: "✨", kind: "use", cat: "med", br: "bio", price: 160, depth: 6, mods: ["strong"], desc: "Здоровье плюс {m:150}, снимает отравление и кровотечение, нейронагрузку и токсины, энергия плюс {m:50}, мутация минус {m:10}.", fx: { heal: 150, cure: true, en: 50, neuro: -50, detox: 50, stopBleed: true }, mutCut: 10 },
   /* (3.6) работа руками: составы, которым учит лаборатория */
   c_lockpaste: { n: "Кислотная паста", icon: "🟡", kind: "use", br: "tox", ce: "lockpaste", price: 60, depth: 2, mods: [], desc: "Густая кислотная паста в тюбике: разъедает механизм замка двери или сейфа — тихо, за полминуты. ОКО ничего не услышит. Встаньте у запертой двери или сейфа." },
-  c_fogspray:  { n: "Щелочной аэрозоль", icon: "💨", kind: "use", br: "tox", ce: "fogspray", price: 45, depth: 2, mods: ["long"], desc: "Баллон щелочного раствора: распылите в помещении с мутагенным туманом — мутаген осядет, и четверть часа туман не вернётся." },
+  c_fogspray:  { n: "Щелочной аэрозоль", icon: "💨", kind: "use", br: "tox", ce: "fogspray", price: 45, depth: 2, mods: ["long"], desc: "Баллон щелочного раствора: распылите в помещении с мутагенным туманом — мутаген осядет, и {min:15} туман не вернётся." },
   c_corrode:   { n: "Коррозионная колба", icon: "🧫", kind: "throw", br: "tox", price: 55, depth: 2, mods: ["long", "strong"], desc: "Солёная кислота в тонком стекле: на шаг вокруг машины ржавеют на глазах — броня вдвое слабее, ход вязнет. Тварям почти не вредит.",
     gren: { dmg: 4, r: 1, dt: "acid", corrode: 1, slow: 6, self: false, range: 5, fuse: 800, loud: 4 } },
-  c_smelling:  { n: "Нюхательная соль", icon: "🧂", kind: "use", cat: "med", br: "pharm", ce: "smelling", price: 25, depth: 1, mods: [], desc: "Нашатырь на соли: резкий запах приводит в чувство — снимает оглушение и вязкость в ногах, нейронагрузка минус десять, бодрость плюс пятнадцать." },
-  c_antisept:  { n: "Антисептический раствор", icon: "🫧", kind: "use", cat: "med", br: "pharm", ce: "antisept", price: 25, depth: 1, mods: ["strong"], desc: "Разведённая перекись: промыть раны — кровотечение останавливается, клещ-кровосос отваливается, здоровье плюс восемь." },
+  c_smelling:  { n: "Нюхательная соль", icon: "🧂", kind: "use", cat: "med", br: "pharm", ce: "smelling", price: 25, depth: 1, mods: [], desc: "Нашатырь на соли: резкий запах приводит в чувство — снимает оглушение и вязкость в ногах, нейронагрузка минус {m:10}, бодрость плюс {m:15}." },
+  c_antisept:  { n: "Антисептический раствор", icon: "🫧", kind: "use", cat: "med", br: "pharm", ce: "antisept", price: 25, depth: 1, mods: ["strong"], desc: "Разведённая перекись: промыть раны — кровотечение останавливается, клещ-кровосос отваливается, здоровье плюс {m:8}." },
   c_reveal:    { n: "Проявитель тайнописи", icon: "🖌️", kind: "use", br: "tox", ce: "reveal", price: 40, depth: 1, mods: [], desc: "Йод на растворителе во флаконе с кисточкой: проводят по документу — проступает то, что написано между строк симпатическими чернилами." },
   c_devel:     { n: "Фотопроявитель", icon: "🧴", kind: "use", br: "energy", ce: "devel", price: 30, depth: 1, mods: [], desc: "Проявитель на серебре: с ним и с фиксажем у химического стола проявляют найденные фотоплёнки." },
   c_fixer:     { n: "Фиксаж", icon: "🧴", kind: "use", br: "energy", ce: "fixer", price: 20, depth: 1, mods: [], desc: "Закрепитель для плёнки: без него проявленные кадры чернеют на свету." }
@@ -187,6 +187,46 @@ function vk(g, mod, base) {
 var MAG_FX = { heal: 1, en: 1, shield: 1, detox: 1, wake: 1, neuro: 1 }, DUR_FX = { antitox: 1, haste: 1, cloak: 1 }, SIDE_FX = { tox: 1 };
 var MAG_G = { dmg: 1 }, DUR_G = { gas: 1, burn: 1, blind: 1, confuse: 1, stun: 1, freeze: 1, slow: 1 };
 function prodId(b, g, mod) { return b + (g > 1 ? "_g" + g : "") + (mod ? "_" + mod : ""); }
+/* (3.7, нелогичность) Числа описания — у каждого варианта свои (descOf): {m:N} — сила (N × mag), {x:N} —
+   побочное действие (× side), {md:N} — итог за всё время (× mag × dur), {t:N} и {T:N} — время в тактах по
+   полсекунды (× dur; T — с заглавной), {n:N:форма,форма,форма} — сколько раз (× dur), {min:N} — минуты
+   (× dur), {pc:N} — на сколько процентов сильнее (× mag), {over} — во сколько раз сильнее выстрел перегрузки,
+   {rg:такты:через сколько:по сколько} — сколько всего вернёт регенерация (как chem.tick: такты × dur / шаг × сила).
+   Прежде у вариантов стояли числа базового состава: «выводит 60 токсинов» у того, что выводит сто тридцать,
+   «Токсины плюс 25» у состава «без побочного действия», «Особая чистота: сильнее в полтора раза» при множителе 1,6 */
+var NUMW = ["", "одну", "две", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять", "десять"];
+function plw(n, a, b, c) { n = Math.abs(n) % 100; if (n >= 11 && n <= 14) return c; var m = n % 10; return m === 1 ? a : m >= 2 && m <= 4 ? b : c; }
+function minsW(m) { return m === 1 ? "минуту" : (m <= 10 ? NUMW[m] : String(m)) + " " + plw(m, "минуту", "минуты", "минут"); }
+function durW(ticks) {
+  var s = Math.round(ticks / 2);
+  if (s === 30) return "полминуты";
+  if (s % 60 === 0) return minsW(s / 60);
+  if (s === 90) return "полторы минуты";
+  if (s > 90 && s % 30 === 0 && s <= 630) { var w = Math.floor(s / 60); return NUMW[w] + " с половиной " + (w <= 4 ? "минуты" : "минут"); }
+  return s + " " + plw(s, "секунду", "секунды", "секунд");
+}
+function hourW(m) { return m === 15 ? "четверть часа" : m === 30 ? "полчаса" : m === 45 ? "три четверти часа" : m === 60 ? "час" : m + " " + plw(m, "минуту", "минуты", "минут"); }
+function pcW(v) { return v === 20 ? "на пятую часть" : v === 25 ? "на четверть" : v === 50 ? "наполовину" : "на " + v + " " + plw(v, "процент", "процента", "процентов"); }
+function overW(x) { var r = Math.round(x * 10) / 10; return r === 1.5 ? "в полтора раза" : r === 2 ? "вдвое" : "в " + String(r).replace(".", ",") + " раза"; }
+function descOf(P, k) {
+  var t = String(P.desc || "").replace(/\{rg:(\d+):(\d+):(\d+)\}/g, function (all, tk, e, per) { return String(Math.floor(+tk * k.dur / +e) * Math.max(1, Math.round(+per * k.mag))); }).replace(/\{(md|min|pc|over|T|t|m|x|n)(?::(\d+))?(?::([^}]*))?\}/g, function (all, f, num, forms) {
+    var v = +num || 0;
+    if (f === "m") return String(Math.round(v * k.mag));
+    if (f === "x") return String(Math.round(v * k.side));
+    if (f === "md") return String(Math.round(v * k.mag * k.dur));
+    if (f === "t") return durW(v * k.dur);
+    if (f === "T") return cap1(durW(v * k.dur));
+    if (f === "min") return hourW(Math.round(v * k.dur));
+    if (f === "pc") return pcW(Math.round(v * k.mag));
+    if (f === "over") return overW(1 + 0.5 * k.mag);
+    if (f === "n") { var c = Math.round(v * k.dur), fs = String(forms || "").split(","); return c + " " + plw(c, fs[0], fs[1], fs[2]); }
+    return all;
+  });
+  /* побочного действия нет — нет и фразы о нём («Токсины плюс 0» у состава без побочного действия) */
+  return t.replace(/\s*[^.:]*(?:плюс|минус) 0\./g, "").replace(/^\s+/, "");
+}
+/* составы, которые от сорта не сильнее и не дольше: паста, проявители, термит, подрывной заряд */
+var NOSCALE = { lockpaste: 1, reveal: 1, devel: 1, fixer: 1, thermite: 1, blast: 1 };
 var PV = {}; /* id → { b, g, mod } */
 function makeVariant(b, g, mod) {
   var P = PROD[b], id = prodId(b, g, mod), k = vk(g, mod, P), d = {}, key;
@@ -194,17 +234,21 @@ function makeVariant(b, g, mod) {
   d.n = P.n + GRADE_P[g] + (mod ? ", " + MOD[mod].n : "");
   d.base = b; d.g = g; d.mod = mod || ""; d.vk = k;
   d.price = Math.round(P.price * [1, 1, 1.8, 3][g] * (mod ? 1.35 : 1));
-  d.depth = P.depth + (g - 1);
+  /* (3.7, нелогичность) высший сорт — не раньше сырья своего сорта (как у FAM: второй — с третьего уровня,
+     третий — с восьмого): прежде состав особой чистоты значился с третьего уровня */
+  d.depth = g === 1 ? P.depth : Math.max(P.depth + g - 1, g === 2 ? 3 : 8);
   if (P.ce) d.chem = true;
   if (P.en) d.en = Math.round(P.en * k.mag);
   if (P.wake) d.wake = Math.round(P.wake * k.mag);
   if (P.fx) { d.fx = {}; for (key in P.fx) { var v = P.fx[key]; d.fx[key] = typeof v !== "number" ? v : MAG_FX[key] ? Math.round(v * k.mag) : DUR_FX[key] ? Math.round(v * k.dur) : SIDE_FX[key] ? Math.round(v * k.side) : v; } }
   if (P.gren) { var q = {}; for (key in P.gren) { var w = P.gren[key]; q[key] = typeof w !== "number" ? w : MAG_G[key] ? Math.round(w * k.mag) : DUR_G[key] ? Math.round(w * k.dur) : w; } if (mod === "clean") q.self = false; d.fx = { gren: q }; }
   var notes = [];
-  if (g > 1) notes.push((g === 2 ? "Высокая чистота" : "Особая чистота") + ": сильнее" + (g === 2 ? " на треть" : " в полтора раза") + ".");
+  if (g > 1) notes.push((g === 2 ? "Высокая чистота" : "Особая чистота") + (NOSCALE[P.ce] ? ": действует так же, но ценится дороже." : g === 2 ? ": сильнее и дольше обычного." : ": ещё сильнее и дольше."));
   if (mod) notes.push(cap1(MOD[mod].n) + ": " + MOD[mod].d + ".");
+  /* (3.7, нелогичность) мутация — одной фразой и своим числом (в базовом описании её больше нет): прежде
+     «мутация плюс 10. Мутация плюс 10.», а у сыворотки управляемой мутации обещанной прибавки не было вовсе */
   if (k.mutAdd) notes.push("Мутация плюс " + k.mutAdd + ".");
-  d.desc = P.desc + (notes.length ? " " + notes.join(" ") : "");
+  d.desc = descOf(P, k) + (notes.length ? " " + notes.join(" ") : "");
   PV[id] = { b: b, g: g, mod: mod || "" };
   if (!LAB.ITEMS[id]) LAB.ITEMS[id] = d;
 }
@@ -429,7 +473,8 @@ function give(id, n) {
 }
 function haveExact(need) { var g = G(); for (var k in need) if ((g.inv[k] || 0) < need[k]) return false; return true; }
 function lackExact(need) { var g = G(), s = []; for (var k in need) { var h = g.inv[k] || 0; if (h < need[k]) s.push(low(LAB.ITEMS[k] ? LAB.ITEMS[k].n : k) + " " + h + " из " + need[k]); } return s.join(", "); }
-function matCount() { var g = G(), n = 0; for (var id in MAT) n += g.inv[id] || 0; return n; }
+var CHEM_EXTRA = ["film", "c_report"]; /* (3.7, нелогичность) вещи стола, которые не сырьё, — в разделе «Химия: сырьё» */
+function matCount() { var g = G(), n = 0; for (var id in MAT) n += g.inv[id] || 0; CHEM_EXTRA.forEach(function (id) { n += g.inv[id] || 0; }); return n; }
 
 /* ════════ ХИМИЧЕСКИЙ СТОЛ ════════ */
 var ST = [null,
@@ -715,6 +760,9 @@ function skillMenu() {
 function invMenu() {
   var g = G(), items = [];
   FAM_IDS.forEach(function (f) { units(f).forEach(function (u) { items.push({ label: LAB.ITEMS[u.id].n + ": " + u.n + ". " + (FAM[f].one ? "" : cap1(GRADE_W[u.g]) + ". ") + FAM[f].desc, keep: true, fn: function () { study(f); } }); }); });
+  /* (3.7, нелогичность) фотоплёнка и отчёт об анализе — тоже здесь: прежде их не было ни в одном разделе
+     инвентаря, хотя они лежали в рюкзаке */
+  CHEM_EXTRA.forEach(function (id) { var d = LAB.ITEMS[id]; if (d && g.inv[id] > 0) items.push({ label: d.n + ": " + g.inv[id] + ". " + d.desc, keep: true, fn: function () { say(d.n + ": " + G().inv[id] + ". " + d.desc); } }); });
   if (!items.length) items.push({ label: "Сырья нет. Его дают лаборатории и склады, жидкости машин и ткани тварей.", info: true, keep: true, fn: function () { say("Сырья нет."); } });
   if (level() >= 6) items.push({ label: "Походная химия: простые составы без стола", fn: function () { pocketMenu(); } });
   items.push({ label: line(), info: true, keep: true, fn: function () { say(line()); } });
@@ -903,7 +951,7 @@ function use(id) {
       msg = "Аэрозоль шипит, сладкий воздух тяжелеет: мутаген оседает каплями на пол. " + minsF + " " + pl(minsF, "минуту", "минуты", "минут") + " туман сюда не вернётся."; break;
     case "smelling":
       g.st.slow = 0; g.st.deaf = 0;
-      if (gm().bodyApply) gm().bodyApply({ neuro: -10, wake: 15 }, []);
+      if (gm().bodyApply) gm().bodyApply({ neuro: -Math.round(10 * k.mag), wake: Math.round(15 * k.mag) }, []); /* (3.7, нелогичность) соль высокой чистоты — и правда сильнее: прежде сорт не значил ничего */
       msg = "Резкий запах бьёт в нос — голова проясняется, ноги снова слушаются."; break;
     case "antisept":
       var hadP = g.st.parasite > 0, hh = Math.round(8 * k.mag * potK("pharm"));
@@ -1168,7 +1216,9 @@ function place(ctx) {
   /* туман */
   var fp = fogPlan(L), fogRooms = [];
   if (fp && r.chance(fp.p)) {
-    var setFog = function (rid, d) { var rm2 = fl.rooms[rid]; if (!rm2 || capRoom[rid] || rid === ctx.U || rm2.fog) return false; rm2.fog = d; fogRooms.push(rid); return true; };
+    /* (3.7, нелогичность) туман не ставится туда, где живут: пока говорили, торговали или лечились
+       у жителя, у героя росла мутация, а сам житель стоял в тумане без защиты */
+    var setFog = function (rid, d) { var rm2 = fl.rooms[rid]; if (!rm2 || capRoom[rid] || rid === ctx.U || rm2.fog || fl.npcs.some(function (n) { return n.room === rid; })) return false; rm2.fog = d; fogRooms.push(rid); return true; };
     var labs = good.filter(function (rid) { return roomTag(fl, rid) === "chem"; });
     var src = r.shuffle(bio.slice()).concat(r.shuffle(labs));
     for (var fi = 0, want2 = r.int(fp.n0, fp.n1); fi < src.length && fogRooms.length < want2; fi++) setFog(src[fi], r.int(fp.d0, fp.d1));

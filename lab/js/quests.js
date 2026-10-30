@@ -99,9 +99,20 @@ var ARC_PROF = { "Медик": "med", "Инженер": "eng", "Техник": "
 var ARC_TRADE = { med: "med", parts: "eng", ammo: "guard", food: "cook", all: "store" };
 function arcOf(n) {
   if (n.heal) return "med";
-  if (ARC_PROF[n.prof]) return ARC_PROF[n.prof];
   var pr = LAB.PROFS && LAB.PROFS[n.prof];
+  /* (3.7, нелогичность) глава — по ремеслу (arc профессии, data.js и блоки), а не по виду торговли:
+     певчий Хора рассказывал о своём медпункте, перевозчик — об описи складов, оператор фазовых
+     колец — о посте у лифта и своих турелях */
+  if (pr && pr.arc) return pr.arc;
+  if (ARC_PROF[n.prof]) return ARC_PROF[n.prof];
   return (pr && ARC_TRADE[pr.trade]) || "sci";
+}
+/* (3.7, нелогичность) что заказчик продаёт сам (окно торговли жителя, game.js): этого он не просит
+   принести и этим не одаривает. Целитель-машина не торгует. */
+function ownGoods(n, L) {
+  var pr = n && !n.robot ? LAB.PROFS[n.prof] : null, tr = pr ? pr.trade : null, out = {};
+  if (tr && gm() && gm().tradeGoods) gm().tradeGoods(tr, L).forEach(function (id) { out[id] = 1; });
+  return out;
 }
 function trustWord(v, fem) { return v >= 80 ? "доверяет вам безоговорочно" : v >= 60 ? "доверяет вам" : v >= 40 ? "присматривается к вам" : v >= 20 ? (fem ? "насторожена" : "насторожен") : "вам не доверяет"; }
 /* плата по доверию: от девяти десятых до одиннадцати — и не больше */
@@ -156,7 +167,9 @@ function isSec(o) { return o.type === "terminal" && o.sub === "sec"; }
 /* — принести детали — */
 K("fetch", { st: "trade", free: true, bring: true, hand: true,
   gen: function (c) {
-    var parts = LAB.PARTS.filter(function (p) { return LAB.ITEMS[p] && (LAB.PART_DEPTH[p] || 1) <= Math.max(c.L, 1) && p !== c.avoid; });
+    /* (3.7, нелогичность) не то, что заказчик продаёт сам: «купить у него и сдать ему же» было выгодно */
+    var own = ownGoods(c.n, c.L);
+    var parts = LAB.PARTS.filter(function (p) { return LAB.ITEMS[p] && (LAB.PART_DEPTH[p] || 1) <= Math.max(c.L, 1) && p !== c.avoid && !own[p]; });
     if (!parts.length) return null;
     parts.sort(function (a, b) { return (LAB.ITEMS[a].price || 0) - (LAB.ITEMS[b].price || 0) || (a < b ? -1 : 1); });
     /* чем дальше, тем деталь реже и дороже */
@@ -173,10 +186,15 @@ K("fetch", { st: "trade", free: true, bring: true, hand: true,
   take: function (s) { G().inv[s.item] = Math.max(0, (G().inv[s.item] || 0) - s.need); } });
 
 /* — принести припасы по ремеслу заказчика — */
-var SUPPLY = { med: ["medkit_s", "bandage", "antidote", "sorbent", "painkiller"], eng: ["tape", "fieldkit", "wrepair", "repairkit"], guard: ["emp", "wrepair", "tape"], cook: ["ration", "stew", "noodles", "water", "crackers"], store: ["medkit_s", "ration", "filter", "tape"], sci: ["filter", "iodine", "antidote", "reagent"] };
+/* (3.7, нелогичность) заказчик не просит того, что сам продаёт (ownGoods): медик просил антидот
+   «без них я как без рук» — и продавал его же. Чтобы просить было что, у ремёсел — и то, чего
+   они не продают: медпункту — реагенты, биогель, фильтры и вода, охране — бинты, аптечки и
+   стимуляторы, кухне — фильтры для горькой воды и припасы с поверхности */
+var SUPPLY = { med: ["medkit_s", "bandage", "antidote", "sorbent", "painkiller", "reagent", "gel", "filter", "water"], eng: ["tape", "fieldkit", "wrepair", "repairkit", "respirator", "ration"], guard: ["emp", "wrepair", "tape", "bandage", "medkit_s", "stim", "ration"], cook: ["ration", "stew", "noodles", "water", "crackers", "filter", "protein", "sausage", "mre"], store: ["medkit_s", "ration", "filter", "tape"], sci: ["filter", "iodine", "antidote", "reagent"] };
 K("supply", { st: "trade", free: true, bring: true, hand: true,
   gen: function (c) {
-    var list = (SUPPLY[c.arc] || SUPPLY.store).filter(function (id) { var d = LAB.ITEMS[id]; return d && (d.depth || 1) <= Math.max(c.L, 1) && id !== c.avoid; });
+    var own = ownGoods(c.n, c.L);
+    var list = (SUPPLY[c.arc] || SUPPLY.store).filter(function (id) { var d = LAB.ITEMS[id]; return d && (d.depth || 1) <= Math.max(c.L, 1) && id !== c.avoid && !own[id]; });
     if (!list.length) return null;
     var id = list[(c.h >>> 2) % list.length], need = Math.min(5, 2 + Math.floor(c.t / 3) + (c.h >>> 5) % 2);
     return { type: "supply", item: id, need: need };
@@ -602,17 +620,20 @@ K("keep", { st: "search", hand: true,
   nav: function (s) { var c = roomCell(s.room); return c ? { n: s.roomName, cell: c } : null; } });
 
 /* — посылка выжившему на другом этаже; со ступени шестой — и ответ назад — */
-function survivorOn(L, F, h, notKey) {
-  var list = fdef(L, F).npcs.filter(function (m) { return !m.robot && m.key && m.key !== notKey; });
+function survivorOn(L, F, h, notKey, ok) {
+  var list = fdef(L, F).npcs.filter(function (m) { return !m.robot && m.key && m.key !== notKey && (!ok || ok(m)); });
   return list.length ? list[h % list.length] : null;
 }
+/* (3.7, нелогичность) профессия в середине фразы — строчная только первая буква и в роде жителя:
+   «боец «Альфы»», «лекарь смены В», «певчая Хора» (прежде — «боец «альфы»», «лекарь смены в») */
+function profLow(m) { var p = LAB.profName ? LAB.profName(m) : (m.prof || ""); return p ? p.charAt(0).toLowerCase() + p.slice(1) : ""; }
 K("deliver", { st: "trade", away: true, hand: function (s) { return !!s.reply; }, /* ответ на посылку — заказчику в руки */
   gen: function (c) {
     /* (3.7, нелогичность) вскрыли посылку и оставили себе — этот человек посылок больше не доверит
        (openParcel: noParcel); прежде круг «вскрыть — переждать — взять снова» давал подарок без конца */
     var rr = recOf(c.n.key); if (rr && rr.noParcel) return null;
     var m = survivorOn(c.L, c.tF, c.h, c.n.key); if (!m) return null;
-    return { type: "deliver", to: m.key, toName: m.n, toF: !!m.female, toProf: (m.prof || "").toLowerCase(), toPr: m.prof || "", given: false, reply: c.t >= 5 };
+    return { type: "deliver", to: m.key, toName: m.n, toF: !!m.female, toProf: profLow(m), toPr: m.prof || "", given: false, reply: c.t >= 5 };
   },
   ready: function (s) { return !!s.given; },
   prog: function (s) { return s.given ? (s.reply ? "ответ у вас" : "посылка передана") : "посылка у вас"; },
@@ -625,7 +646,8 @@ K("deliver", { st: "trade", away: true, hand: function (s) { return !!s.reply; }
 var AID = { med: ["medkit_s", "antidote", "bandage"], cook: ["ration", "stew"], any: ["medkit_s", "bandage"] };
 K("aid", { st: "trade", away: true,
   gen: function (c) {
-    var m = survivorOn(c.L, c.tF, c.h >>> 1, c.n.key); if (!m) return null;
+    /* (3.7, нелогичность) раненый, которому несут лекарство, — не целитель и не торговец лекарствами */
+    var m = survivorOn(c.L, c.tF, c.h >>> 1, c.n.key, function (x) { var px = LAB.PROFS[x.prof] || {}; return !x.heal && !px.heal && px.trade !== "med"; }); if (!m) return null;
     var list = (AID[c.arc] || AID.any).filter(function (id) { var d = LAB.ITEMS[id]; return d && (d.depth || 1) <= Math.max(c.L, 1); });
     if (!list.length) return null;
     return { type: "aid", to: m.key, toName: m.n, toF: !!m.female, item: list[c.h % list.length], given: false };
@@ -696,7 +718,7 @@ K("ask", { st: "search",
   gen: function (c) {
     var m = survivorOn(c.L, c.tF, c.h >>> 2, c.n.key); if (!m) return null;
     var list = ASK.filter(function (a) { return !a.arcs || a.arcs.indexOf(c.arc) >= 0; });
-    return { type: "ask", to: m.key, toName: m.n, toF: !!m.female, toProf: (m.prof || "").toLowerCase(), topic: ASK.indexOf(list[(c.h >>> 6) % list.length]), got: false };
+    return { type: "ask", to: m.key, toName: m.n, toF: !!m.female, toProf: profLow(m), topic: ASK.indexOf(list[(c.h >>> 6) % list.length]), got: false };
   },
   ready: function (s) { return !!s.got; },
   prog: function (s) { return s.got ? "ответ получен" : "ещё не спрошено"; },
@@ -827,21 +849,28 @@ function giftDepthK() { var p = gm().priceDepth ? gm().priceDepth() : 1; return 
 function questGift(n, h, stage, avoid) {
   var pr = (n && LAB.PROFS[n.prof]) || {}, list = GIFTS[(n && n.heal) ? "med" : (pr.trade || "sci")] || GIFTS.all;
   var g = G(), L = Math.max(g.L, 1), val = GIFT_VAL[clamp(stage, 0, GIFT_VAL.length - 1)] * giftDepthK(), start = (h >>> 7) % list.length, d = null, id = null;
-  for (var i = 0; i < list.length && !d; i++) {
-    var pick = list[(start + i) % list.length];
+  /* (3.7, нелогичность) подарок — из личного запаса, а не с прилавка: того, что заказчик продаёт сам
+     (ownGoods), он не дарит; своё ремесло исчерпано — из общего запаса (all, sci) */
+  var mine = ownGoods(n, L), order = [], i;
+  for (i = 0; i < list.length; i++) order.push(list[(start + i) % list.length]);
+  [GIFTS.all, GIFTS.sci].forEach(function (lst) { lst.forEach(function (x) { if (order.indexOf(x) < 0) order.push(x); }); });
+  for (i = 0; i < order.length && !d; i++) {
+    var pick = order[i];
     if (pick === "@ammo") {
       var w = gm().curWeapon(), am = w && w.ammo && LAB.AMMO[w.ammo] ? w.ammo : "energy";
+      if (mine["ammo:" + am]) continue;
       return { kind: "ammo", ammo: am, n: Math.max(1, Math.min(6, Math.round(val / (LAB.AMMO[am].price || 30)))) };
     }
     if (pick === "@part") {
-      var parts = LAB.PARTS.filter(function (p) { return (LAB.PART_DEPTH[p] || 1) <= L && p !== avoid; });
+      var parts = LAB.PARTS.filter(function (p) { return (LAB.PART_DEPTH[p] || 1) <= L && p !== avoid && !mine[p]; });
       var own = parts.filter(function (p) { return (LAB.PART_DEPTH[p] || 1) > L - 20; }); /* (3.7) деталь своего блока */
       if (own.length) parts = own;
+      if (!parts.length) continue;
       pick = parts[(h >>> 11) % parts.length];
     }
     if (pick !== avoid) pick = localGift(pick, L, val * 1.75);
     var dd = LAB.ITEMS[pick];
-    if (dd && pick !== avoid && (dd.depth || 1) <= L && (dd.price || 20) <= val * 1.75) { id = pick; d = dd; }
+    if (dd && pick !== avoid && !mine[pick] && (dd.depth || 1) <= L && (dd.price || 20) <= val * 1.75) { id = pick; d = dd; }
   }
   if (!d) { id = localGift("medkit_s", L, val * 1.75); d = LAB.ITEMS[id]; }
   return { kind: "item", item: id, n: Math.max(1, Math.min(6, Math.round(val / (d.price || 20)))) };

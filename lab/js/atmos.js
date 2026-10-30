@@ -123,14 +123,40 @@ function gateSeal() { play("gate_seal", { gain: 1 }); LAB.vib([120, 60, 220]); }
 function elevRide(ms) { play("elev_ride", { gain: 0.9 }); setTimeout(function () { play("elev_ding"); }, Math.max(800, ms - 400)); }
 function rest() { play("capsule_close"); setTimeout(function () { play("capsule_hum", { gain: 0.6 }); }, 600); }
 function death() { play("player_death"); stopTension(); }
-function npcHello(n) { if (n.robot && !(LAB.ROBOT_NPC && LAB.ROBOT_NPC[n.type] && LAB.ROBOT_NPC[n.type].alive)) play("robot_hello", { gain: 0.8 }); else play("npc_hello", { gain: 0.7 }); }
+function npcHello(n) {
+  var rd = n.robot ? (LAB.ROBOT_NPC && LAB.ROBOT_NPC[n.type]) || {} : null;
+  /* (3.7, нелогичность) живые целители здороваются не человеческим голосом: отражение — звоном стекла,
+     улей — тёплым гулом (синтез) */
+  if (rd && rd.alive) {
+    if (rd.heal === "mirror") { play("ev_glass", { gain: 0.35, rate: 1.15, bus: "fx", reverb: 0.5 }); play("ins_bell_77", { gain: 0.22, delay: 0.16, bus: "fx", reverb: 0.75 }); }
+    else play("hive_hum", { gain: 0.7, fbms: 1300, fb: function (s) { s.hum(196, 1.1, 0.05); s.hum(247, 0.9, 0.03); } });
+    return;
+  }
+  if (rd) play("robot_hello", { gain: 0.8 }); else play("npc_hello", { gain: 0.7 });
+}
+/* (3.7, нелогичность) маяк жителя — на высоте его ремесла (записи те же, bcn_survivor и bcn_robot_npc):
+   прежде медика по звуку было не отличить от охранника. Лечит — выше всех, торгует — выше, учёный —
+   как есть, технарь и охрана — ниже; живые целители (улей, отражение) — ниже машин */
+var NPC_RATE = { npc_med: 1.1, npc_trade: 1.1, npc_sci: 1, npc_eng: 0.9, npc_guard: 0.8 };
+function npcRate(n) {
+  if (n.robot) {
+    var rd = (LAB.ROBOT_NPC && LAB.ROBOT_NPC[n.type]) || {};
+    if (rd.alive) return 0.75;
+    return n.heal || rd.heal ? 1.25 : rd.trade ? 1.1 : 1;
+  }
+  var p = (LAB.PROFS && LAB.PROFS[n.prof]) || {};
+  return n.heal || p.heal ? 1.25 : NPC_RATE[p.beacon] || 1;
+}
 function navPing(x, y) { at("nav_ping", x, y, { bus: "ui", gain: 0.9 }); }
 function navStart(path) {
   if (!path || !path.length) return;
   var last = path[Math.min(path.length - 1, 5)];
   at("nav_ping", last[0], last[1], { bus: "ui", gain: 0.8 });
 }
-function pickup(kind) { play(has("pick_" + kind) ? "pick_" + kind : "pick_part", { bus: "ui", gain: 0.9 }); }
+/* (3.7, нелогичность) свой звук подбора у вида, для которого нет записи «pick_…»: еда шуршит бумагой
+   (game.js, itemKind) — прежде хлеб и тушёнка звенели склянкой стимулятора */
+var PICK_FB = { food: "paper" };
+function pickup(kind) { var id = has("pick_" + kind) ? "pick_" + kind : PICK_FB[kind] && has(PICK_FB[kind]) ? PICK_FB[kind] : "pick_part"; play(id, { bus: "ui", gain: 0.9 }); }
 function setEvent(id) {
   eventLayer(id);
   if (id === "alarm") play("ev_alarm_start", { gain: 0.7 });
@@ -149,7 +175,9 @@ var OBJ_BEACON = { stairs_down: "bcn_stairs", stairs_up: "bcn_stairs_up", elevat
   powergrid: "bcn_powergrid", incubator: "bcn_incubator", mirrorterm: "bcn_mirrorterm", syncgate: "bcn_syncgate", ancient: "bcn_ancient" };
 var OBJ_BEACON_FB = { bcn_chemlab: ["bcn_workbench", 1.3], bcn_radio: ["bcn_pc", 0.75], bcn_oko: ["bcn_terminal", 1.35], bcn_puzzle: ["bcn_vending", 1.25], bcn_snacks: ["bcn_drinks", 0.82],
   /* установки глубин: свои маяки, пока нет записей — знакомые маяки на другой высоте */
-  bcn_powergrid: ["bcn_magnetron", 0.7], bcn_incubator: ["bcn_capsule", 1.3], bcn_mirrorterm: ["bcn_terminal", 0.8], bcn_syncgate: ["bcn_gate", 1.2], bcn_ancient: ["bcn_reactor", 0.6] };
+  bcn_powergrid: ["bcn_magnetron", 0.7], bcn_incubator: ["bcn_capsule", 1.3], bcn_mirrorterm: ["bcn_terminal", 0.8], bcn_syncgate: ["bcn_gate", 1.2], bcn_ancient: ["bcn_reactor", 0.6],
+  /* (3.7, нелогичность) еда на полу (game.js, itemKind «food») — маяк автоматов с едой, выше их: прежде звенела склянкой стимулятора */
+  bcn_food: ["bcn_drinks", 1.3] };
 var OBJ_RANGE = { stairs_down: 16, stairs_up: 10, gate_down: 18, elevator: 12, reactor: 20, workbench: 14 }; /* (2.0) станки мастерской слышно из коридора */
 function beaconTick() {
   var g = G(), cur = CUR();
@@ -174,7 +202,7 @@ function beaconTick() {
   cur.fl.npcs.forEach(function (n) {
     var d = Math.abs(n.x - g.x) + Math.abs(n.y - g.y);
     if (d === 0 || d > 10) return;
-    src.push({ key: "n" + n.id, id: n.robot ? "bcn_robot_npc" : "bcn_survivor", x: n.x, y: n.y, d: d, max: 10 });
+    src.push({ key: "n" + n.id, id: n.robot ? "bcn_robot_npc" : "bcn_survivor", x: n.x, y: n.y, d: d, max: 10, rate: npcRate(n) });
   });
   /* (1.6) известные ловушки и мины: у каждого вида свой маяк, чтобы не напороться */
   if (LAB.traps && LAB.traps.list) LAB.traps.list().forEach(function (tp) {
@@ -199,7 +227,7 @@ function beaconTick() {
     nextPing[s.key] = now + gap * (0.9 + Math.random() * 0.2);
     if (s.trap) { at("bcn_trap", s.x, s.y, { bus: "beacon", gain: (jam ? 0.5 : 1) * (1.1 - k * 0.5), reverb: 0.1, fb: trapBeacon(s.trap) }); return; }
     if (s.foe) { at(s.id, s.x, s.y, { bus: "beacon", gain: 1.1 - k * 0.45, reverb: 0.15, fb: s.foe === "mech" ? FOE_BCN.mech : FOE_BCN.bio }); return; }
-    var bid = s.id, brate = 1;
+    var bid = s.id, brate = s.rate || 1;
     if (!has(bid) && OBJ_BEACON_FB[bid]) { brate = OBJ_BEACON_FB[bid][1]; bid = OBJ_BEACON_FB[bid][0]; }
     at(has(bid) ? bid : "bcn_default", s.x, s.y, { bus: "beacon", gain: (jam ? 0.35 : 1) * (1.1 - k * 0.55), lp: jam ? 1200 : null, reverb: 0.12, rate: brate });
   });

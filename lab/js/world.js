@@ -1068,7 +1068,9 @@ function genFloor(seed, L, F, attempt) {
   /* предметы блоков: что встречается на этой глубине */
   var bItems = [];
   /* товары пунктов снабжения (с разделом cat) раскладывает по кабинетам annex.js — здесь их нет */
-  for (var ik in LAB.ITEMS) { var idf = LAB.ITEMS[ik]; if (idf.kind !== "part" && !idf.cat && idf.depth && idf.depth <= L && idf.depth > L - 25 && LAB.srcOk(idf, "find")) bItems.push(ik); }
+  /* (3.7, нелогичность) и не варианты химии (LAB.chemVariant): прежде на третьем–двадцатом уровне «предметы
+     блоков» почти всегда были составами высших сортов, лежавшими раньше своего сырья */
+  for (var ik in LAB.ITEMS) { var idf = LAB.ITEMS[ik]; if (idf.kind !== "part" && !idf.cat && idf.depth && idf.depth <= L && idf.depth > L - 25 && LAB.srcOk(idf, "find") && !LAB.chemVariant(idf)) bItems.push(ik); }
   for (nb2 = bItems.length ? r.int(0, 2) : 0; nb2 > 0; nb2--) addItem({ kind: "item", item: r.pick(bItems), n: 1 }, anyRoom());
   for (nb2 = r.int(3, 6); nb2 > 0; nb2--) addItem({ kind: "item", item: partAt(r, L), n: 1 + (r.chance(0.3) ? 1 : 0) }, anyRoom());
   if (r.chance(Math.min(0.2, 0.07 + L * 0.006))) addItem({ kind: "armor", a: LAB.genArmor(r, L, F) }, anyRoom());

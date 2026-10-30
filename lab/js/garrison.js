@@ -254,9 +254,12 @@ function place(ctx) {
   /* важные — первыми: при упоре в предел охраняются они */
   rooms.sort(function (a, b) { return CAT[category(fl.rooms[b])].imp - CAT[category(fl.rooms[a])].imp; });
   var placed = 0;
+  /* (3.7, нелогичность) помещения, где живут люди и мирные роботы: туда охрану ОКО не ставят */
+  var npcRoom = {};
+  fl.npcs.forEach(function (q) { if (q.room >= 0) npcRoom[q.room] = 1; });
   for (var ri = 0; ri < rooms.length; ri++) {
     var id = rooms[ri], rm = fl.rooms[id], def = (LAB.ANNEX_ROOMS || {})[rm.type] || {};
-    if (SKIP_KIND[def.kind]) continue;
+    if (SKIP_KIND[def.kind] || npcRoom[id]) continue;
     var cname = category(rm), cat = CAT[cname];
     var dr = null; for (var di = 0; di < fl.doors.length; di++) if (fl.doors[di].room === id && fl.doors[di].annex) { dr = fl.doors[di]; break; }
     if (dr && !farFrom(arr, dr.x, dr.y, 3)) continue;
@@ -303,7 +306,8 @@ function place(ctx) {
     var cand = [];
     for (var y2 = o.y - 6; y2 <= o.y + 6; y2++) for (var x2 = o.x - 6; x2 <= o.x + 6; x2++) {
       var dd = Math.abs(x2 - o.x) + Math.abs(y2 - o.y);
-      if (dd >= 3 && dd <= 7 && freeCell(fl, x2, y2, busy) && !nearDoor(fl, x2, y2) && farFrom(calm, x2, y2, 10)) cand.push([x2, y2]);
+      /* (3.7, нелогичность) пост — не в помещении жителя */
+      if (dd >= 3 && dd <= 7 && freeCell(fl, x2, y2, busy) && !nearDoor(fl, x2, y2) && farFrom(calm, x2, y2, 10) && !(fl.room && npcRoom[fl.room[y2 * W + x2]])) cand.push([x2, y2]);
     }
     r.shuffle(cand);
     for (var w = 0; w < want && w < cand.length; w++) {
