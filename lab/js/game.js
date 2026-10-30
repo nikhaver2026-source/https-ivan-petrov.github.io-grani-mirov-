@@ -4111,17 +4111,20 @@ game._migrate = migrate; /* для проверок: перенос прежне
 /* (3.7) Архив записи прежних версий: письма, документы и журналы компьютеров, журналы
    терминалов, письма почтовых ящиков, служебные записки и тайнопись хранились полным текстом.
    Такой документ становится ссылкой, только если по ссылке собирается слово в слово то же:
-   название, автор, текст и категория (иначе остаётся как был). Повторы того же текста (то же
-   письмо той же переписки с разных компьютеров, одно из двух писем почтовых ящиков) — один раз,
-   первый найденный; прочитанными они остаются. */
+   название, автор, текст и категория (иначе остаётся как был). Точные повторы (то же название,
+   тот же автор, тот же текст: то же письмо той же переписки с разных компьютеров, одно из двух
+   писем почтовых ящиков) — один раз, первый найденный; прочитанными они остаются. */
 function compactArchive(g) {
-  var list = g.noteList || [], out = [], seen = {}, ren = {};
+  var list = g.noteList || [], out = [], seen = {}, ren = {}, cut = 0;
   list.forEach(function (n) {
     if (!n || typeof n !== "object") return;
     if (n.x != null && !n.src) {
       var src = null, r = null;
       try { src = oldRef(n); r = src ? noteText(src, n.L, n.F) : null; } catch (e) { r = null; }
       if (r && r.t === n.t && r.x === n.x && (r.a || "") === (n.a || "")) {
+        var tk = n.t + "\u0001" + (n.a || "") + "\u0001" + n.x;
+        if (seen[tk]) { ren[n.id] = seen[tk]; cut++; return; }
+        seen[tk] = n.id;
         /* категория — та, что была в архиве (docInfo): у писем с кодом её не было — «Переписка» по номеру */
         var cat0 = n.cat || (String(n.id).indexOf("mail:") === 0 ? "Переписка" : docCat(null, { t: n.t, x: n.x, a: n.a }));
         delete n.t; delete n.x; delete n.a; delete n.cat; delete n.story;
@@ -4129,11 +4132,9 @@ function compactArchive(g) {
         if (cat0 !== r.cat) n.cat = cat0;
       }
     }
-    var k = n.src && REF_KIND[n.src.note] ? srcKey(n.src) : "";
-    if (k && seen[k]) { ren[n.id] = seen[k]; return; }
-    if (k) seen[k] = n.id;
     out.push(n);
   });
+  if (!cut && out.length === list.length) return;
   g.noteList = out;
   if (g.lastDoc && ren[g.lastDoc]) g.lastDoc = ren[g.lastDoc];
 }
