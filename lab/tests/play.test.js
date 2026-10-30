@@ -5793,7 +5793,9 @@ LAB.ui.closeAll();
   ok(qz.three === 3 && qz.fourth && qz.fourth.n === 3 && qz.fourth.said, "поручений сразу — не больше трёх: четвёртое не дают и говорят, как освободить место");
   ok(qz.abandon && qz.refused && qz.after, "отказ от поручения: место освобождается, а тот, кому отказали, сразу снова не просит");
   ok(qz.rewards && qz.rewards.length === 3 && qz.rewards.every(r => r.cr > 0 && r.xp > 0 && /^Награда — \d+ кредит/.test(r.txt)), "награда названа сразу: кредиты, опыт и вещь (" + (qz.rewards || []).map(r => r.t + ": " + r.txt).join(" | ") + ")");
-  ok(qz.rewards && qz.rewards.every(r => /^(medkit_s|bandage|antidote|sorbent|painkiller|medkit_l)$/.test(r.gift || "")), "вещь в награду — из ремесла заказчика: медик даёт лекарства");
+  /* (3.7) подарок — из личного запаса, не с прилавка: на первом уровне медик продаёт аптечки и бинты сам,
+     поэтому дарит травяной сбор своей глубины */
+  ok(qz.rewards && qz.rewards.every(r => /^(medkit_\w+|nanomed|bandage(_[hx])?|antidote|sorbent|painkiller|herb_\w+)$/.test(r.gift || "")), "вещь в награду — из ремесла заказчика: медик даёт лекарства (" + (qz.rewards || []).map(r => r.gift).join(", ") + ")");
   ok(/поручений 3 из 3/.test(qz.invLabel || "") && qz.win && qz.win.head && qz.win.ab && qz.win.rew, "окно заданий: «3 из 3», награда у каждого поручения, пункт «Отказаться от поручения» (" + qz.invLabel + ")");
   ok(qz.pay && qz.pay.done && qz.pay.between && qz.pay.gift && qz.pay.notSame, "(3.6) принесённые детали оплачены дороже скупки, но дешевле покупки; вещь в придачу — и не та же деталь (" + JSON.stringify(qz.pay) + ")");
   ok(/дадут те, кому передадите/.test(qz.courierBefore || "") && qz.courier && qz.courier.n === 1 && qz.courier.done && qz.courier.gain > 0 && qz.courier.gift && qz.courier.fem, "весточка: награду даёт получатель при передаче, по своему ремеслу (" + JSON.stringify(qz.courier) + ")");
