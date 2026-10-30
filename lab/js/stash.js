@@ -519,8 +519,14 @@ function cure(id) {
   g.st.parasite = 0;
   return "Клеща сняли: ранка больше не кровит.";
 }
-/* Новый этаж — заново слушать признаки. */
-function enterFloor() { rolled = {}; exRolled = {}; lastCell = -1; grenades = []; }
+/* Новый этаж — заново слушать признаки. (3.7, нелогичность) И помещение, куда уже после кабинетов
+   встало электрическое (стенд испытаний, автомат — world.js), — не «обесточено» (annex.js, unlit):
+   вызов при входе на этаж, повторный ничего не меняет. */
+function enterFloor() {
+  rolled = {}; exRolled = {}; lastCell = -1; grenades = [];
+  var cur = CUR();
+  if (cur && cur.fl && LAB.annex && LAB.annex.unlit) { try { LAB.annex.unlit(cur.fl, G().L); } catch (e) { console.warn(e); } }
+}
 
 LAB.stash = {
   K: K, ids: ORDER, acc: ACC, whereOf: whereOf, chanceAt: chanceAt, trapOf: trapOf, guard: guard, examineLine: examineLine, knownTrap: knownTrap,
