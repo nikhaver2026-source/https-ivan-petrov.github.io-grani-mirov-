@@ -1023,12 +1023,21 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
           ", герой " + G.x + "," + G.y + ", такт ОКО " + g.CUR.fs.okoT + ", repairAt " + g.CUR.fs.repairAt + ", repairN " + g.CUR.fs.repairN + ", heat " + LAB.oko.state().heat;
       }
     }
-    /* перепрошивка: новые машины с другого этажа идут на вас */
+    /* перепрошивка: новые машины с другого этажа идут на вас.
+       (3.8) Следим за отрядом этой волны (на ваш след): смена поста или патрульный, вышедшие
+       в это время, тоже не перепрошиты, но к вам не идут — страж встаёт на пост, и проверка
+       принимала его за отряд. Очередь этажа — с чистого листа: волны и смены, ждавшие с
+       прошлых заходов, вышли бы первыми, а отряд — после промежутка между волнами (wGap) */
     g.enterFloor(2, 8, "down", true); god(); outside();
+    g.CUR.fs.waves = []; g.CUR.fs.repl = [];
     g.CUR.fs.robots = true; C.robotsCalm();
-    LAB.oko.event("robots", { x: G.x, y: G.y }); /* в игре — с координатами терминала, у которого стоит герой */
-    let fresh = [];
-    for (let i = 0; i < 80 && !fresh.length; i++) { C.tick(); fresh = live().filter(f => f.fresh && !f.calm); }
+    const hx = G.x, hy = G.y, disp0 = C.dispatch; let fw = [];
+    C.dispatch = function (n, mode, at) { const r = disp0.apply(this, arguments); if (mode === "hunt" && at && at.x === hx && at.y === hy && r) fw = fw.concat(r); return r; };
+    try {
+      LAB.oko.event("robots", { x: G.x, y: G.y }); /* в игре — с координатами терминала, у которого стоит герой */
+      for (let i = 0; i < 400 && !fw.length; i++) C.tick();
+    } finally { C.dispatch = disp0; }
+    const fresh = fw.filter(f => f.fresh && !f.calm);
     const fd0 = Math.min.apply(null, fresh.map(dH).concat([999]));
     for (let i = 0; i < 40; i++) C.tick();
     out.fresh = { n: fresh.length, d0: fd0, d1: Math.min.apply(null, fresh.filter(f => !f.dead).map(dH).concat([999])) };
