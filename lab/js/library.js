@@ -331,7 +331,13 @@ var EMPTY = { case: "Шкаф пуст: книги отсюда унесли.", 
   specimen: "Банки пусты, этикетки отклеены.", cage: "Клетки пусты, карточки сорваны с дверец.", photo: "Стенд пуст: снимки сняли, остались кнопки.", research: "Ящики пусты: папки вывезли.", autopsy: "Планшет пуст: протоколы забрали.", subject: "Журнал на цепочке пуст: листы вырваны." };
 function libItems(o, which) {
   var s = st(o), list = deal(o, which).filter(function (q) { return !(which === "tape" && s["took_" + q.id]); }), items = [];
-  if (!list.length) return [{ label: EMPTY[which] || "Пусто.", info: true, keep: true, fn: function () { say(EMPTY[which] || "Пусто."); } }];
+  if (!list.length) {
+    var e0 = [{ label: EMPTY[which] || "Пусто.", info: true, keep: true, fn: function () { say(EMPTY[which] || "Пусто."); } }];
+    /* (3.8) коробка с монтажной лентой лежит у магнитофона и тогда, когда бобин в нём не осталось
+       (последнюю, порванную, забрали на продажу) — прежде её было не взять */
+    if (which === "tape" && spliceBox(o) && !s.spliceTook) e0.push({ label: "Коробка с монтажной лентой для плёнки — забрать", fn: function () { takeSplice(o); } });
+    return e0;
+  }
   var rd = 0;
   list.forEach(function (q) {
     var c = ctxFor(q, o), r0 = isRead(q, o); if (r0) rd++;
