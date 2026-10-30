@@ -3406,9 +3406,9 @@ function firstSeg(path) {
   for (var i = 0; i < path.length; i++) { var d = stepDir(path[i], px, py); if (d0 && d !== d0) break; d0 = d; n++; px = path[i][0]; py = path[i][1]; }
   return [d0, n];
 }
-/* (3.7) «Ближайшая точка — проход в коридор. Всего 11 шагов: …» и «До этой двери всего 11 шагов: …» —
-   прежде «…коридор: Всего 11 шагов: 6 шагов…»: заглавная после двоеточия и два двоеточия подряд */
-function lowFirst(s) { s = String(s || ""); return s.charAt(0).toLowerCase() + s.slice(1); }
+/* (3.7) «Ближайшая точка — проход в коридор. Всего 11 шагов: …» и «До этой двери всего 11 шагов: …»
+   (строчная — lowFirst выше) — прежде «…коридор: Всего 11 шагов: 6 шагов…»: заглавная после
+   двоеточия и два двоеточия подряд */
 function navText(path) {
   if (!path || !path.length) return "Вы на месте.";
   var mode = navMode();

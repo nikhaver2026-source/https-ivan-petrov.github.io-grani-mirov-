@@ -885,7 +885,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     return { a, b };
   });
   ok(/Ближайшая точка/.test(nav.a) || /Цель: лестница вниз/.test(nav.a), "без карты — к ближайшей точке на пути: " + nav.a.slice(0, 140));
-  ok(/Цель: лестница вниз/.test(nav.b) && /Всего \d+ шаг/.test(nav.b), "с картой — весь путь до лестницы: " + nav.b.slice(0, 140));
+  ok(/Цель: лестница вниз/.test(nav.b) && /[Вв]сего \d+ шаг/.test(nav.b), "с картой — весь путь до лестницы: " + nav.b.slice(0, 140));
 
   console.log("Мастерская на первом этаже уровня и на каждом третьем, тайник с двумя выходами, переносная турель, ОКО");
   const misc = await page.evaluate(async () => {
