@@ -1294,7 +1294,7 @@ function genFloor(seed, L, F, attempt) {
     if (cS) { sv.x = cS[0]; sv.y = cS[1]; objCell[idx(sv.x, sv.y)] = 1; fl.npcs.push(sv); }
     var rs2 = Rng(seed, "surv2:" + L + ":" + F + ":" + attempt);
     if (quietRooms.length && rs2.chance(survP[1])) {
-      var ns2 = quietRooms.shift(), sv2 = makeSurvivor(rs2, L, F, ns2, rooms[ns2]), cS2 = freeCell(ns2);
+      var ns2 = quietRooms.shift(), sv2 = makeSurvivor(rs2, L, F, ns2, rooms[ns2], fl.npcs), cS2 = freeCell(ns2);
       if (cS2) { sv2.id = "n" + fl.npcs.length; sv2.key = L + "-" + F + "-s2"; sv2.x = cS2[0]; sv2.y = cS2[1]; objCell[idx(sv2.x, sv2.y)] = 1; fl.npcs.push(sv2); }
     }
   }
@@ -1303,7 +1303,9 @@ function genFloor(seed, L, F, attempt) {
     var rtypes = ["helper", "helper", "meddroid", "archivist"];
     /* (3.7, нелогичность) жители блока — только на его глубинах: «Подножие» (блок 1) — с 11-го уровня,
        прежде его роботы и люди жили и в «Ковчеге» */
-    for (var rk in LAB.ROBOT_NPC) if (LAB.ROBOT_NPC[rk].block === residentBlock(L)) rtypes.push(rk, rk);
+    /* (3.7, нелогичность) именной робот («Камертон», «Голубь», КР-12…) — один на уровень: только на
+       своём этаже уровня (по хешу), прежде «Камертон» встречался трижды на одном уровне */
+    for (var rk in LAB.ROBOT_NPC) if (LAB.ROBOT_NPC[rk].block === residentBlock(L) && (!LAB.ROBOT_NPC[rk].unique || uniqueFloor(seed, rk, L) === F)) rtypes.push(rk, rk);
     var rtype = r.pick(rtypes);
     var cR = freeCell(nr);
     if (cR) objCell[idx(cR[0], cR[1])] = 1;
@@ -1399,6 +1401,8 @@ function genFloor(seed, L, F, attempt) {
   {
     for (s = 0; s < NS; s++) {
       if (!rooms[s] || !main[s] || s === U || s === D || s === E || s === secret || s === bossSlot || rooms[s].shop) continue;
+      /* (3.7, нелогичность) где сидит житель, стража ОКО не ставят: прежде повар делил кабинет с машиной поста */
+      if (fl.npcs.some(function (q) { return q.room === s; })) continue;
       var key9 = fl.objs.filter(function (o) { return o.room === s && o.type === "terminal" && o.sub === "sec"; })[0];
       var busy9 = fl.foes.some(function (q) { return q.room === s; });
       if (key9 && rg.chance(Math.min(0.8, 0.4 + d0 * 0.002))) { addGuard(s, key9, "office"); continue; }
@@ -1467,15 +1471,19 @@ function genFloor(seed, L, F, attempt) {
     fl.objs.forEach(function (o9) { if ((o9.type === "capsule" || o9.type === "wake") && o9.room >= 0) capRoom[o9.room] = 1; });
     /* и не среди тел погибших (annex.js, placeBodies): живые от мёртвых уходят */
     fl.objs.forEach(function (o9) { if (o9.type === "corpse" && o9.room >= 0) capRoom[o9.room] = 1; });
+    /* (3.7, нелогичность) и не в мутагенном тумане (chem.js, шаг 25), и не за тайной дверью: до
+       выжившего доходят от прибытия, не зная тайных ходов (прежде люди сидели в кабинетах при
+       коридорах тайной комнаты) */
+    var open9 = LAB.openRooms(fl);
     fl.rooms.forEach(function (m9, s9) {
-      if (!m9 || m9.hidden || m9.rad || m9.gas || foeRoom[s9] || npcRoom[s9] || capRoom[s9] || s9 === U || s9 === D || s9 === E || s9 === secret || s9 === bossSlot) return;
+      if (!m9 || m9.hidden || m9.rad || m9.gas || m9.fog || !open9[s9] || foeRoom[s9] || npcRoom[s9] || capRoom[s9] || s9 === U || s9 === D || s9 === E || s9 === secret || s9 === bossSlot) return;
       var def9 = LAB.ROOMS[m9.type] || {};
       if (def9.special || (def9.kind && def9.kind !== "locked")) return;
       calm.push(s9);
     });
     rs3.shuffle(calm);
     while (humans < survWant && calm.length) {
-      var s9 = calm.shift(), sv9 = makeSurvivor(rs3, L, F, s9, fl.rooms[s9]), c9 = freeCell(s9);
+      var s9 = calm.shift(), sv9 = makeSurvivor(rs3, L, F, s9, fl.rooms[s9], fl.npcs), c9 = freeCell(s9);
       if (!c9) continue;
       var k9 = ["s", "s2", "s3"].filter(function (k) { return !usedKey[L + "-" + F + "-" + k]; })[0];
       if (!k9) break;
@@ -1515,7 +1523,35 @@ function genFloor(seed, L, F, attempt) {
 }
 
 function residentBlock(L) { return L > 10 ? LAB.blockOf(L) : 0; }
-function makeSurvivor(r, L, F, s, rm) {
+/* (3.7, нелогичность) этаж уровня, где может жить именной робот (unique): один на уровень */
+function uniqueFloor(seed, rk, L) { return 1 + (hash32(seed + ":npc1:" + rk + ":" + L) % LAB.FLOORS_N); }
+LAB.uniqueFloor = uniqueFloor;
+/* (3.7, нелогичность) Помещения, куда доходят от прибытия, не зная тайных ходов: двери с замками
+   открываются (ключ, карта, ток — всё на этаже), тайные — нет. Для жителей (шаг 25б, medic.js):
+   прежде выжившие и целители стояли в кабинетах при коридорах тайной комнаты. */
+LAB.openRooms = function (fl) {
+  var out = {}, u = fl.rooms[fl.U] || fl.rooms[0];
+  if (!u) return out;
+  var seen = new Uint8Array(W * H), q = [], st = -1;
+  for (var y = u.y0; y <= u.y1 && st < 0; y++) for (var x = u.x0; x <= u.x1; x++) if (fl.t[idx(x, y)] !== T_WALL) { st = idx(x, y); break; }
+  if (st < 0) return out;
+  seen[st] = 1; q.push(st);
+  for (var qi = 0; qi < q.length; qi++) {
+    var c = q[qi], cx = c % W, cy = (c / W) | 0, rr = fl.room[c];
+    if (rr >= 0) out[rr] = 1;
+    var nb = [[cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1]];
+    for (var k = 0; k < 4; k++) {
+      var nx = nb[k][0], ny = nb[k][1];
+      if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+      var j = idx(nx, ny);
+      if (seen[j] || fl.t[j] === T_WALL) continue;
+      if (fl.t[j] === T_DOOR) { var d = fl.doorAt[j]; if (d && ((d.lock && d.lock.type === "secret") || d.kind === "secret")) continue; }
+      seen[j] = 1; q.push(j);
+    }
+  }
+  return out;
+};
+function makeSurvivor(r, L, F, s, rm, others) {
   var female = r.chance(0.5);
   var first = r.pick(female ? LAB.NAMES.f : LAB.NAMES.m);
   var last = r.pick(female ? LAB.NAMES.sf : LAB.NAMES.sm);
@@ -1524,6 +1560,18 @@ function makeSurvivor(r, L, F, s, rm) {
   var own = profs.filter(function (p) { return LAB.PROFS[p].block === residentBlock(L); });
   var prof = own.length && r.chance(0.6) ? r.pick(own) : r.pick(profs);
   var c = [r.int(rm.x0, rm.x1), r.int(rm.y0, rm.y1)];
+  /* (3.7, нелогичность) на этаже нет двоих одной профессии и двоих с одним именем (они рассказывали
+     одно и то же): занятое выбирается заново — после прежних выборов, поток прочих не сдвигается */
+  if (others && others.length) {
+    var takenP = {}, takenN = {};
+    others.forEach(function (o) { if (!o.robot && o.prof) takenP[o.prof] = 1; if (o.n) takenN[o.n] = 1; });
+    if (takenP[prof]) {
+      var freeOwn = own.filter(function (p) { return !takenP[p]; }), freeAll = profs.filter(function (p) { return !takenP[p]; });
+      var pool = own.indexOf(prof) >= 0 && freeOwn.length ? freeOwn : freeAll;
+      if (pool.length) prof = r.pick(pool);
+    }
+    for (var tn = 0; tn < 20 && takenN[first + " " + last]; tn++) { first = r.pick(female ? LAB.NAMES.f : LAB.NAMES.m); last = r.pick(female ? LAB.NAMES.sf : LAB.NAMES.sm); }
+  }
   return { id: "n0", robot: false, n: first + " " + last, first: first, last: last, female: female, prof: prof,
     x: c[0], y: c[1], room: s, tier: 1 + Math.floor(L / 3), key: L + "-" + F + "-s", life: r.int(0, 99), view: r.int(0, 99) };
 }

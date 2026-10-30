@@ -410,10 +410,10 @@ B({ bosses: {
     mult: 5, beh: ["ranged", "dooropen", "commander", "summon"], snd: "android", sndRate: 0.95, minion: "k_sentry" },
   k_b_queenpollinator: { base: "k_pollinator", n: "Матка опылителей", g: "f",
     desc: "Огромный дрон-опылитель, матка всех роёв полей: гудит так низко, что звенит трава. Липкой пыльцой замедляет и без конца выпускает новых опылителей. Ключ-карты при ней нет; ионы и электрошок.",
-    mult: 8, beh: ["ranged", "slow", "summon", "fly"], snd: "drone", sndRate: 0.75, minion: "k_pollinator" }, /* (3.7, нелогичность) летает: гудит, а не шагает; нажимные ловушки не трогает */
+    mult: 8, beh: ["ranged", "slow", "summon"], snd: "drone", sndRate: 0.75, minion: "k_pollinator" },
   k_b_packleader: { base: "k_wingear", n: "Вожак шептокрылов", g: "m",
     desc: "Вожак стай Гнездовья с крыльями шире модуля. Пикирует из темноты, будто возникает рядом, визгом глушит слух и зовёт стаю. Шлюзовую ключ-карту утащил в гнездо и носит при себе, как трофей.",
-    mult: 8, beh: ["chase", "blink", "screamer", "summon", "fly"], snd: "blind", sndRate: 0.9, minion: "k_wingear" }, /* (3.7) летает */
+    mult: 8, beh: ["chase", "blink", "screamer", "summon"], snd: "blind", sndRate: 0.9, minion: "k_wingear" },
   k_b_leash: { base: "k_shepherd", n: "Поводок", g: "m",
     desc: "Машина ОКО, которая держит на привязи импланты бойцов «Альфы»: пока она цела, двое из отряда не помнят своих имён. Прикрывает щитом роботов рядом, командует ими и зовёт подневольных суперсолдат. Ключ-карту форпоста ОКО повесило на неё.",
     mult: 6, beh: ["ranged", "commander", "shieldally", "summon"], snd: "android", sndRate: 0.75, minion: "soldier" },
