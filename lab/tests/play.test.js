@@ -6326,6 +6326,10 @@ LAB.ui.closeAll();
       out.mind = G().mind - m0;
       const bp0 = Object.keys(G().bp || {}).length; const tb = byCat("tech")[0]; if (tb) { LB.readText(tb, bc); U.closeAll(); }
       out.bp = Object.keys(G().bp || {}).length - bp0;
+      /* (3.8) книга по химии учит рецептуре своей ступени, которой герой ещё не знает; на первых уровнях
+         такая одна, и её могли узнать раньше — первой книгой шкафа или опытом химика в прошлых разделах
+         («Рецептуры из этой книги вы уже знаете»). Химия — с чистого листа: в конце раздела она вернётся */
+      G().chem = {};
       const ck0 = Object.keys((G().chem && G().chem.known) || {}).length; const cb2 = byCat("chem")[0]; if (cb2) { LB.readText(cb2, bc); U.closeAll(); }
       out.chem = Object.keys((G().chem && G().chem.known) || {}).length - ck0;
       const nb0 = (G().body.neuro = 60); const fb = byCat("fiction")[0] || byCat("poetry")[0]; if (fb) { LB.readText(fb, bc); U.closeAll(); }
