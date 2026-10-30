@@ -109,6 +109,15 @@ function tagItem(tag, q, L, F) {
   return q < 0.65 && pool.length ? it(pool[Math.floor(q / 0.65 * pool.length) % pool.length]) : { kind: "credits", n: LAB.credits(15 + Math.floor(q * 1000) % 12, L, F) };
 }
 function it(item, n) { return { kind: "item", item: item, n: n || 1 }; }
+/* (3.7, нелогичность) В горячей камере — изотоп и слиток только с их глубины (изотоп с пятого уровня, слиток —
+   с третьего), выше — личная вещь из уже вынутого q: прежде оба лежали в горячих камерах с первого уровня.
+   Жребий (r.chance) вынимается как прежде — поток случайностей этажа тот же. */
+function hotPick(c, L, q) {
+  var iso = LAB.ITEMS.isotope ? LAB.ITEMS.isotope.depth || 1 : 1, gold = LAB.ITEMS.goldbar ? LAB.ITEMS.goldbar.depth || 1 : 1;
+  if (c && L >= iso) return "isotope";
+  if (L >= gold) return "goldbar";
+  return LOST[Math.floor(mixq(q, 5) * LOST.length) % LOST.length];
+}
 function annexLoot(r, L, F, tag, ot, lean, only) {
   var out = [], n = ot === "safe" ? 3 : lean ? r.int(1, ot === "crate" || ot === "shelf" ? 2 : 1) : ot === "crate" || ot === "shelf" ? r.int(1, 3) : r.int(1, 2);
   var add = function (x) { if (x) out.push(x); };
@@ -122,7 +131,7 @@ function annexLoot(r, L, F, tag, ot, lean, only) {
     var q = r.next(), k0 = out.length;
     switch (tag) {
       case "stash": case "cache": add(q < 0.35 ? it(catPick(r, L, "valuable")) : q < 0.55 ? cr(30) : q < 0.75 ? it(catPick(r, L, "med")) : q < 0.9 ? { kind: "ammo", ammo: "energy", n: 2 } : it(catPick(r, L, "tool"))); break;
-      case "hot": add(q < 0.35 ? it(r.chance(0.5) ? "isotope" : "goldbar") : q < 0.6 ? it(catPick(r, L, "valuable")) : q < 0.8 ? it("lead", 2) : it(r.chance(0.5) ? "radaway" : "antirad")); break;
+      case "hot": add(q < 0.35 ? it(hotPick(r.chance(0.5), L, q)) : q < 0.6 ? it(catPick(r, L, "valuable")) : q < 0.8 ? it("lead", 2) : it(r.chance(0.5) ? "radaway" : "antirad")); break;
       case "isotope": add(q < 0.4 ? it("lead", r.int(1, 2)) : q < 0.6 ? it(L >= 5 && r.chance(0.5) ? "isotope" : "antirad") : q < 0.8 ? it(catPick(r, L, "valuable")) : it("iodine")); break;
       case "classified": add(q < 0.35 ? it(catPick(r, L, "valuable")) : q < 0.55 ? { kind: "note", note: "staff", n: r.int(0, 999) } : q < 0.75 ? cr(25) : it(r.chance(0.5) ? "decoder" : "jammer")); break;
       case "armory": add(q < 0.45 ? { kind: "ammo", ammo: r.chance(0.7) ? "energy" : (LAB.AMMO.slug && L >= 2 ? "slug" : "energy"), n: 1 + r.int(0, 1) } : q < 0.6 ? it(r.chance(0.4) ? "emp" : r.chance(0.5) ? "wrepair" : "fieldkit") : q < 0.8 ? it(partPick(r, L)) : cr(15)); break;
@@ -535,7 +544,9 @@ function lockFor(ctx, r, s, rm) {
     var kname = "Ключ «" + rm.name + "»";
     var spot = r.pick(mains), done = false;
     if (r.chance(0.35)) {
-      var f = fl.foes.filter(function (q2) { return !q2.boss && q2.room === spot && !(q2.carry && q2.carry.length); })[0];
+      /* (3.7, нелогичность) ключ — у того, кто его может носить (carrier), как нужные вещи в world.js:
+         прежде ключи кабинетов доставались клещам, трутням-самоубийцам и тараканам роя */
+      var f = fl.foes.filter(function (q2) { var b2 = LAB.FOES[q2.type]; return !q2.boss && b2 && b2.carrier && q2.room === spot && !(q2.carry && q2.carry.length); })[0];
       if (f) { f.carry = [{ kind: "key", key: keyId, n: kname }]; done = true; }
     }
     if (!done) ctx.addItem({ kind: "key", key: keyId, n: kname }, spot);
