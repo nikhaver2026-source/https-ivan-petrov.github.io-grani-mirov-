@@ -7139,7 +7139,9 @@ LAB.ui.closeAll();
     for (let i = 0; i < 50 && !LAB.Bank.ready("oko_m_" + K); i++) { LAB.Bank.preload(["oko_m_" + K]); await sleep(100); }
     ids.length = 0;
     V.play("ОКО по громкой связи: «" + REC + "»", { prio: "event" }); V.play("ОКО по громкой связи: «" + REC + "»", { prio: "event" });
-    await sleep(400);
+    /* (3.8) ждём, пока первая реплика зазвучит (под нагрузкой — не сразу), но не дольше двух секунд:
+       реплика длится несколько секунд, вторая за это время начаться не может */
+    for (let i = 0; i < 20 && !ids.includes("oko_m_" + K); i++) await sleep(100);
     const first = ids.filter(id => id === "oko_m_" + K).length;
     LAB.Speech.hush(); await sleep(6500);
     out.okoQ = LAB.Bank.ready("oko_m_" + K) && first === 1 && ids.filter(id => id === "oko_m_" + K).length === 1;
