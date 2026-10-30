@@ -1463,7 +1463,7 @@ function scream(f) {
   A("foeSound", f, "alert");
   /* (2.1) за стеной и закрытой дверью визг слышен глухо: слух не глушит, не ранит */
   if (!losTo(f)) return;
-  if (gm().armorSpecial("sonicguard")) { sayOnce("scrG", "Визг — защита слуха гасит его.", 6000); return; }
+  if (gm().armorSpecial("sonicguard")) { sayOnce("scrG", SCREAM_SAY[f.type] ? "Тишина давит на уши — защита слуха держит." : "Визг — защита слуха гасит его.", 6000); return; }
   G().st.deaf = 6;
   A("deafen", 3000);
   sayOnce("scr", SCREAM_SAY[f.type] || "Визг! Слух «Эхо» заложило.", 5000);
