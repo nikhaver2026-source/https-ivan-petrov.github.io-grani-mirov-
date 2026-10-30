@@ -6389,7 +6389,9 @@ LAB.ui.closeAll();
       U.closeAll();
       /* 10. почтовые ящики: письма — в архив */
       const mb = findFx("mailboxes", 1) || findFx("mailboxes", 2);
-      if (mb) { const nl = G().noteList.length; U.closeAll(); LB.act(mb, null, "mail", {}); out.mail = G().noteList.length - nl; }
+      /* (3.7) письмо из готового набора (их всего два), которое уже лежит в архиве, второй раз туда не идёт:
+         писем в архиве — сколько их названо («Записка «…»», «Письмо «…» — в архиве» или «— такое уже есть в архиве») */
+      if (mb) { const nl = G().noteList.length; U.closeAll(); LB.act(mb, null, "mail", {}); const mbSaid = spoken.filter(t => /^Из ящиков/.test(t)).pop() || ""; out.mail = Math.max(G().noteList.length - nl, (mbSaid.match(/Записка «[^»]*»\.|Письмо «[^»]*» — (в архиве|такое уже есть в архиве)/g) || []).length); }
       /* 11. каталог: выбранный шкаф — цель навигатора */
       const ct = findFx("catalog", 1) || findFx("catalog", 2);
       if (ct) { U.closeAll(); LB.act(ct, null, "catalog", {}); pick(/^Книжн/); out.catalog = !!G().libNav && LB.navTargets().length === 1; }

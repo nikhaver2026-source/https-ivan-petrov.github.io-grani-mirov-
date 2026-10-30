@@ -439,7 +439,7 @@ function codeMemo(o) {
     if (!tg.length || !r.chance(0.4)) { s.memo = 0; return null; }
     var t = tg[r.int(0, tg.length - 1)], me = MEMO[era()] ? era() : "K", ti = r.int(0, MEMO[me].length - 1);
     var p = personOf(anyone(r), era());
-    /* (3.7) ref — из чего записка собрана: в архив она идёт ссылкой (memoText), а не текстом */
+    /* (3.7) ref — из чего записка собрана: в архив она идёт ссылкой (memoTitle, memoBody), а не текстом */
     var ref = { e: me, i: ti, w: t.what, n: t.rm.num, r: t.rm.name, c: t.code, s: p.sign + ", " + (p.post || "сотрудник") };
     s.memo = { id: "libmemo:" + CUR().key + ":" + o.id, code: t.code, room: t.rm.name, t: memoTitle(ref), x: memoBody(ref), ref: ref };
   }
@@ -767,7 +767,7 @@ function hiddenCode(id) {
   var t = tg[h32("hidt:" + id + ":" + CUR().key) % tg.length], mid = "libhid:" + CUR().key + ":" + id;
   if (g.notes[mid]) return "";
   g.notes[mid] = 1; g.codes[t.code] = t.rm.name;
-  /* (3.7) в архив — ссылкой: что, номер и название помещения, код (hidText) */
+  /* (3.7) в архив — ссылкой: что, номер и название помещения, код (hidTitle, hidBody) */
   g.noteList.push({ id: mid, src: { note: "libhid", w: t.what, n: t.rm.num, r: t.rm.name, c: t.code }, L: g.L, F: g.F, pl: gm().placeName(g.x, g.y), code: t.code });
   return "Ниже, другой рукой и мельче: код " + t.what + " в помещении " + t.rm.num + " («" + t.rm.name + "») — " + digits(t.code) + ". «Эхо» запомнило код: замок вам его подскажет.";
 }

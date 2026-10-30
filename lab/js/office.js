@@ -401,7 +401,7 @@ function openMail(o, i) {
   var nid = "mail:" + CUR().key + ":" + o.id + ":" + i;
   if (m.code) g.codes[m.code] = m.room;
   /* каждое прочитанное письмо — в архив документов: (3.7) ссылкой (откуда письмо), текст
-     собирается заново (mailNote); письмо с кодом — только своим текстом, без «От» и «Кому» */
+     собирается заново (noteText ниже); письмо с кодом — только своим текстом, без «От» и «Кому» */
   if (m.ref) gm().archiveRef(nid, mailSrc(m, d), m.code && m.safe ? m.code : undefined);
   else if (m.code) { if (!g.notes[nid]) { g.notes[nid] = 1; g.noteList.push({ id: nid, t: "Письмо: " + m.s, x: m.x, a: m.f, L: g.L, F: g.F, code: m.safe ? m.code : undefined }); } }
   else gm().archiveAdd(nid, "Письмо: " + m.s, "От: " + m.f + ". Кому: " + (m.to || d.owner.split(",")[0]) + ". " + m.x, m.f, "Переписка");
