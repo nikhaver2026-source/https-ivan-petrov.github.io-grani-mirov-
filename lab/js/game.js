@@ -113,12 +113,15 @@ function encodeSeen(arr) {
   var s = "", byte = 0, n = 0;
   for (var i = 0; i < arr.length; i++) { byte |= (arr[i] ? 1 : 0) << (i % 8); if (i % 8 === 7) { s += String.fromCharCode(byte); byte = 0; n++; } }
   if (arr.length % 8) s += String.fromCharCode(byte);
-  try { return btoa(s); } catch (e) { return ""; }
+  /* (3.7) повторы сжаты: «~A1z.» — знак и сколько раз подряд (по основанию 36). Карта мало
+     разведанного этажа — сотня знаков вместо шести с половиной тысяч в записи игры */
+  try { return btoa(s).replace(/(.)\1{4,}/g, function (m, c) { return "~" + c + m.length.toString(36) + "."; }); } catch (e) { return ""; }
 }
 function decodeSeen(b64) {
   var arr = new Uint8Array(LAB.W * LAB.H);
   if (!b64) return arr;
   try {
+    if (b64.indexOf("~") >= 0) b64 = b64.replace(/~(.)([0-9a-z]+)\./g, function (m, c, n) { return new Array(parseInt(n, 36) + 1).join(c); }); /* (3.7) запись прежних версий — без «~» */
     var s = atob(b64);
     for (var i = 0; i < arr.length; i++) arr[i] = (s.charCodeAt(i >> 3) >> (i % 8)) & 1;
   } catch (e) { /* */ }
