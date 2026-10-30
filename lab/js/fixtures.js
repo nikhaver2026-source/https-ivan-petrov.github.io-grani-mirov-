@@ -932,10 +932,11 @@ function risk(kind, r) {
   }
   if (kind === "spark") { if (!r.chance(0.35)) return false; var d2 = r.int(3, 6); g.hp = Math.max(1, g.hp - d2); snd("hurt_shock", null); say("Обломок искрит и жалит руку. Минус " + d2 + " здоровья."); return false; }
   if (kind === "cut") { if ((g.inv.rubber || 0) > 0 || !r.chance(0.4)) return false; var d3 = r.int(2, 4); g.hp = Math.max(1, g.hp - d3); say("Острый край режет палец. Минус " + d3 + " здоровья."); return false; }
-  if (kind === "bite") { if ((res.bio || 0) >= 0.3 || !r.chance(0.4)) return false; var d4 = r.int(4, 8); g.hp = Math.max(1, g.hp - d4); snd("hit_flesh", null); say("Что-то в клетке кусает за руку! Минус " + d4 + " здоровья."); return false; }
+  /* (3.7, нелогичность) укус и жало держит плотная броня — стойкость к удару и химии вместе (у брони нет стойкости «bio»: прежде защита не срабатывала никогда) */
+  if (kind === "bite") { if ((res.phys || 0) + (res.chem || 0) >= 0.3 || !r.chance(0.4)) return false; var d4 = r.int(4, 8); g.hp = Math.max(1, g.hp - d4); snd("hit_flesh", null); say("Что-то в клетке кусает за руку! Минус " + d4 + " здоровья."); return false; }
   if (kind === "tox") { gm().bodyApply({ tox: 6, air: true }, m); if (m.length) say("Пары раствора щиплют горло. " + m.join(" ")); return false; }
   if (kind === "spore") { gm().bodyApply({ tox: 6, air: true }, m); if (m.length) say("Из треснувшей банки взлетает облачко спор: в горле першит. " + m.join(" ")); return false; }
-  if (kind === "sting") { if ((res.bio || 0) >= 0.3 || !r.chance(0.5)) return false; var d5 = r.int(2, 4); g.hp = Math.max(1, g.hp - d5); say("Пчела-машина жалит разрядом. Минус " + d5 + " здоровья."); return false; }
+  if (kind === "sting") { if ((res.phys || 0) + (res.chem || 0) >= 0.3 || !r.chance(0.5)) return false; var d5 = r.int(2, 4); g.hp = Math.max(1, g.hp - d5); say("Пчела-машина жалит разрядом. Минус " + d5 + " здоровья."); return false; }
   return false;
 }
 function doSalvage(o, def, p) {

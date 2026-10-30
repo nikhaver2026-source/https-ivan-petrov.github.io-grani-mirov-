@@ -1214,16 +1214,32 @@ function genFloor(seed, L, F, attempt) {
          здоровий сильнейшего из них, удар — не слабее его удара. Прежде страж на слабой основе уступал паре
          обычных врагов этажа: финальная «Заглушка» и Безбережница — двум буровым автоматам. Сильные стражи —
          как были. Случайностей не тратит: этажи прежние. */
-      var bTop = { hp: 0, dmg: 0 };
-      lev.foes.forEach(function (fid) {
-        var b0 = LAB.FOES[fid];
-        if (!b0 || b0.beh.some(function (k) { return k === "turret" || k === "camera" || k === "cleaner" || k === "relay" || k === "observer"; })) return;
-        var s0 = LAB.scaleFoe(b0, bf.lvl);
-        if (s0.hp > bTop.hp) bTop.hp = s0.hp;
-        if (s0.dmg > bTop.dmg) bTop.dmg = s0.dmg;
-      });
+      var bTopOf = function (lv, lvl) {
+        var t = { hp: 0, dmg: 0 };
+        lv.foes.forEach(function (fid) {
+          var b0 = LAB.FOES[fid];
+          if (!b0 || b0.beh.some(function (k) { return k === "turret" || k === "camera" || k === "cleaner" || k === "relay" || k === "observer"; })) return;
+          var s0 = LAB.scaleFoe(b0, lvl);
+          if (s0.hp > t.hp) t.hp = s0.hp;
+          if (s0.dmg > t.dmg) t.dmg = s0.dmg;
+        });
+        return t;
+      };
+      var bTop = bTopOf(lev, bf.lvl);
       bf.hp = bf.maxhp = Math.max(bf.maxhp, Math.round(2.5 * bTop.hp));
       bf.dmg = Math.max(bf.dmg, bTop.dmg);
+      /* (3.7, нелогичность) финальный страж не слабее стражей пяти уровней перед ним: здоровье — не меньше 1,15
+         наибольшего из их здоровий, удар — не слабее наибольшего их удара. Те же формулы, уровень врагов — их
+         последнего этажа, без случайностей (прежде «Заглушка» была вдвое слабее стража 99-го уровня) */
+      if (LAB.isFinalLevel(L)) {
+        for (var pL = Math.max(1, L - 5); pL < L; pL++) {
+          var pLev = LAB.LEVELS[pL], pBd = pLev && LAB.BOSSES[pLev.boss], pBase = pBd && LAB.FOES[pBd.base];
+          if (!pBase) continue;
+          var pLvl = LAB.foeLevel(pL, NF), pSc = LAB.scaleFoe(pBase, pLvl), pTop = bTopOf(pLev, pLvl);
+          bf.hp = bf.maxhp = Math.max(bf.maxhp, Math.round(1.15 * Math.max(Math.round(pSc.hp * pBd.mult), Math.round(2.5 * pTop.hp))));
+          bf.dmg = Math.max(bf.dmg, Math.round(pSc.dmg * 1.5), pTop.dmg);
+        }
+      }
       bf.arm = Math.round(bf.arm * 1.3) + 2;
       bf.lvl += 2;
     } else return null;

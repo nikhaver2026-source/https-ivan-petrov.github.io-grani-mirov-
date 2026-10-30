@@ -515,8 +515,14 @@ function farMain(r, fl, mains, rm) {
 function lockFor(ctx, r, s, rm) {
   var fl = ctx.fl, L = ctx.L, F = ctx.F, lev = LAB.LEVELS[L];
   var q = r.next();
-  var mains = fl.rooms.filter(function (m, i) { return m && i < 12 && i !== fl.secret && i !== fl.U; }).map(function (m) { return m.id; });
+  /* (3.7, нелогичность) главное помещение — то, что не кабинет (!m.annex), а не «номер меньше
+     двенадцати»: когда крайняя ячейка этажа пуста, кабинеты получают номера 10 и 11, и коды с
+     ключами режимных помещений попадали в другие кабинеты — запертые, с фоном, с газом, в тайники */
+  var mains = fl.rooms.filter(function (m, i) { return m && !m.annex && i !== fl.secret && i !== fl.U; }).map(function (m) { return m.id; });
   if (!mains.length) mains = [fl.U];
+  /* (3.7, нелогичность) на последней ступени допуска (99–100 уровни) «пропуска старше вашего» нет:
+     такой замок открывался бы вашим же пропуском — там замок под ключ */
+  if (q >= 0.78 && lev.tier + 1 > Math.max(1, Object.keys(LAB.TIERS).length - 1)) q = 0.5 + (q - 0.78);
   if (q < 0.5) {
     var code = String(r.int(1000, 9999)), sp = farMain(r, fl, mains, rm), cw = r.next();
     rm.codeAt = sp;

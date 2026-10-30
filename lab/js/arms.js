@@ -39,7 +39,8 @@ W("g_winchgun", 19, "ТЛ", { n: "тросомёт лебёдчика", g: "m", 
 W("g_lampbeam", 20, "ЛК", { n: "луч коногонки", g: "m", cls: "laser", ammo: "energy", dt: "laser", dmg: 20, rng: 8, spread: 0, cap: 8, cd: 600, snd: "w_laser", sndRate: 1.1, mark: 4, desc: "Шахтёрская лампа, перемотанная в излучатель. Луч метит цель." });
 
 /* ── Колыбель: то, что выросло и что сделали своими руками ── */
-W("k_bonebow", 24, "КС", { n: "костяной самострел", g: "m", cls: "kinetic", ammo: "k_needle", dt: "kinetic", dmg: 22, rng: 8, spread: 0, cap: 1, cd: 1100, snd: "w_gauss", sndRate: 2.0, silent: true, crit: 0.2, desc: "Самострел из певчей кости. Бьёт беззвучно и точно, но перезаряжается после каждого выстрела." });
+/* (3.7, нелогичность) с той глубины, где появляются иглы-жала (AMMO.k_needle, 26): прежде два уровня самострел был на один выстрел */
+W("k_bonebow", 26, "КС", { n: "костяной самострел", g: "m", cls: "kinetic", ammo: "k_needle", dt: "kinetic", dmg: 22, rng: 8, spread: 0, cap: 1, cd: 1100, snd: "w_gauss", sndRate: 2.0, silent: true, crit: 0.2, desc: "Самострел из певчей кости. Бьёт беззвучно и точно, но перезаряжается после каждого выстрела." });
 W("k_thornwhip", 25, "ТХ", { n: "терновый хлыст", g: "m", cls: "melee", ammo: "none", dt: "bio", dmg: 18, rng: 1, spread: 1, cap: 0, cd: 500, snd: "w_vibro", sndRate: 1.3, bleed: 4, desc: "Хлыст из живого терна. Шипы оставляют кровоточащие раны." });
 W("k_resinspray", 27, "СБ", { n: "смоляной брызгомёт", g: "m", cls: "bio", ammo: "k_capsule", dt: "bio", dmg: 10, rng: 4, spread: 1, cap: 12, cd: 500, snd: "w_plasma", sndRate: 1.2, slow: 5, desc: "Горячая смола: обжигает и склеивает лапы и колёса." });
 W("k_chorushorn", 29, "ПР", { n: "певчий рог", g: "m", cls: "sonic", ammo: "energy", dt: "sonic", dmg: 16, rng: 6, spread: 0, cap: 8, cd: 700, snd: "w_resonator", sndRate: 1.4, chain: 2, desc: "Рог Хора: нота отзывается в соседних целях." });
@@ -52,7 +53,8 @@ W("k_hivespear", 37, "КУ", { n: "копьё улья", g: "n", cls: "melee", a
 W("k_lumen", 39, "ФГ", { n: "фонарь глубоководья", g: "m", cls: "laser", ammo: "energy", dt: "laser", dmg: 26, rng: 10, spread: 0, cap: 5, cd: 900, snd: "w_laser", sndRate: 0.85, pierce: true, mark: 3, desc: "Светящийся орган глубоководной химеры в оправе. Свет здесь — оружие." });
 
 /* ── Отражение: стекло, фаза, повторы ── */
-W("o_mirrorpistol", 43, "ЗП", { n: "зеркальный пистолет", g: "m", cls: "phase", ammo: "o_phasecell", dt: "phase", dmg: 18, rng: 8, spread: 0, cap: 8, cd: 550, snd: "w_ion", sndRate: 1.5, crit: 0.2, desc: "Пуля выходит из ствола и из отражения ствола: одна из двух всегда находит цель точнее." });
+/* (3.7, нелогичность) с глубины фазовых ячеек (AMMO.o_phasecell, 44) */
+W("o_mirrorpistol", 44, "ЗП", { n: "зеркальный пистолет", g: "m", cls: "phase", ammo: "o_phasecell", dt: "phase", dmg: 18, rng: 8, spread: 0, cap: 8, cd: 550, snd: "w_ion", sndRate: 1.5, crit: 0.2, desc: "Пуля выходит из ствола и из отражения ствола: одна из двух всегда находит цель точнее." });
 W("o_shardwhip", 46, "ХО", { n: "хлыст из осколков", g: "m", cls: "melee", ammo: "none", dt: "phase", dmg: 26, rng: 1, spread: 1, cap: 0, cd: 520, snd: "w_vibro", sndRate: 1.5, bleed: 4, desc: "Нить амальгамы, унизанная зеркальными осколками." });
 W("o_echorifle", 48, "Э2", { n: "повторитель «Эхо-2»", g: "m", cls: "sonic", ammo: "o_sonicell", dt: "sonic", dmg: 18, rng: 8, spread: 0, cap: 10, cd: 700, snd: "w_resonator", sndRate: 1.1, burst: 2, mark: 3, desc: "Каждый выстрел повторяется отзвуком и метит цель." });
 W("o_rime", 50, "ИЗ", { n: "иней зеркал", g: "m", cls: "cryo", ammo: "energy", dt: "cryo", dmg: 20, rng: 6, spread: 1, cap: 6, cd: 750, snd: "w_cryo", sndRate: 0.8, freeze: 3, slow: 4, desc: "Холод отражения: замораживает, а оттаявшая цель ещё долго движется вяло." });
