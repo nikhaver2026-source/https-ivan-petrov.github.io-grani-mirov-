@@ -485,7 +485,7 @@ function tick() {
     A("explosion", gr.x, gr.y, "frag"); /* (2.6) граната на растяжке — осколочная */
     if (C) {
       var kk = 1 + 0.165 * (LAB.foeLevel(g.L, g.F) - 1);
-      C.foes().forEach(function (f) { if (!f.dead && !f.ally && cheb(f.x, f.y, gr.x, gr.y) <= 1) C.damageFoe(f, Math.round(45 * kk), "kinetic", { noarmor: true, quiet: true }); });
+      C.foes().forEach(function (f) { if (!f.dead && !f.ally && cheb(f.x, f.y, gr.x, gr.y) <= 1) C.damageFoe(f, Math.round(45 * kk), "kinetic", { noarmor: true, quiet: true, by: "trap" }); }); /* (3.7) растяжка — не рука героя (премия «без крови») */
       C.noise(12);
       if (cheb(g.x, g.y, gr.x, gr.y) <= 1) { C.hurtPlayer(Math.max(1, Math.round(g.hpMax * 0.35 * Math.sqrt(dk().dmg || 1))), "phys", null, { quiet: true }); if (g.dead) return; sayq("Взрыв накрыл вас осколками."); }
       else sayq("Граната рванула за спиной — вы успели отойти.");

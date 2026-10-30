@@ -191,7 +191,7 @@ function slam(h) {
     say("Удар пресса! Вас отбросило назад.", { prio: "urgent" });
     LAB.vib([120, 60, 120]);
   }
-  if (cb) cb.foes().forEach(function (f) { if (!f.dead && !f.calm && onLine(h, f.x, f.y)) cb.damageFoe(f, Math.max(40, f.maxhp * 0.6), "phys", { noarmor: true, quiet: false }); });
+  if (cb) cb.foes().forEach(function (f) { if (!f.dead && !f.calm && onLine(h, f.x, f.y)) cb.damageFoe(f, Math.max(40, f.maxhp * 0.6), "phys", { noarmor: true, quiet: false, by: "trap" }); }); /* (3.7) пресс — не рука героя (премия «без крови») */
 }
 function hazardAt(x, y) {
   var fl = CUR().fl;

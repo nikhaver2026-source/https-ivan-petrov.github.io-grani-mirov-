@@ -413,7 +413,7 @@ function applyFoe(tp, d, f, k) {
   }
   var dmg = d.dmg ? d.dmg * k * (mechF && d.mk ? d.mk : 1) : 0;
   if (tp.dmgAbs) dmg = tp.dmgAbs;
-  if (dmg > 0 && cb()) cb().damageFoe(f, Math.round(dmg), d.dt || "kinetic", { noarmor: !!d.noarmor, quiet: true });
+  if (dmg > 0 && cb()) cb().damageFoe(f, Math.round(dmg), d.dt || "kinetic", { noarmor: !!d.noarmor, quiet: true, by: tp.own ? "hero" : "trap" }); /* (3.7) своя ловушка — рука героя, ловушка этажа — нет (премия «без крови») */
   if (f.dead) return;
   if (d.emp && mechF && !hard) f.shield = 0;
   if (d.hold && (d.id !== "magnet" || mechF) && (d.id !== "gear" || mechF)) f.frozen = Math.max(f.frozen || 0, half(d.hold));
@@ -620,7 +620,7 @@ function tick() {
     foes.forEach(function (f) {
       if (f.dead || f.ally || cheb(f.x, f.y, zn.x, zn.y) > zn.r || !clear(zn.x, zn.y, f.x, f.y)) return;
       if (zn.k === "gas" && f.kind === "mech") return;
-      if (cb()) cb().damageFoe(f, Math.round(zn.d * kk), zn.k === "fire" ? "thermo" : "bio", { noarmor: true, quiet: true });
+      if (cb()) cb().damageFoe(f, Math.round(zn.d * kk), zn.k === "fire" ? "thermo" : "bio", { noarmor: true, quiet: true, by: zn.own ? "hero" : "trap" });
       if (f.dead && zn.own) { ev("trap_kill", 1); if (f.kind === "mech") ev("trap_mech", 1); }
     });
     if (cheb(g.x, g.y, zn.x, zn.y) <= zn.r && clear(zn.x, zn.y, g.x, g.y)) {

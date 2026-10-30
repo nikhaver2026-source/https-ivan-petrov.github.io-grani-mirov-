@@ -236,18 +236,24 @@ K("hunt", { st: "force", free: true,
   grow: function (s, t) { var cap = Math.min({ elite: 8, guard: 10, patrol: 14 }[s.cls] || 25, 2 + Math.ceil(1.3 * t)); if (s.need >= cap) return false; s.need++; return true; } });
 
 /* — расчистить помещение: враги, что в нём сидели, убиты где угодно — */
+/* кто «засел» в помещении: не турели, камеры, неподвижные узлы и наблюдатели, не мирные уборщики
+   (бродят по этажу и людей не трогают) и не ящики-ловушки (притворяются ящиком — врага не видно) */
+var NOT_SIT = ["turret", "camera", "cleaner", "stationary", "mimic", "relay", "observer", "patrol"];
+function sitBeh(beh) { return !NOT_SIT.some(function (k) { return (beh || []).indexOf(k) >= 0; }); }
 function sitDef(d) {
   var b = LAB.FOES[d.type];
   if (!b || d.boss || d.spawned || d.ally || d.beat || d.patrol) return false;
-  return !["turret", "camera", "cleaner", "stationary", "mimic", "relay", "observer", "patrol"].some(function (k) { return (b.beh || []).indexOf(k) >= 0; });
+  return sitBeh(b.beh);
 }
 function roomFoes(rid) {
   var C = LAB.combat; if (!C || !C.foes) return [];
   return C.foes().filter(function (f) {
     if (f.dead || f.ally || f.calm || f.boss) return false;
     if (C.isTurret && C.isTurret(f)) return false;
-    var beh = (f.base && f.base.beh) || [];
-    if (beh.indexOf("camera") >= 0 || beh.indexOf("stationary") >= 0) return false;
+    /* (3.7, нелогичность) на своём этаже — то же правило, что для чужих (sitDef): прежде расчистка
+       «там засели машина или тварь — оттуда не пройти» доставалась одному мирному уборщику,
+       а невидимый ящик-ловушка оставлял «осталось врагов: 1» в пустом помещении */
+    if (f.neutral || f.disguised || !sitBeh((f.base && f.base.beh) || [])) return false;
     return CUR().fl.room[idx(f.x, f.y)] === rid;
   });
 }
@@ -307,9 +313,11 @@ function visitDone(s) { return ((G().lastVisit || {})[s.tL + "-" + s.tF] || 0) >
 K("visit", { st: "search", away: true,
   gen: function (c) { return { type: "visit", seq0: G().visitSeq || 0 }; },
   ready: visitDone,
-  prog: function (s) { return visitDone(s) ? "этаж " + s.tF + " разведан" : "этаж " + s.tF + " ещё не разведан"; },
+  /* (3.7, нелогичность) «разведать» и «ещё не разведан» — только об этаже, где вы не были: о знакомом
+     этаже окно заданий говорило «разведать этаж 1 — ещё не разведан», а описание — «сходить» */
+  prog: function (s) { return s.vis ? (visitDone(s) ? "вы побывали на этаже " + s.tF : "на этаж " + s.tF + " ещё не сходили") : visitDone(s) ? "этаж " + s.tF + " разведан" : "этаж " + s.tF + " ещё не разведан"; },
   does: function (s, q) { return (s.vis ? "сходить на этаж " + s.tF : "разведать этаж " + s.tF + ", где вы ещё не были") + (s.tL !== q.L ? " уровня " + s.tL : " этого уровня"); },
-  short: function (s) { return "разведать этаж " + s.tF; },
+  short: function (s) { return (s.vis ? "сходить на этаж " : "разведать этаж ") + s.tF; },
   w: function (s) { return s.vis ? 2.5 : 5; } });
 
 /* — осмотреть помещения этажа — */
@@ -449,7 +457,10 @@ function camDefs(fl) { return fl.foes.filter(function (d) { var b = LAB.FOES[d.t
 function camsDone(s) {
   var fx = fst(s.tL, s.tF); if (!fx) return false;
   if (fx.netXp && (fx.netXp.camsloop || fx.netXp.camsours)) return true;
-  return (s.ids || []).length > 0 && s.ids.every(function (id) { return fx.foes && fx.foes[id] && fx.foes[id].dead; });
+  /* (3.7, нелогичность) обесточенная камера (кожух или терминал: fs.camS[id].off) тоже ослеплена:
+     прежде засчитывались только разбитые, а когда живых камер не оставалось, с терминала их уже
+     было не закольцевать — оставалось бить каждую */
+  return (s.ids || []).length > 0 && s.ids.every(function (id) { return (fx.foes && fx.foes[id] && fx.foes[id].dead) || !!(fx.camS && fx.camS[id] && fx.camS[id].off); });
 }
 K("cams", { st: "tech",
   gen: function (c) {
@@ -460,7 +471,7 @@ K("cams", { st: "tech",
   },
   ready: camsDone,
   prog: function (s) { return camsDone(s) ? "камеры ослеплены" : "камеры смотрят"; },
-  does: function (s, q) { return "ослепить камеры " + where(s, q) + ": закольцевать или перепрошить их с терминала безопасности — или разбить все"; },
+  does: function (s, q) { return "ослепить камеры " + where(s, q) + ": закольцевать или перепрошить их с терминала безопасности — или обесточить либо разбить каждую"; },
   short: function (s) { return "камеры этажа " + s.tF; },
   w: function () { return 6; },
   nav: function () { var o = nearObj(isSec); return o ? { n: "терминал безопасности", o: o } : null; } });
@@ -483,9 +494,17 @@ K("puzzle", { st: "search",
   nav: function (s) { var o = oObj(s, function (o) { return o.id === s.oid; }); return o ? { n: "стенд испытаний", o: o } : null; } });
 
 /* — сейф: код — в записках этажа — */
+/* (3.7, нелогичность) сейф поручения — в обычном помещении: не в тайнике за фальшивой стеной (текст
+   называл тайник по имени и молчал о проходе) и не в горячей камере за санпропускником (туда пускают
+   только в защитном костюме, а о нём ни слова) — прежде так выходил каждый четвёртый сейф */
+function plainRoom(fl, rid) {
+  var rm = rid != null && rid >= 0 ? fl.rooms[rid] : null;
+  if (!rm || rm.hidden || (LAB.ROOMS[rm.type] || {}).kind === "hazard") return false;
+  return !fl.doors.some(function (d) { return (d.room === rid || d.other === rid) && d.lock && d.lock.type === "hazard"; });
+}
 K("safe", { st: "search",
   gen: function (c) {
-    var fl = fdef(c.L, c.tF), list = fl.objs.filter(function (o) { return o.type === "safe" && !(ost(c.L, c.tF, o.id) || {}).open; });
+    var fl = fdef(c.L, c.tF), list = fl.objs.filter(function (o) { return o.type === "safe" && plainRoom(fl, o.room) && !(ost(c.L, c.tF, o.id) || {}).open; });
     if (!list.length) return null;
     var o = list[c.h % list.length];
     return { type: "safe", oid: o.id, roomName: o.room >= 0 && fl.rooms[o.room] ? roomLabel(fl.rooms[o.room]) : "" };
@@ -589,6 +608,9 @@ function survivorOn(L, F, h, notKey) {
 }
 K("deliver", { st: "trade", away: true, hand: function (s) { return !!s.reply; }, /* ответ на посылку — заказчику в руки */
   gen: function (c) {
+    /* (3.7, нелогичность) вскрыли посылку и оставили себе — этот человек посылок больше не доверит
+       (openParcel: noParcel); прежде круг «вскрыть — переждать — взять снова» давал подарок без конца */
+    var rr = recOf(c.n.key); if (rr && rr.noParcel) return null;
     var m = survivorOn(c.L, c.tF, c.h, c.n.key); if (!m) return null;
     return { type: "deliver", to: m.key, toName: m.n, toF: !!m.female, toProf: (m.prof || "").toLowerCase(), toPr: m.prof || "", given: false, reply: c.t >= 5 };
   },
@@ -785,13 +807,26 @@ var GIFTS = {
   all: ["medkit_s", "ration", "@ammo", "repairkit", "filter", "@part"],
   sci: ["filter", "antidote", "neuroblock", "lockpick", "sonar", "iodine"]
 };
-/* Ценность вещи — по ступени (в базовых ценах, глубина её не меняет). Дорогое, что не по
-   ступени, заказчик не отдаёт — даёт следующее из своего; заряды к вашему оружию — всегда.
-   Деталь, которую просили принести, обратно в подарок не отдают. */
+/* Ценность вещи — по ступени, в базовых ценах. Дорогое, что не по ступени, заказчик не отдаёт —
+   даёт следующее из своего; заряды к вашему оружию — всегда. Деталь, которую просили принести,
+   обратно в подарок не отдают.
+   (3.7, нелогичность) И по глубине: ценность растёт вместе с ценами глубины (priceDepth — как и
+   кредиты награды растут с глубиной), аптечка и бинт — местные (лестница аптечек medic.js, бинты
+   глубин), деталь — своего блока. Прежде на пятидесятом уровне в подарок давали аптечку и
+   протеиновые батончики первого уровня. */
 var GIFT_VAL = [30, 50, 80, 120, 170, 240];
+var LOCAL_GIFT = { medkit_s: "kit", medkit_l: "kit", bandage: "band" };
+function localGift(id, L, maxPrice) {
+  var lad = LOCAL_GIFT[id] === "kit" ? ((LAB.medic && LAB.medic.KIT_LADDER) || []) : LOCAL_GIFT[id] === "band" ? ["bandage", "bandage_h", "bandage_x"] : null;
+  if (!lad) return id;
+  var best = id, bd = (LAB.ITEMS[id] || {}).depth || 1;
+  lad.forEach(function (k) { var d = LAB.ITEMS[k], dk = d ? d.depth || 1 : 0; if (d && dk <= L && dk > bd && (d.price || 20) <= maxPrice) { best = k; bd = dk; } });
+  return best;
+}
+function giftDepthK() { var p = gm().priceDepth ? gm().priceDepth() : 1; return p > 1 ? p : 1; }
 function questGift(n, h, stage, avoid) {
   var pr = (n && LAB.PROFS[n.prof]) || {}, list = GIFTS[(n && n.heal) ? "med" : (pr.trade || "sci")] || GIFTS.all;
-  var g = G(), val = GIFT_VAL[clamp(stage, 0, GIFT_VAL.length - 1)], start = (h >>> 7) % list.length, d = null, id = null;
+  var g = G(), L = Math.max(g.L, 1), val = GIFT_VAL[clamp(stage, 0, GIFT_VAL.length - 1)] * giftDepthK(), start = (h >>> 7) % list.length, d = null, id = null;
   for (var i = 0; i < list.length && !d; i++) {
     var pick = list[(start + i) % list.length];
     if (pick === "@ammo") {
@@ -799,13 +834,16 @@ function questGift(n, h, stage, avoid) {
       return { kind: "ammo", ammo: am, n: Math.max(1, Math.min(6, Math.round(val / (LAB.AMMO[am].price || 30)))) };
     }
     if (pick === "@part") {
-      var parts = LAB.PARTS.filter(function (p) { return (LAB.PART_DEPTH[p] || 1) <= Math.max(g.L, 1) && p !== avoid; });
+      var parts = LAB.PARTS.filter(function (p) { return (LAB.PART_DEPTH[p] || 1) <= L && p !== avoid; });
+      var own = parts.filter(function (p) { return (LAB.PART_DEPTH[p] || 1) > L - 20; }); /* (3.7) деталь своего блока */
+      if (own.length) parts = own;
       pick = parts[(h >>> 11) % parts.length];
     }
+    if (pick !== avoid) pick = localGift(pick, L, val * 1.75);
     var dd = LAB.ITEMS[pick];
-    if (dd && pick !== avoid && (dd.depth || 1) <= Math.max(g.L, 1) && (dd.price || 20) <= val * 1.75) { id = pick; d = dd; }
+    if (dd && pick !== avoid && (dd.depth || 1) <= L && (dd.price || 20) <= val * 1.75) { id = pick; d = dd; }
   }
-  if (!d) { id = "medkit_s"; d = LAB.ITEMS[id]; }
+  if (!d) { id = localGift("medkit_s", L, val * 1.75); d = LAB.ITEMS[id]; }
   return { kind: "item", item: id, n: Math.max(1, Math.min(6, Math.round(val / (d.price || 20)))) };
 }
 function giftName(it) { return gm().itemName(it).replace(/\.$/, "").replace(/^[А-ЯЁ](?=[а-яё])/, function (c) { return c.toLowerCase(); }); }
@@ -861,6 +899,21 @@ function questFloors(q) {
   steps(q).forEach(function (s) { if (s.tF != null) out[(s.tL || q.L) + "-" + s.tF] = 1; });
   return out;
 }
+/* (3.7, нелогичность) Дорога пешком: сколько этажей пройти до цели шага от ближнего этажа, где вы
+   уже были (до него довезёт лифт). Время «Эхо» идёт шагами — минута на шаг, — а этаж от лестницы
+   до лестницы — сотни шагов: на каждый такой этаж срокам — запас WALK_MIN минут. */
+var WALK_MIN = 300;
+function walkFloors(s) {
+  if (!s || s.tF == null) return 0;
+  var L = s.tL, best = LAB.FLOORS_N;
+  if (vis(L, s.tF)) return 0;
+  for (var f = 1; f <= LAB.FLOORS_N; f++) if (vis(L, f)) best = Math.min(best, Math.abs(f - s.tF));
+  return best;
+}
+/* для всего поручения — до самой дальней цели: по пути к ней проходят и ближние */
+function walkAll(q) { var m = 0; steps(q).forEach(function (s) { m = Math.max(m, walkFloors(s)); }); return m; }
+/* шаг в перечне — без своей точки в конце: точку ставит перечень */
+function noDot(t) { return String(t || "").replace(/\.+$/, ""); }
 
 /* ════════ СБОРКА ПОРУЧЕНИЯ ════════ */
 var STYLE = {
@@ -992,8 +1045,10 @@ function build(n, t, h, style, chap, path) {
     var cands = rot(["quiet", "fast"].concat(force ? [] : ["clean"]), h >>> 9);
     q.cond = cands.slice(0, t >= 7 ? 2 : 1).map(function (k2) { return { k: k2, lost: false }; });
   }
-  /* срочная помощь раненому — с настоящим сроком */
-  if (t >= 3 && out.some(function (s) { return s.type === "aid"; }) && (h >>> 13) % 2 === 0) q.urgentW = 1;
+  /* срочная помощь раненому — с настоящим сроком; (3.7, нелогичность) только если раненый рядом
+     (до трёх этажей) или на этаже, где вы уже были (туда возит лифт): время «Эхо» идёт шагами, этаж
+     пешком — несколько часов, и до раненого в семи и больше этажах ниже нельзя было успеть даже бегом */
+  if (t >= 3 && out.some(function (s) { return s.type === "aid" && (s.vis || Math.abs(s.tF - g.F) <= 3); }) && (h >>> 13) % 2 === 0) q.urgentW = 1;
   /* развилка обычного поручения: вещь с секретом */
   if (!chap && t >= 2 && out.some(function (s) { return s.type === "keep"; }) && (h >>> 15) % 3 === 0) q.pick = { chip: LAB.credits(20 + 6 * Math.min(t, 20), g.L, g.F) };
   return q;
@@ -1013,18 +1068,21 @@ function finishBuild(q, n, h, chap, path, intro0) {
   /* (3.6) как сдавать — решено при сборке: вещи в руки и выбор в конце главы — лично */
   q.hand = (chap && chap.pick) || q.pick || ss.some(needsHand) ? "self" : "echo";
   var body;
-  if (ss.length === 1) body = cap1(sDoes(ss[0], q)) + ".";
-  else body = "Шаги: " + ss.map(function (s, i) { return (i + 1) + ") " + sDoes(s, q); }).join("; ") + "." + (q.hand === "self" ? " Потом — обратно, за наградой." : " Доклад передаст «Эхо».");
+  /* (3.7, нелогичность) шаг, что кончается на «шт.», — без второй точки («5 шт.. Потом…») */
+  if (ss.length === 1) body = cap1(noDot(sDoes(ss[0], q))) + ".";
+  else body = "Шаги: " + ss.map(function (s, i) { return (i + 1) + ") " + noDot(sDoes(s, q)); }).join("; ") + "." + (q.hand === "self" ? " Потом — обратно, за наградой." : " Доклад передаст «Эхо».");
   /* простая прямая речь — только об одном шаге: у второй просьбы бывает и второй шаг (build) */
   q.text = (t <= 1 && !chap && ss.length === 1 ? simpleText(q, n) : q.giverName + ": «" + intro + "» " + body);
   q.short = chap ? "«" + chap.t + "»" + (ss.length > 1 ? ", шагов: " + ss.length : "") : sShort(ss[0], q) + (ss.length > 1 ? " и ещё " + (ss.length - 1) + " " + pl(ss.length - 1, "дело", "дела", "дел") : "");
   if (chap) q.title = chap.t;
   if (path && chap && chap[path]) q.way = chap[path].l;
   else if (q.style) q.way = STYLE_N[q.style];
-  /* срок условия «быстро» и срочной помощи — от труда */
+  /* срок условия «быстро» и срочной помощи — от труда; (3.7, нелогичность) и от дороги пешком: на
+     каждый этаж, где вы ещё не были, — запас (лифт туда не возит, этаж от лестницы до лестницы —
+     сотни шагов, а шаг — минута «Эхо»); «без крови» — по убитым героем (hkills, combat.js) */
   var W = workOf(q), now = nowMin();
-  (q.cond || []).forEach(function (c) { if (c.k === "fast") c.until = now + Math.round(90 + 55 * W); if (c.k === "clean") c.k0 = G().stats.kills || 0; });
-  if (q.urgentW) { var aidS = ss.filter(function (s) { return s.type === "aid"; })[0]; q.urgent = now + Math.round(240 + 80 * stepW(aidS, q)); delete q.urgentW; }
+  (q.cond || []).forEach(function (c) { if (c.k === "fast") c.until = now + Math.round(90 + 55 * W + WALK_MIN * walkAll(q)); if (c.k === "clean") c.hk0 = G().stats.hkills || 0; });
+  if (q.urgentW) { var aidS = ss.filter(function (s) { return s.type === "aid"; })[0]; q.urgent = now + Math.round(240 + 80 * stepW(aidS, q) + WALK_MIN * walkFloors(aidS)); delete q.urgentW; }
   q.reward = rewardOf(q, n, h);
   if (q.chap && q.reward.gift) q.reward.gift.n = Math.max(q.reward.gift.n, 2);
   q.t0 = now;
@@ -1038,7 +1096,7 @@ function simpleText(q, n) {
     case "fetch": return who + " просит принести " + s.need + " шт.: «" + LAB.ITEMS[s.item].n + "». " + (why ? why + " " : "") + "Детали попадаются в ящиках, на телах и у роботов.";
     case "supply": return who + ": «Принесите «" + LAB.ITEMS[s.item].n + "» — " + s.need + " шт. Без них я как без рук».";
     case "kill": return who + " просит расчистить путь: уничтожить " + s.need + " " + pl(s.need, "врага", "врагов", "врагов") + ", где угодно; присланные ОКО на замену, когда с них уже нечего взять, не в счёт." + (why ? " " + why : "");
-    case "visit": return who + " просит разведать этаж " + s.tF + " этого уровня. " + (why ? why + " " : "") + "Возвращаться не нужно: как только вы там окажетесь, «Эхо» передаст доклад по связи.";
+    case "visit": return who + " просит " + (s.vis ? "сходить на этаж " : "разведать этаж ") + s.tF + " этого уровня. " + (why ? why + " " : "") + "Возвращаться не нужно: как только вы там окажетесь, «Эхо» передаст доклад по связи.";
     case "clear": return who + ": «В " + inRoom(s.roomName) + (s.tF === q.F ? " на этом этаже" : " на этаже " + s.tF) + " засели " + (s.foes === 1 ? "машина или тварь" : "машины и твари") + " — оттуда не пройти. Расчистите его — «Эхо» мне сообщит».";
     case "body": return who + ": «" + (s.bf ? "Моя коллега" : "Мой коллега") + ", " + s.post + " " + s.who + ", не " + (s.bf ? "вернулась" : "вернулся") + (s.tF === q.F ? ". " + (s.bf ? "Её" : "Его") + " видели здесь, на этом этаже" : ". " + (s.bf ? "Её" : "Его") + " видели на этаже " + s.tF) + ", — " + s.roomName + ". Если " + (s.bf ? "её" : "его") + " больше нет, принесите жетон — передадим имя наверх».";
     case "keep": return who + ": «Когда всё началось, я " + (fem ? "оставила" : "оставил") + " " + s.what + " — " + s.roomName + (s.tF === q.F ? " на этом этаже" : ", этаж " + s.tF) + ". Загляните туда — «Эхо» услышит, где лежит, — и принесите мне».";
@@ -1048,7 +1106,7 @@ function simpleText(q, n) {
     case "deliver": return who + ": «На этаже " + s.tF + " живёт " + s.toName + (s.toProf ? ", " + s.toProf : "") + ". Передайте посылку — " + (s.toF ? "она" : "он") + " ждёт».";
     case "ask": return who + ": «" + (s.tF === q.F ? "Здесь, на нашем этаже," : "На этаже " + s.tF) + " живёт " + s.toName + (s.toProf ? ", " + s.toProf : "") + ". Узнайте у " + (s.toF ? "неё" : "него") + ", " + askTopic(s).q + ". Возвращаться ко мне не нужно: «Эхо» передаст ответ по связи».";
   }
-  return who + ": «" + cap1(sDoes(s, q)) + "».";
+  return who + ": «" + cap1(noDot(sDoes(s, q))) + "».";
 }
 /* Предложения заказчика: одно на первых двух ступенях, с третьей — два пути. */
 function offers(n) {
@@ -1113,24 +1171,35 @@ var COOL_LINE = {
 function take(n) {
   var r = giver(n), now = nowMin();
   if (r.cool && now < r.cool) { say(n.n + ": «" + (COOL_LINE[r.why] || COOL_LINE.abandon) + "»."); return; }
-  if (r.cool && now >= r.cool) { r.cool = 0; if (r.trust < 25) r.trust = 25; } /* время лечит */
+  /* время лечит отказ и опоздание. (3.7, нелогичность) Обман — нет: после вскрытой посылки или
+     утаённого чипа доверие само до двадцати пяти не поднимается, а кому оно упало ниже пятнадцати,
+     тот «больше не верит» — и оттаивает медленно, понемногу за каждую паузу. Прежде любая пауза
+     возвращала доверие к двадцати пяти, и «больше не верю» не звучало никогда */
+  if (r.cool && now >= r.cool) {
+    if (r.why === "distrust") r.trust = Math.min(25, r.trust + 4);
+    else if (r.why !== "betray" && r.trust < 25) r.trust = 25;
+    r.cool = 0;
+  }
   if (r.trust < 15) { r.cool = now + 180; r.why = "distrust"; say(n.n + ": «" + COOL_LINE.distrust + "»."); return; }
   var act = active().length;
   if (act >= ACTIVE) { say(n.n + ": «Вижу, у вас и так забот хватает. Разберитесь с ними — тогда и поговорим». Взятых поручений — " + act + " из " + ACTIVE + ": сдайте одно или откажитесь от него в окне заданий."); return; }
   if (active().some(function (q) { return q.giver === n.key; })) { say(n.n + ": «Сначала — то, о чём я уже " + (n.female ? "просила" : "просил") + "»."); return; }
   var list = offers(n);
   if (!list.length) { say(n.n + ": «Пока просить не о чем»."); return; }
-  if (list.length === 1) { accept(n, list[0]); return; }
+  /* (3.7, нелогичность) без окна — только первые две простые просьбы; глава и просьба с третьей —
+     в окне выбора и с одним путём: заголовок истории, награда и «Подумать и вернуться позже»
+     (прежде такая глава бралась сразу, а отказ от неё стоил доверия) */
+  if (list.length === 1 && !list[0].chap && tierOf(n) <= 1) { accept(n, list[0]); return; }
   offerMenu(n, list);
 }
 function offerMenu(n, list) {
-  var r = giver(n), q0 = list[0], chap = q0.chap ? chapterDef(q0.chap.arc, q0.chap.i, r.path) : null;
+  var r = giver(n), q0 = list[0], chap = q0.chap ? chapterDef(q0.chap.arc, q0.chap.i, r.path) : null, one = list.length === 1;
   var head = chap ? "История «" + chap.arcN + "», глава " + ["первая", "вторая", "третья", "четвёртая", "пятая", "шестая"][chap.i] + ": «" + chap.t + "». " : "";
-  var intro = head + n.n + ": «" + q0.intro + " Можно по-разному — выбирайте, как пойдёте». " + n.n + " " + trustWord(r.trust, !!n.female) + ".";
+  var intro = head + n.n + ": «" + q0.intro + (one ? " Возьмётесь?»" : " Можно по-разному — выбирайте, как пойдёте».") + " " + n.n + " " + trustWord(r.trust, !!n.female) + ".";
   var items = list.map(function (q, i) {
     var ss = steps(q);
     var sum = ss.length > 1 ? ss.map(function (s) { return sShort(s, q); }).join("; ") : sShort(ss[0], q);
-    return { label: "Путь " + ["первый", "второй", "третий"][i] + (q.way ? " — " + q.way : "") + ": " + sum + ". " + rewardText(q), fn: function () { accept(n, q); } };
+    return { label: "Путь" + (one ? "" : " " + ["первый", "второй", "третий"][i]) + (q.way ? " — " + q.way : "") + ": " + sum + ". " + rewardText(q), fn: function () { accept(n, q); } };
   });
   items.push({ label: "Подумать и вернуться позже", fn: function () { say(n.n + ": «Подумайте. Я никуда не денусь»."); } });
   UIx("menu", "Поручение: " + n.n, items, { intro: intro });
@@ -1160,7 +1229,7 @@ function accept(n, q) {
   if (d > 0) { (q.cond || []).forEach(function (c) { if (c.k === "fast") c.until += d; }); if (q.urgent) q.urgent += d; }
   q.t0 = now;
   steps(q).forEach(function (s) { if (s.type === "kill") s.wk0 = G().stats.wkills || 0; if (s.type === "visit" || s.type === "deep") s.seq0 = G().visitSeq || 0; });
-  (q.cond || []).forEach(function (c) { if (c.k === "clean") c.k0 = G().stats.kills || 0; });
+  (q.cond || []).forEach(function (c) { if (c.k === "clean") c.hk0 = G().stats.hkills || 0; }); /* (3.7) убитые героем */
   var rmA = n.room != null && n.room >= 0 && CUR().fl ? CUR().fl.rooms[n.room] : null;
   q.gRoom = rmA ? { num: rmA.num || 0, name: rmA.name || "" } : null;
   G().quests.push(q);
@@ -1168,9 +1237,10 @@ function accept(n, q) {
   journal("Задание от " + n.n + " (" + whereGiver(q) + "): " + q.short + "." + (hd === "echo" ? " Доклад — по связи." : hd === "self" ? " Сдавать лично." : ""));
   UIx("closeAll"); /* окно выжившего под выбором устарело — назад, в игру */
   LAB.UI.ok();
-  /* (3.6, просьба игрока) как сдавать: по связи — возвращаться не нужно; лично — куда именно */
+  /* (3.6, просьба игрока) как сдавать: по связи — возвращаться не нужно; лично — куда именно.
+     (3.7, нелогичность) куда придут кредиты и где ждёт подарок, уже сказала награда (rewardText) — без повтора */
   var how = q.remote || hd === "courier" ? ""
-    : hd === "echo" ? " Сдавать не нужно: как только всё будет сделано, «Эхо» само передаст доклад по связи — кредиты придут на браслет сразу" + (q.reward && q.reward.gift ? ", а подарок оставят у выжившего поближе к вам" : "") + "."
+    : hd === "echo" ? " Сдавать не нужно: как только всё будет сделано, «Эхо» само передаст доклад по связи."
     : " Сдавать лично (" + handWhy(q) + "): " + (q.gRoom ? roomWords(q.gRoom) + ", " : "") + "этаж " + q.F + "; номер помещения — в окне заданий.";
   say("Задание: " + q.text + " " + rewardText(q) + how + " Взятых поручений — " + (act + 1) + " из " + ACTIVE + ".");
   UIx("refresh");
@@ -1389,7 +1459,13 @@ function condTick(q, now) {
   (q.cond || []).forEach(function (c) {
     if (c.lost) return;
     if (c.k === "fast" && c.until && now > c.until) { c.lost = true; sayq("Поручение «" + q.short + "»: срок премии за быстроту вышел."); }
-    if (c.k === "clean" && (G().stats.kills || 0) > (c.k0 || 0)) { c.lost = true; sayq("Поручение «" + q.short + "»: пролилась кровь — премии «без крови» не будет."); }
+    /* (3.7, нелогичность) «без крови» — по убитым самим героем (stats.hkills, combat.js): гибель союзника,
+       ловушка этажа и самоподрыв твари премию не снимают. Поручение прежней записи (k0) — считается с этой минуты */
+    if (c.k === "clean") {
+      var hk = G().stats.hkills || 0;
+      if (c.hk0 == null) c.hk0 = hk;
+      if (hk > c.hk0) { c.lost = true; sayq("Поручение «" + q.short + "»: пролилась кровь — премии «без крови» не будет."); }
+    }
   });
 }
 /* время идёт шагами и отдыхом (advanceTime): сроки проверяются сразу */
@@ -1564,7 +1640,9 @@ function openParcel(q, s, n) {
       gm().giveItem(gift, true);
       q.done = true; q.failed = true;
       var r = recOf(q.giver);
-      if (r) { r.trust = clamp(r.trust - 30, 0, 100); r.fails = (r.fails || 0) + 1; r.cool = nowMin() + 240; r.why = "betray"; r.seq = (r.seq || 0) + 1; }
+      /* (3.7, нелогичность) и посылок вам этот человек больше не доверит (deliver.gen: noParcel), а доверие
+         после паузы само не вернётся (take): прежде круг «вскрыть — переждать — взять снова» давал подарок без конца */
+      if (r) { r.trust = clamp(r.trust - 30, 0, 100); r.fails = (r.fails || 0) + 1; r.cool = nowMin() + 240; r.why = "betray"; r.seq = (r.seq || 0) + 1; r.noParcel = 1; }
       journal("Посылка от " + q.giverName + " не дошла: вы оставили её себе.");
       compact(q);
       say("Вы забираете " + giftName(gift) + ". " + n.n + " так и не узнает, что " + (n.female ? "её" : "его") + " ждало. Поручение «" + q.short + "» сорвано; " + q.giverName + " узнает — и не простит скоро.");

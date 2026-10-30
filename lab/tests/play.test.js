@@ -5882,7 +5882,8 @@ LAB.ui.closeAll();
       /* весь путь главы: два пути, шаги, выбор, следующая глава — по выбору */
       const nc = { key: "Q36-ch", n: "Инженер Главный", prof: "Инженер" };
       const rc = Q.giver(nc); rc.done = 2; rc.ch = 0; rc.path = []; rc.seq = 0; rc.cool = 0;
-      /* (3.7) путь без своих шагов на этом этаже не предлагается (quests.js, need): один путь — без окна выбора */
+      /* (3.7) путь без своих шагов на этом этаже не предлагается (quests.js, need); глава и с одним путём — в окне
+         выбора: заголовок истории, «Путь — …» и «Подумать и вернуться позже» (take: без окна — только первые две просьбы) */
       const offs = Q.offers(nc).length;
       U.closeAll(); spoken.length = 0; g.takeQuest(nc);
       let w = U.top();
@@ -6098,7 +6099,7 @@ LAB.ui.closeAll();
   ok(qv.esc && qv.esc.kinds >= 16, "поручения разнообразные: видов шагов — " + (qv.esc && qv.esc.kinds));
   ok(qv.esc && qv.esc.xpw[1] / qv.esc.xpw[0] <= 1.3, "опыт — по труду: за единицу труда почти одинаково на всех ступенях (" + JSON.stringify(qv.esc && qv.esc.xpw) + ")");
   ok(qv.branch && qv.branch.eng && qv.branch.med && qv.branch.store, "главы ветвятся: выбор в прошлой главе меняет следующую (" + JSON.stringify(qv.branch) + ")");
-  ok(qv.chap && (qv.chap.offers === 2 ? qv.chap.menu && qv.chap.paths === 2 : qv.chap.offers === 1 && !qv.chap.menu) && qv.chap.title === "Обесточено" && qv.chap.choice && qv.chap.done && qv.chap.path === "tools" && qv.chap.ch === 1 && qv.chap.next, "глава: два пути (или один, если второму здесь нечего делать), в конце — выбор, следующая глава — по выбору (" + JSON.stringify(qv.chap) + ")");
+  ok(qv.chap && (qv.chap.offers === 2 ? qv.chap.menu && qv.chap.paths === 2 : qv.chap.offers === 1 && qv.chap.menu && qv.chap.paths === 1) && qv.chap.title === "Обесточено" && qv.chap.choice && qv.chap.done && qv.chap.path === "tools" && qv.chap.ch === 1 && qv.chap.next, "глава: два пути (или один, если второму здесь нечего делать, — тоже в окне выбора), в конце — выбор, следующая глава — по выбору (" + JSON.stringify(qv.chap) + ")");
   ok(qv.trust && qv.trust.took && qv.trust.drop >= 10 && qv.trust.cool && qv.trust.again && qv.trust.up, "доверие: отказ — падает и сразу не просят, потом — другая просьба; честная работа — растёт (" + JSON.stringify(qv.trust) + ")");
   ok(qv.cond && qv.cond.quietLost === true && (qv.cond.fastLost === null || qv.cond.fastLost === true) && qv.clean && qv.clean.killed && qv.clean.lost === true, "премии: тревога ОКО на этаже поручения снимает «тихо», срок — «быстро», убийство — «без крови» (" + JSON.stringify({ c: qv.cond, k: qv.clean }) + ")");
   ok(qv.urgent && qv.urgent.text && qv.urgent.failed && qv.urgent.drop > 0, "срочная помощь раненому: срок назван, опоздали — поручение сорвано, доверие ниже (" + JSON.stringify(qv.urgent) + ")");
