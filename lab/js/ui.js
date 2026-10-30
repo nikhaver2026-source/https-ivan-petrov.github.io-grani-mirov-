@@ -815,14 +815,15 @@ function toolsItems() {
 /* Ценности: часы, кольца, слитки, носители — их скупают пункты снабжения, торговые терминалы и выжившие. */
 function valuablesMenu() {
   var g = G(), tot = 0;
-  catIds("valuable").forEach(function (k) { if (g.inv[k] > 0) tot += (LAB.sellPrice ? LAB.sellPrice.item(k, { who: "supply" }) : Math.round(LAB.ITEMS[k].price * 0.7)) * g.inv[k]; });
+  /* (3.7, нелогичность) то, что не продаётся (жетон погибшего, nosell), — без цены и не в сумме */
+  catIds("valuable").forEach(function (k) { if (g.inv[k] > 0 && !LAB.ITEMS[k].nosell) tot += (LAB.sellPrice ? LAB.sellPrice.item(k, { who: "supply" }) : Math.round(LAB.ITEMS[k].price * 0.7)) * g.inv[k]; });
   menu("Ценности", valuablesItems(), { rebuild: valuablesItems, intro: tot ? "Всё вместе стоит около " + tot + " кредитов." : "" });
 }
 function valuablesItems() {
   var g = G();
   var items = catIds("valuable").filter(function (k) { return g.inv[k] > 0; }).map(function (k) {
-    var d = LAB.ITEMS[k], p = LAB.sellPrice ? LAB.sellPrice.item(k, { who: "supply" }) : Math.round(d.price * 0.7);
-    return { label: d.n + ": " + g.inv[k] + ". Скупка — около " + p + " за штуку. " + d.desc, keep: true, fn: function () { gm().useItem(k); } };
+    var d = LAB.ITEMS[k], p = d.nosell ? 0 : LAB.sellPrice ? LAB.sellPrice.item(k, { who: "supply" }) : Math.round(d.price * 0.7);
+    return { label: d.n + ": " + g.inv[k] + ". " + (d.nosell ? "Не продаётся: отдайте выжившему. " : "Скупка — около " + p + " за штуку. ") + d.desc, keep: true, fn: function () { gm().useItem(k); } };
   });
   if (!items.length) items.push({ label: "Ценностей нет. Их находят в кабинетах, сейфах и тайниках, а продают в пунктах снабжения.", info: true, keep: true, fn: function () {} });
   items.push(back());

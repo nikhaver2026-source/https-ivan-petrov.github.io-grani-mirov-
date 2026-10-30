@@ -747,7 +747,9 @@ function useItem(id, d) {
     ev("tape", 1);
     return true;
   }
-  if (d.kind === "valuable") {
+  /* (3.7, нелогичность) жетон погибшего — не на продажу: отдают выжившим (fixtures.js, badgeItem) */
+  if (d.cat === "valuable" && d.nosell) { say(d.n + ": " + (G().inv[id] || 0) + ". " + d.desc + " Не продаётся: отдайте выжившему."); return false; }
+  if (d.kind === "valuable" || d.cat === "valuable") {
     var p = LAB.sellPrice ? LAB.sellPrice.item(id, { who: "supply" }) : Math.round(d.price * 0.7);
     say(d.n + ". " + d.desc + " Ценность: пункт снабжения возьмёт её примерно за " + p + " " + pl(p, "кредит", "кредита", "кредитов") + ".");
     return false;
