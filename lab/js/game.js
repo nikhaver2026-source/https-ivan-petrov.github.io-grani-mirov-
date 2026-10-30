@@ -3085,9 +3085,12 @@ function tradeGoods(kind, L) {
   L = Math.max(L || 1, 1);
   var goods = (TRADE_GOODS[kind] || TRADE_GOODS.all).slice(), own = {}, blk = L > 10 ? LAB.blockOf(L) : 0;
   var ownBlock = function (dp) { return blk > 0 && dp > 10 && LAB.blockOf(dp) === blk; };
+  /* одноимённых в окне нет: «Реле» Механизма рядом с обычным «Реле» звучали бы одинаково */
+  var named = {};
+  goods.forEach(function (id) { var d0 = LAB.ITEMS[id]; if (d0) named[d0.n] = 1; });
   if (kind === "parts") for (var pk in LAB.PART_DEPTH) {
     var pd = LAB.PART_DEPTH[pk], pi = LAB.ITEMS[pk];
-    if (pd <= 10 || pk === "proto" || !pi || !pi.price || goods.indexOf(pk) >= 0) continue;
+    if (pd <= 10 || pk === "proto" || !pi || !pi.price || goods.indexOf(pk) >= 0 || named[pi.n]) continue;
     if ((pd <= L && pd > L - 20) || ownBlock(pd)) { goods.push(pk); own[pk] = 1; }
   }
   if (kind === "ammo") for (var ak in LAB.AMMO) {
@@ -3535,12 +3538,13 @@ function useFx(id, d) {
   UIx("refresh");
   return true;
 }
+/* (3.7, нелогичность) летит сама вещь — со своим именем, силой и остатком (combat.throwEmp, throwNoise): прежде
+   ионная пыльца и логическая бомба подменялись ЭМИ-гранатой, а шашка, погремушка, колокольчики и будильник —
+   шумовой приманкой */
 function throwItem(id, kind) {
-  if (!LAB.combat) return false;
-  if (kind === "emp") { if (!(G.inv[id] > 0)) return false; G.inv.emp = (G.inv.emp || 0) + 1; G.inv[id]--; LAB.combat.throwEmp(); return true; }
-  if (id !== "noise") { G.inv.noise = (G.inv.noise || 0) + 1; G.inv[id]--; }
-  LAB.combat.throwNoise();
-  return true;
+  if (!LAB.combat || !(G.inv[id] > 0)) return false;
+  if (kind === "emp") { LAB.combat.throwEmp(id); return true; }
+  return LAB.combat.throwNoise(id) !== false;
 }
 
 function toggleDraw() {

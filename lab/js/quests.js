@@ -110,8 +110,10 @@ function arcOf(n) {
 /* (3.7, нелогичность) что заказчик продаёт сам (окно торговли жителя, game.js): этого он не просит
    принести и этим не одаривает. Целитель-машина не торгует. */
 function ownGoods(n, L) {
-  var pr = n && !n.robot ? LAB.PROFS[n.prof] : null, tr = pr ? pr.trade : null, out = {};
-  if (tr && gm() && gm().tradeGoods) gm().tradeGoods(tr, L).forEach(function (id) { out[id] = 1; });
+  var pr = n && !n.robot ? LAB.PROFS[n.prof] : null, tr = pr ? pr.trade : null, out = {}, names = {};
+  if (tr && gm() && gm().tradeGoods) gm().tradeGoods(tr, L).forEach(function (id) { out[id] = 1; var d = LAB.ITEMS[id]; if (d) names[d.n] = 1; });
+  /* и одноимённое («Реле» Механизма — как обычное «Реле»): на слух это одна вещь */
+  for (var k in LAB.ITEMS) if (!out[k] && names[LAB.ITEMS[k].n]) out[k] = 1;
   return out;
 }
 function trustWord(v, fem) { return v >= 80 ? "доверяет вам безоговорочно" : v >= 60 ? "доверяет вам" : v >= 40 ? "присматривается к вам" : v >= 20 ? (fem ? "насторожена" : "насторожен") : "вам не доверяет"; }

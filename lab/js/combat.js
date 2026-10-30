@@ -3062,11 +3062,14 @@ function deployTurret(shots, k) {
   return { x: x, y: y };
 }
 /* Шумовая приманка: враги рядом идут на звук. */
-function noiseLure(x, y) {
-  var n = 0;
+/* (3.7, нелогичность) rad — на сколько шагов слышно (по умолчанию четырнадцать), only — кого зовёт
+   («bio» — живых, «mech» — машины, пусто — всех): у погремушки, будильника и шашки — свои (throwNoise) */
+function noiseLure(x, y, rad, only) {
+  var n = 0, R = rad || 14;
   foes.forEach(function (f) {
     if (!hostile(f) || has(f, "stationary")) return;
-    if (Math.abs(f.x - x) + Math.abs(f.y - y) > 14) return;
+    if (only && f.kind !== only) return;
+    if (Math.abs(f.x - x) + Math.abs(f.y - y) > R) return;
     if (f.state === "hunt" && sees(f)) return;
     f.state = "alert"; f.lastKnown = { x: x, y: y }; f.lost = 0; f.lure = 14; n++;
   });
@@ -3109,10 +3112,15 @@ function weakness(b, f) {
   var nm = function (q) { return LAB.DTYPE_N[q.dt] || q.dt; };
   return { best: best.map(function (q) { return q.dt; }), worst: worst.map(function (q) { return q.dt; }), bestN: best.map(nm), worstN: worst.map(nm) };
 }
-function throwNoise() {
-  var g = G();
-  if (!(g.inv.noise > 0)) { say("Приманок нет."); return; }
-  g.inv.noise--;
+/* (3.7, нелогичность) Летит своя вещь (game.js, throwItem): шумовая приманка, сейсмическая шашка, погремушка,
+   колокольчики, будильник. На сколько шагов слышно — fx.noise (больше единицы; иначе четырнадцать), кого
+   зовёт — поле lure, как звучит — lureSay, остаток — этой вещи. Прежде всё это становилось шумовой приманкой:
+   «Приманка лязгает и пищит», на четырнадцать шагов и для всех, что бы ни обещало описание. */
+function throwNoise(id) {
+  var g = G(), it = id && LAB.ITEMS[id] ? id : "noise", d = LAB.ITEMS[it] || {}, fx = d.fx || {};
+  if (!(g.inv[it] > 0)) { say(it === "noise" ? "Приманок нет." : "Нет: " + String(d.n || it).toLowerCase() + "."); return false; }
+  g.inv[it]--;
+  var rad = typeof fx.noise === "number" && fx.noise > 1 ? fx.noise : 14, only = d.lure || "", nm = it === "noise" ? "Приманка" : d.n, how = d.lureSay || "лязгает и пищит";
   var v = DIRV[g.face] || DIRV.N, x = g.x, y = g.y;
   for (var i = 1; i <= 6; i++) {
     var nx = x + v[0], ny = y + v[1];
@@ -3123,7 +3131,8 @@ function throwNoise() {
   }
   A("grenade", x, y, { noPin: true, fuse: 600 });
   spendTurns(1, "throw");
-  setTimeout(function () { var n = noiseLure(x, y); say("Приманка " + LAB.DIRTO[g.face] + " лязгает и пищит." + (n ? " Слышно, как враги идут к ней: " + n + "." : "")); UIx("refresh"); }, 600);
+  setTimeout(function () { var n = noiseLure(x, y, rad, only); say(nm + " " + LAB.DIRTO[g.face] + " " + how + "." + (n ? " На звук идут: " + n + "." : "") + " Осталось: " + (G().inv[it] || 0) + "."); UIx("refresh"); }, 600);
+  return true;
 }
 function calmAll() { foes.forEach(function (f) { if (f.state !== "idle") { f.state = "idle"; f.lastKnown = null; f.aim = false; } if (f.punisher && !f.dead && f.task !== "leave") f.ambush = true; }); shells = []; hpMark = 100; }
 /* (3.7, нелогичность) взрыв и импульс (подрыв завала, перегрузка магнетронной установки) — не сквозь стену */
@@ -3172,10 +3181,17 @@ function useImplant(id, free) {
     case "scan": {
       /* (2.0) радиус и что ещё — от ступени и модификаций (implants.js) */
       var sr = IM ? IM.scanR(id) : 8;
-      var list = foes.filter(function (f) { return !f.dead && dist(f, heroPos()) <= sr && !(aff(f, "cloak") && dist(f, heroPos()) > 3); });
+      var near = foes.filter(function (f) { return !f.dead && dist(f, heroPos()) <= sr && !(aff(f, "cloak") && dist(f, heroPos()) > 3); });
+      /* (3.7, нелогичность) свои (поставленные турели, перепрошитые на вашу сторону машины) и обезвреженные — не
+         враги: их называют отдельно и маяк врага на них не вешают; прежде скан, буй и «Ясность» звали вашу же
+         турель врагом и вешали на неё маяк */
+      var list = near.filter(function (f) { return !f.ally && !f.calm && !f.neutral; });
+      var mine = near.filter(function (f) { return f.ally; }), tame = near.filter(function (f) { return !f.ally && (f.calm || f.neutral); });
       var items = gm().floorItems().filter(function (it) { return Math.abs(it.x - g.x) + Math.abs(it.y - g.y) <= sr; });
       var parts = [];
       parts.push(list.length ? "Враги: " + list.map(describe).join("; ") + "." : "Врагов рядом нет.");
+      if (mine.length) parts.push("Свои: " + mine.map(function (f) { return f.name.split(",")[0] + " " + gm().relDir(f.x, f.y); }).join("; ") + ".");
+      if (tame.length) parts.push("Не опасны: " + tame.map(function (f) { return f.name.split(",")[0] + " " + gm().relDir(f.x, f.y); }).join("; ") + ".");
       /* (1.6) на каждого найденного — звуковой маяк: ползёт вместе с ним, пока не отстанет */
       list.forEach(function (f) { f.mark = Date.now() + 45000; });
       if (list.length) parts.push("На них повешены маяки: " + (list.length === 1 ? "он звучит, пока враг рядом." : "они звучат, пока враги рядом."));
@@ -3231,10 +3247,15 @@ function telekinesis() {
   }
   say("Телекинез " + LAB.DIRTO[g.face] + ": на пять шагов вещей нет.");
 }
-function throwEmp() {
-  var g = G();
-  if (!(g.inv.emp > 0)) { say("ЭМИ-гранат нет."); return; }
-  g.inv.emp--;
+/* (3.7, нелогичность) Летит своя вещь (game.js, throwItem): ЭМИ-граната, ионная пыльца, логическая бомба — со
+   своим именем и остатком; fx.emp больше единицы — на сколько тактов импульс вешает машины (десятая доля:
+   у логической бомбы 90 — девять тактов). Прежде всё это становилось обычной ЭМИ-гранатой: «ЭМИ-граната…
+   Осталось гранат: 0», хотя в рюкзаке лежали ещё три такие же. */
+function throwEmp(id) {
+  var g = G(), it = id && LAB.ITEMS[id] ? id : "emp", d = LAB.ITEMS[it] || {}, fx = d.fx || {};
+  var hang = typeof fx.emp === "number" && fx.emp > 1 ? Math.round(fx.emp / 10) : 0;
+  if (!(g.inv[it] > 0)) { say(it === "emp" ? "ЭМИ-гранат нет." : "Нет: " + String(d.n || it).toLowerCase() + "."); return; }
+  g.inv[it]--;
   unhide("Бросок выдал вас: укрытия больше нет."); /* (3.5) нападение из укрытия — как выстрел */
   havenFight(); /* (2.3) бой из безопасной зоны у капсулы */
   var v = DIRV[g.face] || DIRV.N, x = g.x, y = g.y;
@@ -3253,10 +3274,10 @@ function throwEmp() {
       /* (3.7, нелогичность) импульс не проходит сквозь стену и закрытую дверь */
       if (f.dead || Math.max(Math.abs(f.x - x), Math.abs(f.y - y)) > 2 || !clearTo(x, y, f.x, f.y)) return;
       if (f.kind === "mech" && !aff(f, "hardened")) f.shield = 0;
-      if (damageFoe(f, 50 + g.L * 15, "emp", { noarmor: true, quiet: true })) n++;
+      if (damageFoe(f, 50 + g.L * 15, "emp", { noarmor: true, quiet: true, stunMech: hang })) n++;
     });
     A("explosion", x, y, "emp");
-    say("ЭМИ-граната " + LAB.DIRTO[g.face] + ". Задето целей: " + n + ". Осталось гранат: " + (g.inv.emp || 0) + ".");
+    say((it === "emp" ? "ЭМИ-граната" : d.n) + " " + LAB.DIRTO[g.face] + ". Задето целей: " + n + "." + (it === "emp" ? " Осталось гранат: " : " Осталось: ") + (g.inv[it] || 0) + ".");
     noise(10);
     UIx("refresh");
   }, 700);
