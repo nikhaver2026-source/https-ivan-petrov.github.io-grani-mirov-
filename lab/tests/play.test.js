@@ -4064,9 +4064,11 @@ LAB.ui.closeAll();
         seer.dead = true; if (w) w.dead = true;
       }
       /* 5. трутень добегает и лопается вплотную */
-      const cAdj = cellAt((x, y, r) => r === 1);
+      /* (3.8) лопается он вплотную по стороне (mutantTick, d — шаги без диагоналей): с диагонали ему
+         нужен шаг, а если клетки сбоку заставлены или трутень медлителен — четырёх тактов мало */
+      const cAdj = cellAt((x, y, r) => r === 1 && (x === G.x || y === G.y)) || cellAt((x, y, r) => r === 1);
       const bomb = spawn("u_bomber", cAdj, {}); bomb.state = "hunt"; bomb.lastKnown = { x: G.x, y: G.y };
-      const hpA = G.hp; tickUntil(() => bomb.dead, 4);
+      const hpA = G.hp; tickUntil(() => bomb.dead, 8);
       out.bomber = bomb.dead && G.hp < hpA;
       /* 6. рабочая каста бежит и поднимает тревогу. Клетка — с запасом, чтобы было куда
          отступить: загнанная в угол тварь по замыслу отбивается, а этаж всякий раз новый */
