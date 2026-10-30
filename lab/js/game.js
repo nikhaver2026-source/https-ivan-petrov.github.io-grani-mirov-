@@ -168,7 +168,8 @@ function enterFloor(L, F, how, silent) {
      прежней планировки не годятся; привязка переходит к капсуле этого этажа */
   var cpx = G.checkpoint;
   if (cpx && cpx.fix && cpx.L === L && cpx.F === F) {
-    var cco = cpx.cap ? findObj("capsule") : null, cso = cco || findObj("capsule") || findObj("gate_sealed") || findObj("stairs_up");
+    /* привязаться можно и к криокапсуле пробуждения (wake); капсулы нет — место у входа на этаж */
+    var cco = cpx.cap ? findObj("capsule") || findObj("wake") : null, cso = cco || findObj("capsule") || findObj("wake") || findObj("gate_sealed") || findObj("stairs_up") || findObj("elevator");
     var csp = cso ? freeNear(cso) : null;
     if (csp) { cpx.x = csp[0]; cpx.y = csp[1]; }
     cpx.cap = cco ? cco.id : null;

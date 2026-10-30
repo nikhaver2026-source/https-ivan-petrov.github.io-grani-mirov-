@@ -336,7 +336,8 @@ function preview(v) {
     var Sp = LAB.Speech;
     if (Sp && Sp.busy && Sp.busy() && Date.now() - t0 < 12000) { setTimeout(go, 250); return; }
     cur = [];
-    playPart(id, { bus: "voice", vary: 0, prio: 3, gain: okoGain(), reverb: 0.18, wait: 4000 });
+    var h = playPart(id, { bus: "voice", vary: 0, prio: 3, gain: okoGain(), reverb: 0.18, wait: 4000 });
+    busyTill = Date.now() + Math.round((h && h.dur ? h.dur : 4) * 1000) + 250; /* реплика игры подождёт конца образца */
   };
   setTimeout(go, 400);
   return true;

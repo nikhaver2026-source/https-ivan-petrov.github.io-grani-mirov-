@@ -6453,8 +6453,12 @@ LAB.ui.closeAll();
     LAB.Sound.play = function (id, o) { plays.push({ id: id, o: o || {} }); return orig.apply(this, arguments); };
     LAB.ui.closeAll();
     const REC = "Я слушаю ваш пульс по вентиляции, носитель. Он учащается.", K = V.key(REC);
-    const say = (t, o) => { SPOKEN.length = 0; plays.length = 0; LAB.oko.voice(t, Object.assign({ prio: "event", keep: true }, o || {}), true, 0); };
+    /* реплики ОКО идут по очереди (okovoice.js): каждая проверка — с чистого листа, будто прежняя давно отзвучала */
+    const say = (t, o) => { V.stop(); SPOKEN.length = 0; plays.length = 0; LAB.oko.voice(t, Object.assign({ prio: "event", keep: true }, o || {}), true, 0); };
     const okoIds = () => plays.map(p => p.id).filter(id => /^oko_(m|f|fx)_/.test(id));
+    /* записи — заранее в памяти: незагруженную реплику очередь ждёт сама, проверка ждала бы тоже */
+    ["m", "f"].forEach(v => { const id = "oko_" + v + "_" + K; if (!LAB.Bank.has(id)) LAB.Bank.def(id, ["oko/" + v + "/" + K + ".mp3"], { bus: "voice", vary: 0 }); LAB.Bank.preload([id]); });
+    for (let i = 0; i < 60 && !(LAB.Bank.ready("oko_m_" + K) && LAB.Bank.ready("oko_f_" + K)); i++) await sleep(100);
     out.def = V.voice() === "m" && S.okoFx === 1;
     out.listed = V.has(REC, "m") && V.has(REC, "f") && !V.has("Тестовая реплика без записи.", "m");
     V._rng(() => 0.99);
@@ -6467,7 +6471,7 @@ LAB.ui.closeAll();
     out.f = okoIds()[0] === "oko_f_" + K;
     out.fem = V.fem("Я стал тише. Это не слабость. Ну… немного слабость.") === "Я стала тише. Это не слабость. Ну… немного слабость." &&
       V.fem("Ещё один пост пуст. Я поставлю новый.") === "Ещё один пост пуст. Я поставлю новый." && V.fem("Это был не я, носитель. Там никого нет.") === "Это была не я, носитель. Там никого нет.";
-    plays.length = 0; V.play("Зрачок, вплотную: «" + REC + "»", { prio: "event" }, "pupil"); await sleep(150);
+    V.stop(); plays.length = 0; V.play("Зрачок, вплотную: «" + REC + "»", { prio: "event" }, "pupil"); await sleep(150);
     const pp = plays.filter(p => /^oko_m_/.test(p.id))[0];
     out.pupil = !!pp && pp.id === "oko_m_" + K && Math.abs(pp.o.pan) > 0.5;
     /* speak(): реплика проходит через женский род (подмена fem видна в словах) */
@@ -7077,7 +7081,7 @@ LAB.ui.closeAll();
     old.notes = { "1-1-i5": 1, "lib:arc1": 1 };
     localStorage.setItem("lab_slot3", JSON.stringify({ meta: { ver: LAB.VERSION, L: 1, F: 1, diff: old.diff, tb: 0, lvl: old.lvl, hp: old.hp, hpMax: old.hpMax, ms: 0, date: Date.now(), samples: 0 }, g: old }));
     out.oldLoad = g.loadSlot(3) !== false; G = g.G;
-    const cap = g.CUR.fl.objs.filter(o => o.type === "capsule")[0], cp = G.checkpoint || {};
+    const cap = g.CUR.fl.objs.filter(o => o.type === "capsule")[0] || g.CUR.fl.objs.filter(o => o.type === "wake")[0], cp = G.checkpoint || {};
     out.cp = !!cap && cp.cap === cap.id && !cp.fix && Math.max(Math.abs(cp.x - cap.x), Math.abs(cp.y - cap.y)) <= 3;
     const n0 = G.noteList[0], n1 = G.noteList[1];
     out.notes = !!n0 && n0.id === "w1:1-1-i5" && n0.old === 1 && n0.code === undefined && !!G.notes["w1:1-1-i5"] && !G.notes["1-1-i5"] && !!n1 && n1.id === "lib:arc1" && !!G.notes["lib:arc1"] && g.noteForCode("1234") === null;
