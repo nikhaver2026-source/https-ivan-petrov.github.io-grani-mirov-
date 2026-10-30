@@ -3376,17 +3376,24 @@ function describePath(path) {
 function turns(n, why) { if (S.turnBased && LAB.combat && LAB.combat.spendTurns) LAB.combat.spendTurns(n, why); }
 /* (2.6) Чем лечить раны: аптечки всех глубин, бинты, травяные сборы, наборы —
    без стимуляторов (передозировка) и того, что бьёт по нервам или тратит энергию. */
+/* (3.7, нелогичность) лечение вещи — и в fx.heal: лекарства глубин (бальзам из смолы, тёплая вода Колыбели,
+   нанобинт, сок первого дерева) лечат через useFx, и быстрое лечение их не видело — говорило «Аптечек нет»;
+   кровь useFx останавливает и сам, когда лечит от тридцати */
+function healOf(d) { return (d && (d.heal || (d.fx && d.fx.heal))) || 0; }
+function cureOf(d) { return !!(d && (d.cure || (d.fx && d.fx.cure))); }
+function stopsBleed(d) { return !!(d && (d.stopBleed || (d.fx && (d.fx.stopBleed || d.fx.heal >= 30)))); }
+game.healOf = healOf;
 function healMeds() {
   return Object.keys(G.inv).filter(function (id) {
-    var d = LAB.ITEMS[id];
-    return !!d && (G.inv[id] || 0) > 0 && d.kind === "use" && d.heal > 0 && !d.overdose && !d.en && !d.shock && (d.stopBleed || d.cure || d.heal >= 15);
+    var d = LAB.ITEMS[id], h = healOf(d);
+    return !!d && (G.inv[id] || 0) > 0 && d.kind === "use" && h > 0 && !d.overdose && !d.en && !(d.fx && d.fx.en) && !d.shock && (stopsBleed(d) || cureOf(d) || h >= 15);
   });
 }
 /* по ране: лишнего поменьше, но недолеченное весит больше — а при малом здоровье втрое */
 function bestMed(list, miss, low) {
   var best = null, bs = 1e9;
   list.forEach(function (id) {
-    var d = LAB.ITEMS[id], h = d.heal;
+    var d = LAB.ITEMS[id], h = healOf(d);
     var sc = (h >= miss ? h - miss : (miss - h) * (low ? 3 : 1.5)) + (d.price || 0) * 0.01;
     if (sc < bs) { bs = sc; best = id; }
   });
@@ -3398,16 +3405,16 @@ function useMedkit() {
   var meds = healMeds(), low = G.hp < G.hpMax * 0.3, D = LAB.ITEMS;
   /* кровотечение — сначала бинт (самое малое, что останавливает кровь); тяжёлая интоксикация — антидот или сорбент */
   if (G.st.bleed && G.hp > G.hpMax * 0.3) {
-    var stop = meds.filter(function (id) { return D[id].stopBleed && D[id].heal < 60; });
-    if (stop.length) { stop.sort(function (a, b) { return D[a].heal - D[b].heal || (D[a].price || 0) - (D[b].price || 0); }); return useItem(stop[0]); }
+    var stop = meds.filter(function (id) { return stopsBleed(D[id]) && healOf(D[id]) < 60; });
+    if (stop.length) { stop.sort(function (a, b) { return healOf(D[a]) - healOf(D[b]) || (D[a].price || 0) - (D[b].price || 0); }); return useItem(stop[0]); }
   }
   if (G.st.poison && (G.inv.antidote || 0) > 0 && G.hp > G.hpMax * 0.35) return useItem("antidote");
   if (body().tox >= 50 && G.hp > G.hpMax * 0.35) { if ((G.inv.antidote || 0) > 0) return useItem("antidote"); if ((G.inv.sorbent || 0) > 0) return useItem("sorbent"); }
   var miss = G.hpMax - G.hp;
   if (miss <= 0 && !G.st.poison && !G.st.bleed) { say("Здоровье полное: " + G.hp + " из " + G.hpMax + "." + (body().neuro >= 60 && (G.inv.neuroblock || 0) > 0 ? " Нейронагрузку снимет нейроблокатор: инвентарь, «Аптечки и лекарства»." : "")); return; }
   /* отравлены — то, что снимает яд; кровит — то, что останавливает кровь; иначе — по ране */
-  var pool = G.st.poison ? meds.filter(function (id) { return D[id].cure; }) : [];
-  if (!pool.length && G.st.bleed) pool = meds.filter(function (id) { return D[id].stopBleed; });
+  var pool = G.st.poison ? meds.filter(function (id) { return cureOf(D[id]); }) : [];
+  if (!pool.length && G.st.bleed) pool = meds.filter(function (id) { return stopsBleed(D[id]); });
   if (!pool.length) pool = meds;
   var pick = pool.length ? bestMed(pool, Math.max(1, miss), low) : null;
   if (!pick && (G.inv.stim || 0) > 0) pick = "stim";
@@ -3436,7 +3443,8 @@ function useItem(id) {
     var at = LAB.combat.deployTurret(d.fx && d.fx.deploy || 30, d.fx && d.fx.dmgK);
     if (!at) { say("Здесь турель не встанет: впереди занято."); return false; }
     G.inv[id]--;
-    say(d.n + " раскрылась " + relDir(at.x, at.y) + " и ищет цели на своей линии. Выстрелов — " + (d.fx.deploy || 30) + "." + (d.fx.dmgK > 1 ? " Бьёт сильнее обычной." : ""));
+    /* (3.7, нелогичность) без рода в глаголе: прежде «Переносной садовник раскрылась» */
+    say("Раскрыто: " + d.n.charAt(0).toLowerCase() + d.n.slice(1) + ", " + relDir(at.x, at.y) + ". Ищет цели на своей линии. Выстрелов — " + (d.fx.deploy || 30) + "." + (d.fx.dmgK > 1 ? " Бьёт сильнее обычной." : ""));
     UIx("refresh"); return true;
   }
   if (d.fx && (d.fx.pick || d.fx.map || d.fx.jam || d.fx.antitox || d.fx.scan || d.fx.shield || d.fx.haste || d.fx.cloak || d.fx.heal || d.fx.en || d.fx.cure || d.fx.unslow || d.fx.food || d.fx.wake || d.fx.detox || d.fx.neuro || d.fx.stopBleed)) return useFx(id, d);
@@ -3445,7 +3453,9 @@ function useItem(id) {
   if (id === "okokey") { say("Служебный ключ ОКО прикладывают к турели вплотную — подходите наискосок, вне её линии огня — или к терминалу безопасности, раздел «Оборонная сеть»: " + LAB.K("двойное касание рядом.", "Enter рядом.")); return false; }
   if (d.kind === "part") { say("Это деталь для мастерской."); return false; }
   /* (1.5) инструменты не тратятся, ценности — на продажу, изолента — на камеру ОКО */
-  if (d.kind === "tool" || d.kind === "valuable" || id === "tape") { if (LAB.zones && LAB.zones.useItem) return LAB.zones.useItem(id, d); say(d.n + ". " + d.desc); return false; }
+  /* (3.7, нелогичность) и всё, что лежит в «Ценностях» (cat valuable): жетон погибшего (kind misc) прежде
+     шёл дальше, в «съесть», и пропадал от нажатия в окне ценностей */
+  if (d.kind === "tool" || d.kind === "valuable" || d.cat === "valuable" || id === "tape") { if (LAB.zones && LAB.zones.useItem) return LAB.zones.useItem(id, d); say(d.n + ". " + d.desc); return false; }
   var food = d.kind === "food", sip = food && (d.eat === "gulp" || d.eat === "sip");
   /* (3.7, нелогичность) суп-концентрат и лапшу заливают кипятком (kitchen.js: чайник, самовар, кран автомата
      с едой): концентрат всухую не съесть, сухую лапшу — разве что погрызть: половина сытости, без тепла */
