@@ -85,7 +85,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     LAB.ui.closeTop(true); LAB.ui.closeAll(); LAB.ui.mainMenu(true);
     return out;
   });
-  ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.ver === "Альфа 3.7" && news.items.some(l => /^Альфа 3\.6$/.test(l)) && news.items.some(l => /^Альфа 3\.5$/.test(l)) && news.items.some(l => /^Альфа 3\.2$/.test(l)) && news.items.some(l => /^Альфа 3\.1$/.test(l)) && news.items.some(l => /^Альфа 3\.0$/.test(l)) && news.items.some(l => /^Альфа 2\.6$/.test(l)) && news.items.some(l => /^Альфа 2\.5$/.test(l)) && news.items.some(l => /^Альфа 2\.2$/.test(l)) && news.items.some(l => /^Альфа 2\.1$/.test(l)) && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
+  ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.ver === "Альфа 3.8" && news.items.some(l => /^Альфа 3\.7$/.test(l)) && news.items.some(l => /^Альфа 3\.6$/.test(l)) && news.items.some(l => /^Альфа 3\.5$/.test(l)) && news.items.some(l => /^Альфа 3\.2$/.test(l)) && news.items.some(l => /^Альфа 3\.1$/.test(l)) && news.items.some(l => /^Альфа 3\.0$/.test(l)) && news.items.some(l => /^Альфа 2\.6$/.test(l)) && news.items.some(l => /^Альфа 2\.5$/.test(l)) && news.items.some(l => /^Альфа 2\.2$/.test(l)) && news.items.some(l => /^Альфа 2\.1$/.test(l)) && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
   ok(/Что нового: /.test(news.note) && /Помещения стали просторнее/.test(news.text) && /Химия руками/.test(news.text) && /Поручения выживших — без предела/.test(news.text) && /Сохранения прежней версии не сброшены/.test(news.text) && /этажи построены заново/.test(news.text) && /Настройки остались прежними/.test(news.text) && !/Набор опыта вернулся/.test(news.text) && !/Качаться на машинах ОКО не выйдет/.test(news.text) && !/ОКО меняется с глубиной/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей; выпущенное в 3.6 — в своём разделе");
 
   console.log("Настройки");
@@ -2378,36 +2378,43 @@ LAB.ui.closeAll();
   }
   ok(kept && kept.ver === kept.cur && kept.slot && kept.auto && kept.kept >= 2 && !kept.wiped && kept.from === "Альфа 3.2" && /Сохранения прежней версии остались/.test(kept.intro || ""),
     "записи «Альфы 3.2» при смене версии не стёрты, игрок слышит, что сохранения остались (" + JSON.stringify(kept).slice(0, 260) + ")");
-  /* (3.7) запись выпущенной «Альфы 3.6» (этажи пятого выпуска): не стёрта, а главное меню честно
-     говорит, что этажи построены заново, — загрузка ставит героя у входа на свой этаж */
-  let kept36 = null;
-  {
-    const st36 = await page.context().storageState();
-    const d36 = JSON.parse(fs.readFileSync(path.join(__dirname, "fixtures", "alfa-3.2-save.json"), "utf8"));
-    d36.meta.ver = "Альфа 3.6"; d36.g.worldV = 5;
-    const raw36 = JSON.stringify(d36);
+  /* (3.8) запись выпущенной «Альфы 3.7» (этажи шестого выпуска): не стёрта, а главное меню честно
+     говорит, что этажи построены заново, — загрузка ставит героя у входа на свой этаж. А запись поздней
+     сборки 3.7, где выпуск мира уже седьмой, грузится с того же места — и меню говорит именно так
+     (game.js, savesRebuilt: по выпуску мира самих записей, а не по номеру версии) */
+  const keptAs = async (wv) => {
+    const st = await page.context().storageState();
+    const d = JSON.parse(fs.readFileSync(path.join(__dirname, "fixtures", "alfa-3.2-save.json"), "utf8"));
+    d.meta.ver = "Альфа 3.7"; d.g.worldV = wv;
+    const raw = JSON.stringify(d);
     const runNow = await page.evaluate(() => String(LAB.RUN));
-    st36.origins.forEach(o => {
+    st.origins.forEach(o => {
       const ls = o.localStorage, setK = (n, v) => { const e = ls.find(q => q.name === n); if (e) e.value = v; else ls.push({ name: n, value: v }); };
-      setK("lab_ver", "Альфа 3.6"); setK("lab_run", runNow); setK("lab_slot1", raw36); setK("lab_auto", raw36); setK("lab_prologue_seen", "1");
+      setK("lab_ver", "Альфа 3.7"); setK("lab_run", runNow); setK("lab_slot1", raw); setK("lab_auto", raw); setK("lab_prologue_seen", "1");
+      ["lab_slot2", "lab_slot3"].forEach(n => { const i = ls.findIndex(q => q.name === n); if (i >= 0) ls.splice(i, 1); });
     });
-    const ctx36 = await browser.newContext({ storageState: st36 });
-    const page36 = await ctx36.newPage();
-    page36.on("pageerror", e => errors.push("pageerror (запись 3.6): " + e.message));
+    const ctx = await browser.newContext({ storageState: st });
+    const pg = await ctx.newPage();
+    pg.on("pageerror", e => errors.push("pageerror (запись 3.7, выпуск мира " + wv + "): " + e.message));
+    let out = null;
     try {
-      await page36.goto(url); await page36.waitForFunction(() => window.LAB_READY === true, null, { timeout: 60000 });
-      kept36 = await page36.evaluate(raw => {
+      await pg.goto(url); await pg.waitForFunction(() => window.LAB_READY === true, null, { timeout: 60000 });
+      out = await pg.evaluate(raw2 => {
         const L = localStorage, fs0 = LAB.freshStart;
         LAB.ui.mainMenu(true);
         const intro = LAB.ui.top() ? LAB.ui.top().intro : "";
-        const m = LAB.game._migrate(JSON.parse(raw).g);
-        return { ver: L.getItem("lab_ver"), cur: LAB.VERSION, slot: L.getItem("lab_slot1") === raw, kept: fs0.kept, wiped: fs0.wiped, from: fs0.from, intro, relocate: m.relocate === true && m.worldV === 7 };
-      }, raw36);
-    } catch (e) { kept36 = { err: String(e && e.message || e).slice(0, 200) }; }
-    await ctx36.close();
-  }
-  ok(kept36 && kept36.ver === kept36.cur && kept36.cur === "Альфа 3.7" && kept36.slot && kept36.kept >= 2 && !kept36.wiped && kept36.from === "Альфа 3.6" && /Сохранения прежней версии остались/.test(kept36.intro || "") && /этажи построены заново/.test(kept36.intro || "") && kept36.relocate,
-    "запись выпущенной «Альфы 3.6» при переходе на 3.7 не стёрта; главное меню говорит, что этажи построены заново, загрузка ставит у входа на свой этаж (" + JSON.stringify(kept36).slice(0, 300) + ")");
+        const m = LAB.game._migrate(JSON.parse(raw2).g);
+        return { ver: L.getItem("lab_ver"), cur: LAB.VERSION, slot: L.getItem("lab_slot1") === raw2, kept: fs0.kept, wiped: fs0.wiped, from: fs0.from, intro, relocate: m.relocate === true && m.worldV === 7 };
+      }, raw);
+    } catch (e) { out = { err: String(e && e.message || e).slice(0, 200) }; }
+    await ctx.close();
+    return out;
+  };
+  const kept37 = await keptAs(6), kept37b = await keptAs(7);
+  ok(kept37 && kept37.ver === kept37.cur && kept37.cur === "Альфа 3.8" && kept37.slot && kept37.kept >= 2 && !kept37.wiped && kept37.from === "Альфа 3.7" && /Сохранения прежней версии остались/.test(kept37.intro || "") && /этажи построены заново/.test(kept37.intro || "") && kept37.relocate,
+    "запись выпущенной «Альфы 3.7» при переходе на 3.8 не стёрта; главное меню говорит, что этажи построены заново, загрузка ставит у входа на свой этаж (" + JSON.stringify(kept37).slice(0, 300) + ")");
+  ok(kept37b && kept37b.cur === "Альфа 3.8" && kept37b.slot && !kept37b.wiped && /Сохранения прежней версии остались/.test(kept37b.intro || "") && /с того же места/.test(kept37b.intro || "") && !/этажи построены заново/.test(kept37b.intro || ""),
+    "запись поздней сборки 3.7 (уже седьмой выпуск мира): меню говорит, что играть дальше можно с того же места (" + JSON.stringify(kept37b).slice(0, 300) + ")");
   /* (2.0) прохождение заново: та же версия, прежнее прохождение — сохранения стёрты, настройки остались */
   let run = null;
   {

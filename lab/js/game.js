@@ -3893,7 +3893,7 @@ function snapshot() {
   var qs = G.quests;
   G.quests = (qs || []).map(function (q) { return q && q.done && q.type !== "main" ? slimQuest(q) : q; });
   try {
-    return JSON.stringify({ meta: { ver: LAB.VERSION, L: G.L, F: G.F, diff: G.diff, tb: G.tb ? 1 : 0, lvl: G.lvl, hp: G.hp, hpMax: G.hpMax, ms: G.stats.ms, date: Date.now(), samples: Object.keys(G.samples).length, done: G.done ? 1 : 0 }, g: G });
+    return JSON.stringify({ meta: { ver: LAB.VERSION, wv: WORLD_V, L: G.L, F: G.F, diff: G.diff, tb: G.tb ? 1 : 0, lvl: G.lvl, hp: G.hp, hpMax: G.hpMax, ms: G.stats.ms, date: Date.now(), samples: Object.keys(G.samples).length, done: G.done ? 1 : 0 }, g: G });
   } finally { G.quests = qs; }
 }
 var QUEST_KEEP = ["id", "giver", "giverName", "gf", "type", "done", "failed", "late", "echoed", "L", "F", "short", "tier", "chap"];
@@ -3954,6 +3954,24 @@ function slotInfo(n, bak) {
   try { var d = JSON.parse(raw); return d.meta; } catch (e) { return null; }
 }
 game.slotInfo = slotInfo;
+/* (3.8) Перестроятся ли этажи у сохранённых записей: true — хоть у одной другой выпуск мира (migrate
+   поставит героя у входа на свой этаж), false — у всех нынешний, null — записей нет или их не прочесть.
+   Главное меню (ui.js, freshNote) говорит по этому, а не по одному номеру версии: сборки одной версии
+   бывали с разным выпуском мира. Выпуск — в сведениях записи (wv), у старых — в самой игре. */
+function savesRebuilt() {
+  var any = false, other = false;
+  ["auto", 1, 2, 3].forEach(function (n) {
+    var raw = LAB.store.get(SLOT_KEYS[n]);
+    if (!raw) return;
+    try {
+      var d = JSON.parse(raw), wv = d.meta && d.meta.wv != null ? d.meta.wv : d.g && d.g.worldV;
+      if (!d.meta || !LAB.keepsSave(d.meta.ver)) return;
+      any = true; if (wv !== WORLD_V) other = true;
+    } catch (e) { /* испорченная запись — не в счёт */ }
+  });
+  return any ? other : null;
+}
+game.savesRebuilt = savesRebuilt;
 function slotText(n, bak) {
   var m = slotInfo(n, bak);
   var name = (n === "auto" ? "Автозапись" : "Слот " + n) + (bak ? ", резервная копия" : "");

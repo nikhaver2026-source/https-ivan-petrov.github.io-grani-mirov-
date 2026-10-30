@@ -27,7 +27,7 @@ protocol.registerSchemesAsPrivileged([{
 // Звук с первой секунды, без щелчка мышью: игроку нечем «разрешить» звук.
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
-const VERSION = 'Альфа 3.7';
+const VERSION = 'Альфа 3.8';
 const TITLE = 'Подземная лаборатория ' + VERSION;
 // Самопроверка (сборка на серверах GitHub): игра проходит все этажи, пишет
 // итог в журнал и закрывается с кодом 0 (всё хорошо) или 1.
