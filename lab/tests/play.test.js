@@ -5882,9 +5882,11 @@ LAB.ui.closeAll();
       /* весь путь главы: два пути, шаги, выбор, следующая глава — по выбору */
       const nc = { key: "Q36-ch", n: "Инженер Главный", prof: "Инженер" };
       const rc = Q.giver(nc); rc.done = 2; rc.ch = 0; rc.path = []; rc.seq = 0; rc.cool = 0;
+      /* (3.7) путь без своих шагов на этом этаже не предлагается (quests.js, need): один путь — без окна выбора */
+      const offs = Q.offers(nc).length;
       U.closeAll(); spoken.length = 0; g.takeQuest(nc);
       let w = U.top();
-      out.chap = { menu: !!w && /^Поручение:/.test(w.title), paths: w ? w.items.filter(x => /^Путь /.test(x.label)).length : 0, intro: spoken.join(" ").slice(0, 200) };
+      out.chap = { offers: offs, menu: !!w && /^Поручение:/.test(w.title), paths: w ? w.items.filter(x => /^Путь /.test(x.label)).length : 0, intro: spoken.join(" ").slice(0, 200) };
       if (w) { w.i = 0; U.activate(); }
       const qch = Q.active().find(q => q.giver === nc.key);
       if (qch) {
@@ -6096,7 +6098,7 @@ LAB.ui.closeAll();
   ok(qv.esc && qv.esc.kinds >= 16, "поручения разнообразные: видов шагов — " + (qv.esc && qv.esc.kinds));
   ok(qv.esc && qv.esc.xpw[1] / qv.esc.xpw[0] <= 1.3, "опыт — по труду: за единицу труда почти одинаково на всех ступенях (" + JSON.stringify(qv.esc && qv.esc.xpw) + ")");
   ok(qv.branch && qv.branch.eng && qv.branch.med && qv.branch.store, "главы ветвятся: выбор в прошлой главе меняет следующую (" + JSON.stringify(qv.branch) + ")");
-  ok(qv.chap && qv.chap.menu && qv.chap.paths === 2 && qv.chap.title === "Обесточено" && qv.chap.choice && qv.chap.done && qv.chap.path === "tools" && qv.chap.ch === 1 && qv.chap.next, "глава: два пути, в конце — выбор, следующая глава — по выбору (" + JSON.stringify(qv.chap) + ")");
+  ok(qv.chap && (qv.chap.offers === 2 ? qv.chap.menu && qv.chap.paths === 2 : qv.chap.offers === 1 && !qv.chap.menu) && qv.chap.title === "Обесточено" && qv.chap.choice && qv.chap.done && qv.chap.path === "tools" && qv.chap.ch === 1 && qv.chap.next, "глава: два пути (или один, если второму здесь нечего делать), в конце — выбор, следующая глава — по выбору (" + JSON.stringify(qv.chap) + ")");
   ok(qv.trust && qv.trust.took && qv.trust.drop >= 10 && qv.trust.cool && qv.trust.again && qv.trust.up, "доверие: отказ — падает и сразу не просят, потом — другая просьба; честная работа — растёт (" + JSON.stringify(qv.trust) + ")");
   ok(qv.cond && qv.cond.quietLost === true && (qv.cond.fastLost === null || qv.cond.fastLost === true) && qv.clean && qv.clean.killed && qv.clean.lost === true, "премии: тревога ОКО на этаже поручения снимает «тихо», срок — «быстро», убийство — «без крови» (" + JSON.stringify({ c: qv.cond, k: qv.clean }) + ")");
   ok(qv.urgent && qv.urgent.text && qv.urgent.failed && qv.urgent.drop > 0, "срочная помощь раненому: срок назван, опоздали — поручение сорвано, доверие ниже (" + JSON.stringify(qv.urgent) + ")");
@@ -6780,15 +6782,19 @@ LAB.ui.closeAll();
       out.recryst = (G().inv.c_salt_2 || 0) > s2;
       spoken.length = 0; CL._add(o, 0, "fuel"); CL._heat(o, 0); CL._heat(o, 0);
       out.pyro = /горючее не греют/.test(said());
-      /* (3.6) один состав посуды — две рецептуры (йодид калия и коррозионная колба в корпусе из
-         металлолома): «Эхо» говорит об обеих, а при разливе даёт выбрать */
-      C.ch().xp.tox = Math.max(C.ch().xp.tox || 0, 80); C.ch().xp.pharm = Math.max(C.ch().xp.pharm || 0, 30); C.ch().xp.pyro = Math.max(C.ch().xp.pyro || 0, 80);
-      CL._add(o, 3, "water"); CL._add(o, 3, "acid"); CL._add(o, 3, "salt"); CL._add(o, 3, "salt"); CL._stir(o, 3); /* кислота в воде сама согревает смесь */
+      /* (3.6) один состав посуды — две рецептуры: «Эхо» говорит об обеих, а при разливе даёт выбрать.
+         (3.7) йодид теперь варят из йода со щёлочью, и общий состав — у регенерирующей сыворотки и
+         культуры: гемолимфа дважды, ферменты, биогель — тёплыми (обе — третья ступень, стол третьей ступени) */
+      C.ch().xp.tox = Math.max(C.ch().xp.tox || 0, 80); C.ch().xp.pyro = Math.max(C.ch().xp.pyro || 0, 80);
+      C.ch().xp.pharm = Math.max(C.ch().xp.pharm || 0, 400); C.ch().xp.bio = Math.max(C.ch().xp.bio || 0, 400);
+      const tier0 = stn.tier; stn.tier = 3; give("c_enzyme", 2);
+      CL._add(o, 3, "blood"); CL._add(o, 3, "blood"); CL._add(o, 3, "enzyme"); CL._add(o, 3, "gel"); CL._heat(o, 3); CL._stir(o, 3);
       out.dupJudge = /годится не на одно/.test(String(CL._judge(V(3)) || ""));
-      const co0 = cnt(/^c_corrode/), scr0 = G().inv.scrap || 0; U.closeAll(); CL._bottle(o, 3);
+      const cu0 = cnt(/^c_culture/), gel0 = G().inv.gel || 0; U.closeAll(); CL._bottle(o, 3);
       out.dupMenu = !!U.top() && U.top().title === "Что разлить" && items().length === 3;
-      click(/корпус из металлолома/); U.closeAll();
-      out.dupCorrode = cnt(/^c_corrode/) > co0 && (G().inv.scrap || 0) === scr0 - 1;
+      click(new RegExp("культур|" + esc(C.BR.bio.n), "i")); U.closeAll();
+      out.dupCorrode = cnt(/^c_culture/) > cu0 && (G().inv.gel || 0) === gel0;
+      stn.tier = tier0;
       /* пиротехника на фосфоре: в сухом стекле он вспыхивает, под водой — нет, и вода такому составу не помеха */
       give("c_phosphor", 2); give("cap", 1);
       spoken.length = 0; CL._add(o, 2, "phos"); out.phosDry = /вспыхнул/.test(said());
@@ -7063,7 +7069,7 @@ LAB.ui.closeAll();
     LAB.chem.noOverdose = nod; G.body.tox = 0; G.hp = G.hpMax;
     /* «Поговорить»: первой звучит первая строка рассказа */
     const prof = Object.keys(LAB.STORIES || {})[0], npc = { key: "t_np", n: "Тестовый выживший", prof: prof, x: G.x, y: G.y, life: 0, view: 0, okoSaw: 1 };
-    if (prof) { SPOKEN.length = 0; g.openTarget({ type: "npc", ref: npc }); const talk = LAB.ui.top().items.filter(i => lb(i) === "Поговорить")[0]; if (talk) talk.fn(); out.talk = SPOKEN.some(t => t.indexOf(LAB.STORIES[prof][0]) >= 0); LAB.ui.closeAll(); }
+    if (prof) { SPOKEN.length = 0; g.openTarget({ type: "npc", ref: npc }); const talk = LAB.ui.top().items.filter(i => lb(i) === "Поговорить")[0]; if (talk) talk.fn(); /* (3.7) в строках рассказа — разметка рода «[м|ж]»: звучит мужской вариант (житель без female) */ const t0 = String(LAB.STORIES[prof][0]).replace(/\[([^\]|]*)\|([^\]]*)\]/g, (m, a1) => a1); out.talk = SPOKEN.some(t => t.indexOf(t0) >= 0); LAB.ui.closeAll(); }
     /* отошли от взлома, не ошибившись: ни тревоги, ни шума */
     const noise0 = LAB.combat.noise; let noised = 0; LAB.combat.noise = function () { noised++; };
     ["lockpick", "pick_b", "pick_r", "pick_g"].forEach(k => { delete G.inv[k]; }); /* без отмычек — сразу взлом вручную */
