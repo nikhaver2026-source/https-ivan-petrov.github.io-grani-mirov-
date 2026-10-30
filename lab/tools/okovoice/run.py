@@ -37,7 +37,10 @@ TTS_URL = "https://generativelanguage.googleapis.com/v1beta/interactions"
 TTS_MODEL = "gemini-3.8-flash-tts"
 # «что слышно» в кусках записи: облегчённые модели (flash-lite) сбиваются в номерах кусков,
 # gemini-3.7-flash отвечает минутами
-ASR_MODELS = os.environ.get("OKOVOICE_ASR", "gemini-3.5-flash").split(",")
+# (30.10) запасные модели «что слышно»: у каждой своя дневная квота — кончилась у одной,
+# слушает следующая (проба 30.10: все из списка распознают реплики верно)
+ASR_MODELS = os.environ.get("OKOVOICE_ASR", "gemini-3.5-flash,gemini-3.6-flash,gemini-3.7-flash,gemini-3.8-flash,"
+                            "gemini-2.5-flash,gemini-flash-latest,gemini-3.5-flash-lite,gemini-3.1-flash-lite").split(",")
 VOICE = {"m": "Alnilam", "f": "Achernar"}
 
 # Интонации: коротко (документация Gemini советует так), с «natural pace» — иначе речь тянется.
