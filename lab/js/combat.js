@@ -1457,6 +1457,8 @@ function search(f, p) {
   if (f.state === "idle") f.state = "alert";
   f.lastKnown = { x: p.x, y: p.y }; f.lost = 0;
 }
+/* (3.7, нелогичность) Немой и Безголосая (основа i_mute) не визжат — они глушат тишиной */
+var SCREAM_SAY = { i_mute: "Тишина давит на уши: слух «Эхо» заложило." };
 function scream(f) {
   A("foeSound", f, "alert");
   /* (2.1) за стеной и закрытой дверью визг слышен глухо: слух не глушит, не ранит */
@@ -1464,7 +1466,7 @@ function scream(f) {
   if (gm().armorSpecial("sonicguard")) { sayOnce("scrG", "Визг — защита слуха гасит его.", 6000); return; }
   G().st.deaf = 6;
   A("deafen", 3000);
-  sayOnce("scr", "Визг! Слух «Эхо» заложило.", 5000);
+  sayOnce("scr", SCREAM_SAY[f.type] || "Визг! Слух «Эхо» заложило.", 5000);
   hurtPlayer(Math.max(1, Math.round(f.dmg * 0.4)), "sonic", f, { quiet: true });
 }
 /* Разгон по прямой: до трёх клеток за такт, удар с разгона. */
@@ -1637,7 +1639,7 @@ function foeTick(f, spotted) {
        шагах — слышна: жужжит, щёлкает приводами (ящик-ловушка и засада молчат) */
     if (f.kind === "mech" && !f.disguised && !f.ambush && !f.burrowed && !aff(f, "cloak") && Math.random() < 0.3 && nearHero(f)) A("foeSound", f, "idle");
     if (f.task === "leave") { if (canMove) { f.mv = 0; leaveStep(f); } return; }
-    if (/repair/.test(f.type) && serviceStep(f, canMove)) return;
+    if (!f.boss && repairKind(f.type) && serviceStep(f, canMove)) return; /* (3.7) и «Ремонтник» m_mender; страж с поста не уходит */
     if (f.task === "mine" && !has(f, "stationary")) { if (canMove) { f.mv = 0; mineTask(f); } return; }
     if (f.work && f.post && !has(f, "stationary")) { workIdle(f, canMove); return; }
     if (f.guard && f.post && !has(f, "stationary")) { guardIdle(f, canMove); return; }
@@ -2076,7 +2078,7 @@ function splashNear(f, dmg, miss) {
   var hp = heroPos(), part = Math.max(1, Math.round(dmg * 0.4));
   if (miss) { hurtPlayer(part, f.adt, f); if (G().dead) return; }
   foes.forEach(function (o) {
-    if (o.ally && !o.dead && cheb(o, hp) <= 1 && clearTo(hp.x, hp.y, o.x, o.y)) damageFoe(o, part, ADT_DT[f.adt] || "kinetic", { quiet: true });
+    if (o.ally && !o.dead && cheb(o, hp) <= 1 && clearTo(hp.x, hp.y, o.x, o.y)) damageFoe(o, part, ADT_DT[f.adt] || "kinetic", { quiet: true, by: "foe" });
   });
 }
 /* (3.7, нелогичность) Чем враг замедляет: причина — в поле slowBy стража или вида, иначе в таблице
@@ -2192,7 +2194,7 @@ function hurtPlayer(dmg, adt, src, opts) {
 var shells = [];
 function mortarShell(f, x, y) {
   A("foeSound", f, "mortar_fire");
-  shells.push({ x: x, y: y, t: 3, dmg: f.dmg, src: f });
+  shells.push({ x: x, y: y, t: 3, dmg: f.dmg, src: f, adt: f.adt }); /* (3.7, нелогичность) снаряд бьёт видом удара стрелка: луч, разряд, молния — не «ударом» */
   A("shellIncoming", x, y);
 }
 function shellsTick() {
@@ -2202,7 +2204,7 @@ function shellsTick() {
     if (s.t > 0) continue;
     shells.splice(i, 1);
     A("explosion", s.x, s.y, "shell");
-    if (Math.max(Math.abs(s.x - G().x), Math.abs(s.y - G().y)) <= 1 && clearTo(s.x, s.y, G().x, G().y)) hurtPlayer(s.dmg, "phys", s.src);
+    if (Math.max(Math.abs(s.x - G().x), Math.abs(s.y - G().y)) <= 1 && clearTo(s.x, s.y, G().x, G().y)) hurtPlayer(s.dmg, s.adt || "phys", s.src);
     if (G().dead) return;
   }
 }
@@ -2501,6 +2503,23 @@ function damageFoe(f, raw, dt, o) {
   }
   return true;
 }
+/* (3.7, нелогичность) Аптечка, реагент и кредиты — с людей и машин: человекоподобная тварь (мутировавший
+   сотрудник, поселенец, узник — наборы звуков labmut, soldier, mutant или повадка dooropen) их носит,
+   зверь, растение, гриб, панцирный и аномалия — нет. Чтобы кредитов в игре не стало меньше, у носителей
+   доля выше: прежние 30 % с любого врага делятся на долю носителей среди врагов этажа (по его списку
+   врагов) — средний доход с врага этажа прежний. */
+function humanoid(f) { return f.kind === "bio" && (/^(labmut|soldier|mutant)$/.test(f.snd || "") || (f.beh || []).indexOf("dooropen") >= 0); }
+function carrier(f) { return f.kind === "mech" || humanoid(f); }
+var crKey = null, crShare = 1;
+function crP() {
+  var c = CUR(), key = c.key + ":" + G().L + "-" + G().F;
+  if (crKey !== key) {
+    var n = 0, k = 0;
+    (c.fl.foes || []).forEach(function (d) { var b = LAB.FOES[d.type]; if (!b) return; n++; if (carrier(b)) k++; });
+    crKey = key; crShare = n && k ? k / n : 1;
+  }
+  return Math.min(0.9, 0.3 / crShare);
+}
 /* (3.7, нелогичность) Деталь с павшего врага — его природы: происхождение детали — LAB.PART_FROM
    (data.js: mech — снимают с машин, anom — вещество аномалий). Деталь, что встречается на этой
    глубине, и в половине случаев — деталь своего блока, если у блока такие есть (у «Колыбели»
@@ -2539,7 +2558,9 @@ function kill(f, quiet) {
   }
   A("foeDeath", f);
   LAB.vib(30);
-  var xp = Math.round((f.base.xp || 10) * (1 + 0.1 * (f.lvl - 1)) * (f.aff ? 1 + 0.25 * f.aff.length : 1) * (f.boss ? 6 : 1));
+  /* (3.7, нелогичность) страж — опыт по его силе: × 1,2 × множитель здоровья стража (mult), а не × 6 на любой
+     основе: прежде страж на слабой основе давал опыта как два-три обычных врага уровня */
+  var xp = Math.round((f.base.xp || 10) * (1 + 0.1 * (f.lvl - 1)) * (f.aff ? 1 + 0.25 * f.aff.length : 1) * (f.boss ? 1.2 * ((LAB.BOSSES[f.boss] && LAB.BOSSES[f.boss].mult) || 5) : 1));
   /* (3.0) присланные и призванные: опыта меньше, а на этаже-мясорубке — всё меньше, до нуля;
      каратели сгорают — ни опыта, ни добычи */
   /* напарник из режима сложности (twin) — житель этажа, а не замена: в мясорубку не идёт */
@@ -2552,7 +2573,9 @@ function kill(f, quiet) {
     sk = waveK(wn);
     if (sk <= 0 && !fs.sentOut) { fs.sentOut = 1; sayq("«Эхо»: с машин и тварей, которых ОКО и улья присылают на этот этаж, больше ничего не взять — ни опыта, ни добычи. Их начинку вы уже знаете наизусть; новое — ниже."); }
   }
-  if (f.spawned) { xp = f.punisher ? 0 : Math.round(xp * 0.4 * grindK() * sk); if (!f.ally && !f.twin) grindAdd(); }
+  /* (3.7, нелогичность) выводок стража (brood, summon) — не замена от ОКО: в мясорубку не идёт; прежде бой с маткой
+     запускал мясорубку, и на пути вниз ждали каратели */
+  if (f.spawned) { xp = f.punisher ? 0 : Math.round(xp * 0.4 * grindK() * sk); if (!f.ally && !f.twin && !f.brood) grindAdd(); }
   /* (3.5) свои (перехваченные, союзники) и обезвреженные (обесточенные, перепрошитые)
      машины — ни опыта, ни добычи: прежде перехваченные турели ломали монтировкой,
      а перепрошитых роботов глушили ЭМИ — за полный опыт и добычу, без ответа */
@@ -2596,13 +2619,13 @@ function kill(f, quiet) {
          глубины (если оно здесь есть) и аномальная взвесь (chem.drops) */
       var ap = r() < 0.45 * dk ? foePart(r, L, "anom") : null;
       if (ap) drops.push({ kind: "item", item: ap, n: 1 });
-    } else {
+    } else if (humanoid(f)) {
       if (r() < 0.35 * dk) drops.push({ kind: "item", item: r() < 0.6 ? "gel" : "reagent", n: 1 });
       if (r() < 0.12 * dk) drops.push({ kind: "item", item: "medkit_s", n: 1 });
-    }
+    } else if (r() < 0.21 * dk) drops.push({ kind: "item", item: "gel", n: 1 }); /* (3.7) зверь, растение, гриб — без аптечек и реагентов */
     if (LAB.workshop) LAB.workshop.drops(f, drops, r, dk);
     if (LAB.chem) LAB.chem.drops(f, drops, r, dk); /* (3.0) сырьё химии: ткани тварей, жидкости машин */
-    if (r() < 0.3 * sk) drops.push({ kind: "credits", n: LAB.credits(4 + r() * 12, L, g.F) });
+    if (carrier(f) && r() < crP() * sk) drops.push({ kind: "credits", n: LAB.credits(4 + r() * 12, L, g.F) }); /* (3.7) кредиты — у машин и людей */
     /* служебный ключ ОКО: у начальника смены, изредка — у стража поста */
     if (f.kind === "mech" && (has(f, "commander") ? r() < 0.45 * dk : f.guard && LAB.depth(L, g.F) >= 6 && r() < 0.08 * dk)) drops.push({ kind: "item", item: "okokey", n: 1 });
   }
@@ -2610,7 +2633,9 @@ function kill(f, quiet) {
      где бы он ни пал (N по режиму: bat; камеры и турели не в счёт). Напарник из
      режима сложности добычи не несёт, но враг есть враг — он в счёт идёт. */
   /* (3.5) присланные — в счёт с той же долей, что и их опыт и добыча (waveK) */
-  if ((looty || (f.twin && !tame)) && !f.punisher && !f.ally && !has(f, "camera") && !has(f, "stationary") && (!f.spawned || f.twin || r() < sk)) {
+  /* (3.7, нелогичность) не в счёт — только камеры, турели и узлы связи, а не все неподвижные: лиана, Царица улья,
+     Судья и неподвижные стражи — враги, как все */
+  if ((looty || (f.twin && !tame)) && !f.punisher && !f.ally && !has(f, "camera") && !has(f, "turret") && !has(f, "relay") && (!f.spawned || f.twin || r() < sk)) {
     var nth = diff().bat || 4;
     g.batKills = (g.batKills || 0) + 1;
     if (g.batKills % nth === 0) { drops.push({ kind: "ammo", ammo: "energy", n: 1, nth27: 1 }); if (!g.tut.batNth) { g.tut.batNth = 1; corrHint = nth; } }
@@ -2645,7 +2670,11 @@ function kill(f, quiet) {
     var self = f;
     setTimeout(function () {
       A("explosion", self.x, self.y, self.kind === "bio" ? "acid" : "bot");
-      if (cheb(self, heroPos()) <= 1 && clearTo(self.x, self.y, G().x, G().y)) hurtPlayer(Math.round(self.dmg * 1.4), self.kind === "bio" ? "chem" : "phys", self);
+      if (cheb(self, heroPos()) <= 1 && clearTo(self.x, self.y, G().x, G().y)) {
+        var fin0 = hurtPlayer(Math.round(self.dmg * 1.4), self.kind === "bio" ? "chem" : "phys", self);
+        /* (3.7, нелогичность) ядовитая тварь (poison) лопается ядовитым облаком: вдохнувший отравлен, фильтр спасает */
+        if (fin0 > 0 && self.kind === "bio" && has(self, "poison") && !G().dead) { if (G().st.antitox > 0) sayOnce("cloudF", "Фильтр задержал ядовитое облако."); else poison(6 + Math.floor(G().L / 2)); }
+      }
     }, 350);
   }
   if (LAB.quests) LAB.quests.onKill(f, xp); /* (3.6) поручения «уничтожить машин, тварей, стражей…» */
@@ -2777,10 +2806,14 @@ function okoPoint(o) {
   var c = any[Math.min(any.length - 1, Math.floor(any.length / 3))];
   return [c[0], c[1]];
 }
+/* (3.7, нелогичность) Кто ремонтник: repairbot и его родня по имени, «Ремонтник» m_mender и всякая машина-
+   лекарь, что чинит машины (healer; ветеринарный дрон лечит химер — не он). Прежде к выключенным турелям ОКО
+   слало только repairbot, и Ремонтник, что «первым выходит к выключенным турелям», не выходил никогда. */
+function repairKind(id) { var b = LAB.FOES[id]; return !!b && b.kind === "mech" && (/repair|mend/.test(id) || (b.beh.indexOf("healer") >= 0 && (b.heals || HEALS[id] || "mech") === "mech")); }
 function okoPool(mode) {
   var lev = LAB.LEVELS[G().L], ids = lev.foes, pool;
   var mobile = function (id) { var b = LAB.FOES[id]; return b && b.kind === "mech" && ["stationary", "cleaner", "mimic", "camera", "turret", "swarm"].every(function (k) { return b.beh.indexOf(k) < 0; }); };
-  if (mode === "repair") { pool = ids.filter(function (id) { return /repair/.test(id) && LAB.FOES[id] && LAB.FOES[id].kind === "mech"; }); if (!pool.length) pool = ["repairbot"]; return pool; }
+  if (mode === "repair") { pool = ids.filter(repairKind); if (!pool.length) pool = ["repairbot"]; return pool; }
   if (mode === "drone") return ["okodrone"];
   if (mode === "sapper") { pool = ids.filter(function (id) { var b = LAB.FOES[id]; return b && b.kind === "mech" && b.beh.indexOf("mines") >= 0 && b.beh.indexOf("stationary") < 0; }); return pool.length ? pool : ["sapper"]; }
   if (mode === "patrol") {
@@ -3061,9 +3094,11 @@ function signalLure(x, y, ticks) {
    бестиария брался только из природы: каждому роботу — «ЭМИ и ионы», даже Глубиннику, которого они
    почти не берут, каждой твари — «жар», даже Термофилу, который жар пьёт. */
 function vsK(b, dt, f) {
-  var k = (LAB.DMG_VS[b.kind] || {})[dt];
+  /* (3.7) у живого врага — его природа и стойкости (у стража — свои, makeRuntime) */
+  var kind = (f && f.kind) || b.kind, res = f && f.base ? f.res : b.res;
+  var k = (LAB.DMG_VS[kind] || {})[dt];
   if (k == null) k = 1;
-  if (b.res && b.res[dt] != null) k *= b.res[dt];
+  if (res && res[dt] != null) k *= res[dt];
   if (f && aff(f, "hardened") && (dt === "emp" || dt === "ion")) k *= dt === "emp" ? 0 : 0.5;
   return k;
 }
@@ -3247,7 +3282,7 @@ function patrolCue() {
   if (!best) return;
   best.cueT = now; cueAt = now;
   /* летающая машина не шагает — гудит */
-  var fly = ((best.base && best.base.beh) || []).indexOf("fly") >= 0;
+  var fly = has(best, "fly"); /* (3.7) по повадкам самого врага: страж на основе дрона может ходить на гусеницах */
   LAB.say((fly ? "Гул патруля: " : "Шаги патруля: ") + best.name.split(",")[0] + ", " + gm().relDir(best.x, best.y) + ".", { interrupt: false, prio: "info" });
 }
 function announceSpotted(list) {

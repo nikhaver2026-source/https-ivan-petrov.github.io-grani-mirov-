@@ -473,6 +473,13 @@ function foeSound(f, kind) {
     radio: "robot_radio", dodge: "robot_dodge", retreat: "robot_retreat", repair: "robot_repair", shield_up: "shield_up", shield_break: "shield_break", shield_hit: "shield_hit_foe",
     summon: f.kind === "mech" ? "robot_summon" : "mutant_summon", blink_out: "phase_out", blink_in: "phase_in", mine_set: "mine_set", mortar_fire: "mortar_fire", hurt: f.kind === "mech" ? "robot_hurt" : "mutant_hurt"
   };
+  /* (3.7, нелогичность) звук по природе — у тварей, людей и аномалий (машины — как прежде): бросок копья,
+     дротика, обломка, семени и удар волной звучат их собственным ударом (_attack набора), а не пулемётной
+     очередью foe_shot_phys; у людей «Альфы» (набор soldier) удар вплотную — удар оружием, а не выстрел */
+  if (f.kind && f.kind !== "mech") {
+    if (kind === "shoot" && !has(id) && generic.shoot === "foe_shot_phys") id = has(set + "_attack") ? set + "_attack" : "mutant_attack";
+    else if (kind === "attack" && set === "soldier") id = "w_melee";
+  }
   if (!has(id)) id = generic[kind] || id;
   var br = (f.base && f.base.sndRate) || 1;
   if (f.boss && LAB.BOSSES[f.boss] && LAB.BOSSES[f.boss].sndRate) br = LAB.BOSSES[f.boss].sndRate;
@@ -494,7 +501,8 @@ function foeStep(f) {
   var pat = !!(f.beat || f.patrol);
   if (outOfEar(f, f.boss ? 30 : pat ? 24 : 20, pat ? 14 : 12)) return;
   /* летающая машина не шагает — слышно, как она жужжит */
-  var beh0 = (f.base && f.base.beh) || [];
+  /* (3.7) по повадкам самого врага: страж на основе дрона может ехать на гусеницах («Няня») */
+  var beh0 = f.beh || (f.base && f.base.beh) || [];
   if (beh0.indexOf("fly") >= 0) {
     var now0 = Date.now();
     if (hoverT[f.id] && now0 - hoverT[f.id] < (pat ? 900 : 1500)) return;
@@ -506,7 +514,12 @@ function foeStep(f) {
   var id = f.kind === "mech" ? (has(f.snd + "_step") ? f.snd + "_step" : "robot_step") : (has(f.snd + "_step") ? f.snd + "_step" : "mutant_step");
   atFoe(id, f.x, f.y, { gain: f.boss || pat ? 1 : 0.65, rate: ((f.base && f.base.sndRate) || 1) * (f.boss ? 0.8 : 1) });
 }
-function foeHit(f, dt, dmg, crit) { atFoe(f.kind === "mech" ? "hit_metal" : "hit_flesh", f.x, f.y, { gain: crit ? 1.2 : 0.9 }); if (Math.random() < 0.5) foeSound(f, "hurt"); }
+/* (3.7, нелогичность) попадание по аномалии — хрусткий звон, а не удар о плоть */
+function foeHit(f, dt, dmg, crit) {
+  if (f.kind === "anom") atFoe("ev_ice_crack", f.x, f.y, { gain: crit ? 1.1 : 0.85, rate: 1 + Math.random() * 0.25, fb: function (s) { s.tink(2200); } });
+  else atFoe(f.kind === "mech" ? "hit_metal" : "hit_flesh", f.x, f.y, { gain: crit ? 1.2 : 0.9 });
+  if (Math.random() < 0.5) foeSound(f, "hurt");
+}
 /* Гибель врага (1.6: ярче и слоистее): крик или треск самой машины, затем
    у роботов — взрыв, разряд и осыпающиеся обломки, у тварей — удар тела
    об пол и хрип; босс — тяжёлый взрыв. */
@@ -518,6 +531,10 @@ function foeDeath(f) {
     atFoe("ev_electric", f.x, f.y, { gain: 0.7, delay: 0.32, fb: function (s) { s.zap(); } });
     atFoe("debris", f.x, f.y, { gain: 0.9, delay: 0.5 });
     atFoe("debris", f.x, f.y, { gain: 0.5, delay: 0.95, rate: 1.2 });
+  } else if (f.kind === "anom") {
+    /* (3.7, нелогичность) аномалия развеивается: фазовый срыв и тающий отзвук — тела, что падает на пол, нет */
+    atFoe("phase_out", f.x, f.y, { gain: 0.9, delay: 0.3, fb: function (s) { s.whoosh(false); } });
+    atFoe("ev_phase", f.x, f.y, { gain: 0.55, delay: 0.65, rate: 0.8, fb: function (s) { s.tink(1600); } });
   } else {
     atFoe("hit_flesh", f.x, f.y, { gain: 0.9, delay: 0.3 });
     atFoe("bump_body", f.x, f.y, { gain: 0.8, delay: 0.55, rate: 0.8 });
@@ -709,7 +726,24 @@ function alarmLayer(on) {
 /* Камера ОКО переводит взгляд: тихий сервопривод под потолком. */
 function camTurn(f) { atFoe("turret_servo", f.x, f.y, { gain: 0.3, rate: 1.6, fb: FB.turret_servo }); }
 /* Мимик выдаёт себя: «прибор» гудит с биением, чуть ниже и неровнее настоящих. */
-function mimicHum(f) { atFoe("ev_transformer", f.x, f.y, { gain: 0.32, rate: 0.78 + Math.random() * 0.08, fb: FB.mimic_hum }); }
+/* (3.7, нелогичность) по природе мимика: машина гудит мотором, тварь чуть дышит (тихий голос её набора),
+   аномалия — каменный или стеклянный щелчок (Керновик «тихо щёлкает», мим отвечает звонко) */
+function mimicHum(f) {
+  if (f.kind === "anom") { atFoe("ev_ice_crack", f.x, f.y, { gain: 0.3, rate: 1.15 + Math.random() * 0.2, fb: function (s) { s.tink(2600); } }); return; }
+  if (f.kind === "bio") { var bid = has(foeSet(f) + "_idle") ? foeSet(f) + "_idle" : "mutant_idle"; atFoe(bid, f.x, f.y, { gain: 0.22, rate: 0.7, fb: function (s) { s.hiss(); } }); return; }
+  atFoe("ev_transformer", f.x, f.y, { gain: 0.32, rate: 0.78 + Math.random() * 0.08, fb: FB.mimic_hum });
+}
+/* (3.7, нелогичность) Тварь или аномалия уходит под настил (in), скребётся под ним (under — у ваших ног) и
+   выныривает (out): скрежет и осыпь, у корней — скрип и треск, у ныряльщика в зеркальный настил — бульканье.
+   Прежде — звук телепорта, а под полом тишина, хотя описания учат ловить скрежет. Машины — как прежде. */
+var BURROW_SND = { vine: "ev_rustle", swamp: "ev_bubbles" };
+function burrowSnd(f, phase) {
+  if (f.kind === "mech") { if (phase !== "under") foeSound(f, phase === "out" ? "blink_in" : "blink_out"); return; }
+  var id = BURROW_SND[foeSet(f)] || "rubble_hit", rock = id === "rubble_hit", g = G();
+  if (phase === "under") { if (g) at(id, g.x, g.y, { ch: "foe", gain: 0.35, rate: 0.85 }); return; }
+  atFoe(id, f.x, f.y, { gain: phase === "out" ? 1 : 0.85 });
+  if (rock) atFoe("debris", f.x, f.y, { gain: phase === "out" ? 0.5 : 0.35, delay: 0.2, rate: 1.2 });
+}
 /* Перегретая турель шипит и потрескивает, остывая. */
 function turretHot(f) { atFoe("ev_steam", f.x, f.y, { gain: 0.5, rate: 1.3, fb: FB.turret_hot }); atFoe("turret_servo", f.x, f.y, { gain: 0.25, rate: 0.6, delay: 0.4, fb: FB.turret_servo }); }
 function noiseLure(x, y) {
@@ -910,7 +944,7 @@ LAB.atmos = {
   foeSound: foeSound, foeStep: foeStep, foeHit: foeHit, foeDeath: foeDeath, foeMiss: foeMiss, hurt: hurt,
   shot: shot, shotWall: shotWall, shotMiss: shotMiss, swingMiss: swingMiss, explosion: explosion, grenade: grenade, shellIncoming: shellIncoming,
   mineBeep: mineBeep, dropLoot: dropLoot, implant: implant, rubbleWork: rubbleWork, rubbleClear: rubbleClear, combatLevel: combatLevel, okoChime: okoChime, okoAlarm: okoAlarm, noiseLure: noiseLure, deafen: deafen,
-  alarmLayer: alarmLayer, camTurn: camTurn, mimicHum: mimicHum, turretHot: turretHot,
+  alarmLayer: alarmLayer, camTurn: camTurn, mimicHum: mimicHum, burrowSnd: burrowSnd, turretHot: turretHot,
   music: music, stopMusic: stopMusic, musicVolume: musicVolume, musicNow: musicNow, preloadLevel: preloadLevel, idsFor: idsFor
 };
 })();

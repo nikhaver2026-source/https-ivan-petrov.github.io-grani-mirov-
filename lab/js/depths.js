@@ -75,6 +75,12 @@ addBeh("g_welder", "fixer");
 ["k_glowbug", "k_leech", "k_quickling", "k_eel"].forEach(function (id) { addBeh(id, "heat"); });
 ["o_echoghost", "o_twin"].forEach(function (id) { addBeh(id, "mimicsnd"); });
 ["m_gatekeeper", "m_serverguard"].forEach(function (id) { addBeh(id, "blocker"); });
+/* (3.7, нелогичность) летающие (fly): гудят, а не шагают (atmos.js, foeStep), «Гул патруля», и нажимные ловушки
+   с растяжками под ними не срабатывают (traps.js) — прежде у дронов садов, роёв и шептокрылов fly не было;
+   «Слуховое окно» слушает, а не смотрит (deaf: combat.js, camSees); «Камера садов» смотрит теплом (heat) */
+["k_sentry", "k_pollinator", "k_vet", "k_hivedrone", "k_wingear", "o_shardswarm", "m_swarm", "i_tuner"].forEach(function (id) { addBeh(id, "fly"); });
+addBeh("i_ear", "deaf");
+addBeh("k_gardencam", "heat");
 if (!LAB.FOES.g_listener) LAB.FOES.g_listener = { n: "Слухач", g: "m", kind: "mech", desc: "Тихий наблюдатель «Подножия»: щуп-микрофон на гибкой ноге. Не нападает — передаёт ОКО, где вы, и отходит. Его выдаёт сухой щелчок передатчика.", hp: 28, dmg: 0, arm: 4, spd: 2, rng: 0, acd: 99, det: 8, beh: ["observer", "patrol", "deaf"], adt: "phys", snd: "watcher", sndRate: 1.2, xp: 14, min: 11 }; /* (3.7, нелогичность) микрофон, а не глаз: замечает на слух (deaf — «слепой», combat.js, observerTick) */
 
 /* ════════ РАЗМЕЩЕНИЕ (из генератора этажа, последним) ════════ */

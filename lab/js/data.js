@@ -405,11 +405,11 @@ LAB.FOES = {
   android: { n: "Охранный андроид", g: "m", kind: "mech", desc: "Человекоподобный робот охраны. Открывает двери и обходит с фланга.", hp: 66, dmg: 12, arm: 7, spd: 1, rng: 5, acd: 2, det: 8, beh: ["ranged", "dooropen"], adt: "energy", snd: "android", xp: 30, min: 1, carrier: true },
   watcher: { n: "Робот-смотритель", g: "m", kind: "mech", desc: "Тяжёлый робот криохранилища: медленный, почти непробиваемый.", hp: 90, dmg: 13, arm: 14, spd: 3, rng: 1, acd: 2, det: 5, beh: ["chase"], adt: "phys", snd: "watcher", xp: 32, min: 1 },
   interceptor:{ n: "Дрон-перехватчик", g: "m", kind: "mech", desc: "Скоростной дрон с импульсной пушкой. Стреляет на ходу.", hp: 36, dmg: 11, arm: 3, spd: 1, rng: 6, acd: 2, det: 8, beh: ["ranged", "fly"], adt: "shock", snd: "drone", xp: 26, min: 1 },
-  coreguard:{ n: "Страж ядра", g: "m", kind: "mech", desc: "Элитный робот бастиона ОКО: силовой щит и тяжёлый бластер.", hp: 110, dmg: 16, arm: 12, spd: 2, rng: 6, acd: 2, det: 8, beh: ["ranged", "dooropen"], adt: "energy", snd: "guardbot", xp: 44, min: 1, carrier: true },
+  coreguard:{ n: "Страж ядра", g: "m", kind: "mech", desc: "Элитный робот бастиона ОКО: толстая броня и тяжёлый бластер." /* (3.7, нелогичность) щита у него нет */, hp: 110, dmg: 16, arm: 12, spd: 2, rng: 6, acd: 2, det: 8, beh: ["ranged", "dooropen"], adt: "energy", snd: "guardbot", xp: 44, min: 1, carrier: true },
   /* роботы глубоких уровней */
   shieldbot:{ n: "Робот-щитоносец", g: "m", kind: "mech", desc: "Тяжёлый робот с генератором поля: прикрывает щитом всех роботов рядом с собой. Начинайте с него.", hp: 70, dmg: 8, arm: 9, spd: 2, rng: 1, acd: 2, det: 6, beh: ["chase", "shieldally"], adt: "phys", snd: "shieldbot", xp: 30, min: 1 },
   sapper:  { n: "Робот-сапёр", g: "m", kind: "mech", desc: "Низкий гусеничный робот: ставит мины в проходах, а раненый бросается под ноги и взрывается.", hp: 34, dmg: 14, arm: 4, spd: 2, rng: 1, acd: 3, det: 6, beh: ["chase", "mines", "kamikaze"], adt: "phys", snd: "sapper", xp: 24, min: 1 },
-  hunter:  { n: "Робот-ищейка", g: "f", kind: "mech", desc: "Быстрая четвероногая машина с чутким микрофоном: идёт на звук шагов через весь этаж.", hp: 48, dmg: 11, arm: 5, spd: 1, rng: 1, acd: 2, det: 9, beh: ["chase", "tracker"], adt: "phys", snd: "hunter", xp: 28, min: 1 },
+  hunter:  { n: "Робот-ищейка", g: "f", kind: "mech", desc: "Быстрая четвероногая машина с чутким микрофоном: идёт на звук шагов издалека, бег слышит ещё дальше." /* (3.7) не «через весь этаж» */, hp: 48, dmg: 11, arm: 5, spd: 1, rng: 1, acd: 2, det: 9, beh: ["chase", "tracker"], adt: "phys", snd: "hunter", xp: 28, min: 1 },
   mortar:  { n: "Миномётный робот", g: "m", kind: "mech", desc: "Робот с мортирой: бьёт навесом туда, где вас видел или слышал, — поверх ящиков и машин, но стена и закрытая дверь от снаряда укрывают. Свист снаряда — значит, пора сойти с места.", hp: 60, dmg: 18, arm: 8, spd: 3, rng: 9, acd: 4, det: 8, beh: ["ranged", "indirect"], adt: "phys", snd: "mortar", xp: 32, min: 1 },
   relay:   { n: "Узел ОКО", g: "m", kind: "mech", desc: "Неподвижный ретранслятор искусственного интеллекта. Пока он цел, роботы вокруг умнее и зовут подмогу.", hp: 80, dmg: 0, arm: 10, spd: 99, rng: 0, acd: 99, det: 10, beh: ["stationary", "relay"], adt: "shock", snd: "relay", xp: 40, min: 1 },
   micro:   { n: "Рой микродронов", g: "m", kind: "mech", desc: "Облако крошечных дронов с лезвиями. Каждый слаб, но их много, и они не отстают.", hp: 12, dmg: 5, arm: 0, spd: 1, rng: 1, acd: 1, det: 7, beh: ["chase", "swarm", "fly"], adt: "phys", snd: "micro", xp: 9, min: 1 },
@@ -447,11 +447,11 @@ LAB.DTYPE_N = { kinetic: "удар", shock: "электрошок", energy: "э�
 
 /* Стражи двадцатых этажей: охраняют шлюз; на части уровней шлюзовая ключ-карта при них. */
 LAB.BOSSES = {
-  b_grachev:   { base: "labmut", n: "Майор Грачёв", g: "m", desc: "Начальник охраны, мутировавший сквозь имплант. В руке — табельный бластер, в кармане — шлюзовая ключ-карта.", mult: 4, beh: ["chase", "dooropen", "ranged"], rng: 4, snd: "labmut" },
+  b_grachev:   { base: "labmut", n: "Майор Грачёв", g: "m", desc: "Начальник охраны, мутировавший сквозь имплант. В руке — табельный бластер, в кармане — шлюзовая ключ-карта.", mult: 4, beh: ["chase", "dooropen", "ranged"], rng: 4, snd: "labmut", adt: "energy" }, /* (3.7, нелогичность) бластер бьёт энергией (своё adt стража) */
   b_brood:     { base: "roach", n: "Матка", g: "f", desc: "Самка тараканищ размером с машину. Вокруг неё всегда рой.", mult: 5, beh: ["chase", "summon"], snd: "roach" },
   b_root:      { base: "vine", n: "Корень", g: "m", desc: "Сердцевина всех лиан, светится изнутри. Шлюзовая ключ-карта оплетена его стеблями.", mult: 6, beh: ["stationary", "ranged", "summon"], rng: 4, snd: "vine" },
   b_hydra:     { base: "chimera", n: "Химера «Гидра»", g: "f", desc: "Трёхголовая химера доктора Лаптевой. Головы бьют по очереди.", mult: 5, beh: ["chase", "regen"], snd: "chimera" },
-  b_goliath:   { base: "guardbot", n: "Боевой робот «Голиаф»", g: "m", desc: "Броня из керамики и стали, два тяжёлых бластера. После залпа открывает радиаторы.", mult: 5, beh: ["ranged"], snd: "guardbot" },
+  b_goliath:   { base: "guardbot", n: "Боевой робот «Голиаф»", g: "m", desc: "Броня из керамики и стали, два тяжёлых бластера: бьёт издалека. Электрошок, ионы и ЭМИ берут его лучше пуль." /* (3.7) радиаторов, что открываются после залпа, у него нет */, mult: 5, beh: ["ranged"], snd: "guardbot" },
   b_leviathan: { base: "spark", n: "Электрический левиафан", g: "m", desc: "Существо, ползущее по кабелям. Каждый удар — разряд на весь коридор.", mult: 6, beh: ["ranged", "chase"], snd: "spark" },
   b_colossus:  { base: "frozen", n: "Ледяной колосс", g: "m", desc: "Вмёрзший в стену гигант. Оттаял, когда отключилось охлаждение.", mult: 6, beh: ["chase", "slow"], snd: "frozen" },
   b_alpha:     { base: "soldier", n: "Суперсолдат «Альфа»", g: "m", desc: "Командир отряда суперсолдат. Броня пятого класса и бластер с подствольником.", mult: 5, beh: ["ranged", "dooropen"], snd: "soldier" },
@@ -765,23 +765,29 @@ LAB.NAMES = {
   sf: ["Беляева", "Горина", "Зуева", "Климова", "Комарова", "Лебедева", "Миронова", "Назарова", "Орлова", "Панина", "Рябова", "Соколова", "Тарасова", "Уварова", "Фролова", "Чернова", "Шилова", "Яковлева", "Дронова", "Ершова"]
 };
 
+/* (3.7, нелогичность) у профессии всё — явно: heal — лечит (вид целителя, medic.js), arc — глава
+   поручений (quests.js), f — название для женщины. Прежде врачом считался любой, кто торгует
+   лекарствами, а главу выбирал вид торговли: певчий Хора рассказывал о своём медпункте. */
 LAB.PROFS = {
-  "Инженер": { trade: "parts", beacon: "npc_eng" },
-  "Техник": { trade: "ammo", beacon: "npc_eng" },
-  "Генетик": { trade: null, beacon: "npc_sci" },
-  "Лаборант": { trade: null, beacon: "npc_sci" },
-  "Охранник": { trade: "ammo", beacon: "npc_guard" },
-  "Медик": { trade: "med", beacon: "npc_med" },
-  "Программист": { trade: null, beacon: "npc_sci" },
-  "Кладовщик": { trade: "all", beacon: "npc_trade" },
-  "Повар": { trade: "food", beacon: "npc_trade" },
-  "Оператор ускорителя": { trade: null, beacon: "npc_sci" }
+  "Инженер": { trade: "parts", beacon: "npc_eng", arc: "eng" },
+  "Техник": { trade: "ammo", beacon: "npc_eng", arc: "eng" },
+  "Генетик": { trade: null, beacon: "npc_sci", arc: "sci" },
+  "Лаборант": { trade: null, beacon: "npc_sci", arc: "sci", f: "Лаборантка" },
+  "Охранник": { trade: "ammo", beacon: "npc_guard", arc: "guard", f: "Охранница" },
+  "Медик": { trade: "med", beacon: "npc_med", heal: "medic", arc: "med" },
+  "Программист": { trade: null, beacon: "npc_sci", arc: "sci", f: "Программистка" },
+  "Кладовщик": { trade: "all", beacon: "npc_trade", arc: "store", f: "Кладовщица" },
+  "Повар": { trade: "food", beacon: "npc_trade", arc: "cook", f: "Повариха" },
+  "Оператор ускорителя": { trade: null, beacon: "npc_sci", arc: "sci" }
 };
+/* (3.7, нелогичность) профессия так, как её называют: «Певчая Хора», «Кладовщица» */
+LAB.profName = function (n) { var p = n && LAB.PROFS[n.prof]; return n ? (n.female && p && p.f ? p.f : n.prof || "") : ""; };
 
+/* bye — прощание этого робота (3.7, нелогичность: прежде все прощались «Протокол помощи ожидает») */
 LAB.ROBOT_NPC = {
-  helper: { n: "Сервисный робот «Помощник»", trade: "ammo", beacon: "npc_robot", desc: "Невысокий робот на колёсах. Его прошивку ОКО не успело переписать." },
-  meddroid: { n: "Медицинский дроид", trade: "med", beacon: "npc_robot", desc: "Парящий дроид с манипуляторами и красным крестом." },
-  archivist: { n: "Робот-архивариус", trade: null, beacon: "npc_robot", desc: "Старый робот библиотеки. Помнит всё, что видел, и любит рассказывать." }
+  helper: { n: "Сервисный робот «Помощник»", trade: "ammo", beacon: "npc_robot", desc: "Невысокий робот на колёсах. Его прошивку ОКО не успело переписать.", bye: "До свидания. Протокол помощи ожидает." },
+  meddroid: { n: "Медицинский дроид", trade: "med", beacon: "npc_med", desc: "Парящий дроид с манипуляторами и красным крестом.", bye: "Берегите себя. Сканирование завершено." },
+  archivist: { n: "Робот-архивариус", trade: null, beacon: "npc_robot", desc: "Старый робот библиотеки. Помнит всё, что видел, и любит рассказывать.", bye: "Запись о встрече внесена в архив. До свидания." }
 };
 
 /* Оценки уровней врагов и предметов по глубине комплекса. */
@@ -875,10 +881,11 @@ LAB.addBlock = function (n, part) {
   if (part.riddles) { B.riddles = B.riddles.concat(part.riddles); part.riddles.forEach(function (r) { r.b = n; LAB.RIDDLES.push(r); }); }
   if (part.rumors) B.rumors = B.rumors.concat(part.rumors);
   if (part.oko) for (k in part.oko) B.oko[k] = (B.oko[k] || []).concat(part.oko[k]);
-  if (part.profs) for (k in part.profs) { B.profs[k] = part.profs[k]; LAB.PROFS[k] = { trade: part.profs[k].trade || null, beacon: part.profs[k].beacon || "npc_sci", block: n }; LAB.STORIES = LAB.STORIES || {}; LAB.STORIES[k] = part.profs[k].stories || []; }
+  /* (3.7, нелогичность) heal, arc, f профессии и heal, bye, unique робота — как в блоке */
+  if (part.profs) for (k in part.profs) { var pp = part.profs[k]; B.profs[k] = pp; var pr = LAB.PROFS[k] = { trade: pp.trade || null, beacon: pp.beacon || "npc_sci", block: n }; if (pp.heal) pr.heal = pp.heal; if (pp.arc) pr.arc = pp.arc; if (pp.f) pr.f = pp.f; LAB.STORIES = LAB.STORIES || {}; LAB.STORIES[k] = pp.stories || []; }
   if (part.life) B.life = B.life.concat(part.life);
   if (part.view) B.view = B.view.concat(part.view);
-  if (part.robotNpc) for (k in part.robotNpc) { var rn = part.robotNpc[k]; LAB.ROBOT_NPC[k] = { n: rn.n, trade: rn.trade || null, beacon: "npc_robot", desc: rn.desc || "", block: n }; LAB.ROBOT_LINES = LAB.ROBOT_LINES || {}; LAB.ROBOT_LINES[k] = rn.lines || []; }
+  if (part.robotNpc) for (k in part.robotNpc) { var rn = part.robotNpc[k], ro = LAB.ROBOT_NPC[k] = { n: rn.n, trade: rn.trade || null, beacon: rn.beacon || "npc_robot", desc: rn.desc || "", block: n }; if (rn.heal) ro.heal = rn.heal; if (rn.bye) ro.bye = rn.bye; if (rn.unique) ro.unique = true; LAB.ROBOT_LINES = LAB.ROBOT_LINES || {}; LAB.ROBOT_LINES[k] = rn.lines || []; }
   if (part.events) { B.events = B.events.concat(part.events); LAB.EVENTS_B[n] = B.events; }
   /* уровней столько, сколько их готово подряд от первого: недописанный блок не ломает игру */
   var nL = 10;
