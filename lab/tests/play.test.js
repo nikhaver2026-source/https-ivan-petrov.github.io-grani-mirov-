@@ -2361,6 +2361,11 @@ LAB.ui.closeAll();
     "новая версия: настройки, отметка о прологе и подсказка про облегчённый режим остались, игроку сказано, что настройки прежние" + (fresh ? " (" + JSON.stringify({ stored: fresh.stored, ratePct: fresh.ratePct, navMode: fresh.navMode, hints: fresh.hints, prologue: fresh.prologue, lite: fresh.lite }) + (freshDiag ? "; " + freshDiag.slice(0, 300) : "") + ")" : ""));
   ok(fresh && /новая версия/i.test(fresh.both1 || "") && !/начинается заново/.test(fresh.both2 || ""),
     "сменились и версия, и прохождение — одно сообщение о новой версии, без второго о прохождении" + (fresh ? " (" + String(fresh.both2 || "").slice(0, 120) + ")" : ""));
+  /* (3.8) новая вкладка с подменённым хранилищем: Chromium изредка не доносит до неё последние ключи
+     storageState (так «терялись» отметки в проверке 2.5 выше, а однажды — метка прохождения, и игра
+     честно начала прохождение заново). Нужные ключи ставит ещё и скрипт до загрузки страницы;
+     какие пришлось ставить — в window.__labLost (в отчёте проверки) */
+  const guardLS = m => { window.__labLost = []; for (const k in m) { try { if (localStorage.getItem(k) !== m[k]) { window.__labLost.push(k); localStorage.setItem(k, m[k]); } } catch (e) { /* нет хранилища */ } } };
   /* (3.6, просьба игрока) записи «Альфы 3.0» и новее при смене версии не стираются: образец —
      настоящая запись «Альфы 3.2»; игрок слышит, что сохранения остались */
   let kept = null;
@@ -2373,6 +2378,7 @@ LAB.ui.closeAll();
       setK("lab_ver", "Альфа 3.2"); setK("lab_run", runNow); setK("lab_slot1", raw32); setK("lab_auto", raw32); setK("lab_prologue_seen", "1");
     });
     const ctxK = await browser.newContext({ storageState: stK });
+    await ctxK.addInitScript(guardLS, { lab_ver: "Альфа 3.2", lab_run: runNow, lab_slot1: raw32, lab_auto: raw32, lab_prologue_seen: "1" });
     const pageK = await ctxK.newPage();
     pageK.on("pageerror", e => errors.push("pageerror (запись 3.2): " + e.message));
     try {
@@ -2380,7 +2386,7 @@ LAB.ui.closeAll();
       kept = await pageK.evaluate(raw => {
         const L = localStorage, fs0 = LAB.freshStart;
         LAB.ui.mainMenu(true);
-        return { ver: L.getItem("lab_ver"), cur: LAB.VERSION, slot: L.getItem("lab_slot1") === raw, auto: L.getItem("lab_auto") === raw, kept: fs0.kept, wiped: fs0.wiped, from: fs0.from, intro: LAB.ui.top() ? LAB.ui.top().intro : "" };
+        return { ver: L.getItem("lab_ver"), cur: LAB.VERSION, slot: L.getItem("lab_slot1") === raw, auto: L.getItem("lab_auto") === raw, kept: fs0.kept, wiped: fs0.wiped, from: fs0.from, intro: LAB.ui.top() ? LAB.ui.top().intro : "", lost: window.__labLost };
       }, raw32);
     } catch (e) { kept = { err: String(e && e.message || e).slice(0, 200) }; }
     await ctxK.close();
@@ -2403,6 +2409,7 @@ LAB.ui.closeAll();
       ["lab_slot2", "lab_slot3"].forEach(n => { const i = ls.findIndex(q => q.name === n); if (i >= 0) ls.splice(i, 1); });
     });
     const ctx = await browser.newContext({ storageState: st });
+    await ctx.addInitScript(guardLS, { lab_ver: "Альфа 3.7", lab_run: runNow, lab_slot1: raw, lab_auto: raw, lab_prologue_seen: "1" });
     const pg = await ctx.newPage();
     pg.on("pageerror", e => errors.push("pageerror (запись 3.7, выпуск мира " + wv + "): " + e.message));
     let out = null;
@@ -2413,7 +2420,7 @@ LAB.ui.closeAll();
         LAB.ui.mainMenu(true);
         const intro = LAB.ui.top() ? LAB.ui.top().intro : "";
         const m = LAB.game._migrate(JSON.parse(raw2).g);
-        return { ver: L.getItem("lab_ver"), cur: LAB.VERSION, slot: L.getItem("lab_slot1") === raw2, kept: fs0.kept, wiped: fs0.wiped, from: fs0.from, intro, relocate: m.relocate === true && m.worldV === 7 };
+        return { ver: L.getItem("lab_ver"), cur: LAB.VERSION, slot: L.getItem("lab_slot1") === raw2, kept: fs0.kept, wiped: fs0.wiped, from: fs0.from, intro, relocate: m.relocate === true && m.worldV === 7, lost: window.__labLost };
       }, raw);
     } catch (e) { out = { err: String(e && e.message || e).slice(0, 200) }; }
     await ctx.close();
@@ -6784,7 +6791,8 @@ LAB.ui.closeAll();
       out.tables = { withT, n };
       delete G().visited["1-7"]; spoken.length = 0;
       g.enterFloor(1, 7, "down"); CB.stop();
-      out.entry = /Химический стол — помещение \d+ \(«[^»]+»\): навигатор знает дорогу/.test(said());
+      /* (3.8) в имени помещения бывают свои кавычки: «Фотокружок «Подземный кадр»» */
+      out.entry = /Химический стол — помещение \d+ \(«.+?»\): навигатор знает дорогу/.test(said());
       U.closeAll(); g.navMenu(); out.nav = items().some(l => /химический стол, помещение \d+/.test(l)); U.closeAll();
       /* 2. работа руками: реакции, опасности, разлив, открытие, перекристаллизация */
       g.enterFloor(1, 3, "down", true); CB.stop();
