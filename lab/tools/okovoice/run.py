@@ -152,8 +152,17 @@ def log(s):
         LOG.write(s + "\n"); LOG.flush()
 
 
+# (30.10) между репликами — отдельный кусок «…» в полной тишине: длинная пауза на стыке
+# (seg.split_dp режет по ней); проба: две секунды тишины в интонации самой реплики пауз не дают
+SEP = {"type": "text", "text": "…", "annotations": [{"type": "speech_metadata", "style": "complete silence for two seconds, no sound at all"}]}
+
+
 def tts(batch, voice, ks, start):
-    content = [{"type": "text", "text": x["say"], "annotations": [{"type": "speech_metadata", "style": x["style"]}]} for x in batch]
+    content = []
+    for i, x in enumerate(batch):
+        if i:
+            content.append(SEP)
+        content.append({"type": "text", "text": x["say"], "annotations": [{"type": "speech_metadata", "style": x["style"]}]})
     body = {"model": TTS_MODEL, "input": [{"type": "user_input", "content": content}],
             "response_format": {"type": "audio", "mime_type": "audio/wav"},
             "generation_config": {"speech_config": [{"voice": VOICE[voice]}]}}
@@ -210,7 +219,7 @@ def cut_batch(raw, items, voice, ks, state):
     rows = [{"k": it["k"], "say": it["say"], "style": it["style"], "kind": it["kind"]} for it in items]
     json.dump({"voice": voice, "items": rows}, open(side, "w", encoding="utf-8"), ensure_ascii=False)
     sr, x = read(raw)
-    res = seg.split(x, sr, [it["say"] for it in items], lambda c, lines=None: asr(c, ks, lines))
+    res = seg.split_dp(x, sr, [it["say"] for it in items], lambda c, lines=None: asr(c, ks, lines))
     if res is None:
         log("   «что слышно» не ответило — запись сохранена, нарежется позже")
         return -1
@@ -305,7 +314,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--voice", default="both", choices=["m", "f", "both"])
     ap.add_argument("--requests", type=int, default=60, help="не больше стольких запросов записи за запуск")
-    ap.add_argument("--chars", type=int, default=2600, help="знаков в пакете")
+    ap.add_argument("--chars", type=int, default=2000, help="знаков в пакете (с паузами между репликами запись длиннее)")
     ap.add_argument("--work", default=os.environ.get("OKOVOICE_WORK", "/tmp/okovoice_work"))
     ap.add_argument("--dry", action="store_true", help="только показать, сколько осталось и какие пакеты")
     a = ap.parse_args()

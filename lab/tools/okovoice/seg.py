@@ -196,3 +196,70 @@ def split(x, sr, texts, asr, gap=GAP, debug=None):
         h = next(it).strip()
         out.append((x[sp[0]:sp[1]], h, ratio(norm(h), norm(t))))
     return out
+
+
+# ── (30.10) Новый способ: запись с паузами «…» между репликами ──────────────────
+# Gemini в одной записи путает номера кусков (до 40 за раз), и проверка ловила
+# чужие реплики. Теперь run.py ставит между репликами отдельный кусок «…» с
+# интонацией «две секунды полной тишины» (проба 30.10: длинные паузы на всех
+# стыках), а режем мы сами:
+#   1. куски речи по паузам (pieces);
+#   2. раскладка кусков на реплики по порядку (динамическое программирование):
+#      стык реплик любит длинную паузу, а длина отрезка — длину её текста
+#      (скорость чтения — по всей записи);
+#   3. проверка — группами по GROUP отрезков с их текстами: в коротком запросе
+#      модель не сбивается в номерах, а если и собьётся, отрезок просто не
+#      совпадёт со своим текстом и не пройдёт — чужой реплики в игре не будет.
+GROUP = 6
+
+
+def dp_cut(x, sr, texts, gap=GAP, w_gap=3.0, lam=4.0, pad=0.06):
+    """Отрезки реплик [(начало, конец)] в отсчётах или None (кусков меньше реплик)."""
+    ps = pieces(x, sr, gap)
+    P, n = len(ps), len(texts)
+    if not n or P < n:
+        return None
+    gaps = [(ps[i + 1][0] - ps[i][1]) / sr for i in range(P - 1)]
+    span = (ps[-1][1] - ps[0][0]) / sr
+    rate = max(0.03, (span - sum(sorted(gaps, reverse=True)[:n - 1])) / sum(max(1, len(t)) for t in texts))
+    NEG = float("-inf")
+    best = [[NEG] * (P + 1) for _ in range(n + 1)]
+    back = [[-1] * (P + 1) for _ in range(n + 1)]
+    best[0][0] = 0.0
+    for k in range(1, n + 1):
+        e = rate * max(1, len(texts[k - 1]))
+        for j in range(k, P - (n - k) + 1):
+            for a in range(k - 1, j):
+                if best[k - 1][a] == NEG:
+                    continue
+                d = (ps[j - 1][1] - ps[a][0]) / sr
+                sc = best[k - 1][a] - lam * np.log(d / e) ** 2 + (w_gap * np.log(max(0.05, gaps[a - 1])) if a else 0.0)
+                if sc > best[k][j]:
+                    best[k][j], back[k][j] = sc, a
+    if best[n][P] == NEG:
+        return None
+    spans, j = [], P
+    for k in range(n, 0, -1):
+        a = back[k][j]
+        spans.append((max(0, ps[a][0] - int(pad * sr)), min(len(x), ps[j - 1][1] + int(pad * sr))))
+        j = a
+    return spans[::-1]
+
+
+def split_dp(x, sr, texts, asr, group=GROUP):
+    """Запись пакета с паузами между репликами → по реплике (отрезок, услышано, сходство);
+    None — не разрезать или «что слышно» не ответило (запись подождёт)."""
+    spans = dp_cut(x, sr, texts)
+    if spans is None:
+        return None
+    segs = [x[a:b] for a, b in spans]
+    out = []
+    for i in range(0, len(texts), group):
+        part = texts[i:i + group]
+        heard = asr([wav_bytes(s, sr) for s in segs[i:i + group]], part)
+        if heard is None:
+            return None
+        for j, t in enumerate(part):
+            h = heard[j] if j < len(heard) else ""
+            out.append((segs[i + j], h, ratio(norm(h), norm(t))))
+    return out
