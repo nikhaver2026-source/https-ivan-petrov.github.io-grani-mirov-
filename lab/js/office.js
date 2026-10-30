@@ -257,6 +257,22 @@ function thread(o, h) {
   }
   return (st.th.L === "g" ? gl : ((Lr.mail && Lr.mail[st.th.L]) || []))[st.th.i] || null;
 }
+/* (3.7) Письма, журнал и документы компьютера собираются из текстов lore.js по
+   ссылке — одними и теми же функциями и для ящика, и для архива документов: в
+   записи игры хранится ссылка (откуда письмо), а не текст (game.js, archiveRef). */
+function threadMail(th, j) {
+  var m = th.m[j], me = (th.o || "").split(",")[0];
+  var other = (th.m.filter(function (q) { return q[0] !== "*"; })[0] || [""])[0];
+  var sent = m[0] === "*", sub = m[1] || th.s;
+  return { f: sent ? me : m[0], to: sent ? (other || (/^Себе/.test(sub) ? "себе" : "всем")) : me, sent: sent, s: sub, x: m[2] };
+}
+function noticeMail(n) { var nn = (lore().notices || [])[n]; return nn ? { f: nn[0], s: nn[1], x: nn[2] } : null; }
+function codeMail(code, room, safe) {
+  if (safe) return { f: "Бухгалтерия", s: "Сейф, помещение «" + room + "»", x: "Напоминаю комбинацию сейфа в помещении «" + room + "»: " + digits(code) + ". Сменить её после инвентаризации — так и не сменили.", code: code, safe: true, room: room };
+  return { f: "Служба безопасности", s: "Код двери: " + room, x: "Новый код двери помещения «" + room + "»: " + digits(code) + ". Никому не пересылать и не записывать на бумаге.", code: code, room: room };
+}
+function threadOf(ref) { var p = String(ref).split("."), Lr = lore(), list = Lr.mail ? (p[0] === "g" ? Lr.mail.g : Lr.mail[p[0]]) : null; return (list && list[+p[1]]) || null; }
+function logPair(lg, k0) { return [lg[k0], lg[(k0 + 1) % lg.length]].filter(function (x, i, a) { return a.indexOf(x) === i; }); }
 function pcData(o) {
   var key = G().seed + ":" + CUR().key + ":" + o.id;
   if (poolCache[key]) return poolCache[key];
@@ -267,27 +283,23 @@ function pcData(o) {
   var th = d.state === "ok" ? thread(o, h) : null;
   if (th) {
     d.owner = th.o || "";
-    var me = (d.owner || "").split(",")[0];
-    var other = (th.m.filter(function (m) { return m[0] !== "*"; })[0] || [""])[0];
-    d.mails = th.m.map(function (m) {
-      var sent = m[0] === "*", sub = m[1] || th.s;
-      return { f: sent ? me : m[0], to: sent ? (other || (/^Себе/.test(sub) ? "себе" : "всем")) : me, sent: sent, s: sub, x: m[2] };
-    });
+    var tr = gm().objState(o).th; /* какая переписка — ссылка для архива */
+    d.mails = th.m.map(function (m, j) { var ml = threadMail(th, j); ml.ref = { th: tr.L + "." + tr.i, j: j }; return ml; });
     d.subj = th.s;
   }
   if (!d.owner) d.owner = randomOwner(L, h);
   /* объявление для всех — иногда */
   var notes = Lr.notices || [];
-  if (notes.length && d.state === "ok" && (h >>> 3) % 3 === 0) { var nn = notes[(h >>> 5) % notes.length]; d.mails.push({ f: nn[0], s: nn[1], x: nn[2] }); }
+  if (notes.length && d.state === "ok" && (h >>> 3) % 3 === 0) { var ni = (h >>> 5) % notes.length, nm = noticeMail(ni); nm.ref = { nt: ni }; d.mails.push(nm); }
   /* код двери или сейфа — в письме */
-  if (o.code) d.mails.unshift({ f: "Служба безопасности", s: "Код двери: " + o.codeRoom, x: "Новый код двери помещения «" + o.codeRoom + "»: " + digits(o.code) + ". Никому не пересылать и не записывать на бумаге.", code: o.code, room: o.codeRoom });
-  if (o.safeCode) d.mails.unshift({ f: "Бухгалтерия", s: "Сейф, помещение «" + o.safeRoom + "»", x: "Напоминаю комбинацию сейфа в помещении «" + o.safeRoom + "»: " + digits(o.safeCode) + ". Сменить её после инвентаризации — так и не сменили.", code: o.safeCode, safe: true, room: o.safeRoom });
+  if (o.code) { var cm = codeMail(o.code, o.codeRoom, false); cm.ref = { c: o.code, r: o.codeRoom }; d.mails.unshift(cm); }
+  if (o.safeCode) { var sm = codeMail(o.safeCode, o.safeRoom, true); sm.ref = { c: o.safeCode, r: o.safeRoom, sf: 1 }; d.mails.unshift(sm); }
   /* журнал испытаний помещения */
   var rm = gm().roomAt(o.x, o.y);
   var lg = rm && Lr.logs && Lr.logs[rm.type];
-  if (lg && lg.length && d.state === "ok") { d.logTitle = "Журнал испытаний: " + rm.name; var k0 = (h >>> 7) % lg.length; d.logs = [lg[k0], lg[(k0 + 1) % lg.length]].filter(function (x, i, a) { return a.indexOf(x) === i; }); }
+  if (lg && lg.length && d.state === "ok") { d.logTitle = "Журнал испытаний: " + rm.name; var k0 = (h >>> 7) % lg.length; d.logs = logPair(lg, k0); d.logRef = { rt: rm.type, k: k0, r: rm.name }; }
   var docs = Lr.docs && Lr.docs[L];
-  if (docs && docs.length && d.state === "ok" && (h >>> 9) % 2 === 0) d.docs = [docs[(h >>> 10) % docs.length]];
+  if (docs && docs.length && d.state === "ok" && (h >>> 9) % 2 === 0) { var di = (h >>> 10) % docs.length; d.docs = [docs[di]]; d.docRef = [L + "." + di]; }
   var cams = Lr.cams && Lr.cams[L];
   if (cams && cams.length && (h >>> 11) % 2 === 0) d.cams = [cams[(F + pcIndex(o)) % cams.length]];
   poolCache[key] = d;
@@ -386,13 +398,13 @@ function openMail(o, i) {
   st.read = st.read || {};
   st.read[i] = 1;
   snd("pc_click");
-  if (m.code) {
-    g.codes[m.code] = m.room;
-    var nid = "mail:" + CUR().key + ":" + o.id + ":" + i;
-    if (!g.notes[nid]) { g.notes[nid] = 1; g.noteList.push({ id: nid, t: "Письмо: " + m.s, x: m.x, a: m.f, L: g.L, F: g.F, code: m.safe ? m.code : undefined }); }
-  }
-  /* каждое прочитанное письмо — в архив документов */
-  if (!m.code) gm().archiveAdd("mail:" + CUR().key + ":" + o.id + ":" + i, "Письмо: " + m.s, "От: " + m.f + ". Кому: " + (m.to || d.owner.split(",")[0]) + ". " + m.x, m.f, "Переписка");
+  var nid = "mail:" + CUR().key + ":" + o.id + ":" + i;
+  if (m.code) g.codes[m.code] = m.room;
+  /* каждое прочитанное письмо — в архив документов: (3.7) ссылкой (откуда письмо), текст
+     собирается заново (mailNote); письмо с кодом — только своим текстом, без «От» и «Кому» */
+  if (m.ref) gm().archiveRef(nid, mailSrc(m, d), m.code && m.safe ? m.code : undefined);
+  else if (m.code) { if (!g.notes[nid]) { g.notes[nid] = 1; g.noteList.push({ id: nid, t: "Письмо: " + m.s, x: m.x, a: m.f, L: g.L, F: g.F, code: m.safe ? m.code : undefined }); } }
+  else gm().archiveAdd(nid, "Письмо: " + m.s, "От: " + m.f + ". Кому: " + (m.to || d.owner.split(",")[0]) + ". " + m.x, m.f, "Переписка");
   UIx("note", "Письмо: «" + m.s + "»", "От: " + m.f + ". Кому: " + (m.to || d.owner.split(",")[0]) + ". " + m.x + (m.code ? " Код записан в инвентарь: «Пропуска и ключи», «Известные коды». Набирать его — самому." : ""), function () { mailList(o); });
 }
 /* Документы компьютера: все, по одному; прочитанное — в архив. */
@@ -401,15 +413,100 @@ function docList(o) {
   snd("pc_click");
   UIx("menu", "Документы: " + d.owner, d.docs.map(function (dc, i) {
     return { label: "«" + dc.t + "»", fn: function () {
-      gm().archiveAdd("doc:" + CUR().key + ":" + o.id + ":" + i, dc.t, dc.x, (d.owner || "").split(",")[0], "Документы");
+      var nid = "doc:" + CUR().key + ":" + o.id + ":" + i, own = (d.owner || "").split(",")[0];
+      if (d.docRef && d.docRef[i]) gm().archiveRef(nid, { note: "pcdoc", d: d.docRef[i], o: own });
+      else gm().archiveAdd(nid, dc.t, dc.x, own, "Документы");
       UIx("note", dc.t, dc.x, function () { docList(o); });
     } };
   }).concat([{ label: "Назад", fn: function () { desk(o); } }]));
 }
 function readList(o, title, list) {
-  gm().archiveAdd("log:" + CUR().key + ":" + o.id, title, list.join(" "), (pcData(o).owner || "").split(",")[0], "Журналы терминалов");
+  var d = pcData(o), nid = "log:" + CUR().key + ":" + o.id, own = (d.owner || "").split(",")[0];
+  if (d.logRef) gm().archiveRef(nid, { note: "pclog", rt: d.logRef.rt, k: d.logRef.k, r: d.logRef.r, o: own });
+  else gm().archiveAdd(nid, title, list.join(" "), own, "Журналы терминалов");
   UIx("note", title, list.join(" "), function () { desk(o); });
 }
 
-LAB.office = { _openMail: function (o, i) { openMail(o, i); }, _docList: function (o) { docList(o); }, pcMenu: pcMenu, drinkMenu: drinkMenu, snackMenu: snackMenu, SNACKS: SNACKS, pcData: pcData, DRINKS: DRINKS, clear: function () { poolCache = {}; } };
+/* ════════ (3.7) АРХИВ: ТЕКСТ ПО ССЫЛКЕ ════════
+   Ссылка письма (pcmail): th — переписка («уровень.номер» или «g.номер») и j — письмо в
+   ней; nt — объявление для всех; c, r, sf — письмо с кодом; o — кому, если письмо адресовано
+   владельцу ящика. Документ (pcdoc): d — «уровень.номер», o — владелец. Журнал испытаний
+   (pclog): rt — вид помещения, k — первая запись, r — название помещения, o — владелец. */
+function mailSrc(m, d) {
+  var s = { note: "pcmail" }, r = m.ref || {};
+  for (var k in r) s[k] = r[k];
+  if (!r.c && !m.to) s.o = (d.owner || "").split(",")[0];
+  return s;
+}
+function noteText(s) {
+  var Lr = lore();
+  if (s.note === "pcmail") {
+    var m = s.c ? codeMail(s.c, s.r, !!s.sf) : s.nt != null ? noticeMail(s.nt) : null;
+    if (!m && s.th != null) { var th = threadOf(s.th); if (th && th.m && th.m[s.j]) m = threadMail(th, s.j); }
+    if (!m) return null;
+    return { t: "Письмо: " + m.s, x: s.c ? m.x : "От: " + m.f + ". Кому: " + (m.to || s.o || "") + ". " + m.x, a: m.f, cat: "Переписка" };
+  }
+  if (s.note === "pcdoc") {
+    var p = String(s.d).split("."), dc = ((Lr.docs && Lr.docs[p[0]]) || [])[+p[1]];
+    return dc ? { t: dc.t, x: dc.x, a: s.o || "", cat: "Документы" } : null;
+  }
+  if (s.note === "pclog") {
+    var lg = Lr.logs && Lr.logs[s.rt];
+    return lg && lg.length ? { t: "Журнал испытаний: " + s.r, x: logPair(lg, s.k % lg.length).join(" "), a: s.o || "", cat: "Журналы терминалов" } : null;
+  }
+  return null;
+}
+/* Повторы: то же письмо той же переписки (колода почты после круга начинается заново), то
+   же объявление, тот же документ или журнал на другом компьютере — тот же текст; в архив он
+   второй раз не идёт. Письмо с кодом — своё у каждой двери и сейфа. */
+function srcKey(s) {
+  if (s.note === "pcmail") return s.c ? "" : s.nt != null ? "nt" + s.nt : "m" + s.th + "." + s.j + (s.o ? "." + s.o : "");
+  if (s.note === "pcdoc") return "d" + s.d;
+  if (s.note === "pclog") return "l" + s.rt + "." + s.k;
+  return "";
+}
+/* Запись прежней версии с полным текстом — ссылкой, если текст по ней тот же (game.js, migrate
+   проверяет совпадение). Указатель: текст письма → откуда оно. */
+var oldIdx = null;
+function oldIndex() {
+  if (oldIdx) return oldIdx;
+  var Lr = lore(), I = { mail: {}, doc: {}, log: {} }, k;
+  var addM = function (m, ref) { var b = I.mail[m.x] = I.mail[m.x] || []; b.push({ m: m, ref: ref }); };
+  for (k in (Lr.mail || {})) (Lr.mail[k] || []).forEach(function (th, i) { (th.m || []).forEach(function (q, j) { addM(threadMail(th, j), { th: k + "." + i, j: j }); }); });
+  (Lr.notices || []).forEach(function (q, n) { addM(noticeMail(n), { nt: n }); });
+  for (k in (Lr.docs || {})) (Lr.docs[k] || []).forEach(function (dc, i) { var dk = dc.t + "\n" + dc.x; if (!I.doc[dk]) I.doc[dk] = k + "." + i; });
+  for (k in (Lr.logs || {})) { var lg = Lr.logs[k] || []; for (var j = 0; j < lg.length; j++) { var lk = logPair(lg, j).join(" "); if (!I.log[lk]) I.log[lk] = { rt: k, k: j }; } }
+  oldIdx = I;
+  return I;
+}
+function refOld(n) {
+  var id = String(n.id || "").replace(/^w\d+:/, ""), x = String(n.x || ""), t = String(n.t || ""), I, cm, tail;
+  if (/^mail:/.test(id)) {
+    cm = /^Новый код двери помещения «(.+)»: ([\d ]+)\. Никому не пересылать и не записывать на бумаге\.$/.exec(x) || /^Напоминаю комбинацию сейфа в помещении «(.+)»: ([\d ]+)\. Сменить её после инвентаризации — так и не сменили\.$/.exec(x);
+    if (cm) { var sr = { note: "pcmail", c: cm[2].replace(/ /g, ""), r: cm[1] }; if (/^Напоминаю/.test(x)) sr.sf = 1; return sr; }
+    var pos = x.indexOf(". Кому: ");
+    if (x.indexOf("От: ") !== 0 || pos < 0) return null;
+    I = oldIndex();
+    /* где кончается «кому» и начинается текст письма — пробуем каждую точку */
+    for (var at = x.indexOf(". ", pos + 8); at >= 0; at = x.indexOf(". ", at + 1)) {
+      var cands = I.mail[x.slice(at + 2)] || [];
+      for (var i = 0; i < cands.length; i++) {
+        var c = cands[i], pre = "От: " + c.m.f + ". Кому: ";
+        if (x.indexOf(pre) !== 0 || pre.length > at || "Письмо: " + c.m.s !== t) continue;
+        tail = x.slice(pre.length, at);
+        if (c.m.to && tail !== c.m.to) continue;
+        var s = { note: "pcmail" }; for (var rk in c.ref) s[rk] = c.ref[rk];
+        if (!c.m.to) s.o = tail;
+        return s;
+      }
+    }
+    return null;
+  }
+  if (/^doc:/.test(id)) { I = oldIndex(); var dd = I.doc[t + "\n" + x]; return dd ? { note: "pcdoc", d: dd, o: n.a || "" } : null; }
+  if (/^log:/.test(id) && t.indexOf("Журнал испытаний: ") === 0) { I = oldIndex(); var ll = I.log[x]; return ll ? { note: "pclog", rt: ll.rt, k: ll.k, r: t.slice(18), o: n.a || "" } : null; }
+  return null;
+}
+
+LAB.office = { _openMail: function (o, i) { openMail(o, i); }, _docList: function (o) { docList(o); }, pcMenu: pcMenu, drinkMenu: drinkMenu, snackMenu: snackMenu, SNACKS: SNACKS, pcData: pcData, DRINKS: DRINKS, clear: function () { poolCache = {}; },
+  noteText: noteText, srcKey: srcKey, refOld: refOld };
 })();

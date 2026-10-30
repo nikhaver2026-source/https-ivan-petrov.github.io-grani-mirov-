@@ -474,7 +474,7 @@ function take(o) {
   });
   if (!got.length) { say("Забирать нечего."); return false; }
   /* (3.7) giveItem кончает фразу точкой: в перечне она лишняя (кроме «шт.»), а в конце — одна: прежде «7 шт.. Заварить» */
-  say("Вы забираете с собой: " + LAB.dot(got.map(function (t, i) { t = /\sшт\.$/.test(t) || i === got.length - 1 ? t : t.replace(/\.$/, ""); return t.charAt(0).toLowerCase() + t.slice(1); }).join(", ")) + " Заварить можно у любого чайника.");
+  say("Вы забираете с собой: " + (LAB.dot || String)(got.map(function (t, i) { t = /\sшт\.$/.test(t) || i === got.length - 1 ? t : t.replace(/\.$/, ""); return t.charAt(0).toLowerCase() + t.slice(1); }).join(", ")) + " Заварить можно у любого чайника.");
   UIx("refresh");
   return true;
 }

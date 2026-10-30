@@ -84,7 +84,8 @@ function reveal() {
    выбор голоса — настройки): фокус — на том же пункте, что был у прежнего окна, как после Escape, а не на
    первом. Тот же пункт — по метке id, по тексту; число в нём сменилось («Еда и напитки: 3» — «: 2») — по
    тексту без чисел; значение сменилось («Голос синтезатора: …») — по началу до двоеточия или тире. Из
-   нескольких подходящих — ближайший к прежнему месту; не нашёлся — прежнее место, если пунктов столько же. */
+   нескольких подходящих — ближайший к прежнему месту; не нашёлся (вещь выбросили, продали последнюю) — прежнее
+   место, как после Escape: следующий пункт, а не начало списка. */
 function sameFocus(old, items) {
   var it0 = old.items[old.i];
   if (!it0) return 0;
@@ -97,7 +98,7 @@ function sameFocus(old, items) {
   if (k < 0) k = near(function (t) { return t === t0; });
   if (k < 0) k = near(function (t) { return num(t) === num(t0); });
   if (k < 0 && head(t0).length >= 3) k = near(function (t) { return head(t) === head(t0); });
-  if (k < 0) k = items.length === old.items.length ? old.i : 0;
+  if (k < 0) k = Math.min(old.i, items.length - 1);
   return k;
 }
 /* (3.7, нелогичность) подсказка об управлении окнами до начала игры (главное меню, настройки, руководство)
@@ -552,7 +553,32 @@ function loadMenu() {
     var t = gm().slotText(k, true);
     if (t) items.push({ label: t, fn: function () { if (!gm().loadSlot(k, true)) reopenMain(); } });
   });
+  /* (3.7) записи занимают память устройства, а её не бесконечно: ненужную можно удалить */
+  if (keys.some(function (k) { return LAB.store.get(gm().slotKey(k)) || LAB.store.get(gm().slotKey(k) + "_bak"); })) items.push({ label: "Удалить ненужную запись, чтобы освободить память", fn: function () { deleteSlotMenu(); } });
   menu("Загрузить игру", items.concat([{ label: "Назад", fn: function () { reopenMain(); } }]));
+}
+/* (3.7) Удалить запись: выбрать место — и подтвердить «Да» или «Нет». Запись удаляется вместе
+   с её резервной копией; после — снова окно «Загрузить игру». */
+function deleteSlotMenu() {
+  var keys = ["auto", 1, 2, 3], items = [];
+  keys.forEach(function (k) {
+    var key = gm().slotKey(k);
+    if (!LAB.store.get(key) && !LAB.store.get(key + "_bak")) return;
+    var name = k === "auto" ? "автозапись" : "запись слота " + k;
+    var what = gm().slotInfo(k) ? gm().slotText(k) : (k === "auto" ? "Автозапись" : "Слот " + k) + ": " + (LAB.store.get(key) ? "запись не читается" : "только резервная копия");
+    items.push({ label: "Удалить — " + what, fn: function () {
+      menu("Удалить " + name + "?", [
+        { label: "Да, удалить " + name + " вместе с её резервной копией", fn: function () {
+          var ok = gm().deleteSlot(k);
+          if (ok) { LAB.UI.ok(); say(name.charAt(0).toUpperCase() + name.slice(1) + " удалена."); } else { LAB.UI.error(); say("Не удалось удалить запись."); }
+          loadMenu();
+        } },
+        { label: "Нет, оставить", close: true, fn: function () {} }
+      ], { intro: what + "." });
+    } });
+  });
+  if (!items.length) { say("Удалять нечего: записей нет."); return; }
+  menu("Удалить запись", items.concat([{ label: "Назад", fn: function () { loadMenu(); } }]));
 }
 function saveMenu() {
   menu("Сохранить игру", [1, 2, 3].map(function (k) {
@@ -1277,10 +1303,10 @@ function key(act) {
       var want = act === "char" ? "Персонаж" : "Инвентарь";
       if (w.title === want) closeTop(); else { closeAll(); if (act === "char") character(); else inventory(); }
       return true;
-    /* (3.7, нелогичность) J и в окнах — окно заданий, как C и I; в самих заданиях — назад */
+    /* (3.7, нелогичность) J и в окнах — окно заданий, как C и I; в самих заданиях — снова в игру (и инвентарь под ними закрывается) */
     case "quests":
       if (screen !== "game") return true;
-      if (w.title === "Задания") closeTop(); else quests();
+      if (w.title === "Задания") { closeAll(); LAB.UI.close(); say("Игра."); } else quests();
       return true;
     case "guide":
       if (LAB.guide && w.title !== "Руководство") LAB.guide.open();

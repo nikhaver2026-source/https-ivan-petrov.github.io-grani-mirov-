@@ -1679,7 +1679,8 @@ LAB.ui.closeAll();
     g.giveItem({ kind: "note", note: "staff", id: "tstaff1" }, true);
     const added = g.G.noteList.slice(n0);
     out.added = added.length;
-    out.meta = added.every(n => n.cat && typeof n.pl === "string" && n.L === 12);
+    /* (3.7) категория и название у записки-ссылки собираются заново (docInfo), в записи их нет */
+    out.meta = added.every(n => g.docInfo(n).cat && typeof n.pl === "string" && n.L === 12 && n.x == null && n.t == null);
     out.docCat = g.docInfo(added[0]).cat;
     out.memCat = g.docInfo(added[1]).cat;
     out.sum = g.docInfo(added[0]).sum.length > 10;
@@ -1697,7 +1698,9 @@ LAB.ui.closeAll();
     if (found) {
       const m0 = g.G.noteList.length;
       LAB.office._openMail(found.pc, found.mi);
-      out.pcArchived = g.G.noteList.length === m0 + 1 && /^Письмо: /.test(g.G.noteList[g.G.noteList.length - 1].t);
+      /* (3.7) письмо — ссылкой: текста в записи нет, название и текст собираются заново */
+      const pe = g.G.noteList[g.G.noteList.length - 1];
+      out.pcArchived = g.G.noteList.length === m0 + 1 && pe.x == null && !!pe.src && /^Письмо: /.test(g.noteFull(pe).t) && /^От: /.test(g.noteFull(pe).x);
       LAB.ui.closeAll();
     }
     /* документ компьютера, ещё не прочитанный, — тоже в архив */

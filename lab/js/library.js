@@ -138,8 +138,18 @@ function archive(q, o, c) {
   g.noteList.push({ id: id, src: src, t: titleOf(q, c), a: q.a || "", L: g.L, F: g.F, pl: gm().placeName(g.x, g.y), cat: CAT_N[q.kind] || "Документы" });
   return true;
 }
-/* текст для архива: game.noteText — по ссылке src */
+/* текст для архива: game.noteText — по ссылке src.
+   (3.7) и прежние «полнотекстовые» документы этого файла: письмо почтового ящика из готового
+   набора (fxtx: k — набор, i — номер), служебная записка с кодом (libmemo: e — глубина, i —
+   образец, w — что открывает, n и r — номер и название помещения, c — код, s — подпись) и
+   тайнопись с кодом (libhid) */
+function fxPool(k) { return (LAB.FIX && LAB.FIX.TX && LAB.FIX.TX[k]) || []; }
+function hidTitle(f) { return "Тайнопись: код " + f.w + ", помещение " + f.n; }
+function hidBody(f) { return "Код " + f.w + " в помещении " + f.n + " («" + f.r + "»): " + digits(f.c) + "."; }
 function noteText(it) {
+  if (it.note === "fxtx") { var fx = fxPool(it.k)[it.i]; return fx == null ? null : { t: it.k === "letters" ? "Письмо" : "Лист", x: fx, a: "", cat: "Переписка" }; }
+  if (it.note === "libmemo") return MEMO[it.e] && MEMO[it.e][it.i] ? { t: memoTitle(it), x: memoBody(it), a: "", cat: "Служебные записки" } : null;
+  if (it.note === "libhid") return { t: hidTitle(it), x: hidBody(it), a: "", cat: "Служебные записки" };
   var q = byId(it.lib);
   if (!q) return { t: "Документ", x: "Текст не сохранился.", a: "" };
   return { t: titleOf(q, it.c), x: flat(note(q) + render(q, it.c)) + (q.hid ? (rec().rev && rec().rev[q.id] ? " Тайнопись между строк: " + flat(q.hid) : " «Эхо»: между строк — тайнопись, ещё не проявленная.") : ""), a: q.a || "" };
@@ -276,11 +286,18 @@ var LBL = {
   photo: function (q, rd) { return "Снимок: «" + q.t + "»" + (rd ? ", рассмотрено" : ""); }
 };
 function isRead(q, o) { return q.tpl ? inArchive(q, o) : !!rec().read[q.id]; }
+/* (3.7) Подстановки бланка (кто, кому, номера и время) собираются из зерна этажа (ctxMake) —
+   заново, а не хранятся в записи игры: у этажа, где открыты все шкафы и картотеки, они
+   занимали в записи до двадцати тысяч знаков. Прочитанный бланк хранит свои подстановки
+   в ссылке архива (src.c); в записях прежних версий они остались в вещи (libc) — оттуда. */
+var ctxCache = {}, ctxN = 0;
 function ctxFor(q, o) {
   if (!q.tpl) return null;
-  var s = st(o), m = s.libc = s.libc || {};
-  if (!m[q.id]) m[q.id] = ctxMake(o, q);
-  return m[q.id];
+  var s = st(o);
+  if (s.libc && s.libc[q.id]) return s.libc[q.id];
+  var k = G().seed + "|" + CUR().key + "|" + o.id + "|" + q.id;
+  if (!ctxCache[k]) { if (++ctxN > 3000) { ctxCache = {}; ctxN = 1; } ctxCache[k] = ctxMake(o, q); }
+  return ctxCache[k];
 }
 function readText(q, o) {
   var first = !isRead(q, o), c = ctxFor(q, o), body = render(q, c);
@@ -420,19 +437,26 @@ function codeMemo(o) {
   if (!s.memo) {
     var r = rng(o, "memo"), tg = codeTargets(o.room);
     if (!tg.length || !r.chance(0.4)) { s.memo = 0; return null; }
-    var t = tg[r.int(0, tg.length - 1)], tpl = (MEMO[era()] || MEMO.K)[r.int(0, (MEMO[era()] || MEMO.K).length - 1)];
+    var t = tg[r.int(0, tg.length - 1)], me = MEMO[era()] ? era() : "K", ti = r.int(0, MEMO[me].length - 1);
     var p = personOf(anyone(r), era());
-    s.memo = { id: "libmemo:" + CUR().key + ":" + o.id, code: t.code, room: t.rm.name, t: "Записка о коде " + t.what + ", помещение " + t.rm.num,
-      x: tpl.replace("{что}", t.what).replace("{номер}", String(t.rm.num)).replace("{имя}", t.rm.name).replace("{код}", digits(t.code)).replace("{подпись}", p.sign + ", " + (p.post || "сотрудник")) };
+    /* (3.7) ref — из чего записка собрана: в архив она идёт ссылкой (memoText), а не текстом */
+    var ref = { e: me, i: ti, w: t.what, n: t.rm.num, r: t.rm.name, c: t.code, s: p.sign + ", " + (p.post || "сотрудник") };
+    s.memo = { id: "libmemo:" + CUR().key + ":" + o.id, code: t.code, room: t.rm.name, t: memoTitle(ref), x: memoBody(ref), ref: ref };
   }
   return s.memo;
 }
+function memoTitle(f) { return "Записка о коде " + f.w + ", помещение " + f.n; }
+function memoBody(f) { return MEMO[f.e][f.i].replace("{что}", f.w).replace("{номер}", String(f.n)).replace("{имя}", f.r).replace("{код}", digits(f.c)).replace("{подпись}", f.s); }
 function readMemo(o, m) {
   var g = G(), first = !g.notes[m.id];
   spend(2); snd("paper_turn", "paper");
   if (first) {
     g.notes[m.id] = 1;
-    g.noteList.push({ id: m.id, t: m.t, x: m.x, a: "", L: g.L, F: g.F, pl: gm().placeName(g.x, g.y), cat: "Служебные записки", code: m.code });
+    if (m.ref) { var src = { note: "libmemo" }; for (var k in m.ref) src[k] = m.ref[k]; g.noteList.push({ id: m.id, src: src, L: g.L, F: g.F, pl: gm().placeName(g.x, g.y), code: m.code }); }
+    else g.noteList.push({ id: m.id, t: m.t, x: m.x, a: "", L: g.L, F: g.F, pl: gm().placeName(g.x, g.y), cat: "Служебные записки", code: m.code });
+    /* (3.7) записок о кодах на этаже бывает по пять-шесть, а коды пройденных этажей ничего не открывают:
+       в архиве — последние триста, как записки кабинетов (game.js, giveItem), — запись не разрастается */
+    var mn = 0; for (var qi = g.noteList.length - 1; qi >= 0; qi--) { var e = g.noteList[qi]; if ((/^libmemo:/.test(e.id) || (e.src && e.src.note === "libmemo")) && ++mn > 300) g.noteList.splice(qi, 1); }
     g.codes[m.code] = m.room;
     g.stats.notes = (g.stats.notes || 0) + 1; ev("note", 1); gm().gainXP(6);
   }
@@ -674,7 +698,12 @@ function mail(o) {
   for (var i = 0; i < n; i++) {
     var tx = LAB.fixtures && LAB.fixtures.read ? LAB.fixtures.read("letters", o, r, i) : null;
     if (tx && tx.src) got.push(gm().giveItem(Object.assign({ kind: "note", id: o.id + "-m" + i }, tx.src)));
-    else if (tx && gm().archiveAdd && gm().archiveAdd("mailbox:" + CUR().key + ":" + o.id + ":" + i, tx.t || "Письмо", tx.x, "", "Переписка")) got.push("письмо «" + (tx.t || "Письмо") + "» — в архиве документов.");
+    else if (tx) {
+      /* (3.7) письмо из готового набора — в архив ссылкой (номер в наборе); то же письмо уже там — второй раз не идёт */
+      var mid = "mailbox:" + CUR().key + ":" + o.id + ":" + i, fi = fxPool("letters").indexOf(tx.x);
+      var ar = fi >= 0 && gm().archiveRef ? gm().archiveRef(mid, { note: "fxtx", k: "letters", i: fi }) : gm().archiveAdd && gm().archiveAdd(mid, tx.t || "Письмо", tx.x, "", "Переписка");
+      if (ar) got.push("Письмо «" + (tx.t || "Письмо") + "» — " + (ar === "dup" ? "такое уже есть в архиве документов." : "в архиве документов."));
+    }
   }
   if (r.chance(0.3)) got.push(gm().giveItem({ kind: "credits", n: LAB.credits(4 + r.int(0, 10), L, F) }));
   say(got.length ? "Из ящиков — конверты: " + got.join(" ") : "Ящики пусты: только рекламные листки столовой.");
@@ -738,7 +767,8 @@ function hiddenCode(id) {
   var t = tg[h32("hidt:" + id + ":" + CUR().key) % tg.length], mid = "libhid:" + CUR().key + ":" + id;
   if (g.notes[mid]) return "";
   g.notes[mid] = 1; g.codes[t.code] = t.rm.name;
-  g.noteList.push({ id: mid, t: "Тайнопись: код " + t.what + ", помещение " + t.rm.num, x: "Код " + t.what + " в помещении " + t.rm.num + " («" + t.rm.name + "»): " + digits(t.code) + ".", a: "", L: g.L, F: g.F, pl: gm().placeName(g.x, g.y), cat: "Служебные записки", code: t.code });
+  /* (3.7) в архив — ссылкой: что, номер и название помещения, код (hidText) */
+  g.noteList.push({ id: mid, src: { note: "libhid", w: t.what, n: t.rm.num, r: t.rm.name, c: t.code }, L: g.L, F: g.F, pl: gm().placeName(g.x, g.y), code: t.code });
   return "Ниже, другой рукой и мельче: код " + t.what + " в помещении " + t.rm.num + " («" + t.rm.name + "») — " + digits(t.code) + ". «Эхо» запомнило код: замок вам его подскажет.";
 }
 function reveal(id) {
@@ -802,8 +832,40 @@ function examineLine(o) {
   return "";
 }
 
+/* (3.7) Повтор в архиве: то же письмо из готового набора (их в наборе всего два) — тот же
+   текст. Записки и тайнопись с кодом — свои у каждого кода. */
+function srcKey(s) { return s.note === "fxtx" ? "x" + s.k + "." + s.i : ""; }
+/* Запись прежней версии полным текстом — ссылкой, если текст по ней тот же (game.js, migrate). */
+var memoRx = null;
+function refOld(n) {
+  var id = String(n.id || "").replace(/^w\d+:/, ""), x = String(n.x || ""), t = String(n.t || ""), m;
+  if (/^mailbox:/.test(id)) { for (var k in { letters: 1, typed: 1, copier: 1 }) { var i = fxPool(k).indexOf(x); if (i >= 0) return { note: "fxtx", k: k, i: i }; } return null; }
+  if (/^libhid:/.test(id)) { m = /^Код (.+?) в помещении (\d+) \(«(.+)»\): ([\d ]+)\.$/.exec(x); return m ? { note: "libhid", w: m[1], n: +m[2], r: m[3], c: m[4].replace(/ /g, "") } : null; }
+  if (/^libmemo:/.test(id)) {
+    /* образец записки — в выражение: подстановки ловятся по порядку, в каком стоят в образце */
+    if (!memoRx) {
+      memoRx = [];
+      Object.keys(MEMO).forEach(function (e) { MEMO[e].forEach(function (tpl, ti) {
+        var order = [], rx = tpl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\\{(что|номер|имя|код|подпись)\\\}/g, function (a, nm) { order.push(nm); return nm === "номер" ? "(\\d+)" : nm === "код" ? "([\\d ]+?)" : "(.+?)"; });
+        memoRx.push({ e: e, i: ti, rx: new RegExp("^" + rx + "$"), order: order });
+      }); });
+    }
+    var tm = /^Записка о коде (.+), помещение (\d+)$/.exec(t);
+    if (!tm) return null;
+    for (var j = 0; j < memoRx.length; j++) {
+      m = memoRx[j].rx.exec(x);
+      if (!m) continue;
+      var f = { note: "libmemo", e: memoRx[j].e, i: memoRx[j].i, w: tm[1], n: +tm[2], r: "", c: String(n.code || ""), s: "" };
+      memoRx[j].order.forEach(function (nm, q) { var v = m[q + 1]; if (nm === "имя") f.r = v; else if (nm === "код") f.c = v.replace(/ /g, ""); else if (nm === "подпись") f.s = v; });
+      return f;
+    }
+    return null;
+  }
+  return null;
+}
+
 LAB.library = {
-  act: act, noteText: noteText, navTargets: navTargets, examineLine: examineLine,
+  act: act, noteText: noteText, srcKey: srcKey, refOld: refOld, navTargets: navTargets, examineLine: examineLine,
   cabinetMenu: cabinetMenu, cabinetItems: cabinetItems, shelfBooks: shelfBooks, readText: readText, isRead: isRead,
   codeMemo: codeMemo, deal: deal, byId: byId, pool: poolOf, index: idx, CAT_N: CAT_N, CAT_W: CAT_W, bookEffect: bookEffect,
   hiddenDocs: hiddenDocs, reveal: reveal, develop: develop, filmLeft: filmLeft, hasAt: hasAt

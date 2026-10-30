@@ -162,9 +162,13 @@ function unlock(a) {
   s.d[a.id] = 1;
   var msg = give(a.rew || {});
   if (LAB.UI && LAB.UI.fanfare) LAB.UI.fanfare(); else if (LAB.atmos) LAB.atmos.play("ui_levelup");
-  LAB.say("Достижение: «" + a.n + "». " + (msg ? "Награда: " + msg + "." : ""), { interrupt: false });
-  if (gm().journal) gm().journal("Достижение «" + a.n + "»" + (msg ? ": " + msg : "") + ".");
+  /* (3.7) keep: следующий жест игрока не стирает сообщение (engine.js, userAct) — оно прозвучит,
+     когда игрок замрёт; и без двойной точки после «3 шт.» */
+  LAB.say("Достижение: «" + a.n + "». " + (msg ? "Награда: " + dot(msg) : ""), { interrupt: false, keep: true });
+  if (gm().journal) gm().journal(dot("Достижение «" + a.n + "»" + (msg ? ": " + msg : "")));
 }
+/* точка в конце — если там ещё нет знака */
+function dot(s) { s = String(s || ""); return /[.!?…]$/.test(s) ? s : s + "."; }
 function give(r) {
   var g = G(), out = [];
   if (r.cr) { g.credits += r.cr; out.push(r.cr + " " + pl(r.cr, "кредит", "кредита", "кредитов")); }
@@ -180,7 +184,7 @@ function give(r) {
 }
 function rewText(r) {
   var out = [];
-  if (r.cr) out.push(r.cr + " кредитов"); if (r.xp) out.push(r.xp + " опыта"); if (r.hp) out.push("здоровье плюс " + r.hp); if (r.en) out.push("энергия плюс " + r.en);
+  if (r.cr) out.push(r.cr + " " + pl(r.cr, "кредит", "кредита", "кредитов")); if (r.xp) out.push(r.xp + " опыта"); if (r.hp) out.push("здоровье плюс " + r.hp); if (r.en) out.push("энергия плюс " + r.en);
   if (r.item && LAB.ITEMS[r.item[0]]) out.push(LAB.ITEMS[r.item[0]].n.toLowerCase());
   if (r.perk && PERKS[r.perk]) out.push("умение «" + PERKS[r.perk].n + "»");
   return out.join(", ");

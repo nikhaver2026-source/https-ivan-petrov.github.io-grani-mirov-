@@ -221,7 +221,7 @@ function objName(o, plain) {
 }
 function objName0(o) {
   if (!o) return "";
-  if (o.type === "terminal") return { sec: "Терминал безопасности", sci: "Научный терминал", eng: "Инженерный терминал" }[o.sub] || "Терминал";
+  if (o.type === "terminal") return TERM_N[o.sub] || "Терминал";
   if (o.type === "hq") return "Штаб: " + LAB.FACTIONS[o.faction].n;
   if (o.type === "comp" && LAB.COMPS) return (LAB.COMPS[o.kind] || LAB.COMPS.archive).n;
   if (o.type === "fx" && LAB.FIX && LAB.FIX.T[o.fx]) return LAB.FIX.T[o.fx].n;
@@ -425,9 +425,15 @@ function noteText(it, L, F) {
   if (it.note === "agen" && LAB.agen) return LAB.agen.noteText(it); /* записки кабинетов: из частей, с людьми этажа (1.5) */
   if (it.note === "lib" && LAB.library) return LAB.library.noteText(it); /* (3.6) книги, дела, газеты, записи — по ссылке на библиотеку */
   if (it.note === "riddle") { var rd = riddleFor(it.rid, it.L || L); return LAB.riddleNote ? LAB.riddleNote(rd, it.room, h) : { t: "Отгадка", x: "Замок помещения «" + it.room + "»: ответ — «" + rd.a[0] + "»." }; }
+  /* (3.7) документы, прежде хранившиеся полным текстом: письма, документы и журналы компьютеров
+     (office.js), журналы терминалов (termText), письма почтовых ящиков, служебные записки и
+     тайнопись (library.js) — по ссылке; источника нет (данные игры изменились) — null */
+  var rk = REF_KIND[it.note];
+  if (rk) { try { return rk === "office" ? (LAB.office && LAB.office.noteText ? LAB.office.noteText(it) : null) : rk === "lib" ? (LAB.library && LAB.library.noteText ? LAB.library.noteText(it) : null) : termText(it, L, F); } catch (e) { console.warn(e); return null; } }
   return { t: "Записка", x: "Неразборчиво." };
 }
 game.noteText = noteText;
+var REF_KIND = { pcmail: "office", pcdoc: "office", pclog: "office", term: "term", fxtx: "lib", libmemo: "lib", libhid: "lib" };
 /* Записки в записи игры хранятся ссылкой — откуда текст (src), а не самим
    текстом: иначе к глубоким уровням запись разрастается до мегабайт. Текст
    собирается заново по ссылке; письма и старые записи хранят его как есть. */
@@ -471,9 +477,36 @@ function archiveAdd(id, t, x, a, cat) {
   return true;
 }
 game.archiveAdd = archiveAdd;
+/* (3.7) Записать в архив документ ссылкой: письма, документы и журналы компьютеров, журналы
+   терминалов, письма почтовых ящиков, служебные записки и тайнопись прежде ложились в запись
+   полным текстом, и к сотому этажу запись доходила до мегабайта, а потом переставала
+   сохраняться. Теперь в записи — откуда документ (src), место и глубина; название, автор,
+   текст и категория собираются заново (noteText). Тот же текст уже в архиве (письмо той же
+   переписки с другого компьютера, тот же журнал) — второй раз не заносится: «dup», и номер
+   документа в прочитанные не идёт — запись не растёт и от повторов. */
+function srcKey(s) {
+  var k = s && REF_KIND[s.note];
+  if (!k) return "";
+  try { return k === "office" ? (LAB.office && LAB.office.srcKey ? LAB.office.srcKey(s) : "") : k === "lib" ? (LAB.library && LAB.library.srcKey ? LAB.library.srcKey(s) : "") : termKey(s); } catch (e) { return ""; }
+}
+function archived(key) {
+  if (!key) return null;
+  for (var i = 0; i < G.noteList.length; i++) { var n = G.noteList[i]; if (n.src && REF_KIND[n.src.note] && srcKey(n.src) === key) return n; }
+  return null;
+}
+function archiveRef(id, src, code) {
+  if (G.notes[id]) return false;
+  if (archived(srcKey(src))) return "dup";
+  G.notes[id] = 1;
+  var e = { id: id, src: src, L: G.L, F: G.F, pl: placeName(G.x, G.y) };
+  if (code) e.code = code;
+  G.noteList.push(e);
+  return true;
+}
+game.archiveRef = archiveRef;
 /* Сведения документа для архива: категория (у старых записей — по виду), место, глубина, кратко. */
 function docInfo(n) {
-  var nf = noteFull(n), cat = n.cat || (n.id && n.id.indexOf("mail:") === 0 ? "Переписка" : docCat(n.src, nf));
+  var nf = noteFull(n), cat = n.cat || nf.cat || (n.id && n.id.indexOf("mail:") === 0 ? "Переписка" : docCat(n.src, nf));
   var dpt = LAB.depths ? LAB.depths.depthOf(n.L || 1) : 0, dname = LAB.depths ? LAB.depths.names[dpt] : "";
   var mm = String(nf.x || "").match(/^[\s\S]*?[.!?…](\s|$)/), first = (mm ? mm[0] : String(nf.x || "")).trim();
   if (first.length > 110) first = first.slice(0, 107).replace(/\s+\S*$/, "") + "…";
@@ -901,7 +934,9 @@ function gainXP(n, why) {
   }
   if (lv) {
     LAB.UI.fanfare(); LAB.vib([60, 80, 60]);
-    sayq("Новый уровень героя: " + G.lvl + ". Здоровье, энергия и характеристики выросли.");
+    /* (3.7) keep: следующий жест игрока очищает очередь речи (engine.js, userAct) — важное
+       сообщение не теряется, а звучит, когда игрок замрёт */
+    say("Новый уровень героя: " + G.lvl + ". Здоровье, энергия и характеристики выросли.", { interrupt: false, keep: true });
     journal("Уровень героя " + G.lvl + ".");
   }
   UIx("refresh");
@@ -950,7 +985,8 @@ function giveItem(it, quiet) {
         /* ссылка на текст — само описание записки (без места на полу): по нему текст собирается заново */
         var src = JSON.parse(JSON.stringify(it)); delete src.x; delete src.y; delete src.kind;
         var dcat = docCat(src, nt);
-        G.noteList.push({ id: nid, src: src, t: nt.t, a: nt.a || "", story: !!nt.story, L: G.L, F: G.F, code: it.note === "safe" || it.note === "pcpin" || it.note === "code" ? it.code : undefined, pl: placeName(G.x, G.y), cat: dcat });
+        /* (3.7) название, автор и категория собираются по ссылке (noteFull, docInfo) — в записи их не хранить */
+        G.noteList.push({ id: nid, src: src, L: G.L, F: G.F, code: it.note === "safe" || it.note === "pcpin" || it.note === "code" ? it.code : undefined, pl: placeName(G.x, G.y) });
         G.stats.notes++; gainXP(4);
         if (LAB.ach) LAB.ach.ev("note", 1);
         if (LAB.workshop) LAB.workshop.fromDoc(nid, dcat);
@@ -1979,7 +2015,7 @@ function okoMenu(o) {
       if (ok) {
         A("play", "term_ok");
         if (!CUR.fs.mapped) { mapFloor(); say("ОКО: «Верно». Панель передаёт в «Эхо» карту этажа. Подозрение ОКО к вам снизилось."); }
-        else { var cr = LAB.credits(30, G.L, G.F); G.credits += cr; say("ОКО: «Верно». На ваш счёт переведено " + cr + " кредитов. Подозрение ОКО снизилось."); }
+        else { var cr = LAB.credits(30, G.L, G.F); G.credits += cr; say("ОКО: «Верно». На ваш счёт переведено " + crW(cr) + ". Подозрение ОКО снизилось."); }
         gainXP(15); if (LAB.oko) LAB.oko.event("riddle_ok"); UIx("refresh");
       } else { A("play", "term_err"); say("ОКО: «Нет». Подсказка, которую оно всё же даёт: " + rd.hint); if (LAB.oko) LAB.oko.event("riddle_fail"); }
     });
@@ -2136,7 +2172,7 @@ function descend(o, seam) {
       if (G.L !== L0) return; /* уже спустились */
       /* прошлый уровень недостижим: его этажи больше не храним (только теперь, когда
          герой внизу: автозапись во время страниц истории не вернёт старый уровень) */
-      Object.keys(G.fs).forEach(function (k) { if (k.indexOf(L0 + "-") === 0) delete G.fs[k]; });
+      forgetLevel(L0);
       /* (3.5) доклад с этажа этого уровня, до которого так и не дошли, — уже не передать */
       var lost = G.quests.filter(function (q) { return !q.done && q.type === "deep" && q.tL === L0; });
       lost.forEach(function (q) { q.done = true; q.failed = true; });
@@ -2167,6 +2203,17 @@ function descend(o, seam) {
     else go();
   }, 5200);
 }
+/* Пройденный уровень (шлюз закрылся за спиной): его этажей больше не будет. Из записи уходят их
+   состояние, (3.7) отметки «прочитано» у их вещей («1-4-i7», «mail:1-4:o3:0») и известные коды
+   (они от дверей, сейфов и компьютеров тех этажей): всё это копилось в записи без предела.
+   Документы остаются в архиве. */
+function forgetLevel(L0) {
+  Object.keys(G.fs).forEach(function (k) { if (k.indexOf(L0 + "-") === 0) delete G.fs[k]; });
+  var nk = new RegExp("(^|:)" + L0 + "-\\d+(-|:|$)");
+  Object.keys(G.notes).forEach(function (k) { if (nk.test(k)) delete G.notes[k]; });
+  G.codes = {};
+}
+game.forgetLevel = forgetLevel;
 /* Главная цель: своя для каждой части пути. */
 function mainQuest() {
   var q = G.quests.filter(function (x) { return x.type === "main"; })[0];
@@ -2311,7 +2358,7 @@ function terminalMenu(o) {
   if (o.codeFor) items.push({ label: "Коды доступа этажа", fn: function () { G.codes[o.code] = o.codeRoom; A("play", "term_beep"); say("В базе кодов: дверь «" + o.codeRoom + "» — код " + o.code.split("").join(" ") + ". Код записан в инвентарь: «Пропуска и ключи», «Известные коды». Набирать его у двери — самому."); } });
   if (o.sub === "sci") items.push({ label: objState(o).data ? "Данные уже скачаны" : "Скачать исследовательские данные", fn: function () {
     if (st.data) { say("Данные уже скачаны."); return; }
-    st.data = true; var cr = LAB.credits(15 + Math.min(G.L, 10) * 5, G.L, 1) ; G.credits += cr; A("play", "term_ok"); say("Данные проекта скопированы в «Эхо». За них дадут " + cr + " кредитов — уже начислено."); gainXP(8); checkQuests();
+    st.data = true; var cr = LAB.credits(15 + Math.min(G.L, 10) * 5, G.L, 1) ; G.credits += cr; A("play", "term_ok"); say("Данные проекта скопированы в «Эхо». За них дадут " + crW(cr) + " — уже начислено."); gainXP(8); checkQuests();
   } });
   if (o.sub === "eng") items.push({ label: "Состояние энергосистемы", fn: function () {
     var t = CUR.fl.needPower ? (CUR.fs.power ? "Питание этажа восстановлено." : "Этаж частично обесточен: силовые двери закрыты. Магнетронная установка ждёт настройки.") : "Питание этажа в норме.";
@@ -2414,7 +2461,12 @@ function defenseLine() {
 }
 /* Сколько тактов ОКО (полсекунды) держится петля или прошивка: глубже и после частых взломов — меньше. */
 function camTicks(base) { var dif = okoDiff(), blk = LAB.blockOf(G.L); return Math.max(40, Math.round(base * (1 - 0.08 * dif - 0.03 * (blk - 1)) + Math.random() * base * 0.25)); }
-function secs(t) { var s = Math.round(t / 2); return s + " " + plural(s, "секунду", "секунды", "секунд"); }
+/* (3.7, нелогичность) в пошаговом бою такт ОКО — ход (combat.js, spendTurns): глушилка «на шестьдесят
+   секунд» там действует сто двадцать ходов — и сроки называются ходами */
+function secs(t) {
+  if (S.turnBased) { var n = Math.max(1, Math.round(t)); return n + " " + plural(n, "ход", "хода", "ходов"); }
+  var s = Math.round(t / 2); return s + " " + plural(s, "секунду", "секунды", "секунд");
+}
 function defenseMenu(o, st) {
   var cb = LAB.combat, items = [], nT = cb ? cb.turretsLeft() : 0, cs = cb && cb.cams ? cb.cams() : [];
   /* (2.2) чего на этаже нет — сведения, а не «недоступно»: сеть работает, управлять здесь просто нечем */
@@ -2582,15 +2634,50 @@ game.mapFloor = mapFloor;
 function terminalLogs(o) {
   var key = G.L + "-" + G.F;
   var story = LAB.STORY[key];
-  var t = [];
-  if (story) t.push("Запись: «" + story.t + "». " + story.x);
-  if (o.codeFor) { t.push("Служебная запись: код двери «" + o.codeRoom + "» — " + o.code.split("").join(" ") + "."); G.codes[o.code] = o.codeRoom; }
+  /* (3.7) в архив — ссылкой (termText): история этажа, код двери, заявка о тайной двери, записка персонала */
+  var src = { note: "term" };
+  if (story) src.s = key;
+  if (o.codeFor) { src.c = o.code; src.cr = o.codeRoom; G.codes[o.code] = o.codeRoom; }
   var sec = CUR.fl.doors.filter(function (d) { return d.lock && d.lock.type === "secret" && !secretFound(d); })[0];
-  if (sec && LAB.hash32(o.id) % 2 === 0) t.push("Заявка на ремонт: «В помещении " + CUR.fl.rooms[sec.room].name + " сквозит из стены. Проверить». Заявка не выполнена.");
-  if (!t.length) { var sp = staffPool(); t.push(sp[LAB.hash32(o.id + key) % sp.length].x); }
+  if (sec && LAB.hash32(o.id) % 2 === 0) src.sr = CUR.fl.rooms[sec.room].name;
+  if (!story && !o.codeFor && src.sr == null) { var b = G.L > 10 ? LAB.blockOf(G.L) : 0, sp = staffPool(b); src.sp = b + "." + (LAB.hash32(o.id + key) % sp.length); }
+  var nm = objName(o);
+  if (o.sub && TERM_N[o.sub] === nm) src.u = o.sub; else if (nm !== "Терминал") src.a = nm;
+  var tx = termText(src, G.L, G.F);
   A("play", "term_beep");
-  archiveAdd("term:" + key + ":" + o.id, "Журналы терминала, уровень " + G.L + ", этаж " + G.F, t.join(" "), objName(o), "Журналы терминалов");
-  UIx("note", "Журналы терминала", t.join(" "));
+  archiveRef("term:" + key + ":" + o.id, src);
+  UIx("note", "Журналы терминала", tx ? tx.x : "Журнал пуст.");
+}
+var TERM_N = { sec: "Терминал безопасности", sci: "Научный терминал", eng: "Инженерный терминал" };
+/* Журналы терминала по ссылке: s — этаж с историей, c и cr — код двери и её помещение,
+   sr — помещение, где сквозит из стены, sp — записка персонала («блок.номер»), u — вид
+   терминала (a — его название, если оно другое). */
+function termText(s, L, F) {
+  var t = [], story = s.s ? LAB.STORY[s.s] : null;
+  if (s.s && !story) return null;
+  if (story) t.push("Запись: «" + story.t + "». " + story.x);
+  if (s.c) t.push("Служебная запись: код двери «" + s.cr + "» — " + String(s.c).split("").join(" ") + ".");
+  if (s.sr != null) t.push("Заявка на ремонт: «В помещении " + s.sr + " сквозит из стены. Проверить». Заявка не выполнена.");
+  if (s.sp != null) { var p = String(s.sp).split("."), q = staffPool(+p[0])[+p[1]]; if (!q) return null; t.push(q.x); }
+  return { t: "Журналы терминала, уровень " + (L || G.L) + ", этаж " + (F || G.F), x: t.join(" "), a: s.a || TERM_N[s.u] || "Терминал", cat: "Журналы терминалов" };
+}
+/* одинаковый текст — те же части; название терминала и место не в счёт */
+function termKey(s) { return "t" + [s.s || "", s.c || "", s.cr || "", s.sr == null ? "" : s.sr, s.sp == null ? "" : s.sp].join("|"); }
+/* Запись прежней версии: журнал терминала полным текстом — ссылкой, если текст по ней тот же. */
+function termRef(n) {
+  var x = String(n.x || ""), s = { note: "term" }, key = n.L + "-" + n.F, story = LAB.STORY[key], m;
+  if (story) { var st0 = "Запись: «" + story.t + "». " + story.x; if (x.indexOf(st0) === 0) { s.s = key; x = x.slice(st0.length).replace(/^ /, ""); } }
+  if ((m = /^Служебная запись: код двери «(.+?)» — ([\d ]+)\.(?: |$)/.exec(x))) { s.c = m[2].replace(/ /g, ""); s.cr = m[1]; x = x.slice(m[0].length); }
+  if ((m = /^Заявка на ремонт: «В помещении (.+?) сквозит из стены\. Проверить»\. Заявка не выполнена\.(?: |$)/.exec(x))) { s.sr = m[1]; x = x.slice(m[0].length); }
+  if (x) {
+    if (s.s || s.c || s.sr != null) return null;
+    for (var b = 0; b <= 5 && s.sp == null; b++) { var sp = staffPool(b); for (var i = 0; i < sp.length; i++) if (sp[i].x === x) { s.sp = b + "." + i; break; } }
+    if (s.sp == null) return null;
+  }
+  var a = String(n.a || "");
+  for (var u in TERM_N) if (TERM_N[u] === a) s.u = u;
+  if (!s.u && a !== "Терминал") s.a = a;
+  return s;
 }
 function rumor() {
   var R = [
@@ -2745,7 +2832,7 @@ function safeCode(o) {
    what: "door" — дверь (можно взломать), "safe" — сейф, "pc" — пароль компьютера (можно взломать). */
 function codeHint(code, what) {
   var n = code ? safeNoteFor(code) : null, pass = what === "pc";
-  if (n) return (pass ? "Записка с паролем" : "Записка с кодом") + " — в ваших документах: «" + n.t + "». Сверьтесь с ней и " + (pass ? "введите пароль." : "наберите код.");
+  if (n) return (pass ? "Записка с паролем" : "Записка с кодом") + " — в ваших документах: «" + (noteFull(n).t || n.t) + "». Сверьтесь с ней и " + (pass ? "введите пароль." : "наберите код."); /* (3.7) у документа-ссылки название собирается заново */
   if (what === "door" && code && G.codes[code]) return "Код этой двери вы знаете: он в ваших документах. Сверьтесь и наберите код.";
   return (pass ? "Пароля" : "Кода") + " у вас нет. Найдите записку с ним" + (what === "safe" ? " и приходите снова." : " — или взломайте.");
 }
@@ -2835,7 +2922,7 @@ function vendingItems(o) {
     var id = g[0], isAmmo = id.indexOf("ammo:") === 0, name = isAmmo ? LAB.AMMO[id.slice(5)].n : LAB.ITEMS[id].n;
     var base = isAmmo ? (LAB.AMMO[id.slice(5)].price || 40) : LAB.ITEMS[id].price;
     var p = Math.round(base * priceK() * (G.faction === "sec" && isAmmo ? 0.85 : 1));
-    return { label: name + " — " + p + " кредитов", fn: function () { buy(id, p); } };
+    return { label: name + " — " + crW(p), fn: function () { buy(id, p); } }; /* (3.7) «34 кредита», а не «34 кредитов» */
   });
   /* броня: у каждого терминала свой выбор, под глубину уровня */
   var st = objState(o);
@@ -2848,24 +2935,26 @@ function vendingItems(o) {
     /* (3.7, нелогичность) цена — как у прилавка (supply.armorBuyPrice): с уровнем брони и режимом;
        прежде без них, и броню из терминала скупали дороже, чем она здесь стоила */
     var p = LAB.supply && LAB.supply.armorBuyPrice ? LAB.supply.armorBuyPrice(a) : Math.round(LAB.ARMORS[a.base].price * (G.L <= 10 ? 1 + 0.15 * (G.L - 1) : 0.6 + 0.4 * LAB.wealth(G.L, G.F)) * LAB.QUAL_MULT[a.qual]);
-    items.push({ label: "Броня: " + armorLine(a) + " — " + p + " кредитов", fn: function () {
+    items.push({ label: "Броня: " + armorLine(a) + " — " + crW(p), fn: function () {
       if (!st.armor[i]) { say("Уже продано."); return; }
       if (G.credits < p) { LAB.UI.error(); say("Не хватает кредитов: нужно " + p + ", у вас " + G.credits + "."); return; }
       G.credits -= p; var got = st.armor[i]; st.armor[i] = null;
       A("play", "buy");
-      say("Куплено. " + giveItem({ kind: "armor", a: got }, true) + " Осталось " + G.credits + " кредитов.");
+      say("Куплено. " + giveItem({ kind: "armor", a: got }, true) + " Осталось " + crW(G.credits) + ".");
       UIx("refresh"); autosaveSoon();
     } });
   });
   /* скупка (1.5): всё, что несёте, — оружие, броня и комбинезоны, модули, детали, ценности, лекарства, еда */
   items.push({ label: "Продать: оружие, броню, детали, ценности и всё остальное", keep: false, fn: function () { UIx("closeTop", true); if (LAB.supply) LAB.supply.sellMenu({ who: "terminal", name: "Скупка торгового терминала" }, function () { vendingMenu(o); }); else sellMenu(); } });
-  items.unshift({ label: "У вас " + G.credits + " кредитов", disabled: true, fn: function () {} });
+  /* (3.7, нелогичность) строка-сведение, а не «недоступный пункт» («— недоступно» в конце); «41 кредит» */
+  var info0 = "У вас " + crW(G.credits || 0);
+  items.unshift({ label: info0, info: true, keep: true, fn: function () { say(info0 + "."); } });
   return items;
 }
 function sellMenu() {
   var items = sellItems();
   if (!items.length) { say("Продавать нечего."); return; }
-  UIx("menu", "Скупка", items, { keep: true, rebuild: function () { var it = sellItems(); return it.length ? it : [{ label: "Продавать больше нечего", disabled: true, fn: function () {} }]; } });
+  UIx("menu", "Скупка", items, { keep: true, rebuild: function () { var it = sellItems(); return it.length ? it : [{ label: "Продавать больше нечего", info: true, keep: true, fn: function () { say("Продавать больше нечего."); } }]; } });
 }
 function sellItems() {
   var items = [];
@@ -2890,7 +2979,7 @@ function buy(id, p) {
   if (id.indexOf("ammo:") === 0) G.ammo[id.slice(5)] = (G.ammo[id.slice(5)] || 0) + 1;
   else G.inv[id] = (G.inv[id] || 0) + 1;
   A("play", "buy");
-  say("Куплено. Осталось " + G.credits + " кредитов.");
+  say("Куплено. Осталось " + crW(G.credits) + ".");
   UIx("refresh");
 }
 game.buy = buy;
@@ -2898,19 +2987,19 @@ function medMenu(o) {
   /* (2.6) и очистка крови, и снятие отравления дорожают с глубиной и по режиму */
   var miss = G.hpMax - G.hp, p = Math.max(10, Math.round(miss * 0.6 * priceK())), pt = Math.max(5, Math.round(20 * priceK())), pp = Math.max(4, Math.round(15 * priceK()));
   UIx("menu", "Медицинская станция", [
-    { label: miss > 0 ? "Лечение до полного — " + p + " кредитов" : "Вы здоровы", fn: function () {
+    { label: miss > 0 ? "Лечение до полного — " + crW(p) : "Вы здоровы", fn: function () {
       /* (3.5) цена — по ранам сейчас, а не тогда, когда открывали окно */
       miss = G.hpMax - G.hp; p = Math.max(10, Math.round(miss * 0.6 * priceK()));
       if (miss <= 0) { say("Сканер: повреждений нет."); return; }
       if (G.credits < p) { LAB.UI.error(); say("Не хватает кредитов: нужно " + p + "."); return; }
       G.credits -= p; G.hp = G.hpMax; G.st.poison = 0; G.st.bleed = 0; A("play", "heal"); say("Лечение завершено. Здоровье полное, кровотечение остановлено."); UIx("refresh");
     } },
-    { label: "Очистка крови от токсинов — " + pt + " кредитов (токсинов " + Math.round(body().tox) + ")", fn: function () {
+    { label: "Очистка крови от токсинов — " + crW(pt) + " (токсинов " + Math.round(body().tox) + ")", fn: function () {
       if (body().tox < 1) { say("Токсинов нет."); return; }
       if (G.credits < pt) { say("Не хватает кредитов."); return; }
       G.credits -= pt; body().tox = 0; body().lv = {}; A("play", "heal"); say("Кровь очищена: токсинов нет.");
     } },
-    { label: "Снять отравление — " + pp + " кредитов", fn: function () {
+    { label: "Снять отравление — " + crW(pp), fn: function () {
       if (!G.st.poison) { say("Отравления нет."); return; }
       if (G.credits < pp) { say("Не хватает кредитов."); return; }
       G.credits -= pp; G.st.poison = 0; A("play", "heal"); say("Отравление снято.");
@@ -2936,7 +3025,8 @@ game.spendEnergy = spendEnergy;
 function hqMenu(o) {
   var f = LAB.FACTIONS[o.faction];
   var items = [{ label: "Узнать о фракции", fn: function () { say(f.n + ". " + f.desc + " Выгода: " + f.perk); } }];
-  if (G.faction === o.faction) items.push({ label: "Вы уже в этой фракции", disabled: true, fn: function () {} });
+  /* (3.7, нелогичность) строка-сведение, а не «Вы уже в этой фракции — недоступно» */
+  if (G.faction === o.faction) items.push({ label: "Вы уже в этой фракции", info: true, keep: true, fn: function () { say("Вы уже во фракции «" + f.n + "». " + f.perk); } });
   else items.push({ label: G.faction ? "Перейти во фракцию «" + f.n + "»" : "Вступить во фракцию «" + f.n + "»", fn: function () {
     /* (3.5) прибавка Научного совета — пока вы в нём: ушли — снимается, вернулись — снова */
     if (G.sciMind) { G.mind = Math.max(10, G.mind - G.sciMind); G.sciMind = 0; }
@@ -3276,8 +3366,8 @@ function navigate(cycle, fromNpc) {
       var plain = blockDoor.lock && /^(card|key|code)$/.test(blockDoor.lock.type);
       var full = CUR.fs.mapped || fromNpc;
       var wp = !full && pd ? waypoint(pd) : null;
-      if (wp && wp.k < pd.length) { var sub2 = pd.slice(0, wp.k); say("Цель: " + tgt.n + ". Дальше путь перекрыт запертой дверью. Ближайшая точка — " + wpName(wp) + ": " + navText(sub2) + more); A("navStart", sub2); navFollowStart(sub2[sub2.length - 1], null, wpName(wp)); return; }
-      say("Цель: " + tgt.n + ". Путь перекрыт: " + lockText(blockDoor) + "." + (plain ? "" : " " + doorBlock(blockDoor)) + (pd ? " До этой двери: " + navText(pd) : ""));
+      if (wp && wp.k < pd.length) { var sub2 = pd.slice(0, wp.k); say("Цель: " + tgt.n + ". Дальше путь перекрыт запертой дверью. Ближайшая точка — " + wpName(wp) + ". " + navText(sub2) + more); A("navStart", sub2); navFollowStart(sub2[sub2.length - 1], null, wpName(wp)); return; }
+      say("Цель: " + tgt.n + ". Путь перекрыт: " + lockText(blockDoor) + "." + (plain ? "" : " " + doorBlock(blockDoor)) + (pd && pd.length ? " До этой двери " + lowFirst(navText(pd)) : ""));
       A("navPing", blockDoor.x, blockDoor.y);
       if (pd && pd.length >= 2) navFollowStart(pd[pd.length - 2], null, "запертая дверь"); /* ведём до клетки перед дверью */
     } else say("Цель: " + tgt.n + ". Пути не видно: возможно, за тайной дверью.");
@@ -3287,7 +3377,7 @@ function navigate(cycle, fromNpc) {
     var w = waypoint(path);
     if (w && w.k < path.length) {
       var sub = path.slice(0, w.k);
-      say((fromNpc ? "«Иди так»: " : "") + "«Эхо» слышит " + tgt.n + " — дальше. Ближайшая точка — " + wpName(w) + ": " + navText(sub) + " Дойдёте — спросите снова. Всю дорогу покажет карта этажа: терминал безопасности или научный." + more);
+      say((fromNpc ? "«Иди так»: " : "") + "«Эхо» слышит " + tgt.n + " — дальше. Ближайшая точка — " + wpName(w) + ". " + navText(sub) + " Дойдёте — спросите снова. Всю дорогу покажет карта этажа: терминал безопасности или научный." + more);
       A("navStart", sub);
       navFollowStart(sub[sub.length - 1], null, wpName(w));
       return;
@@ -3311,6 +3401,9 @@ function firstSeg(path) {
   for (var i = 0; i < path.length; i++) { var d = stepDir(path[i], px, py); if (d0 && d !== d0) break; d0 = d; n++; px = path[i][0]; py = path[i][1]; }
   return [d0, n];
 }
+/* (3.7) «Ближайшая точка — проход в коридор. Всего 11 шагов: …» и «До этой двери всего 11 шагов: …» —
+   прежде «…коридор: Всего 11 шагов: 6 шагов…»: заглавная после двоеточия и два двоеточия подряд */
+function lowFirst(s) { s = String(s || ""); return s.charAt(0).toLowerCase() + s.slice(1); }
 function navText(path) {
   if (!path || !path.length) return "Вы на месте.";
   var mode = navMode();
@@ -3700,7 +3793,7 @@ function reload() {
   w.charge = w.cap;
   A("play", w.ammo === "energy" ? "w_reload_e" : w.ammo === "magnetron" ? "w_reload_m" : "w_reload_p");
   if (LAB.combat) LAB.combat.reloadPause(Math.round((w.ammo === "positron" ? 1400 : 900) * (LAB.workshop ? LAB.workshop.reloadK(w) : 1)));
-  say("Перезаряжено: " + w.cap + " выстрелов. Осталось: " + LAB.AMMO[w.ammo].n.toLowerCase() + " — " + G.ammo[w.ammo] + ".");
+  say("Перезаряжено: " + w.cap + " " + plural(w.cap, "выстрел", "выстрела", "выстрелов") + ". Осталось: " + LAB.AMMO[w.ammo].n.toLowerCase() + " — " + G.ammo[w.ammo] + ".");
   UIx("refresh");
   turns(w.ammo === "positron" ? 3 : 2, "reload"); /* (2.6) пошаговый режим: перезарядка — не мгновенно */
 }
@@ -3789,25 +3882,51 @@ var SLOT_KEYS = { 1: "lab_slot1", 2: "lab_slot2", 3: "lab_slot3", auto: "lab_aut
 function snapshot() {
   syncFloorState();
   G.stats.ms += Date.now() - (game.t0 || Date.now()); game.t0 = Date.now();
-  return JSON.stringify({ meta: { ver: LAB.VERSION, L: G.L, F: G.F, diff: G.diff, tb: G.tb ? 1 : 0, lvl: G.lvl, hp: G.hp, hpMax: G.hpMax, ms: G.stats.ms, date: Date.now(), samples: Object.keys(G.samples).length, done: G.done ? 1 : 0 }, g: G });
+  /* (3.7) сданные и сорванные поручения — в записи только то, что о них ещё спрашивают:
+     чьё, какое, сдано или сорвано (счёт ступеней и доверия заказчика — quests.js, giver),
+     главу; текст, шаги и награда сданного больше не нужны (в игре они остаются до выхода) */
+  var qs = G.quests;
+  G.quests = (qs || []).map(function (q) { return q && q.done && q.type !== "main" ? slimQuest(q) : q; });
+  try {
+    return JSON.stringify({ meta: { ver: LAB.VERSION, L: G.L, F: G.F, diff: G.diff, tb: G.tb ? 1 : 0, lvl: G.lvl, hp: G.hp, hpMax: G.hpMax, ms: G.stats.ms, date: Date.now(), samples: Object.keys(G.samples).length, done: G.done ? 1 : 0 }, g: G });
+  } finally { G.quests = qs; }
 }
+var QUEST_KEEP = ["id", "giver", "giverName", "gf", "type", "done", "failed", "late", "echoed", "L", "F", "short", "tier", "chap"];
+function slimQuest(q) { var o = {}; QUEST_KEEP.forEach(function (k) { if (q[k] !== undefined) o[k] = q[k]; }); return o; }
+/* (3.7) Резервная копия большой записи не делается: две копии мегабайтной записи в каждом из
+   четырёх мест не помещаются в память страницы, и сохранение отказывало. */
+var BAK_MAX = 400000;
 function saveSlot(n) {
   if (!game.entered || game.loading) return false;
-  var snap = snapshot(), key = SLOT_KEYS[n];
-  /* прежняя запись слота — в резервную копию (если место есть) */
+  var snap = snapshot(), key = SLOT_KEYS[n], big = snap.length > BAK_MAX;
+  /* прежняя запись слота — в резервную копию (если место есть и запись не слишком велика) */
   var prev = LAB.store.get(key);
-  if (prev && prev !== snap && validSave(prev)) LAB.store.set(key + "_bak", prev);
+  if (!big && prev && prev !== snap && prev.length <= BAK_MAX && validSave(prev)) LAB.store.set(key + "_bak", prev);
   var ok = LAB.store.set(key, snap);
   if (!ok && prev) { LAB.store.del(key + "_bak"); ok = LAB.store.set(key, snap); } /* не хватило места — копией жертвуем */
-  if (!ok && n === "auto" && Date.now() - (game.autoFailSaid || 0) > 120000) { game.autoFailSaid = Date.now(); sayq("Автозапись не удалась: память устройства переполнена. Сохранитесь в слот вручную."); }
+  /* (3.7) и копиями других мест: текущая игра важнее прежнего содержимого слотов */
+  if (!ok) { for (var sk in SLOT_KEYS) LAB.store.del(SLOT_KEYS[sk] + "_bak"); ok = LAB.store.set(key, snap); }
+  if (ok && big) LAB.store.del(key + "_bak"); /* копия устарела, а место нужнее */
+  var free = " Запишите игру поверх ненужного слота или удалите лишние записи: главное меню, «Загрузить игру».";
+  if (!ok && n === "auto" && Date.now() - (game.autoFailSaid || 0) > 120000) { game.autoFailSaid = Date.now(); sayq("Автозапись не удалась: память устройства переполнена." + free); }
   if (n !== "auto") {
     G.stats.saves++;
     if (ok) { LAB.UI.ok(); say("Игра сохранена в слот " + n + "."); }
-    else { LAB.UI.error(); say("Не удалось сохранить: память устройства переполнена."); }
+    else { LAB.UI.error(); say("Не удалось сохранить: память устройства переполнена." + free); }
   }
   return ok;
 }
 game.saveSlot = saveSlot;
+/* (3.7) Удалить запись места (слот или автозапись) вместе с её резервной копией — окно
+   «Загрузить игру» (ui.js), с подтверждением: освободить память устройства. */
+function deleteSlot(n) {
+  var key = SLOT_KEYS[n];
+  if (!key) return false;
+  LAB.store.del(key); LAB.store.del(key + "_bak");
+  return !LAB.store.get(key);
+}
+game.deleteSlot = deleteSlot;
+game.slotKey = function (n) { return SLOT_KEYS[n]; };
 /* Запись игры цела и подходит этой версии: проверяем до того, как заменить текущую игру. */
 function validSave(raw) {
   var d;
@@ -3875,7 +3994,8 @@ function loadSlot(n, fromBak) {
     UIx("showGame");
     var how = G.relocate ? (G.L === 1 && G.F === 1 ? "start" : (G.F === 1 ? "gatedown" : "down")) : "load";
     var moved = !!G.relocate; /* (3.6) этажи прежней записи построены заново — сказать после загрузки */
-    G.relocate = false;
+    var movedFrom = G.relocFrom || 0; /* (3.7) с какого выпуска мира: что именно изменилось */
+    G.relocate = false; delete G.relocFrom;
     enterFloor(G.L, G.F, how, true);
   } catch (e) {
     console.warn(e);
@@ -3893,7 +4013,9 @@ function loadSlot(n, fromBak) {
   var lev = LAB.LEVELS[G.L];
   say("Игра загружена. Уровень " + G.L + ", " + lev.name + ", этаж " + G.F + ". Здоровье " + G.hp + " из " + G.hpMax + ". " + weaponLine(curWeapon()) + ".");
   if (G.upgNote) { sayq(G.upgNote); G.upgNote = null; }
-  if (moved) sayq("Этажи комплекса перестроены: помещения стали просторнее, обстановки в них больше. Вы у входа на свой этаж; уровень, оружие, броня, вещи, кредиты и пропуска — при вас, поручения выживших сняты.");
+  /* (3.7, нелогичность) помещения росли в шестом выпуске мира (3.6); в седьмом — только обстановка по
+     назначению помещений: запись выпущенной 3.7 (шестой выпуск) просторнее не стала */
+  if (moved) sayq("Этажи комплекса перестроены: " + (movedFrom >= 6 ? "обстановка в помещениях расставлена заново, по их назначению." : "помещения стали просторнее, обстановки в них больше, и расставлена она по назначению помещений.") + " Вы у входа на свой этаж; уровень, оружие, броня, вещи, кредиты и пропуска — при вас, поручения выживших сняты.");
   roomCheck(true);
   return true;
 }
@@ -3914,6 +4036,8 @@ function migrate(g) {
   if (!g.melodies) g.melodies = {};
   for (var mk in g.melodies) if (!/^\d+-\d+-/.test(mk)) delete g.melodies[mk];
   if (!g.blockSeen) g.blockSeen = {};
+  /* (3.7) архив прежних версий: документы полным текстом — ссылками, повторы — один раз */
+  compactArchive(g);
   /* (3.7) этаж 1-1 прежде был отмечен заранее и в счёт вех «побывать на этажах» не попадал */
   if (g.ach && g.ach.c && g.visited) { var nv = Object.keys(g.visited).length; if ((g.ach.c.floor || 0) < nv) g.ach.c.floor = nv; }
   /* (3.7) id оружия прежде повторялись между запусками игры: у одинаковых в рюкзаке — новые */
@@ -3949,7 +4073,8 @@ function migrate(g) {
        броня, кредиты и прочитанные записки остаются */
     /* тексты записок-ссылок — собрать, пока колоды прежние */
     var G0 = G; G = g; noteCache = {};
-    (g.noteList || []).forEach(function (n) { if (n.x == null && n.src) { try { var r = noteFull(n); n.t = r.t; n.x = r.x; n.a = r.a; } catch (e) { /* */ } } });
+    /* (3.7) документы-ссылки на тексты игры (REF_KIND) от этажей и колод не зависят — их не собирать */
+    (g.noteList || []).forEach(function (n) { if (n.x == null && n.src && !REF_KIND[n.src.note]) { try { var r = noteFull(n); n.t = r.t; n.x = r.x; n.a = r.a; } catch (e) { /* */ } } });
     G = G0; noteCache = {};
     /* (3.7) прочитанное остаётся в архиве, но ключи записок — номера вещей на этаже
        («1-1-i5», «term:1-1:o3»): в новом мире те же номера у других вещей, и новая
@@ -3974,11 +4099,48 @@ function migrate(g) {
     g.pickups = [];
     /* привязка к капсуле — к той же на новом этаже (enterFloor найдёт её и место рядом) */
     if (g.checkpoint) g.checkpoint.fix = 1;
+    g.relocFrom = g.worldV || 0; /* (3.7) сообщение после загрузки — по прежнему выпуску мира */
     g.worldV = WORLD_V; g.relocate = true;
   }
   return g;
 }
 game._migrate = migrate; /* для проверок: перенос прежней записи */
+/* (3.7) Архив записи прежних версий: письма, документы и журналы компьютеров, журналы
+   терминалов, письма почтовых ящиков, служебные записки и тайнопись хранились полным текстом.
+   Такой документ становится ссылкой, только если по ссылке собирается слово в слово то же:
+   название, автор, текст и категория (иначе остаётся как был). Повторы того же текста (то же
+   письмо той же переписки с разных компьютеров, одно из двух писем почтовых ящиков) — один раз,
+   первый найденный; прочитанными они остаются. */
+function compactArchive(g) {
+  var list = g.noteList || [], out = [], seen = {}, ren = {};
+  list.forEach(function (n) {
+    if (!n || typeof n !== "object") return;
+    if (n.x != null && !n.src) {
+      var src = null, r = null;
+      try { src = oldRef(n); r = src ? noteText(src, n.L, n.F) : null; } catch (e) { r = null; }
+      if (r && r.t === n.t && r.x === n.x && (r.a || "") === (n.a || "")) {
+        /* категория — та, что была в архиве (docInfo): у писем с кодом её не было — «Переписка» по номеру */
+        var cat0 = n.cat || (String(n.id).indexOf("mail:") === 0 ? "Переписка" : docCat(null, { t: n.t, x: n.x, a: n.a }));
+        delete n.t; delete n.x; delete n.a; delete n.cat; delete n.story;
+        n.src = src;
+        if (cat0 !== r.cat) n.cat = cat0;
+      }
+    }
+    var k = n.src && REF_KIND[n.src.note] ? srcKey(n.src) : "";
+    if (k && seen[k]) { ren[n.id] = seen[k]; return; }
+    if (k) seen[k] = n.id;
+    out.push(n);
+  });
+  g.noteList = out;
+  if (g.lastDoc && ren[g.lastDoc]) g.lastDoc = ren[g.lastDoc];
+}
+function oldRef(n) {
+  var id = String(n.id || "").replace(/^w\d+:/, "");
+  if (/^(mail|doc|log):/.test(id)) return LAB.office && LAB.office.refOld ? LAB.office.refOld(n) : null;
+  if (/^(mailbox|libmemo|libhid):/.test(id)) return LAB.library && LAB.library.refOld ? LAB.library.refOld(n) : null;
+  if (/^term:/.test(id)) return termRef(n);
+  return null;
+}
 var autoTimer = null;
 var autoNoteAt = 0;
 function autosave() {

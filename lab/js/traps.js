@@ -179,6 +179,9 @@ var ACC = { glue: "клеевую ловушку", alarm: "сигнальную 
   logic: "логическую мину", roots: "корневую ловушку", timeless: "ловушку безвременья" };
 function itemOf(k) { return "tr_" + k; }
 function cap1(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+/* (3.7) точка в конце — только если там ещё нет знака (как LAB.dot в engine.js): traps.js грузят и без engine.js —
+   проверки мира (tests/world.test.js) и головоломок, — поэтому своя */
+function dot1(s) { s = String(s == null ? "" : s).replace(/\s+$/, ""); return !s || /[.!?…:;][»"”')]*$/.test(s) ? s : s + "."; }
 
 /* ── вещи и схемы ── */
 ORDER.forEach(function (k) {
