@@ -180,7 +180,7 @@ function noisy(o, how, s, half) {
   if (half || !O) return;
   if (how === "jack") { if (!s.heardJ && Math.random() < 0.35 && O.report && O.report("noise", o.x, o.y, "suspect", "скрип на лестничной клетке")) s.heardJ = 1; return; }
   if (O.heat) O.heat(2);
-  if (O.report && O.report("noise", o.x, o.y, "suspect", "удары на лестничной клетке") && !s.said) { s.said = 1; if (O.speak) O.speak("rubble", true); }
+  if (O.report && O.report("noise", o.x, o.y, "suspect", "удары на лестничной клетке") && !s.said) { s.said = 1; if (O.speak) O.speak("rubble", true, { nocheck: !(O.checkSent && O.checkSent()) }); } /* (3.7, нелогичность) не обещать бойцов, которых не послали */
 }
 /* Машины на шум — по режиму сложности: digW раз за разбор, ровно по ходу работы. */
 function okoWaves(o, s) {

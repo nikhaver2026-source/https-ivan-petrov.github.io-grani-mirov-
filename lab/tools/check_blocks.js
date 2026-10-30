@@ -238,7 +238,7 @@ for (let n = 1; n <= 5; n++) {
     if (w.ammo !== "none" && !w.cap) E(b, `weapon ${id}: с батареями нужен cap`);
     if (!num(w.cd, 250, 1600)) E(b, `weapon ${id}: cd 280–1500`);
     if (!W_SND.has(w.snd)) E(b, `weapon ${id}: snd «${w.snd}»`);
-    if (w.sndRate != null && !num(w.sndRate, 0.6, 1.5)) E(b, `weapon ${id}: sndRate`);
+    if (w.sndRate != null && !num(w.sndRate, 0.6, 2.2)) E(b, `weapon ${id}: sndRate`); /* до 2.2 — бесшумные пневмовыстрелы («пф»), как дротики и самострел */
     if (!str(w.model)) E(b, `weapon ${id}: model`);
     if (!num(w.depth, L0, L1)) E(b, `weapon ${id}: depth ${L0}–${L1}`);
   });
