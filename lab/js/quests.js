@@ -824,7 +824,8 @@ function goodsCr(s, q, k) {
   return Math.max(sell * s.need, Math.min(cr, Math.floor(buy * 0.7) * s.need));
 }
 var GIFTS = {
-  med: ["medkit_s", "bandage", "antidote", "sorbent", "painkiller", "medkit_l"],
+  /* (3.7, нелогичность) «@herb» — травяной сбор своей глубины: медик дарит из личного запаса, а не с прилавка */
+  med: ["medkit_s", "bandage", "antidote", "sorbent", "painkiller", "medkit_l", "@herb"],
   ammo: ["@ammo", "@ammo", "emp", "wrepair"],
   parts: ["@part", "@part", "fieldkit", "tape"],
   food: ["ration", "stew", "protein", "noodles"],
@@ -863,6 +864,7 @@ function questGift(n, h, stage, avoid) {
       if (mine["ammo:" + am]) continue;
       return { kind: "ammo", ammo: am, n: Math.max(1, Math.min(6, Math.round(val / (LAB.AMMO[am].price || 30)))) };
     }
+    if (pick === "@herb") { var hb = LAB.medic && LAB.medic.HERBS; pick = hb && LAB.medic.era ? hb[LAB.medic.era(L)] : null; if (!pick) continue; }
     if (pick === "@part") {
       var parts = LAB.PARTS.filter(function (p) { return (LAB.PART_DEPTH[p] || 1) <= L && p !== avoid && !mine[p]; });
       var own = parts.filter(function (p) { return (LAB.PART_DEPTH[p] || 1) > L - 20; }); /* (3.7) деталь своего блока */

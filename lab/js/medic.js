@@ -143,9 +143,18 @@ function place(ctx) {
     pick(rm.zone);
     if (!to.length && rm.zone !== -1) pick(-1); /* за замком других помещений нет — в начальную зону, куда дойти можно всегда */
     /* сперва большие помещения этажа, потом кабинеты у коридоров; ближние — раньше */
-    to.sort(function (a, b) { var p = ctr(fl.rooms[a]), q = ctr(fl.rooms[b]); return (fl.rooms[a].annex ? 1 : 0) - (fl.rooms[b].annex ? 1 : 0) || Math.abs(p[0] - c0[0]) + Math.abs(p[1] - c0[1]) - Math.abs(q[0] - c0[0]) - Math.abs(q[1] - c0[1]) || a - b; });
+    var near0 = function (a, b) { var p = ctr(fl.rooms[a]), q = ctr(fl.rooms[b]); return (fl.rooms[a].annex ? 1 : 0) - (fl.rooms[b].annex ? 1 : 0) || Math.abs(p[0] - c0[0]) + Math.abs(p[1] - c0[1]) - Math.abs(q[0] - c0[0]) - Math.abs(q[1] - c0[1]) || a - b; };
+    to.sort(near0);
+    var calmAny = null;
     away.forEach(function (t) {
       var npc = fl.npcs.indexOf(t) >= 0, to2 = npc ? to.filter(calmFor) : to;
+      /* (3.7, нелогичность) в своей зоне спокойного нет — житель уходит в спокойное помещение начальной
+         зоны, потом любой (туда доходят без тайных ходов); нет и такого — остаётся у капсулы */
+      if (npc && !to2.length) {
+        if (!calmAny) calmAny = fl.rooms.map(function (m, i) { return i; }).filter(function (i) { return fl.rooms[i] && !capRooms[i] && i !== fl.secret && !fl.rooms[i].hidden && calmFor(i); })
+          .sort(function (a, b) { return (fl.rooms[a].zone === -1 ? 0 : 1) - (fl.rooms[b].zone === -1 ? 0 : 1) || near0(a, b); });
+        to2 = calmAny;
+      }
       for (var i = 0; i < to2.length && i < 30; i++) if (ctx.moveTo(t, to2[i], npc)) { if (npc) used[t.y * W + t.x] = 1; return; }
     });
   });
