@@ -416,6 +416,9 @@ function hears(f) {
   if (refugeId >= 0 && !inRefuge(f.x, f.y)) return false; /* (2.2) убежище */
   if (havenId >= 0 && !inHaven(f.x, f.y)) return false; /* (2.3) безопасная зона у капсулы */
   if (f.deafT > 0) return false; /* (1.5) оглушён ловушкой */
+  /* (3.7, нелогичность) мимикрия: машина принимает вас за свою и по шагам — прежде её обходило
+     только зрение, и ищейка шла на «свои» шаги как на чужие */
+  if (G().st.mimicT > 0 && f.kind === "mech") return false;
   if (LAB.chem && LAB.chem.repels(f, dist(f, heroPos()))) return false; /* (3.0) репеллент */
   var n = G().noise;
   if (gm().armorSpecial("stealth")) n = Math.round(n * 0.6);
@@ -791,6 +794,7 @@ function camSees(f, extra) {
   var range = detOf(f) - (g.event === "dark" ? 3 : 0) + (extra || 0);
   if (along < 1 || along > range || perp > Math.max(1, Math.ceil(along * 0.6))) return false;
   if (veiled() || gm().armorSpecial("okoghost")) return false;
+  if (g.st.mimicT > 0) return false; /* (3.7, нелогичность) мимикрия: и камера видит в вас свою машину */
   return losTo(f);
 }
 function camFacing(f) { var g = G(), v = DIRV[camDirs(f)[f.camI]]; return (g.x - f.x) * v[0] + (g.y - f.y) * v[1] > 0; }
@@ -905,13 +909,17 @@ function cleanable(it) { return !/^d\d/.test(String(it.id || "")) && ["note", "s
    щелчок передатчика. */
 function observerTick(f) {
   f.mv++;
-  var see = sees(f);
+  /* (3.7, нелогичность) слухач — щуп-микрофон: замечает на слух, а не глазами (повадка deaf) */
+  var see = sees(f) || (has(f, "deaf") && hears(f));
   if (see) {
     if (!f.obsT || tickN - f.obsT > 30) {
       f.obsT = tickN;
       A("foeSound", f, "radio");
-      if (netUp() && LAB.oko) LAB.oko.report("observer", G().x, G().y, "seen");
-      sayOnce("obs" + f.id, "Сухой щелчок передатчика " + gm().relDir(f.x, f.y) + ": кто-то следит за вами и докладывает ОКО.", 12000);
+      /* (3.7, нелогичность) «докладывает» — только когда есть связь: глушилка, разбитые узлы
+         и заглушённая панель её рвут, и щелчок уходит в пустой эфир */
+      var up = netUp();
+      if (up && LAB.oko) LAB.oko.report("observer", G().x, G().y, "seen");
+      sayOnce("obs" + f.id, "Сухой щелчок передатчика " + gm().relDir(f.x, f.y) + (up ? ": кто-то следит за вами и докладывает ОКО." : ": кто-то следит за вами, но связи с ОКО у него нет — доклад уходит в пустой эфир."), 12000);
     }
     if (f.mv >= f.spd) { f.mv = 0; stepAway(f); }
     return;
@@ -965,15 +973,19 @@ function cleanerTick(f) {
   var fs = CUR().fs, here = gm().floorItems().filter(function (it) { return it.x === f.x && it.y === f.y && cleanable(it); });
   here.forEach(function (it) { fs.taken[it.id] = 1; var c = JSON.parse(JSON.stringify(it)); delete c.x; delete c.y; f.bag.push(c); });
   if (here.length) A("foeSound", f, "idle");
-  if (!f.reported && sees(f) && G().st.jam <= 0 && !gm().armorSpecial("okoghost")) {
-    f.reported = true;
-    A("foeSound", f, "radio");
-    sayOnce("cl" + f.id, f.name.split(",")[0] + " " + gm().relDir(f.x, f.y) + " заметил вас и докладывает ОКО.", 8000);
-    if (LAB.oko) LAB.oko.event("cleaner", { x: G().x, y: G().y });
+  /* (3.7, нелогичность) докладывает, только пока есть связь (netUp: глушилка, разбитые узлы,
+     заглушённая панель ОКО); без связи — замечает, но доложить некому, и «Эхо» так и говорит */
+  if (!f.reported && sees(f) && !gm().armorSpecial("okoghost")) {
+    if (netUp()) {
+      f.reported = true;
+      A("foeSound", f, "radio");
+      sayOnce("cl" + f.id, f.name.split(",")[0] + " " + gm().relDir(f.x, f.y) + " " + (f.g === "f" ? "заметила" : "заметил") + " вас и докладывает ОКО.", 8000);
+      if (LAB.oko) LAB.oko.event("cleaner", { x: G().x, y: G().y });
+    } else sayOnce("cln" + f.id, f.name.split(",")[0] + " " + gm().relDir(f.x, f.y) + " " + (f.g === "f" ? "заметила" : "заметил") + " вас, но связи с ОКО нет — доложить некому.", 30000);
   }
   /* обломки машин — след: уборщик сообщает ОКО, где их нашёл */
   var wr = CUR().fs.wrecks;
-  if (wr && wr.length && !(G().st.jam > 0)) {
+  if (wr && wr.length && netUp()) {
     for (var wi = 0; wi < wr.length; wi++) {
       var w = wr[wi];
       if (w.rep || Math.abs(w.x - f.x) + Math.abs(w.y - f.y) > 2) continue;
@@ -1086,9 +1098,11 @@ function serviceStep(f, canMove) {
    шумно; ОКО пошлёт ремонтника. Перерезанная турель молчит, пока её не
    починят. */
 function isTurret(f) { return isNetTurret(f); }
-function cutTurret(f, ok) {
+function cutTurret(f, ok, safe) {
   var fs = CUR().fs;
   noise(12);
+  /* safe — изолированные кусачки: жилу не перекусили, но и током не ударило */
+  if (!ok && safe) { A("play", "term_err"); sayq("Кусачки соскользнули с жилы — кабель цел, но диэлектрические ручки удержали ток. Турель цела."); if (LAB.oko) LAB.oko.report("noise", G().x, G().y, "suspect", "искрит щиток турели"); return false; }
   if (!ok) { A("play", "w_shock_crack"); hurtPlayer(Math.max(4, Math.round(G().hpMax * 0.08)), "shock", null); sayq("Искра из кожуха — удар током. Турель цела."); if (LAB.oko) LAB.oko.report("noise", G().x, G().y, "suspect", "искрит щиток турели"); return false; }
   f.cut = true; f.calm = true; f.ally = false; f.state = "idle"; f.aim = false;
   if (!fs.cutT) fs.cutT = {};
@@ -1360,8 +1374,12 @@ function stalkerTick(f) {
   var g = G(), hp = heroPos(), fs = CUR().fs;
   /* дрон знает, где вы, только своими глазами и ушами — или от ОКО, если
      вас только что видел другой датчик этажа */
-  var see = sees(f), hear = hears(f), d = dist(f, hp);
+  /* (3.7, нелогичность) глушилка забивает и камеру, и микрофон дрона — он теряет след и идёт
+     обыскивать последнее место; «Слепое пятно» прячет от его камеры, как от любой камеры ОКО */
+  var jam = g.st.jam > 0;
+  var see = !jam && !gm().armorSpecial("okoghost") && sees(f), hear = !jam && hears(f), d = dist(f, hp);
   var sa = LAB.oko && LAB.oko.state().seenAt, okoT = LAB.oko ? LAB.oko.T() : 0;
+  if (jam && f.state === "hunt") { f.state = "alert"; f.lost = 0; f.aim = false; }
   if (see || (hear && !veiled())) { f.lastKnown = hp; if (f.state !== "flee") f.state = "hunt"; f.lost = 0; }
   else {
     if (sa && sa.L === g.L && sa.F === g.F && okoT - sa.t < 8 && netUp() && !fs.okoBlind) f.lastKnown = { x: sa.x, y: sa.y };
@@ -1370,7 +1388,9 @@ function stalkerTick(f) {
   }
   f.mv++; f.at++;
   var canMove = f.mv >= f.spd, canAct = f.at >= f.acd;
-  if (see && ++f.repT >= 14) { f.repT = 0; A("foeSound", f, "radio"); if (LAB.oko) LAB.oko.event("drone", { x: hp.x, y: hp.y }); }
+  /* (3.7, нелогичность) докладывает ОКО, только пока есть связь: прежде дрон поднимал тревогу и
+     при разбитых узлах связи этажа */
+  if (see && ++f.repT >= 14) { f.repT = 0; if (netUp()) { A("foeSound", f, "radio"); if (LAB.oko) LAB.oko.event("drone", { x: hp.x, y: hp.y }); } }
   if (f.state !== "flee" && f.hp < f.maxhp * 0.35) { f.state = "flee"; A("foeSound", f, "retreat"); }
   if (f.state === "flee") {
     if (f.hitT > 6 && f.hp < f.maxhp) f.hp = Math.min(f.maxhp, f.hp + Math.max(1, Math.round(f.maxhp * 0.04)));
@@ -1530,7 +1550,8 @@ function foeTick(f, spotted) {
   /* подбитая машина ушла — и передала ОКО, где видела вас последний раз */
   if (f.state === "flee" && f.kind === "mech" && !f.fledRep && f.lastKnown && dist(f, heroPos()) >= 10 && netUp() && LAB.oko) { f.fledRep = true; A("foeSound", f, "radio"); LAB.oko.event("robot", { x: f.lastKnown.x, y: f.lastKnown.y }); }
   /* (2.0) носитель прошёл в двух шагах от патрульного, и тот доложил «чисто» — ОКО не верит */
-  if (f.state === "idle" && !sense && (f.beat || f.route) && f.kind === "mech" && cheb(f, heroPos()) <= 2 && (f.slipT || 0) <= tickN && LAB.oko && LAB.oko.react) { f.slipT = tickN + 120; LAB.oko.react("patrol_slip"); }
+  /* (3.7, нелогичность) «доложил» — значит, связь есть: без неё ОКО не слышит и этого «чисто» */
+  if (f.state === "idle" && !sense && (f.beat || f.route) && f.kind === "mech" && cheb(f, heroPos()) <= 2 && (f.slipT || 0) <= tickN && netUp() && LAB.oko && LAB.oko.react) { f.slipT = tickN + 120; LAB.oko.react("patrol_slip"); }
 
   f.mv++; f.at++;
   var canMove = f.mv >= f.spd && !has(f, "stationary");
@@ -1553,8 +1574,8 @@ function foeTick(f, spotted) {
     f.healT++;
     if (f.healT >= 3) {
       f.healT = 0;
-      var healed = 0;
-      foes.forEach(function (o) { if (o !== f && hostile(o) && o.kind === f.kind && cheb(o, f) <= 2 && o.hp < o.maxhp) { o.hp = Math.min(o.maxhp, o.hp + Math.round(o.maxhp * 0.06)); healed++; } });
+      var healed = 0, hk = healsKind(f);
+      foes.forEach(function (o) { if (o !== f && hostile(o) && o.kind === hk && cheb(o, f) <= 2 && o.hp < o.maxhp) { o.hp = Math.min(o.maxhp, o.hp + Math.round(o.maxhp * 0.06)); healed++; } });
       if (healed) A("foeSound", f, "repair");
     }
   }
@@ -1678,6 +1699,11 @@ function foeTick(f, spotted) {
     if (!stepToward(f, t2.x, t2.y, { adjacent: true })) { if (!noPath(f)) wander(f); } else f.noPath = 0;
   }
 }
+/* (3.7, нелогичность) Кого лечит лекарь: прежде — только своих по виду (машина — машин), и
+   ветеринарный дрон с «Няней» латали роботов, хотя в описаниях «лечит раненых химер». Природа
+   пациентов — в поле heals вида или стража, иначе в таблице HEALS, иначе — свои. */
+var HEALS = { k_vet: "bio" };
+function healsKind(f) { var bd = f.boss && LAB.BOSSES[f.boss]; return (bd && bd.heals) || (f.base && f.base.heals) || HEALS[f.type] || f.kind; }
 /* До героя нет прохода — он за стеной, за запертой дверью: машина не бьётся
    о стену вечно. Несколько ходов подряд без пути и без прямой видимости —
    бросает погоню, а звук из-за стены какое-то время её снова не поднимает. */
@@ -1985,9 +2011,45 @@ function attack(f, seen) {
   if (has(f, "poison") && Math.random() < 0.5) poison(6 + Math.floor(G().L / 2));
   if (!ranged) bleed(f, fin);
   if (f.adt === "chem" && fin > 0) toxins(2 + Math.round(fin / 6));
-  if ((has(f, "slow") || f.adt === "therm" && f.kind === "bio") && Math.random() < 0.5 && !gm().armorSpecial("frost")) { if (!g.st.slow) sayq("Холод сковывает: вы замедлены."); g.st.slow = 6; }
+  /* (3.7, нелогичность) замедляет каждый по-своему — холод, корни, хватка, петля, пыльца,
+     снотворное, время (slowWhy), и фраза — по причине; термокостюм «Полюс» (frost) спасает
+     только от холода. Прежде всё звалось холодом, «Полюс» спасал и от корней с пыльцой, а горячие
+     твари с ударом «холод и жар» замедляли, хотя в описаниях этого нет */
+  var sw = slowWhy(f);
+  if (sw && Math.random() < 0.5 && !(sw === "cold" && gm().armorSpecial("frost"))) { if (!g.st.slow) sayq(SLOW_SAY[sw] || SLOW_SAY.other); g.st.slow = 6; }
   if (has(f, "web") && ranged && Math.random() < 0.4) { g.st.web = 2; A("play", "web_hit"); sayq(LAB.K("Паутина! Свайп — рвать её.", "Паутина! Шаг в любую сторону — рвать её.")); }
   if (fin > 0 && f.kind === "bio") mutantHit(f, fin);
+}
+/* (3.7, нелогичность) Чем враг замедляет: причина — в поле slowBy стража или вида, иначе в таблице
+   SLOW_BY (по стражу, потом по виду); у повадки slow без причины — общая фраза. Удар «холод и
+   жар» без повадки slow замедляет только холодную тварь: стойкую к холоду или боящуюся жара. */
+var SLOW_BY = {
+  frozen: "cold", u_frostling: "cold", u_coolant: "cold", m_coolbot: "cold", o_b_colossus: "rime",
+  k_rootweaver: "roots", u_sprout: "roots", u_rootchild: "roots",
+  g_lakewhisker: "grab", u_crawler: "grab", u_marshmaw: "grab", m_catcher: "lasso",
+  k_pollinator: "pollen", k_vet: "sleep", m_sleeper: "sleep", m_b_nurse: "sleep",
+  o_still: "time", i_timeless: "time", u_sandling: "time",
+  g_welder: "weld", i_plugger: "metal", u_geyser: "scald"
+};
+var SLOW_SAY = {
+  cold: "Холод сковывает: вы замедлены.",
+  rime: "Зеркальный иней сковывает ноги: вы замедлены.",
+  roots: "Корни оплетают ноги: вы замедлены.",
+  grab: "Вас держат за ноги: каждый шаг даётся с трудом.",
+  lasso: "Петля захлестнула ноги: вы замедлены.",
+  pollen: "Липкая пыльца облепила ноги: вы замедлены.",
+  sleep: "Ноги наливаются сном: вы замедлены.",
+  time: "Время вокруг вас вязнет: движения замедлены.",
+  weld: "Подошвы прихватило к металлу: вы замедлены.",
+  metal: "Вязкий металл облепил ноги: вы замедлены.",
+  scald: "Кипяток ошпарил ноги: вы замедлены.",
+  other: "Удар сковывает движения: вы замедлены."
+};
+function coldFoe(b) { var r = b && b.res; return !!(r && ((r.cryo != null && r.cryo <= 0.5) || (r.thermo != null && r.thermo >= 1.5))); }
+function slowWhy(f) {
+  var bd = f.boss && LAB.BOSSES[f.boss];
+  if (has(f, "slow")) return (bd && bd.slowBy) || (f.boss && SLOW_BY[f.boss]) || (f.base && f.base.slowBy) || SLOW_BY[f.type] || (f.adt === "therm" && coldFoe(f.base) ? "cold" : "other");
+  return f.adt === "therm" && f.kind === "bio" && coldFoe(f.base) ? "cold" : "";
 }
 function poison(t) {
   var g = G();
@@ -2013,7 +2075,11 @@ var BLEEDERS = { chimera: 1, lizard: 1, proto: 1, weaver: 1, labmut: 1, blind: 1
 function bleed(f, fin) {
   var g = G();
   if (!g.body || fin <= 0) return;
-  var p = (BLEEDERS[f.type] || f.base.bleeder || (f.boss && BLEEDERS[f.boss]) ? 0.3 : f.kind === "bio" ? 0.1 : 0.05) + Math.min(0.15, fin / g.hpMax);
+  /* (3.7, нелогичность) кровит рана от когтей, клыков, лезвий и ударов (урон phys) и от «режущих»
+     видов; разряд, ожог, кислота и «сон» крови не пускают — прежде любой удар вплотную мог */
+  var cut = BLEEDERS[f.type] || f.base.bleeder || (f.boss && BLEEDERS[f.boss]);
+  if (!cut && (f.adt || "phys") !== "phys") return;
+  var p = (cut ? 0.3 : f.kind === "bio" ? 0.1 : 0.05) + Math.min(0.15, fin / g.hpMax);
   if (Math.random() > p) return;
   var t = 10 + Math.floor(Math.random() * 10) + Math.floor(g.L / 10);
   if (!g.st.bleed) { sayq("Кровотечение: рана кровит. Бинт или аптечка остановят кровь."); A("play", "hurt_phys"); }
@@ -2265,7 +2331,8 @@ function shoot(w, f, perp, along, burst, melee) {
   var chx = LAB.chem ? LAB.chem.onShot(w, f, melee) : null; /* (3.0) смазка и перегрузочная капсула */
   if (chx) dmg *= chx.k;
   var wb = LAB.WEAPONS[w.base] || {};
-  damageFoe(f, dmg, dt, { noarmor: !!wf(w, "noarmor") || !!(chx && chx.noarmor), crit: crit, melee: melee, burst: burst, freeze: wf(w, "freeze"), apierce: LAB.workshop ? LAB.workshop.pierce(w) : 0, stunMech: wb.stunMech || 0 });
+  /* direct — прямой удар героя по цели: его и только его отражают зеркальные (3.7) */
+  damageFoe(f, dmg, dt, { noarmor: !!wf(w, "noarmor") || !!(chx && chx.noarmor), crit: crit, melee: melee, burst: burst, freeze: wf(w, "freeze"), apierce: LAB.workshop ? LAB.workshop.pierce(w) : 0, stunMech: wb.stunMech || 0, direct: true });
   if (wf(w, "area")) foes.forEach(function (o) { if (o !== f && !o.dead && !o.calm && cheb(o, f) <= 1) damageFoe(o, dmg * 0.6, dt, { noarmor: true, quiet: true }); });
   afterHit(w, f, dmg, dt);
   if (LAB.chem) LAB.chem.afterHit(w, f, dmg);
@@ -2305,7 +2372,7 @@ function chainArc(f0, d, dt, n) {
 function wake(f) {
   if (f.ally) return;
   if (f.disguised) { unmask(f); return; }
-  if (f.neutral) { f.neutral = false; A("foeSound", f, "alert"); sayOnce("clh" + f.id, f.name.split(",")[0] + " больше не мирный!", 5000); if (LAB.oko && !f.reported) { f.reported = true; LAB.oko.event("cleaner"); } }
+  if (f.neutral) { f.neutral = false; A("foeSound", f, "alert"); sayOnce("clh" + f.id, f.name.split(",")[0] + " больше не мирный!", 5000); if (LAB.oko && !f.reported && netUp()) { f.reported = true; LAB.oko.event("cleaner"); } } /* (3.7, нелогичность) докладывает — только по живой связи */
   if (f.state !== "hunt" && !f.calm) { f.state = "hunt"; f.lastKnown = heroPos(); }
 }
 
@@ -2321,8 +2388,9 @@ function damageFoe(f, raw, dt, o) {
   var dmg = raw * vs * res * (1 - (f.adapt[dt] || 0)) * (f.markT > 0 ? 1.25 : 1);
   /* (2.5) улей глубин привык к вашему оружию */
   if (f.kind === "bio" && LAB.mutants) dmg *= LAB.mutants.resK(f, dt, G());
-  /* щитоносец прикрывает соседей */
-  if (foes.some(function (s) { return s !== f && !s.dead && !s.calm && has(s, "shieldally") && cheb(s, f) <= 2; })) dmg *= 0.6;
+  /* щитоносец прикрывает соседей — (3.7, нелогичность) только своих: робот-щитоносец — машин,
+     страж улья — тварей; прежде поле генератора прикрывало и тварей, и турели героя */
+  if (foes.some(function (s) { return s !== f && !s.dead && !s.calm && has(s, "shieldally") && s.kind === f.kind && !s.ally === !f.ally && cheb(s, f) <= 2; })) dmg *= 0.6;
   /* тяжёлая машина: разряд по снятому щиту перегружает энергоузел — броня на время не держит */
   if (f.kind === "mech" && f.arm >= 8 && (dt === "shock" || dt === "ion" || dt === "emp") && f.shield <= 0 && !f.nodeT && !has(f, "camera")) {
     f.nodeT = 8; f.frozen = Math.max(f.frozen || 0, 2);
@@ -2347,7 +2415,9 @@ function damageFoe(f, raw, dt, o) {
   if (o.freeze) f.frozen = o.freeze;
   /* ЭМ-подавитель: машина замирает на несколько тактов (экранированную и босса не берёт) */
   if (o.stunMech && f.kind === "mech" && !f.boss && !aff(f, "hardened") && !f.dead) { f.frozen = Math.max(f.frozen || 0, o.stunMech); if (!o.quiet) sayOnce("stun" + f.id, f.name.split(",")[0] + " замер: импульс сбил ему контур.", 5000); }
-  if (has(f, "reflect") && !o.ally && dmg > 0 && Math.random() < 0.5) { var back = Math.max(1, Math.round(dmg * 0.2)); A("play", "deflect"); sayOnce("rfl" + f.id, f.name.split(",")[0] + " отражает часть удара!", 6000); hurtPlayer(back, "field", f, { quiet: true }); }
+  /* (3.7, нелогичность) отражает только прямой удар героя — выстрел или удар оружием (o.direct, shoot):
+     прежде «отражала» и кровотечение, мину, огонь, пресс, и герой терял здоровье в тридцати шагах */
+  if (has(f, "reflect") && o.direct && !o.ally && dmg > 0 && Math.random() < 0.5) { var back = Math.max(1, Math.round(dmg * 0.2)); A("play", "deflect"); sayOnce("rfl" + f.id, f.name.split(",")[0] + " отражает часть удара!", 6000); hurtPlayer(back, "field", f, { quiet: true }); }
   f.hp -= dmg; f.hitT = 0;
   if (f.kind === "bio" && LAB.mutants && !o.ally && !o.quiet && dmg > 0) hiveLearn(f, dt);
   wake(f);
@@ -2361,6 +2431,20 @@ function damageFoe(f, raw, dt, o) {
   }
   return true;
 }
+/* (3.7, нелогичность) Деталь с павшего врага — его природы: происхождение детали — LAB.PART_FROM
+   (data.js: mech — снимают с машин, anom — вещество аномалий). Деталь, что встречается на этой
+   глубине, и в половине случаев — деталь своего блока, если у блока такие есть (у «Колыбели»
+   машинных нет — тогда любая); у аномалий — только вещество своего блока. Подходящей нет — ничего. */
+function foePart(r, L, kind) {
+  var from = LAB.PART_FROM || {};
+  var pool = LAB.PARTS.filter(function (p) { return LAB.ITEMS[p] && (LAB.PART_DEPTH[p] || 1) <= L && (" " + (from[p] || "") + " ").indexOf(" " + kind + " ") >= 0; });
+  var b0 = LAB.blockOf ? LAB.blockOf(L) : 1, B0 = LAB.BLOCKS && LAB.BLOCKS[b0], from0 = (B0 && B0.from) || (b0 - 1) * 20 + 1;
+  var recent = pool.filter(function (p) { return (LAB.PART_DEPTH[p] || 1) >= from0; });
+  if (kind === "anom") pool = recent;
+  if (!pool.length) return null;
+  var a = recent.length && r() < 0.5 ? recent : pool;
+  return a[Math.floor(r() * a.length)];
+}
 var killTimes = [];
 var corrHint = 0, NTH_W = { 2: "второго", 3: "третьего", 4: "четвёртого", 5: "пятого", 6: "шестого", 7: "седьмого", 8: "восьмого" };
 function kill(f, quiet) {
@@ -2371,6 +2455,9 @@ function kill(f, quiet) {
   g.stats.kills++;
   if (!f.ally) markCleared(f); /* (2.2) помещение зачищено — в нём можно укрыться */
   if (LAB.ach) { LAB.ach.ev("kill", 1); if (f.kind === "mech") LAB.ach.ev("kill_mech", 1); if (f.boss) LAB.ach.ev("boss", 1); }
+  /* (3.7, нелогичность) ОКО помнит, кто пал только что — машина или тварь: реплики о серии потерь
+     и о сработавшей ловушке — о том, кто пал (oko.js, loss) */
+  if (LAB.oko && LAB.oko.loss && !f.ally) LAB.oko.loss(f.kind === "mech");
   /* (2.0) ОКО отвечает на потери: машина, тварь, турель — или серия подряд */
   if (LAB.oko && LAB.oko.react && !f.ally && !f.boss) {
     var kn = Date.now();
@@ -2411,7 +2498,7 @@ function kill(f, quiet) {
   }
   if (LAB.oko && f.kind === "mech" && !f.ally) LAB.oko.event("kill", { task: f.task, stalker: has(f, "stalker"), camera: has(f, "camera"), guard: f.guard, post: f.post, oko: f.oko, x: f.x, y: f.y,
     beat: f.beat && !f.sapper ? f.beat : null, corr: f.corr, room: f.guard === "room" ? postRoom(f) : f.room, type: f.type, garrison: f.garrison, wv: f.wv });
-  if (LAB.oko && f.boss) LAB.oko.event("boss");
+  if (LAB.oko && f.boss) LAB.oko.event("boss", { subj: f.kind === "mech" ? "mech" : "bio" }); /* (3.7) о живом страже — без «чертежей» */
   if (f.kind === "bio") mutantDeath(f, quiet); /* (2.5) отряд без вожака, павший для падальщиков */
   if (has(f, "commander")) {
     var lost = 0;
@@ -2423,14 +2510,19 @@ function kill(f, quiet) {
      только те, кого призвали сами враги (рой улья, кладки, двойники, половинки) */
   var looty = (!f.spawned || !!f.oko) && !f.twin && !f.punisher && sk > 0 && !tame;
   if (looty) {
+    /* (3.7, нелогичность) деталь — по природе врага (foePart): с машины — машинная, с аномалии —
+       её вещество; прежде любая деталь глубины, и турель роняла смолу, кость и хитин */
     if (f.kind === "mech") {
-      if (r() < 0.6 * dk) drops.push({ kind: "item", item: LAB.partAt({ pick: function (a) { return a[Math.floor(r() * a.length)]; }, chance: function (p) { return r() < p; } }, L), n: 1 });
+      var mp = r() < 0.6 * dk ? foePart(r, L, "mech") : null;
+      if (mp) drops.push({ kind: "item", item: mp, n: 1 });
       /* энергобатарея — только с каждого N-го врага (ниже); магнетронный заряд — как был */
       if (L >= 3 && r() < 0.075 * dk) drops.push({ kind: "ammo", ammo: "magnetron", n: 1 });
       if (f.aff && r() < 0.35) drops.push({ kind: "item", item: L >= 5 && r() < 0.4 ? "supercond" : L >= 3 ? "ceramic" : "chip", n: 1 });
     } else if (f.kind === "anom") {
-      if (r() < 0.45 * dk) drops.push({ kind: "item", item: LAB.partAt({ pick: function (a) { return a[Math.floor(r() * a.length)]; }, chance: function (p) { return r() < p; } }, L), n: 1 });
-      if (r() < 0.12 * dk) drops.push({ kind: "item", item: "energy_d", n: 1 });
+      /* бесплотное не носит ни микросхем, ни нейростимуляторов: только вещество аномалий своей
+         глубины (если оно здесь есть) и аномальная взвесь (chem.drops) */
+      var ap = r() < 0.45 * dk ? foePart(r, L, "anom") : null;
+      if (ap) drops.push({ kind: "item", item: ap, n: 1 });
     } else {
       if (r() < 0.35 * dk) drops.push({ kind: "item", item: r() < 0.6 ? "gel" : "reagent", n: 1 });
       if (r() < 0.12 * dk) drops.push({ kind: "item", item: "medkit_s", n: 1 });
@@ -2875,6 +2967,40 @@ function noiseLure(x, y) {
   A("noiseLure", x, y);
   return n;
 }
+/* (3.7, нелогичность) «Подмена сигнала» (implants.js): на ложный сигнал идут только подвижные машины —
+   не турели и не камеры, не обезвреженные (перепрошитые, обесточенные) и не мирные; та, что видит
+   вас своими глазами, верит глазам. Прежде в счёт «машин пошло туда» шли и турели с камерами. */
+function signalLure(x, y, ticks) {
+  var out = [];
+  foes.forEach(function (f) {
+    /* засада (и каратели в ней) с места не сходит — её и не считаем */
+    if (!hostile(f) || f.kind !== "mech" || has(f, "stationary") || has(f, "camera") || has(f, "turret") || f.burrowed || f.ambush) return;
+    if (Math.abs(f.x - x) + Math.abs(f.y - y) > 16) return;
+    if (f.state === "hunt" && sees(f)) return;
+    if (f.guard && f.post && Math.abs(x - f.post.x) + Math.abs(y - f.post.y) > 12) return; /* страж далеко от поста не уйдёт (foeTick) */
+    f.state = "alert"; f.lastKnown = { x: x, y: y }; f.lost = 0; f.lure = ticks || 20;
+    out.push(f);
+  });
+  return out;
+}
+/* (3.7, нелогичность) Чем бить и что почти не берёт: множитель вида урона — по природе врага (LAB.DMG_VS)
+   и его собственной стойкости (res), у экранированной машины — и по экрану. Прежде совет сканера и
+   бестиария брался только из природы: каждому роботу — «ЭМИ и ионы», даже Глубиннику, которого они
+   почти не берут, каждой твари — «жар», даже Термофилу, который жар пьёт. */
+function vsK(b, dt, f) {
+  var k = (LAB.DMG_VS[b.kind] || {})[dt];
+  if (k == null) k = 1;
+  if (b.res && b.res[dt] != null) k *= b.res[dt];
+  if (f && aff(f, "hardened") && (dt === "emp" || dt === "ion")) k *= dt === "emp" ? 0 : 0.5;
+  return k;
+}
+function weakness(b, f) {
+  var all = Object.keys(LAB.DTYPE_N || {}).map(function (dt) { return { dt: dt, k: vsK(b, dt, f) }; });
+  var best = all.filter(function (q) { return q.k >= 1.4; }).sort(function (a, c) { return c.k - a.k; }).slice(0, 3);
+  var worst = all.filter(function (q) { return q.k < 0.6; }).sort(function (a, c) { return a.k - c.k; }).slice(0, 3);
+  var nm = function (q) { return LAB.DTYPE_N[q.dt] || q.dt; };
+  return { best: best.map(function (q) { return q.dt; }), worst: worst.map(function (q) { return q.dt; }), bestN: best.map(nm), worstN: worst.map(nm) };
+}
 function throwNoise() {
   var g = G();
   if (!(g.inv.noise > 0)) { say("Приманок нет."); return; }
@@ -2892,9 +3018,10 @@ function throwNoise() {
   setTimeout(function () { var n = noiseLure(x, y); say("Приманка " + LAB.DIRTO[g.face] + " лязгает и пищит." + (n ? " Слышно, как враги идут к ней: " + n + "." : "")); UIx("refresh"); }, 600);
 }
 function calmAll() { foes.forEach(function (f) { if (f.state !== "idle") { f.state = "idle"; f.lastKnown = null; f.aim = false; } if (f.punisher && !f.dead && f.task !== "leave") f.ambush = true; }); shells = []; hpMark = 100; }
+/* (3.7, нелогичность) взрыв и импульс (подрыв завала, перегрузка магнетронной установки) — не сквозь стену */
 function areaDamage(x, y, r, dmg, dt) {
   var n = 0;
-  foes.forEach(function (f) { if (!f.dead && !f.calm && Math.max(Math.abs(f.x - x), Math.abs(f.y - y)) <= r) { if (damageFoe(f, dmg, dt, { noarmor: true, quiet: true })) n++; } });
+  foes.forEach(function (f) { if (!f.dead && !f.calm && Math.max(Math.abs(f.x - x), Math.abs(f.y - y)) <= r && clearTo(x, y, f.x, f.y)) { if (damageFoe(f, dmg, dt, { noarmor: true, quiet: true })) n++; } });
   return n;
 }
 function reloadPause(ms) { reloadUntil = Date.now() + ms; stopFire(); }
@@ -3015,7 +3142,8 @@ function throwEmp() {
   var n = 0;
   setTimeout(function () {
     foes.forEach(function (f) {
-      if (f.dead || Math.max(Math.abs(f.x - x), Math.abs(f.y - y)) > 2) return;
+      /* (3.7, нелогичность) импульс не проходит сквозь стену и закрытую дверь */
+      if (f.dead || Math.max(Math.abs(f.x - x), Math.abs(f.y - y)) > 2 || !clearTo(x, y, f.x, f.y)) return;
       if (f.kind === "mech" && !aff(f, "hardened")) f.shield = 0;
       if (damageFoe(f, 50 + g.L * 15, "emp", { noarmor: true, quiet: true })) n++;
     });
@@ -3138,8 +3266,10 @@ function throwGrenade(id) {
     LAB.safe(function () {
       if (!gm().entered || G().dead) return;
       var hit = 0, killed = 0;
+      /* (3.7, нелогичность) взрыв, огонь и газ гранаты не проходят сквозь стену и закрытую дверь —
+         как у вражеских взрывов (explode): прежде граната задевала всех в радиусе, даже за стеной */
       foes.forEach(function (f) {
-        if (f.dead || f.ally || f.burrowed || cheb(f, p) > r) return;
+        if (f.dead || f.ally || f.burrowed || cheb(f, p) > r || !clearTo(p.x, p.y, f.x, f.y)) return;
         var was = f.dead;
         hit++;
         if (dmg > 0) damageFoe(f, dmg, q.dt || "kinetic", { noarmor: !!q.noarmor, quiet: true, stunMech: q.stunMech || 0 });
@@ -3159,13 +3289,13 @@ function throwGrenade(id) {
         }
         if (f.state === "idle") { f.state = "alert"; f.lastKnown = heroPos(); f.lost = 0; }
       });
-      if (q.blind) foes.forEach(function (f) { if (!f.dead && isCam(f) && cheb(f, p) <= r + 4) f.blindT = Math.max(f.blindT || 0, q.blind); });
+      if (q.blind) foes.forEach(function (f) { if (!f.dead && isCam(f) && cheb(f, p) <= r + 4 && clearTo(p.x, p.y, f.x, f.y)) f.blindT = Math.max(f.blindT || 0, q.blind); });
       /* огонь и пар — от урона гранаты первого уровня: глубину зона добавляет сама (traps.tick) */
       if (q.burn && LAB.traps && LAB.traps.addZone) LAB.traps.addZone("fire", p.x, p.y, Math.max(1, r), q.burn, Math.max(4, Math.round((q.dmg || 0) * 0.3)), 1);
       if (q.gas && LAB.traps && LAB.traps.addZone) LAB.traps.addZone("gas", p.x, p.y, Math.max(1, r), q.gas, Math.max(4, Math.round((q.dmg || 0) * 0.25)), 1);
       A("explosion", p.x, p.y, grenKind(q));
       noise(q.loud == null ? 10 : q.loud);
-      var self = q.self !== false && dmg > 0 && cheb(heroPos(), p) <= r && !(LAB.chem && LAB.chem.safeGrenades()); /* (3.0) пиротехника не задевает пиротехника */
+      var self = q.self !== false && dmg > 0 && cheb(heroPos(), p) <= r && clearTo(p.x, p.y, G().x, G().y) && !(LAB.chem && LAB.chem.safeGrenades()); /* (3.0) пиротехника не задевает пиротехника */
       if (self) hurtPlayer(Math.round(dmg * 0.5), q.dt === "thermo" ? "therm" : "phys", null);
       say(d.n + " " + dirW + ". " + (hit ? "Задето целей: " + hit + (killed ? ", уничтожено: " + killed : "") + "." : "Рядом с местом падения никого.") + (self ? " Вас задело: слишком близко." : "") + " Осталось: " + (G().inv[id] || 0) + ".");
       if (LAB.ach) LAB.ach.ev("grenade", 1);
@@ -3187,6 +3317,7 @@ LAB.combat = {
   /* для проверок: будто вы молчите уже ms миллисекунд */
   _idleBack: function (ms) { idleAt = Date.now() - ms; }, idleMs: function () { return IDLE_MS; }, grenKind: grenKind, noise: noise, turretsOff: turretsOff, turretsOurs: turretsOurs, turretsHostile: turretsHostile, turretsLeft: turretsLeft,
   robotsCalm: robotsCalm, calmAll: calmAll, chaser: chaser, alertMech: alertMech, deployTurret: deployTurret, noiseLure: noiseLure, throwNoise: throwNoise,
+  signalLure: signalLure, weakness: weakness, vsK: vsK, slowWhy: slowWhy, healsKind: healsKind, /* (3.7) */
   dispatch: dispatch, replacePatrol: replacePatrol, refillRoom: refillRoom, okoPoint: okoPoint, patrols: patrols, sappers: sappers, minePoints: minePoints, drones: drones, repairers: repairers, guards: guards, sendCheck: sendCheck, reroute: reroute, dismiss: dismiss, despawn: despawn,
   tickN: function () { return tickN; }, wakeSafe: function () { return safeHero; }, sheltered: sheltered, refuge: function () { return refugeId; },
   haven: function () { return havenId; }, havenAt: havenAt, postRoom: postRoom, hidden: hidden,

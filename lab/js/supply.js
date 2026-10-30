@@ -61,7 +61,10 @@ function ctxK0(ctx, cat) {
    потолок был в 85 % прилавка и только у вещей — батареи, оружие и броню в лёгком
    режиме и с высокой харизмой перепродавали дороже, чем купили. */
 var SELL_CAP = 0.72;
-function sellCap(p, buy) { return Math.max(1, Math.min(p, Math.floor(buy * SELL_CAP))); }
+/* (3.7) скидка «Сопротивления» — только у выживших (game.tradeItems, medic.js), но потолок скупки
+   держится ниже и этой, самой низкой цены */
+function resK() { return G().faction === "res" ? 0.8 : 1; }
+function sellCap(p, buy) { return Math.max(1, Math.min(p, Math.floor(buy * SELL_CAP * resK()))); }
 /* (3.5) То, что вы сами собрали у верстака (G.craftN — сколько таких штук у вас), скупают
    не дороже двух пятых цены деталей: иначе «купить детали — собрать — продать» печатало
    кредиты (чипы уходили втрое дороже деталей, а партия из трёх и смекалка инженеров давали
@@ -112,7 +115,7 @@ function buyK() { return gm().priceK ? gm().priceK() : 1; }
 function itemBuyPrice(id) { return Math.max(2, Math.round(LAB.ITEMS[id].price * buyK())); }
 function ammoBuyPrice(k) { return Math.max(2, Math.round((LAB.AMMO[k].price || 30) * buyK() * (G().faction === "sec" ? 0.85 : 1))); }
 /* (2.2) броня и оружие на прилавке — тоже по режиму: цена (price) и её рост с глубиной (pgrow) */
-function armorBuyPrice(a) { var L = G().L, dk = LAB.dk(), k = L <= 10 ? 1 + 0.15 * (L - 1) : 0.6 + 0.4 * LAB.wealth(L, G().F); return Math.round(armorValue(a) * (dk.price || 1) * (1 + (k - 1) * (dk.pgrow || 1)) * (G().faction === "res" ? 0.8 : 1)); }
+function armorBuyPrice(a) { var L = G().L, dk = LAB.dk(), k = L <= 10 ? 1 + 0.15 * (L - 1) : 0.6 + 0.4 * LAB.wealth(L, G().F); return Math.round(armorValue(a) * (dk.price || 1) * (1 + (k - 1) * (dk.pgrow || 1))); }
 function weaponBuyPrice(w) { var dk = LAB.dk(); return Math.round(LAB.weaponPrice(w) * (LAB.QUAL_MULT[w.qual] || 1) * 1.1 * (dk.price || 1) * (1 + 0.15 * ((dk.pgrow || 1) - 1) * Math.min(9, LAB.blockOf ? LAB.blockOf(G().L) : 1))); }
 function bpPrice(rc) { return Math.round((90 + 25 * (rc.minL || 1)) * Math.min(4, buyK())); }
 
@@ -416,9 +419,13 @@ function surfaceCatalog() {
   ["radcape", "radsuit", "hazmat", "reactorsuit"].forEach(function (b) { if (LAB.ARMORS[b] && LAB.ARMORS[b].depth <= Math.max(L, 2) + 1) out.push({ armor: b }); });
   return out;
 }
+/* (3.7, нелогичность) броня заказа — той ступени, где её оплатили (прежде — где забрали: «свинец» со
+   второго уровня, забранный на десятом, скупали дороже, чем он стоил), и цена — как у прилавка: с
+   уровнем брони и режимом, только с наценкой поставки */
+function orderArmorLvl() { return LAB.foeLevel(G().L, G().F); }
 function orderPrice(e) {
   var mk = era().markup;
-  if (e.armor) return Math.round(LAB.ARMORS[e.armor].price * (G().L <= 10 ? 1 + 0.15 * (G().L - 1) : 0.6 + 0.4 * LAB.wealth(G().L, G().F)) * mk);
+  if (e.armor) return Math.round(armorBuyPrice({ base: e.armor, qual: 2, lvl: orderArmorLvl() }) * mk);
   return Math.round((e.ammo ? ammoBuyPrice(e.ammo) : itemBuyPrice(e.id)) * mk);
 }
 function orderName(e) { return e.armor ? LAB.ARMORS[e.armor].n.charAt(0).toUpperCase() + LAB.ARMORS[e.armor].n.slice(1) : e.ammo ? LAB.AMMO[e.ammo].n : LAB.ITEMS[e.id].n; }
@@ -431,7 +438,7 @@ function orderMenu(o) {
         if ((G().orders || []).filter(function (q) { return q.st !== "done"; }).length >= 4) { LAB.UI.error(); say("В пути уже четыре заказа: магистраль больше не берёт. Заберите прибывшие."); return; }
         if (G().credits < p) { LAB.UI.error(); say("Не хватает кредитов: нужно " + p + ", у вас " + G().credits + "."); return; }
         G().credits -= p;
-        var q = { id: "q" + Date.now().toString(36) + Math.floor(Math.random() * 1e4), name: nm, item: e.id || null, ammo: e.ammo || null, armor: e.armor || null, due: now() + deliveryMins(), st: "way", era: LAB.supplyEra(G().L) };
+        var q = { id: "q" + Date.now().toString(36) + Math.floor(Math.random() * 1e4), name: nm, item: e.id || null, ammo: e.ammo || null, armor: e.armor || null, alvl: e.armor ? orderArmorLvl() : null, due: now() + deliveryMins(), st: "way", era: LAB.supplyEra(G().L) };
         (G().orders = G().orders || []).push(q);
         A("play", "term_ok");
         say(era().ord + " " + nm + ": " + cr(p) + " списано, доставка " + deliveryText() + ". Забрать — в любом пункте снабжения.");
@@ -450,7 +457,7 @@ function pickup(o) {
   (g.orders || []).forEach(function (q) {
     if (q.st !== "ready") return;
     q.st = "done";
-    if (q.armor) got.push(gm().giveItem({ kind: "armor", a: LAB.makeArmor(q.armor, LAB.foeLevel(g.L, g.F), 2) }, true));
+    if (q.armor) got.push(gm().giveItem({ kind: "armor", a: LAB.makeArmor(q.armor, q.alvl || LAB.foeLevel(g.L, g.F), 2) }, true));
     else if (q.ammo) got.push(gm().giveItem({ kind: "ammo", ammo: q.ammo, n: 1 }, true));
     else if (q.item) got.push(gm().giveItem({ kind: "item", item: q.item, n: 1 }, true));
   });
@@ -486,7 +493,7 @@ function tick() {
 
 LAB.supply = {
   postMenu: postMenu, sellMenu: sellMenu, tick: tick, catOf: catOf, stockOf: stockOf, profileOf: profileOf,
-  itemSellPrice: itemSellPrice, weaponSellPrice: weaponSellPrice, armorSellPrice: armorSellPrice, ammoSellPrice: ammoSellPrice,
+  itemSellPrice: itemSellPrice, weaponSellPrice: weaponSellPrice, armorSellPrice: armorSellPrice, ammoSellPrice: ammoSellPrice, armorBuyPrice: armorBuyPrice,
   surfaceCatalog: surfaceCatalog, orderPrice: orderPrice, deliveryMins: deliveryMins, now: now
 };
 })();

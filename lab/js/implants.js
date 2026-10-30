@@ -69,7 +69,7 @@ var NEW = [
   { id: "sonic", n: "Звуковой таран", cat: "combat", t: 2, cost: 10, price: 180, desc: "Удар звуком вперёд, конусом на четыре шага: бьёт и отбрасывает на шаг.", fx: { k: "cone", rng: 4, dmg: 18, perL: 5, dt: "sonic", push: 1 } },
   { id: "shrapnel", n: "Осколочный выброс", cat: "combat", t: 2, cost: 11, price: 180, desc: "Подкожный заряд стальной дроби: бьёт всех в двух шагах вокруг.", fx: { k: "area", r: 2, dmg: 28, perL: 8, dt: "kinetic" } },
   { id: "overdrive", n: "Плазменный разгон", cat: "combat", t: 2, cost: 12, price: 200, desc: "Десять секунд оружие в руках бьёт на сорок процентов сильнее.", fx: { k: "buff", over: 20 } },
-  { id: "neuroshock", n: "Нейрошок", cat: "combat", t: 2, cost: 12, price: 190, desc: "Импульс по нервам: твари в трёх шагах цепенеют на два такта.", fx: { k: "area", r: 3, freeze: 4, dmg: 8, perL: 2, dt: "shock", kind: "bio" } },
+  { id: "neuroshock", n: "Нейрошок", cat: "combat", t: 2, cost: 12, price: 190, desc: "Импульс по нервам: твари в трёх шагах цепенеют на две секунды.", fx: { k: "area", r: 3, freeze: 4, dmg: 8, perL: 2, dt: "shock", kind: "bio" } },
   { id: "gravwell", n: "Гравитационный узел", cat: "combat", t: 3, cost: 16, price: 300, desc: "Узел тяжести стягивает врагов в четырёх шагах к вам и вязнет их движение.", fx: { k: "pull", r: 4, slow: 8, dmg: 10, perL: 3, dt: "grav" } },
   /* защитные */
   { id: "reflect", n: "Зеркальный контур", cat: "defense", t: 2, cost: 12, price: 210, desc: "Восемь секунд сорок процентов удара уходят обратно в того, кто бьёт.", fx: { k: "buff", reflect: 16 } },
@@ -175,9 +175,9 @@ var MODS = {
   ap:        { n: "бронебойная", d: "броня врагов удар не гасит", cost: { chip: 1, ceramic: 1 }, cat: "combat", tag: "dmg", need: 1 },
   shock:     { n: "электрическая", d: "урон — разрядом: машины горят", cost: { chip: 1, relay: 1, cap: 1 }, cat: "combat", tag: "dmg", need: 1 },
   thermo:    { n: "термическая", d: "урон — жаром: твари горят", cost: { chip: 1, reagent: 1, ceramic: 1 }, cat: "combat", tag: "dmg", need: 1 },
-  cryo:      { n: "криогенная", d: "задетые цепенеют на такт", cost: { chip: 1, reagent: 2 }, cat: "combat", tag: "dmg", need: 2 },
+  cryo:      { n: "криогенная", d: "задетые цепенеют на секунду", cost: { chip: 1, reagent: 2 }, cat: "combat", tag: "dmg", need: 2 },
   chain:     { n: "цепная", d: "удар перескакивает ещё на одного рядом", cost: { chip: 2, wire: 1, relay: 1 }, cat: "combat", tag: "dmg", need: 2 },
-  stun:      { n: "оглушающая", d: "задетые теряют такт", cost: { chip: 1, servo: 1 }, cat: "combat", tag: "dmg", need: 2 },
+  stun:      { n: "оглушающая", d: "задетые замирают на полсекунды", cost: { chip: 1, servo: 1 }, cat: "combat", tag: "dmg", need: 2 },
   bleed:     { n: "рвущая", d: "живые истекают кровью", cost: { chip: 1, scrap: 2 }, cat: "combat", tag: "dmg", need: 3 },
   execute:   { n: "добивающая", d: "по раненым — в полтора раза сильнее", cost: { chip: 2, optic: 1 }, cat: "combat", tag: "dmg", need: 3 },
   mirror:    { n: "зеркальная", d: "пока действует, пятая часть удара уходит обратно", cost: { chip: 1, panel: 1 }, cat: "defense", tag: "guard", need: 1 },
@@ -319,12 +319,15 @@ function dmgK(f) {
 }
 
 /* ════════ ДЕЙСТВИЕ ИМПЛАНТОВ ════════ */
-function foesNear(r, kind) {
+/* los — (3.7, нелогичность) удар по площади (дробь, жар, импульс, холод, узел тяжести, сифон) не проходит
+   сквозь стену и закрытую дверь, как взрывы врагов; сенсоры (метка, термозрение, анализатор) — как прежде */
+function foesNear(r, kind, los) {
   var g = G(), C = LAB.combat; if (!C) return [];
   return C.foes().filter(function (f) {
     if (f.dead || f.calm || f.ally || f.burrowed) return false;
     if (kind && f.kind !== kind) return false;
-    return Math.max(Math.abs(f.x - g.x), Math.abs(f.y - g.y)) <= r;
+    if (Math.max(Math.abs(f.x - g.x), Math.abs(f.y - g.y)) > r) return false;
+    return !los || LAB.los(CUR().fl, CUR().fs, g.x, g.y, f.x, f.y);
   });
 }
 function secW(n) { return n + " " + pl(n, "секунду", "секунды", "секунд"); }
@@ -393,7 +396,7 @@ function run(id) {
   switch (fx.k) {
     case "heal": t = d.n + ". " + healFx(id, fx, p); break;
     case "area":
-      list = foesNear(p.r, fx.kind);
+      list = foesNear(p.r, fx.kind, true);
       list.forEach(function (f) {
         if (fx.unshield) f.shield = 0;
         if (p.dmg) hit(id, f, p.dmg, p);
@@ -426,7 +429,7 @@ function run(id) {
       break;
     }
     case "pull":
-      list = foesNear(p.r);
+      list = foesNear(p.r, null, true);
       list.forEach(function (f) {
         if (!f.boss) { var px2 = f.x + Math.sign(g.x - f.x), py2 = f.y + Math.sign(g.y - f.y); if (free(px2, py2)) { f.x = px2; f.y = py2; } f.slowT = Math.max(f.slowT || 0, Math.round(fx.slow * p.dur)); }
         if (p.dmg) hit(id, f, p.dmg, p);
@@ -478,10 +481,12 @@ function run(id) {
     case "lure": {
       var v2 = LAB.DIRS[g.face] || LAB.DIRS.N, lx = g.x, ly = g.y;
       for (var s2 = 0; s2 < p.rng; s2++) { if (!gm().passable(lx + v2[0], ly + v2[1])) break; lx += v2[0]; ly += v2[1]; }
-      if (C.noiseLure) C.noiseLure(lx, ly);
-      list = C.foes().filter(function (f) { return !f.dead && !f.ally && f.kind === "mech" && Math.abs(f.x - lx) + Math.abs(f.y - ly) <= 16; });
-      list.forEach(function (f) { f.state = "alert"; f.lastKnown = { x: lx, y: ly }; f.lost = 0; f.lure = Math.round(20 * p.dur); });
-      t = d.n + ": ваш сигнал — " + (LAB.DIRTO[g.face] || "впереди") + ". Машин пошло туда: " + list.length + ".";
+      /* (3.7, нелогичность) ложный сигнал — для машин, и идут на него только подвижные, не обезвреженные
+         и не мирные (combat.js, signalLure): прежде в счёт шли турели и камеры, а на «сигнал» сбегались
+         и твари (шумовая приманка) — теперь звенит только сам сигнал */
+      A("noiseLure", lx, ly);
+      list = C.signalLure ? C.signalLure(lx, ly, Math.round(20 * p.dur)) : [];
+      t = d.n + ": ваш сигнал — " + (LAB.DIRTO[g.face] || "впереди") + ". " + (list.length ? "Машин пошло туда: " + list.length + "." : "Ни одна машина рядом на него не пошла.");
       break;
     }
     case "turret": {
@@ -518,7 +523,7 @@ function run(id) {
       break;
     }
     case "siphon": {
-      list = foesNear(p.r, "mech");
+      list = foesNear(p.r, "mech", true);
       list.forEach(function (f) { hit(id, f, p.dmg, p); });
       var en = Math.round(list.length * (fx.en || 6) * p.k * (has(id, "capacitor") ? 1.5 : 1));
       g.en = Math.min(g.enMax, g.en + en);
@@ -544,11 +549,11 @@ function mapAround(r) {
   if (!seen) return;
   for (var yy = g.y - r; yy <= g.y + r; yy++) for (var xx = g.x - r; xx <= g.x + r; xx++) if (LAB.inb(xx, yy)) seen[yy * W + xx] = 1;
 }
+/* (3.7, нелогичность) чем бить — по стойкостям самого врага (combat.js, weakness: природа, его res и экран),
+   а не по одной природе: прежде каждому роботу советовались ЭМИ и ионы, даже тем, кого они почти не берут */
 function weakText(f) {
-  var vs = LAB.DMG_VS[f.kind] || {}, best = [], worst = [];
-  for (var k in vs) { if (vs[k] >= 1.5) best.push(k); else if (vs[k] <= 0.5) worst.push(k); }
-  var N = { emp: "ЭМИ", ion: "ионы", shock: "разряд", thermo: "жар", plasma: "плазма", magnetron: "магнетрон", positron: "позитроны", sonic: "звук", nano: "наноструя", bio: "биоудар", cryo: "холод", kinetic: "пули", laser: "лазер", grav: "тяжесть", phase: "фаза", energy: "энергия", gauss: "гаусс" };
-  return (best.length ? "бить: " + best.slice(0, 3).map(function (k) { return N[k] || k; }).join(", ") : "особых слабостей нет") + (worst.length ? "; не берут: " + worst.slice(0, 2).map(function (k) { return N[k] || k; }).join(", ") : "");
+  var w = LAB.combat && LAB.combat.weakness ? LAB.combat.weakness(f.base || f, f) : { bestN: [], worstN: [] };
+  return (w.bestN.length ? "бить: " + w.bestN.join(", ") : "особых слабостей нет") + (w.worstN.length ? "; почти не берут: " + w.worstN.slice(0, 2).join(", ") : "");
 }
 /* сканер с «аналитической» и «маркирующей» модификацией */
 function scanExtra(id, list) {

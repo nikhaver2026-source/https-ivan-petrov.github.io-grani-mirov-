@@ -33,7 +33,7 @@ W("zarya", 10, "ЛЗ", { n: "лучемёт «Заря»", g: "m", cls: "laser",
 
 /* ── «Подножие»: инструмент «Глубины» сорокалетней давности ── */
 W("g_pickaxe", 13, "КО", { n: "кирка-отбойник", g: "f", cls: "melee", ammo: "none", dt: "kinetic", dmg: 26, rng: 1, spread: 1, cap: 0, cd: 800, snd: "w_melee", sndRate: 0.7, crit: 0.1, bleed: 2, desc: "Пневматическая кирка забойщика. Тяжёлая, медленная, бьёт наверняка." });
-W("g_flarepistol", 15, "СП", { n: "сигнальный пистолет горноспасателя", g: "m", cls: "thermo", ammo: "energy", dt: "thermo", dmg: 18, rng: 7, spread: 0, cap: 3, cd: 900, snd: "w_blaster_h", sndRate: 0.7, area: true, desc: "Ракета с магнием: вспыхивает у цели и обжигает всех рядом." });
+W("g_flarepistol", 15, "СП", { n: "сигнальный пистолет горноспасателя", g: "m", cls: "thermo", ammo: "energy", dt: "thermo", dmg: 18, rng: 7, spread: 0, cap: 3, cd: 900, snd: "w_blaster_h", sndRate: 0.7, area: true, desc: "Электрическая ракетница: разряд батареи выбрасывает сгусток раскалённой плазмы — он вспыхивает у цели, как магниевая ракета, и обжигает всех рядом." });
 W("g_charger", 16, "ШМ", { n: "шашечный метатель", g: "m", cls: "thermo", ammo: "g_seiscell", dt: "thermo", dmg: 30, rng: 5, spread: 0, cap: 2, cd: 1300, snd: "w_pcannon", sndRate: 0.8, area: true, knock: true, desc: "Метатель взрывных шашек для обрушения кровли. Отбрасывает всех рядом с целью." });
 W("g_winchgun", 19, "ТЛ", { n: "тросомёт лебёдчика", g: "m", cls: "gauss", ammo: "energy", dt: "kinetic", dmg: 22, rng: 6, spread: 0, cap: 3, cd: 1000, snd: "w_gauss", sndRate: 0.7, slow: 4, pierce: true, desc: "Стальной трос с кошкой: прошивает и опутывает, цели вязнут." });
 W("g_lampbeam", 20, "ЛК", { n: "луч коногонки", g: "m", cls: "laser", ammo: "energy", dt: "laser", dmg: 20, rng: 8, spread: 0, cap: 8, cd: 600, snd: "w_laser", sndRate: 1.1, mark: 4, desc: "Шахтёрская лампа, перемотанная в излучатель. Луч метит цель." });
@@ -43,7 +43,9 @@ W("k_bonebow", 24, "КС", { n: "костяной самострел", g: "m", c
 W("k_thornwhip", 25, "ТХ", { n: "терновый хлыст", g: "m", cls: "melee", ammo: "none", dt: "bio", dmg: 18, rng: 1, spread: 1, cap: 0, cd: 500, snd: "w_vibro", sndRate: 1.3, bleed: 4, desc: "Хлыст из живого терна. Шипы оставляют кровоточащие раны." });
 W("k_resinspray", 27, "СБ", { n: "смоляной брызгомёт", g: "m", cls: "bio", ammo: "k_capsule", dt: "bio", dmg: 10, rng: 4, spread: 1, cap: 12, cd: 500, snd: "w_plasma", sndRate: 1.2, slow: 5, desc: "Горячая смола: обжигает и склеивает лапы и колёса." });
 W("k_chorushorn", 29, "ПР", { n: "певчий рог", g: "m", cls: "sonic", ammo: "energy", dt: "sonic", dmg: 16, rng: 6, spread: 0, cap: 8, cd: 700, snd: "w_resonator", sndRate: 1.4, chain: 2, desc: "Рог Хора: нота отзывается в соседних целях." });
-W("k_eeljar", 31, "ЭУ", { n: "банка с электроугрём", g: "f", cls: "ion", ammo: "energy", dt: "shock", dmg: 18, rng: 3, spread: 1, cap: 6, cd: 650, snd: "w_ion", sndRate: 1.4, chain: 3, desc: "Живой угорь Колыбели в стеклянной банке с медной крышкой. Разряд скачет по трём целям." });
+/* (3.7, нелогичность) прежде — «живой угорь в банке», но собирали его из соли, воска и проводов и
+   заряжали батареей: теперь это то, что из них и выходит, — лейденская банка */
+W("k_eeljar", 31, "ЛБ", { n: "солевая лейденская банка", g: "f", cls: "ion", ammo: "energy", dt: "shock", dmg: 18, rng: 3, spread: 1, cap: 6, cd: 650, snd: "w_ion", sndRate: 1.4, chain: 3, desc: "Стеклянная банка с рассолом звонкой соли, восковой пробкой и медными обкладками: копит заряд энергобатареи и отдаёт его разрядом, который скачет по трём целям." });
 W("k_amberwand", 33, "ЯЖ", { n: "янтарный жезл", g: "m", cls: "phase", ammo: "energy", dt: "phase", dmg: 20, rng: 7, spread: 0, cap: 8, cd: 650, snd: "w_laser", sndRate: 0.7, mark: 5, drain: 0.15, desc: "Жезл из тёплой смолы: метит цель и возвращает часть силы." });
 W("k_sling", 35, "ПК", { n: "праща с певчим камнем", g: "f", cls: "sonic", ammo: "none", dt: "sonic", dmg: 24, rng: 7, spread: 0, cap: 0, cd: 900, snd: "w_resonator", sndRate: 0.7, knock: true, desc: "Камень поёт в полёте и сбивает с ног. Заряжать не нужно: камень возвращается сам." });
 W("k_hivespear", 37, "КУ", { n: "копьё улья", g: "n", cls: "melee", ammo: "none", dt: "nano", dmg: 30, rng: 1, spread: 1, cap: 0, cd: 650, snd: "w_vibro", sndRate: 0.9, bleed: 3, desc: "Наконечник из воска и хитина, в древке гудит рой." });
@@ -87,7 +89,7 @@ var REC = [
   { id: "g_r_lampbeam", out: "weapon:g_lampbeam", n: "Луч коногонки", need: { g_tube: 2, lens: 1, cell: 1, g_mica: 1 }, cls: "spec", bp: true, minL: 20 },
   { id: "k_r_thornwhip", out: "weapon:k_thornwhip", n: "Терновый хлыст", need: { k_root: 1, k_resin: 1, k_chitin: 1 }, cls: "base", minL: 29 },
   { id: "k_r_bonebow", out: "weapon:k_bonebow", n: "Костяной самострел", need: { k_bone: 2, k_resin: 1, wire: 1 }, cls: "spec", bp: true, minL: 37 },
-  { id: "k_r_eeljar", out: "weapon:k_eeljar", n: "Банка с электроугрём", need: { k_salt: 2, k_wax: 1, wire: 2 }, cls: "spec", minL: 32 },
+  { id: "k_r_eeljar", out: "weapon:k_eeljar", n: "Солевая лейденская банка", need: { k_salt: 2, k_wax: 1, wire: 2 }, cls: "spec", minL: 32 },
   { id: "o_r_shardwhip", out: "weapon:o_shardwhip", n: "Хлыст из осколков", need: { o_glass: 2, o_silver: 1, wire: 1 }, cls: "base", minL: 46 },
   { id: "o_r_rime", out: "weapon:o_rime", n: "Иней зеркал", need: { o_quartz: 1, o_echoshard: 1, cap: 2, reagent: 2 }, cls: "spec", bp: true, minL: 50 },
   { id: "m_r_gearsaw", out: "weapon:m_gearsaw", n: "Шестерёночная пила", need: { m_gear: 3, m_casting: 1, servo: 1 }, cls: "base", minL: 69 },

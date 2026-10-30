@@ -30,6 +30,8 @@ var LAB = (typeof window !== "undefined" ? window.LAB : globalThis.LAB);
    who — на кого: all — на всех; walk — на всех, кто ходит (дроны
    пролетают); mech — только на машины; bio — на живых (и на вас);
    metal — на металл и ток: на машины и на вас с оружием.
+   air — ловит и летунов (сеть бьёт вверх, корни хватают на взлёте); над
+   прочими нажимными ловушками и растяжками летуны пролетают (3.7).
    Врагам: dmg и dt — урон (растёт с глубиной) и его вид, r — радиус,
    mk — множитель по машинам; hold, stun (машины), slow, bleed (живые),
    freeze, confuse, deaf, ally — сколько тактов (такт — полсекунды)
@@ -77,7 +79,7 @@ var T = {
     pd: 0.45, need: { reagent: 2, cap: 1, scrap: 2, chip: 1 }, cls: "spec",
     d: "Самодельная мина в стальном корпусе: прикрытая мусором у пола, взрывается под ногой и задевает всех в шаге вокруг. Громкая — на шум сбегутся.",
     hit: "Под ногой щёлкнуло — мина!" },
-  net: { n: "сеть-ловушка", g: "f", depth: 2, price: 40, trig: "step", who: "all", dmg: 6, dt: "kinetic", hold: 10, uses: 1, loud: 2, stealth: 0.4, cue: "tick", snd: "web_hit",
+  net: { n: "сеть-ловушка", g: "f", depth: 2, price: 40, trig: "step", who: "all", air: true, dmg: 6, dt: "kinetic", hold: 10, uses: 1, loud: 2, stealth: 0.4, cue: "tick", snd: "web_hit",
     ph: 6, need: { wire: 3, scrap: 1, servo: 1 }, cls: "spec", minL: 2,
     d: "Сеть из стального троса на пружинном выбросе: кто наступит — того накрывает и спутывает. Выбрасывается вверх, поэтому ловит и дронов.",
     hit: "Сеть накрыла вас с головой!" },
@@ -160,7 +162,7 @@ var T = {
     need: { m_relay: 2, m_okochip: 1, chip: 1 }, cls: "exp", bp: true, minL: 62,
     d: "Реле с противоречивым приказом и чипом ОКО, похожее на сервисный люк: наступивший робот получает новую прошивку и пятнадцать секунд бьёт своих. Стража уровня не перепрошить — только оглушить. На живых не реагирует." },
   /* ── Исток: корни и время ── */
-  roots: { n: "корневая ловушка", g: "f", depth: 86, price: 380, trig: "step", who: "all", r: 1, hold: 14, drain: 6, uses: 3, regrow: 20, loud: 1, stealth: 0.5, cue: "tick", snd: "vine_attack",
+  roots: { n: "корневая ловушка", g: "f", depth: 86, price: 380, trig: "step", who: "all", air: true, r: 1, hold: 14, drain: 6, uses: 3, regrow: 20, loud: 1, stealth: 0.5, cue: "tick", snd: "vine_attack",
     pd: 0.1, ph: 8, need: { i_treefiber: 2, k_root: 1 }, cls: "spec", minL: 86,
     d: "Волокно первого дерева в горсти земли: корни прорастают за миг, держат всех рядом — тварей, машины и даже дроны на взлёте — и тянут из них силы. Отрастают ещё дважды.",
     hit: "Корни обвили ноги!" },
@@ -228,6 +230,8 @@ function fhas(f, b) { return !!(f.beh && f.beh.indexOf(b) >= 0); }
 function K() { var g = G(); return 1 + 0.165 * (LAB.foeLevel(g.L, g.F) - 1); }
 function sapper() { return !!(LAB.ach && LAB.ach.has("sapper")); }
 function cellT(x, y) { return LAB.inb(x, y) ? CUR().fl.t[idx(x, y)] : LAB.T.WALL; }
+/* (3.7) между точкой и целью нет стены и закрытой двери */
+function clear(x, y, tx, ty) { return LAB.los(CUR().fl, CUR().fs, x, y, tx, ty); }
 /* Клетка, на которую можно поставить ловушку: пол помещения или коридора, без вещей. */
 function floorOk(x, y) {
   var t = cellT(x, y);
@@ -280,12 +284,17 @@ function inZone(tp, x, y) {
   if (d.trig === "remote" || d.trig === "lure") return false;
   return onCells(tp, x, y);
 }
-/* Кого берёт: живых, машин, всех, кто ходит. */
-function foeOk(d, f) {
+/* Кого берёт: живых, машин, всех, кто ходит. area — (3.7) задело волной от ловушки, которую задел другой:
+   летун на неё не наступал, но звон солевого круга достаёт и его (взрыв — и так всех, boom) */
+function foeOk(d, f, area) {
   if (!f || f.dead || f.ally || f.calm || f.neutral || f.disguised || f.burrowed || f.phased) return false;
   if (fhas(f, "stationary") && d.trig !== "prox") return false;
   if (d.who === "none") return false;
   if (d.who === "walk" && fhas(f, "fly")) return false;
+  /* (3.7, нелогичность) летуны не наступают на нажимную крышку и не задевают проволоку — какой бы ни была
+     ловушка; ловят их только выбрасываемая вверх сеть и корни (air). Прежде логическая мина
+     перепрошивала охранного дрона, а солевой круг убивал летяг и моль */
+  if (!area && (d.trig === "step" || d.trig === "wire") && !d.air && fhas(f, "fly")) return false;
   if (d.who === "mech" || d.who === "metal") return f.kind === "mech";
   if (d.who === "bio") return f.kind !== "mech";
   return true;
@@ -348,8 +357,10 @@ function fire(tp, who, at) {
     foes.forEach(function (f) { if (!f.dead && !f.ally && onCells(tp, f.x, f.y)) hitF.push(f); });
     hero = onCells(tp, g.x, g.y);
   } else if (d.r) {
-    foes.forEach(function (f) { if (!f.dead && !f.ally && cheb(f.x, f.y, x, y) <= d.r && (d.boom || foeOk(d, f) || (who && who.f === f))) hitF.push(f); });
-    hero = cheb(g.x, g.y, x, y) <= d.r && (d.boom || heroOk(d) || !!(who && who.hero));
+    /* (3.7, нелогичность) взрыв, холод, газ, звон и корни не проходят сквозь стену и закрытую дверь — как
+       у вражеских взрывов (combat.js, explode); прежде мина задевала всех в радиусе, даже за стеной */
+    foes.forEach(function (f) { if (!f.dead && !f.ally && cheb(f.x, f.y, x, y) <= d.r && (d.boom || foeOk(d, f, true) || (who && who.f === f)) && ((who && who.f === f) || clear(x, y, f.x, f.y))) hitF.push(f); });
+    hero = cheb(g.x, g.y, x, y) <= d.r && (d.boom || heroOk(d) || !!(who && who.hero)) && (!!(who && who.hero) || clear(x, y, g.x, g.y));
   } else {
     if (who && who.f) hitF.push(who.f);
     hero = !!(who && who.hero);
@@ -371,7 +382,7 @@ function fire(tp, who, at) {
   /* огонь и газ остаются на месте */
   if (d.zone) zones.push({ k: d.zone.k, x: x, y: y, r: d.zone.r, t: d.zone.t, d: d.zone.d, own: tp.own });
   /* взрыв задевает соседние заряды */
-  if (d.boom) list().forEach(function (o) { if (o !== tp && o.st === "on" && D(o).boom && cheb(o.x, o.y, x, y) <= (d.r || 1) + 1 && pending.indexOf(o) < 0) pending.push(o); });
+  if (d.boom) list().forEach(function (o) { if (o !== tp && o.st === "on" && D(o).boom && cheb(o.x, o.y, x, y) <= (d.r || 1) + 1 && clear(x, y, o.x, o.y) && pending.indexOf(o) < 0) pending.push(o); }); /* (3.7) и соседний заряд — не сквозь стену */
   /* что сказать */
   if (tp.own && !hero && hitF.length) {
     var nm = cap1(d.n) + " " + gv(d, "сработал", "сработала", "сработали") + ", " + rel(x, y) + ": ";
@@ -450,7 +461,7 @@ function alarmFire(tp, d, who, x, y) {
   if (lastAlarm[tp.id] && now - lastAlarm[tp.id] < 2500) return;
   lastAlarm[tp.id] = now;
   LAB.say(cap1(d.n) + " " + (d.id === "bonebell" ? "запел" : "загремела") + ": кто-то идёт, " + rel(x, y) + ".", { prio: "event" });
-  if (d.confuse && cb()) cb().foes().forEach(function (f) { if (!f.dead && f.kind !== "mech" && cheb(f.x, f.y, x, y) <= (d.r || 3) && foeOk(d, f)) f.confused = Math.max(f.confused || 0, d.confuse); });
+  if (d.confuse && cb()) cb().foes().forEach(function (f) { if (!f.dead && f.kind !== "mech" && cheb(f.x, f.y, x, y) <= (d.r || 3) && foeOk(d, f) && clear(x, y, f.x, f.y)) f.confused = Math.max(f.confused || 0, d.confuse); }); /* (3.7) звон — не сквозь стену */
 }
 
 /* ════════ ХОДЫ ════════ */
@@ -605,13 +616,14 @@ function tick() {
     var zn = zones[z];
     if (--zn.t <= 0) { zones.splice(z, 1); continue; }
     var kk = K();
+    /* (3.7, нелогичность) огонь и газ — по эту сторону стены: за стеной и закрытой дверью не жгут и не травят */
     foes.forEach(function (f) {
-      if (f.dead || f.ally || cheb(f.x, f.y, zn.x, zn.y) > zn.r) return;
+      if (f.dead || f.ally || cheb(f.x, f.y, zn.x, zn.y) > zn.r || !clear(zn.x, zn.y, f.x, f.y)) return;
       if (zn.k === "gas" && f.kind === "mech") return;
       if (cb()) cb().damageFoe(f, Math.round(zn.d * kk), zn.k === "fire" ? "thermo" : "bio", { noarmor: true, quiet: true });
       if (f.dead && zn.own) { ev("trap_kill", 1); if (f.kind === "mech") ev("trap_mech", 1); }
     });
-    if (cheb(g.x, g.y, zn.x, zn.y) <= zn.r) {
+    if (cheb(g.x, g.y, zn.x, zn.y) <= zn.r && clear(zn.x, zn.y, g.x, g.y)) {
       if (zn.k === "fire") { if (cb()) cb().hurtPlayer(Math.max(1, Math.round(g.hpMax * 0.04)), "therm", null); if (g.dead) return; }
       else if (zn.t % 2 === 0 && !(g.st.antitox > 0) && !gm().armorSpecial("antitox")) gm().bodyApply({ tox: 6 }, []);
     }
@@ -713,7 +725,7 @@ function detonate(tp) {
   UIx("closeAll");
   if (cb() && cb().unhide) cb().unhide("Подрыв выдал вас: укрытия больше нет."); /* (3.5) нападение из укрытия — как выстрел */
   A("play", "term_beep");
-  var close = cheb(g.x, g.y, tp.x, tp.y) <= (D(tp).r || 1);
+  var close = cheb(g.x, g.y, tp.x, tp.y) <= (D(tp).r || 1) && clear(tp.x, tp.y, g.x, g.y);
   if (close) sayq("Вы слишком близко!");
   setTimeout(function () { LAB.safe(function () { if (list().indexOf(tp) >= 0) fire(tp, null, [tp.x, tp.y]); UIx("refresh"); }); }, 350);
 }
@@ -755,7 +767,9 @@ function back() { return { label: "Назад", fn: function () { UIx("inventory
 function effLine(d) {
   var s = [];
   s.push({ step: "срабатывает под ногой", wire: "срабатывает, если задеть проволоку: в коридоре она идёт от стены до стены", cone: "бьёт веером на три шага вперёд", prox: "срабатывает, когда рядом " + (d.pr > 1 ? "в двух шагах" : "в шаге"), remote: "подрывается по вашему сигналу", lure: "полминуты пищит и зовёт врагов" }[d.trig]);
-  if (d.who !== "none") s.push({ all: "берёт всех, даже дронов", walk: "берёт всех, кто ходит; дроны пролетают", mech: "только машины", bio: "только живых", metal: "машины и тех, кто с оружием" }[d.who]);
+  /* (3.7) над нажимной крышкой и проволокой летуны пролетают — кроме сети и корней (air) */
+  var over = (d.trig === "step" || d.trig === "wire") && !d.air;
+  if (d.who !== "none") s.push({ all: over ? "берёт всех, кто ходит; летуны пролетают" : "берёт всех, даже дронов", walk: "берёт всех, кто ходит; дроны пролетают", mech: "только машины" + (over ? ", кроме летающих" : ""), bio: "только живых" + (over ? ", кроме летающих" : ""), metal: "машины и тех, кто с оружием" }[d.who]);
   if (d.r && d.dmg) s.push("задевает всех в " + (d.r > 1 ? d.r + " шагах" : "шаге") + " вокруг");
   if (d.hold) s.push("держит на месте");
   if (d.freeze) s.push("замораживает");
@@ -808,7 +822,7 @@ function ownMenu() {
 }
 function farMenu(tp) {
   var d = D(tp), items = [];
-  if (d.trig === "remote" && tp.st === "on") items.push({ label: "Подорвать" + (cheb(G().x, G().y, tp.x, tp.y) <= (d.r || 1) ? ": вы рядом — заденет и вас!" : ""), fn: function () { detonate(tp); } });
+  if (d.trig === "remote" && tp.st === "on") items.push({ label: "Подорвать" + (cheb(G().x, G().y, tp.x, tp.y) <= (d.r || 1) && clear(tp.x, tp.y, G().x, G().y) ? ": вы рядом — заденет и вас!" : ""), fn: function () { detonate(tp); } });
   items.push({ label: "Вести к ней", fn: function () { leadTo(tp); } });
   items.push({ label: "Осмотреть", keep: true, fn: function () { say(cap1(nameOf(tp)) + ", " + rel(tp.x, tp.y) + ", " + stateWord(tp) + ". " + effLine(d)); } });
   items.push({ label: "Назад", fn: ownMenu });

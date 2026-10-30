@@ -73,11 +73,11 @@ function srcOf(k) { var s0 = LAB.ITEMS[k] && LAB.ITEMS[k].src; if (LAB.ARSENAL17
 LAB.AMMO.slug = { n: "Обойма стальных пуль", icon: "🔩", desc: "Стальные пули для кинетического оружия — пистолета и карабина. Обойму делают из металлолома у любого верстака.", price: 14, depth: 2, loot: false };
 var W_NEW = {
   kpistol:    { n: "кинетический пистолет", g: "m", cls: "kinetic", ammo: "slug", dt: "kinetic", dmg: 11, rng: 7, spread: 0, cap: 8, cd: 480, snd: "w_gauss", sndRate: 1.45,
-    desc: "Катушечный ускоритель стальных пуль: не греется и не тратит батарей, пули делают из металлолома. Броня гасит его сильнее, чем лучи." },
+    desc: "Катушечный ускоритель стальных пуль: катушки питает конденсатор, который заряжается при взводе затвора, — пистолет не греется и не тратит батарей, пули делают из металлолома. Броня гасит его сильнее, чем лучи." },
   suppressor: { n: "ЭМ-подавитель «Тишь»", g: "m", cls: "ion", ammo: "energy", dt: "emp", dmg: 3, rng: 4, spread: 1, cap: 10, cd: 650, snd: "w_ion", sndRate: 0.78, stunMech: 3,
     desc: "Короткий электромагнитный импульс: роботы и турели замирают на несколько тактов. Живому почти не вредит, экранированных машин не берёт." },
   needle:     { n: "бронебойный карабин «Игла»", g: "m", cls: "kinetic", ammo: "slug", dt: "kinetic", dmg: 19, rng: 9, spread: 0, cap: 4, cd: 1000, snd: "w_gauss", sndRate: 1.1, apierce: 0.7,
-    desc: "Вольфрамовая игла на магнитном разгоне: броня роботов её почти не держит. Взводится долго, в обойме четыре выстрела." }
+    desc: "Стальная игла на магнитном разгоне: разгон питает своя ячейка, которую заряжает взвод, — батарей карабин не тратит, а броня роботов иглу почти не держит. Взводится долго, в обойме четыре выстрела." }
 };
 var wk;
 for (wk in W_NEW) LAB.WEAPONS[wk] = W_NEW[wk];
@@ -905,17 +905,22 @@ function salvageBattery() {
   return true;
 }
 /* Разбор оружия: модули — в запас, детали по классу; у верстака — схема. */
-function onScrap(w, crafted) {
+function onScrap(w, crafted, byRecipe) {
   var g = G(), out = [], m = w.mod || {}, k;
   for (k in m) if (m[k] && MODS[k]) { g.inv[MODS[k].item] = (g.inv[MODS[k].item] || 0) + m[k]; }
   if (used(w)) out.push("Модули сняты и лежат в запасе: " + modsLine(w) + ".");
   var b = LAB.WEAPONS[w.base] || {}, extra = {};
-  /* (3.5) собранное своими руками — без находок сверх рецепта (game.js, scrapWeapon) */
+  /* (3.5) собранное своими руками — без находок сверх рецепта (game.js, scrapWeapon);
+     (3.7, нелогичность) найденное по схеме — её детали; без схемы — только то, что в нём есть:
+     ячейка — у оружия на батареях и зарядах, сервопривод — у кинетического с питанием */
   if (!crafted) {
-    if (battery(w) && w.ammo !== "slug") extra.cell = Math.random() < 0.5 + 0.1 * (w.rank || 0) ? 1 : 0;
-    if (b.cls === "laser" || b.cls === "blaster") extra.lens = Math.random() < 0.3 ? 1 : 0;
-    if (b.cls === "kinetic") extra.servo = Math.random() < 0.5 ? 1 : 0;
-    if ((w.rank || 0) >= 4) extra.proto = 1;
+    var sk = LAB.game.salvKind ? LAB.game.salvKind(w) : "elec";
+    if (!byRecipe) {
+      if (sk === "elec" && !LAB.physAmmo(w.ammo)) extra.cell = Math.random() < 0.5 + 0.1 * (w.rank || 0) ? 1 : 0;
+      if (b.cls === "laser" || b.cls === "blaster") extra.lens = Math.random() < 0.3 ? 1 : 0;
+      if (b.cls === "kinetic" && sk === "elec") extra.servo = Math.random() < 0.5 ? 1 : 0;
+    }
+    if ((w.rank || 0) >= 4 && sk !== "live") extra.proto = 1;
   }
   var got = give(extra);
   if (got) out.push("Ещё: " + got + ".");

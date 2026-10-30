@@ -334,7 +334,7 @@ LAB.ROOMS = {
 LAB.OBJ = {
   terminal:  { n: "Терминал", icon: "🖥️", desc: "Компьютерный терминал: журналы, двери, турели, карта этажа." },
   workbench: { n: "Верстак мастерской", icon: "🛠️", desc: "Мастерская: инструменты, тиски и пресс. Здесь из деталей собирают аптечки, батареи, гранаты и броню." },
-  vending:   { n: "Торговый терминал", icon: "🏧", desc: "Терминал снабжения: продаёт аптечки, батареи, броню и детали за кредиты, покупает детали." },
+  vending:   { n: "Торговый терминал", icon: "🏧", desc: "Терминал снабжения: продаёт аптечки, батареи, броню и расходники за кредиты и скупает почти всё найденное." },
   medst:     { n: "Медицинская станция", icon: "⚕️", desc: "Автоматический медик: лечит за кредиты." },
   capsule:   { n: "Капсула восстановления", icon: "🛏️", desc: "Капсула запоминает вас и лечит во сне. Сюда «Эхо» вернёт вас после гибели." },
   charger:   { n: "Зарядная станция", icon: "🔋", desc: "Заряжает энергобатареи и оружие." },
@@ -410,7 +410,7 @@ LAB.FOES = {
   shieldbot:{ n: "Робот-щитоносец", g: "m", kind: "mech", desc: "Тяжёлый робот с генератором поля: прикрывает щитом всех роботов рядом с собой. Начинайте с него.", hp: 70, dmg: 8, arm: 9, spd: 2, rng: 1, acd: 2, det: 6, beh: ["chase", "shieldally"], adt: "phys", snd: "shieldbot", xp: 30, min: 1 },
   sapper:  { n: "Робот-сапёр", g: "m", kind: "mech", desc: "Низкий гусеничный робот: ставит мины в проходах, а раненый бросается под ноги и взрывается.", hp: 34, dmg: 14, arm: 4, spd: 2, rng: 1, acd: 3, det: 6, beh: ["chase", "mines", "kamikaze"], adt: "phys", snd: "sapper", xp: 24, min: 1 },
   hunter:  { n: "Робот-ищейка", g: "f", kind: "mech", desc: "Быстрая четвероногая машина с чутким микрофоном: идёт на звук шагов через весь этаж.", hp: 48, dmg: 11, arm: 5, spd: 1, rng: 1, acd: 2, det: 9, beh: ["chase", "tracker"], adt: "phys", snd: "hunter", xp: 28, min: 1 },
-  mortar:  { n: "Миномётный робот", g: "m", kind: "mech", desc: "Робот с мортирой: бьёт навесом через стены туда, где вас слышал. Свист снаряда — значит, пора сойти с места.", hp: 60, dmg: 18, arm: 8, spd: 3, rng: 9, acd: 4, det: 8, beh: ["ranged", "indirect"], adt: "phys", snd: "mortar", xp: 32, min: 1 },
+  mortar:  { n: "Миномётный робот", g: "m", kind: "mech", desc: "Робот с мортирой: бьёт навесом туда, где вас видел или слышал, — поверх ящиков и машин, но стена и закрытая дверь от снаряда укрывают. Свист снаряда — значит, пора сойти с места.", hp: 60, dmg: 18, arm: 8, spd: 3, rng: 9, acd: 4, det: 8, beh: ["ranged", "indirect"], adt: "phys", snd: "mortar", xp: 32, min: 1 },
   relay:   { n: "Узел ОКО", g: "m", kind: "mech", desc: "Неподвижный ретранслятор искусственного интеллекта. Пока он цел, роботы вокруг умнее и зовут подмогу.", hp: 80, dmg: 0, arm: 10, spd: 99, rng: 0, acd: 99, det: 10, beh: ["stationary", "relay"], adt: "shock", snd: "relay", xp: 40, min: 1 },
   micro:   { n: "Рой микродронов", g: "m", kind: "mech", desc: "Облако крошечных дронов с лезвиями. Каждый слаб, но их много, и они не отстают.", hp: 12, dmg: 5, arm: 0, spd: 1, rng: 1, acd: 1, det: 7, beh: ["chase", "swarm", "fly"], adt: "phys", snd: "micro", xp: 9, min: 1 },
   titan:   { n: "Шагающий танк «Титан»", g: "m", kind: "mech", desc: "Четырёхногая боевая машина с плазменной пушкой. Пол дрожит от его шагов, залп задевает и соседние клетки.", hp: 160, dmg: 22, arm: 16, spd: 3, rng: 7, acd: 3, det: 8, beh: ["ranged", "splash"], adt: "energy", snd: "titan", xp: 60, min: 1 },
@@ -505,8 +505,8 @@ LAB.RANK_MULT = [1, 1.2, 1.45, 1.75, 2.1, 2.6];
 
 LAB.AMMO = {
   energy:    { n: "Энергобатарея", icon: "🔋", desc: "Батарея для бластеров, лазеров, ионного и плазменного оружия, гаусс-винтовки, крио и резака.", price: 30, depth: 1 },
-  magnetron: { n: "Магнетронная ячейка", icon: "🧲", desc: "Ячейка для магнетронного оружия. Её заряжает магнетронная установка.", price: 55, depth: 2 },
-  positron:  { n: "Позитронный заряд", icon: "⚛️", desc: "Магнитная ловушка с антивеществом для позитронного оружия. Делается на позитронной установке.", price: 140, depth: 5 }
+  magnetron: { n: "Магнетронная ячейка", icon: "🧲", desc: "Ячейка для магнетронного оружия. Её заряжает магнетронная установка.", price: 55, depth: 3 },
+  positron:  { n: "Позитронный заряд", icon: "⚛️", desc: "Магнитная ловушка с антивеществом для позитронного оружия. Делается на позитронной установке.", price: 140, depth: 7 }
 };
 
 /* ── ПРЕДМЕТЫ ── */
@@ -525,7 +525,7 @@ LAB.ITEMS = {
   crackers: { n: "Галеты армейские", icon: "🍪", kind: "food", desc: "Сухие и пресные: сытость плюс 20.", food: 20, price: 4, eat: "crunch" },
   protein:  { n: "Протеиновый батончик", icon: "🥜", kind: "food", desc: "Сытость плюс 18, энергия имплантов плюс 20.", food: 18, en: 20, price: 10, eat: "wrap" },
   nuts:     { n: "Орехи и сухофрукты", icon: "🥜", kind: "food", desc: "Сытость плюс 15, энергия имплантов плюс 10, токсины минус 5.", food: 15, en: 10, detox: 5, price: 8, eat: "crunch" },
-  noodles:  { n: "Лапша быстрого приготовления", icon: "🍜", kind: "food", desc: "Горячая лапша: сытость плюс 25, бодрость плюс 5, здоровье плюс 5.", food: 25, wake: 5, heal: 5, price: 7, eat: "chew" },
+  noodles:  { n: "Лапша быстрого приготовления", icon: "🍜", kind: "food", hot: "dry", desc: "Брикет лапши: залить кипятком у чайника, у самовара или из крана автомата с едой — сытость плюс 25, бодрость плюс 5, здоровье плюс 5. Сухую можно погрызть, но это лишь половина сытости.", food: 25, wake: 5, heal: 5, price: 7, eat: "chew" },
   sandwich: { n: "Бутерброд из автомата", icon: "🥪", kind: "food", desc: "Сытость плюс 30, здоровье плюс 5. Свежесть не гарантирована: бывает несвежим.", food: 30, heal: 5, stale: 0.25, price: 9, eat: "chew" },
   stew:     { n: "Тушёнка", icon: "🥫", kind: "food", desc: "Банка тушёнки: сытость плюс 40, здоровье плюс 10.", food: 40, heal: 10, price: 14, eat: "can" },
   ration:   { n: "Сухпаёк «Глубина»", icon: "🥫", kind: "food", desc: "Армейский сухой паёк: сытость плюс 45, энергия имплантов плюс 10, здоровье плюс 5.", food: 45, en: 10, heal: 5, price: 18, eat: "crunch" },
@@ -573,17 +573,33 @@ LAB.ITEMS.honeycomb = { n: "Соты с мёдом", icon: "🍯", kind: "food",
 LAB.PARTS = ["scrap", "wire", "chip", "cap", "gel", "reagent", "lens", "magnet", "ceramic", "supercond"];
 /* С какого уровня деталь попадается. */
 LAB.PART_DEPTH = { scrap: 1, wire: 1, chip: 1, cap: 1, gel: 1, reagent: 1, lens: 2, magnet: 2, ceramic: 3, supercond: 5 };
+/* (3.7, нелогичность) Откуда деталь: mech — снимают с машин, anom — вещество аномалий, bio — органика
+   (её с тварей не снимают деталью: у них — ткани химии). Остальное (соль, воск, фольга, ткань, фильтры,
+   экспериментальные узлы) с врагов не падает — его находят в ящиках и на складах. Добыча с врага —
+   только его природы (combat.js, foePart): прежде турель роняла смолу и певчую кость, а бесплотное
+   эхо — микросхемы и сервоприводы. Детали мастерской и блоков — здесь же, по имени. */
+LAB.PART_FROM = {
+  scrap: "mech", wire: "mech", chip: "mech", cap: "mech", lens: "mech", magnet: "mech", ceramic: "mech", supercond: "mech",
+  relay: "mech", cell: "mech", servo: "mech", optic: "mech", panel: "mech", powercell: "mech",
+  g_hydrocyl: "mech", g_tube: "mech", g_mica: "mech", g_quartz: "anom",
+  k_resin: "bio", k_chitin: "bio", k_root: "bio", k_bone: "bio",
+  o_silver: "anom", o_glass: "anom", o_prismpart: "anom", o_quartz: "mech anom", o_echoshard: "anom",
+  m_gear: "mech", m_relay: "mech", m_memcore: "mech", m_nanopaste: "mech", m_casting: "mech", m_okochip: "mech",
+  i_soundlump: "anom", i_layerstring: "anom", i_timesand: "anom", i_treefiber: "bio", i_omegagel: "bio"
+};
 
 /* ── МАСТЕРСКАЯ ── */
 LAB.RECIPES = [
   { id: "medkit_s", out: "medkit_s", n: "Аптечка", need: { gel: 2, reagent: 1 } },
   { id: "medkit_l", out: "medkit_l", n: "Большая аптечка", need: { gel: 3, reagent: 2, chip: 1 } },
   { id: "antidote", out: "antidote", n: "Антидот", need: { reagent: 2 } },
-  { id: "stim", out: "stim", n: "Стимулятор", need: { reagent: 1, gel: 1, cap: 1 } },
-  { id: "energy_d", out: "energy_d", n: "Нейростимулятор", need: { reagent: 2, chip: 1 } },
+  /* (3.7, нелогичность) лекарства — без электроники: шприц-тюбику стимулятора нужна игла (из лома),
+     а не конденсатор; нейростимулятору и нейроблокатору — реагенты, а не микросхема */
+  { id: "stim", out: "stim", n: "Стимулятор", need: { reagent: 1, gel: 1, scrap: 1 } },
+  { id: "energy_d", out: "energy_d", n: "Нейростимулятор", need: { reagent: 2, gel: 2 } },
   { id: "bandage", out: "bandage", n: "Кровоостанавливающий бинт", need: { gel: 1 } },
   { id: "sorbent", out: "sorbent", n: "Энтеросорбент", need: { reagent: 1 } },
-  { id: "neuroblock", out: "neuroblock", n: "Нейроблокатор", need: { reagent: 1, chip: 1 } },
+  { id: "neuroblock", out: "neuroblock", n: "Нейроблокатор", need: { reagent: 3 } },
   { id: "bat_e", out: "ammo:energy", n: "Энергобатарея", need: { cap: 1, wire: 1, scrap: 1 } },
   { id: "bat_m", out: "ammo:magnetron", n: "Магнетронная ячейка", need: { magnet: 1, cap: 1, wire: 1 } },
   { id: "emp", out: "emp", n: "ЭМИ-граната", need: { cap: 2, chip: 1, scrap: 1 } },
@@ -718,7 +734,7 @@ LAB.IMPLANTS = [
   { id: "echo",   n: "Эхолокация", cost: 3, price: 0, desc: "Подробно описывает стены, двери и проходы во все четыре стороны." },
   { id: "tk",     n: "Телекинез", cost: 6, price: 120, desc: "Притягивает вещи с клетки впереди, до пяти шагов." },
   { id: "hack",   n: "Дистанционный взлом", cost: 10, price: 200, desc: "Открывает запертую дверь рядом без ключа: код, пропуск или блокировка. Не действует на шлюзы уровней." },
-  { id: "freeze", n: "Криостаз", cost: 15, price: 220, desc: "Замораживает врагов в радиусе трёх шагов на четыре такта." },
+  { id: "freeze", n: "Криостаз", cost: 15, price: 220, desc: "Замораживает врагов в радиусе трёх шагов на четыре секунды." },
   { id: "pbolt",  n: "Позитронный разряд", cost: 28, price: 400, desc: "Разряд антивещества по линии взгляда: огромный урон всем на линии." }
 ];
 

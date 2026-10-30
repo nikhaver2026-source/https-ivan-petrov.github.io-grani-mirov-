@@ -348,7 +348,13 @@ GP.describe = function (rm, def, it, owner, opt) {
 GP.mainDetail = function (rm, have) {
   var fr = FR(this.era), r = this.r;
   if (!fr) return "";
-  if (r.chance(0.3) && fr.state) { var k = r.pick(["tidy", "hurry", "ransacked", "dust", "fresh", "dark"]); if (fr.state[k] && fr.state[k].length) { var sv = this.fromFit("st:" + this.era + ":" + k, fr.state[k], 3, have); if (sv) { rm.state = k; return sv; } } }
+  if (r.chance(0.3) && fr.state) {
+    var k = r.pick(["tidy", "hurry", "ransacked", "dust", "fresh", "dark"]);
+    /* (3.7, нелогичность) «Обесточено давно: всё электрическое мёртвое» — не там, где работают
+       компьютеры, автоматы, капсулы, лампы и экраны (annex.js, powered): такому — просто подробность */
+    if (k === "dark" && LAB.annexPowered && LAB.annexPowered(have)) k = null;
+    if (k && fr.state[k] && fr.state[k].length) { var sv = this.fromFit("st:" + this.era + ":" + k, fr.state[k], 3, have); if (sv) { rm.state = k; return sv; } }
+  }
   var cat = r.pick(CATS.filter(function (c) { return fr[c] && fr[c].length; }));
   return cat ? this.fromFit("fr:" + this.era + ":" + cat, fr[cat], Math.ceil(this.n * 1.6 / 6), have) || "" : "";
 };

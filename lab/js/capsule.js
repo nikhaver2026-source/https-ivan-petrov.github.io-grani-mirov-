@@ -87,6 +87,26 @@ function recover(min, asleep) {
   inCap.min += min;
   UIx("refresh");
 }
+/* (3.7, нелогичность) Полчаса с закрытыми глазами в капсуле — не меньше, чем на железной койке
+   (fixtures_data.js, bunk: здоровье 0,18, бодрость 20, нервы −14): мягкая капсула — 0,2, 22, −16;
+   прежде полчаса в капсуле давали меньше койки. Счёт отдыха общий с обстановкой (fixtures.js,
+   restK, раз в час — в полную силу): прилегли недавно — к тому, что капсула даёт сама (recover,
+   как при чтении), прибавляется лишь доля. Вернёт эту долю в процентах (0 — в полную силу). */
+var LIE = { m: 30, hp: 0.2, wake: 22, neuro: -16 };
+function lie() {
+  var g = G(), b = g.body, t0 = (g.day || 0) * 1440 + (g.min || 0);
+  var rk = g.restAt == null ? 1 : Math.max(0, Math.min(1, (t0 + LIE.m - g.restAt) / 60));
+  var hp0 = g.hp, w0 = b ? b.wake : 0, n0 = b ? b.neuro : 0;
+  recover(LIE.m, false);
+  if (!b) return 0;
+  var hpW = Math.max(1, Math.round(Math.max(5, g.hpMax * LIE.hp) * rk));
+  if (g.hp - hp0 < hpW) g.hp = Math.min(g.hpMax, hp0 + hpW);
+  if (b.wake - w0 < LIE.wake * rk) b.wake = Math.min(100, w0 + LIE.wake * rk);
+  if (n0 - b.neuro < -LIE.neuro * rk) b.neuro = Math.max(0, n0 + LIE.neuro * rk);
+  g.restAt = (g.day || 0) * 1440 + (g.min || 0);
+  UIx("refresh");
+  return rk < 1 ? Math.max(1, Math.round(rk * 100)) : 0;
+}
 function statusLine() {
   var g = G(), b = g.body || {};
   return "Здоровье " + g.hp + " из " + g.hpMax + ", энергия " + g.en + " из " + g.enMax + ", бодрость " + Math.round(b.wake) + (b.rad >= 1 ? ", облучение " + Math.round(b.rad) : "") + (b.tox >= 5 ? ", токсины " + Math.round(b.tox) : "") + ". На часах комплекса " + gm().clock() + ".";
@@ -157,7 +177,7 @@ function menuItems() {
   items.push({ label: "Полежать с закрытыми глазами: полчаса", keep: true, fn: function () {
     var why = gm().restBlock ? gm().restBlock() : null; /* (3.5) как и сон: в тревогу — не до покоя */
     if (why) { LAB.UI.error(); say(why); return; }
-    recover(30, false); A("play", "capsule_hum", { gain: 0.5 }); say("Вы лежите, слушая ровный гул капсулы. Прошло полчаса. " + statusLine()); } });
+    var part = lie(); A("play", "capsule_hum", { gain: 0.5 }); say("Вы лежите, слушая ровный гул капсулы. Прошло полчаса. " + (part ? "Вы отдыхали недавно: полежать помогло лишь на " + part + " процентов. " : "") + statusLine()); } });
   items.push({ label: "Состояние тела", keep: true, fn: function () { gm().bodyStatus(); } });
   if (o && boundHere(o)) items.push({ label: "Вы привязаны к этой капсуле: если погибнете, вернётесь сюда", info: true, keep: true, fn: function () { say("Вы привязаны к этой капсуле. Погибнете на этом уровне — «Эхо» вернёт вас сюда. Привязка к другой капсуле снимет эту."); } });
   items.push({ label: "Откинуть крышку и выйти", fn: function () { leave(false); } });
@@ -187,7 +207,10 @@ function leave(byClose) {
    бластера первых уровней полная зарядка чуть дешевле энергобатареи, у
    мощного оружия глубин — дороже: батарея всегда даёт полный заряд. */
 function cr(n) { return n + " " + pl(n, "кредит", "кредита", "кредитов"); }
-function chargeable(w) { return !!w && !!w.ammo && w.ammo !== "none" && !!LAB.AMMO[w.ammo] && !(LAB.physAmmo && LAB.physAmmo(w.ammo)) && w.cap > 0; }
+/* (3.7, нелогичность) антивещество и кварки от сети не набрать: позитронный заряд делают на
+   позитронной установке, кварковую капсулу — там же, где её нашли */
+var NO_GRID = { positron: 1, i_quarkcell: 1 };
+function chargeable(w) { return !!w && !!w.ammo && w.ammo !== "none" && !!LAB.AMMO[w.ammo] && !(LAB.physAmmo && LAB.physAmmo(w.ammo)) && !NO_GRID[w.ammo] && w.cap > 0; }
 function chargeFull(w) {
   var a = LAB.AMMO[w.ammo], mark = LAB.weaponMark ? LAB.weaponMark(w.rank, w.lvl) : 1 + (w.rank || 0);
   return (a.price || 30) * (gm().priceK ? gm().priceK() : 1) * 0.85 * Math.sqrt(w.cap / 30) * (1 + 0.015 * (mark - 1));
@@ -219,6 +242,7 @@ function chargeItems(st) {
   need.forEach(function (w) { items.push({ label: capital(gm().weaponLine(w)) + ". Зарядить полностью — " + cr(chargePrice(w)), keep: true, fn: function () { chargeOne(w); } }); });
   if (need.length > 1) items.push({ label: "Зарядить всё оружие — " + cr(need.reduce(function (s2, w) { return s2 + chargePrice(w); }, 0)), keep: true, fn: function () { chargeAll(); } });
   if (!need.length) items.push({ label: all.length ? "Всё оружие заряжено" : "Оружия на батареях нет: " + who + " заряжает только его, не патроны", info: true, keep: true, fn: function () { say(all.length ? "Всё оружие заряжено." : capital(who) + " заряжает только оружие на батареях."); } });
+  if (g.weapons.some(function (w) { return w && NO_GRID[w.ammo] && w.charge < w.cap; })) items.push({ label: "Позитронные заряды и кварковые капсулы от сети не набрать: антивещество делают на позитронной установке", info: true, keep: true, fn: function () { say("Позитронные заряды и кварковые капсулы от сети не набрать: антивещество делают на позитронной установке."); } });
   if (st && LAB.medic && LAB.medic.vendPrice) {
     var pb = LAB.medic.vendPrice("ammo:energy");
     items.push({ label: "Зарядить энергобатарею — " + cr(pb) + ". Батарей у вас: " + (g.ammo.energy || 0), keep: true, fn: function () { gm().buy("ammo:energy", pb); } });
@@ -238,8 +262,8 @@ function capital(t) { t = String(t || ""); return t.charAt(0).toUpperCase() + t.
 var SLEEP = [
   { min: 60, n: "Вздремнуть: час", d: "Восстановится четверть здоровья и энергии, бодрость заметно прибавится." },
   { min: 240, n: "Поспать: четыре часа", d: "Здоровье, энергия и бодрость — полностью." },
-  { min: 480, n: "Выспаться: восемь часов", d: "Всё полностью, и следующие шесть часов бодрость падает вдвое медленнее." },
-  { min: 720, n: "Лечебный сон: двенадцать часов", d: "Всё полностью; капсула выводит токсины, облучение — заметно, снимает отравление и кровотечение." }
+  { min: 480, n: "Выспаться: восемь часов", d: "Здоровье, энергия и бодрость — полностью, и следующие шесть часов бодрость падает вдвое медленнее." },
+  { min: 720, n: "Лечебный сон: двенадцать часов", d: "Всё, что даёт восьмичасовой сон; и ещё капсула выводит токсины, заметно снижает облучение, снимает отравление и кровотечение." }
 ];
 function sleepMenu() {
   var items = SLEEP.map(function (s) { return { label: s.n + ". " + s.d, fn: function () { sleep(s); } }; });
@@ -257,9 +281,11 @@ function sleep(s) {
   var dream = pickDream();
   recover(s.min, true);
   g.restAt = (g.day || 0) * 1440 + (g.min || 0); /* (3.6) только что выспались — стул сразу после капсулы даст лишь долю отдыха (fixtures.js, restK) */
-  if (s.min >= 240) { g.hp = g.hpMax; g.en = g.enMax; b.wake = 100; b.neuro = 0; g.st.poison = 0; g.st.bleed = 0; }
+  if (s.min >= 240) { g.hp = g.hpMax; g.en = g.enMax; b.wake = 100; b.neuro = 0; }
   if (s.min >= 480) g.st.restedMin = 360;
-  if (s.min >= 720) { b.tox = 0; b.rad = Math.max(0, (b.rad || 0) - 30); }
+  /* (3.7, нелогичность) отравление и кровотечение снимает лечебный сон, как и обещано в пункте:
+     прежде их снимал любой сон от четырёх часов */
+  if (s.min >= 720) { b.tox = 0; b.rad = Math.max(0, (b.rad || 0) - 30); g.st.poison = 0; g.st.bleed = 0; }
   gm().bodyWarn();
   G().stats.sleeps = (G().stats.sleeps || 0) + 1;
   ev("sleep", s.min);

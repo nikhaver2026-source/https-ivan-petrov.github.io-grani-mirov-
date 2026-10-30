@@ -66,7 +66,97 @@ function minW(n) { n = Math.max(0, Math.round(n)); var h = Math.floor(n / 60), m
 function roomOf(o) { var fl = CUR().fl; return o && o.room >= 0 ? fl.rooms[o.room] : null; }
 function noise(n) { if (LAB.combat && LAB.combat.noise) LAB.combat.noise(n); }
 function giveAll(list) { return list.map(function (it) { return gm().giveItem(it); }); }
-function fxDef(o) { return LAB.FIX && LAB.FIX.T[o.fx]; }
+/* ════════ ВЕЩЬ ПО ПОМЕЩЕНИЮ ════════
+   (3.7, нелогичность) Вещь каталога (fixtures_data.js) — по помещению, где стоит: растения в холле,
+   кабинете и на складе — для глаз, без плодов; урожай — в оранжереях и теплицах (лимонные деревья —
+   лимоны, грядки мяты — травы на чай, ростки — ничего); часы в комнате остановленных часов стоят;
+   термометр показывает мороз холодной кладовой и жар котельной; тумбочка «у кровати» — только у
+   кровати; пресс типографии печатает, пресс архива прессует бумагу — бронепластину на них не
+   выправить; нетопленая печь не греет и не печёт; динамик говорит то, о чём говорит помещение
+   («шипит эфир», «просит предъявить жетон»), а не прибоем; бочки с едой — в кладовых и погребах, в
+   маслостанции в них масло; банки в споровом хранилище — со спорами; щит в сарае садовника — с
+   лопатами и граблями; с манекенов оружейной снимают броню. Помещение — по названию, виду и
+   описанию; каталог не меняется, и этажи строятся по-прежнему. */
+function roomText(rm) {
+  if (!rm) return "";
+  var d = (LAB.ROOMS || {})[rm.type] || {};
+  return ((rm.name || "") + ". " + (d.n || "") + ". " + (rm.desc || d.desc || "")).toLowerCase();
+}
+function fxIn(o, list) { var fl = CUR().fl; return o.room != null && o.room >= 0 && fl.objs.some(function (q) { return q.room === o.room && q.type === "fx" && list.indexOf(q.fx) >= 0; }); }
+function varDef(def, d, a, more) { var v = { n: def.n, d: d == null ? def.d : d, a: (a || def.a).filter(Boolean), base: def }, k; for (k in (more || {})) v[k] = more[k]; return v; }
+function actOf(def, kind) { return def.a.filter(function (a) { return a[0] === kind; })[0] || null; }
+/* теплица ли это — по виду и названию помещения, а не по всему описанию: «пробы урожая» в холодильной
+   кладовой и «начальник гидропоники» в кабинете — не грядки */
+var P_CROP = /оранжере|теплиц|огород|грядк|плантац|(^|[^а-яё])(сад|ферма|фермы)(?![а-яё])/;
+var CROP_T = { greenhouse: 1, darkfarm: 1, k_greenrow: 1, o_orangery: 1, x_orangery: 1, x_orchard: 1 };
+var P_SPROUT = /ростк|росток|рассад|саженц|питомник/;
+var P_DECOR = /(^|[^а-яё])цвет(ы|ов|ами|ах|ок|ки)?(?![а-яё])|орхиде|папорот|кактус|фикус|клевер|ромашк|сосн|бонсай|стеклянн\S* стебл/;
+var P_STOP = /остановленн\S* час|(часы|часов|циферблат\S*|стрелк\S*|ходики|будильник\S*|хронометр\S*|маятник\S*)[^.]{0,40}(молчат|не идут|встали|замерл|застыл|остановил|стоят на (одн|двадцат|тридцат|сорок|пятидесят|[а-яё]+ час))|все стоят на/;
+var STOP_AT = /стоят на ((двадцат|тридцат|сорок|пятидесят|десят|девят|восьм|сем|шест|пят|четыр|тр|дв|полуноч|полудн)[а-яё]*( [а-яё]+){0,2}?)(?=[.,:;!?]| и | —)/;
+var VAR = {
+  plants: function (o, def, t, rm) {
+    var water = actOf(def, "listen"), d0 = rm ? (LAB.ROOMS || {})[rm.type] || {} : {}, nm = rm ? ((rm.name || "") + ". " + (d0.n || "")).toLowerCase() : "", crop = !!(rm && CROP_T[rm.type]) || P_CROP.test(nm);
+    if (/лимонн\S* (дерев|оранжере|кадк)|лимоны растут|лимонов\S* дерев/.test(t)) return varDef(def, "Лимонные деревца в кадках: листья жёсткие и душистые, на ветках — мелкие твёрдые лимоны.", [["harvest", "Сорвать лимон", { item: "lemon", every: 300 }], water]);
+    if (/(апельсинов|мандаринов|померанцев)\S* дерев/.test(t)) return varDef(def, "Апельсиновые деревца в кадках, усыпанные мелкими плодами. Плоды горькие, как у дикой померанцевой: их растят для запаха, а не для еды.", [water]);
+    if (P_SPROUT.test(nm) || /рассад|саженц|(^|[^а-яё])ростк(и|ами)? (для|под стекл)|ящик\S* с (крошечн\S* )?ростк/.test(t)) return varDef(def, "Ростки в ящиках под стеклом: тонкие стебли по два-три листка. Плодов на них ещё долго не будет — их только поливают.", [water]);
+    if (/(^|[^а-яё])(мят|мелисс|чабрец)/.test(t) && /огород|грядк|растут в (длинных )?ящиках/.test(t)) return varDef(def, "Ящики с душистыми травами: мята, мелисса, чабрец. Листья мягкие и пахнут летом.", [["harvest", "Нарвать трав на чай", { item: "herbtea", every: 360 }], water]);
+    if (crop && /ягод/.test(t)) return varDef(def, "Кусты в кадках, на ветках — тёмные тёплые ягоды.", [["harvest", "Собрать ягод", { item: "berries", every: 300 }], water]);
+    if (crop && !P_DECOR.test(t)) return null;
+    return varDef(def, "Растения в кадках и горшках: листья мягкие, земля влажная. Плодов на них нет — их держат для глаз и для воздуха.", [water]);
+  },
+  clock: function (o, def, t, rm) {
+    if (!(rm && (rm.type === "x_stopclock" || rm.type === "i_clockroom")) && !P_STOP.test(t)) return null;
+    var m = STOP_AT.exec(t), at = m ? m[1] : "", tick = /всё равно тикают|и тикают/.test(t);
+    return varDef(def, "Часы на стене стоят: стрелки замерли" + (at ? " на " + at : " на одной минуте") + ", маятник не качается." + (tick ? " И всё равно тикают — сами по себе." : ""), [["clock", "Посмотреть на стрелки", { stop: at, tick: tick }]]);
+  },
+  thermometer: function (o, def, t, rm) { var c = roomTemp(rm, o); return varDef(def, def.d + " Показывает " + degW(c) + ". " + tempFeel(c)); },
+  nightstand: function (o, def) { return fxIn(o, ["bunk", "sensorbed", "couch"]) ? varDef(def, "Тумбочка у кровати: ящик чуть выдвинут, сверху — стакан и очки в футляре.") : null; },
+  press: function (o, def, t, rm) {
+    var ty = rm ? rm.type : "";
+    if (ty === "x_pressarc") return varDef(def, "Пресс для бумаг: плита опускается на ворох отработанных листов и спрессовывает их в брикет. Рядом — брикеты, перевязанные проволокой. Бронепластину на нём не выправить: матрицы под неё нет.", [["listen", "Опустить плиту пресса", { t: "Рычаг вниз — плита ухает и сминает ворох листов в брикет. «Эхо» успевает прочитать на верхнем листе только дату.", neuro: -5, m: 2 }]]);
+    if (ty === "x_binding" || (ty === "x_printshop" && /переплёт|переплет|корешк/.test(t))) return varDef(def, "Корешковый пресс: две плиты зажимают сшитый том, чтобы корешок не разошёлся. Бронепластину на нём не выправить: матрицы под неё нет.", [["listen", "Зажать пресс потуже", { t: "Винт идёт туго, плиты сходятся, и том между ними тихо поскрипывает. Корешок выровнен — ещё одно дело не развалится.", neuro: -5, m: 2 }]]);
+    if (ty === "x_tagshop" || ty === "x_numbers") return varDef(def, "Пресс для бирок: выбивает номера на латунных заготовках. Бронепластину на нём не выправить: матрица — под бирку, а не под пластину.", [["listen", "Выбить бирку без номера", { t: "Щелчок — и на латунной заготовке остаётся оттиск рамки. Номер в ней пустой: «Эхо» читает «ноль ноль ноль».", neuro: -5, m: 2 }]]);
+    if (ty === "x_printshop") return varDef(def, "Печатный пресс: плита, валики, лоток для листов. Плита прижимает лист к набору — бронепластину на нём не выправить, матрицы под неё нет.", [["listen", "Оттиснуть пустой лист", { t: "Плита опускается, валик проходит по набору, и на листе проступают чужие строки — последний набор, который так никто и не разобрал.", neuro: -5, m: 2 }]]);
+    return null;
+  },
+  oven: function (o, def, t) {
+    if (!/(не|никто не) топ(ят|ит|или|лен)|нетоплен|печ\S*[^.]{0,30}(остыл|холодн)|(остыл|холодн)\S* печ/.test(t)) return null;
+    return varDef(def, "Печь, которую давно не топят: заслонка холодная, внутри — старая зола. Ни разогреть еду, ни погреться: тепло здесь идёт не от неё.", [["search", "Заглянуть в холодную печь", { tag: "home" }], ["rest", "Посидеть у печи, как здесь заведено", { m: 10, hp: 0.05, wake: 6, neuro: -12 }]], { rl: "Печь холодная, но сидеть у неё привычно: тепло идёт от стены, за которой реактор." });
+  },
+  speaker: function (o, def, t, rm) {
+    var m = /[^.!?…]*(динамик|громкоговорит)[^.!?…]*[.!?…]*/i.exec(String((rm && rm.desc) || ""));
+    if (!m || /прибо/i.test(m[0])) return null;
+    /* только часть предложения про динамик: «…рамки сканеров щёлкают, громкоговоритель просит жетон» */
+    var sn = m[0].replace(/^\s+|\s+$/g, ""), at = sn.search(/динамик|громкоговорит/i), head = sn.slice(0, at);
+    var cut = Math.max(head.lastIndexOf(", "), head.lastIndexOf(": "), head.lastIndexOf("; "), head.lastIndexOf("— ")), s = cap(cut >= 0 ? sn.slice(cut + 2) : sn);
+    return varDef(def, "Динамик на стене. " + s, [["listen", "Послушать динамик", { t: "Вы прислушиваетесь. " + s, neuro: -5, m: 5 }]]);
+  },
+  barrels: function (o, def, t) {
+    if (/кладов|погреб|амбар|солень|солён|мочён|квашен|провиант|продукт|снедь/.test(t)) return null;
+    var what = /масл|смазк|мазут|солярк|керосин|бензин|топлив/.test(t) ? "машинное масло" : /щёлоч|щелоч|кислот|реактив|электролит/.test(t) ? "щёлочь и реактивы" : /смол|дёгт|дегт/.test(t) ? "густая смола" : /глин/.test(t) ? "глина, разведённая водой" : "стоялая вода";
+    return varDef(def, "Ряд бочек с деревянными крышками. В них — " + what + ": съестного здесь нет.", [["search", "Заглянуть в бочки", { tag: "barrelx", empty: "В бочках — " + what + ". Ни еды, ни вещей: на дне пусто." }], actOf(def, "listen")]);
+  },
+  seedjars: function (o, def, t, rm) {
+    if (!(rm && rm.type === "x_sporevault") && !/банк\S* (со )?спор|спорово\S* хранилищ/.test(t)) return null;
+    return varDef(def, "Стеклянные банки со спорами, на каждой — бирка с названием и датой. Одна лопнула, и над стеллажом висит сладковатая пыль.", [["search", "Перебрать банки со спорами", { tag: "spores", risk: "spore" }]]);
+  },
+  toolwall: function (o, def, t) {
+    if (!/лопат|грабл|(^|[^а-яё])вил(ы|ами)(?![а-яё])|тяпк|мотыг|секатор|гильзов\S* леек|садов\S* инструмент/.test(t)) return null;
+    return varDef(def, "Садовый инструмент на щите, каждый в своём контуре: лопаты, грабли, тяпки, лейки, мотки проволоки.", [["search", "Снять с щита что-нибудь годное", { tag: "garden" }]]);
+  },
+  mannequin: function (o, def, t) {
+    if (!/брон\S* на манекен|манекен\S* (в|с) брон/.test(t)) return null;
+    return varDef(def, "Манекен в бронежилете: так броню держат на виду, чтобы не мялась и всегда была под рукой.", [["strip", "Снять броню с манекена", {}]], { arm: 1 });
+  }
+};
+/* Вещь каталога — с поправкой на помещение (VAR); без поправки — как в каталоге. */
+function fxDef(o) {
+  var def = LAB.FIX && LAB.FIX.T[o.fx];
+  if (!def || !VAR[o.fx] || !CUR() || !CUR().fl) return def;
+  var rm = roomOf(o), v = null;
+  try { v = VAR[o.fx](o, def, roomText(rm), rm); } catch (e) { console.warn(e); }
+  return v || def;
+}
 
 /* ── новые вещи: грибы, травяной сбор, жетоны погибших ──
    (3.7) только у своей обстановки (грибница, пучки трав, ягодный куст): fxOnly — не в
@@ -265,10 +355,10 @@ function fresh(o, def, a, it) {
 }
 function actionItem(o, def, a, s) {
   var kind = a[0], label = a[1], p = a[2] || {};
-  if (s.salv && kind !== "salvage" && SALV_KILLS[kind]) return null;
+  if (s.salv && kind !== "salvage" && SALV_KILLS[kind] && !salvKeep(def)) return null;
   switch (kind) {
     case "search": return s["s_" + label] ? { label: label + ": уже обыскано", info: true, keep: true, fn: function () { say("Здесь вы уже искали."); } } : { label: label, fn: function () { doSearch(o, def, label, p); } };
-    case "salvage": return s.salv ? { label: "Разобрано на детали", info: true, keep: true, fn: function () { say(def.n + ": разобрано, остался остов."); } } : { label: label, fn: function () { doSalvage(o, def, p); } };
+    case "salvage": return s.salv ? { label: p.keep ? label + ": уже снято" : "Разобрано на детали", info: true, keep: true, fn: function () { say(p.after || def.n + ": разобрано, остался остов."); } } : { label: label, fn: function () { doSalvage(o, def, p); } };
     case "harvest": {
       if (harvGone(o, p, s)) return { label: p.none || label + ": больше нет", info: true, keep: true, fn: function () { say(p.none || "Здесь больше нечего брать."); } };
       var left = s.harvAt ? p.every - (nowMin() - s.harvAt) : 0;
@@ -317,8 +407,10 @@ function drinkCombos(o, def, p, label) {
   });
   return out;
 }
-/* После разборки прибор больше не работает. */
+/* После разборки прибор больше не работает — (3.7) кроме снятой запасной детали (keep). */
 var SALV_KILLS = { listen: 1, read: 1, scan: 1, cams: 1, play: 1, game: 1, vent: 1, map: 1, neuro: 1, clock: 1, mirror: 1 };
+function salvOf(def) { var a = actOf(def, "salvage"); return a ? a[2] || {} : null; }
+function salvKeep(def) { var p = salvOf(def); return !!(p && p.keep); }
 function run(o, def, kind, p, label, withId) {
   /* (3.6) книги и бумаги, звук и связь — library.js */
   if (LAB.library && LAB.library.act && LAB.library.act(o, def, kind, p || {})) return;
@@ -351,9 +443,9 @@ function run(o, def, kind, p, label, withId) {
         if (dd.wake > 0) bonus.wake = Math.max(1, Math.round(Math.max(5, Math.ceil(dd.wake * 0.25)) * rk));
         gm().useItem(withId);
         gm().bodyApply(bonus, bm);
-        sayq(restLine(o, r) + " " + m.join(" ") + (bm.length ? " В покое напиток действует лучше: " + bm.join(" ") : ""));
+        sayq(restLine(o, r, def) + " " + m.join(" ") + (bm.length ? " В покое напиток действует лучше: " + bm.join(" ") : ""));
         ev("rest_drink", 1);
-      } else say(restLine(o, r) + " " + m.join(" "));
+      } else say(restLine(o, r, def) + " " + m.join(" "));
       ev("rest_fx", 1);
       return;
     }
@@ -507,8 +599,10 @@ function run(o, def, kind, p, label, withId) {
       return;
     }
     case "weigh": {
-      var base = 55 + (h32(G().seed + "w") % 30), kg = base + Math.round(G().weapons.length * 2.5 + (G().armor ? 6 : 0));
-      say("Стрелка весов дрожит и останавливается: " + kg + " килограммов вместе со снаряжением. Без рюкзака и брони было бы около " + base + ".");
+      /* (3.7, нелогичность) на весах — рюкзак: его вес по тому, что в нём лежит (грубо, по видам вещей);
+         прежде весы называли вес героя, и он не менялся от сорока банок тушёнки */
+      var pk = packKg(), body0 = 55 + (h32(G().seed + "w") % 30), worn = (G().armor ? 6 : 0) + (gm().curWeapon && gm().curWeapon() ? 3 : 0);
+      say(pk.kg < 0.5 ? "Вы ставите рюкзак на чашку весов. Стрелка едва вздрагивает: рюкзак почти пуст." : "Вы ставите рюкзак на чашку весов. Стрелка дрожит и останавливается: " + kgW(pk.kg) + "." + (pk.top ? " Тяжелее всего — " + pk.top + ": " + kgW(pk.topKg) + "." : "") + " Вместе с вами и тем, что надето и в руках, было бы около " + kgW(body0 + worn + pk.kg) + ".");
       return;
     }
     case "queue": {
@@ -540,7 +634,9 @@ function run(o, def, kind, p, label, withId) {
       return;
     }
     case "clock": {
-      if (p.temp) { say("Термометр: " + roomTemp(rm, o) + " градусов."); return; }
+      if (p.temp) { var tc = roomTemp(rm, o); say("Термометр: " + degW(tc) + ". " + tempFeel(tc)); return; }
+      /* (3.7, нелогичность) остановленные часы не показывают текущего времени */
+      if (p.stop != null) { say("Стрелки стоят" + (p.stop ? " на " + p.stop : "") + ": часы не идут, и сверить с ними нечего." + (p.tick ? " Тикают они всё равно — сами по себе, не двигая стрелок." : "")); return; }
       var tm = gm().clock ? gm().clock() : "";
       say(era() === "O" ? "Стрелки идут назад. Если перевернуть циферблат, выходит " + tm + "." : era() === "M" ? "Часы из шестерён отбивают такт. На табло: " + tm + ". Ниже мелко: «Время учтено»." : "Часы показывают " + tm + ".");
       return;
@@ -575,7 +671,7 @@ function run(o, def, kind, p, label, withId) {
     }
     case "train": {
       var tr2 = trainSt();
-      if (tr2.strPts >= TRAIN_MAX || G().str >= 40) { say("Тренажёры больше ничего не дадут: сила " + G().str + ". " + (tr2.strPts >= TRAIN_MAX ? "Всё, что можно накачать на тренажёрах, — пять единиц — вы уже накачали." : "Это предел.") + " Дальше сила растёт только с уровнями героя, до сорока. Ловкость, интеллект и харизму тренажёрами не поднять — тоже только уровнями."); return; }
+      if (tr2.strPts >= TRAIN_MAX || G().str >= 40) { say("Тренажёры больше ничего не дадут: сила " + G().str + ". " + (tr2.strPts >= TRAIN_MAX ? "Всё, что можно накачать на тренажёрах, — пять единиц — вы уже накачали." : "Это предел.") + " Дальше сила растёт только с уровнями героя, до сорока. Ловкость и харизму тренажёрами не поднять — только уровнями; интеллект растёт ещё от научных книг и в Научном совете."); return; }
       var b = G().body;
       if (b && b.wake < 15) { say("Слишком устали для тренировки: сначала отдохните."); return; }
       var whyT = restBlock();
@@ -604,7 +700,8 @@ function run(o, def, kind, p, label, withId) {
   say("Ничего не происходит.");
 }
 var WISH = ["Вы загадываете выйти наверх. Вода отвечает тихим плеском.", "Вы загадываете, чтобы группа у лифта дождалась. Где-то наверху гудит вентиляция — будто в ответ.", "Вы загадываете снова увидеть свет. «Эхо» молчит, но как-то по-доброму.", "Вы ничего не загадываете: просто слушаете, как монетка ложится к другим.", "Вы загадываете тишины для тех, кто здесь остался."];
-function restLine(o, r) {
+function restLine(o, r, def) {
+  if (def && def.rl) return def.rl;
   var L0 = { sofa: "Пружины скрипят, подушки пахнут пылью и чужим одеколоном. Вы сидите, слушая, как гудит вентиляция.", bunk: "Сетка койки прогибается. Вы лежите, глядя в темноту, которой нет разницы, открыты глаза или нет.", couch: "Клеёнка кушетки холодит спину, потом теплеет.", armchair: "Кресло принимает вас, как своего.", pillows: "Подушки мягкие, тишина вокруг густая, как одеяло.", moss: "Мох пружинит и тепло пахнет землёй. Звуки гаснут, будто их кто-то накрыл ладонью.", rocking: "Качалка поскрипывает, как часы.", sauna: "Жар обнимает, пот смывает усталость.", rain: "Тёплые капли стучат по плечам. Дышится легко.", stars: "Над вами щёлкают проекторы, «Эхо» вполголоса называет созвездия.", oven: "Печь греет спину, как живая.", mats: "Маты пахнут резиной и потом. Вы растягиваетесь во весь рост." , twinchairs: "Вы садитесь, и кресло напротив словно садится вместе с вами. Минуты идут ровно, спина отдыхает.", boiler: "От котла идёт сухое тепло, манометр тихо постукивает. Руки отогреваются, плечи опускаются.", rootbench: "Корни под вами тёплые и чуть подаются, как живые. Где-то в глубине по ним течёт вода — слышно, если затаить дыхание.", warmstone: "Камень греет спину, одеяло пахнет шерстью и дымом. Вы почти засыпаете — и тело говорит спасибо." };
   return L0[o.fx] || r.pick(["Вы сидите, переводя дух.", "Минуты идут медленно, и это хорошо.", "Дыхание выравнивается."]);
 }
@@ -621,11 +718,50 @@ function echoLine(rm) {
   var n = (rm.doors || []).length;
   return n > 1 ? "Эхо приходит из " + n + " мест: это двери." : "Эхо приходит с одной стороны: выход один.";
 }
+/* (3.7, нелогичность) Термометр — по помещению: «минус два» в описании — минус два; иней и мороз —
+   ниже нуля; погреб и холодильная камера — чуть выше нуля; пар, котлы, печь, баня, турбины — жарко;
+   иначе — как на этой глубине. Прежде он знал только глубину: в холодной кладовой — восемнадцать. */
+var T_MINUS = /минус (один|одна|два|две|три|четыре|пять|шесть|семь|восемь|девять|десять|\d+)(?![а-яё])/;
+var NUMW = { "один": 1, "одна": 1, "два": 2, "две": 2, "три": 3, "четыре": 4, "пять": 5, "шесть": 6, "семь": 7, "восемь": 8, "девять": 9, "десять": 10 };
+var T_COLD = /иней|инея|инеем|мороз|ледян|заледен|наледь|изморозь|ниже нуля|стужа|(^|[^а-яё])(лёд|льдом|льда)(?![а-яё])/;
+var T_HOT = /клуб\S* пара|облак\S* пара|(^|[^а-яё])пар (идёт|валит|подним|стелется|клубится|шипит|бьёт)|паров(ой|ая|ые|ых|ом|ую)|котл|котёл|(^|[^а-яё])жар(?!ен)|жарко|горяч|раскал|кочегар|(^|[^а-яё])(печь|печи)(?![а-яё])|печк|парилк|(^|[^а-яё])бан(я|и|е)(?![а-яё])|турбин|литейн|плавильн|кузн/;
+var T_COOL = /холодильн|прохладн|погреб|зябк|стыл|тянет холод|холодн\S* (воздух|камер|кладов|помещен|комнат|склад)/;
+var T_WARM = /тёпл|тепло|душно|духот/;
+var T_NOFIRE = /(не|никто не) топ(ят|ит|или|лен)|нетоплен|остыл|погасл|холодн\S* печ|печ\S* холодн/;
 function roomTemp(rm, o) {
-  var base = { K: 21, P: 13, C: 27, O: 11, M: 31, I: 24 }[era()] || 20, d = (h32(o.id + CUR().key) % 7) - 3;
-  if (rm && rm.rad >= 3) d += 4; if (rm && rm.state === "dark") d -= 3; if (rm && rm.state === "burnt") d += 2;
-  return base + d;
+  var base = { K: 21, P: 13, C: 27, O: 11, M: 31, I: 24 }[era()] || 20, h = h32(o.id + CUR().key), d = (h % 7) - 3, t = roomText(rm), m = T_MINUS.exec(t);
+  if (m) return -(NUMW[m[1]] || parseInt(m[1], 10) || 2);
+  if (T_COLD.test(t)) return -6 + (h % 7);
+  if (T_HOT.test(t) && !T_NOFIRE.test(t)) return 30 + (h % 13);
+  if (T_COOL.test(t)) return 4 + (h % 7);
+  var c = base + d;
+  if (T_WARM.test(t)) c = Math.max(c, 24 + (h % 5));
+  if (rm && rm.rad >= 3) c += 4; if (rm && rm.state === "dark") c -= 3; if (rm && rm.state === "burnt") c += 2;
+  return c;
 }
+function degW(c) { var a = Math.abs(c); return (c < 0 ? "минус " + a : c === 0 ? "ноль" : String(c)) + " " + pl(a, "градус", "градуса", "градусов"); }
+function tempFeel(c) {
+  return c < 0 ? "Спирт стоит ниже нуля: здесь мороз, пальцы стынут." : c <= 5 ? "Спирт едва над нулём: холодно, как в погребе." : c <= 14 ? "Спирт держится низко: здесь зябко." : c <= 26 ? "Спирт — у отметки обычной комнатной температуры." : c <= 32 ? "Спирт поднялся высоко: здесь тепло, даже душно." : "Спирт подполз к верхним делениям: здесь жарко.";
+}
+/* (3.7) Вес рюкзака — грубо, по вещам: свой вес у тяжёлых и лёгких, остальное — по виду. Запасное
+   оружие и броня — тоже в рюкзаке; то, что в руках и надето, — нет. */
+var KG = { scrap: 1, lead: 1.5, ceramic: 1, plate: 2.5, magnet: 0.5, cell: 0.4, servo: 0.4, wire: 0.3, rubber: 0.5, supercond: 0.3, isotope: 2, goldbar: 1, toolkit: 1.5, fieldkit: 0.8, wirecutters: 0.4,
+  water: 0.5, stew: 0.4, fishcan: 0.3, porridge: 0.3, bread: 0.5, freshbread: 0.5, ration: 0.6, mre: 0.7, juice_apple: 1, oranges: 1, jam: 0.5, milk: 0.5, kefir: 0.5, lunchbox: 0.5,
+  thermos: 0.8, g_thermos: 0.9, g_thermos_e: 0.5, medkit_l: 0.8, ring: 0.01, pen: 0.05, medal: 0.05, datachip: 0.05, chip: 0.05, cap: 0.1, lens: 0.1, badge: 0.02 };
+var KG_KIND = { food: 0.3, part: 0.3, med: 0.15, use: 0.3, tool: 0.8, valuable: 0.1, misc: 0.1, chip: 0.02, key: 0.02 };
+function packKg() {
+  var g = G(), sum = 0, top = null, topKg = 0, k, cw = gm().curWeapon ? gm().curWeapon() : null;
+  for (k in (g.inv || {})) {
+    var n = g.inv[k] || 0, d = LAB.ITEMS[k]; if (!(n > 0) || !d) continue;
+    var w = (KG[k] != null ? KG[k] : KG_KIND[d.kind] != null ? KG_KIND[d.kind] : 0.2) * n;
+    sum += w; if (w > topKg) { topKg = w; top = d.n.toLowerCase() + (n > 1 ? ", " + n + " шт." : ""); }
+  }
+  for (k in (g.ammo || {})) sum += Math.max(0, g.ammo[k] || 0) * 0.25;
+  (g.weapons || []).forEach(function (w) { if (w !== cw) { sum += 2.5; if (2.5 > topKg) { topKg = 2.5; top = String(w.name || "оружие").toLowerCase(); } } });
+  (g.armors || []).forEach(function (a) { if (a && (!g.armor || a.id !== g.armor.id)) { sum += 6; if (6 > topKg) { topKg = 6; top = String(a.name || "броня").toLowerCase(); } } });
+  return { kg: sum, top: topKg >= 1 ? top : null, topKg: topKg };
+}
+function kgW(x) { if (x < 1) return "меньше килограмма"; var n = Math.round(x); return n + " " + pl(n, "килограмм", "килограмма", "килограммов"); }
 function heroPortrait() {
   var g = G(), b = g.body || {}, parts = ["«Эхо» описывает снимок: силуэт человека с тонкой сеткой проводов вдоль виска — это ваш имплант."];
   parts.push(g.armor ? "На вас — " + g.armor.name.toLowerCase() + "." : "Брони на вас нет.");
@@ -689,7 +825,7 @@ function tuneInst(o, p, s) {
 var COOK_OK = { stew: 1, ration: 1, bread: 1, porridge: 1, fishcan: 1, sandwich: 1, freshbread: 1, sausage: 1, dsausage: 1, lunchbox: 1, mre: 1, pemmican: 1, mushroom: 1 };
 function cookMenu(o) {
   var g = G(), foods = Object.keys(LAB.ITEMS).filter(function (k) { return COOK_OK[k] && LAB.ITEMS[k].kind === "food" && g.inv[k] > 0; });
-  if (!foods.length) { say("Разогревать нечего: в рюкзаке нет того, что греют, — консервов, каши, хлеба, колбасы, пайка, обеда в контейнере или грибов." + (g.inv.noodles > 0 || g.inv.soupcup > 0 ? " Лапшу и суп-концентрат заливают кипятком у чайника или у самовара, лапшу — ещё и из крана автомата с едой." : "")); return; }
+  if (!foods.length) { say("Разогревать нечего: в рюкзаке нет того, что греют, — консервов, каши, хлеба, колбасы, пайка, обеда в контейнере или грибов." + (g.inv.noodles > 0 || g.inv.soupcup > 0 ? " Лапшу и суп-концентрат заливают кипятком у чайника, у самовара или из крана автомата с едой." : "")); return; }
   UIx("menu", "Разогреть", foods.map(function (k) {
     var d = LAB.ITEMS[k];
     return { label: d.n + " (" + g.inv[k] + ")", fn: function () {
@@ -708,8 +844,13 @@ function cookMenu(o) {
 }
 
 /* ── обыскать, разобрать, собрать урожай ── */
+/* (3.7, нелогичность) котлы, печь, бочки, коптильня, лотки раздачи — у каждой своё съестное
+   (kitchen.js, COOKED_BY), и только когда в них ищут еду (FOODTAG): в холодной печи хлеба нет.
+   Бюро находок — забытые вещи (lost), а не еда; под матрасом и в земле кадки — чей-то схрон с
+   личными вещами (cache), а не изотоп; под подушками, в карманах и кассе — личные вещи (annex.js). */
 var COOKFX = { serving: 1, cauldron: 1, oven: 1, barrels: 1, smoker: 1 };
-var TAGMAP = { books: "paper", vent: "smoke", cushion: "smoke", top: "store", under: "smoke", med: "med", mattress: "stash", drawer: "paper", guard: "arms", food: "food", home: "home", bread: "food", smoked: "food", barrel: "food", soil: "stash", seeds: "herbs", bio: "bio", lab: "chem", rad: "rad", arms: "armory", pockets: "smoke", parcel: "tech", cash: "smoke", ore: "parts", tools: "tech", janitor: "janitor", mail: "paper", lost: "smoke", expedition: "protect", laundry: "home" };
+var FOODTAG = { food: 1, bread: 1, smoked: 1, barrel: 1 };
+var TAGMAP = { books: "paper", vent: "smoke", cushion: "smoke", top: "store", under: "smoke", med: "med", mattress: "cache", drawer: "paper", guard: "arms", food: "food", home: "home", bread: "food", smoked: "food", barrel: "food", soil: "cache", seeds: "herbs", bio: "bio", lab: "chem", rad: "rad", arms: "armory", pockets: "smoke", parcel: "tech", cash: "smoke", ore: "parts", tools: "tech", janitor: "janitor", mail: "paper", lost: "lost", expedition: "protect", laundry: "home" };
 /* (3.7, нелогичность) Что лежит там, где ищут: прежде в барабанах стиральных машин находили еду
    и лекарства, в банках с семенами — аптечки, в ящиках с кернами и в вагонетке с породой —
    микросхемы, на щите с инструментами — батареи и носители данных. Земля в кадке, «будто её
@@ -718,14 +859,21 @@ function oneOf(r, L, list) { var ok = list.filter(function (e) { return LAB.ITEM
 var OWN_LOOT = {
   laundry: function (r, L, F) { /* забытое в карманах белья: мелочь, а то и ценная вещица */
     if (r.chance(0.6)) return [{ kind: "credits", n: LAB.credits(3 + r.int(0, 5), L, F) }];
-    var v = LAB.annexPick && LAB.annexPick(r, L, "valuable"); return v ? [{ kind: "item", item: v, n: 1 }] : [{ kind: "credits", n: LAB.credits(4, L, F) }];
+    var v = LAB.annexPersonal ? LAB.annexPersonal(r) : null; return v ? [{ kind: "item", item: v, n: 1 }] : [{ kind: "credits", n: LAB.credits(4, L, F) }]; /* (3.7) личная вещица, не изотоп */
   },
   seeds: function (r, L) { return [{ kind: "item", item: oneOf(r, L, [["herbtea", 5], ["nuts", 4]]), n: r.chance(0.3) ? 2 : 1 }]; },
   ore: function (r, L) { /* порода: кварц и слюда звучащего слоя, обломки буровых коронок */
     var min = L >= 13 ? (L >= 18 && r.chance(0.4) ? "g_mica" : "g_quartz") : null;
     return [{ kind: "item", item: min && LAB.ITEMS[min] && r.chance(0.5) ? min : "scrap", n: 1 + (r.chance(0.3) ? 1 : 0) }];
   },
-  tools: function (r, L) { return [{ kind: "item", item: oneOf(r, L, [["wirecutters", 3], ["toolkit", 2], ["fieldkit", 3], ["tape", 3]]), n: 1 }]; }
+  tools: function (r, L) { return [{ kind: "item", item: oneOf(r, L, [["wirecutters", 3], ["toolkit", 2], ["fieldkit", 3], ["tape", 3]]), n: 1 }]; },
+  /* (3.7, нелогичность) банки спорового хранилища — споры: биогель, реагент, культура «Колыбели»;
+     прежде в них находили орехи и травяной сбор */
+  spores: function (r, L) { return [{ kind: "item", item: oneOf(r, L, [["gel", 4], ["reagent", 3], ["culture", 2]]), n: 1 }]; },
+  /* щит в сарае садовника: лопаты и грабли вам ни к чему — проволока, лом сломанной тяпки, изолента */
+  garden: function (r, L) { return [{ kind: "item", item: oneOf(r, L, [["wire", 4], ["scrap", 3], ["tape", 2]]), n: 1 }]; },
+  /* бочки с маслом, водой, смолой: на дне разве что обронённая мелочь */
+  barrelx: function (r) { return r.chance(0.35) ? [{ kind: "item", item: r.pick(["scrap", "wire", "tape"]), n: 1 }] : []; }
 };
 function doSearch(o, def, label, p) {
   var s = st(o);
@@ -740,7 +888,7 @@ function doSearch(o, def, label, p) {
   if (risk(p.risk, r)) return;
   var tag = TAGMAP[p.tag] || "store", own = OWN_LOOT[p.tag];
   /* (3.0) холодильная камера — как холодильник; котлы, печь, бочки, коптильня, лотки — только съестное */
-  var only = o.fx === "coldroom" ? "cold" : COOKFX[o.fx] ? "cooked" : null;
+  var only = o.fx === "coldroom" ? "cold" : COOKFX[o.fx] && FOODTAG[p.tag] ? "cooked:" + o.fx : null;
   /* (2.5, просьба игрока) в тумбочке, под матрасом, в ящике — почти всегда что-то есть, бывает и две вещи */
   var n = p.tag === "mattress" || p.tag === "cash" ? 2 : r.chance(LAB.ach && LAB.ach.has("searcher") ? 0.97 : 0.88) ? (r.chance(0.25) ? 2 : 1) : 0;
   if (n && own) loot = own(r, L, F, n);
@@ -749,7 +897,7 @@ function doSearch(o, def, label, p) {
   if (p.tag === "lost" && r.chance(0.6)) { var vv = ["watch", "ring", "pen", "harmonica"].filter(function (k) { return LAB.ITEMS[k]; }); if (vv.length) loot.push({ kind: "item", item: r.pick(vv), n: 1 }); }
   /* записки, что лежали здесь с самого начала (annex.js) */
   if (o.notes && o.notes.length && !s.notes) { s.notes = 1; o.notes.forEach(function (src, i) { var it = Object.assign({ kind: "note", id: o.id + "-n" + i }, src); loot.push(it); }); }
-  if (!loot.length) { say(r.pick(["Пусто: только пыль и крошки.", "Ничего, кроме фантика и пыли.", "Пальцы находят только паутину.", "Пусто. Кто-то искал здесь раньше вас."])); ev("search", 1); return; }
+  if (!loot.length) { say(p.empty || r.pick(["Пусто: только пыль и крошки.", "Ничего, кроме фантика и пыли.", "Пальцы находят только паутину.", "Пусто. Кто-то искал здесь раньше вас."])); ev("search", 1); return; }
   var got = giveAll(loot);
   say("Найдено: " + got.join(" "));
   readFirstNote(loot);
@@ -784,6 +932,7 @@ function risk(kind, r) {
   if (kind === "cut") { if ((g.inv.rubber || 0) > 0 || !r.chance(0.4)) return false; var d3 = r.int(2, 4); g.hp = Math.max(1, g.hp - d3); say("Острый край режет палец. Минус " + d3 + " здоровья."); return false; }
   if (kind === "bite") { if ((res.bio || 0) >= 0.3 || !r.chance(0.4)) return false; var d4 = r.int(4, 8); g.hp = Math.max(1, g.hp - d4); snd("hit_flesh", null); say("Что-то в клетке кусает за руку! Минус " + d4 + " здоровья."); return false; }
   if (kind === "tox") { gm().bodyApply({ tox: 6, air: true }, m); if (m.length) say("Пары раствора щиплют горло. " + m.join(" ")); return false; }
+  if (kind === "spore") { gm().bodyApply({ tox: 6, air: true }, m); if (m.length) say("Из треснувшей банки взлетает облачко спор: в горле першит. " + m.join(" ")); return false; }
   if (kind === "sting") { if ((res.bio || 0) >= 0.3 || !r.chance(0.5)) return false; var d5 = r.int(2, 4); g.hp = Math.max(1, g.hp - d5); say("Пчела-машина жалит разрядом. Минус " + d5 + " здоровья."); return false; }
   return false;
 }
@@ -796,7 +945,7 @@ function doSalvage(o, def, p) {
   var loot = [];
   for (var k in (p.parts || {})) if (LAB.ITEMS[k]) loot.push({ kind: "item", item: k, n: p.parts[k] });
   if (!loot.length) loot.push({ kind: "item", item: "scrap", n: 1 });
-  say("Вы разбираете на ощупь, винт за винтом. Получено: " + giveAll(loot).join(" "));
+  say((p.t || "Вы разбираете на ощупь, винт за винтом.") + " Получено: " + giveAll(loot).join(" ")); /* (3.7) своя фраза у каждого действия */
   ev("salvage", 1);
 }
 /* (3.7, нелогичность) Сушёные травы под потолком не отрастают: их несколько пучков (max), и
@@ -828,6 +977,9 @@ function doRespect(o, s) {
    от излучения, изолирующий костюм; прежде с манекена снимали любую броню вплоть до экзоскелета */
 var DUMMY = ["bio", "radsuit", "hazmat", "reactorsuit"];
 function dummySuit(r, L) { var ok = DUMMY.filter(function (k) { return LAB.ARMORS[k] && (LAB.ARMORS[k].depth || 1) <= Math.max(2, L); }); return ok.length ? r.pick(ok) : "suit"; }
+/* (3.7, нелогичность) «броня на манекенах» оружейной — броня, а не противохимический костюм */
+var DUMMY_ARM = ["vest", "composite", "ablative", "k_hearing", "k_saltplate"];
+function dummyArmor(r, L) { var ok = DUMMY_ARM.filter(function (k) { return LAB.ARMORS[k] && (LAB.ARMORS[k].depth || 1) <= Math.max(2, L); }); return ok.length ? r.pick(ok) : "vest"; }
 /* мягкая броня — ткань, её подшивают на швейной машинке; остальное — пластины и рамы. Без металла
    (рамка досмотра молчит) — только ткань: в жилете пластины, в фартуке и комбинезонах от излучения — свинец */
 var CLOTH = { suit: 1, bio: 1, stealth: 1, thermal: 1, k_quiet: 1, o_blindspot: 1, o_shadowveil: 1, o_anechoic: 1, m_apron: 1, m_okocloak: 1, i_mutecloak: 1, i_phaseweave: 1 };
@@ -836,14 +988,14 @@ function doStrip(o, def, s) {
   if (s.strip) { say(def.n + ": здесь уже ничего не висит."); return; } /* (3.5) */
   s.strip = 1;
   var r = rng(o, "strip"), L = G().L, F = G().F;
-  var a = o.fx === "mannequin" ? LAB.makeArmor(dummySuit(r, L), LAB.foeLevel(L, F), r.chance(0.5) ? 0 : 1) : LAB.makeArmor(L > 10 && L <= 20 && LAB.ARMORS.g_rigrobe ? "g_rigrobe" : "suit", LAB.foeLevel(L, F), r.chance(0.5) ? 0 : 1);
-  say((o.fx === "mannequin" ? "Вы снимаете с манекена костюм. " : "С вешалки — рабочая одежда, ещё крепкая. ") + gm().giveItem({ kind: "armor", a: a }));
+  var a = o.fx === "mannequin" ? LAB.makeArmor(def.arm ? dummyArmor(r, L) : dummySuit(r, L), LAB.foeLevel(L, F), r.chance(0.5) ? 0 : 1) : LAB.makeArmor(L > 10 && L <= 20 && LAB.ARMORS.g_rigrobe ? "g_rigrobe" : "suit", LAB.foeLevel(L, F), r.chance(0.5) ? 0 : 1);
+  say((o.fx === "mannequin" ? (def.arm ? "Вы снимаете с манекена броню. " : "Вы снимаете с манекена костюм. ") : "С вешалки — рабочая одежда, ещё крепкая. ") + gm().giveItem({ kind: "armor", a: a }));
 }
 
 /* ════════ ОСМОТРЕТЬ ════════
    Подробно — для любой вещи: что это, какая она, что с ней уже сделали,
    есть ли в ней что-нибудь. */
-var FXCLASS = { sofa: "soft", armchair: "soft", couch: "soft", bunk: "soft", pillows: "soft", rocking: "wood", chair: "wood", bench: "wood", table: "wood", nightstand: "wood", counter: "wood", ledger: "paper", menu: "paper", dutydesk: "wood", kettle: "kitchen", samovar: "kitchen", stove: "kitchen", oven: "kitchen", cauldron: "kitchen", serving: "kitchen", coldroom: "metal", smoker: "kitchen", barrels: "wood", plants: "plant", appletree: "plant", mushrooms: "plant", herbs: "plant", moss: "plant", roots: "plant", palm: "plant", seedjars: "plant", beehive: "wood", mechflowers: "device", birdcage: "metal", drone: "device", microscope: "device", turnstile: "metal", frame: "device", forklift: "metal", conveyor: "metal", robotwreck: "metal", generator: "device", transformer: "device", cables: "metal", coils: "device", gears: "metal", lanterns: "device", lamprack: "metal", glass: "device", magnifier: "device", typewriter: "device", copier: "device", screens: "device", gauges: "device", projector: "device", headphones: "device", phone: "device", clock: "device", thermometer: "device", poster: "paper", graffiti: "paper", drawings: "paper", awards: "paper", notes: "paper", inkblots: "paper", memorial: "metal", piano: "wood", guitar: "wood", accordion: "wood", bell: "metal", chess: "wood", gym: "metal", targets: "metal", press: "metal", sewing: "device", scales: "metal", queue: "device", stamps: "wood", tubes: "metal", register: "device", minecart: "metal", cores: "metal", toolwall: "metal", ladder: "metal", cart: "metal", mailbag: "soft", boxlost: "wood", optable: "metal", expgear: "soft", washer: "device", hangers: "soft", mannequin: "soft", abacus: "wood", counting: "device", complaints: "paper", seismograph: "device", phonograph: "device", mirror: "metal", lamp: "device", stars: "device", aquarium: "device", globe: "device", metronome: "wood", pendulum: "metal", speaker: "device", sauna: "wood", rain: "device", shower: "metal", fountain: "metal", well: "wood", pond: "plant", eyewash: "metal", cage: "metal", labbench: "metal", hood: "metal", gloves: "metal", tank: "metal", cryopods: "device", gunrack: "metal", lightbox: "device", trays: "kitchen", dewar: "metal", redlamp: "device", vats: "metal", horns: "metal", toys: "wood", riftwindow: "device", ringpipe: "metal", turbine: "device", valves: "metal", vent: "metal", xray: "device", monitors: "device", scheme: "paper", soundmap: "paper", echo: "metal", stage: "wood", cradle: "wood", testbooth: "device", hoop: "metal", neurochair: "device", blackboard: "wood", sensorbed: "device", loom: "wood", wheel: "wood", mats: "soft", barricade: "wood" , twinchairs: "soft", rootbench: "wood", backclock: "device", prism: "device", punchclock: "device", gearwall: "metal", boiler: "metal", sealer: "metal", mirrorlog: "paper", perfocards: "paper", berrybush: "plant", sprout: "plant" };
+var FXCLASS = { sofa: "soft", armchair: "soft", couch: "soft", bunk: "soft", pillows: "soft", rocking: "wood", chair: "wood", bench: "wood", table: "wood", nightstand: "wood", counter: "wood", ledger: "paper", menu: "paper", dutydesk: "wood", kettle: "kitchen", samovar: "kitchen", stove: "kitchen", oven: "kitchen", cauldron: "kitchen", serving: "kitchen", coldroom: "metal", smoker: "kitchen", barrels: "wood", plants: "plant", appletree: "plant", mushrooms: "plant", herbs: "plant", moss: "plant", roots: "plant", palm: "plant", seedjars: "plant", beehive: "wood", mechflowers: "device", birdcage: "metal", drone: "device", microscope: "device", turnstile: "metal", frame: "device", forklift: "metal", conveyor: "metal", robotwreck: "metal", generator: "device", transformer: "device", cables: "metal", coils: "device", gears: "metal", lanterns: "device", lamprack: "metal", glass: "device", magnifier: "device", typewriter: "device", copier: "device", screens: "device", gauges: "device", projector: "device", headphones: "device", phone: "device", clock: "device", thermometer: "device", poster: "paper", graffiti: "paper", drawings: "paper", awards: "paper", notes: "paper", inkblots: "paper", memorial: "metal", piano: "wood", guitar: "wood", accordion: "wood", bell: "metal", chess: "wood", gym: "metal", targets: "metal", press: "metal", sewing: "device", scales: "metal", queue: "device", stamps: "wood", tubes: "metal", register: "device", minecart: "metal", cores: "metal", toolwall: "metal", ladder: "metal", cart: "metal", mailbag: "soft", boxlost: "wood", optable: "metal", expgear: "soft", washer: "device", hangers: "soft", mannequin: "soft", abacus: "wood", counting: "device", complaints: "paper", seismograph: "device", phonograph: "device", mirror: "metal", lamp: "device", stars: "device", aquarium: "device", globe: "device", metronome: "wood", pendulum: "metal", speaker: "device", sauna: "wood", rain: "device", shower: "metal", fountain: "metal", well: "wood", pond: "plant", eyewash: "metal", cage: "metal", labbench: "metal", hood: "metal", gloves: "metal", tank: "metal", cryopods: "device", gunrack: "metal", lightbox: "device", trays: "kitchen", dewar: "metal", redlamp: "device", vats: "metal", horns: "metal", toys: "wood", riftwindow: "device", ringpipe: "metal", turbine: "device", valves: "metal", vent: "metal", xray: "device", monitors: "device", scheme: "paper", soundmap: "paper", echo: "metal", stage: "wood", cradle: "wood", testbooth: "device", hoop: "metal", neurochair: "device", blackboard: "wood", sensorbed: "device", loom: "wood", wheel: "wood", mats: "soft", barricade: "wood" , twinchairs: "soft", rootbench: "wood", backclock: "device", prism: "device", punchclock: "device", gearwall: "metal", boiler: "metal", sealer: "metal", mirrorlog: "paper", perfocards: "paper", berrybush: "plant", sprout: "plant", oilfountain: "metal", chasm: "metal" };
 function wearOf(o) {
   var fr = FR(), cls = FXCLASS[o.fx];
   if (!fr || !fr.fxwear || !cls || !fr.fxwear[cls] || !fr.fxwear[cls].length) return "";
@@ -856,9 +1008,13 @@ function examine(o) {
     var def = fxDef(o); if (!def) return "Вещь обстановки.";
     if (o.fx === "kettle" && LAB.kitchen) return LAB.kitchen.examine(o);
     if (o.fx === "samovar" && LAB.kitchen && LAB.kitchen.samExamine) return LAB.kitchen.samExamine(o);
-    out.push(def.n + ". " + def.d);
+    /* (3.7, нелогичность) разобранная вещь описана такой, какой осталась: генератор без запасных
+       конденсаторов гудит, а лампа без патрона не горит */
+    var sp0 = s.salv ? salvOf(def) : null;
+    out.push(def.n + ". " + (sp0 && sp0.after && !sp0.keep ? sp0.after : def.d));
     var w = wearOf(o); if (w) out.push(w);
-    if (s.salv) out.push("Её уже разобрали на детали: остался остов.");
+    if (sp0 && sp0.after && sp0.keep) out.push(sp0.after);
+    else if (s.salv && !(sp0 && sp0.after)) out.push("Её уже разобрали на детали: остался остов.");
     for (var k in s) if (k.indexOf("s_") === 0) { out.push("Здесь вы уже искали."); break; }
     if (s.harvAt) { var left = 0, gone = ""; def.a.forEach(function (a) { if (a[0] !== "harvest") return; left = a[2].every - (nowMin() - s.harvAt); if (harvGone(o, a[2], s)) gone = a[2].none || "Брать больше нечего."; }); out.push(gone ? gone : left > 0 ? "Следующий урожай — через " + minW(left) + "." : "Снова можно собирать."); }
     if (o.notes && o.notes.length && !s.notes) out.push(def.a.some(function (a) { return a[0] === "search"; }) ? "Шуршит бумага: кажется, там что-то лежит." : "Сверху лежит сложенная записка.");

@@ -80,6 +80,18 @@ var COLD = {
 };
 /* Котлы, печь, бочки, коптильня, лотки раздачи — готовое съестное. */
 var COOKED = [["porridge", 10], ["bread", 8], ["noodles", 6], ["soupcup", 6], ["stew", 6], ["fishcan", 5], ["crackers", 5], ["sandwich", 4], ["algaebread", 4, 3], ["mushroom", 3, 3], ["pemmican", 3, 11]];
+/* (3.7, нелогичность) у каждой вещи — своё: в котлах — каша и тушёнка, в печи — хлеб, в бочках
+   кладовой и погреба — яблоки, солёные грибы, орехи и сухофрукты, на решётке коптильни — грибы
+   и вяленое мясо, в лотках раздачи — каша, хлеб, тушёнка, рыба. Прежде в котлах лежали сардины и
+   бутерброд из автомата, с решётки коптильни снимали лапшу и суп-концентрат, а в бочках «с кашей»
+   бывала щёлочь. Бочки без еды (масло, вода, смола) — fixtures.js, VAR.barrels. */
+var COOKED_BY = {
+  cauldron: [["porridge", 10], ["stew", 4]],
+  oven: [["bread", 8], ["algaebread", 3, 3]],
+  barrels: [["apple", 4], ["mushroom", 4], ["nuts", 3]],
+  smoker: [["mushroom", 6], ["pemmican", 4]],
+  serving: [["porridge", 8], ["bread", 6], ["stew", 3], ["fishcan", 2]]
+};
 function tableOf(tag) { return tag === "chem" ? COLD.lab : tag === "bio" ? COLD.bio : tag === "med" || tag === "herbs" ? COLD.med : COLD.kitchen; }
 /* Случайность из уже вынутого числа q (и «соли» k): поток этажа не трогаем. */
 function mix(q, k) {
@@ -105,7 +117,7 @@ function coldItem(q, L, tag, salt) {
   if (id === "@med") id = medPick(mix(q, (salt || 1) + 6), L);
   return { kind: "item", item: id, n: mix(q, (salt || 1) + 2) < 0.22 ? 2 : 1 };
 }
-function cookedItem(q, L) { return { kind: "item", item: pickW(COOKED, mix(q, 5), L), n: 1 }; }
+function cookedItem(q, L, fx) { return { kind: "item", item: pickW(COOKED_BY[fx] || COOKED, mix(q, 5), L), n: 1 }; }
 /* В холодильнике обычно не одна вещь: вторая — в половине холодильников. Её
    кладут, когда холодильник открывают, своим потоком от зерна и вещи: число
    вещей при постройке этажа прежнее — по нему бросают жребий в разграбленных
@@ -138,6 +150,13 @@ var SUG = ["сахарница с отбитой ручкой", "коробка 
 var MUG = ["кружка с надписью «Лучшему лаборанту»", "кружка с отбитым краем", "кружка с выцветшим знаком «Ковчега»", "эмалированная кружка", "кружка с нарисованным котом", "гранёный стакан в подстаканнике"];
 
 function kkey(o) { return CUR().key + ":" + o.id; }
+/* (3.7, нелогичность) Чайник по помещению: в чайных «Колыбели» он стоит на углях («чайник на углях
+   всегда горячий», «подогревают, пока последний гость не задремлет»), в ночлеге «Истока» — на трубе
+   реактора и не остывает. Прежде у любого чайника щёлкал выключатель, и стоял он холодным. На углях
+   кипятят без щелчка — подвигают на жар; за которым смотрят — всегда горячий и полон, как самовар. */
+function kroom(o) { var fl = CUR().fl; return o.room != null && o.room >= 0 ? fl.rooms[o.room] : null; }
+function coalK(o) { var rm = kroom(o), d = String((rm && rm.desc) || ""); return !!rm && (rm.type === "x_teahouse" || /чайник[^.]{0,40}(на угл|на трубе|на печ|на огне|на жаровн|на костр)|(на углях|на трубе)[^.]{0,30}чайник/i.test(d)); }
+function keptK(o) { var rm = kroom(o), d = String((rm && rm.desc) || ""); return /чайник[^.]{0,80}(всегда горяч|не остыва)/i.test(d); }
 function kst(o) {
   var s = gm().objState(o);
   if (s.kw == null) {
@@ -150,6 +169,8 @@ function kst(o) {
     s.sug = r.chance(0.75) ? r.int(4, 12) : 0;
     s.kv = r.int(0, 99999);
   }
+  /* за чайником смотрят: горячий и полон всегда */
+  if (keptK(o)) { s.kt = nowMin() + HOT_MIN; if (!(s.kw >= KMAX)) s.kw = KMAX; }
   return s;
 }
 function isBoiling(o) {
@@ -250,7 +271,8 @@ function stateLine(o) {
   var s = kst(o), out = [];
   if (isBoiling(o)) out.push("Чайник шумит: вот-вот закипит.");
   else if (!s.kw) out.push("Чайник пуст: воды в нём нет.");
-  else out.push((isHot(s) ? "Чайник горячий: кипятка — на " : "Чайник холодный: воды — на ") + cups(s.kw) + ".");
+  else if (keptK(o)) out.push("Чайник горячий, и воды в нём вдоволь: за ним здесь смотрят.");
+  else out.push((isHot(s) ? "Чайник горячий: кипятка — на " : coalK(o) ? "Чайник остыл на прогоревших углях: воды — на " : "Чайник холодный: воды — на ") + cups(s.kw) + ".");
   if (s.cup) out.push("На столе — кружка: " + cupName(s.cup) + (cupCold(s.cup) ? ", остыл." : "."));
   var sup = supplyText(s);
   if (sup) out.push("Рядом: " + sup + ".");
@@ -261,7 +283,7 @@ function items(o) {
   out.push({ label: stateLine(o), info: true, keep: true, fn: function () { say(stateLine(o)); } });
   if (s.cup) out.push({ label: "Кружка на столе: " + cupName(s.cup), fn: function () { cupMenu(o); } });
   if (b) out.push({ label: "Подождать, пока закипит", fn: function () { UIx("closeAll"); sayq("Вы ждёте у чайника: шум нарастает."); } });
-  else if (s.kw > 0 && !hot) out.push({ label: "Вскипятить чайник", fn: function () { boil(o); } });
+  else if (s.kw > 0 && !hot) out.push({ label: coalK(o) ? "Вскипятить чайник на углях" : "Вскипятить чайник", fn: function () { boil(o); } });
   if (hot && s.kw > 0 && !b && !s.cup) {
     if (has(s, "tea")) out.push({ label: "Заварить чай", fn: function () { brew(o, "tea"); } });
     if (has(s, "cof")) out.push({ label: "Заварить растворимый кофе", fn: function () { brew(o, "cof"); } });
@@ -293,10 +315,11 @@ function boil(o) {
   UIx("closeAll");
   var g = G(), k = kkey(o), key = CUR().key;
   boiling[k] = { g: g, t: Date.now() };
-  at("kettle_boil", o);
+  var coal = coalK(o);
+  at(coal ? "ev_steam" : "kettle_boil", o);
   noise(2);
   turns(1);
-  say("Щелчок выключателя — чайник зашумел. Секунд десять, и закипит.");
+  say(coal ? "Вы подвигаете чайник на самый жар и раздуваете угли: вода зашумела. Скоро закипит." : "Щелчок выключателя — чайник зашумел. Секунд десять, и закипит.");
   gm().later(function () { boilEnd(o, s, k, g, key); }, BOIL_MS);
   return true;
 }
@@ -308,7 +331,7 @@ function boilEnd(o, s, k, g, key) {
   var d = cheb(o);
   if (d > 6) return;
   if (d <= 1 && !(LAB.ui.layer && LAB.ui.layer()) && !danger()) { menu(o, "Чайник вскипел"); return; }
-  sayq("Чайник вскипел: щёлкнул автомат.");
+  sayq(coalK(o) ? "Чайник на углях вскипел: крышка подпрыгивает." : "Чайник вскипел: щёлкнул автомат.");
 }
 
 /* ── вода ── */
@@ -369,20 +392,27 @@ function thermos(o) {
 /* Лапша и суп-концентрат: залить кипятком — и есть. */
 var SOAK = { noodles: "Лапша набухает в кипятке; вы едите её, обжигаясь.", soupcup: "Порошок расходится в кипятке густым супом; вы пьёте его маленькими глотками." };
 function soak(o, id, sam) {
-  var s = sam ? sst(o) : kst(o), g = G(), d = LAB.ITEMS[id];
+  var s = sam ? sst(o) : kst(o);
   if (sam ? !sHot(s) || !s.sw : !isHot(s) || !s.kw) { say(sam ? "Кипятка нет: самовар холодный или пуст." : "Кипятка нет: сначала вскипятите чайник."); return false; }
+  return pour(o, id, sam ? "самовара" : "чайника", function () { if (!sam) s.kw--; else if (!s.sk) s.sw--; }, "kettle_pour");
+}
+/* (3.7, нелогичность) кран с кипятком у автомата с едой: кипяток в нём не кончается, а лапша и суп
+   из него — те же, что из чайника (прежде кран давал столько же, сколько сухая лапша) */
+function tap(o, id) { return pour(o, id, "крана", null, "kettle_pour"); }
+function pour(o, id, from, take, sndId) {
+  var g = G(), d = LAB.ITEMS[id];
   if (!(g.inv[id] > 0) || !d) { say("Этого в рюкзаке нет."); return false; }
   if (danger()) { if (LAB.UI && LAB.UI.error) LAB.UI.error(); say("Не до еды: рядом опасность."); return false; }
   dec(id);
-  if (!sam) s.kw--; else if (!s.sk) s.sw--;
+  if (take) take();
   UIx("closeAll");
-  at("kettle_pour", o);
+  at(sndId, o);
   spend(4); turns(1);
   var m = [];
   gm().bodyApply({ food: Math.round((d.food || 0) * 1.25), wake: (d.wake || 0) + 3, detox: d.detox || 0 }, m);
   if (d.heal) { var h0 = g.hp; g.hp = Math.min(g.hpMax, g.hp + d.heal + 3); if (g.hp > h0) m.push("Здоровье " + g.hp + "."); }
   gm().later(function () { if (G() === g) A("play", id === "noodles" ? "eat_chew" : "drink_sip"); }, 1600);
-  say(SOAK[id] + " С кипятком из " + (sam ? "самовара" : "чайника") + " — сытнее. " + m.join(" "));
+  say(SOAK[id] + " С кипятком из " + from + " — сытнее, чем всухомятку. " + m.join(" "));
   ev("cook");
   if (gm().autosaveSoon) gm().autosaveSoon();
   return true;
@@ -451,7 +481,7 @@ function take(o) {
 /* ── осмотреть ── */
 function examine(o) {
   var s = kst(o), def = LAB.FIX && LAB.FIX.T && LAB.FIX.T.kettle, out = [];
-  out.push(def ? def.n + ". " + def.d : "Чайник.");
+  out.push(def ? def.n + ". " + (keptK(o) && coalK(o) && /на трубе/i.test(String((kroom(o) || {}).desc || "")) ? "Чайник стоит прямо на тёплой трубе реактора и не остывает: кипяток в нём в любой час." : keptK(o) ? "Закопчённый чайник на углях: угли под ним подкладывают, и он всегда горячий." : coalK(o) ? "Закопчённый чайник с толстым дном стоит на углях: подвинешь на жар — зашумит, и вскоре будет кипяток." : def.d) : "Чайник.");
   out.push(stateLine(o));
   if (s.tea) out.push("Чай — " + TEA[s.kv % TEA.length] + ".");
   if (s.cof) out.push("Кофе — " + COF[Math.floor(s.kv / 7) % COF.length] + ".");
@@ -459,7 +489,7 @@ function examine(o) {
   out.push("Рядом — " + MUG[Math.floor(s.kv / 97) % MUG.length] + ".");
   var rm = o.room != null && o.room >= 0 ? CUR().fl.rooms[o.room] : null;
   if (s.cof && rm && rm.owner && !rm.owner.m) out.push("К банке приклеена бумажка: «Кофе — " + rm.owner.n + ". Не брать!»");
-  if (!sinkHere(o)) out.push("Раковины здесь нет: воду придётся носить в бутылке.");
+  if (!sinkHere(o) && !keptK(o)) out.push("Раковины здесь нет: воду придётся носить в бутылке.");
   return out.join(" ");
 }
 
@@ -630,7 +660,7 @@ function useItem(id) {
 
 LAB.kitchen = {
   coldItem: coldItem, cookedItem: cookedItem, fridgeExtra: fridgeExtra, addTo: addTo,
-  menu: menu, examine: examine, useItem: useItem, boil: boil, brew: brew, drink: drink, cupMenu: cupMenu, sinkHere: sinkHere,
+  menu: menu, examine: examine, useItem: useItem, boil: boil, brew: brew, drink: drink, cupMenu: cupMenu, sinkHere: sinkHere, tap: tap,
   samovar: samMenu, samExamine: samExamine, samFire: samFire, samDrink: samDrink, samFill: samFill, samState: function (o) { return sst(o); },
   state: function (o) { return kst(o); },
   /* для проверок: кипение без ожидания, сброс */

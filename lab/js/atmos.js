@@ -546,8 +546,9 @@ function shot(w, dir, burst) {
   var id = b.snd || "w_blaster_s";
   if (!has(id)) id = b.cls === "magnetron" ? "w_magnetron" : "w_blaster_s";
   var power = (w.rank || 0) + Math.max(0, (w.qual || 1) - 2) * 0.5 + (HEAVY_CLS[b.cls] || 0) + (b.dmg >= 30 ? 1 : 0) + (b.area || b.pierce ? 1 : 0);
-  /* глушитель: выстрел тише и глуше — без раската и треска разряда */
-  var q = (w.mod && w.mod.quiet) || 0;
+  /* глушитель: выстрел тише и глуше — без раската и треска разряда;
+     (3.7) бесшумное оружие («Шёпот», дротики, самострел) тихо звучит и для героя */
+  var q = Math.max((w.mod && w.mod.quiet) || 0, b.silent ? 1 : 0);
   if (q) power -= 2 * q;
   play(id, { ch: "weap", pan: v[0] * 0.35, gain: (burst ? 0.9 : 1.05) * (1 - 0.28 * q), rate: (b.sndRate || 1) * (burst ? 1.03 : 1) * (1 - 0.05 * q), reverb: q ? 0.15 : 0.3 });
   if (b.cls === "melee") { if (b.dt === "shock") play("w_shock_crack", { ch: "weap", pan: v[0] * 0.3, gain: 0.8, fb: FB.w_shock_crack }); return; }

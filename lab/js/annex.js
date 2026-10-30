@@ -81,9 +81,31 @@ function partPick(r, L) { return LAB.partAt ? LAB.partAt(r, L) : "scrap"; }
    прежде такие теги уходили в общую ветку склада — вместо ценностей лежали детали. Вещь
    подменяется из уже вынутого q, как у холодильника: поток случайностей этажа тот же */
 var LOST = ["watch", "ring", "pen", "harmonica", "flask", "medal"];
+/* (3.7, нелогичность) Под подушками, в карманах, в кассе, в тумбочке, за решёткой, в ящиках стола и
+   на складе — личные вещи: часы, кольцо, ручка, медаль, фляжка, гармошка (в бумагах и на складе —
+   ещё носитель с архивом, в чьём-то схроне под матрасом — и слиток). Контейнер с изотопом,
+   культура «Колыбели», слиток и носитель — в горячих камерах, режимных помещениях, тайниках,
+   лабораториях и сейфах (stash, hot, isotope, classified, rad, chem, bio, сейф). Прежде «ценное»
+   бралось одно на всех, и изотоп лежал под подушками дивана. Вещь подменяется из уже вынутого q
+   (mixq): поток случайностей этажа тот же. */
+var PERSONAL = LOST, OFFICE = LOST.concat(["datachip"]);
+var PERS_TAG = { smoke: LOST, home: LOST, food: LOST, janitor: LOST, arms: LOST, lost: LOST, valuable: LOST, paper: OFFICE, cache: OFFICE.concat(["goldbar"]) };
+var LOOT_CASE = { stash: 1, cache: 1, hot: 1, isotope: 1, classified: 1, armory: 1, protect: 1, rad: 1, med: 1, herbs: 1, food: 1, home: 1, smoke: 1, janitor: 1, chem: 1, paper: 1, tech: 1, bio: 1, arms: 1 };
+function mixq(q, k) {
+  var h = (Math.floor(q * 4294967296) ^ Math.imul((k || 7) + 1, 0x9E3779B1)) >>> 0;
+  h = Math.imul(h ^ (h >>> 16), 0x85EBCA6B) >>> 0;
+  h = Math.imul(h ^ (h >>> 13), 0xC2B2AE35) >>> 0;
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+function persOk(tag) { return PERS_TAG[tag] || (LOOT_CASE[tag] ? null : OFFICE); }
+function persItem(x, tag, q) {
+  var ok = persOk(tag), d = x && x.kind === "item" && x.item ? LAB.ITEMS[x.item] : null;
+  if (!ok || !d || d.cat !== "valuable" || ok.indexOf(x.item) >= 0) return x;
+  return it(ok[Math.floor(mixq(q) * ok.length) % ok.length]);
+}
 function tagItem(tag, q, L, F) {
   if (tag === "lost") return q < 0.85 ? it(LOST[Math.floor(q / 0.85 * LOST.length) % LOST.length]) : { kind: "credits", n: LAB.credits(4 + Math.floor(q * 100) % 6, L, F) };
-  var pool = itemsOf(L, function (d) { return d.cat === "valuable"; });
+  var pool = itemsOf(L, function (d, k) { return d.cat === "valuable" && PERSONAL.indexOf(k) >= 0; });
   return q < 0.65 && pool.length ? it(pool[Math.floor(q / 0.65 * pool.length) % pool.length]) : { kind: "credits", n: LAB.credits(15 + Math.floor(q * 1000) % 12, L, F) };
 }
 function it(item, n) { return { kind: "item", item: item, n: n || 1 }; }
@@ -94,11 +116,12 @@ function annexLoot(r, L, F, tag, ot, lean, only) {
   /* (3.0) холодильник и холодильная камера — только то, что держат в холоде; котлы, печь,
      бочки, коптильня, лотки раздачи — только съестное (kitchen.js). Вещь подменяется из уже
      вынутого числа q: поток случайностей тот же, этажи прежних записей не меняются. */
-  var KI = LAB.kitchen, cold = KI && (only === "cold" || ot === "fridge"), cook = KI && only === "cooked";
+  /* (3.7) only — «cooked:котлы», «cooked:печь»…: у каждой вещи своё съестное (kitchen.js, cookedItem) */
+  var KI = LAB.kitchen, cold = KI && (only === "cold" || ot === "fridge"), cook = KI && /^cooked/.test(only || ""), cfx = cook ? String(only).slice(7) : "";
   for (var i = 0; i < n; i++) {
     var q = r.next(), k0 = out.length;
     switch (tag) {
-      case "stash": add(q < 0.35 ? it(catPick(r, L, "valuable")) : q < 0.55 ? cr(30) : q < 0.75 ? it(catPick(r, L, "med")) : q < 0.9 ? { kind: "ammo", ammo: "energy", n: 2 } : it(catPick(r, L, "tool"))); break;
+      case "stash": case "cache": add(q < 0.35 ? it(catPick(r, L, "valuable")) : q < 0.55 ? cr(30) : q < 0.75 ? it(catPick(r, L, "med")) : q < 0.9 ? { kind: "ammo", ammo: "energy", n: 2 } : it(catPick(r, L, "tool"))); break;
       case "hot": add(q < 0.35 ? it(r.chance(0.5) ? "isotope" : "goldbar") : q < 0.6 ? it(catPick(r, L, "valuable")) : q < 0.8 ? it("lead", 2) : it(r.chance(0.5) ? "radaway" : "antirad")); break;
       case "isotope": add(q < 0.4 ? it("lead", r.int(1, 2)) : q < 0.6 ? it(L >= 5 && r.chance(0.5) ? "isotope" : "antirad") : q < 0.8 ? it(catPick(r, L, "valuable")) : it("iodine")); break;
       case "classified": add(q < 0.35 ? it(catPick(r, L, "valuable")) : q < 0.55 ? { kind: "note", note: "staff", n: r.int(0, 999) } : q < 0.75 ? cr(25) : it(r.chance(0.5) ? "decoder" : "jammer")); break;
@@ -117,9 +140,10 @@ function annexLoot(r, L, F, tag, ot, lean, only) {
       default: /* store, parts */ add(q < 0.5 ? it(partPick(r, L), r.chance(0.3) ? 2 : 1) : q < 0.65 ? it(catPick(r, L, "food")) : q < 0.78 ? it(r.chance(0.4) ? "tape" : r.chance(0.6) ? "rubber" : "fieldkit") : q < 0.9 ? it(catPick(r, L, "valuable")) : cr(8));
     }
     if ((tag === "valuable" || tag === "lost") && out[k0]) out[k0] = tagItem(tag, q, L, F);
+    if (out[k0]) out[k0] = persItem(out[k0], tag, q); /* (3.7) личные вещи там, где ищут под подушками и в карманах */
     /* число вещей — прежнее (по нему потом бросают жребий в разграбленных помещениях); негодная вещь так и остаётся негодной */
     var x0 = out[k0];
-    if ((cold || cook) && x0 && (x0.kind !== "item" || (x0.item && LAB.ITEMS[x0.item]))) out[k0] = cold ? KI.coldItem(q, L, tag) : KI.cookedItem(q, L);
+    if ((cold || cook) && x0 && (x0.kind !== "item" || (x0.item && LAB.ITEMS[x0.item]))) out[k0] = cold ? KI.coldItem(q, L, tag) : KI.cookedItem(q, L, cfx);
   }
   /* сейф — ценное наверняка; оружейная стойка — ствол; шкаф спецодежды — костюм от излучения */
   if (ot === "safe") out.push(r.chance(0.5) ? it(catPick(r, L, "valuable") || "watch") : { kind: "credits", n: LAB.credits(35, L, F) });
@@ -130,6 +154,9 @@ function annexLoot(r, L, F, tag, ot, lean, only) {
 }
 LAB.annexLoot = annexLoot;
 LAB.annexPick = catPick; /* (3.7) вещь раздела по глубине — для находок обстановки (fixtures.js, library.js) */
+/* (3.7, нелогичность) личная вещь: в карманах белья, под подушками — не изотоп и не слиток */
+LAB.annexPersonal = function (r) { var ok = PERSONAL.filter(function (k) { return LAB.ITEMS[k]; }); return ok.length ? r.pick(ok) : null; };
+LAB.annexPowered = powered;
 
 /* ════════ ПОСТРОЕНИЕ ════════
    Вдоль каждой стены каждого коридора — ряд помещений: где больше, где
@@ -205,7 +232,7 @@ var DETAIL = {
 };
 function detailDeck(r, era) { var d = (DETAIL[era] || DETAIL.K).slice(); r.shuffle(d); return d; }
 
-LAB.annex = { ROOMS: ROOMS, eraOf: eraOf, loot: annexLoot, DETAIL: DETAIL };
+LAB.annex = { ROOMS: ROOMS, eraOf: eraOf, loot: annexLoot, DETAIL: DETAIL, unlit: function (fl, L) { return unlit(fl, L); } };
 LAB.annex.place = function (ctx) {
   var fl = ctx.fl, L = ctx.L, F = ctx.F;
   var r = LAB.Rng(ctx.seed, "annex:" + L + ":" + F + ":" + ctx.attempt);
@@ -350,7 +377,11 @@ LAB.annex.place = function (ctx) {
       if (def.kind === "locked") d.lock = lockFor(ctx, r, sp2, rm);
     }
     furnish(ctx, r, sp2, rm, def, v, gen);
-    if (gen) rm.desc = gen.describe(rm, def, it2, owner, { secret: sp2.wing, state: rm.state || null, have: holds(fl, rm) });
+    /* (3.7, нелогичность) обесточено — только там, где нет ничего электрического (powered): в таком
+       помещении состояние снимается после тел погибших — их расстановка прежняя */
+    var hv0 = holds(fl, rm);
+    if (rm.state === "dark" && powered(hv0)) rm.lit = 1;
+    if (gen) rm.desc = gen.describe(rm, def, it2, owner, { secret: sp2.wing, state: rm.lit ? null : rm.state || null, have: hv0 });
   });
   /* 4б. «Ковчег»: тела тех, кто не успел уйти три недели назад — чаще там, где держали
      оборону, бежали или горело; при них — вещи, жетон и, бывает, записка */
@@ -373,6 +404,8 @@ LAB.annex.place = function (ctx) {
      При каждом — немного вещей своей глубины; карманы, одежда, жетон и записка — как
      у всех тел (fixtures.js). Свой поток случайностей. */
   if (!(L === 1 && F === 1)) placeBodies(ctx, LAB.Rng(ctx.seed, "bodies33:" + L + ":" + F + ":" + ctx.attempt), era, L, F);
+  /* (3.7) где работает электрическое — не «обесточено» (описание уже без этого) */
+  spots.forEach(function (q) { var m = fl.rooms[q.id]; if (m && m.lit) { delete m.state; delete m.lit; } });
   /* 5. Записки: в ящиках, карманах и на полу — из частей, с людьми и помещениями этажа */
   if (gen) placeNotes(ctx, r, gen, spots);
   /* 6. Пункт снабжения обязателен; обстановка и подробности основных помещений, люди на телах */
@@ -425,6 +458,27 @@ function placeBodies(ctx, r, era, L, F) {
     per[rid] = (per[rid] || 0) + 1; i++;
     bo.loot = annexLoot(r, L, F, r.pick(tags), "desk", true);
   }
+}
+/* (3.7, нелогичность) Электрическое: компьютеры, терминалы, автоматы, капсулы, щиты, холодильники,
+   приёмники — и вещи обстановки под током (лампа, вытяжка, электрочайник, экраны, мониторы,
+   копир, динамик, селектор, рентген, генератор…). Где они есть, помещение не обесточено. */
+var POWER = { comp: 1, pc: 1, terminal: 1, coffee: 1, drinks: 1, snacks: 1, vending: 1, medst: 1, medvend: 1, capsule: 1, wake: 1, charger: 1, fusebox: 1, supply: 1, radio: 1, okoterm: 1,
+  implantlab: 1, magnetron: 1, positron: 1, reactor: 1, fridge: 1, tubepost: 1, puzzle: 1, workbench: 1, powergrid: 1, incubator: 1, mirrorterm: 1, syncgate: 1, trial: 1, chemlab: 1,
+  lamp: 1, redlamp: 1, vent: 1, hood: 1, kettle: 1, stove: 1, screens: 1, monitors: 1, copier: 1, speaker: 1, intercom: 1, xray: 1, lightbox: 1, projector: 1, testbooth: 1,
+  counting: 1, recorder: 1, microfilm: 1, neurochair: 1, aquarium: 1, headphones: 1, cryopods: 1, frame: 1, turnstile: 1, generator: 1, turbine: 1, transformer: 1, coils: 1,
+  gauges: 1, washer: 1, sensorbed: 1, tubes: 1, queue: 1, chemsafe: 1 };
+function powered(have) { for (var k in (have || {})) if (POWER[k]) return true; return false; }
+/* (3.7) Для шагов постройки после кабинетов (world.js: стенды испытаний, chem.js: химические столы,
+   перестановки автоматов): помещение, куда потом встало электрическое, — не «обесточено»;
+   фраза об этом уходит из описания. Вызов — в самом конце постройки этажа: LAB.annex.unlit(fl, L). */
+function unlit(fl, L) {
+  var fr = (LAB.ANNEX_F || {})[eraOf(L)] || {}, ph = (fr.state && fr.state.dark) || [], n = 0;
+  fl.rooms.forEach(function (rm) {
+    if (!rm || rm.state !== "dark" || !powered(holds(fl, rm))) return;
+    delete rm.state; n++;
+    ph.forEach(function (p) { if (rm.desc && rm.desc.indexOf(p) >= 0) rm.desc = rm.desc.replace(" " + p, "").replace(p, "").replace(/\s{2,}/g, " ").replace(/^\s+|\s+$/g, ""); });
+  });
+  return n;
 }
 /* Что стоит в помещении: виды предметов и вещей обстановки. */
 function holds(fl, rm) {

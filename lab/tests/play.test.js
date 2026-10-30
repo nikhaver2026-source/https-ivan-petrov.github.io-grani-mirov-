@@ -2793,7 +2793,7 @@ LAB.ui.closeAll();
     const pp = mk("ppistol", 7, 0), pos = [pp.cap]; W5.bayBore(pp, { tier: 5, dmg: false }); pos.push(pp.cap); W5.bayBore(pp, { tier: 5, dmg: false }); pos.push(pp.cap);
     out.pos = pos.join(",");
     const tw = mk("g_twinbarrel", 16, 0), eel = mk("k_eeljar", 31, 0);
-    out.noUpg = !W5.bayBore(tw, { tier: 5, dmg: false }) && tw.cap === 2 && /два ствола/.test(W5.capLine(tw)) && !W5.bayBore(eel, { tier: 5, dmg: false }) && /живой угорь/.test(W5.capLine(eel));
+    out.noUpg = !W5.bayBore(tw, { tier: 5, dmg: false }) && tw.cap === 2 && /два ствола/.test(W5.capLine(tw)) && !W5.bayBore(eel, { tier: 5, dmg: false }) && /лейденская банка/.test(W5.capLine(eel));
     /* ступень и качество оружия поднимают и предел: «Искра» Б-3 — дальше пятидесяти */
     out.markCap = W5.capMax(mk("spark", 25, 0)) > 50 && W5.capMax(mk("spark", 1, 0, 3)) > 50;
     /* оружие прежней записи: батареи и модуль ёмкости — в рюкзак, расточка сверх ступеней вида — деталями */
@@ -4509,7 +4509,7 @@ LAB.ui.closeAll();
       const o = { id: "t27", type: "chemlab", x: G.x, y: G.y, good: 1 };
       fs.chemSt = fs.chemSt || {}; fs.chemSt.t27 = { tier: 3, dirty: false };
       CH.open(o); out.chTitle = LAB.ui.top().title; LAB.ui.closeAll();
-      G.inv.gel = 5; G.inv.c_blood = 3; G.inv.c_salt = 3;
+      G.inv.gel = 5; G.inv.c_blood = 3; G.inv.c_salt = 3; G.inv.bandage = 4;
       let m0 = G.inv.medkit_s || 0; CH.brew("h_medkit", o); out.medkit = (G.inv.medkit_s || 0) - m0;
       CH.gain("pharm", 30); out.pharm = CH.brLv("pharm");
       delete G.inv.c_blood; delete G.inv.c_salt; G.inv.c_blood_2 = 2; G.inv.c_salt_2 = 2; CH.opt().best = true;

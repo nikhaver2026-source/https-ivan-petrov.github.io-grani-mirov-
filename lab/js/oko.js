@@ -165,6 +165,18 @@ function release() {
     list.forEach(function (h, i) { if (i === 0 && h.chime) chimeSay(h.t, h.o, h.chime, h.gap); else okoSay(h.t, h.o, h.chime); });
   }, 1500);
 }
+/* (3.7, нелогичность) Реплики, где ОКО обещает патруль или проверку, — для них проверка должна
+   выйти на самом деле (speak, nocheck); реплики о машинах и о живых — для отбора по тому, кто пал
+   (subj). Слова ищутся в тексте реплик всех глубин; спорное — в сторону молчания. */
+var CHECK_RE = /патрул|провер(к|ит|ить|ят|ьте|ь[ ,.!])|единиц[аы]?[ ,]+(этажа )?(—|проверь|к |рядом)|к источник|к точке|на звук|на гром|на эхо|на самое|высыла|выслан|бригад|пришл[юё]|шлёт|в пути|идёт|идут|пойд[её]т|пойдут|охрана, внимание|придёт|посмотр(еть|ит)|закроют|будет найден|найдут|туда —|, туда/i;
+var MECH_RE = /машин|робот|металл|единиц|турел|шестер|корпус|чертеж|чертёж|сборочн|производств|запчаст|техник[аиу]/i;
+var BIO_RE = /образ[еч]|образц|твар|живое|живой|живого|живых|жител|звер|химер|плоть|плоти|кровь|крови|мяс/i;
+/* (3.7) Кого ОКО потеряло только что: машину или тварь (combat.js, kill). Серия потерь — за
+   двадцать секунд, сработавшая ловушка — за полторы: о том, кто пал, ОКО и говорит. */
+var losses = [];
+function loss(mech) { var now = Date.now(); losses = losses.filter(function (q) { return now - q.t < 20000; }); losses.push({ t: now, mech: !!mech }); }
+function lossSubj(ms) { var now = Date.now(), m = 0, b = 0; losses.forEach(function (q) { if (now - q.t <= ms) { if (q.mech) m++; else b++; } }); return m && b ? "mix" : m ? "mech" : b ? "bio" : ""; }
+var SUBJ_MS = { kill_many: 20000, trap_kill: 1500 };
 function speak(kind, force, data) {
   var o = st(), now = Date.now();
   if (LAB.okoForms && LAB.okoForms.silent()) return false; /* (3.2) простилось и молчит */
@@ -178,6 +190,11 @@ function speak(kind, force, data) {
     var cb0 = C();
     if (!cb0 || !cb0.cams || !cb0.cams().length || (data && data.nocam)) { var a2 = arr.filter(function (t) { return !/камер/i.test(t); }); if (a2.length) arr = a2; }
   }
+  /* (3.7, нелогичность) проверка не вышла (nocheck) — реплики без патруля и без «высылаю»: прежде на
+     этаже без единой машины ОКО говорило «Патруль, проверить»; о павшем (subj) — о том, кто пал:
+     машине — без «образцов» и «жителей», твари — без «машин» и «металла», и тем и другим — без обоих */
+  if (data && data.nocheck) arr = arr.filter(function (t) { return !CHECK_RE.test(t); });
+  if (data && data.subj) arr = arr.filter(function (t) { return (data.subj === "mech" || !MECH_RE.test(t)) && (data.subj === "bio" || !BIO_RE.test(t)); });
   if (!arr.length) return false;
   var recent = lastLine[kind] || (lastLine[kind] = []);
   var fresh = arr.filter(function (t) { return recent.indexOf(t) < 0; });
@@ -195,7 +212,7 @@ function speak(kind, force, data) {
   if (LAB.game.journal && (kind === "turret_hack" || kind === "robots" || kind === "boss")) LAB.game.journal("ОКО: «" + t + "»");
   return true;
 }
-function speakLater(kind, ms) { setTimeout(function () { if (LAB.game.entered && !G().dead) speak(kind, true); }, ms || 1200); }
+function speakLater(kind, ms, data) { setTimeout(function () { if (LAB.game.entered && !G().dead) speak(kind, true, data); }, ms || 1200); }
 
 /* ════════ РЕАКЦИИ НА ДЕЙСТВИЯ (2.0) ════════
    ОКО замечает, что вы делаете, и отвечает — по-своему на каждой глубине.
@@ -222,6 +239,14 @@ function react(kind, data) {
   if (kind === "floor" && g.F === 1) return false;
   var rule = REACT[kind] || { p: 0.5, cd: 60 };
   if ((f.okoBlind || g.st.jam > 0) && !rule.always) return false;
+  /* (3.7, нелогичность) о серии потерь и о сработавшей ловушке — по тому, кто пал (loss); разбит
+     последний узел связи — машины этажа не докладывают, и о своих потерях ОКО не знает: прежде
+     и тогда звучало «Единица уничтожена…» (о тварях — по-прежнему: их ОКО слышит само) */
+  if (SUBJ_MS[kind] && !(data && data.subj)) { var sj = lossSubj(SUBJ_MS[kind]), d2 = {}, dk0; for (dk0 in (data || {})) d2[dk0] = data[dk0]; d2.subj = sj; data = sj ? d2 : data; }
+  if (f.netCut) {
+    if (kind === "kill_mech" || kind === "turret_kill") return false;
+    if (data && (data.subj === "mech" || data.subj === "mix")) { if (data.subj === "mech") return false; data.subj = "bio"; }
+  }
   var o = st(), now = Date.now();
   if (!o.react) o.react = {};
   if (now - (o.react[kind] || 0) < rule.cd * 1000) return false;
@@ -243,9 +268,10 @@ function heat(n) {
   o.heat = Math.max(0, Math.min(100, o.heat + n));
 }
 /* Отряд по расписанию: через delay тактов, n машин, mode — как в dispatch. */
+/* (3.7) true — волна встала в очередь (или пополнила ту, что ждёт) */
 function wave(delay, n, mode, at, tag) {
   var f = fs(), dk = LAB.dk();
-  if (!f || n <= 0) return;
+  if (!f || n <= 0) return false;
   /* (2.2) режим сложности: отряды больше или меньше (repl) и быстрее или медленнее (replT) */
   n = Math.max(1, Math.round(n * (dk.repl || 1))); delay = Math.max(1, Math.round(delay * (dk.replT || 1)));
   if (!f.waves) f.waves = [];
@@ -254,12 +280,13 @@ function wave(delay, n, mode, at, tag) {
   if (f.waves.length >= 12) {
     for (var i = f.waves.length - 1; i >= 0; i--) {
       var q = f.waves[i];
-      if (q.mode === mode && !noWait(q) && q.n < 6) { q.n = Math.min(6, q.n + n); if (at) q.at = { x: at.x, y: at.y }; return; }
+      if (q.mode === mode && !noWait(q) && q.n < 6) { q.n = Math.min(6, q.n + n); if (at) q.at = { x: at.x, y: at.y }; return true; }
     }
-    return;
+    return false;
   }
   f.waves.push({ t: T() + delay, n: n, mode: mode, at: at ? { x: at.x, y: at.y } : null, tag: tag || "" });
   if (LAB.okoForms && tag !== "shift") LAB.okoForms.offerDeal(); /* (3.2) Счетовод: время продаётся */
+  return true;
 }
 
 /* ── (3.0, просьба игрока) ПЕРЕДЫШКА МЕЖДУ ВОЛНАМИ ──
@@ -359,7 +386,8 @@ function logText(n) {
   return L.slice(-(n || 14)).map(function (e) { return pad(e.h) + ":" + pad(e.mi) + ". " + e.t; }).join(" ");
 }
 /* Сменить режим этажа и выполнить его правила. */
-function setLevel(lv, why) {
+/* (3.7) quiet — без слов; chk — проверка по признаку вышла (report): «suspect» без патруля, если нет */
+function setLevel(lv, why, quiet, chk) {
   var s = sec(), was = s.lv;
   if (lv === was) return;
   s.lv = lv; s.t = T();
@@ -368,7 +396,7 @@ function setLevel(lv, why) {
   var f = fs(), cb = C(), sn = s.seen || s.sus;
   A("alarmLayer", lv === 4 || lv === 5);
   if (lv === 0) { if (was >= 2) speak("normal", true); f.turretAlert = false; return; }
-  if (lv === 1) { if (Math.random() < 0.4) speak("suspect"); return; }
+  if (lv === 1) { if (!quiet && Math.random() < 0.4) speak("suspect", false, { nocheck: !chk }); return; }
   if (lv === 6) { speak("lost", true); f.turretAlert = false; searchAt(s.seen); return; }
   /* 2–5: тревога */
   f.alarmUntil = T() + (lv >= 3 ? 60 : 40); /* в тактах этажа: меню и мини-игры не съедают тревогу */
@@ -421,8 +449,12 @@ function searchAt(p) {
 }
 /* Сообщение сенсора. kind: "seen" — носитель замечен (подтверждение),
    "suspect" — признак (шум, следы, вскрытый терминал, открытая ключом дверь). */
-function report(src, x, y, kind, what) {
+/* lastCheck — вышла ли проверка по последнему признаку (3.7): о патруле ОКО говорит, только если
+   он вышел. quiet — без слов при смене режима: сказать о признаке хочет тот, кто сообщил о нём. */
+var lastCheck = false;
+function report(src, x, y, kind, what, quiet) {
   var f = fs(), o = st(), cb = C();
+  lastCheck = false;
   if (!f || !cb) return false;
   if (f.okoBlind || G().st.jam > 0) return false;
   if (src === "noise" && LAB.depths && LAB.depths.sensorsDeaf()) return false; /* вибродатчики обесточены на щите «Подножия» */
@@ -447,8 +479,13 @@ function report(src, x, y, kind, what) {
   s.sus = { x: x, y: y, t: now, src: src };
   log((SRCN[src] || "Датчик") + ", " + place(x, y) + ": " + (what || "подозрительная активность") + ".");
   heat(1);
-  if (s.lv === 0) setLevel(1, (what || "признак").toLowerCase());
-  if (s.lv <= 1 || s.lv === 6) { if (!cb.sendCheck(x, y, 1) && o.heat >= 25 && (f.checks || 0) < 4) { f.checks = (f.checks || 0) + 1; wave(rnd(10, 20), 1, "check", { x: x, y: y }); } }
+  /* (3.7, нелогичность) проверку высылают раньше слов, чтобы слова знали, вышла ли она (lastCheck);
+     прежде ОКО сначала говорило «Единица — проверить», а патруля на этаже могло не быть вовсе */
+  if (s.lv <= 1 || s.lv === 6) {
+    if (cb.sendCheck(x, y, 1)) lastCheck = true;
+    else if (o.heat >= 25 && (f.checks || 0) < 4) { f.checks = (f.checks || 0) + 1; lastCheck = wave(rnd(10, 20), 1, "check", { x: x, y: y }); }
+  }
+  if (s.lv === 0) setLevel(1, (what || "признак").toLowerCase(), quiet, lastCheck);
   return true;
 }
 /* Совместимость: тревога от источника — подтверждение. */
@@ -686,20 +723,25 @@ function event(kind, data) {
       report("drone", data.x != null ? data.x : g.x, data.y != null ? data.y : g.y, "seen");
       break;
     case "boss":
-      heat(10); setTimeout(function () { speak("boss", true); }, 2500);
+      /* (3.7, нелогичность) о живом страже — без «чертежей» и «единиц», о машине — без «образцов» */
+      heat(10); setTimeout(function () { speak("boss", true, data.subj ? { subj: data.subj } : null); }, 2500);
       break;
     case "kill":
+      /* (3.0) пала последняя машина волны — передышка до следующей (это ход волн, а не знание ОКО) */
+      if (data.wv) waveDown(data.wv);
+      /* (3.7, нелогичность) разбит последний узел связи: машины этажа не докладывают — ОКО не знает
+         ни о потере, ни о том, где оборвалась связь (камеру на проводе — замечает) */
+      if (f.netCut && !data.camera) { if (data.stalker) f.droneAt = T() + rnd(240, 400); break; }
       o.kills++; heat(1);
       if (data.task === "repair") { heat(3); f.repairLost = 1; }
       /* (2.0) потеря: участок обхода, кабинет, пост — ОКО пришлёт замену */
       lost(data);
-      /* (3.0) пала последняя машина волны — передышка до следующей */
-      if (data.wv) waveDown(data.wv);
       if (data.stalker) { heat(4); f.droneAt = T() + rnd(240, 400); if (Math.random() < 0.6) speakLater("drone_lost", 1500); }
       if (data.camera) {
         heat(5);
-        if (Math.random() < 0.6) speakLater("cam_down", 900);
+        /* (3.7, нелогичность) сначала — проверка, потом слова: «высылаю проверку» — только если вышла */
         report("lost", data.x, data.y, "suspect", "камера не отвечает");
+        if (Math.random() < 0.6) speakLater("cam_down", 900, { nocheck: !lastCheck });
       } else if (data.oko || data.guard || data.task) {
         /* машина ОКО замолчала — ОКО знает, где оборвалась связь */
         var sq = sec(); if (sq.lv >= 2) sq.loss = (sq.loss || 0) + 1;
@@ -715,7 +757,9 @@ function event(kind, data) {
       break;
     case "door":
       heat(2);
-      if (Math.random() < 0.25 + o.heat / 200) { speak("door"); report("door", data.x, data.y, "suspect", "запертая дверь открыта"); }
+      /* (3.7, нелогичность) «Патруль проверит» — только если проверка вышла: сначала доклад датчика
+         (без слов о смене режима — говорит дверь), потом реплика */
+      if (Math.random() < 0.25 + o.heat / 200) { report("door", data.x, data.y, "suspect", "запертая дверь открыта", true); speak("door", false, { nocheck: !lastCheck }); }
       break;
     case "sample":
       if (Math.random() < 0.3) setTimeout(function () { speak("sample"); }, 1800);
@@ -1026,7 +1070,8 @@ function tick() {
   /* слух ОКО: громкая стрельба — акустические датчики, проверка источника */
   if (g.noise >= 10 && now - (f.noiseT || -999) > 40 && !(LAB.combat && LAB.combat.sheltered && LAB.combat.sheltered())) {
     f.noiseT = now;
-    if (report("noise", g.x, g.y, "suspect", "выстрелы") && Math.random() < 0.3) speak("check");
+    /* (3.7, нелогичность) «Патруль, проверить» — только если проверка и правда вышла */
+    if (report("noise", g.x, g.y, "suspect", "выстрелы") && Math.random() < 0.3) speak("check", false, { nocheck: !lastCheck });
   }
   secTick();
   LAB.safe(minesTick);
@@ -1051,6 +1096,8 @@ function tick() {
 
 LAB.oko = {
   event: event, tick: tick, speak: speak, alarm: alarm, difficulty: difficulty, heat: heat,
+  loss: loss, lossSubj: lossSubj, /* (3.7) кто пал только что — машина или тварь */
+  checkSent: function () { return lastCheck; }, /* (3.7) вышла ли проверка по последнему признаку (report) */
   state: st, lines: lines, wave: wave, shift: shift, react: react, minesOrder: minesOrder, minesLater: minesLater, REACT: REACT,
   report: report, level: level, levelName: function () { return SEC[level()]; }, setLevel: setLevel, sec: sec, log: log, logText: logText, T: T,
   hushed: hushed, voice: voice,

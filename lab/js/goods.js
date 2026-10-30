@@ -29,7 +29,7 @@ var ITEMS = {
   /* еда */
   bread:     { n: "Хлеб из пекарни «Ковчега»", icon: "🍞", kind: "food", cat: "food", desc: "Буханка серого хлеба в бумаге. Чуть зачерствел, но пахнет домом: сытость плюс 22.", food: 22, heal: 5, price: 6, eat: "chew", depth: 1 },
   porridge:  { n: "Каша в реторт-пакете", icon: "🥣", kind: "food", cat: "food", desc: "Гречневая каша с тушёнкой: пакет шуршит, каша ещё тёплая. Сытость плюс 30.", food: 30, wake: 5, price: 8, eat: "chew", depth: 1 },
-  soupcup:   { n: "Суп-концентрат в стакане", icon: "🍲", kind: "food", cat: "food", desc: "Залить кипятком из крана и подождать. Сытость плюс 26, здоровье плюс 6, согревает.", food: 26, heal: 6, wake: 5, price: 9, eat: "chew", depth: 1 },
+  soupcup:   { n: "Суп-концентрат в стакане", icon: "🍲", kind: "food", cat: "food", hot: "only", desc: "Сухой порошок в стакане: залить кипятком у чайника, у самовара или из крана автомата с едой и подождать. Сытость плюс 26, здоровье плюс 6, согревает.", food: 26, heal: 6, wake: 5, price: 9, eat: "chew", depth: 1 },
   fishcan:   { n: "Рыбные консервы «Северная»", icon: "🐟", kind: "food", cat: "food", desc: "Банка сардин в масле: ключ на крышке звонко щёлкает. Сытость плюс 34.", food: 34, heal: 6, price: 12, eat: "can", depth: 1 },
   cheese:    { n: "Плавленый сырок", icon: "🧀", kind: "food", cat: "food", desc: "Маленький сырок в фольге. Сытость плюс 14, энергия имплантов плюс 6.", food: 14, en: 6, price: 5, eat: "wrap", depth: 1 },
   apple:     { n: "Яблоко из оранжереи", icon: "🍏", kind: "food", cat: "food", desc: "Мелкое кислое яблоко из оранжереи «Ковчега». Хрустит так, что слышно в коридоре. Сытость плюс 10, выводит немного токсинов.", food: 10, heal: 5, detox: 5, price: 5, eat: "crunch", depth: 1 },
@@ -108,7 +108,7 @@ for (var pk in ITEMS) if (ITEMS[pk].kind === "part") { if (LAB.PARTS.indexOf(pk)
 put(LAB.ARMORS, {
   radcape:    { n: "свинцовый фартук рентгенолога", g: "m", def: 2, res: { rad: 0.35 }, depth: 1, price: 120, desc: "Тяжёлый фартук на лямках: закрывает грудь и живот. Треть облучения не проходит." },
   radsuit:    { n: "противорадиационный комбинезон «Свинец»", g: "m", def: 3, res: { rad: 0.6, chem: 0.15 }, depth: 2, price: 240, desc: "Комбинезон со свинцовыми вставками и капюшоном: держит большую часть излучения. Шуршит при каждом шаге." },
-  hazmat:     { n: "изолирующий костюм «Барьер»", g: "m", def: 4, res: { chem: 0.5, rad: 0.5 }, special: "antitox", depth: 3, price: 320, desc: "Герметичный костюм с фильтрами: яды, газ и половина излучения ему нипочём." },
+  hazmat:     { n: "изолирующий костюм «Барьер»", g: "m", def: 4, res: { chem: 0.5, rad: 0.5 }, special: "antitox", depth: 3, price: 320, desc: "Герметичный костюм с фильтрами: газ доходит вчетверо слабее, яды действуют вдвое короче, половина излучения не проходит." },
   reactorsuit:{ n: "скафандр реакторщика «Исток-Р»", g: "m", def: 7, res: { rad: 0.85, therm: 0.3, phys: 0.1 }, depth: 6, price: 560, desc: "Тяжёлый скафандр ремонтников реактора: почти всё излучение остаётся снаружи. Внутри слышно только собственное дыхание." }
 });
 
@@ -119,11 +119,11 @@ put(LAB.ARMORS, {
 var REC = [
   { id: "a_radcape", out: "armor:radcape", n: "Свинцовый фартук", need: { lead: 3, rubber: 1 }, cls: "base", desc: "Треть облучения не проходит." },
   { id: "a_radsuit", out: "armor:radsuit", n: "Противорадиационный комбинезон «Свинец»", need: { lead: 5, rubber: 2, wire: 2, scrap: 2 }, minL: 2, bp: true, cls: "spec", desc: "Защита от излучения шестьдесят процентов." },
-  { id: "a_hazmat", out: "armor:hazmat", n: "Изолирующий костюм «Барьер»", need: { rubber: 4, filtercart: 2, lead: 3, wire: 2 }, minL: 3, bp: true, cls: "spec", desc: "Яды и газ не действуют, половина излучения не проходит." },
+  { id: "a_hazmat", out: "armor:hazmat", n: "Изолирующий костюм «Барьер»", need: { rubber: 4, filtercart: 2, lead: 3, wire: 2 }, minL: 3, bp: true, cls: "spec", desc: "Газ вчетверо слабее, яды действуют вдвое короче, половина излучения не проходит." },
   { id: "a_reactorsuit", out: "armor:reactorsuit", n: "Скафандр реакторщика «Исток-Р»", need: { lead: 8, ceramic: 3, rubber: 3, supercond: 1, chip: 2 }, minL: 6, bp: true, cls: "exp", desc: "Почти всё излучение остаётся снаружи." },
   { id: "respirator", out: "respirator", n: "Респиратор с угольным фильтром", need: { filtercart: 1, rubber: 1 }, cls: "base" },
   { id: "antirad", out: "antirad", n: "Антирадин", need: { reagent: 2, gel: 1 }, cls: "spec" },
-  { id: "iodine", out: "iodine", n: "Йодид калия", need: { reagent: 1, gel: 1 }, cls: "base" },
+  { id: "iodine", out: "iodine", n: "Йодид калия", need: { c_iodine: 1, reagent: 1 }, cls: "base" }, /* (3.7) йодид — из кристаллического йода */
   /* (3.7, нелогичность) дозиметр без счётчика Гейгера не собрать: его продают и находят, а из
      микросхемы, провода и конденсатора прежде выходил «дозиметр» без датчика */
   { id: "tape", out: "tape", n: "Изолента", need: { rubber: 1 }, cls: "base" }

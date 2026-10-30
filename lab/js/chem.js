@@ -72,9 +72,9 @@ var FAM = {
   c_acid:       { n: ["Кислотный мешок", "Кислотный секрет", "Кислотный кристалл"], icon: "🟢", depth: 3, price: 15, br: "tox", org: 1, desc: "Мешок кислотника: шипит, если сжать. Едче лабораторной кислоты.", src: "кислотные и взрывающиеся твари" },
   c_nerve:      { n: ["Нервный узел", "Нейроэкстракт", "Нейромедиатор"], icon: "🧠", depth: 3, price: 18, br: "pharm", org: 1, desc: "Нервный узел разумной твари: успокоительные, ноотропы и нервный газ.", src: "разумные твари, вожаки, жрецы и стражи; нервный корень «Колыбели»" },
   c_fuel:       { n: ["Топливный гель", "Стабилизированное топливо", "Высокоэнергетическое топливо"], icon: "🔥", depth: 3, price: 14, br: "pyro", desc: "Загущённое топливо из баков сварщиков и тяжёлых машин: горит долго и жарко.", src: "сварщики, резчики и тяжёлые роботы; генераторные; смола «Колыбели»" },
-  c_phosphor:   { n: ["Белый фосфор", "Красный фосфор", "Фосфорный концентрат"], icon: "✴️", depth: 4, price: 20, br: "pyro", desc: "Фосфор под водой в банке: на воздухе вспыхивает сам. Сердце пиротехники.", src: "склады химии и оружейные с четвёртого уровня" },
+  c_phosphor:   { n: ["Белый фосфор", "Очищенный белый фосфор", "Белый фосфор особой чистоты"], icon: "✴️", depth: 4, price: 20, br: "pyro", desc: "Фосфор под водой в банке: на воздухе вспыхивает сам. Сердце пиротехники.", src: "склады химии и оружейные с четвёртого уровня" },
   c_enzyme:     { n: ["Ферментная культура", "Активные ферменты", "Чистый фермент"], icon: "🧫", depth: 4, price: 22, br: "bio", org: 1, desc: "Живая культура ферментов: ускоряет любой биосинтез.", src: "биолаборатории, инкубаторы и чаны с четвёртого уровня; клетки Омеги" },
-  c_catalyst:   { n: ["Платиновый катализатор", "Палладиевый катализатор", "Наноструктурный катализатор"], icon: "💠", depth: 5, price: 40, br: "energy", desc: "Сетка катализатора: ведёт реакцию куда нужно. Добавка к синтезу поднимает сорт состава.", src: "роботы с модификациями и стражи, склады глубоких уровней; амальгама и нанопаста" },
+  c_catalyst:   { n: ["Платиновый катализатор", "Очищенный платиновый катализатор", "Наноструктурный катализатор"], icon: "💠", depth: 5, price: 40, br: "energy", desc: "Сетка катализатора: ведёт реакцию куда нужно. Добавка к синтезу поднимает сорт состава.", src: "роботы с модификациями и стражи, склады глубоких уровней; амальгама и нанопаста" },
   c_ecto:       { n: ["Аномальная взвесь", "Сгущённая взвесь", "Кристаллы взвеси"], icon: "🌫️", depth: 6, price: 50, br: "bio", desc: "Светящаяся взвесь аномалий: свойства меняет, пока на неё смотрят.", src: "аномалии и установки глубин" },
   c_cond:       { n: ["Мутагенный конденсат", "Концентрат мутагена", "Чистый мутаген"], icon: "🟣", depth: 2, price: 18, br: "bio", desc: "Капли мутагена, осевшие из тумана: светятся в темноте. Из него делают антимутаген и всё, что с мутагеном спорит.", src: "помещения с мутагенным туманом; вывод мутагена из тканей щёлочью; твари «Колыбели» и глубже" },
   c_stab:       { n: ["Стабилизатор"], one: 1, icon: "⚖️", depth: 3, price: 16, br: "pharm", desc: "Добавка к синтезу: состав действует вдвое дольше.", src: "склады химии с третьего уровня; соли со щёлочью и растворителем; воск улья" },
@@ -121,7 +121,7 @@ var PROD = {
   c_adapt:     { n: "Сыворотка адаптации", icon: "🧬", kind: "use", cat: "med", br: "bio", ce: "adapt", price: 60, depth: 2, mods: ["long"], desc: "Полторы минуты туман мутагена не берёт вас, а мутация не растёт." },
   c_controlled:{ n: "Сыворотка управляемой мутации", icon: "🧬", kind: "use", cat: "med", br: "bio", ce: "ctrl", price: 140, depth: 5, mods: ["long", "strong"], mut: 1, desc: "Пять минут — сила в руках, тварям без разума вы свой, раны затягиваются; лекарства не слабеют. Мутация плюс пять." },
   c_clarity:   { n: "Ноотроп «Ясность»", icon: "💊", kind: "use", cat: "med", br: "pharm", price: 40, depth: 2, mods: ["strong"], mut: 1, desc: "Нейронагрузка минус 25, бодрость плюс 20, и слух обостряется — «Эхо» прослушивает всё вокруг.", fx: { neuro: -25, wake: 20, scan: 1 } },
-  c_regen:     { n: "Регенерирующая сыворотка", icon: "💉", kind: "use", cat: "med", br: "pharm", ce: "regen", price: 60, depth: 3, mods: ["long", "strong"], mut: 1, desc: "Полминуты раны затягиваются сами — около пятидесяти здоровья." },
+  c_regen:     { n: "Регенерирующая сыворотка", icon: "💉", kind: "use", cat: "med", br: "pharm", ce: "regen", price: 60, depth: 3, mods: ["long", "strong"], mut: 1, desc: "Полминуты раны затягиваются сами — около шестидесяти здоровья." },
   c_antitox:   { n: "Универсальный антитоксин", icon: "🧪", kind: "use", cat: "med", br: "tox", price: 45, depth: 2, mods: ["long", "strong"], desc: "Снимает отравление, выводит 60 токсинов, и минуту яды, споры и туман не действуют.", fx: { cure: true, detox: 60, antitox: 120 } },
   c_repel:     { n: "Репеллент", icon: "🧴", kind: "use", br: "tox", ce: "repel", price: 35, depth: 2, mods: ["long"], desc: "Минуту твари без разума не чуют вас дальше шага. Разумных, стражей и машин не обманет." },
   c_coat_tox:  { n: "Ядовитая смазка", icon: "🦂", kind: "use", br: "tox", ce: "coat", price: 40, depth: 1, mods: ["long", "strong"], desc: "Для клинка, дубинки или стальных пуль: пятнадцать попаданий травят тварей и бьют их на пятую часть сильнее." },
@@ -140,7 +140,7 @@ var PROD = {
   c_gunoil:    { n: "Оружейная смазка", icon: "🛢️", kind: "use", br: "energy", ce: "oil", price: 30, depth: 1, mods: ["strong"], desc: "Оружие в руках чище и надёжнее: плюс двадцать к состоянию, не выше девяноста." },
   c_smoke:     { n: "Дымовая шашка", icon: "🌫️", kind: "throw", br: "pyro", price: 30, depth: 1, mods: ["long"], desc: "На два шага вокруг враги и камеры вас теряют, а машины путаются. Урона нет.",
     gren: { dmg: 0, r: 2, dt: "kinetic", smoke: true, blind: 16, confuse: 4, self: false, range: 5, fuse: 700, loud: 3 } },
-  c_flash:     { n: "Магниевая вспышка", icon: "🎆", kind: "throw", br: "pyro", price: 45, depth: 4, mods: ["long"], desc: "Вспышка слепит всех на два шага вокруг, твари замирают. Урона нет, вас не заденет.",
+  c_flash:     { n: "Фосфорная вспышка", icon: "🎆", kind: "throw", br: "pyro", price: 45, depth: 4, mods: ["long"], desc: "Вспышка слепит всех на два шага вокруг, твари замирают. Урона нет, вас не заденет.",
     gren: { dmg: 0, r: 2, dt: "sonic", blind: 20, stun: 2, self: false, range: 6, fuse: 900, loud: 9 } },
   c_cryo:      { n: "Криосмесь", icon: "🧊", kind: "throw", br: "pyro", price: 45, depth: 2, mods: ["long", "strong", "clean"], desc: "Схватывает инеем всех на шаг вокруг: цели застывают, потом движутся вяло.",
     gren: { dmg: 10, r: 1, dt: "cryo", freeze: 3, slow: 6, self: true, range: 5, fuse: 800, loud: 5 } },
@@ -274,22 +274,24 @@ function line() {
    st — ступень стола; f — рецептуру надо узнать (журнал, анализ) или
    дорасти: направление на две ступени выше; minG — только сырьё не ниже сорта. */
 var RC = [
-  { id: "h_bandage", out: "bandage", br: "pharm", lv: 0, st: 1, need: { c_blood: 1, c_salt: 1 } },
+  /* (3.7, нелогичность) бинт и наборы — с бинтом: стол не «разливает по склянкам» ткань; бинт
+     пропитывают гемостатиком из гемолимфы, а в аптечку и набор кладут бинты (к склянке, chemlab ASM) */
+  { id: "h_bandage", out: "bandage_h", br: "pharm", lv: 0, st: 1, need: { c_blood: 1, c_salt: 1, bandage: 1 } },
   { id: "h_coagulant", out: "coagulant", br: "pharm", lv: 0, st: 1, need: { c_blood: 1, c_alkali: 1 } },
-  { id: "h_medkit", out: "medkit_s", br: "pharm", lv: 0, st: 1, need: { gel: 1, c_blood: 1, c_salt: 1 } },
+  { id: "h_medkit", out: "medkit_s", br: "pharm", lv: 0, st: 1, need: { gel: 1, c_blood: 1, c_salt: 1, bandage: 1 } },
   { id: "h_painkiller", out: "painkiller", br: "pharm", lv: 0, st: 1, need: { c_gland: 1, c_solvent: 1 } },
-  { id: "h_iodine", out: "iodine", br: "pharm", lv: 1, st: 1, need: { c_salt: 2, c_acidc: 1 } },
+  { id: "h_iodine", out: "iodine", br: "pharm", lv: 1, st: 1, need: { c_iodine: 1, c_alkali: 1 } }, /* (3.7) йодид — из йода со щёлочью */
   { id: "h_eardrops", out: "eardrops", br: "pharm", lv: 1, st: 1, need: { c_salt: 1, c_solvent: 1, gel: 1 } },
   { id: "h_calm", out: "calm", br: "pharm", lv: 1, st: 1, need: { c_nerve: 1, c_salt: 1 } },
   { id: "h_antimut", out: "c_antimut", br: "pharm", lv: 1, st: 2, need: { c_cond: 1, c_alkali: 1, c_salt: 1 } },
   { id: "h_adrenaline", out: "adrenaline", br: "pharm", lv: 1, st: 2, need: { c_gland: 2, c_salt: 1 } },
-  { id: "h_stim", out: "stim", br: "pharm", lv: 1, st: 2, need: { c_gland: 1, c_electrolyte: 1, c_solvent: 1 } },
+  { id: "h_stim", out: "stim", br: "pharm", lv: 1, st: 2, need: { c_gland: 1, c_salt: 1, c_solvent: 1 } }, /* (3.7) без батарейного электролита */
   { id: "h_antirad", out: "antirad", br: "pharm", lv: 2, st: 2, need: { c_salt: 2, c_alkali: 1 } },
   { id: "h_neuroblock", out: "neuroblock", br: "pharm", lv: 2, st: 2, need: { c_nerve: 1, c_solvent: 1, c_salt: 1 } },
-  { id: "h_medkit_l", out: "medkit_l", br: "pharm", lv: 2, st: 2, need: { gel: 2, c_blood: 2, c_salt: 1, c_solvent: 1 } },
+  { id: "h_medkit_l", out: "medkit_l", br: "pharm", lv: 2, st: 2, need: { gel: 2, c_blood: 2, c_salt: 1, c_solvent: 1, bandage: 1 } },
   { id: "h_clarity", out: "c_clarity", br: "pharm", lv: 2, st: 2, f: 1, need: { c_nerve: 1, c_gland: 1, c_solvent: 1 } },
   { id: "h_regen", out: "c_regen", br: "pharm", lv: 3, st: 3, f: 1, need: { c_blood: 2, c_enzyme: 1, gel: 1 } },
-  { id: "h_trauma", out: "trauma", br: "pharm", lv: 3, st: 3, f: 1, need: { gel: 2, c_blood: 2, c_gland: 1, c_salt: 1 } },
+  { id: "h_trauma", out: "trauma", br: "pharm", lv: 3, st: 3, f: 1, need: { gel: 2, c_blood: 2, c_gland: 1, c_salt: 1, bandage: 2 } },
   { id: "h_radaway", out: "radaway", br: "pharm", lv: 3, st: 3, f: 1, need: { c_salt: 2, c_solvent: 1, c_enzyme: 1 } },
   { id: "h_nanomed", out: "nanomed", br: "pharm", lv: 5, st: 4, f: 1, minG: 2, need: { c_catalyst: 1, c_enzyme: 1, gel: 2, c_blood: 2 } },
   { id: "t_antidote", out: "antidote", br: "tox", lv: 0, st: 1, need: { c_venom: 1, c_salt: 1 } },
@@ -331,7 +333,7 @@ var RC = [
   { id: "l_lockpaste", out: "c_lockpaste", br: "tox", lv: 2, st: 1, f: 1, need: { c_acidc: 2, c_salt: 1, gel: 1 } },
   { id: "l_corrode", out: "c_corrode", br: "tox", lv: 2, st: 2, f: 1, need: { c_acidc: 1, c_salt: 2, scrap: 1 } },
   { id: "l_fixer", out: "c_fixer", br: "energy", lv: 0, st: 1, need: { c_salt: 2, c_soda: 1 } },
-  { id: "l_devel", out: "c_devel", br: "energy", lv: 1, st: 1, need: { c_silver: 1, c_alkali: 1 } }
+  { id: "l_devel", out: "c_devel", br: "energy", lv: 1, st: 1, need: { c_silver: 1, c_ammonia: 1 } } /* (3.7) ляпис в нашатыре — физический проявитель; со щёлочью выходил бурый осадок */
 ];
 var RCBY = {};
 RC.forEach(function (rc) { RCBY[rc.id] = rc; });
@@ -352,17 +354,20 @@ var REF = [
   { id: "d_salt", n: "Растолочь звонкую соль — химически чистые соли, два", br: "tox", st: 2, need: { k_salt: 1 }, give: { c_salt_3: 2 } },
   { id: "d_resin", n: "Вытопить смолу — стабилизированное топливо, два", br: "pyro", st: 2, need: { k_resin: 1 }, give: { c_fuel_2: 2 } },
   { id: "d_wax", n: "Растопить воск улья — стабилизатор, два", br: "pharm", st: 1, need: { k_wax: 1 }, give: { c_stab: 2 } },
-  { id: "d_silver", n: "Восстановить амальгаму — палладиевый катализатор", br: "energy", st: 3, need: { o_silver: 1, c_acidc: 1 }, give: { c_catalyst_2: 1 } },
+  { id: "d_silver", n: "Восстановить амальгаму — очищенный платиновый катализатор", br: "energy", st: 3, need: { o_silver: 1, c_acidc: 1 }, give: { c_catalyst_2: 1 } },
   { id: "d_nano", n: "Разложить нанопасту — наноструктурный катализатор", br: "energy", st: 3, need: { m_nanopaste: 1, c_solvent: 1 }, give: { c_catalyst_3: 1 } },
   { id: "d_omega", n: "Развести клетки Омеги — чистый фермент, два", br: "bio", st: 3, need: { i_omegagel: 1, c_salt: 1 }, give: { c_enzyme_3: 2 } },
   { id: "d_fiber", n: "Разварить волокно первого дерева — хитозан, два", br: "bio", st: 3, need: { i_treefiber: 1, c_alkali: 1 }, give: { c_chitin_3: 2 } }
 ];
-/* Очистка: из двух порций сорта ниже — одна сорта выше (растворитель того же сорта). */
+/* Очистка: из двух порций сорта ниже — одна сорта выше (растворитель того же сорта).
+   (3.7, нелогичность) растворитель и кислоту не промывают растворителем, а перегоняют: из трёх
+   порций — одна (прежде концентрированную кислоту «очищали» спиртом с ацетоном до дымящей) */
+var DISTIL = { c_solvent: 1, c_acidc: 1 };
 FAM_IDS.forEach(function (f) {
   if (FAM[f].one) return;
   var nm = FAM[f].n;
-  REF.push({ id: "p2_" + f, n: "Очистить: " + low(nm[0]) + " — " + low(nm[1]), br: FAM[f].br, st: 2, pur: 2, need: f === "c_solvent" ? { c_solvent: 3 } : (function () { var o = {}; o[f] = 2; o.c_solvent = 1; return o; })(), give: (function () { var o = {}; o[matId(f, 2)] = 1; return o; })() });
-  REF.push({ id: "p3_" + f, n: "Довести до особой чистоты: " + low(nm[1]) + " — " + low(nm[2]), br: FAM[f].br, st: 3, pur: 3, need: f === "c_solvent" ? { c_solvent_2: 3 } : (function () { var o = {}; o[matId(f, 2)] = 2; o.c_solvent_2 = 1; return o; })(), give: (function () { var o = {}; o[matId(f, 3)] = 1; return o; })() });
+  REF.push({ id: "p2_" + f, n: (DISTIL[f] ? "Перегнать: " : "Очистить: ") + low(nm[0]) + " — " + low(nm[1]), br: FAM[f].br, st: 2, pur: 2, need: DISTIL[f] ? (function () { var o = {}; o[f] = 3; return o; })() : (function () { var o = {}; o[f] = 2; o.c_solvent = 1; return o; })(), give: (function () { var o = {}; o[matId(f, 2)] = 1; return o; })() });
+  REF.push({ id: "p3_" + f, n: (DISTIL[f] ? "Перегнать ещё раз: " : "Довести до особой чистоты: ") + low(nm[1]) + " — " + low(nm[2]), br: FAM[f].br, st: 3, pur: 3, need: DISTIL[f] ? (function () { var o = {}; o[matId(f, 2)] = 3; return o; })() : (function () { var o = {}; o[matId(f, 2)] = 2; o.c_solvent_2 = 1; return o; })(), give: (function () { var o = {}; o[matId(f, 3)] = 1; return o; })() });
 });
 function refOk(rf) { for (var k in rf.need) if (!LAB.ITEMS[k]) return false; for (var k2 in rf.give) if (!LAB.ITEMS[k2]) return false; return true; }
 function outOk(rc) { var o = String(rc.out); return o.indexOf("ammo:") === 0 ? !!LAB.AMMO[o.slice(5)] : !!LAB.ITEMS[o]; }
@@ -860,7 +865,7 @@ function use(id) {
     case "antimut": var cut = Math.round(30 * k.mag * pk * (rank("pharm") >= 3 ? 1.5 : 1)); cutMut(cut); msg = "Мутация минус " + cut + ". " + mutLine(); break;
     case "adapt": g.st.fogImm = Math.max(g.st.fogImm || 0, Math.round(180 * k.dur * bioDur())); msg = "Туман мутагена вас пока не берёт."; break;
     case "ctrl": g.st.ctrlMut = Math.max(g.st.ctrlMut || 0, Math.round(600 * k.dur * bioDur())); msg = "Мутаген послушен: сила в руках, твари без разума принимают вас за своего, раны затягиваются."; break;
-    case "regen": g.st.regen = Math.max(g.st.regen || 0, Math.round(30 * k.dur)); g.st.regenN = Math.max(1, Math.round(2 * k.mag * pk * mutHealK())); g.st.regenE = 2; msg = "Тепло растекается по ранам: здоровье возвращается само."; break;
+    case "regen": g.st.regen = Math.max(g.st.regen || 0, Math.round(60 * k.dur)); /* (3.7, нелогичность) полминуты — шестьдесят тактов по полсекунды; прежде тридцать */ g.st.regenN = Math.max(1, Math.round(2 * k.mag * pk * mutHealK())); g.st.regenE = 2; msg = "Тепло растекается по ранам: здоровье возвращается само."; break;
     case "regen2": g.st.regen = Math.max(g.st.regen || 0, Math.round(300 * k.dur * bioDur())); g.st.regenN = Math.max(1, Math.round(1 * k.mag * pk * mutHealK())); g.st.regenE = 3; msg = "Пластырь с культурой прирастает к коже: долго, понемногу здоровье будет возвращаться."; break;
     case "repel": g.st.repel = Math.round(120 * k.dur * bioDur()); msg = "Едкий запах окутывает вас: твари без разума не чуют вас дальше шага."; break;
     case "salve": g.st.shield = Math.max(g.st.shield || 0, Math.round(30 * k.mag * potK("bio"))); g.st.shieldT = Math.round(60 * k.dur * bioDur()); msg = "Хитиновая корка схватывается на коже: щит " + g.st.shield + "."; break;
@@ -1060,10 +1065,15 @@ function pickBio(f, r, L) {
   var c = [];
   if (has("poison") || has("leech") || adt === "chem") c.push("c_venom");
   if ((has("explode") || adt === "acid") && famOk("c_acid", L)) c.push("c_acid");
-  if ((f.arm || 0) >= 2 && famOk("c_chitin", L)) c.push("c_chitin");
-  if ((has("swarm") || has("spore") || /vine|myc|spore|moss/.test(f.snd || (f.base && f.base.snd) || "")) && famOk("c_spores", L)) c.push("c_spores");
+  /* (3.7, нелогичность) хитин — только с панцирных (body shell, mutants.js), а не с любой твари в броне от
+     двух (суперсолдат, сом, слизень); споровая пыльца — с грибниц, разносчиков спор и растений (fungus,
+     spores, plant), а не со всякой стаи (крысолак); у растения нет ни крови, ни желёз — с лианы только
+     пыльца (и яд, и ферменты) */
+  var body = " " + ((f.base && f.base.body) || f.body || "") + " ", is = function (k) { return body.indexOf(" " + k + " ") >= 0; };
+  if (is("shell") && famOk("c_chitin", L)) c.push("c_chitin");
+  if (((is("fungus") || is("spores") || has("spore")) && famOk("c_spores", L)) || is("plant")) c.push("c_spores");
   if (L >= 4 && (has("regen") || (f.base && f.base.caste === "worker"))) c.push("c_enzyme");
-  if (c.length && r() < 0.6) return c[Math.floor(r() * c.length)];
+  if (c.length && (is("plant") || r() < 0.6)) return c[Math.floor(r() * c.length)];
   return r() < 0.45 ? "c_gland" : "c_blood";
 }
 function pickMech(f, r, L) {

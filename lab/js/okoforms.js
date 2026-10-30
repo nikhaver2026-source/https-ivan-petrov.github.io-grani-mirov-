@@ -225,12 +225,22 @@ function offerDeal() {
 }
 
 /* ── ИСТОК: ОКО ПРЕДУПРЕЖДАЕТ ШЁПОТОМ ── */
-var WARN = [
-  "{dir} — {name}. Не моя. Осторожно.",
-  "Идёт к вам: {name}, {dir}. Я её больше не держу.",
-  "Тише. {name} — {dir}. Слышите? Я слышу.",
-  "{name}, {dir}. Она меня не слушает. Вас — тем более."
-];
+/* (3.7, нелогичность) о машине — что она больше не слушает ОКО, о твари — что живое ОКО никогда и не
+   держало; без «она» и «моя»: имя бывает любого рода (прежде — «Она меня не слушает» о любом враге) */
+var WARN = {
+  mech: [
+    "{dir} — {name}. Эта машина уже не моя. Осторожно.",
+    "Идёт к вам: {name}, {dir}. Эту машину я больше не держу.",
+    "Тише. {name} — {dir}. Слышите? Я слышу.",
+    "{name}, {dir}. Моих приказов эта машина не слушает. Ваших — тем более."
+  ],
+  bio: [
+    "{dir} — {name}. Живое здесь не моё. Осторожно.",
+    "Идёт к вам: {name}, {dir}. Над живым у меня власти нет и не было.",
+    "Тише. {name} — {dir}. Слышите? Я слышу.",
+    "{name}, {dir}. Живое меня никогда не слушало. Вас — тем более."
+  ]
+};
 var lastWarn = 0;
 function warnTick() {
   var f = cur(), g = G(), cb = C(), fl = CUR() && CUR().fl;
@@ -251,7 +261,7 @@ function warnTick() {
   lastWarn = now;
   if (Math.random() > 0.85 - 0.6 * f.t) return;
   var nm = String(near.name || "машина").split(",")[0];
-  var t = pick(WARN).replace(/\{dir\}/g, LAB.game.relDir(near.x, near.y)).replace(/\{name\}/g, nm);
+  var t = pick(WARN[near.kind === "mech" ? "mech" : "bio"]).replace(/\{dir\}/g, LAB.game.relDir(near.x, near.y)).replace(/\{name\}/g, nm);
   t = t.charAt(0).toUpperCase() + t.slice(1);
   var fr = frame("check");
   if (LAB.oko && LAB.oko.voice) LAB.oko.voice(fr.lead + ": «" + t + "»", { prio: "urgent", keep: true }, null, 0);

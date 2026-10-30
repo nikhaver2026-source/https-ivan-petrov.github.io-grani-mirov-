@@ -23,6 +23,8 @@ function load(f) {
 }
 let errs = 0, warns = 0;
 for (const f of ["js/data.js", "js/texts.js", "js/lore.js"]) load(f);
+/* сырьё химии (chem.js, FAM: споровая пыльца и др.) — тоже вещи рюкзака: рецепты верстака берут и его */
+const CHEM_FAM = new Set((fs.readFileSync(path.join(ROOT, "js/chem.js"), "utf8").match(/^\s{2}(c_[a-z]+):\s*\{ n: \[/gm) || []).map(m => m.trim().split(":")[0]));
 const LAB = ctx.LAB;
 const before = {
   rooms: new Set(Object.keys(LAB.ROOMS)), foes: new Set(Object.keys(LAB.FOES)), bosses: new Set(Object.keys(LAB.BOSSES)),
@@ -259,7 +261,7 @@ for (let n = 1; n <= 5; n++) {
     const o = String(r.out);
     const ok = o.indexOf("ammo:") === 0 ? !!LAB.AMMO[o.slice(5)] : o.indexOf("armor:") === 0 ? !!LAB.ARMORS[o.slice(6)] : o.indexOf("weapon:") === 0 ? !!LAB.WEAPONS[o.slice(7)] : !!LAB.ITEMS[o] || o === "wmod";
     if (!ok) E(b, `recipe ${r.id}: out «${o}» — нет такой вещи`);
-    for (const k in r.need) { if (!LAB.ITEMS[k]) E(b, `recipe ${r.id}: need.${k} — нет такой детали или предмета`); if (!num(r.need[k], 1, 12)) E(b, `recipe ${r.id}: need.${k} 1–12`); }
+    for (const k in r.need) { if (!LAB.ITEMS[k] && !CHEM_FAM.has(k)) E(b, `recipe ${r.id}: need.${k} — нет такой детали или предмета`); if (!num(r.need[k], 1, 12)) E(b, `recipe ${r.id}: need.${k} 1–12`); }
     if (!num(r.minL || 0, L0, L1)) E(b, `recipe ${r.id}: minL ${L0}–${L1}`);
   });
   armors.forEach(id => {

@@ -106,10 +106,10 @@ var NEW = {
     desc: "Тварь, выучившая человеческий голос: из темноты зовёт на помощь и ждёт, кто придёт. «Эхо» распознаёт подделку только вблизи. Не верьте крику, который повторяется слово в слово.",
     hp: 40, dmg: 9, arm: 2, spd: 2, rng: 1, acd: 2, det: 6, beh: ["ambush", "chase", "lure"], adt: "phys", snd: "labmut", sndRate: 1.0, xp: 24 },
   u_quaker: { n: "Трясун", g: "m", kind: "bio", mind: 0, rank: "high", fam: "Великаны и звери", lv: [15, 20],
-    desc: "Тяжёлая тварь сейсмических штолен: топает так, что удар расходится волной на соседние клетки. Чувствует шаги через пол — замрите, и он вас потеряет.",
+    desc: "Тяжёлая тварь сейсмических штолен: топает так, что удар расходится волной на соседние клетки. Шаги чувствует через пол даже за стеной: пока вы идёте, он знает, где вы, а глаза у него тоже есть.",
     hp: 110, dmg: 16, arm: 6, spd: 3, rng: 2, acd: 3, det: 6, beh: ["ranged", "splash", "vibro"], adt: "phys", snd: "proto", sndRate: 0.8, xp: 40 },
   u_geyser: { n: "Гейзерник", g: "m", kind: "bio", mind: 0, rank: "mid", fam: "Слизни и черви", lv: [18, 20],
-    desc: "Слизистая тварь геотермальных скважин: набирает в себя кипяток и плюёт струёй на четыре шага. Перед плевком булькает — ловите паузу. Холод её гасит.",
+    desc: "Слизистая тварь геотермальных скважин: набирает в себя кипяток и плюёт струёй на четыре шага, и ошпаренные ноги слушаются хуже. Перед плевком булькает — ловите паузу. Холод её гасит.",
     hp: 42, dmg: 9, arm: 1, spd: 2, rng: 4, acd: 3, det: 6, beh: ["ranged", "slow"], adt: "therm", snd: "swamp", sndRate: 1.3, xp: 20, res: { thermo: 0.2, cryo: 1.7 } },
   u_townsman: { n: "Житель городка", g: "m", kind: "bio", mind: 2, rank: "mid", caste: "soldier", fam: "Народы глубин", lv: [16, 18],
     desc: "Житель резервного городка «Глубины», так и не поднявшийся наверх. Живут семьями, держатся вместе и говорят обрывками фраз. Увидев чужого, зовут своих.",
@@ -343,6 +343,18 @@ var PACKS = [
 var k;
 for (k in NEW) { if (!LAB.FOES[k]) LAB.FOES[k] = NEW[k]; }
 for (k in OLD) { var b = LAB.FOES[k]; if (b && b.mind == null) { b.mind = OLD[k][0]; b.rank = OLD[k][1]; b.fam = OLD[k][2]; } }
+/* (3.7, нелогичность) Из чего тело — для добычи химии (chem.js, pickBio): shell — панцирь или хитин
+   (хитиновые пластины), plant — растение (пыльца; ни крови, ни желёз), fungus — гриб, spores — носит
+   в себе споры (споровая пыльца). Прежде хитин падал с любой твари в броне от двух — с суперсолдата и
+   сома, — а пыльца со всякой стаи, с крысолака; с лианы — гемолимфа и железа. Своё поле body у вида
+   (в данных блока) — сильнее этой таблицы. */
+var BODY = {
+  roach: "shell", weaver: "shell", k_saltcrab: "shell", k_glowbug: "shell", u_tick: "shell", u_stonemite: "shell", u_rustbug: "shell",
+  u_hiveworker: "shell", u_hiveguard: "shell", u_stinger: "shell", u_hivequeen: "shell", u_bomber: "shell", u_cogroach: "shell", u_lockermimic: "shell",
+  vine: "plant", k_rootweaver: "plant", i_rootling: "plant", u_sprout: "plant", u_rootchild: "plant",
+  spore: "fungus", k_puffball: "fungus", u_moth: "spores", u_pollenfly: "spores", u_cslinger: "spores", u_husk: "spores"
+};
+for (k in BODY) { var fb = LAB.FOES[k]; if (fb && !fb.body) fb.body = BODY[k]; }
 
 /* Новые твари — в списки уровней: узкие (до шести уровней) — на каждом
    своём уровне, широкие — через уровень-другой, вперемешку, чтобы соседние

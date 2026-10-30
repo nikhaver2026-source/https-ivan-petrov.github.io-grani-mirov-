@@ -194,7 +194,11 @@ LAB.isBlaster = function (b) { return !!b && (b.cls === "blaster" || /бласт
    огнестрел на пулях, дроби, иглах и газе — как прежде: в двустволке два
    патрона. Прежде тяжёлое оружие делало два-восемь выстрелов, а лишь у
    бластеров было плюс восемь за ступень. */
-var PHYS_AMMO = { none: 1, slug: 1, buckshot: 1, k_needle: 1, g_gascan: 1 };
+/* (3.7, нелогичность) капсулы спор и смолы, нанокартриджи и сейсмозаряды — тоже не батареи: их не
+   заряжают от сети, и ёмкость у оружия под них — своя, как у ствола на патронах (прежде шашечный
+   метатель держал семь десятков шашек из одной гильзы) */
+var PHYS_AMMO = { none: 1, slug: 1, buckshot: 1, k_needle: 1, g_gascan: 1, k_capsule: 1, m_nanocart: 1, g_seiscell: 1 };
+var PHYS_V3 = { k_capsule: 1, m_nanocart: 1, g_seiscell: 1 };
 /* (2.6) патроны, иглы и баллоны капсула не заряжает: только батареи и заряды */
 LAB.physAmmo = function (a) { return !!PHYS_AMMO[a]; };
 LAB.chargeGun = function (b) { return !!b && b.cap > 0 && (b.rng || 1) > 1 && !PHYS_AMMO[b.ammo]; };
@@ -232,7 +236,7 @@ var UPG = {
 var UPG_KIND = { g_twinbarrel: [0, 0], k_bonebow: [0, 0], k_sting: [0, 0], k_eeljar: [0, 0], k_lumen: [0, 0], k_amberwand: [0, 0], zaslon: [1 / 3, 2], k_alphamg: [0.5, 3] };
 /* почему ёмкость не меняется — у тех, кому верстак не поможет */
 var UPG_NO = { g_twinbarrel: "два ствола — два патрона", k_bonebow: "самострел заряжают по одной игле", k_sting: "живое жало: игл в нём столько, сколько выросло",
-  k_eeljar: "живой угорь: разрядов в нём столько, сколько он накопит", k_lumen: "живой орган: его свет не прибавить", k_amberwand: "жезл из цельной смолы: отсека в нём не расточить" };
+  k_eeljar: "лейденская банка: разрядов в ней столько, сколько держат обкладки", k_lumen: "живой орган: его свет не прибавить", k_amberwand: "жезл из цельной смолы: отсека в нём не расточить" };
 /* fam: bay — отсек батарей и ячеек, mag — магазин патронов, игл, капсул и картриджей, tank — газовый баллон */
 var MAG_AMMO = { slug: 1, buckshot: 1, k_needle: 1, k_capsule: 1, m_nanocart: 1, g_seiscell: 1 };
 LAB.capPlan = function (base) {
@@ -252,12 +256,13 @@ LAB.capAt = function (base, cap0, n) {
    пересчитывается, модули и расточка мастерской остаются, заряд — в той же
    доле (полный — полный). */
 LAB.fixCap = function (w) {
-  if (!w || w.capV === 2 || !LAB.WEAPONS[w.base]) return w;
+  if (!w || w.capV === 3 || !LAB.WEAPONS[w.base]) return w;
+  if (w.capV === 2 && !PHYS_V3[w.ammo]) { w.capV = 3; return w; } /* (3.7) пересчёт — только под капсулы, картриджи и сейсмозаряды */
   var was = w.cap || 0, full = was > 0 && w.charge >= was, nb = LAB.weaponCap(w.base, w.rank, w.lvl, w.qual);
   if (w.cap0 != null && LAB.workshop && LAB.workshop.recalc) { w.cap0 = nb; LAB.workshop.recalc(w); }
   else w.cap = nb;
   if (was > 0) w.charge = full ? w.cap : Math.min(w.cap, Math.round((w.charge || 0) * w.cap / was));
-  w.capV = 2;
+  w.capV = 3;
   return w;
 };
 LAB.makeWeapon = function (base, lvl, rank, qual, idHint) {
@@ -269,7 +274,7 @@ LAB.makeWeapon = function (base, lvl, rank, qual, idHint) {
     id: idHint || ("w" + (++weaponSeq) + "_" + Math.floor(Math.random() * 1e6).toString(36) + "_" + base),
     base: base, g: b.g, rank: rank, qual: qual, lvl: lvl,
     dmg: Math.max(1, Math.round(b.dmg * k)),
-    rng: b.rng, spread: b.spread, cap: LAB.weaponCap(base, rank, lvl, qual), capV: 2,
+    rng: b.rng, spread: b.spread, cap: LAB.weaponCap(base, rank, lvl, qual), capV: 3,
     cd: b.cd, ammo: b.ammo, dt: b.dt, mods: 0
   };
   w.charge = w.cap;
@@ -951,7 +956,10 @@ function genFloor(seed, L, F, attempt) {
   function placeRequirement(it, spot, lockChild) {
     /* иногда вещь — у врага рядом: «пропуска добываются с монстров»
        (2.0) но не в мастерской этажа: там вещь просто лежит */
-    if (r.chance(0.35) && spot !== U && !rooms[spot].shop) {
+    /* (3.7, нелогичность) спрятанную шлюзовую ключ-карту (card: "hidden") враг не носит: записи и считыватель
+       говорят «её спрятали — слушайте маяк», а у врага-носителя маяка нет */
+    var hid = it.kind === "gatepass" && lev.card === "hidden";
+    if (r.chance(0.35) && !hid && spot !== U && !rooms[spot].shop) {
       var pool = lev.foes.filter(function (fid) { return LAB.FOES[fid] && LAB.FOES[fid].carrier; });
       if (pool.length) {
         var fid = r.pick(pool);
@@ -1279,7 +1287,9 @@ function genFloor(seed, L, F, attempt) {
   if (quietRooms.length && r.chance(0.22)) {
     var nr = quietRooms.shift();
     var rtypes = ["helper", "helper", "meddroid", "archivist"];
-    for (var rk in LAB.ROBOT_NPC) if (LAB.ROBOT_NPC[rk].block === LAB.blockOf(L)) rtypes.push(rk, rk);
+    /* (3.7, нелогичность) жители блока — только на его глубинах: «Подножие» (блок 1) — с 11-го уровня,
+       прежде его роботы и люди жили и в «Ковчеге» */
+    for (var rk in LAB.ROBOT_NPC) if (LAB.ROBOT_NPC[rk].block === residentBlock(L)) rtypes.push(rk, rk);
     var rtype = r.pick(rtypes);
     var cR = freeCell(nr);
     if (cR) objCell[idx(cR[0], cR[1])] = 1;
@@ -1485,13 +1495,14 @@ function genFloor(seed, L, F, attempt) {
   return fl;
 }
 
+function residentBlock(L) { return L > 10 ? LAB.blockOf(L) : 0; }
 function makeSurvivor(r, L, F, s, rm) {
   var female = r.chance(0.5);
   var first = r.pick(female ? LAB.NAMES.f : LAB.NAMES.m);
   var last = r.pick(female ? LAB.NAMES.sf : LAB.NAMES.sm);
   /* (2.6) целители глубин (nosurv) встают на этаже сами — среди случайных выживших их нет */
-  var profs = Object.keys(LAB.PROFS).filter(function (p) { var b = LAB.PROFS[p].block; return !LAB.PROFS[p].nosurv && (!b || b === LAB.blockOf(L)); });
-  var own = profs.filter(function (p) { return LAB.PROFS[p].block === LAB.blockOf(L); });
+  var profs = Object.keys(LAB.PROFS).filter(function (p) { var b = LAB.PROFS[p].block; return !LAB.PROFS[p].nosurv && (!b || b === residentBlock(L)); });
+  var own = profs.filter(function (p) { return LAB.PROFS[p].block === residentBlock(L); });
   var prof = own.length && r.chance(0.6) ? r.pick(own) : r.pick(profs);
   var c = [r.int(rm.x0, rm.x1), r.int(rm.y0, rm.y1)];
   return { id: "n0", robot: false, n: first + " " + last, first: first, last: last, female: female, prof: prof,

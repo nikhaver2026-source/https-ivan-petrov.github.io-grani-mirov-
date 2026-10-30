@@ -32,17 +32,21 @@ var LAB = (typeof window !== "undefined" ? window.LAB : globalThis.LAB);
    находит «Осмотреть»; hit — что случилось. fx — действие: pd — доля
    здоровья (adt — вид удара), poison, bleed, tox, neuro, rad, hold, slow,
    noise, oko, gas, grenade, spawn и n, parasite, emp, drain, armor, mimic,
-   psi. glove — прорезиненная ткань спасает руки; mask — респиратор и
+   psi. (3.7) fxo — вещи обстановки без дверцы и ящика (диван, скамья, койка, решётка, вешалка,
+   бочки…): там пружинного лезвия не бывает, а у прочих — свои подсказки o (без ручки, замочной
+   скважины и дверцы); они же — у тела. glove — прорезиненная ткань спасает руки; mask — респиратор и
    противогаз спасают дыхание. noDisarm — тварь, а не механизм: её не
    разбирают, а уничтожают (kill — как это назвать). gain — сама ловушка
    в рюкзак, parts — детали. */
 var K = {
-  cans: { n: "банки на нитке", w: 10, minL: 1, maxL: 40, where: "box fx body", see: 0.12, hard: 0,
+  cans: { n: "банки на нитке", w: 10, minL: 1, maxL: 40, where: "box fx fxo body", see: 0.12, hard: 0,
+    o: { cue: "Тронешь — где-то рядом тихо звякает жесть.", hint: "Под рукой натянута тонкая нитка, а на ней — связка пустых банок." },
     cue: "Тронешь дверцу — внутри тихо звякает жесть.", cueSnd: "can_open",
     hint: "К ручке привязана тонкая нитка, а на ней — связка пустых банок.",
     hit: "Нитка дёрнулась — связка банок загремела на весь этаж! На шум сейчас сбегутся.",
     fx: { noise: 12 }, gain: "tr_alarm", parts: { wire: 1, scrap: 1 } },
-  needle: { n: "игла с ядом", w: 9, minL: 1, where: "box fx safe med", see: -0.1, hard: 0.05,
+  needle: { n: "игла с ядом", w: 9, minL: 1, where: "box fx fxo safe med", see: -0.1, hard: 0.05,
+    o: { hint: "Среди вещей торчит тонкая игла, кончик тёмный — от яда.", hit: "Палец укололо: там была игла! Ранка жжёт — яд." },
     hint: "В замочной скважине поблёскивает тонкая игла, кончик тёмный — от яда.",
     hit: "Палец укололо: в замке была игла! Ранка жжёт — яд.",
     fx: { poison: 10, tox: 8 }, glove: true, parts: { reagent: 1 } },
@@ -55,12 +59,14 @@ var K = {
     hint: "К ручке подведён оголённый провод: она под током.",
     hit: "Разряд из ручки бьёт в руку и в грудь! Пальцы онемели.",
     fx: { pd: 0.1, adt: "shock", hold: 2, drain: 0.3 }, glove: true, gain: "tr_shock", parts: { wire: 2, cap: 1 } },
-  rats: { n: "крысиное гнездо", kill: "Выжечь крысиное гнездо", w: 7, minL: 1, maxL: 20, where: "box fx body cold", see: 0.22, hard: 0,
+  rats: { n: "крысиное гнездо", kill: "Выжечь крысиное гнездо", w: 7, minL: 1, maxL: 20, where: "box fx fxo body cold", see: 0.22, hard: 0,
+    o: { cue: "Там скребутся и попискивают.", hint: "Оттуда доносятся писк и возня: там гнездо крысолаков.", hit: "Гнездо потревожено — крысолаки прыгают на вас!" },
     cue: "Внутри скребутся и попискивают.", cueSnd: "rat_idle",
     hint: "Изнутри доносятся писк и возня: там гнездо крысолаков.",
     hit: "Дверца отошла — и из гнезда на вас прыгают крысолаки!",
     fx: { spawn: "rat", n: [2, 3] }, noDisarm: true },
-  glue: { n: "клеевой баллон", w: 6, minL: 2, where: "box fx", see: 0, hard: 0.05,
+  glue: { n: "клеевой баллон", w: 6, minL: 2, where: "box fx fxo", see: 0, hard: 0.05,
+    o: { hint: "Под рукой — баллон с клеем и нажимной клапан, прикрытый тряпкой." },
     hint: "На дне — баллон с клеем и нажимной клапан под тонкой фанеркой.",
     hit: "Клапан пшикнул — руки и ноги в клею!",
     fx: { hold: 6, slow: 10 }, gain: "tr_glue", parts: { gel: 1 } },
@@ -69,22 +75,26 @@ var K = {
     hint: "На дверце — магнитный датчик ОКО: откроете — ОКО узнает, где вы.",
     hit: "Тихий двойной писк: дверца стояла на датчике. ОКО знает, где вы, — сюда идут.",
     fx: { oko: true }, parts: { chip: 1, wire: 1 } },
-  gas: { n: "газовая ампула", w: 7, minL: 3, where: "box safe med fx", see: 0.06, hard: 0.1,
+  gas: { n: "газовая ампула", w: 7, minL: 3, where: "box safe med fx fxo", see: 0.06, hard: 0.1,
+    o: { hint: "Там спрятана стеклянная ампула с газом: тронете — разобьётся." },
     cue: "Из щели тянет едким, и тонко шипит.", cueSnd: "ev_steam",
     hint: "За дверцей закреплена стеклянная ампула с газом: разобьётся, если открыть.",
     hit: "Хруст стекла — едкий газ рвётся наружу! Не дышите и отходите.",
     fx: { gas: true, tox: 12 }, mask: true, gain: "tr_gas", parts: { reagent: 2 } },
-  spores: { n: "споровый мешок", w: 6, minL: 3, where: "box fx body cold", see: 0.1, hard: 0.05,
+  spores: { n: "споровый мешок", w: 6, minL: 3, where: "box fx fxo body cold", see: 0.1, hard: 0.05,
+    o: { cue: "Там что-то влажно чавкает и пахнет грибницей.", hint: "Там разросся споровый мешок: тронешь — лопнет облаком спор." },
     cue: "Внутри что-то влажно чавкает и пахнет грибницей.", cueSnd: "ev_rustle",
     hint: "Под крышкой разросся споровый мешок: тронешь — лопнет облаком спор.",
     hit: "Мягкий хлопок — в лицо облако спор! Горло дерёт, в голове звенит.",
     fx: { tox: 10, neuro: 18, noise: 4 }, mask: true, parts: { gel: 1 } },
   grenade: { n: "граната на растяжке", w: 5, minL: 4, where: "box body", see: 0.02, hard: 0.2,
+    o: { hint: "Проволока уходит к гранате без чеки: тронете — рванёт." },
     cue: "Что-то чуть звенит, как натянутая проволока.", cueSnd: "pry",
     hint: "Проволока от дверцы уходит к гранате без чеки. Откроете — рванёт.",
     hit: "Щелчок и шипение запала — граната! Отходите, у вас две секунды!",
     fx: { grenade: true }, gain: "tr_wire", parts: { reagent: 1, cap: 1, scrap: 1 } },
-  larvae: { n: "кладка личинок", kill: "Раздавить кладку личинок", w: 6, minL: 4, where: "box fx body cold", see: 0.22, hard: 0,
+  larvae: { n: "кладка личинок", kill: "Раздавить кладку личинок", w: 6, minL: 4, where: "box fx fxo body cold", see: 0.22, hard: 0,
+    o: { cue: "Там тихо шуршат и щёлкают сотни крошечных челюстей.", hint: "Там — кладка личинок: они вот-вот вылупятся." },
     cue: "Внутри тихо шуршат и щёлкают сотни крошечных челюстей.", cueSnd: "ev_skitter",
     hint: "Внутри — кладка личинок: они вот-вот вылупятся.",
     hit: "Кладка лопнула — личинки высыпают наружу и ползут к вам!",
@@ -108,7 +118,7 @@ var K = {
     hint: "За дверцей — патрон жидкого азота на пружинном ударнике.",
     hit: "Хлопок — и ледяное облако сковывает руки и ноги!",
     fx: { pd: 0.07, adt: "therm", hold: 5, slow: 12 }, gain: "tr_cryo", parts: { cap: 1, reagent: 1 } },
-  parasite: { n: "клещ-кровосос", kill: "Раздавить клеща", w: 5, minL: 8, where: "fx body cold box", see: 0.1, hard: 0,
+  parasite: { n: "клещ-кровосос", kill: "Раздавить клеща", w: 5, minL: 8, where: "fx fxo body cold box", see: 0.1, hard: 0,
     cue: "Что-то мелкое шевелится в складках.", cueSnd: "ev_skitter",
     hint: "В складках затаился клещ-кровосос величиной с ладонь.",
     hit: "Что-то холодное прыгает на руку и впивается: клещ-кровосос! Аптечка, бинт или антидот снимут его.",
@@ -118,7 +128,8 @@ var K = {
     hint: "В замок встроена ЭМИ-капсула: откроете — погасит импланты и посадит батарею оружия.",
     hit: "Глухой хлопок импульса — импланты гаснут, батарея оружия села наполовину!",
     fx: { emp: true }, gain: "tr_emp", parts: { magnet: 1, cap: 1 } },
-  psi: { n: "метка улья", w: 6, minL: 41, where: "box fx body cold", see: 0.06, hard: 0.1,
+  psi: { n: "метка улья", w: 6, minL: 41, where: "box fx fxo body cold", see: 0.06, hard: 0.1,
+    o: { hint: "Здесь оставлена склизкая метка улья: так разумные твари метят добычу." },
     cue: "Пахнет сладко и чуждо, как в улье.", cueSnd: "ev_whisper",
     hint: "На дверце оставлена склизкая метка улья: так разумные твари метят добычу.",
     hit: "Под пальцами лопнула склизкая метка — запах улья! Разумные твари этажа теперь чуют вас.",
@@ -147,6 +158,10 @@ function dk() { return LAB.dk ? LAB.dk() : {}; }
 
 /* ════════ ГДЕ И КАКАЯ ════════ */
 var BOX = { locker: 1, cabinet: 1, shelf: 1, crate: 1, suitlocker: 1, rack: 1, tubepost: 1, desk: 1, pc: 1 };
+/* (3.7, нелогичность) вещи обстановки с дверцей, ящиком или заслонкой: у них замочная скважина,
+   ручка и дверца; у прочих (диван, скамья, койка, решётка вентиляции, вешалка, бочки, котлы…) —
+   «fxo»: там «игла в замочной скважине» и «дверца подпёрта изнутри» не бывают */
+var DOORFX = { table: 1, nightstand: 1, dutydesk: 1, diarydesk: 1, perfocards: 1, stamps: 1, register: 1, couch: 1, gunrack: 1, optable: 1, coldroom: 1, oven: 1, hood: 1, cryopods: 1, washer: 1, tubes: 1, bookcase: 1, cores: 1 };
 function whereOf(o) {
   if (!o) return null;
   if (o.type === "corpse") return "body";
@@ -155,7 +170,7 @@ function whereOf(o) {
   if (o.type === "firstaid") return "med";
   if (o.type === "fx") {
     var d = LAB.FIX && LAB.FIX.T ? LAB.FIX.T[o.fx] : null;
-    return d && d.a && d.a.some(function (a) { return a[0] === "search"; }) ? "fx" : null;
+    return d && d.a && d.a.some(function (a) { return a[0] === "search"; }) ? (DOORFX[o.fx] ? "fx" : "fxo") : null;
   }
   return BOX[o.type] ? "box" : null;
 }
@@ -212,6 +227,8 @@ function trapOf(o) {
   return s;
 }
 function armed(s) { return !!(s && (s.st === "armed" || s.st === "known")); }
+/* (3.7) подсказка, признак, что случилось — по месту: у вещи без дверцы и у тела — свои (o) */
+function tx(s, o, f) { var d = K[s.k], w = whereOf(o); return (w === "fxo" || w === "body") && d.o && d.o[f] ? d.o[f] : d[f]; }
 
 /* ════════ ЗАМЕТИТЬ ════════ */
 var rolled = {};   /* что уже пытались заметить на подходе (на этот заход на этаж) */
@@ -239,18 +256,18 @@ function reveal(o, s, how) {
   var d = K[s.k], where = nameIn(o);
   if (how === "cue") {
     if (d.cueSnd) sndAt(d.cueSnd, o.x, o.y, { gain: 0.6 });
-    return "«Эхо»: " + (d.cue || d.hint) + " " + cap1(where) + " " + gm().relDir(o.x, o.y) + " — с подвохом: " + d.n + ".";
+    return "«Эхо»: " + (tx(s, o, "cue") || tx(s, o, "hint")) + " " + cap1(where) + " " + gm().relDir(o.x, o.y) + " — с подвохом: " + d.n + ".";
   }
-  return "Ловушка: " + d.hint;
+  return "Ловушка: " + tx(s, o, "hint");
 }
 /* «Осмотреть»: строка о ловушке (или пусто). */
 function examineLine(o) {
   var s = trapOf(o);
   if (!armed(s)) return "";
-  if (s.st === "known") return "Ловушка: " + K[s.k].hint;
+  if (s.st === "known") return "Ловушка: " + tx(s, o, "hint");
   if (exRolled[o.id]) return "";
   exRolled[o.id] = 1;
-  if (Math.random() < seeChance(s, true)) { s.st = "known"; A("play", "scan_soft"); return "Ловушка! " + K[s.k].hint; }
+  if (Math.random() < seeChance(s, true)) { s.st = "known"; A("play", "scan_soft"); return "Ловушка! " + tx(s, o, "hint"); }
   return "";
 }
 /* Сканер: все пакости в радиусе. */
@@ -370,7 +387,7 @@ function spring(o, s, cont) {
     if (cont) cont();
     return;
   }
-  urgent(d.hit);
+  urgent(tx(s, o, "hit"));
   var x = o.x, y = o.y;
   if (fx.noise && C) { C.noise(fx.noise); C.noiseLure(g.x, g.y); sndAt("can_drop", x, y, { gain: 1 }); }
   /* урон ловушки — по режиму: в лёгком слабее, в сложных сильнее */
@@ -433,7 +450,7 @@ function guard(o, cont) {
   if (Math.random() < reflex) {
     s.st = "known";
     A("play", "swing_miss");
-    LAB.say("В последний миг вы отдёрнули руку: " + d.hint, { prio: "urgent" });
+    LAB.say("В последний миг вы отдёрнули руку: " + tx(s, o, "hint"), { prio: "urgent" });
     menu(o, s, cont);
     return true;
   }
@@ -448,7 +465,7 @@ function menu(o, s, cont) {
   var gone = function () { if (armed(s)) return false; say("Ловушки здесь уже нет."); return true; };
   items.push({ label: (d.noDisarm ? d.kill : "Обезвредить: " + d.n) + " (удача — " + pct + " " + gm().plural(pct, "процент", "процента", "процентов") + ")", fn: function () { if (!gone()) disarm(o, s, cont); } });
   items.push({ label: d.noDisarm ? "Открыть всё равно" : "Открыть, не обезвреживая", fn: function () { if (!gone()) spring(o, s, cont); } });
-  items.push({ label: "Осмотреть ловушку", keep: true, fn: function () { say(d.hint + (d.glove ? " Прорезиненная ткань на руках убережёт от неё." : d.mask ? " Респиратор или противогаз убережёт от неё." : "")); } });
+  items.push({ label: "Осмотреть ловушку", keep: true, fn: function () { say(tx(s, o, "hint") + (d.glove ? " Прорезиненная ткань на руках убережёт от неё." : d.mask ? " Респиратор или противогаз убережёт от неё." : "")); } });
   items.push({ label: "Отойти", fn: function () { say("Вы отходите от хранилища."); } });
   UIx("menu", nameIn(o) + ": ловушка — " + d.n, items);
 }

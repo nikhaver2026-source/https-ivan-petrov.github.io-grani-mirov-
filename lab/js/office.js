@@ -40,7 +40,7 @@ var DRINKS = {
 };
 /* (3.5) цена растёт с глубиной так же, как лечение (прежде медленнее), и — по режиму
    сложности, как у прочих торговцев */
-function priceOf(d) { var dk = LAB.dk ? LAB.dk() : {}; return Math.round(d.p * (1 + (G().L - 1) * 0.15) * (dk.price || 1) * (G().faction === "res" ? 0.8 : 1)); }
+function priceOf(d) { var dk = LAB.dk ? LAB.dk() : {}; return Math.round(d.p * (1 + (G().L - 1) * 0.15) * (dk.price || 1)); }
 function healOf(d) { return Math.round(d.hp * (1 + (G().L - 1) * 0.15)); }
 function machineName(o) { return DRINKS[o.type] ? DRINKS[o.type].n : "Автомат"; }
 function drinkMenu(o) {
@@ -187,10 +187,13 @@ function snackItems(o) {
     var p = snackPrice(id);
     items.push({ label: d.n + " — " + p + " " + gm().plural(p, "кредит", "кредита", "кредитов") + ". " + d.desc, keep: true, fn: function () { buySnack(o, id); } });
   });
+  /* (3.7, нелогичность) кран — тот же кипяток, что у чайника (kitchen.tap): лапша и суп-концентрат из рюкзака */
   items.push({ label: "Кран с кипятком: заварить лапшу из рюкзака" + (G().inv.noodles ? " (лапши " + G().inv.noodles + ")" : " — лапши нет"), keep: true, fn: function () {
     if (!(G().inv.noodles > 0)) { LAB.UI.error(); say("Лапши в рюкзаке нет: её продаёт этот же автомат."); return; }
-    snd("water_pour", "drink_sip");
-    setTimeout(function () { gm().useItem("noodles"); }, 900);
+    if (LAB.kitchen && LAB.kitchen.tap) LAB.kitchen.tap(o, "noodles");
+  } });
+  if (G().inv.soupcup > 0) items.push({ label: "Кран с кипятком: залить суп-концентрат из рюкзака (" + G().inv.soupcup + " шт.)", keep: true, fn: function () {
+    if (LAB.kitchen && LAB.kitchen.tap) LAB.kitchen.tap(o, "soupcup");
   } });
   items.push({ label: "Осмотреть автомат", keep: true, fn: function () { say("Автомат с едой. " + LAB.OBJ.snacks.desc + " На стекле наклейка: «Сроки годности — по требованию проверяющего»."); } });
   items.push({ label: "Отойти", fn: function () {} });
@@ -208,7 +211,7 @@ function buySnack(o, id) {
   gm().paused = true;
   gm().later(function () {
     gm().paused = false;
-    if (id === "noodles") { snd("water_pour", "drink_sip"); setTimeout(function () { gm().useItem(id); }, 900); }
+    if (id === "noodles" && LAB.kitchen && LAB.kitchen.tap) LAB.kitchen.tap(o, id); /* лапшу — сразу под кран с кипятком */
     else gm().useItem(id);
   }, 900);
 }
