@@ -479,7 +479,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   await page.evaluate(() => LAB.ui.closeAll());
   await key("F1");
   const gl = await page.evaluate(() => LAB.ui.top() && LAB.ui.top().items.map(i => typeof i.label === "function" ? i.label() : i.label));
-  ok(gl && gl[0] === "Первые шаги" && gl.indexOf("Управление: клавиатура") >= 0 && !gl.some(l => /жест/i.test(l)) && gl.indexOf("Справочники: бестиарий, оружие, броня") >= 0, "F1 — руководство по разделам (3.0): «Управление: клавиатура» вместо жестов (" + (gl || []).join(", ") + ")");
+  ok(gl && gl[0] === "Первые шаги" && gl.indexOf("Управление: клавиатура") >= 0 && !gl.some(l => /жест/i.test(l)) && gl.indexOf("Справочники: бестиарий, гербарий, оружие, броня") >= 0, "F1 — руководство по разделам (3.0): «Управление: клавиатура» вместо жестов (" + (gl || []).join(", ") + ")");
   await page.evaluate(() => { const w = LAB.ui.top(); w.i = w.items.findIndex(i => i.label === "Управление: клавиатура"); });
   await key("Enter");
   const kbl = await page.evaluate(() => LAB.ui.top() && LAB.ui.top().items.map(i => i.label));
@@ -4735,7 +4735,7 @@ LAB.ui.closeAll();
     LAB.ui.closeAll();
     return out;
   });
-  ok(gd.root && gd.root[0] === "Первые шаги" && gd.root.indexOf("Справочники: бестиарий, оружие, броня") >= 0 && gd.root.indexOf("Что нового?") >= 0 && gd.first.indexOf("С чего начать") === 0, "руководство разложено по разделам (" + (gd.root || []).join(", ") + ")");
+  ok(gd.root && gd.root[0] === "Первые шаги" && gd.root.indexOf("Справочники: бестиарий, гербарий, оружие, броня") >= 0 && gd.root.indexOf("Что нового?") >= 0 && gd.first.indexOf("С чего начать") === 0, "руководство разложено по разделам (" + (gd.root || []).join(", ") + ")");
   ok(!gd.depth1 && gd.depth25 && gd.d25, "глава о глубинах — только когда вы до них дошли, и в ней лишь пройденные глубины");
   ok(gd.spoil && !gd.spoil.length && gd.len < 45000, "в остальных главах нет названий глубин — без спойлеров; руководство короткое (" + gd.len + " знаков" + (gd.spoil && gd.spoil.length ? "; спойлеры: " + gd.spoil.join(", ") : "") + ")");
 
@@ -7284,6 +7284,10 @@ LAB.ui.closeAll();
       /* «Гербарий»: только глубины, до которых дошли */
       go(12, 1); LAB.ui.closeAll(); P.herbarium(null); const hw = LAB.ui.top();
       out.herb = !!hw && /^Гербарий/.test(hw.title) && hw.items.some(i => /«Ковчег»/.test(label(i))) && hw.items.some(i => /«Подножие»/.test(label(i))) && !hw.items.some(i => /«Колыбель»|«Механизм»|«Исток»/.test(label(i)));
+      /* классы и курсы глубин, до которых не дошли, не называются */
+      const notes = [], note0 = LAB.ui.note; LAB.ui.note = function (t, x) { notes.push(String(x)); };
+      try { hw.items.forEach(i => { if (/^Как устроена классификация|^Курсы опытных линий/.test(label(i))) i.fn(); }); } finally { LAB.ui.note = note0; }
+      out.herbText = notes.length === 2 && !notes.some(x => /Колыбел|Отражени|Механизм|Исток|Лидии|нервного корня/.test(x)) && /глубже есть и другие/.test(notes[0]) && /«Атлант»/.test(notes[1]) && /лимонника/.test(notes[1]) && /Линии на интеллект и харизму — глубже/.test(notes[1]);
       LAB.ui.closeAll();
       /* запись: состояние растений — в записи */
       out.save = JSON.parse(JSON.stringify(G)).plants && JSON.parse(JSON.stringify(G)).plants.course != null;
@@ -7311,7 +7315,7 @@ LAB.ui.closeAll();
   ok(pl.full, "сытым горсть ягод съесть можно, томат — нет");
   ok(pl.rad && pl.gas && pl.fog, "под излучением и в газу плодов нет; в тумане — плоды с мутагеном и созревают быстрее");
   ok(pl.okoFound && pl.okoHeat && /Садовник заметил/.test(pl.okoSaid || "") && /по расписанию/.test(pl.okoWater || "") && pl.okoJam, "сад ОКО: сорвали без глушилки — ОКО подозревает больше; с глушилкой — нет; поливать машины не дают зря");
-  ok(pl.herb, "«Гербарий» в справочниках — только глубины, до которых дошли");
+  ok(pl.herb && pl.herbText, "«Гербарий» в справочниках — только глубины, до которых дошли; классы и курсы линий глубже не называются");
   ok(pl.save, "состояние растений и курсов — в записи");
 
   /* (3.7) Проверка перед сборкой, этап «ошибки»: исправленное не возвращается — кредиты
