@@ -2,7 +2,8 @@
 # Проверка APK «Подземной лаборатории» на эмуляторе (рабочий процесс
 # lab-android.yml): APK ставится, приложение запускается, страница
 # загружается без ошибок, самопроверка игры проходит — новая игра, ходьба,
-# оружие, окна, сохранение и загрузка, все 200 этажей, декодирование звука.
+# оружие, окна, сохранение и загрузка, все 200 этажей, декодирование звука;
+# (4.1) новый запуск после ухода в фон в том же процессе загружается (relaunch-check.sh).
 #   bash lab/android/install-check.sh <APK>
 set -e
 APK=$1
@@ -17,12 +18,24 @@ adb shell settings put global package_verifier_enable 0 || true
 # и ставит), вручную — копия в /data/local/tmp и pm install (pm сам скажет
 # причину отказа, а не «Broken pipe»)
 inst() {
+  local F=${2:-$APK}
   case "$1" in
-    1) adb install -r "$APK" ;;
-    2) adb install --no-streaming -r "$APK" ;;
-    *) adb push "$APK" /data/local/tmp/lab.apk > /dev/null && adb shell pm install -r /data/local/tmp/lab.apk ;;
+    1) adb install -r "$F" ;;
+    2) adb install --no-streaming -r "$F" ;;
+    *) adb push "$F" /data/local/tmp/lab.apk > /dev/null && adb shell pm install -r /data/local/tmp/lab.apk ;;
   esac
 }
+# (4.1) Сравнение по запросу (LAB_OLD_APK — прежний APK из выпуска lab-android-latest): встаёт
+# ли он на «Загрузке» при запуске после фона. Только сведения — сборку не роняет; потом прежний
+# удаляется, и новый APK ставится начисто и проверяется тем же сценарием ниже.
+if [ -n "${LAB_OLD_APK:-}" ] && [ -f "$LAB_OLD_APK" ]; then
+  echo "== прежний APK ($LAB_OLD_APK): запуск после фона"
+  OK_OLD=""
+  for t in 1 2 3; do inst $t "$LAB_OLD_APK" > /dev/null 2>&1 && { OK_OLD=1; break; }; bash "$(dirname "$0")/emu-ready.sh" 180 || true; done
+  if [ -n "$OK_OLD" ]; then bash "$(dirname "$0")/relaunch-check.sh" stuck || true; else echo "прежний APK не поставился — сравнения не будет"; fi
+  # новый APK проверяется на чистой установке, как и без сравнения
+  adb uninstall $PKG > /dev/null 2>&1 || true
+fi
 for t in 1 2 3; do
   inst $t && break
   echo "установка не удалась (попытка $t) — жду системные службы"
@@ -64,4 +77,7 @@ ERR=$(adb logcat -d -s LabJS:* | grep -E "^.*LabJS.*error " || true)
 [ -n "$PID" ]
 echo "$RES" | grep -q "selftest ok"
 [ -z "$ERR" ] || { echo "ошибки страницы: $ERR"; exit 1; }
-echo "Android $REL: APK поставлен, игра запущена, самопроверка пройдена"
+# (4.1) запуск после ухода в фон, новым окном в том же процессе: страница не стоит на «Загрузке»
+echo "== запуск после фона в том же процессе"
+bash "$(dirname "$0")/relaunch-check.sh"
+echo "Android $REL: APK поставлен, игра запущена, самопроверка пройдена, запуск после фона загружается"

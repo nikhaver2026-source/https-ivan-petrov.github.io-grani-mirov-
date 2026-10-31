@@ -163,7 +163,8 @@ function activate() {
   if (!it) return;
   if (it.kind === "toggle") { it.set(!it.get()); LAB.UI.click(); say(itemText(it) + (it.descOf ? ". " + it.descOf(it.get()) : "")); render(); return; }
   if (it.kind === "choice") { cycle(it, 1); return; }
-  if (it.kind === "slider") { say(itemText(it) + LAB.K(". Свайп вверх — больше, вниз — меньше.", ". Стрелка вправо — больше, влево — меньше.")); return; }
+  /* ползунок с действием (4.1: «Выбросить вещь» — сколько штук) выполняется, как пункт; простой — подсказывает */
+  if (it.kind === "slider" && !it.fn) { say(itemText(it) + LAB.K(". Свайп вверх — больше, вниз — меньше.", ". Стрелка вправо — больше, влево — меньше.")); return; }
   if (it.disabled) { LAB.UI.error(); say(it.why || "Недоступно."); return; }
   /* «Отойти», «Назад», «Отмена» без действия — закрыть окно и сказать, где вы */
   if (it.close || (/^(Отойти|Назад|Отмена)$/.test(String(it.label)) && String(it.fn).replace(/\s+/g, "") === "function(){}")) { if (!closeTop()) LAB.UI.error(); return; }
@@ -234,8 +235,16 @@ function cycle(it, step) {
 }
 function adjust(it, dir) {
   if (it.kind === "slider") {
-    var v = it.get() + (dir > 0 ? it.step : -it.step);
-    v = Math.max(it.min, Math.min(it.max, Math.round(v * 100) / 100));
+    var v;
+    /* (4.1) ползунок со своими шагами (it.steps, по возрастанию): соседний шаг, у края — край */
+    if (it.steps && it.steps.length) {
+      var st = it.steps, cur = it.get(), k = 0;
+      for (var si = 0; si < st.length; si++) if (st[si] <= cur) k = si;
+      v = st[Math.max(0, Math.min(st.length - 1, k + (dir > 0 ? 1 : -1)))];
+    } else {
+      v = it.get() + (dir > 0 ? it.step : -it.step);
+      v = Math.max(it.min, Math.min(it.max, Math.round(v * 100) / 100));
+    }
     it.set(v);
     LAB.UI.move();
     say(valueText(it));
@@ -828,27 +837,50 @@ function invItems() {
 }
 function back(fn) { return { label: "Назад", fn: fn || function () { inventory(); } }; }
 /* (3.7, нелогичность) Выбросить вещь: список всего, что лежит в рюкзаке (game.dropItem кладёт её на пол у героя);
-   то, что выбросить нельзя, — с причиной */
-function dropMenu() { menu("Выбросить вещь", dropItems(), { rebuild: dropItems, intro: "Вещь ляжет на пол у ваших ног; поднять — отойти и снова наступить." }); }
+   то, что выбросить нельзя, — с причиной.
+   (4.1, просьба игрока) Сколько выбросить — ползунок, как в настройках: где одинаковых вещей несколько, свайп
+   вверх и вниз (стрелки вправо и влево) выбирает, сколько, а двойное касание (Enter) выбрасывает. Шаг — по
+   одной до десяти, дальше крупнее (dropSteps), последний шаг — все. В списке теперь и броня с оружием
+   (game.dropGroups): одинаковые — одной строкой. После броска окно остаётся на месте и собирается заново
+   (без повторного объявления — слышно, что легло на пол); выбранное число держится, пока окно открыто
+   (dropPick), и не сбрасывается, если окно пересоберётся само. Прежде — «одну штуку» или «все». */
+var dropPick = {};
+function dropSteps(max) {
+  var s = [], v;
+  for (v = 1; v <= Math.min(10, max); v++) s.push(v);
+  for (v = 15; v <= Math.min(50, max); v += 5) s.push(v);
+  for (v = 60; v <= Math.min(100, max); v += 10) s.push(v);
+  for (v = 150; v <= Math.min(500, max); v += 50) s.push(v);
+  for (v = 600; v <= max; v += 100) s.push(v);
+  if (s[s.length - 1] !== max) s.push(max);
+  return s;
+}
+function cap1(t) { t = String(t || ""); return t.charAt(0).toUpperCase() + t.slice(1); }
+function dropMenu() {
+  dropPick = {};
+  menu("Выбросить вещь", dropItems(), { rebuild: dropItems, intro: "Вещь ляжет на пол у ваших ног; поднять — отойти и снова наступить. " +
+    LAB.K("Где одинаковых вещей несколько, сколько выбросить — свайп вверх или вниз, выбросить — двойное касание.", "Где одинаковых вещей несколько, сколько выбросить — стрелки вправо и влево, выбросить — Enter.") });
+}
 function dropItems() {
-  var g = G(), ids = Object.keys(g.inv).filter(function (k) { return g.inv[k] > 0 && LAB.ITEMS[k]; });
-  ids.sort(function (a, b) { return LAB.ITEMS[a].n < LAB.ITEMS[b].n ? -1 : 1; });
-  var items = ids.map(function (k) {
-    var d = LAB.ITEMS[k], why = gm().dropWhy ? gm().dropWhy(k) : "";
-    return { label: d.n + ": " + g.inv[k] + (why ? ". Нельзя: " + why : ""), keep: !!why, fn: function () { if (why) { say(why); return; } dropOne(k); } };
+  /* что можно выбросить — сначала, строки «Нельзя» (в руках, надета, жетон) — в конце: окно открывается на деле */
+  var groups = gm().dropGroups ? gm().dropGroups() : [];
+  groups = groups.filter(function (gr) { return gr.max > 0; }).concat(groups.filter(function (gr) { return !gr.max; }));
+  var items = groups.map(function (gr) {
+    var id = "drop:" + gr.kind + ":" + gr.key, item = gr.kind === "item", name = cap1(gr.label);
+    if (!gr.max) return { id: id, label: name + (item || gr.n > 1 ? ": " + gr.n : "") + ". Нельзя: " + gr.why, keep: true, fn: function () { LAB.UI.error(); say(item ? gr.why : cap1(gr.why) + "."); } };
+    var rest = gr.n > gr.max ? (item ? " (в рюкзаке " + gr.n + ", начатый остаётся)" : " (всего " + gr.n + ")") : "";
+    if (gr.max === 1) return { id: id, label: name + (item ? ": " + gr.n : "") + rest, keep: true, fn: function () { gm().dropGroup(gr.kind, gr.key, 1); } };
+    return {
+      id: id, kind: "slider", label: name + rest, min: 1, max: gr.max, step: 1, steps: dropSteps(gr.max), keep: true,
+      get: function () { return Math.max(1, Math.min(gr.max, dropPick[id] || 1)); },
+      set: function (v) { dropPick[id] = v; },
+      fmt: function (v) { return "выбросить " + v + " из " + gr.max; },
+      fn: function () { if (gm().dropGroup(gr.kind, gr.key, Math.max(1, Math.min(gr.max, dropPick[id] || 1)))) delete dropPick[id]; }
+    };
   });
   if (!items.length) items.push({ label: "Рюкзак пуст: выбрасывать нечего.", info: true, keep: true, fn: function () {} });
   items.push(back());
   return items;
-}
-function dropOne(k) {
-  var g = G(), d = LAB.ITEMS[k], n = g.inv[k] || 0;
-  if (n <= 1) { gm().dropItem(k, false); dropMenu(); return; }
-  menu("Выбросить: " + d.n, [
-    { label: "Одну штуку", fn: function () { gm().dropItem(k, false); dropMenu(); } },
-    { label: "Все: " + n + " шт.", fn: function () { gm().dropItem(k, true); dropMenu(); } },
-    { label: "Назад", fn: dropMenu }
-  ]);
 }
 function weaponsMenu() { menu("Оружие", weaponsItems(), { rebuild: weaponsItems }); }
 function weaponsItems() {

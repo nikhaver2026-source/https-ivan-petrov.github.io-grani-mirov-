@@ -135,6 +135,11 @@ public class MainActivity extends Activity {
                 .build();
 
         web = new WebView(this);
+        /* (4.1) pauseTimers() (уход в фон, ниже) действует на весь процесс, а не на одно окно.
+           Прежнее окно этого процесса могло закрыться усыплённым — «Выход» из игры, смахнули
+           из недавних, система закрыла окно в фоне, а процесс остался в памяти. Новая страница
+           тогда не разбирается и не запускает сценарии — игра стоит на «Загрузке». Будим сразу. */
+        web.resumeTimers();
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
@@ -258,23 +263,26 @@ public class MainActivity extends Activity {
        выключен (игра отвечает 0), страница засыпает целиком: таймеры, раскладка
        и анимации стоят, процессор телефона отдыхает. Приглушённый звук в фоне
        играет дальше — тогда страница не засыпает. */
-    private boolean paused = false, timersPaused = false;
+    private boolean paused = false, timersPaused = false, destroyed = false;
     @Override
     protected void onPause() {
         super.onPause();
         paused = true;
+        /* (4.1) окно закрывается («Выход», смахнули из недавних) — запись пишется, но страница не
+           усыпляется: усыплённые таймеры пережили бы окно и остановили бы следующий запуск */
         if (web != null) web.evaluateJavascript("(function(){try{return window.labPause?window.labPause():1;}catch(e){return 1;}})()", v -> {
-            if (paused && !timersPaused && "0".equals(v) && web != null) { timersPaused = true; web.onPause(); web.pauseTimers(); }
+            if (paused && !timersPaused && !destroyed && !isFinishing() && "0".equals(v) && web != null) { timersPaused = true; web.onPause(); web.pauseTimers(); }
         });
     }
 
     /* Возврат на экран: единые обработчики звука и речи будят звук и повторяют
-       фразу, оборванную уходом в фон (labResume). */
+       фразу, оборванную уходом в фон (labResume). (4.1) Таймеры будятся всегда: усыпить
+       их мог и не этот экран. */
     @Override
     protected void onResume() {
         super.onResume();
         paused = false;
-        if (web != null && timersPaused) { timersPaused = false; web.resumeTimers(); web.onResume(); }
+        if (web != null) { timersPaused = false; web.resumeTimers(); web.onResume(); }
         if (web != null) web.evaluateJavascript("try{window.labResume&&window.labResume();}catch(e){}", null);
     }
 
@@ -286,6 +294,10 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        destroyed = true;
+        /* (4.1) таймеры усыплены на весь процесс — будим их, пока окно не ушло: процесс может
+           остаться в памяти, и следующий запуск встал бы на «Загрузке» */
+        if (web != null) { try { web.resumeTimers(); } catch (Exception ignored) { } }
         if (tts != null) { tts.stop(); tts.shutdown(); }
         synchronized (others) { for (TextToSpeech t : others.values()) { try { t.stop(); t.shutdown(); } catch (Exception ignored) { } } others.clear(); }
         if (web != null) web.destroy();

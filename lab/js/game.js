@@ -3672,12 +3672,19 @@ function dropWhy(id) {
   if (LAB.repair && LAB.repair.isKit(id) && LAB.repair.opened && LAB.repair.opened(id) > 0 && G.inv[id] <= 1) return d.n + " начат: сначала доиспользуйте его.";
   return "";
 }
-function dropItem(id, all) {
+/* (4.1) Сколько штук можно выбросить: начатый ремнабор остаётся в рюкзаке. */
+function dropMax(id) {
+  var held = G.inv[id] || 0;
+  if (LAB.repair && LAB.repair.isKit(id) && LAB.repair.opened && LAB.repair.opened(id) > 0) held--;
+  return Math.max(0, held);
+}
+/* cnt: true — все, что можно; число — столько (4.1, ползунок в окне «Выбросить вещь»); иначе — одну. */
+function dropItem(id, cnt) {
   if (!game.entered) return false;
   var why = dropWhy(id);
   if (why) { LAB.UI.error(); say(why); return false; }
-  var d = LAB.ITEMS[id], held = G.inv[id], n = all ? held : 1;
-  if (all && LAB.repair && LAB.repair.isKit(id) && LAB.repair.opened && LAB.repair.opened(id) > 0) n = held - 1; /* начатый остаётся в рюкзаке */
+  var d = LAB.ITEMS[id], held = G.inv[id], max = dropMax(id);
+  var n = cnt === true ? max : typeof cnt === "number" && cnt > 0 ? Math.min(max, Math.floor(cnt)) : Math.min(1, max);
   if (n <= 0) { LAB.UI.error(); say(d.n + " начат: сначала доиспользуйте его."); return false; }
   /* сначала уходят найденные, потом собранные (как при продаже, supply.js) */
   var cH = G.craftN && G.craftN[id] ? Math.min(G.craftN[id], held) : 0, cD = Math.max(0, n - (held - cH));
@@ -3697,6 +3704,82 @@ function dropItem(id, all) {
 }
 game.dropItem = dropItem;
 game.dropWhy = dropWhy;
+game.dropMax = dropMax;
+
+/* (4.1, просьба игрока) Выбросить можно и броню, и оружие: в окне «Выбросить вещь» одинаковые — одной
+   строкой с ползунком (сколько выбросить), как вещи рюкзака. Одинаковые — те, что звучат одинаково:
+   имя, защита, состояние и пластины у брони; имя, заряд, состояние и модули у оружия, — какую из
+   них ни выбросить, разницы нет. Надетая броня и оружие в руках не выбрасываются (сначала снять или
+   взять другое), стартовая монтировка — тоже: ею открывают шкафчики (как и при разборке). На полу броня
+   и оружие лежат как есть — со своим состоянием, пластинами, модулями и зарядом — и подбираются
+   обратно, как добыча (giveItem). */
+function ucf(t) { t = String(t || ""); return t.charAt(0).toUpperCase() + t.slice(1); }
+function lcf(t) { t = String(t || ""); return t.charAt(0).toLowerCase() + t.slice(1); }
+function gearLine(kind, o) {
+  if (kind === "armor") {
+    var c = LAB.armorCond(o);
+    return o.name + ", защита " + LAB.armorDef(o) + (c < 100 ? ", состояние " + Math.round(c) + " из 100" : "") + (o.up ? ", пластин " + o.up + " из 5" : "");
+  }
+  var ml = LAB.workshop && LAB.workshop.modsLine ? LAB.workshop.modsLine(o) : "";
+  return weaponLine(o) + (ml ? ", модули: " + ml : "");
+}
+function gearWhy(kind, o) {
+  if (kind === "armor") return G.armor && G.armor.id === o.id ? "надета — сначала снимите" : "";
+  var held = G.weapons[G.wi];
+  if (held && held.id === o.id) return "в руках — сначала возьмите другое оружие";
+  if (o.id === "w_start_crowbar") return "монтировку лучше оставить: она открывает шкафчики";
+  return "";
+}
+/* Строки окна «Выбросить вещь»: { kind: item | armor | weapon, key, label, n — сколько есть, max — сколько
+   можно выбросить, why — почему нельзя }. Оружие, броня, потом вещи рюкзака по алфавиту. */
+function dropGroups() {
+  var out = [];
+  [["weapon", G.weapons || []], ["armor", G.armors || []]].forEach(function (p) {
+    var by = {};
+    p[1].forEach(function (o) {
+      var line = gearLine(p[0], o), why = gearWhy(p[0], o), key = p[0] + ":" + (why ? "id:" + o.id : line);
+      var gr = by[key];
+      if (!gr) { gr = by[key] = { kind: p[0], key: key, label: line, n: 0, max: 0, why: why, ids: [] }; out.push(gr); }
+      gr.n++; gr.ids.push(o.id);
+      if (!why) gr.max++;
+    });
+  });
+  var ids = Object.keys(G.inv || {}).filter(function (k) { return G.inv[k] > 0 && LAB.ITEMS[k]; });
+  ids.sort(function (a, b) { return LAB.ITEMS[a].n < LAB.ITEMS[b].n ? -1 : 1; });
+  ids.forEach(function (k) {
+    var why = dropWhy(k);
+    out.push({ kind: "item", key: k, label: LAB.ITEMS[k].n, n: G.inv[k], max: why ? 0 : dropMax(k), why: why });
+  });
+  return out;
+}
+function dropGroup(kind, key, cnt) {
+  if (!game.entered) return false;
+  if (kind === "item") return dropItem(key, cnt);
+  var gr = dropGroups().filter(function (q) { return q.kind === kind && q.key === key; })[0];
+  if (!gr || !gr.max) { LAB.UI.error(); say(gr ? ucf(gr.label) + ": " + gr.why + "." : "Этого в рюкзаке уже нет."); return false; }
+  var n = cnt === true ? gr.max : typeof cnt === "number" && cnt > 0 ? Math.min(gr.max, Math.floor(cnt)) : 1;
+  var list = kind === "armor" ? G.armors : G.weapons, gone = gr.ids.slice(gr.ids.length - n);
+  var c = LAB.combat && LAB.combat.lootCell ? LAB.combat.lootCell(G.x, G.y) : [G.x, G.y], fs = CUR.fs;
+  if (!fs.drops) fs.drops = [];
+  gone.forEach(function (oid) {
+    var i = -1; list.forEach(function (o, k) { if (o.id === oid) i = k; });
+    if (i < 0) return;
+    var o = list.splice(i, 1)[0];
+    if (kind === "weapon") { if (i < G.wi) G.wi--; if (G.wi >= G.weapons.length) G.wi = Math.max(0, G.weapons.length - 1); }
+    var it = { kind: kind, id: "d" + (fs.dseq = (fs.dseq || 0) + 1), x: c[0], y: c[1] };
+    it[kind === "armor" ? "a" : "w"] = o;
+    fs.drops.push(it);
+  });
+  A("dropLoot", c[0], c[1]);
+  var left = gr.n - n;
+  say("На полу" + (c[0] === G.x && c[1] === G.y ? " у ваших ног" : " " + relDir(c[0], c[1])) + ": " + lcf(gr.label) + (n > 1 ? "; " + n + " шт." : ".") + " Поднять — отойти и снова наступить." + (left > 0 ? " Таких в рюкзаке ещё " + left + "." : ""));
+  turns(1, "");
+  UIx("refresh");
+  autosaveSoon();
+  return true;
+}
+game.dropGroups = dropGroups;
+game.dropGroup = dropGroup;
 
 function toggleDraw() {
   if (!game.entered) return;

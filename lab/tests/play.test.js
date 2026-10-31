@@ -81,12 +81,14 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     out.title = LAB.ui.top().title; out.items = lb(); out.ver = LAB.VERSION;
     SPOKEN.length = 0; LAB.ui.top().i = 0; LAB.ui.activate();
     out.note = LAB.ui.top().title; out.text = SPOKEN.join(" ");
-    out.tech = /WebView|Playwright|JSON|ES2018|обработчик|сборщик/.test(out.text);
+    out.tech = /WebView|Playwright|JSON|ES2018|обработчик|сборщик|pauseTimers/.test(out.text);
+    out.prev40 = LAB.news.text(LAB.NEWS.filter(n => n.v === "Альфа 4.0")[0] || { x: [] });
     LAB.ui.closeTop(true); LAB.ui.closeAll(); LAB.ui.mainMenu(true);
     return out;
   });
-  ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.ver === "Альфа 4.0" && news.items.some(l => /^Альфа 3\.7$/.test(l)) && news.items.some(l => /^Альфа 3\.6$/.test(l)) && news.items.some(l => /^Альфа 3\.5$/.test(l)) && news.items.some(l => /^Альфа 3\.2$/.test(l)) && news.items.some(l => /^Альфа 3\.1$/.test(l)) && news.items.some(l => /^Альфа 3\.0$/.test(l)) && news.items.some(l => /^Альфа 2\.6$/.test(l)) && news.items.some(l => /^Альфа 2\.5$/.test(l)) && news.items.some(l => /^Альфа 2\.2$/.test(l)) && news.items.some(l => /^Альфа 2\.1$/.test(l)) && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
-  ok(/Что нового: /.test(news.note) && /Ёмкость оружия поднимает только верстак/.test(news.text) && /Вещи ведут себя как вещи/.test(news.text) && /Обстановка — по назначению помещений/.test(news.text) && /Исправлены ошибки/.test(news.text) && !/Помещения стали просторнее/.test(news.text) && !/Химия руками/.test(news.text) && /Сохранения прежней версии не сброшены/.test(news.text) && /этажи построены заново/.test(news.text) && /Настройки остались прежними/.test(news.text) && !/Набор опыта вернулся/.test(news.text) && !/Качаться на машинах ОКО не выйдет/.test(news.text) && !/ОКО меняется с глубиной/.test(news.text) && !news.tech, "что нового в этой версии — без технических подробностей; выпущенное в 3.7 и 3.6 — в своих разделах");
+  ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.ver === "Альфа 4.1" && news.items.some(l => /^Альфа 4\.0$/.test(l)) && news.items.some(l => /^Альфа 3\.7$/.test(l)) && news.items.some(l => /^Альфа 3\.6$/.test(l)) && news.items.some(l => /^Альфа 3\.5$/.test(l)) && news.items.some(l => /^Альфа 3\.2$/.test(l)) && news.items.some(l => /^Альфа 3\.1$/.test(l)) && news.items.some(l => /^Альфа 3\.0$/.test(l)) && news.items.some(l => /^Альфа 2\.6$/.test(l)) && news.items.some(l => /^Альфа 2\.5$/.test(l)) && news.items.some(l => /^Альфа 2\.2$/.test(l)) && news.items.some(l => /^Альфа 2\.1$/.test(l)) && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
+  ok(/Что нового: /.test(news.note) && /Растения\. Над растениями ставили опыты/.test(news.text) && /Сколько выбросить — решаете вы/.test(news.text) && /(свайп вверх или вниз выбирает|стрелки вправо и влево выбирают), сколько выбросить/.test(news.text) && /Игра больше не встаёт на «Загрузке»/.test(news.text) && /Сохранения прежней версии не сброшены: запись «Альфы 4\.0» загружается с того же места/.test(news.text) && /Настройки остались прежними/.test(news.text) && !/Ёмкость оружия поднимает только верстак/.test(news.text) && !/Помещения стали просторнее/.test(news.text) && !news.tech, "что нового в этой версии — без технических подробностей; выпущенное в 4.0 и раньше — в своих разделах");
+  ok(/Ёмкость оружия поднимает только верстак/.test(news.prev40) && /Вещи ведут себя как вещи/.test(news.prev40) && /Обстановка — по назначению помещений/.test(news.prev40) && /одну штуку или все сразу/.test(news.prev40) && /запись «Альфы 3\.7» можно загрузить/.test(news.prev40) && !/Растения\. Над растениями/.test(news.prev40) && !/Сколько выбросить/.test(news.prev40), "раздел «Альфа 4.0» — как она вышла: растения и ползунок — в 4.1");
 
   console.log("Настройки");
   await page.evaluate(() => { LAB.ui.top().i = 0; });
@@ -2438,15 +2440,18 @@ LAB.ui.closeAll();
     await ctx.close();
     return out;
   };
-  const kept37 = await keptAs(6), kept37b = await keptAs(7), kept38 = await keptAs(7, "Альфа 3.8");
-  ok(kept37 && kept37.ver === kept37.cur && kept37.cur === "Альфа 4.0" && kept37.slot && kept37.kept >= 2 && !kept37.wiped && kept37.from === "Альфа 3.7" && /Сохранения прежней версии остались/.test(kept37.intro || "") && /этажи построены заново/.test(kept37.intro || "") && kept37.relocate,
-    "запись выпущенной «Альфы 3.7» при переходе на 4.0 не стёрта; главное меню говорит, что этажи построены заново, загрузка ставит у входа на свой этаж (" + JSON.stringify(kept37).slice(0, 300) + ")");
-  ok(kept37b && kept37b.cur === "Альфа 4.0" && kept37b.slot && !kept37b.wiped && /Сохранения прежней версии остались/.test(kept37b.intro || "") && /с того же места/.test(kept37b.intro || "") && !/этажи построены заново/.test(kept37b.intro || ""),
+  const kept37 = await keptAs(6), kept37b = await keptAs(7), kept38 = await keptAs(7, "Альфа 3.8"), kept40 = await keptAs(7, "Альфа 4.0");
+  ok(kept37 && kept37.ver === kept37.cur && kept37.cur === "Альфа 4.1" && kept37.slot && kept37.kept >= 2 && !kept37.wiped && kept37.from === "Альфа 3.7" && /Сохранения прежней версии остались/.test(kept37.intro || "") && /этажи построены заново/.test(kept37.intro || "") && kept37.relocate,
+    "запись выпущенной «Альфы 3.7» при переходе на 4.1 не стёрта; главное меню говорит, что этажи построены заново, загрузка ставит у входа на свой этаж (" + JSON.stringify(kept37).slice(0, 300) + ")");
+  ok(kept37b && kept37b.cur === "Альфа 4.1" && kept37b.slot && !kept37b.wiped && /Сохранения прежней версии остались/.test(kept37b.intro || "") && /с того же места/.test(kept37b.intro || "") && !/этажи построены заново/.test(kept37b.intro || ""),
     "запись поздней сборки 3.7 (уже седьмой выпуск мира): меню говорит, что играть дальше можно с того же места (" + JSON.stringify(kept37b).slice(0, 300) + ")");
   /* (4.0) пробные сборки 3.8 уже строили этажи по седьмому выпуску: их запись при переходе на 4.0 не стёрта
      и грузится с того же места, без переноса героя к входу на этаж */
-  ok(kept38 && kept38.ver === kept38.cur && kept38.cur === "Альфа 4.0" && kept38.slot && kept38.kept >= 2 && !kept38.wiped && kept38.from === "Альфа 3.8" && /Сохранения прежней версии остались/.test(kept38.intro || "") && /с того же места/.test(kept38.intro || "") && !/этажи построены заново/.test(kept38.intro || "") && kept38.relocate === false,
-    "запись пробной сборки 3.8 при переходе на 4.0 не стёрта и грузится с того же места (" + JSON.stringify(kept38).slice(0, 300) + ")");
+  ok(kept38 && kept38.ver === kept38.cur && kept38.cur === "Альфа 4.1" && kept38.slot && kept38.kept >= 2 && !kept38.wiped && kept38.from === "Альфа 3.8" && /Сохранения прежней версии остались/.test(kept38.intro || "") && /с того же места/.test(kept38.intro || "") && !/этажи построены заново/.test(kept38.intro || "") && kept38.relocate === false,
+    "запись пробной сборки 3.8 при переходе на 4.1 не стёрта и грузится с того же места (" + JSON.stringify(kept38).slice(0, 300) + ")");
+  /* (4.1) мир тот же, седьмой выпуск: запись «Альфы 4.0» не стёрта и грузится с того же места */
+  ok(kept40 && kept40.ver === kept40.cur && kept40.cur === "Альфа 4.1" && kept40.slot && kept40.kept >= 2 && !kept40.wiped && kept40.from === "Альфа 4.0" && /Сохранения прежней версии остались/.test(kept40.intro || "") && /с того же места/.test(kept40.intro || "") && !/этажи построены заново/.test(kept40.intro || "") && kept40.relocate === false,
+    "запись «Альфы 4.0» при переходе на 4.1 не стёрта и грузится с того же места (" + JSON.stringify(kept40).slice(0, 300) + ")");
   /* (2.0) прохождение заново: та же версия, прежнее прохождение — сохранения стёрты, настройки остались */
   let run = null;
   {
@@ -7317,6 +7322,92 @@ LAB.ui.closeAll();
   ok(pl.okoFound && pl.okoHeat && /Садовник заметил/.test(pl.okoSaid || "") && /по расписанию/.test(pl.okoWater || "") && pl.okoJam, "сад ОКО: сорвали без глушилки — ОКО подозревает больше; с глушилкой — нет; поливать машины не дают зря");
   ok(pl.herb && pl.herbText, "«Гербарий» в справочниках — только глубины, до которых дошли; классы и курсы линий глубже не называются");
   ok(pl.save, "состояние растений и курсов — в записи");
+
+  /* (4.1, просьба игрока) «Выбросить вещь»: сколько — ползунок, как в настройках. Свайп вверх и вниз
+     (стрелки вправо и влево) выбирает, сколько; двойное касание (Enter) выбрасывает; шаг — по одной до
+     десяти, дальше крупнее, последний — все. Броня и оружие — тоже, одинаковые одной строкой; надетая
+     броня, оружие в руках, стартовая монтировка и жетон погибшего — нельзя. Выброшенное подбирается тем же. */
+  console.log("(4.1) Выбросить вещь: ползунок количества, броня и оружие");
+  const dr = await page.evaluate(() => {
+    const g = LAB.game, ui = LAB.ui, C = LAB.combat, out = {}, label = i => typeof i.label === "function" ? i.label() : i.label;
+    const G = g.G, fs = g.CUR.fs;
+    const keep = { inv: JSON.stringify(G.inv), armors: G.armors.slice(), armor: G.armor, weapons: G.weapons.slice(), wi: G.wi, drops: (fs.drops || []).slice(), taken: JSON.stringify(fs.taken || {}), x: G.x, y: G.y, km: LAB.keysMode };
+    const sw = d => ui.gesture({ kind: "swipe", n: 1, dir: d }), dtap = () => ui.gesture({ kind: "dtap", n: 1 });
+    const focus = re => { const w = ui.top(); const k = w ? w.items.findIndex(i => re.test(label(i))) : -1; if (k >= 0) w.i = k; return k >= 0 ? w.items[k] : null; };
+    const cur = () => { const w = ui.top(); return w ? w.items[w.i] : null; };
+    const val = () => { const it = cur(); return it && it.kind === "slider" ? it.fmt(it.get()) : ""; };
+    const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    try {
+      ui.closeAll(); C.stop(); LAB.keysMode = false;
+      const med = Object.keys(LAB.ITEMS).filter(k => LAB.ITEMS[k].cat === "med" && !LAB.ITEMS[k].nosell && !LAB.ITEMS[k].fxOnly && !(LAB.repair && LAB.repair.isKit(k)))[0];
+      G.inv = { scrap: 137, badge: 1 }; G.inv[med] = 12;
+      /* пол вокруг героя — пустой: чужие находки рядом не мешают подсчёту (вернутся в конце) */
+      fs.drops = []; g.floorItems().forEach(it => { if (Math.abs(it.x - G.x) <= 3 && Math.abs(it.y - G.y) <= 3) fs.taken[it.id] = 1; });
+      /* броня: надетая и пять одинаковых комбинезонов; оружие: две одинаковые «Искры» — перед той, что в руках */
+      const worn = G.armor || LAB.makeArmor("suit", 1, 1);
+      if (!G.armor) { G.armors.push(worn); G.armor = worn; }
+      G.armors = [worn]; for (let i = 0; i < 5; i++) G.armors.push(LAB.makeArmor("suit", 2, 1));
+      const inHand = G.weapons[G.wi], w0 = LAB.makeWeapon("spark", 1, 0, 1), w1 = JSON.parse(JSON.stringify(w0)); w1.id = w0.id + "b";
+      G.weapons = [w0, w1].concat(keep.weapons); G.wi = keep.wi + 2;
+      ui.inventory(); focus(/^Выбросить вещь из рюкзака/); SPOKEN.length = 0; ui.activate();
+      out.title = ui.top() && ui.top().title; out.intro = SPOKEN.join(" ");
+      const its0 = ui.top().items.map(label), firstNo = its0.findIndex(l => /Нельзя/.test(l));
+      out.order = ui.top().i === 0 && !/Нельзя/.test(its0[0]) && firstNo > 0 && its0.slice(firstNo, -1).every(l => /Нельзя/.test(l)) && its0[its0.length - 1] === "Назад";
+      /* аптечки: 12 → ползунок «выбросить 1 из 12»; вверх четыре раза, вниз раз — 4; двойное касание — четыре на полу */
+      const mi = focus(new RegExp("^" + esc(LAB.ITEMS[med].n)));
+      out.medSlider = !!mi && mi.kind === "slider" && val() === "выбросить 1 из 12";
+      sw("U"); sw("U"); sw("U"); sw("U"); sw("D"); out.medSaid = SPOKEN.slice(-1)[0] || ""; out.medVal = val(); SPOKEN.length = 0;
+      sw("D"); sw("U"); /* туда и обратно — снова 4; сказано значением, окно на месте */
+      out.medSaid2 = SPOKEN.join(" | ");
+      SPOKEN.length = 0; dtap();
+      out.medLeft = G.inv[med]; out.medDrop = (fs.drops || []).filter(d => d.kind === "item" && d.item === med && !(fs.taken || {})[d.id]).map(d => d.n);
+      out.medMsg = SPOKEN.join(" | "); out.stillOpen = ui.top() && ui.top().title === "Выбросить вещь";
+      out.medAfter = label(cur()) + ": " + val();
+      /* у края: «1» вниз — остаётся 1, окно не закрывается */
+      sw("D"); sw("D"); out.minStay = val() === "выбросить 1 из 8" && ui.top() && ui.top().title === "Выбросить вещь";
+      /* металлолом 137: шаги 1…10, 15…50, 60…100, 137 — и дальше не растёт; вниз — 100; клавишами: влево — 90, Enter — выброшено 90 */
+      focus(/^Металлолом/); const seq = [];
+      for (let i = 0; i < 30; i++) { sw("U"); seq.push(cur().get()); }
+      out.seq = seq.join(",");
+      sw("D"); out.after137 = cur().get();
+      ui.key("dec"); out.keyDec = cur().get(); ui.key("select"); out.scrapLeft = G.inv.scrap;
+      /* броня: надетая — нельзя; пять одинаковых — одной строкой, вверх дважды — 3, двойное касание */
+      const wornLine = focus(/Нельзя: надета/); out.wornLine = !!wornLine;
+      const nA0 = G.armors.length; dtap(); out.wornKept = G.armors.length === nA0 && G.armor === worn && G.armors.indexOf(worn) >= 0;
+      const suitName = G.armors[1].name;
+      const sl = focus(new RegExp("^" + esc(suitName.charAt(0).toUpperCase() + suitName.slice(1)) + ", защита \\d+$"));
+      out.suitSlider = !!sl && sl.kind === "slider" && val() === "выбросить 1 из 5";
+      sw("U"); sw("U"); const dropIds = G.armors.slice(-3).map(a => a.id); dtap();
+      out.suitLeft = G.armors.length; out.suitFloor = (fs.drops || []).filter(d => d.kind === "armor" && !(fs.taken || {})[d.id]).map(d => d.a.id).sort().join(",") === dropIds.sort().join(",");
+      out.stillWorn = G.armor === worn;
+      /* оружие: в руках и монтировка — нельзя; две одинаковые «Искры» — ползунок; выброшены обе, в руках то же */
+      out.handLine = !!focus(/Нельзя: в руках/); out.crowLine = !!focus(/Нельзя: монтировку лучше оставить/);
+      const nW0 = G.weapons.length; focus(/Нельзя: в руках/); dtap(); out.handKept = G.weapons.length === nW0;
+      const ws = ui.top().items.filter(i => i.kind === "slider" && /из 2$/.test(i.fmt(i.get())) && /заряд/.test(label(i)));
+      out.wSlider = ws.length === 1;
+      if (ws.length) { ui.top().i = ui.top().items.indexOf(ws[0]); sw("U"); dtap(); }
+      out.wLeft = G.weapons.length; out.wInHand = G.weapons[G.wi] === inHand;
+      /* жетон погибшего — нельзя */
+      focus(/^Жетон погибшего/); dtap(); out.badge = G.inv.badge === 1;
+      /* подобрать: всё вернулось тем же */
+      ui.closeAll();
+      const cells = {}; (fs.drops || []).forEach(d => { if (!(fs.taken || {})[d.id]) cells[d.x + "," + d.y] = 1; });
+      Object.keys(cells).forEach(k => { const p = k.split(",").map(Number); G.x = p[0]; G.y = p[1]; g.autoPickup(); });
+      out.back = G.inv[med] === 12 && G.inv.scrap === 137 && G.armors.length === 6 && dropIds.every(id => G.armors.some(a => a.id === id)) && G.weapons.length === nW0 && G.weapons.some(w => w.id === w1.id) && G.armor === worn;
+    } catch (e) { out.err = String(e && e.stack || e).slice(0, 400); }
+    ui.closeAll(); C.stop();
+    G.inv = JSON.parse(keep.inv); G.armors = keep.armors; G.armor = keep.armor; G.weapons = keep.weapons; G.wi = keep.wi;
+    fs.drops = keep.drops; fs.taken = JSON.parse(keep.taken); G.x = keep.x; G.y = keep.y; LAB.keysMode = keep.km;
+    return out;
+  });
+  ok(!dr.err && dr.title === "Выбросить вещь" && /сколько выбросить — свайп вверх или вниз, выбросить — двойное касание/.test(dr.intro || "") && dr.order, "«Выбросить вещь»: окно говорит, как выбрать количество, и открывается на том, что можно выбросить; строки «Нельзя» — в конце" + (dr.err ? " (" + dr.err + ")" : ""));
+  ok(dr.medSlider && dr.medVal === "выбросить 4 из 12" && dr.medSaid === "выбросить 4 из 12" && /выбросить 3 из 12 \| выбросить 4 из 12/.test(dr.medSaid2 || ""), "аптечки: ползунок «выбросить 1 из 12», свайпы вверх и вниз меняют число и называют его (" + dr.medSaid2 + ")");
+  ok(dr.medLeft === 8 && JSON.stringify(dr.medDrop) === "[4]" && /На полу.*4 шт\..*В рюкзаке ещё 8/.test(dr.medMsg || "") && dr.stillOpen && /: выбросить 1 из 8$/.test(dr.medAfter || ""), "двойное касание — на полу ровно 4, в рюкзаке 8; окно осталось, ползунок снова с 1 (" + dr.medMsg + " / " + dr.medAfter + ")");
+  ok(dr.minStay, "у края ползунок не уходит ниже одной, и свайп вниз не закрывает окно");
+  ok(dr.seq === "2,3,4,5,6,7,8,9,10,15,20,25,30,35,40,45,50,60,70,80,90,100,137,137,137,137,137,137,137,137" && dr.after137 === 100 && dr.keyDec === 90 && dr.scrapLeft === 47, "137 штук: шаги по одной до десяти, дальше крупнее, последний — все; клавишами — так же, Enter выбрасывает (" + dr.seq + "; " + dr.after137 + ", " + dr.keyDec + ", осталось " + dr.scrapLeft + ")");
+  ok(dr.wornLine && dr.wornKept && dr.suitSlider && dr.suitLeft === 3 && dr.suitFloor && dr.stillWorn, "броня: пять одинаковых комбинезонов — одной строкой с ползунком, выброшены три; надетую не выбросить");
+  ok(dr.handLine && dr.crowLine && dr.handKept && dr.wSlider && dr.wInHand && dr.wLeft === 2, "оружие: две одинаковые «Искры» — ползунком; в руках и монтировку не выбросить, в руках осталось то же");
+  ok(dr.badge && dr.back, "жетон погибшего не выбрасывается; выброшенное подбирается обратно тем же — вещи, броня, оружие");
 
   /* (3.7) Проверка перед сборкой, этап «ошибки»: исправленное не возвращается — кредиты
      с чипом старателя, фармаколог, разговор с выжившим, счёт этажей, отход от взлома,
