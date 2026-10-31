@@ -5216,8 +5216,10 @@ LAB.ui.closeAll();
       C.foes().forEach(f => { f.dead = true; });
       const fl = g.CUR.fl, W = LAB.W, DV = { N: [0, -1], S: [0, 1], W: [-1, 0], E: [1, 0] };
       const wallBy = (x, y) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(v => fl.t[(y + v[1]) * W + x + v[0]] === LAB.T.WALL);
-      /* шаг внутри участка: что прозвучало и какой пол под ногами */
-      const stepIn = (area, rnd) => {
+      /* шаг внутри участка: что прозвучало и какой пол под ногами. (4.1) wantWall — шаг к клетке у стены
+         (true) или вдали от стен (false): прежде брался первый попавшийся шаг, и в мирах, где он у
+         всех трёх участков приходился на клетку у прохода или двери, проверке эха нечего было слушать */
+      const stepIn = (area, rnd, wantWall) => {
         for (let i = 0; i < fl.t.length; i++) {
           if (!area(i)) continue;
           const x = i % W, y = (i / W) | 0;
@@ -5225,6 +5227,7 @@ LAB.ui.closeAll();
           for (const k of ["N", "S", "W", "E"]) {
             const nx = x + DV[k][0], ny = y + DV[k][1], j = ny * W + nx;
             if (!LAB.inb(nx, ny) || !area(j) || !g.passable(nx, ny) || fl.t[j] === LAB.T.DOOR) continue;
+            if (wantWall != null && wallBy(nx, ny) !== wantWall) continue;
             G.x = x; G.y = y; LAB.ui.closeAll();
             const ids = [];
             LAB.Sound.play = function (id) { ids.push(id); return sp0.apply(this, arguments); };
@@ -5246,9 +5249,11 @@ LAB.ui.closeAll();
       out.conc = !!conc && conc.moved && conc.surf === "concrete" && conc.ids.indexOf("step_concrete") >= 0;
       out.metal = !!metal && metal.moved && metal.surf === lev && metal.ids.indexOf(lb) >= 0 && metal.ids.indexOf("step_concrete") < 0;
       out.ids = [wood, stair, conc, metal].map(r => r ? r.ids.filter(id => /^step_|creak/.test(id)).join("+") : "—").join(" | ");
-      /* у стены шаг отдаётся тем же коротким эхом, что и на металле */
-      const echo = [wood, conc, metal].filter(r => r && r.moved && r.wall);
-      out.echo = echo.length > 0 && echo.every(r => r.ids.indexOf("step_echo") >= 0);
+      /* у стены шаг отдаётся тем же коротким эхом, что и на металле; вдали от стен эха нет */
+      const inWood = i => fl.room[i] === found.wr, inConc = i => fl.corrAt[i] === found.cc;
+      const echoW = [stepIn(inWood, null, true), stepIn(inConc, null, true)], echoN = [stepIn(inWood, null, false), stepIn(inConc, null, false)];
+      out.echo = echoW.every(r => r && r.moved && r.wall && r.ids.indexOf("step_echo") >= 0) && echoN.every(r => !r || !r.moved || r.ids.indexOf("step_echo") < 0);
+      out.echoIds = echoW.concat(echoN).map(r => r ? r.ids.filter(id => /^step_/.test(id)).join("+") : "—").join(" | ");
       /* по дереву изредка скрипят половицы (здесь — всегда: случайность подменена) */
       const creak = stepIn(i => fl.room[i] === found.wr, () => 0.01);
       out.creak = !!creak && creak.ids.indexOf("floor_creak") >= 0;
@@ -5279,7 +5284,7 @@ LAB.ui.closeAll();
     ok(flr.wood, "в деревянном помещении («" + flr.woodRoom + "», этаж " + flr.at + ") шаги по дереву");
     ok(flr.stair, "лестничная клетка — бетонный колодец: шаги по бетону");
     ok(flr.conc && flr.metal, "коридоры: где бетон — шаги по бетону, где металл — прежний металл уровня (" + flr.lev + "): " + flr.ids);
-    ok(flr.echo, "у стены шаг отдаётся прежним коротким эхом — и на дереве, и на бетоне");
+    ok(flr.echo, "у стены шаг отдаётся прежним коротким эхом — и на дереве, и на бетоне; вдали от стен эха нет (" + flr.echoIds + ")");
     ok(flr.creak, "по деревянному полу изредка скрипят половицы");
     ok(flr.bump, "звук стены прежний: удар о сталь, без звука шага");
   }
