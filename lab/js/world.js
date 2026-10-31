@@ -1777,6 +1777,7 @@ LAB.solidAt = function (fl, x, y) {
 var bfsPrev = null, bfsSeen = null, bfsDepA = null, bfsQ = null, bfsGen = 0;
 LAB.bfs = function (fl, st, sx, sy, goal, opts) {
   opts = opts || {};
+  LAB.bfsCapped = false; /* (3.8) поиск оборвался на пределе maxLen — «пути нет» тогда не значит, что его нет */
   if (!bfsPrev || bfsPrev.length !== W * H) { bfsPrev = new Int32Array(W * H); bfsSeen = new Int32Array(W * H); bfsDepA = new Int16Array(W * H); bfsQ = new Int32Array(W * H); bfsGen = 0; }
   if (++bfsGen > 2000000000) { bfsSeen.fill(0); bfsGen = 1; }
   var prev = bfsPrev, seen = bfsSeen, gen = bfsGen;
@@ -1818,7 +1819,7 @@ LAB.bfs = function (fl, st, sx, sy, goal, opts) {
       if (opts.block && opts.block(nx, ny) && !isGoal(nx, ny)) continue;
       prev[j] = u; seen[j] = gen; q[qn++] = j;
       if (dep) dep[j] = dep[u] + 1;
-      if (opts.maxLen && qn > opts.maxLen) return null;
+      if (opts.maxLen && qn > opts.maxLen) { LAB.bfsCapped = true; return null; }
     }
   }
   return null;

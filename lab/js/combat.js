@@ -521,19 +521,27 @@ function stepToward(f, tx, ty, opts) {
      или стол не встают (прежде машина вставала на них — и её добыча падала туда,
      откуда её не поднять); если цель сама занята обстановкой — подойти вплотную */
   var solidT = LAB.solidAt(fl, tx, ty);
-  var path = LAB.bfs(fl, fs, f.x, f.y, function (x, y) {
+  /* (3.8, просьба автора) «Пропустить своего»: свободного пути нет — второй поиск идёт сквозь
+     клетки напарников (pm), и шаг на такую клетку — обмен местами (swapFoes). Прежде машина
+     упиралась в своего же в проёме или узком проходе, считала, что прохода нет, и бросала погоню */
+  var pm = null;
+  var free = function (i) { return occ[i] !== 1 || (pm !== null && pm[i] === 1); };
+  var goal = function (x, y) {
     /* клетка рядом с целью, занятая героем или другой машиной, — не цель: иначе машина идёт к ней и упирается */
     if (barred(f, x, y)) return false;
-    if (opts.near) return Math.max(Math.abs(x - tx), Math.abs(y - ty)) === 1 && occ[y * W0 + x] !== 1 && !LAB.solidAt(fl, x, y); /* любая из восьми соседних клеток */
-    if (opts.adjacent || solidT) return Math.abs(x - tx) + Math.abs(y - ty) === 1 && occ[y * W0 + x] !== 1 && !LAB.solidAt(fl, x, y);
+    if (opts.near) return Math.max(Math.abs(x - tx), Math.abs(y - ty)) === 1 && free(y * W0 + x) && !LAB.solidAt(fl, x, y); /* любая из восьми соседних клеток */
+    if (opts.adjacent || solidT) return Math.abs(x - tx) + Math.abs(y - ty) === 1 && free(y * W0 + x) && !LAB.solidAt(fl, x, y);
     return x === tx && y === ty;
-  }, {
+  };
+  var bo = {
     passDoor: function (d) { return foeOpens(f, d); },
     /* (3.5) путь в обход безопасных зон: прежде машина шла сквозь зону, вставала в проёме
        и стояла там вечно — шаг внутрь не выходил, а «застрял» не засчитывался */
-    block: function (x, y) { return occ[y * W0 + x] === 1 || barred(f, x, y); },
+    block: function (x, y) { return !free(y * W0 + x) || barred(f, x, y); },
     maxLen: bfsCap()
-  });
+  };
+  var path = LAB.bfs(fl, fs, f.x, f.y, goal, bo);
+  if (!path && !LAB.bfsCapped && (pm = partnerCells(f))) path = LAB.bfs(fl, fs, f.x, f.y, goal, bo); /* первый поиск оборвался на пределе — второй, такой же долгий, не нужен */
   f.pathLen = path ? path.length : 9999;
   if (!path || !path.length) return false;
   var nx = path[0][0], ny = path[0][1];
@@ -548,8 +556,86 @@ function stepToward(f, tx, ty, opts) {
       return true; /* дверь открыта — шаг в следующий такт */
     }
   }
+  /* на пути напарник: обмен местами, а нельзя — ждать за ним, не бросая цели (waitP) */
+  if (pm !== null && pm[idx(nx, ny)] === 1) {
+    var mate = null;
+    for (var k = 0; k < foes.length && !mate; k++) if (foes[k] !== f && !foes[k].dead && foes[k].x === nx && foes[k].y === ny) mate = foes[k];
+    if (mate && canSwap(f, mate)) { swapFoes(f, mate); return true; }
+    f.waitP = tickN; f.waitFor = mate ? mate.id : null;
+    return false;
+  }
   if (occupied(nx, ny, f) || (nx === G().x && ny === G().y)) return false;
   return moveFoe(f, nx, ny);
+}
+/* ── (3.8, просьба автора) «ПРОПУСТИТЬ СВОЕГО» ──
+   В узком месте — дверном проёме, проходе между стеной и обстановкой — враг меняется местами с
+   напарником, который стоит у него на пути. Напарники — свои по стороне: машины ОКО друг другу,
+   твари одной стаи друг другу. Не меняются местами: перепрошитые, спокойные и союзные машины,
+   неподвижные (турели, камеры, наблюдатели), рои, главари, затаившиеся (мимики, зарывшиеся,
+   ловцы), замороженные. Напарник не уступает место, пока бьёт героя вплотную, целится,
+   разгоняется для рывка или занят делом (ремонт, мины); в такте — один обмен на каждого, и с тем,
+   с кем только что поменялись, — не раньше чем через десять тактов (без «качелей»). Кто сам стоит
+   в очереди за другим, вперёд не пропускает — кроме затора по кругу: встречные в проёме ждут друг
+   друга, или очередь замкнулась (waitCycle). Клетки обмена годятся обоим, как для обычного шага:
+   не стена, дверь открыта, не обстановка, не безопасная зона, не известная ловушка. */
+function mobileMate(o) {
+  if (!o || o.dead || o.ally || o.calm || o.boss || o.disguised || o.burrowed || o.neutral || o.frozen > 0) return false;
+  return ["stationary", "camera", "turret", "swarm", "observer", "stalker"].every(function (k) { return !has(o, k); });
+}
+function partners(a, b) {
+  if (a === b || !mobileMate(a) || !mobileMate(b)) return false;
+  if (a.kind === "mech" && b.kind === "mech") return true;
+  return a.kind === "bio" && b.kind === "bio" && !!a.pack && a.pack === b.pack;
+}
+var pmMap = null, pmMarked = [];
+/* Клетки напарников этого врага; напарников нет — null (второго поиска не будет). */
+function partnerCells(f) {
+  var n = LAB.W * LAB.H, any = false;
+  if (!pmMap || pmMap.length !== n) { pmMap = new Uint8Array(n); pmMarked = []; }
+  for (var i = 0; i < pmMarked.length; i++) pmMap[pmMarked[i]] = 0;
+  pmMarked.length = 0;
+  for (var k = 0; k < foes.length; k++) { var o = foes[k]; if (o !== f && partners(f, o)) { var j = idx(o.x, o.y); pmMap[j] = 1; pmMarked.push(j); any = true; } }
+  return any ? pmMap : null;
+}
+/* Клетка годится этому врагу при обмене — как для обычного шага, только без «занято». */
+function swapCell(o, x, y) {
+  var fl = CUR().fl, i = idx(x, y), t = fl.t[i];
+  if (t === LAB.T.WALL || LAB.solidAt(fl, x, y) || barred(o, x, y) || (x === G().x && y === G().y)) return false;
+  if (t === LAB.T.DOOR && CUR().fs.doors[fl.doorAt[i].id] !== 2) return false;
+  return !(LAB.traps && LAB.traps.avoid && LAB.traps.avoid(o, x, y));
+}
+function canSwap(f, p) {
+  if (!partners(f, p)) return false;
+  if (f.swapT === tickN || p.swapT === tickN || p.mvT === tickN) return false; /* один обмен за такт; напарник уже шагнул в этом такте */
+  if (p.swapWith === f.id && p.swapAt <= tickN && tickN - p.swapAt < 10) return false;
+  if (waiting(p) && !waitCycle(f, p)) return false;
+  if (p.aim || p.chargeV || p.task || (p.state === "hunt" && dist(p, heroPos()) <= 1)) return false;
+  return swapCell(f, p.x, p.y) && swapCell(p, f.x, f.y);
+}
+/* стоит в очереди за напарником (ждал в этом или прошлом такте) */
+function waiting(o) { return o.waitP != null && o.waitP <= tickN && tickN - o.waitP <= 1; }
+/* затор по кругу: p ждёт того, кто ждёт… — и цепочка приходит к f (встречные — круг из двоих) */
+function waitCycle(f, p) {
+  var q = p;
+  for (var n = 0; q && n < 8; n++) {
+    if (q.waitFor === f.id) return true;
+    if (!waiting(q)) return false;
+    var nx = null;
+    for (var k = 0; k < foes.length && !nx; k++) if (foes[k].id === q.waitFor && !foes[k].dead) nx = foes[k];
+    q = nx;
+  }
+  return false;
+}
+function swapFoes(f, p) {
+  var fl = CUR().fl, fx = f.x, fy = f.y;
+  f.x = p.x; f.y = p.y; f.room = fl.room[idx(f.x, f.y)];
+  p.x = fx; p.y = fy; p.room = fl.room[idx(p.x, p.y)];
+  f.swapT = p.swapT = f.mvT = p.mvT = f.swapAt = p.swapAt = tickN;
+  f.swapWith = p.id; p.swapWith = f.id;
+  [f, p].forEach(function (o) {
+    if ((!aff(o, "cloak") && !has(o, "silent")) || dist(o, heroPos()) <= 3) A("foeStep", o); /* шаги — как у обычного шага */
+    if (LAB.traps && !o.dead) LAB.traps.foeStep(o);
+  });
 }
 /* (3.2) предел поиска пути: с третьего блока этажи просторнее — и путь ищется дальше */
 function bfsCap() { var gw = LAB.floorGrow ? LAB.floorGrow(G().L) : null; return gw ? 6000 + 1500 * (LAB.blockOf(G().L) - 2) : 6000; }
@@ -557,7 +643,7 @@ function moveFoe(f, nx, ny) {
   if (LAB.solidAt(CUR().fl, nx, ny)) return false; /* (3.0) на обстановку и на жителей враг не встаёт никогда */
   if (barred(f, nx, ny)) return false; /* (2.2) в капсульный отсек при пробуждении и в убежище, (2.3) в безопасную зону у капсулы не входят */
   var px = f.x, py = f.y;
-  f.x = nx; f.y = ny;
+  f.x = nx; f.y = ny; f.mvT = tickN; /* (3.8) шагнул в этом такте — меняться местами больше не будет (canSwap) */
   var r = CUR().fl.room[idx(nx, ny)];
   f.room = r;
   if ((!aff(f, "cloak") && !has(f, "silent")) || dist(f, heroPos()) <= 3) A("foeStep", f); /* (2.5) беззвучные твари — слышно только вблизи */
@@ -1087,7 +1173,7 @@ function repairTask(f, canMove) {
     else if (++f.stuck > 16) {
       f.stuck = 0; f.repBest = null;
       var p = (f.hops || 0) < 2 ? okoPoint({ to: t, minHero: 8, dmin: 2, dmax: 16 }) : null;
-      if (p) { f.hops = (f.hops || 0) + 1; f.x = p[0]; f.y = p[1]; f.room = CUR().fl.room[idx(p[0], p[1])]; A("foeSound", f, "radio"); }
+      if (p) { f.hops = (f.hops || 0) + 1; f.x = p[0]; f.y = p[1]; f.mvT = tickN; f.room = CUR().fl.room[idx(p[0], p[1])]; A("foeSound", f, "radio"); }
       else { despawn(f); if (LAB.oko) LAB.oko.event("repair_lost", { quiet: true }); }
     }
   }
@@ -1112,7 +1198,7 @@ function serviceStep(f, canMove) {
     if (t.hp >= t.maxhp) f.svc = null;
     return true;
   }
-  if (canMove) { f.mv = 0; if (!stepToward(f, t.x, t.y, { near: true })) f.svc = null; }
+  if (canMove) { f.mv = 0; if (!stepToward(f, t.x, t.y, { near: true }) && f.waitP !== tickN) f.svc = null; } /* (3.8) ждёт за напарником — дела не бросает */
   return true;
 }
 /* Турель вручную: вскрыть кожух и перерезать кабель питания. Быстро, но
@@ -1408,7 +1494,7 @@ function stalkerTick(f) {
     if (f.state === "alert" && f.lastKnown && f.x === f.lastKnown.x && f.y === f.lastKnown.y && !f.searchR) search(f, f.lastKnown);
   }
   f.mv++; f.at++;
-  var canMove = f.mv >= f.spd, canAct = f.at >= f.acd;
+  var canMove = f.mv >= f.spd && f.swapT !== tickN, canAct = f.at >= f.acd; /* (3.8) уступил место напарнику — в этом такте больше не шагает */
   /* (3.7, нелогичность) докладывает ОКО, только пока есть связь: прежде дрон поднимал тревогу и
      при разбитых узлах связи этажа */
   if (see && ++f.repT >= 14) { f.repT = 0; if (netUp()) { A("foeSound", f, "radio"); if (LAB.oko) LAB.oko.event("drone", { x: hp.x, y: hp.y }); } }
@@ -1440,7 +1526,7 @@ function stalkerTick(f) {
   if (see && d < 3) { stepAway(f); return; }
   /* за углом дрон не лезет вплотную: зависает в паре шагов и ждёт, пока цель покажется */
   if (!see && d <= 2) return;
-  if (d > 4 || !see) { if (!stepToward(f, f.lastKnown.x, f.lastKnown.y, { adjacent: true })) wander(f); return; }
+  if (d > 4 || !see) { if (!stepToward(f, f.lastKnown.x, f.lastKnown.y, { adjacent: true }) && f.waitP !== tickN) wander(f); return; } /* (3.8) за напарником — ждёт, не бродит */
   if (Math.random() < 0.3) sidestep(f, 2);
 }
 /* Есть ли у машин связь с ОКО: глушилка и разбитые узлы связи этажа её рвут. */
@@ -1526,7 +1612,7 @@ function foeTick(f, spotted) {
     if (f.burrowT < 3 && Math.random() < 0.6) A("burrowSnd", f, "under"); /* (3.7) под полом — скрежет под ногами */
     if (f.burrowT >= 3) {
       var cb = freeCellNear(G().x, G().y, f);
-      if (cb) { f.x = cb[0]; f.y = cb[1]; f.room = CUR().fl.room[idx(cb[0], cb[1])]; }
+      if (cb) { f.x = cb[0]; f.y = cb[1]; f.mvT = tickN; f.room = CUR().fl.room[idx(cb[0], cb[1])]; }
       f.burrowed = false; f.burrowT = 0; f.at = f.acd;
       A("burrowSnd", f, "out"); /* (3.7, нелогичность) тварь выныривает с обломками, а не из телепорта (atmos.js) */
       sayOnce("brw" + f.id, f.name.split(",")[0] + " " + gw(f, "вынырнул", "вынырнула", "вынырнуло") + " " + gm().relDir(f.x, f.y) + "!", 4000);
@@ -1589,7 +1675,7 @@ function foeTick(f, spotted) {
   if (f.state === "idle" && !sense && (f.beat || f.route) && f.kind === "mech" && cheb(f, heroPos()) <= 2 && (f.slipT || 0) <= tickN && netUp() && LAB.oko && LAB.oko.react) { f.slipT = tickN + 120; LAB.oko.react("patrol_slip"); }
 
   f.mv++; f.at++;
-  var canMove = f.mv >= f.spd && !has(f, "stationary");
+  var canMove = f.mv >= f.spd && !has(f, "stationary") && f.swapT !== tickN; /* (3.8) уступил место напарнику — в этом такте больше не шагает */
   var canAct = f.at >= f.acd;
   var d = dist(f, heroPos());
   /* (3.7, нелогичность) разогнался в прошлом такте — рывок по запомненной линии (chargeRun);
@@ -1662,7 +1748,7 @@ function foeTick(f, spotted) {
     if (canMove && f.lastKnown) {
       f.mv = 0;
       if (f.x === f.lastKnown.x && f.y === f.lastKnown.y) { f.lost++; if (f.lost > 8) { if (f.kind === "mech" && (f.oko || f.patrol || f.route) && !f.searched) { f.searched = true; search(f, f.lastKnown); } else { f.state = "idle"; f.lastKnown = null; f.searched = false; } } else wander(f); }
-      else if (!stepToward(f, f.lastKnown.x, f.lastKnown.y)) { f.lost++; if (f.lost > 8) f.state = "idle"; }
+      else if (!stepToward(f, f.lastKnown.x, f.lastKnown.y) && f.waitP !== tickN) { f.lost++; if (f.lost > 8) f.state = "idle"; } /* (3.8) очередь за напарником — не «потерял след» */
     }
     return;
   }
@@ -1715,7 +1801,7 @@ function foeTick(f, spotted) {
         var fc = flankCell(f);
         if (fc && stepToward(f, fc[0], fc[1])) { if (!f.flank) { f.flank = 1; sayOnce("flk" + f.id, f.name.split(",")[0] + " заходит с фланга, " + gm().relDir(f.x, f.y) + "!", 9000); } return; }
       }
-      if (!stepToward(f, tgt.x, tgt.y, { adjacent: true })) { if (noPath(f)) return; wander(f); } else f.noPath = 0;
+      if (!stepToward(f, tgt.x, tgt.y, { adjacent: true })) { if (noPath(f)) return; if (f.waitP !== tickN) wander(f); } else f.noPath = 0; /* (3.8) за напарником — ждёт, не бродит */
       if (punish && f.spd > 0) stepToward(f, G().x, G().y, { adjacent: true });
     }
     return;
@@ -1739,7 +1825,7 @@ function foeTick(f, spotted) {
   if (canMove) {
     f.mv = 0;
     var t2 = f.lastKnown || heroPos();
-    if (!stepToward(f, t2.x, t2.y, { adjacent: true })) { if (!noPath(f)) wander(f); } else f.noPath = 0;
+    if (!stepToward(f, t2.x, t2.y, { adjacent: true })) { if (!noPath(f) && f.waitP !== tickN) wander(f); } else f.noPath = 0; /* (3.8) за напарником — ждёт, не бродит */
   }
 }
 /* (3.7, нелогичность) Кого лечит лекарь: прежде — только своих по виду (машина — машин), и
@@ -1823,7 +1909,7 @@ function blink(f) {
   var c = freeCellNear(G().x, G().y, f);
   if (!c || Math.random() < 0.3) return false;
   A("foeSound", f, "blink_out");
-  f.x = c[0]; f.y = c[1]; f.room = CUR().fl.room[idx(c[0], c[1])];
+  f.x = c[0]; f.y = c[1]; f.mvT = tickN; f.room = CUR().fl.room[idx(c[0], c[1])];
   A("foeSound", f, "blink_in");
   f.at = Math.max(0, f.acd - 1);
   return true;
@@ -1907,7 +1993,7 @@ function feedTick(f, canMove) {
     }
     return true;
   }
-  if (canMove) { f.mv = 0; if (!stepToward(f, b.x, b.y)) bodies.splice(bodies.indexOf(b), 1); }
+  if (canMove) { f.mv = 0; if (!stepToward(f, b.x, b.y) && f.waitP !== tickN) bodies.splice(bodies.indexOf(b), 1); } /* (3.8) за напарником — ждёт очереди */
   return true;
 }
 /* Ткач: поперёк прохода — ловушка своей глубины (своих она не трогает). */
@@ -3466,6 +3552,7 @@ LAB.combat = {
   /* (2.5) мир мутантов — для проверок */
   _evolve: evolve, _gainEvo: gainEvo, _bodies: function () { return bodies; },
   /* для проверок, что подменяют часы: забыть время прошлого выстрела */
-  _shotReset: function () { lastShot = 0; reloadUntil = 0; }
+  _shotReset: function () { lastShot = 0; reloadUntil = 0; },
+  _partners: partners, _canSwap: canSwap /* (3.8) «Пропустить своего» — для проверок */
 };
 })();

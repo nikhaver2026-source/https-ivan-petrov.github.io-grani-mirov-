@@ -7103,6 +7103,90 @@ LAB.ui.closeAll();
     "после перезапуска — тот же голос: игра отдаёт его телефону при запуске и говорит синтезатором телефона (" + JSON.stringify(vc2) + ")");
   await ctxV.close(); await ctxV2.close();
 
+  /* (3.8, просьба автора) «Пропустить своего»: в дверном проёме машина меняется местами с
+     напарником, который стоит у неё на пути; встречные расходятся; кто бьёт героя вплотную, места
+     не уступает — сзади ждут и погоню не бросают; перепрошитую машину не двигают; напарники — свои
+     по стороне (машины ОКО, твари одной стаи); в пошаговом режиме — так же. Помещение — с одной
+     дверью и без арок, чтобы обойти было негде */
+  console.log("(3.8) Пропустить своего: обмен местами в узком месте");
+  const sw = await page.evaluate(() => {
+    const g = LAB.game, C = LAB.combat, S = LAB.settings, W = LAB.W, T = LAB.T, out = {};
+    LAB.ui.closeAll(); g.newGame(); LAB.ui.closeAll(); C.stop();
+    const G = g.G; G.hp = G.hpMax = 1e6;
+    const tb0 = S.turnBased;
+    try {
+      /* машина ближнего боя: ходит и бьёт, без особых умений */
+      const bad = ["ranged", "stationary", "camera", "turret", "swarm", "mimic", "cleaner", "observer", "stalker", "kamikaze", "bomber", "mines", "fixer", "flee", "dooropen", "healer", "burrow"];
+      const type = Object.keys(LAB.FOES).find(id => { const b = LAB.FOES[id]; return b.kind === "mech" && !b.boss && bad.every(x => (b.beh || []).indexOf(x) < 0); });
+      let fl = null, d = null, din = null, dout = null;
+      for (let F = 2; F <= 20 && !d; F++) {
+        g.enterFloor(1, F, "down", true); C.stop(); LAB.ui.closeAll(); fl = g.CUR.fl;
+        for (const dd of fl.doors) {
+          const rm = fl.rooms[dd.room]; if (!rm || rm.doors.length !== 1 || (rm.mouths && rm.mouths.length) || dd.lock) continue;
+          const nb = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+          const vin = nb.find(v => fl.room[(dd.y + v[1]) * W + dd.x + v[0]] === dd.room); if (!vin) continue;
+          const vout = [-vin[0], -vin[1]];
+          const ok2 = (m, v) => { const x = dd.x + v[0] * m, y = dd.y + v[1] * m; return LAB.inb(x, y) && fl.t[y * W + x] !== T.WALL && fl.t[y * W + x] !== T.DOOR && !LAB.solidAt(fl, x, y); };
+          if ([1, 2].every(m => ok2(m, vin)) && [1, 2, 3].every(m => ok2(m, vout)) && fl.room[(dd.y + vout[1]) * W + dd.x + vout[0]] < 0) { d = dd; din = vin; dout = vout; break; }
+        }
+      }
+      out.found = !!(d && type);
+      if (!out.found) return out;
+      const fs = g.CUR.fs, at = (v, m) => [d.x + v[0] * m, d.y + v[1] * m];
+      const R = at(din, 1), R2 = at(din, 2), D = [d.x, d.y], C1 = at(dout, 1), C2 = at(dout, 2), C3 = at(dout, 3);
+      const reset = () => { C.foes().forEach(f => { f.dead = true; }); fs.haven = {}; fs.cleared = {}; fs.doors[d.id] = 2; G.st.cloak = 0; G.noise = 0; };
+      const spawn = (c, ex) => { const f = C.spawnFoe(type, c[0], c[1], ex || {}); f.lvl = 1; return f; };
+      const ticks = (n, fn) => { for (let i = 0; i < n; i++) { fs.haven = {}; fs.cleared = {}; C.tick(); if (fn && fn()) return i + 1; } return -1; };
+      const inRoom = f => fl.room[f.y * W + f.x] === d.room;
+      const gaveUp = () => SPOKEN.some(s => /не находит к вам прохода/.test(s));
+      for (let i = 0; i < 10; i++) C.tick(); /* передышка после входа на этаж */
+      /* 1. впереди в проёме свой и не двигается — меняются местами, погоня идёт дальше */
+      reset(); G.x = C3[0]; G.y = C3[1]; SPOKEN.length = 0;
+      { const P = spawn(D, { oko: true }); P.spd = 999; P.state = "idle"; const F1 = spawn(R, { oko: true }); F1.state = "hunt"; F1.lastKnown = { x: G.x, y: G.y };
+        out.swap = ticks(12, () => !inRoom(F1) && P.x === R[0] && P.y === R[1]) > 0 && F1.state === "hunt" && !gaveUp(); }
+      /* 2. встречные в проёме расходятся */
+      reset(); G.st.cloak = 999;
+      { let far = null; for (let i = 0; i < fl.t.length && !far; i++) { const x = i % W, y = (i / W) | 0; if (fl.corrAt[i] >= 0 && g.passable(x, y) && Math.abs(x - d.x) + Math.abs(y - d.y) > 40) far = [x, y]; } if (far) { G.x = far[0]; G.y = far[1]; } }
+      { const A1 = spawn(R, { oko: true }), B1 = spawn(D, { oko: true }); A1.state = "alert"; A1.lastKnown = { x: C2[0], y: C2[1] }; B1.state = "alert"; B1.lastKnown = { x: R2[0], y: R2[1] };
+        out.headOn = ticks(14, () => !inRoom(A1) && fl.t[A1.y * W + A1.x] !== T.DOOR && inRoom(B1)) > 0; }
+      /* 3. впереди свой бьёт героя вплотную — места не уступает; сзади ждут и погоню не бросают */
+      reset(); G.x = C1[0]; G.y = C1[1]; SPOKEN.length = 0;
+      { const P = spawn(D, { oko: true }); P.state = "hunt"; P.lastKnown = { x: G.x, y: G.y }; const F1 = spawn(R, { oko: true }); F1.state = "hunt"; F1.lastKnown = { x: G.x, y: G.y };
+        ticks(14);
+        out.queue = P.x === D[0] && P.y === D[1] && F1.x === R[0] && F1.y === R[1] && F1.state === "hunt" && !gaveUp(); }
+      /* 4. в проёме перепрошитая машина — не напарник: её не двигают */
+      reset(); G.x = C3[0]; G.y = C3[1];
+      { const P = spawn(D, { oko: true }); P.calm = true; const F1 = spawn(R, { oko: true }); F1.state = "hunt"; F1.lastKnown = { x: G.x, y: G.y };
+        ticks(14);
+        out.calm = P.x === D[0] && P.y === D[1] && inRoom(F1); }
+      /* 5. кто кому напарник: машины ОКО — друг другу, твари одной стаи — друг другу; чужая стая,
+         тварь с машиной, союзная, перепрошитая машина и турель — нет */
+      reset();
+      { const m1 = spawn(R2, {}), m2 = spawn(C2, {}), al = spawn(C3, {}); al.ally = true;
+        const bio = Object.keys(LAB.FOES).filter(id => LAB.FOES[id].kind === "bio" && !LAB.FOES[id].boss && (LAB.FOES[id].beh || []).every(x => ["stationary", "swarm", "stalker", "observer", "burrow", "mimic"].indexOf(x) < 0));
+        const b1 = C.spawnFoe(bio[0], R[0], R[1], { pack: "pk1" }), b2 = C.spawnFoe(bio[1] || bio[0], R2[0], R2[1], { pack: "pk1" }), b3 = C.spawnFoe(bio[0], C1[0], C1[1], { pack: "pk2" });
+        const tur = Object.keys(LAB.FOES).find(id => (LAB.FOES[id].beh || []).indexOf("turret") >= 0), tu = tur ? C.spawnFoe(tur, C2[0], C2[1], {}) : null;
+        const P2 = C._partners;
+        out.mates = P2(m1, m2) && P2(b1, b2) && !P2(b1, b3) && !P2(m1, b1) && !P2(m1, al) && (!tu || !P2(m1, tu));
+        m2.calm = true; out.mates = out.mates && !P2(m1, m2); }
+      /* 6. пошаговый режим — тот же обмен */
+      reset(); G.x = C3[0]; G.y = C3[1]; S.turnBased = 1;
+      { const P = spawn(D, { oko: true }); P.spd = 999; P.state = "idle"; const F1 = spawn(R, { oko: true }); F1.state = "hunt"; F1.lastKnown = { x: G.x, y: G.y };
+        out.tb = ticks(12, () => !inRoom(F1) && P.x === R[0] && P.y === R[1]) > 0; }
+      reset();
+    } catch (e) { out.err = String(e && e.stack || e).slice(0, 300); }
+    S.turnBased = tb0;
+    LAB.ui.closeAll();
+    return out;
+  });
+  ok(!sw.err && sw.found, "пропустить своего: этаж с помещением в одну дверь найден, проверка без ошибок" + (sw.err ? " (" + sw.err + ")" : ""));
+  ok(sw.swap, "впереди в проёме свой и не двигается — меняются местами, погоня идёт дальше, «не находит прохода» не звучит");
+  ok(sw.headOn, "встречные машины в дверном проёме расходятся");
+  ok(sw.queue, "кто бьёт героя вплотную, места не уступает; сзади ждут и погоню не бросают");
+  ok(sw.calm, "перепрошитую машину в проёме не двигают — она не напарник");
+  ok(sw.mates, "напарники — машины ОКО и твари одной стаи; чужая стая, тварь с машиной, союзная, перепрошитая и турель — нет");
+  ok(sw.tb, "в пошаговом режиме — тот же обмен местами");
+
   /* (3.7) Проверка перед сборкой, этап «ошибки»: исправленное не возвращается — кредиты
      с чипом старателя, фармаколог, разговор с выжившим, счёт этажей, отход от взлома,
      пройденная игра, привязка к капсуле и записки после перестройки мира, вехи, справочник,
