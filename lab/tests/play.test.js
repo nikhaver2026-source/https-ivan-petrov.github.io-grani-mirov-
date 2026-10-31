@@ -3725,6 +3725,8 @@ LAB.ui.closeAll();
     for (let i = 0; i < fl.rooms.length && !pick; i++) {
       const rm = fl.rooms[i];
       if (!rm || !rm.annex || rm.hidden || rm.doors.length !== 1 || (rm.mouths || []).length) continue;
+      /* (4.1) помещение с капсулой — не то: зачищенное, оно безопасная зона у капсулы и прикрывает и с открытой дверью */
+      if (fl.objs.some(o => (o.type === "capsule" || o.type === "wake") && o.room === i)) continue;
       const d = fl.doors.find(q => q.id === rm.doors[0]);
       const outC = d && [[1, 0], [-1, 0], [0, 1], [0, -1]].map(v => [d.x + v[0], d.y + v[1]]).find(c => LAB.inb(c[0], c[1]) && fl.room[c[1] * W + c[0]] !== i && fl.t[c[1] * W + c[0]] === LAB.T.CORR);
       if (!d || !outC || d.lock) continue;
@@ -3756,6 +3758,7 @@ LAB.ui.closeAll();
       /* открыли дверь — убежища нет */
       fs.doors[d.id] = 2; C.tick();
       out.off = C.refuge() === -1 && !C.sheltered();
+      out.offWhy = { refuge: C.refuge(), sheltered: C.sheltered(), wake: !!C.wakeSafe(), door: fs.doors[d.id], stair: !!G.stair, room: fl.room[G.y * W + G.x] === rid };
       if (bot) bot.dead = true;
     }
     /* 2. камеры в помещениях: со второго этажа, глубже — больше; разбить вплотную */
@@ -3823,7 +3826,7 @@ LAB.ui.closeAll();
   });
   ok(v21.found && v21.notYet && v21.cleared && v21.refuge && v21.said, "убежище: робот в кабинете убит, дверь закрыта — «Эхо» говорит, что здесь можно перевести дух (" + JSON.stringify({ f: v21.found, n: v21.notYet, c: v21.cleared, r: v21.refuge, s: v21.said }) + ")");
   ok(v21.shut && v21.outside && v21.unhurt && v21.noSpawnIn, "убежище: робот за дверью её не открывает и не входит, ОКО внутрь никого не выводит, носителя не трогают (" + JSON.stringify({ shut: v21.shut, out: v21.outside, hp: v21.unhurt, sp: v21.noSpawnIn }) + ")");
-  ok(v21.off, "открыли дверь — убежища нет");
+  ok(v21.off, "открыли дверь — убежища нет" + (v21.off ? "" : " (" + JSON.stringify(v21.offWhy) + ")"));
   ok(/^0,[1-9],[1-9],[1-9],[1-9]$/.test(v21.camN || "") && +v21.camN.split(",")[4] >= +v21.camN.split(",")[1], "камеры ОКО в помещениях: на первом этаже нет, дальше есть, в глубине больше (" + v21.camN + ")");
   ok(v21.camHeard && v21.smashItem && v21.smashed, "камеру в помещении слышно при входе, вплотную её можно разбить — удар слышно, терминал считает разбитые (" + JSON.stringify({ n: v21.roomCams, h: v21.camHeard, i: v21.smashItem, s: v21.smashed, d: v21.camDirs }) + ")");
   ok(v21.fuseNone, "электрощит без камер говорит «камер на этаже нет», а не «уже обесточены»");
