@@ -4850,6 +4850,9 @@ LAB.ui.closeAll();
       /* прежние проверки оставили щиты, импланты и подозрение ОКО под сотню — для взрыва с чистого листа */
       const imp0 = G.implants; G.implants = []; G.st.shield = 0; G.st.shieldT = 0; G.st.phaseT = 0; if (G.oko) G.oko.heat = 0;
       G.inv.c_blast = 1; g.CUR.fs.waves = []; const heat0 = (G.oko && G.oko.heat) || 0, hp0 = G.hp, dr1 = g.CUR.fs.drops.length;
+      /* (4.1) опыт за разнесённый завал мог поднять уровень героя, а новый уровень лечит до полного — и «задело»
+         не было видно по здоровью: проверка падала, когда прежние разделы оставляли героя у самой границы уровня */
+      const xp0 = G.xp; G.xp = 0;
       SPOKEN.length = 0;
       out.armUse = g.useItem("c_blast"); out.armLeft = G.inv.c_blast || 0; out.armed = !!G.rub[k3].armed; out.fuse = R._fuse();
       /* пока горит запал, у завала не работают: ни руками, ни домкратом */
@@ -4863,7 +4866,7 @@ LAB.ui.closeAll();
       out.blastHurt = G.hp < hp0 && /Вас задело обломками/.test(SPOKEN.join(" | "));
       out.blastWave = (g.CUR.fs.waves || []).filter(q => q.tag === "rubble").length;
       out.blastHeat = (G.oko.heat || 0) > heat0;
-      out.blastLoot = g.CUR.fs.drops.length - dr1; G.implants = imp0;
+      out.blastLoot = g.CUR.fs.drops.length - dr1; G.implants = imp0; G.xp = xp0;
 
       /* Д. Пошаговый бой: подход — два хода */
       S.turnBased = 1;
