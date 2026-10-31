@@ -75,7 +75,7 @@ function stages(how) {
   if (how === "jack") return 2;
   var n = Math.max(2, dk().dig || 6);
   if (how === "bar") n = Math.max(2, Math.round(n * 0.6));
-  if ((G().str || 0) >= 14) n = Math.max(2, n - 1);
+  if ((LAB.heroStat ? LAB.heroStat("str") : (G().str || 0)) >= 14) n = Math.max(2, n - 1); /* (после 4.0) с прибавкой от плода */
   return n;
 }
 function left(o, how) { var s = peek(o) || { p: 0 }; return Math.max(1, Math.ceil((100 - (s.p || 0)) / (100 / stages(how)) - 0.001)); }

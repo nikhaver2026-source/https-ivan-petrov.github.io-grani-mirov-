@@ -93,8 +93,20 @@ var P_SPROUT = /ростк|росток|рассад|саженц|питомни
 var P_DECOR = /(^|[^а-яё])цвет(ы|ов|ами|ах|ок|ки)?(?![а-яё])|орхиде|папорот|кактус|фикус|клевер|ромашк|сосн|бонсай|стеклянн\S* стебл/;
 var P_STOP = /остановленн\S* час|(часы|часов|циферблат\S*|стрелк\S*|ходики|будильник\S*|хронометр\S*|маятник\S*)[^.]{0,40}(молчат|не идут|встали|замерл|застыл|остановил|стоят на (одн|двадцат|тридцат|сорок|пятидесят|[а-яё]+ час))|все стоят на/;
 var STOP_AT = /стоят на ((двадцат|тридцат|сорок|пятидесят|десят|девят|восьм|сем|шест|пят|четыр|тр|дв|полуноч|полудн)[а-яё]*( [а-яё]+){0,2}?)(?=[.,:;!?]| и | —)/;
+/* (после 4.0) Растения — свой вид, класс, назначение и программа опыта (plants.js): здесь — что
+   знает только обстановка: температура помещения, пчёлы и дроны рядом, урожайное ли помещение,
+   ростки ли это. Без plants.js — как в 3.7. */
+function plantEnv(o, def, t, rm) {
+  var d0 = rm ? (LAB.ROOMS || {})[rm.type] || {} : {}, nm = rm ? ((rm.name || "") + ". " + (d0.n || "")).toLowerCase() : "";
+  var crop = !!(rm && CROP_T[rm.type]) || P_CROP.test(String((rm && rm.name) || "").toLowerCase()) || P_CROP.test(String(d0.n || "").toLowerCase());
+  var sprout = P_SPROUT.test(nm) || /рассад|саженц|(^|[^а-яё])ростк(и|ами)? (для|под стекл)|ящик\S* с (крошечн\S* )?ростк/.test(t);
+  return { L: G().L, era: era(), temp: rm ? roomTemp(rm, o) : null, bees: fxIn(o, ["beehive", "drone"]) || !!(rm && /dronebay/.test(rm.type || "")), crop: crop, sprout: o.fx === "plants" && sprout };
+}
+function plantVar(fx) { return function (o, def, t, rm) { return LAB.plants && LAB.plants.variant ? LAB.plants.variant(fx, o, def, t, rm, plantEnv(o, def, t, rm)) : null; }; }
 var VAR = {
+  appletree: plantVar("appletree"), berrybush: plantVar("berrybush"), mushrooms: plantVar("mushrooms"), palm: plantVar("palm"), moss: plantVar("moss"), roots: plantVar("roots"),
   plants: function (o, def, t, rm) {
+    if (LAB.plants && LAB.plants.variant) { var pv = LAB.plants.variant("plants", o, def, t, rm, plantEnv(o, def, t, rm)); if (pv) return pv; }
     var water = actOf(def, "listen"), d0 = rm ? (LAB.ROOMS || {})[rm.type] || {} : {}, nm = rm ? ((rm.name || "") + ". " + (d0.n || "")).toLowerCase() : "", crop = !!(rm && CROP_T[rm.type]) || P_CROP.test(String((rm && rm.name) || "").toLowerCase()) || P_CROP.test(String(d0.n || "").toLowerCase());
     if (/лимонн\S* (дерев|оранжере|кадк)|лимоны растут|лимонов\S* дерев/.test(t)) return varDef(def, "Лимонные деревца в кадках: листья жёсткие и душистые, на ветках — мелкие твёрдые лимоны.", [["harvest", "Сорвать лимон", { item: "lemon", every: 300 }], water]);
     if (/(апельсинов|мандаринов|померанцев)\S* дерев/.test(t)) return varDef(def, "Апельсиновые деревца в кадках, усыпанные мелкими плодами. Плоды горькие, как у дикой померанцевой: их растят для запаха, а не для еды.", [water]);
@@ -324,6 +336,7 @@ function logText(r, n, o, sub) {
 function menu(o) {
   var def = fxDef(o);
   if (!def) return false;
+  if (def.plant && LAB.plants) LAB.plants.touch(o); /* (после 4.0) растение встречено — в гербарий */
   if (o.fx === "kettle" && LAB.kitchen) return LAB.kitchen.menu(o); /* (3.0) чайник — своё меню: вскипятить, заварить, сахар (kitchen.js) */
   if (o.fx === "samovar" && LAB.kitchen && LAB.kitchen.samovar) return LAB.kitchen.samovar(o); /* (3.7) самовар — вода, растопка, остывание (kitchen.js) */
   /* (3.5) окно вещи собирается заново, когда к нему возвращаются (поели с плиты,
@@ -418,6 +431,7 @@ function run(o, def, kind, p, label, withId) {
   /* (3.6) книги и бумаги, звук и связь — library.js */
   if (LAB.library && LAB.library.act && LAB.library.act(o, def, kind, p || {})) return;
   if (LAB.chempuz && LAB.chempuz.act && LAB.chempuz.act(o, def, kind, p || {})) return; /* (3.6) реактивы, химические замки, банка с кислотой */
+  if (LAB.plants && LAB.plants.act && LAB.plants.act(o, def, kind, p || {})) return; /* (после 4.0) полив и бирка опыта у растения */
   var s = st(o), cnt = (s["n_" + kind] = (s["n_" + kind] || 0) + 1), m = [], rm = roomOf(o);
   /* прочитанное при новом прочтении то же самое; эфир и экраны — каждый раз другие */
   var r = rng(o, kind + ":" + (kind === "read" && p.pool !== "ether" && p.pool !== "screens" ? 0 : cnt));
@@ -666,7 +680,7 @@ function run(o, def, kind, p, label, withId) {
     }
     case "hoop": {
       spend(1);
-      var ok2 = r.chance(Math.min(0.75, 0.3 + (G().agi || 10) * 0.012));
+      var ok2 = r.chance(Math.min(0.75, 0.3 + LAB.heroStat("agi") * 0.012)); /* (после 4.0) с прибавкой от плода */
       snd(ok2 ? "paper" : "bump_rail", null);
       s.streak = ok2 ? (s.streak || 0) + 1 : 0;
       say(ok2 ? "Мяч шуршит сеткой: попали!" + (s.streak >= 3 ? " " + s.streak + " подряд!" : "") : "Мяч звонко отскакивает от кольца.");
@@ -971,7 +985,9 @@ function doHarvest(o, def, p) {
   /* глубоко внизу у механических ульев ОКО в рамке — и пластинка воска (b2.js, k_wax) */
   if (p.extra && LAB.ITEMS[p.extra] && G().L >= (p.extraL || 1) && r.chance(0.6)) got.push(gm().giveItem({ kind: "item", item: p.extra, n: 1 }));
   var rest = p.max ? harvMax(o, p) - s.harvN : -1;
-  say("Собрано: " + got.join(" ") + (rest === 0 ? " Это последний." : rest > 0 ? " Осталось ещё " + rest + "." : ""));
+  /* (после 4.0) растения: пчёлы и дроны опыляли — урожай больше; в саду ОКО Садовник видит свои ряды (plants.js) */
+  var after = p.plant && LAB.plants && LAB.plants.afterHarvest ? LAB.plants.afterHarvest(o, def, p, got, r) : [];
+  say("Собрано: " + got.join(" ") + (rest === 0 ? " Это последний." : rest > 0 ? " Осталось ещё " + rest + "." : "") + (after && after.length ? " " + after.join(" ") : ""));
   ev("harvest", 1);
 }
 function doRespect(o, s) {
@@ -1029,6 +1045,7 @@ function examine(o) {
     if (rm && rm.owner && !rm.owner.m && h32(o.id) % 4 === 0) out.push("«Эхо» связывает эту вещь с хозяином помещения: " + rm.owner.n + ", " + rm.owner.post + ".");
     if (LAB.stash) { var tl0 = LAB.stash.examineLine(o); if (tl0) out.push(tl0); }
     if (LAB.library) { var lb0 = LAB.library.examineLine(o); if (lb0) out.push(lb0); }
+    if (LAB.plants && def.plant) { var pl0 = LAB.plants.examineLine(o); if (pl0) out.push(pl0); } /* (после 4.0) вид и опыт */
     return out.join(" ");
   }
   if (o.type === "corpse") { var ct = corpseText(o, identity(o)), tl1 = LAB.stash ? LAB.stash.examineLine(o) : ""; return tl1 ? ct + " " + tl1 : ct; }
@@ -1134,5 +1151,5 @@ function badgeItem(n) {
   } };
 }
 
-LAB.fixtures = { menu: menu, examine: examine, corpseMenu: corpseMenu, identity: identity, badgeItem: badgeItem, read: gen, _logText: logText };
+LAB.fixtures = { menu: menu, examine: examine, corpseMenu: corpseMenu, identity: identity, badgeItem: badgeItem, read: gen, _logText: logText, def: fxDef };
 })();

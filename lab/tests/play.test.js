@@ -7191,6 +7191,129 @@ LAB.ui.closeAll();
   ok(sw.mates, "напарники — машины ОКО и твари одной стаи; чужая стая, тварь с машиной, союзная, перепрошитая и турель — нет");
   ok(sw.tb, "в пошаговом режиме — тот же обмен местами");
 
+  /* (после 4.0, просьба автора) Растения: вид, класс, назначение и программа опыта на всех глубинах;
+     плоды — только там, где растению живётся (излучение, газ, мороз — плодов нет, туман — плоды с
+     мутагеном); прибавки к характеристикам на время, не складываются, кончаются с откатом; курс опытной
+     линии — три плода с перерывом от шести часов, навсегда плюс один, один раз; полив, бирка, сад ОКО,
+     «Гербарий» без чужих глубин, имя вида в списках, запись */
+  console.log("(после 4.0) Растения: классы, опыты по глубинам, плоды и их действие");
+  const pl = await page.evaluate(() => {
+    const g = LAB.game, C = LAB.combat, P = LAB.plants, out = {}, label = i => typeof i.label === "function" ? i.label() : i.label;
+    let G = g.G;
+    const keep = { L: G.L, F: G.F, x: G.x, y: G.y, inv: JSON.stringify(G.inv), body: JSON.stringify(G.body), str: G.str, agi: G.agi, mind: G.mind, cha: G.cha, plants: JSON.stringify(G.plants || {}), oko: JSON.stringify(G.oko || {}), st: JSON.stringify(G.st), day: G.day, min: G.min, hp: G.hp };
+    const km = LAB.keysMode; LAB.keysMode = false;
+    const go = (L, F) => { g.enterFloor(L, F, "down", true); C.stop(); G = g.G; C.foes().forEach(f => { f.dead = true; }); };
+    const PFX = { plants: 1, appletree: 1, berrybush: 1, mushrooms: 1, palm: 1, moss: 1, roots: 1 };
+    const pick = (L, Fs, test) => { for (const F of Fs) { go(L, F); const o = g.CUR.fl.objs.find(q => q.type === "fx" && PFX[q.fx] && test(q, LAB.fixtures.def(q) || {})); if (o) return o; } return null; };
+    const act = (o, re) => { LAB.ui.closeAll(); LAB.fixtures.menu(o); const w = LAB.ui.top(); const k = w ? w.items.findIndex(i => re.test(label(i))) : -1; if (k < 0) return "нет пункта: " + (w ? w.items.map(label).join(" / ") : "нет окна"); SPOKEN.length = 0; w.i = k; LAB.ui.activate(); const s = SPOKEN.join(" | "); LAB.ui.closeAll(); return s; };
+    const harvestOf = d => (d.a || []).find(a => a[0] === "harvest") || null;
+    try {
+      LAB.ui.closeAll(); C.stop();
+      /* виды на всех глубинах: у каждого растения — вид из таблицы; плоды и бирки опытов — на каждой глубине; в холлах — для глаз */
+      const by = {}, LV = { K: [3, 4], P: [12, 16], C: [25, 33], O: [43, 55], M: [78, 64], I: [86, 90] };
+      out.noSpecies = 0; out.hallFruit = 0;
+      Object.keys(LV).forEach(E => { by[E] = { n: 0, fruit: 0, label: 0, cls: {} }; LV[E].forEach(L => { [1, 2, 3, 4].forEach(F => {
+        go(L, F);
+        g.CUR.fl.objs.forEach(o => {
+          if (o.type !== "fx" || !PFX[o.fx]) return;
+          const d = LAB.fixtures.def(o) || {}, sp = d.plant && P.SP[d.plant];
+          if (!sp) { out.noSpecies++; return; }
+          by[E].n++; by[E].cls[sp.cls] = 1;
+          if (harvestOf(d)) by[E].fruit++;
+          if (sp.label) by[E].label++;
+          const rm = o.room >= 0 ? g.CUR.fl.rooms[o.room] : null;
+          if (o.fx === "plants" && E !== "C" && E !== "I" && P.ctxOf(rm, L, E, {}) === "hall" && harvestOf(d)) out.hallFruit++;
+        });
+      }); }); });
+      out.by = Object.keys(by).map(E => E + ":" + by[E].n + "/" + by[E].fruit + "/" + by[E].label).join(" ");
+      out.allEras = Object.keys(by).every(E => by[E].n > 0 && by[E].fruit > 0) && ["K", "P", "C", "O", "M"].every(E => by[E].label > 0);
+      out.classes = Object.keys(by).reduce((a, E) => a.concat(Object.keys(by[E].cls)), []).filter((v, i, a) => a.indexOf(v) === i).length;
+      /* «Атлант» в «Гидропонике»: сбор, полив, бирка, осмотр, имя в списках */
+      const at = pick(3, [1, 2, 3, 4, 5, 6, 7, 8], (o, d) => d.plant === "k_atlant" && !d.block && !d.fog);
+      out.atlant = !!at;
+      if (at) {
+        G.x = at.x; G.y = at.y; g.CUR.room = at.room; delete g.objState(at).harvAt; delete g.objState(at).waterAt;
+        const n0 = G.inv.pf_atlant || 0;
+        out.harvest = act(at, /^Сорвать томат/); out.got = (G.inv.pf_atlant || 0) > n0;
+        out.water = act(at, /^Полить/); out.water2 = act(at, /^Полить/);
+        out.label = act(at, /^Прочитать бирку/);
+        out.exam = LAB.fixtures.examine(at);
+        out.name = g.objName(at);
+      }
+      /* прибавка: на время, в окне персонажа, кончается с откатом; не складывается — продлевается */
+      G.plants = { seen: G.plants ? G.plants.seen : {}, fx: {}, course: {}, ate: {} };
+      G.body.food = 50; G.inv.pf_atlant = 3;
+      const s0 = G.str;
+      g.useItem("pf_atlant"); out.eat = SPOKEN.slice(-1)[0];
+      out.up = LAB.heroStat("str") === s0 + 3 && G.str === s0 && /Сила \d+ \(плод: плюс 3/.test(g.characterText().join(" "));
+      const u1 = G.plants.fx.str.until; g.useItem("pf_atlant"); out.noStack = LAB.heroStat("str") === s0 + 3 && G.plants.fx.str.until > u1 && G.plants.fx.str.until - ((G.day || 0) * 1440 + (G.min || 0)) <= P.FX_MAX;
+      const f0 = G.body.food; SPOKEN.length = 0; g.advanceTime(P.FX_MAX + 5); out.expire = SPOKEN.join(" | ");
+      out.down = LAB.heroStat("str") === s0 && /Действие плода прошло: сила снова/.test(out.expire) && G.body.food < f0;
+      /* курс: рано — не в счёт; три приёма с перерывом — навсегда плюс один; дальше — ничего */
+      G.plants.course = {}; G.inv.pf_atlant = 5; const b0 = G.str, said = [];
+      g.useItem("pf_atlant"); said.push(SPOKEN.slice(-1)[0]); g.advanceTime(60);
+      g.useItem("pf_atlant"); said.push(SPOKEN.slice(-1)[0]); g.advanceTime(P.COURSE_GAP + 1);
+      g.useItem("pf_atlant"); said.push(SPOKEN.slice(-1)[0]); g.advanceTime(P.COURSE_GAP + 1);
+      g.useItem("pf_atlant"); said.push(SPOKEN.slice(-1)[0]); const b1 = G.str; g.advanceTime(P.COURSE_GAP + 1);
+      g.useItem("pf_atlant");
+      out.course = /приём 1 из 3/.test(said[0]) && /рано/.test(said[1]) && /приём 2 из 3/.test(said[2]) && /пройден/.test(said[3]) && b1 === b0 + 1 && G.str === b0 + 1;
+      /* плод из тумана: сильнее, мутация растёт, в курс не идёт */
+      g.advanceTime(P.FX_MAX + 5); G.plants.course = {}; G.plants.fx = {};
+      const m0 = LAB.chem.mut(); G.inv.pf_atlant_m = 1; g.useItem("pf_atlant_m");
+      out.mut = LAB.chem.mut() > m0 && G.plants.fx.str.v === 4 && !(G.plants.course.str && G.plants.course.str.n) && /в курс опытной линии он не идёт/.test(SPOKEN.slice(-1)[0]);
+      /* сытому: горсть ягод — можно, томат — нет */
+      g.advanceTime(P.FX_MAX + 5); G.body.food = 100; G.inv.pf_reflex = 1; G.inv.pf_atlant = 1;
+      out.full = g.useItem("pf_reflex") === true && g.useItem("pf_atlant") === false;
+      /* где растению плохо — плодов нет; туман — плоды с мутагеном и быстрее */
+      if (at) {
+        go(3, LAB.game.G.F); const at2 = g.CUR.fl.objs.find(q => q.id === at.id) || at; const rm = g.CUR.fl.rooms[at2.room], keepR = { rad: rm.rad, gas: rm.gas, fog: rm.fog };
+        const hv0 = harvestOf(LAB.fixtures.def(at2));
+        rm.rad = 2; out.rad = !harvestOf(LAB.fixtures.def(at2)) && /Излучение угнетает/.test(LAB.fixtures.def(at2).d); rm.rad = keepR.rad;
+        rm.gas = 2; out.gas = !harvestOf(LAB.fixtures.def(at2)); rm.gas = keepR.gas;
+        rm.fog = 2; const hvF = harvestOf(LAB.fixtures.def(at2)); out.fog = !!hvF && hvF[2].item === "pf_atlant_m" && hvF[2].every < hv0[2].every && /мутагенном тумане/.test(LAB.fixtures.def(at2).d); rm.fog = keepR.fog;
+      }
+      /* сад ОКО: Садовник видит свои ряды — подозрение растёт; с глушилкой — нет */
+      const ok = pick(33, [1, 2, 3, 4, 5, 6, 7, 8], (o, d) => { const h = harvestOf(d); return !!h && h[2].oko > 0; });
+      out.okoFound = !!ok;
+      if (ok) {
+        G.x = ok.x; G.y = ok.y; g.CUR.room = ok.room; G.st.jam = 0; G.st.cloak = 0; if (G.oko) G.oko.heat = 0; delete g.objState(ok).harvAt;
+        const h0 = (G.oko && G.oko.heat) || 0; out.okoSaid = act(ok, /^(Сорвать|Собрать)/); out.okoHeat = (G.oko.heat || 0) > h0;
+        out.okoWater = act(ok, /^Полить/);
+        delete g.objState(ok).harvAt; G.st.jam = 50; const h1 = G.oko.heat; out.okoJam = /глушилка/.test(act(ok, /^(Сорвать|Собрать)/)) && G.oko.heat === h1; G.st.jam = 0;
+      }
+      /* «Гербарий»: только глубины, до которых дошли */
+      go(12, 1); LAB.ui.closeAll(); P.herbarium(null); const hw = LAB.ui.top();
+      out.herb = !!hw && /^Гербарий/.test(hw.title) && hw.items.some(i => /«Ковчег»/.test(label(i))) && hw.items.some(i => /«Подножие»/.test(label(i))) && !hw.items.some(i => /«Колыбель»|«Механизм»|«Исток»/.test(label(i)));
+      LAB.ui.closeAll();
+      /* запись: состояние растений — в записи */
+      out.save = JSON.parse(JSON.stringify(G)).plants && JSON.parse(JSON.stringify(G)).plants.course != null;
+    } catch (e) { out.err = String(e && e.stack || e).slice(0, 400); }
+    G = g.G;
+    LAB.ui.closeAll(); C.stop();
+    g.enterFloor(keep.L, keep.F, "down", true); C.stop(); G = g.G;
+    G.x = keep.x; G.y = keep.y; G.inv = JSON.parse(keep.inv); G.body = JSON.parse(keep.body); G.str = keep.str; G.agi = keep.agi; G.mind = keep.mind; G.cha = keep.cha;
+    G.plants = JSON.parse(keep.plants); G.oko = JSON.parse(keep.oko); G.st = JSON.parse(keep.st); G.day = keep.day; G.min = keep.min; G.hp = keep.hp;
+    LAB.keysMode = km;
+    return out;
+  });
+  ok(!pl.err && pl.noSpecies === 0, "у каждого растения — вид из таблицы (по глубине и назначению помещения), проверка без ошибок" + (pl.err ? " (" + pl.err + ")" : " (" + pl.by + ")"));
+  ok(pl.allEras && pl.classes >= 6, "плоды и опытные растения с бирками — на всех глубинах, классы разные (" + pl.by + ", классов " + pl.classes + ")");
+  ok(pl.hallFruit === 0, "растения в холлах и на лестницах — для глаз, без плодов");
+  ok(pl.atlant && pl.got && /Собрано: Томат «Атлант»/.test(pl.harvest || ""), "«Атлант» в «Гидропонике»: томат сорван (" + String(pl.harvest).slice(0, 120) + ")");
+  ok(/созреет быстрее/.test(pl.water || "") && /уже поливали/.test(pl.water2 || ""), "полив ускоряет созревание раз за круг (" + String(pl.water).slice(0, 140) + ")");
+  ok(/Флора-Х, линия Х-17/.test(pl.label || "") && /Курс по протоколу/.test(pl.label || ""), "бирка опыта читается: протокол и курс");
+  ok(/Класс: генетическая линия/.test(pl.exam || "") && /Назначение: силовая/.test(pl.exam || "") && /Опыт: программа «Химера»/.test(pl.exam || "") && /^Томат «Атлант»/.test(pl.name || ""), "«Осмотреть» называет класс, назначение и опыт, а в списках — вид растения (" + pl.name + ")");
+  ok(pl.up && /Сила плюс 3 на 4 часа/.test(pl.eat || ""), "плод прибавляет силу на время — и это видно в окне персонажа (" + String(pl.eat).slice(0, 120) + ")");
+  ok(pl.noStack, "второй плод не складывает прибавку, а продлевает её — не дольше шести часов");
+  ok(pl.down, "действие плода кончается: характеристика прежняя, после силы — голод (" + String(pl.expire).slice(-120) + ")");
+  ok(pl.course, "курс опытной линии: рано — не в счёт; три приёма с перерывом от шести часов — сила навсегда плюс один, и только раз");
+  ok(pl.mut, "плод из тумана: прибавка больше, мутация растёт, в курс не идёт");
+  ok(pl.full, "сытым горсть ягод съесть можно, томат — нет");
+  ok(pl.rad && pl.gas && pl.fog, "под излучением и в газу плодов нет; в тумане — плоды с мутагеном и созревают быстрее");
+  ok(pl.okoFound && pl.okoHeat && /Садовник заметил/.test(pl.okoSaid || "") && /по расписанию/.test(pl.okoWater || "") && pl.okoJam, "сад ОКО: сорвали без глушилки — ОКО подозревает больше; с глушилкой — нет; поливать машины не дают зря");
+  ok(pl.herb, "«Гербарий» в справочниках — только глубины, до которых дошли");
+  ok(pl.save, "состояние растений и курсов — в записи");
+
   /* (3.7) Проверка перед сборкой, этап «ошибки»: исправленное не возвращается — кредиты
      с чипом старателя, фармаколог, разговор с выжившим, счёт этажей, отход от взлома,
      пройденная игра, привязка к капсуле и записки после перестройки мира, вехи, справочник,

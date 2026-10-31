@@ -227,7 +227,7 @@ function objName0(o) {
   if (o.type === "terminal") return TERM_N[o.sub] || "Терминал";
   if (o.type === "hq") return "Штаб: " + LAB.FACTIONS[o.faction].n;
   if (o.type === "comp" && LAB.COMPS) return (LAB.COMPS[o.kind] || LAB.COMPS.archive).n;
-  if (o.type === "fx" && LAB.FIX && LAB.FIX.T[o.fx]) return LAB.FIX.T[o.fx].n;
+  if (o.type === "fx" && LAB.FIX && LAB.FIX.T[o.fx]) { var pn = LAB.plants && LAB.plants.nameOf ? LAB.plants.nameOf(o) : null; return pn || LAB.FIX.T[o.fx].n; } /* (после 4.0) растение — по виду */
   if (o.type === "stairs_down" && stairBlocked(o)) return "Лестница вниз (завалена)";
   if (o.type === "stairs_up" && stairBlocked(o)) return "Лестница вверх (завалена)";
   if (o.type === "reactor" && o.final) return G.done ? "Пульт «Истока» (ключ повёрнут)" : "Пульт «Истока»"; /* (3.7, нелогичность) не реактор */
@@ -670,6 +670,7 @@ function advanceTime(min, asleep) {
   if (LAB.supply) LAB.supply.tick();
   if (LAB.zones && !asleep) LAB.zones.minutes(min);
   if (Q()) Q().onTime(); /* (3.6) сроки поручений: премия «быстро», срочная помощь */
+  if (LAB.plants) LAB.plants.minutes(); /* (после 4.0) действие плода кончилось — сказать и отдать откат */
 }
 game.advanceTime = advanceTime;
 
@@ -869,6 +870,7 @@ function bodyStatus() {
   if (G.st.poison) st.push("отравление"); if (G.st.bleed) st.push("кровотечение"); if (G.st.slow) st.push("замедление"); if (G.st.deaf) st.push("звон в ушах"); if (G.st.antitox) st.push(G.st.atoxIn > 0 ? "антитоксин действует" : "фильтр противогаза действует"); if (G.st.radBlock) st.push("йодид калия защищает");
   if (G.st.trapHeld > 0) st.push("нога в ловушке");
   if (LAB.stash) st = st.concat(LAB.stash.status()); /* (2.5) клещ, метка улья */
+  if (LAB.plants) st = st.concat(LAB.plants.states()); /* (после 4.0) прибавки от плодов */
   var hpw = G.hp >= G.hpMax * 0.8 ? "в порядке" : G.hp >= G.hpMax * 0.5 ? "ранены" : G.hp >= G.hpMax * 0.25 ? "тяжело ранены" : "при смерти";
   say("Здоровье " + G.hp + " из " + G.hpMax + ": " + hpw + (G.st.shield ? ", щит " + G.st.shield : "") + ". Бодрость " + Math.round(b.wake) + ": " + bodyWord("wake") + ". Сытость " + Math.round(b.food) + ": " + bodyWord("food") + ". Токсины " + Math.round(b.tox) + ": " + bodyWord("tox") + ". Нейронагрузка " + Math.round(b.neuro) + ": " + bodyWord("neuro") + ". Облучение " + Math.round(b.rad) + ": " + bodyWord("rad") + "." + (LAB.chem && LAB.chem.mut() >= 1 ? " " + LAB.chem.mutLine() : "") + " Энергия имплантов " + G.en + " из " + G.enMax + "." + (G.armor ? " Броня: " + armorWord() + "." : "") + (st.length ? " Состояние: " + st.join(", ") + "." : ""));
 }
@@ -1889,8 +1891,8 @@ function walkedAway() { return !!(LAB.mini && LAB.mini.wasCancelled && LAB.mini.
 game.walkedAway = walkedAway;
 function hackLength(lv) {
   var n = 3 + lv;
-  if (G.mind >= 16) n--;
-  if (G.mind >= 24) n--;
+  if (LAB.heroStat("mind") >= 16) n--; /* (после 4.0) с прибавкой от плода */
+  if (LAB.heroStat("mind") >= 24) n--;
   if (G.faction === "eng") n--;
   return Math.max(3, Math.min(9, n));
 }
@@ -2809,7 +2811,7 @@ function containerMenu(o) {
     items.push({ label: "Вскрыть шкафчик силой", fn: function () {
       var hasBar = G.weapons.some(function (w) { return w.base === "crowbar"; });
       A("play", "pry");
-      if (hasBar || G.str >= 14 || Math.random() < 0.4) { st.forced = true; openContainer(o); if (LAB.combat) LAB.combat.noise(6); }
+      if (hasBar || LAB.heroStat("str") >= 14 || Math.random() < 0.4) { st.forced = true; openContainer(o); if (LAB.combat) LAB.combat.noise(6); }
       else { say("Не поддаётся. С монтировкой было бы проще."); if (LAB.combat) LAB.combat.noise(4); }
     } });
   } else {
@@ -2896,8 +2898,8 @@ game.priceK = priceK;
 game.priceDepth = priceDepth;
 /* (3.5) Харизма: люди — выжившие и медики — уступают в цене, до двенадцати процентов при
    сорока, а скупая, платят чуть больше; автоматам, дроидам и терминалам она безразлична. */
-function chaK() { return 1 - Math.max(0, Math.min(30, (G.cha || 10) - 10)) * 0.004; }
-function chaSellK() { return 1 + Math.max(0, Math.min(30, (G.cha || 10) - 10)) * 0.003; }
+function chaK() { return 1 - Math.max(0, Math.min(30, LAB.heroStat("cha") - 10)) * 0.004; } /* (после 4.0) с прибавкой от плода */
+function chaSellK() { return 1 + Math.max(0, Math.min(30, LAB.heroStat("cha") - 10)) * 0.003; }
 game.chaK = chaK;
 game.chaSellK = chaSellK;
 /* Торговый терминал: расходники, броня своей глубины, скупка деталей. */
@@ -3575,7 +3577,7 @@ function useItem(id) {
   if (d.hot === "only") { say(d.n + " — сухой порошок: его заливают кипятком у чайника, у самовара или из крана автомата с едой."); return false; }
   if (d.hot === "dry") d = dryFood(d);
   /* сытому еда не лезет, а питьё — всегда */
-  if (food && !sip && body().food >= 100 && !d.en) { say("Вы сыты: больше не лезет."); return false; }
+  if (food && !sip && body().food >= 100 && !d.en && !d.small) { say("Вы сыты: больше не лезет."); return false; } /* (после 4.0) горсть ягод, лист, стручок — и сытым */
   G.inv[id]--;
   if (G.craftN && G.craftN[id] > 0) G.craftN[id]--; /* (3.5) потрачена — считаем, что собранная */
   var msg = [];
@@ -3597,6 +3599,7 @@ function useItem(id) {
   if (d.unslow) { G.st.slow = 0; G.st.web = 0; }
   bodyApply(d, msg);
   if (LAB.chem) LAB.chem.afterUse(id); /* (3.0) мутагенные составы, сыворотка из взвеси, фармаколог */
+  if (d.plantFruit && LAB.plants) LAB.plants.eat(id, d, msg); /* (после 4.0) плод: прибавка к характеристике, курс опытной линии, мутаген из тумана */
   if (food) eatSound(d.eat);
   else A("play", /^bandage|^coagulant$/.test(id) ? "bandage_tear" : /^herb_/.test(id) ? "eat_chew" : id === "sorbent" || id === "neuroblock" ? "pills_rattle" : id === "antidote" || id === "stim" || id === "energy_d" ? "inject" : "heal");
   say((food ? (sip ? "Вы выпили: " : "Вы съели: ") + d.n.charAt(0).toLowerCase() + d.n.slice(1) + ". " : d.n + ". ") + (d.x ? d.x + " " : "") + msg.join(" ") + " Осталось: " + (G.inv[id] || 0) + ".");
@@ -4222,9 +4225,9 @@ function characterText() {
   lines.push("Сытость " + Math.round(bb.food) + " из 100: " + bodyWord("food") + ". Бодрость " + Math.round(bb.wake) + ": " + bodyWord("wake") + ". Токсины " + Math.round(bb.tox) + ": " + bodyWord("tox") + ". Нейронагрузка " + Math.round(bb.neuro) + ": " + bodyWord("neuro") + ".");
   lines.push("Аптечки " + (G.inv.medkit_s || 0) + ", большие аптечки " + (G.inv.medkit_l || 0) + ", бинты " + (G.inv.bandage || 0) + ", стимуляторы " + (G.inv.stim || 0) + ", антидоты " + (G.inv.antidote || 0) + ", сорбенты " + (G.inv.sorbent || 0) + ", еды " + FOODS().reduce(function (a, k) { return a + (G.inv[k] || 0); }, 0) + ".");
   var st = [];
-  if (G.st.poison) st.push("отравление"); if (G.st.bleed) st.push("кровотечение"); if (G.st.slow) st.push("замедление"); if (G.st.deaf) st.push("звон в ушах"); if (G.st.antitox) st.push(G.st.atoxIn > 0 ? "антитоксин" : "фильтр противогаза"); if (G.st.shield) st.push("силовой щит " + G.st.shield); if (G.st.haste) st.push("ускорение"); if (G.st.cloak) st.push("маскировка"); if (LAB.combat && LAB.combat.hidden && LAB.combat.hidden()) st.push("в укрытии"); if (LAB.stash) st = st.concat(LAB.stash.status());
+  if (G.st.poison) st.push("отравление"); if (G.st.bleed) st.push("кровотечение"); if (G.st.slow) st.push("замедление"); if (G.st.deaf) st.push("звон в ушах"); if (G.st.antitox) st.push(G.st.atoxIn > 0 ? "антитоксин" : "фильтр противогаза"); if (G.st.shield) st.push("силовой щит " + G.st.shield); if (G.st.haste) st.push("ускорение"); if (G.st.cloak) st.push("маскировка"); if (LAB.combat && LAB.combat.hidden && LAB.combat.hidden()) st.push("в укрытии"); if (LAB.stash) st = st.concat(LAB.stash.status()); if (LAB.plants) st = st.concat(LAB.plants.states());
   if (st.length) lines.push("Состояние: " + st.join(", ") + ".");
-  lines.push("Энергия имплантов " + G.en + " из " + G.enMax + ". Уровень героя " + G.lvl + ", опыт " + G.xp + " из " + LAB.xpNeed(G.lvl) + ". Сила " + G.str + ", ловкость " + G.agi + ", интеллект " + G.mind + ", харизма " + G.cha + ". Кредиты " + G.credits + ".");
+  lines.push("Энергия имплантов " + G.en + " из " + G.enMax + ". Уровень героя " + G.lvl + ", опыт " + G.xp + " из " + LAB.xpNeed(G.lvl) + ". Сила " + statTxt("str") + ", ловкость " + statTxt("agi") + ", интеллект " + statTxt("mind") + ", харизма " + statTxt("cha") + ". Кредиты " + G.credits + ".");
   if (LAB.chem) lines.push(LAB.chem.line()); /* (3.0) ступени химии */
   lines.push("Комплекс: уровень " + G.L + " «" + LAB.LEVELS[G.L].name + "», этаж " + G.F + ". Пропуск: " + (G.tier ? LAB.TIERS[G.tier].n.toLowerCase() : "нет") + ". Лифт этажей: " + (G.elev[G.L] ? "есть пропуск" : "нет пропуска") + ". " + (!LAB.isReactorLevel(G.L) ? "Шлюзовая ключ-карта уровня " + G.L + ": " + (G.gate[G.L] ? "есть" : "нет") : "Ключ доступа к «Истоку»: " + (hasCore(G.L) ? "есть" : "нет")) + ".");
   lines.push("Образцов " + Object.keys(G.samples).length + ", тайников " + G.stats.secrets + ", записок " + G.stats.notes + ", побеждено врагов " + G.stats.kills + ". Режим сложности: " + LAB.dk().n.toLowerCase() + (S.turnBased ? ", бой пошаговый" : "") + ".");
@@ -4232,4 +4235,6 @@ function characterText() {
   return lines;
 }
 game.characterText = characterText;
+/* (после 4.0) характеристика в окне персонажа: с прибавкой от плода — «21 (плод: плюс 3, ещё 2 часа)» */
+function statTxt(k) { return LAB.plants ? LAB.plants.statText(k) : String(G[k]); }
 })();

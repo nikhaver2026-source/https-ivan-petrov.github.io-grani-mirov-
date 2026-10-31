@@ -240,7 +240,7 @@ function eyeK() {
   /* чип острого слуха и прочие сенсоры: слышно и чуется острее */
   if (LAB.implants && LAB.implants.stat) p += Math.min(0.2, (LAB.implants.stat("sense") || 0) * 0.05);
   p += (dk().tsee || 0);
-  p += Math.max(-0.1, Math.min(0.2, ((g.mind || 10) - 10) * 0.01));
+  p += Math.max(-0.1, Math.min(0.2, (LAB.heroStat("mind") - 10) * 0.01)); /* (после 4.0) с прибавкой от плода */
   return p;
 }
 function seeChance(s, exam) {
@@ -310,7 +310,7 @@ function disarmChance(s) {
   var g = G(), d = K[s.k], inv = g.inv || {};
   var p = 0.6 + ((inv.toolkit || 0) > 0 ? 0.15 : 0) + (sapper() ? 0.15 : 0) + ((inv.rubber || 0) > 0 && d.glove ? 0.08 : 0) + (dk().tsee || 0) * 0.5;
   p -= (d.hard || 0) + Math.min(0.15, g.L * 0.0015);
-  if (d.noDisarm) p = 0.7 + ((g.agi || 10) - 10) * 0.02 + (sapper() ? 0.1 : 0);
+  if (d.noDisarm) p = 0.7 + (LAB.heroStat("agi") - 10) * 0.02 + (sapper() ? 0.1 : 0);
   return Math.max(0.2, Math.min(0.95, p));
 }
 function give(id, n) {
@@ -446,7 +446,7 @@ function guard(o, cont) {
   var d = K[s.k];
   if (s.st === "known") { menu(o, s, cont); return true; }
   /* не заметили — в последний миг ещё можно отдёрнуть руку */
-  var g = G(), reflex = Math.max(0.05, Math.min(0.5, 0.12 + ((g.agi || 10) - 10) * 0.012 + (sapper() ? 0.12 : 0) + (dk().tsee || 0) * 0.5));
+  var g = G(), reflex = Math.max(0.05, Math.min(0.5, 0.12 + (LAB.heroStat("agi") - 10) * 0.012 + (sapper() ? 0.12 : 0) + (dk().tsee || 0) * 0.5));
   if (Math.random() < reflex) {
     s.st = "known";
     A("play", "swing_miss");

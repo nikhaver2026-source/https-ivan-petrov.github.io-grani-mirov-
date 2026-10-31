@@ -2124,7 +2124,7 @@ function attack(f, seen) {
   /* только что вошли на этаж: враг наводится, но не бьёт */
   if (tickN < graceT) { A("foeSound", f, ranged ? "aim" : "alert"); return; }
   A("foeSound", f, ranged ? "shoot" : "attack");
-  var acc = 0.72 + 0.025 * iqOf(f) + (aff(f, "sniper") ? 0.12 : 0) - (g.agi - 10) * 0.01 - (g.st.haste > 0 ? 0.12 : 0) - (ranged ? 0.015 * d : 0) + (diff().acc || 0);
+  var acc = 0.72 + 0.025 * iqOf(f) + (aff(f, "sniper") ? 0.12 : 0) - (LAB.heroStat("agi") - 10) * 0.01 - (g.st.haste > 0 ? 0.12 : 0) - (ranged ? 0.015 * d : 0) + (diff().acc || 0);
   /* (3.7, нелогичность) залп по площади (splash): «Экран» отводит снаряд, но не разрыв рядом, и промах
      тоже задевает (splashNear) */
   var spl = has(f, "splash");
@@ -2460,7 +2460,7 @@ function wf(w, k) { if (w && w[k] != null) return w[k]; var b = w && LAB.WEAPONS
 function foeAtCell(x, y) { for (var i = 0; i < foes.length; i++) if (!foes[i].dead && !foes[i].burrowed && foes[i].x === x && foes[i].y === y) return foes[i]; return null; }
 function shoot(w, f, perp, along, burst, melee) {
   var g = G();
-  var acc = (melee ? 0.92 : 0.9) - 0.13 * perp - 0.012 * along + (g.agi - 10) * 0.01 + (w.spread ? 0.08 * perp : 0) - (burst ? 0.1 : 0) - (gm().aimPenalty ? gm().aimPenalty() : 0) + (LAB.workshop ? LAB.workshop.accBonus(w, burst) : 0);
+  var acc = (melee ? 0.92 : 0.9) - 0.13 * perp - 0.012 * along + (LAB.heroStat("agi") - 10) * 0.01 + (w.spread ? 0.08 * perp : 0) - (burst ? 0.1 : 0) - (gm().aimPenalty ? gm().aimPenalty() : 0) + (LAB.workshop ? LAB.workshop.accBonus(w, burst) : 0);
   /* умный робот уходит с линии огня */
   var iq = iqOf(f);
   if (!melee && f.kind === "mech" && iq >= 5 && !has(f, "stationary") && f.frozen <= 0) {
@@ -2474,8 +2474,8 @@ function shoot(w, f, perp, along, burst, melee) {
   }
   var dt = w.dt;
   var dmg = w.dmg * LAB.wGrowK(w); /* (2.2) рост оружия — по режиму сложности */
-  if (melee) { dmg *= 1 + (g.str - 10) * 0.03; if (gm().armorSpecial("strength")) dmg *= 1.6; }
-  var crit = Math.random() < 0.05 + (g.agi - 10) * 0.008 + (wf(w, "crit") || 0);
+  if (melee) { dmg *= 1 + (LAB.heroStat("str") - 10) * 0.03; if (gm().armorSpecial("strength")) dmg *= 1.6; }
+  var crit = Math.random() < 0.05 + (LAB.heroStat("agi") - 10) * 0.008 + (wf(w, "crit") || 0);
   if (crit) dmg *= 1.75;
   if (LAB.workshop) dmg *= LAB.workshop.dmgK(w, f);
   var chx = LAB.chem ? LAB.chem.onShot(w, f, melee) : null; /* (3.0) смазка и перегрузочная капсула */

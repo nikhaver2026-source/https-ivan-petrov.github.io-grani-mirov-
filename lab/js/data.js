@@ -23,6 +23,8 @@ LAB.KEEP_FROM = 3.0;
    уже строили этажи по седьмому выпуску, и их записи загружаются с того же места */
 LAB.WORLD_SINCE = 3.8;
 LAB.verNum = function (v) { var m = /(\d+)\.(\d+)/.exec(String(v || "")); return m ? +m[1] + +m[2] / 10 : 0; };
+/* (после 4.0) Характеристика героя (str, agi, mind, cha) — с прибавкой от плода; без plants.js — как есть */
+LAB.heroStat = function (k, g) { g = g || (LAB.game && LAB.game.G); return g && g[k] != null ? g[k] : 10; };
 LAB.keepsSave = function (v) { var n = LAB.verNum(v); return v === LAB.VERSION || (n >= LAB.KEEP_FROM && n <= LAB.verNum(LAB.VERSION)); };
 /* Номер прохождения (2.0): растёт, когда сборка просит пройти игру заново,
    не меняя версии, — прежние сохранения стираются, настройки остаются
