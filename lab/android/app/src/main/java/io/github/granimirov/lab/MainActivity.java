@@ -135,10 +135,11 @@ public class MainActivity extends Activity {
                 .build();
 
         web = new WebView(this);
-        /* (4.1) pauseTimers() (уход в фон, ниже) действует на весь процесс, а не на одно окно.
-           Прежнее окно этого процесса могло закрыться усыплённым — «Выход» из игры, смахнули
-           из недавних, система закрыла окно в фоне, а процесс остался в памяти. Новая страница
-           тогда не разбирается и не запускает сценарии — игра стоит на «Загрузке». Будим сразу. */
+        /* (4.1) pauseTimers() (уход в фон, ниже) усыпляет не одно окно, а процесс отрисовки
+           страниц, общий для всех окон приложения. Прежнее окно могло закрыться усыплённым —
+           «Выход» из игры, смахнули из недавних, система закрыла окно в фоне, а процесс остался
+           в памяти. Новая страница в том же процессе отрисовки разбирается, но всё, что идёт по
+           таймерам, стоит: игра молчит, чтец экрана читает «Загрузка…». Будим сразу. */
         web.resumeTimers();
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
@@ -271,7 +272,7 @@ public class MainActivity extends Activity {
         /* (4.1) окно закрывается («Выход», смахнули из недавних) — запись пишется, но страница не
            усыпляется: усыплённые таймеры пережили бы окно и остановили бы следующий запуск */
         if (web != null) web.evaluateJavascript("(function(){try{return window.labPause?window.labPause():1;}catch(e){return 1;}})()", v -> {
-            if (paused && !timersPaused && !destroyed && !isFinishing() && "0".equals(v) && web != null) { timersPaused = true; web.onPause(); web.pauseTimers(); }
+            if (paused && !timersPaused && !destroyed && !isFinishing() && "0".equals(v) && web != null) { timersPaused = true; web.onPause(); web.pauseTimers(); Log.i(TAG, "фон: таймеры страницы усыплены"); }
         });
     }
 
@@ -298,6 +299,7 @@ public class MainActivity extends Activity {
         /* (4.1) таймеры усыплены на весь процесс — будим их, пока окно не ушло: процесс может
            остаться в памяти, и следующий запуск встал бы на «Загрузке» */
         if (web != null) { try { web.resumeTimers(); } catch (Exception ignored) { } }
+        if (timersPaused) Log.i(TAG, "окно закрыто в фоне: таймеры страницы разбужены");
         if (tts != null) { tts.stop(); tts.shutdown(); }
         synchronized (others) { for (TextToSpeech t : others.values()) { try { t.stop(); t.shutdown(); } catch (Exception ignored) { } } others.clear(); }
         if (web != null) web.destroy();

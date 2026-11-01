@@ -11,6 +11,9 @@
 # (API 35) и Android 17 (API 37): страница грузится без ошибок, самопроверка
 # игры проходит.
 # Выпуск «lab-android-latest» несёт APK.
+# (4.1) Ручной запуск: compare_old — сначала тот же сценарий запуска после фона проходит
+# прежний APK (old_run — со страницы той сборки), для сравнения; quick — только APK и
+# эмуляторы, без долгих проверок и без выпуска (для опытов на эмуляторах).
 #
 # Подпись. Ключей в репозитории нет. (3.5) Постоянный ключ — в секретах
 # репозитория (ANDROID_KEYSTORE_B64 и пароль, см. lab/android/SIGNING.md): все
@@ -25,7 +28,15 @@ on:
   workflow_dispatch:
     inputs:
       compare_old:
-        description: "Сравнить с прежним APK (выпуск lab-android-latest): встаёт ли он на «Загрузке» при запуске после фона (Android 15)"
+        description: "Сравнить с прежним APK: встаёт ли он на «Загрузке» при запуске после фона (Android 9, 15 и 17)"
+        type: boolean
+        default: false
+      old_run:
+        description: "Прежний APK — со страницы этой сборки (число из адреса …/actions/runs/<число>); пусто — из выпуска lab-android-latest"
+        type: string
+        default: ""
+      quick:
+        description: "Быстро: только APK и эмуляторы, без долгих проверок; выпуск lab-android-latest не обновляется"
         type: boolean
         default: false
   push:
@@ -37,6 +48,8 @@ on:
 
 permissions:
   contents: write
+  # (4.1) APK со страницы прежней сборки — для сравнения (compare_old, old_run)
+  actions: read
 
 concurrency:
   group: lab-android-${{ github.ref }}
@@ -138,6 +151,7 @@ jobs:
           node-version: '20'
 
       - name: Синтаксис (не новее ES2018) и генератор этажей
+        if: ${{ !inputs.quick }}
         run: |
           npm i --no-save --prefix "$RUNNER_TEMP/n" acorn@8.12.1 > /dev/null
           node -e '
@@ -161,6 +175,7 @@ jobs:
           NODE_PATH="$RUNNER_TEMP/n/node_modules" node lab/tests/oko_lines_b.check.js
 
       - name: Проверка игры в Chromium
+        if: ${{ !inputs.quick }}
         run: |
           npm i --no-save --prefix "$RUNNER_TEMP/pw" playwright@1.48.2 > /dev/null
           (cd "$RUNNER_TEMP/pw" && npx playwright install --with-deps chromium > /dev/null)
@@ -219,6 +234,24 @@ jobs:
           compression-level: 0
           retention-days: 90
 
+      # (4.1) По запросу (compare_old): прежний APK — со страницы сборки old_run или из выпуска
+      # lab-android-latest — для сравнения на всех трёх эмуляторах: встаёт ли он на «Загрузке» при
+      # запуске после фона (relaunch-check.sh). Только сведения.
+      - name: Прежний APK — для сравнения
+        if: ${{ inputs.compare_old }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OLD_RUN: ${{ inputs.old_run }}
+        run: |
+          if [ -n "$OLD_RUN" ]; then
+            gh run download "$OLD_RUN" -R "$GITHUB_REPOSITORY" -D "$RUNNER_TEMP/old" || true
+            F=$(find "$RUNNER_TEMP/old" -name '*.apk' 2>/dev/null | head -1)
+            [ -n "$F" ] && cp "$F" old-lab.apk && echo "прежний APK — со страницы сборки $OLD_RUN: $(basename "$F")"
+          else
+            gh release download lab-android-latest -R "$GITHUB_REPOSITORY" -p '*.apk' -O old-lab.apk || true
+          fi
+          ls -la old-lab.apk 2>/dev/null || echo "прежнего APK нет — сравнения не будет"
+
       - name: Эмулятор — включить KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -244,6 +277,8 @@ jobs:
 
       - name: Установка и самопроверка на Android 9
         uses: reactivecircus/android-emulator-runner@v2
+        env:
+          LAB_OLD_APK: old-lab.apk
         with:
           api-level: 28
           target: google_apis
@@ -253,15 +288,6 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: bash lab/android/install-check.sh Podzemnaya-laboratoriya-Alfa-4.1.apk
-
-      # (4.1) По запросу (compare_old): прежний APK из выпуска lab-android-latest — для сравнения на
-      # Android 15: встаёт ли он на «Загрузке» при запуске после фона (relaunch-check.sh). Только сведения.
-      - name: Прежний APK — для сравнения
-        if: ${{ inputs.compare_old }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release download lab-android-latest -R "$GITHUB_REPOSITORY" -p '*.apk' -O old-lab.apk && ls -la old-lab.apk || echo "прежнего APK нет — сравнения не будет"
 
       - name: Установка и самопроверка на Android 15
         uses: reactivecircus/android-emulator-runner@v2
@@ -280,6 +306,8 @@ jobs:
       # Android 17: имя образа — из списка SDK (шаг «Платформа Android 17»),
       # поэтому эмулятор запускаем сами, без готового действия.
       - name: Установка и самопроверка на Android 17
+        env:
+          LAB_OLD_APK: old-lab.apk
         run: |
           IMG=$(cat "$RUNNER_TEMP/img37" 2>/dev/null || true)
           [ -n "$IMG" ] || { echo "::error::в списке SDK нет образа эмулятора Android 17 (API 37)"; exit 1; }
@@ -347,6 +375,7 @@ jobs:
           exit $RC
 
       - name: Выпуск «lab-android-latest»
+        if: ${{ !inputs.quick }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
