@@ -332,6 +332,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.lore=[];G.marks={};
   G.place={kind:"house",bx:900,by:900,stype:"school",name:"Проба",depth:0,x:1,y:1};
   const l=curLevel();
+  /* (3 ноября 2026) случайный бой с бродячей тварью (Немота со временем расползается) к проверке книги не относится:
+     бой завершается, бродячие останавливаются */
+  try{if(G.inCombat)endCombat();}catch(_){}try{Actors.stop();Actors.list=[];}catch(_){}try{refresh();}catch(_){}
   for(let y=0;y<l.h;y++)for(let x=0;x<l.w;x++)if(l.g[y][x]==="K"){G.place.x=x;G.place.y=y;return;}});
  await page.waitForTimeout(200);
  const одно=await page.evaluate(()=>knowRead().length);
@@ -340,6 +343,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const послеОдного=await page.evaluate(()=>({страниц:knowRead().length,окно:!document.getElementById("modal-read").hidden}));
  check('одно касание по полю ничего не изучает',
   послеОдного.страниц===одно&&послеОдного.окно===false,послеОдного);
+ await page.evaluate(()=>{try{if(G.inCombat)endCombat();}catch(_){}try{Actors.stop();Actors.list=[];}catch(_){}});
  await tap(195,600);
  await page.waitForTimeout(600);
  const послеДвух=await page.evaluate(()=>({страниц:knowRead().length,окно:!document.getElementById("modal-read").hidden}));

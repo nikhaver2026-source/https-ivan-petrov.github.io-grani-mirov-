@@ -66,7 +66,7 @@ const Дозор={
   const и1=ДОЗОР_ИМЕНА[Math.floor(h(1)*ДОЗОР_ИМЕНА.length)];let и2=ДОЗОР_ИМЕНА[Math.floor(h(2)*ДОЗОР_ИМЕНА.length)];if(и2===и1)и2=ДОЗОР_ИМЕНА[(ДОЗОР_ИМЕНА.indexOf(и1)+5)%ДОЗОР_ИМЕНА.length];
   const г1=Math.floor(h(3)*3),г2=(г1+1+Math.floor(h(4)*2))%3;
   const сдв=Math.floor(h(5)*ДОЗОР_ПОСТЫ.length);
-  const посты=ДОЗОР_КРУГ.map(([dx,dy],i)=>({x:Math.max(0,Math.min(WORLD_MAX-1,(c.x|0)+dx)),y:Math.max(0,Math.min(WORLD_MAX-1,(c.y|0)+dy)),n:ДОЗОР_ПОСТЫ[(сдв+i*3)%ДОЗОР_ПОСТЫ.length],готов:false}));
+  const посты=ДОЗОР_КРУГ.map(([dx,dy],i)=>({x:Math.max(0,Math.min(WORLD_MAX-1,(c.x|0)+dx)),y:Math.max(0,Math.min(WORLD_MAX-1,(c.y|0)+dy)),n:ДОЗОР_ПОСТЫ[(сдв+i*5)%ДОЗОР_ПОСТЫ.length],готов:false}));   /* шаг 5 взаимно прост с 12: имена постов не повторяются */
   посты.push({x:c.x|0,y:c.y|0,n:"у ворот — конец обхода",готов:false,конец:true});
   const st=this.ст();
   st.идёт=true;st.где={x:c.x|0,y:c.y|0,имя:this.имя(c),тип:c.structure.type,откуда:откуда||""};st.посты=посты;st.пост=0;st.тревог=0;st.начат=this.час();
@@ -82,6 +82,9 @@ const Дозор={
  пуск(){clearTimeout(this._t);this._t=setTimeout(()=>safeFn(()=>this.такт()),this.ШАГ);},
  страж(i){const st=G.дозор;return st&&st.идёт&&st.стража?st.стража[Number(i)||0]:null;},
  /* стражник говорит своим записанным голосом; записи нет — читает голос игры */
+ /* строка из списка — не та же, что звучала в прошлый раз */
+ выбрать(список,ключ){const st=G.дозор||{};const был=(st.было||{})[ключ];const можно=список.filter(x=>x!==был);const v=(можно.length?можно:список)[Math.floor(Math.random()*(можно.length||список.length))];
+  if(G.дозор){if(!G.дозор.было)G.дозор.было={};G.дозор.было[ключ]=v;}return v;},
  сказать(g,пул,строка){if(!g)return false;
   const ok=safeFn(()=>Folk.реплика(пул,строка,{x:g.x,y:g.y},false,{всегда:true,голос:g.голос}),false);
   if(!ok)narrate(`${g.кто[0].toUpperCase()+g.кто.slice(1)} ${g.имя}: «${строка}»`,{interrupt:false});
@@ -115,7 +118,7 @@ const Дозор={
    if(Date.now()>st.болтовня){st.болтовня=Date.now()+16000+Math.random()*10000;
     const строки=["Тихо сегодня. Даже слишком тихо.","Смена кончается, а ночь только начинается.","Кто без огня после заката — того спрашиваем.",
      "Третий обход за день. Ноги гудят.","Пристанет кто — кричи. Мы рядом.","Слыхал, за стеной волков видели. Держись дорог."];
-    this.сказать(Math.random()<0.6?L:S,"guard",строки[Math.floor(Math.random()*строки.length)]);}}
+    this.сказать(Math.random()<0.6?L:S,"guard",this.выбрать(строки,"болтовня"));}}
   else if(p&&d<=2)this.пост(p);
   this.пуск();},
  пост(p){
@@ -124,8 +127,8 @@ const Дозор={
   safeFn(()=>Spatial.role("gear_guard_thud",L.x-G.x,L.y-G.y,{gain:0.5,maxSec:1.2}));
   const ночные=["Стой! Кто идёт? А, путник. Ступай.","Тише. Город спит.","Держись света. В тени нынче неспокойно.","Ночь длинная, а смена ещё длиннее.","Ступай. Ночной дозор своё дело знает."];
   const тревога=st.тревог<2&&Math.random()<0.3;
-  if(!тревога){this.сказать(L,"guard_night",ночные[Math.floor(Math.random()*ночные.length)]);
-   narrate(`Пост ${p.n}: ${ДОЗОР_ИТОГ[Math.floor(Math.random()*ДОЗОР_ИТОГ.length)]}. ${this.осталось()}`,{interrupt:false});}
+  if(!тревога){this.сказать(L,"guard_night",this.выбрать(ночные,"пост"));
+   narrate(`Пост ${p.n}: ${this.выбрать(ДОЗОР_ИТОГ,"итог")}. ${this.осталось()}`,{interrupt:false});}
   else this.тревога(p);
   st.пост++;safeFn(()=>saveGame(true));},
  осталось(){const st=G.дозор;const n=st.посты.filter(x=>!x.готов&&!x.конец).length;return n?`Осталось постов: ${n}.`:"Посты обойдены — назад к воротам.";},
@@ -195,8 +198,9 @@ safeFn(()=>{const TB=TargetBeacon;const st0=TB.start,tk0=TB.tick,pg0=TB.ping,rp0
   t.x=g.x;t.y=g.y;if(this.mode()!=="constant")return;
   if(!safeFn(()=>gameActive(),true)){this.timer=setTimeout(()=>this.tick(),1500);return;}
   const r=this.rel();
-  if(r.d<=1){if(!t.рядом){t.рядом=true;narrate(`Вы рядом: ${t.n}.`,{interrupt:false,cat:"approach"});}}
-  else{t.рядом=false;if(!G.inCombat&&!safeFn(()=>activeLayer(),null)){this.n++;this.ping(r);}}
+  /* «Вы рядом» — в первый раз и после того, как отставали больше чем на три шага; дальше рядом идут молча */
+  if(r.d<=1){if(!t.рядом){t.рядом=true;if(!t.сказаноРядом||t.отставал){t.сказаноРядом=true;t.отставал=false;narrate(`Вы рядом: ${t.n}.`,{interrupt:false,cat:"approach"});}}}
+  else{t.рядом=false;if(r.d>3)t.отставал=true;if(!G.inCombat&&!safeFn(()=>activeLayer(),null)){this.n++;this.ping(r);}}
   this.lastD=r.d;this.timer=setTimeout(()=>this.tick(),this.gap(Math.max(2,r.d)));};
  TB.ping=function(r,голосом){const t=this.t;if(!(t&&t.дозор))return pg0.apply(this,arguments);if(!r)return;
   safeFn(()=>{const f=Bank.pick("gear_guard_mail",this.n);

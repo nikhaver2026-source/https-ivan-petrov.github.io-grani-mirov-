@@ -47,3 +47,11 @@ safeFn(()=>{const sp0=sellPriceOf;sellPriceOf=matKeep(sp0,function(n,row){let v=
    cancelable=false» на каждое такое касание. Сама отмена здесь ничего не делает, поэтому и не просим её. */
 safeFn(()=>{if(typeof TouchEvent==="undefined"||TouchEvent.prototype.__отмена)return;const pd=TouchEvent.prototype.preventDefault;
  TouchEvent.prototype.preventDefault=function(){if(this.cancelable===false)return;return pd.call(this);};TouchEvent.prototype.__отмена=true;});
+
+/* ── 3. Полоса боя без боя ──
+   Загрузка сохранения посреди боя гасит бой (G.inCombat), но полоса боя оставалась на экране с прежней надписью
+   («Поле боя: Лихой человек, вплотную») и перехватывала касание по полю: двойное касание читало давний бой, а не
+   действие здесь. Теперь, когда боя нет, полоса прячется при каждом обновлении экрана. */
+safeFn(()=>{const r0=refresh;refresh=matKeep(r0,function(){const r=r0.apply(this,arguments);
+ try{if(!G.inCombat){const bar=document.getElementById("combatBar");if(bar&&!bar.hidden){bar.hidden=true;const log=document.getElementById("cbLog");if(log)log.textContent="";}}}catch(_){}
+ return r;});});

@@ -22,6 +22,7 @@
    11. Постройки и жители: каждое окно открывается, у каждой кнопки есть имя.
    12. Карточки вещей; сохранение и загрузка без потерь.
    13. Одна награда — один раз: знание мира, работа в деревне.
+   14. Артефакты: имя, описание и цена у каждого.
    ══════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :: '+JSON.stringify(e).slice(0,1500):''));
@@ -220,6 +221,14 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.x=x0;G.y=y0;return out;});
  check('13. одна награда — один раз: знание мира второй раз не записывается и опыта не даёт; та же работа в деревне — не чаще раза в двенадцать часов',
   п13.знание.раз1&&!п13.знание.раз2&&п13.знание.опытВторой===0&&(!п13.работа||(п13.работа.первая&&!п13.работа.вторая&&п13.работа.прибавка2===0)),п13);
+
+ /* ── 14. Артефакты ── */
+ const п14=await p.evaluate(()=>{const плохо=[];const имена=new Set();let n=0;
+  for(let i=0;i<300;i++){let a=null;try{a=ART.make({seed:i*7919+13,ранг:i%ART_RANKS.length,кач:i%ART_QUAL.length});}catch(e){плохо.push(String(e).slice(0,60));continue;}
+   if(!a)continue;n++;имена.add(a.имя);const оп=safeFn(()=>ART.describe(a,true),"");const цена=safeFn(()=>ART.price(a),NaN);
+   if(!a.имя||!оп||!(цена>0)||!Number.isFinite(цена)||/NaN|undefined/.test(оп+a.имя))плохо.push({имя:a.имя,оп:String(оп).slice(0,60),цена});}
+  return {n,имён:имена.size,плохо:плохо.slice(0,5)};});
+ check('14. артефакты: у каждого своё имя, описание и цена без сбоев',п14.n>=250&&п14.имён>=100&&!п14.плохо.length,п14);
 
  check('Ошибок страницы нет',errors.length===0,errors.slice(0,3));
  results.forEach(r=>console.log(r));
