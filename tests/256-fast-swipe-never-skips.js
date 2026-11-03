@@ -23,7 +23,7 @@ const R=path.join(__dirname,'..');
  await p.evaluate(()=>{try{enterGame();}catch(_){}while(activeLayer())closeTopUI();window.maybeEvent=()=>{};});
 
  /* Поддельный синтезатор браузера: поведение задаётся списком на каждую фразу. */
- const прогон=async(план)=>p.evaluate(async(план)=>{
+ const прогон=async(план,nav=true)=>p.evaluate(async([план,nav])=>{
   settings.speech=1;settings.ttsEngine="device";Speech.stop({user:false});
   Speech.adapter=null;Speech._kind=null;Speech._useNative=()=>false;Speech.deskNoMs=()=>false;
   const слышно=[];let k=0;
@@ -40,9 +40,9 @@ const R=path.join(__dirname,'..');
      того прозвучала): только у такого молчание о начале значит потерю. */
   Speech._startSeen={web:true};
   const было=Speech.stats.retried||0;
-  Speech.say("Настройки звука",{interrupt:true,nav:true});
-  await new Promise(r=>setTimeout(r,5200));
-  return {слышно,подано:k,повторов:(Speech.stats.retried||0)-было,занят:!!Speech.current};},план);
+  Speech.say("Настройки звука",{interrupt:true,nav});
+  await new Promise(r=>setTimeout(r,7600));
+  return {слышно,подано:k,повторов:(Speech.stats.retried||0)-было,занят:!!Speech.current};},[план,nav]);
 
  const п1=await прогон(["drop","ok"]);
  check('1. синтезатор потерял фразу — она подана снова и прозвучала',п1.слышно.includes("Настройки звука")&&п1.повторов===1&&!п1.занят,п1);
@@ -53,7 +53,13 @@ const R=path.join(__dirname,'..');
  const п4=await прогон(["ok","ok"]);
  check('3а. обычная фраза не повторяется',п4.слышно.length===1&&п4.повторов===0&&п4.подано===1,п4);
  const п5=await прогон(["drop","drop","ok"]);
- check('3б. второй потери не ждут: повтор один, очередь свободна',п5.повторов===1&&п5.подано===2&&!п5.занят,п5);
+ /* (3 ноября 2026, просьба игрока: «голоса при быстром пролистывании не замолкали») пункт, на котором стоит игрок,
+    после второй потери подаётся ещё раз и звучит — до трёх повторов; прочие фразы — по-прежнему один повтор */
+check('3б. вторая потеря пункта, на котором стоит игрок, — ещё повтор, и пункт звучит; очередь свободна',п5.слышно.includes("Настройки звука")&&п5.повторов===2&&п5.подано===3&&!п5.занят,п5);
+ const п5в=await прогон(["drop","drop","ok"],false);
+ check('3в. прочая фраза (не пункт игрока): повтор один, второй потери не ждут',п5в.повторов===1&&п5в.подано===2&&!п5в.занят,п5в);
+ const п5г=await прогон(["drop","drop","drop","drop","drop","drop"]);
+ check('3г. совсем сломанный синтезатор очередь не держит: не больше трёх повторов пункта, очередь свободна',п5г.повторов===3&&п5г.подано===4&&!п5г.занят,п5г);
 
  const java=fs.readFileSync(path.join(R,'android/app/src/main/java/io/github/granimirov/MainActivity.java'),'utf8');
  const src=fs.readFileSync(path.join(R,'index.html'),'utf8');
