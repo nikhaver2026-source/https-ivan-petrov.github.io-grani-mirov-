@@ -5139,8 +5139,8 @@ const Speech={voice:null,keepAlive:null,
     /* Ошибка на середине длинного текста не глушит остальное: следующий кусок. */
     if(i+1<m.parts.length)this._part(m,i+1);else this._finish(m,i>0?"COMPLETED":"FAILED");}});
   if(!ok){if(ещё())return;this._finish(m,"FAILED");return;}
-  /* пункт игрока: синтезатор, который сообщает о начале, а начала нет за 0,7 с — фраза потеряна, подать снова сразу, не ждать сторожа */
-  if(важный&&a&&(a.name==="web"||a.name==="native")&&this._startSeen&&this._startSeen[a.name])ранний=setTimeout(()=>{if(!начат&&!закрыт)ещё();},700);
+  /* пункт игрока: синтезатор, который сообщает о начале, а начала нет за секунду — фраза потеряна, подать снова сразу, не ждать сторожа */
+  if(важный&&a&&(a.name==="web"||a.name==="native")&&this._startSeen&&this._startSeen[a.name])ранний=setTimeout(()=>{if(!начат&&!закрыт)ещё();},1000);
   this._watch(m,a,m.parts[i],дальше,()=>ещё());},
  /* ── СТОРОЖ ──
     Синтезатор устройства иногда не присылает конца фразы: Chrome теряет
