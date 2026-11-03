@@ -7,7 +7,7 @@
    пропускались одним касанием.
    1. Дозор — настоящий обход. Ночью (с восьми вечера до пяти утра) у
       поселения — в окне деревни («Помочь по хозяйству»), у стражи ворот или в
-      меню действий («Мир» → «Ночной дозор») — герой выходит с двумя
+      меню действий («Квесты» → «Ночной дозор») — герой выходит с двумя
       стражниками: десятником и стражником. У каждого своё имя и свой голос
       (записанные голоса стражи). Они идут по пяти постам вокруг поселения
       и возвращаются к воротам; шаги и кольчуга слышны с их стороны.
@@ -232,9 +232,8 @@ safeFn(()=>{if(typeof Стража147==="undefined")return;const v0=Стража
   try{const c=Дозор._ворота;if(c&&/^Ворота: /.test(String(title))&&Array.isArray(choices)&&Дозор.ночь()&&!Дозор.идёт()&&!Дозор.почему(c)){
    const i=Math.max(0,choices.length-1);choices=choices.slice();choices.splice(i,0,{l:"Пойти с ночным дозором вокруг стен",run:()=>Дозор.начать(c,"ворота")});}}catch(_){}
   return w0.call(this,title,text,choices);});});
-/* меню действий: «Мир» → «Ночной дозор» — ночью у поселения и пока идёт обход */
-safeFn(()=>{const g=AM_GROUPS.find(x=>x[0]==="Мир");if(g&&!g[1].some(z=>z[0]==="dozor"))g[1].push(["dozor","Ночной дозор"]);
- if(typeof AM_ITEMS!=="undefined"&&!AM_ITEMS.some(z=>z[0]==="dozor"))AM_ITEMS.push(["dozor","Ночной дозор"]);
+/* меню действий: «Квесты» → «Ночной дозор» — ночью у поселения и пока идёт обход */
+safeFn(()=>{const g=AM_GROUPS.find(x=>x[2]&&x[2].id==="quests")||AM_GROUPS.find(x=>x[0]==="Квесты");if(g&&!g[1].some(z=>z[0]==="dozor"))g[1].push(["dozor","Ночной дозор"]);
  const a0=amAvailable;amAvailable=matKeep(a0,function(cmd){if(cmd==="dozor")return Дозор.доступен();return a0.apply(this,arguments);});});
 /* загрузка сохранения посреди обхода: дозор продолжает путь */
 safeFn(()=>{if(typeof loadGame!=="function")return;const l0=loadGame;loadGame=matKeep(l0,function(){const r=l0.apply(this,arguments);

@@ -15,10 +15,12 @@
 /* ── 1. Купить и тут же продать дороже нельзя ── */
 const Скупка={кэш:new Map(),внутри:false,
  /* наименьшая цена каждой вещи на прилавках этого места — та, что игрок платит (со скидками и инструментом
-    лавки): имя → цена. Живёт секунду: скидка торговца меняется от сделки к сделке. */
+    лавки): имя → цена. Скидка торговца меняется от сделки к сделке. */
  цены(n){
   const k=[n.x|0,n.y|0,(G.place&&Number(G.place.depth))|0,Number(G.day)|0,Number(G.hour)|0].join(",");
-  const был=this.кэш.get(k);if(был&&Date.now()-был.t<1000)return был.m;const m=new Map();if(this.кэш.size>60)this.кэш.clear();
+  /* запомнено только на один такт: внутри одной отрисовки лавки цены считаются раз, к следующему действию — заново */
+  if(!this._сброс){this._сброс=true;setTimeout(()=>{this.кэш.clear();this._сброс=false;},0);}
+  const был=this.кэш.get(k);if(был)return был.m;const m=new Map();
   this.внутри=true;
   try{const все=[n];
    safeFn(()=>{const c=cellContent(n.x,n.y);(npcsFor(c)||[]).forEach(x=>{if(x&&x.trade&&x.key!==n.key)все.push(x);});});

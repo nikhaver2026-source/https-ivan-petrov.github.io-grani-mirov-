@@ -106,7 +106,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   while(activeLayer())closeTopUI();Стража147.встреча(cellContent(к.x,к.y));await w(100);
   const lay=activeLayer();out.ворота=lay?[...lay.querySelectorAll("button")].map(b=>b.textContent.trim()).filter(t=>/дозор/i.test(t)):[];
   while(activeLayer())closeTopUI();
-  out.меню=amAvailable("dozor");out.пункт=AM_GROUPS.find(x=>x[0]==="Мир")[1].some(z=>z[0]==="dozor");
+  out.меню=amAvailable("dozor");out.пункт=AM_GROUPS.find(x=>x[0]==="Квесты")[1].some(z=>z[0]==="dozor");
   G.hour=12;out.меню_днём=amAvailable("dozor");return out;},мест);
  check('6. в деревне «Выйти в ночной дозор со стражей» — настоящий обход; у ворот ночью — «Пойти с ночным дозором»; в меню действий — пункт ночью, днём — нет',
   (п6.работа===undefined||(/ночной дозор/.test(п6.работа)&&п6.деревня&&п6.идёт))&&п6.ворота.length>=1&&п6.меню&&п6.пункт&&!п6.меню_днём,п6);

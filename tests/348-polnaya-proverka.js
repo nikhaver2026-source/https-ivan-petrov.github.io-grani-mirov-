@@ -19,6 +19,9 @@
       продать (ему или соседу по месту) дороже.
    9. Жила ресурса иссякает: повторный сбор пустой клетки ничего не даёт.
    10. Живой бой: частые нажатия удара не бьют чаще, чем позволяет оружие.
+   11. Постройки и жители: каждое окно открывается, у каждой кнопки есть имя.
+   12. Карточки вещей; сохранение и загрузка без потерь.
+   13. Одна награда — один раз: знание мира, работа в деревне.
    ══════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :: '+JSON.stringify(e).slice(0,1500):''));
@@ -179,6 +182,44 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const мс=Date.now()-t0;await w(400);Speech.say=s0;const ударов=сказ.filter(t=>/^Вы ударили/.test(t)).length;const ms=safeFn(()=>weaponSpeedMs(),600);try{endCombat();}catch(_){}G.inCombat=false;G.combat=null;
   return {ударов,мс,перезарядка:ms,предел:Math.ceil(мс/ms)+1};});
  check('10. живой бой: сорок нажатий удара подряд бьют не чаще, чем позволяет перезарядка оружия',п10.ударов>=1&&п10.ударов<=п10.предел,п10);
+
+ /* ── 11. Постройки и жители ── */
+ const п11=await p.evaluate(async()=>{const w=ms=>new Promise(z=>setTimeout(z,ms));Speech.say=()=>null;G.level=30;G.gold=99999;
+  const имя=el=>(el.dataset.speak||el.getAttribute("aria-label")||el.textContent||"").replace(/\s+/g," ").trim();
+  const out={видов:0,профессий:new Set(),сбои:[],немые:[]};const x0=G.x,y0=G.y;const виды=new Map();
+  for(let r=0;r<260&&виды.size<40;r+=2)for(let dx=-r;dx<=r;dx+=2)for(const dy of [-r,r]){const c=safeFn(()=>cellContent(x0+dx,y0+dy),null);if(c&&c.structure&&!виды.has(c.structure.type))виды.set(c.structure.type,c);}
+  for(const [т,c] of виды){G.place=null;G.x=c.x;G.y=c.y;G.inCombat=false;while(activeLayer())closeTopUI();out.видов++;
+   try{openBuilding(c);}catch(x){out.сбои.push(т+": "+String(x).slice(0,80));}await w(20);const lay=activeLayer();if(!lay)out.сбои.push(т+": окно не открылось");
+   (lay?[...lay.querySelectorAll("button,[data-cmd]")]:[]).forEach(k=>{if(!имя(k))out.немые.push(т+": "+(k.dataset.cmd||""));});while(activeLayer())closeTopUI();
+   (safeFn(()=>npcsFor(c),[])||[]).forEach((n,i)=>{if(!n)return;out.профессий.add(n.prof);try{openNPC(`${c.x},${c.y},${i}`);}catch(x){out.сбои.push(n.prof+": "+String(x).slice(0,80));}
+    const l2=activeLayer();if(!l2)out.сбои.push(n.prof+": окно не открылось");(l2?[...l2.querySelectorAll("button,[data-cmd]")]:[]).forEach(k=>{if(!имя(k))out.немые.push(n.prof+": "+(k.dataset.cmd||""));});
+    while(activeLayer())closeTopUI();});}
+  G.place=null;G.x=x0;G.y=y0;return {видов:out.видов,профессий:out.профессий.size,сбои:out.сбои,немые:out.немые.slice(0,10)};});
+ check('11. постройки и жители: окно каждого вида постройки и каждого жителя открывается, у каждой кнопки есть имя для голоса',
+  п11.видов>=15&&п11.профессий>=15&&!п11.сбои.length&&!п11.немые.length,п11);
+
+ /* ── 12. Карточки вещей и сохранение ── */
+ const п12=await p.evaluate(async()=>{["Факел","Верёвка","Лопата","Ведро"].forEach(n=>{if(!(G.items||[]).includes(n))G.items.push(n);});
+  ["дерево","камень","руда","трава","кристалл","кость","шкура","стальной слиток","тиснёная кожа"].forEach(k=>G.inv[k]=(+G.inv[k]||0)+2);
+  const безКарты=[];let всего=0;for(const row of (safeFn(()=>invAll(),[])||[])){всего++;const t=safeFn(()=>invBrief(row.kind,row.key),"");if(!t||String(t).trim().length<3)безКарты.push(row.name);}
+  const снимок=()=>JSON.stringify({gold:G.gold,xp:G.xp,level:G.level,inv:G.inv,items:G.items,x:G.x,y:G.y,day:G.day});
+  const до=снимок();saveGame(true);G.gold=1;G.inv={};G.items=[];loadGame();const после=снимок();
+  return {всего,безКарты,сохранение:до===после};});
+ check('12. у каждой вещи сумы есть карточка; сохранение и загрузка возвращают золото, опыт, уровень, вещи и место',п12.всего>=10&&!п12.безКарты.length&&п12.сохранение,п12);
+
+ /* ── 13. Одна награда — один раз ── */
+ const п13=await p.evaluate(async()=>{const out={};
+  /* знание мира: второе то же знание не записывается и опыта не даёт */
+  const xp0=G.xp,l0=G.level;const раз1=Lore.add("map","проба-аудит-1","Проба аудита");const xp1=G.xp;const раз2=Lore.add("map","проба-аудит-1","Проба аудита");
+  out.знание={раз1,раз2,опытВторой:G.xp-xp1};
+  /* работа в деревне: та же работа той же деревни — не чаще раза в двенадцать часов */
+  const x0=G.x,y0=G.y;let д=null;for(let r=0;r<120&&!д;r++)for(let dx=-r;dx<=r&&!д;dx++)for(const dy of [-r,r]){const c=safeFn(()=>cellContent(x0+dx,y0+dy),null);if(c&&c.structure&&c.structure.type==="village")д=c;}
+  if(д){G.place=null;G.x=д.x;G.y=д.y;G.hour=10;const имя=Хозяйство170.имяДеревни(д);delete Хозяйство170.ст()[имя+":deti"];
+   const v0=Хозяйство170.отношение(имя);const a=Хозяйство170.сделать("deti");const v1=Хозяйство170.отношение(имя);const b=Хозяйство170.сделать("deti");const v2=Хозяйство170.отношение(имя);
+   out.работа={первая:a,вторая:b,прибавка1:v1-v0,прибавка2:v2-v1};}
+  G.x=x0;G.y=y0;return out;});
+ check('13. одна награда — один раз: знание мира второй раз не записывается и опыта не даёт; та же работа в деревне — не чаще раза в двенадцать часов',
+  п13.знание.раз1&&!п13.знание.раз2&&п13.знание.опытВторой===0&&(!п13.работа||(п13.работа.первая&&!п13.работа.вторая&&п13.работа.прибавка2===0)),п13);
 
  check('Ошибок страницы нет',errors.length===0,errors.slice(0,3));
  results.forEach(r=>console.log(r));
