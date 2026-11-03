@@ -388,14 +388,16 @@ jobs:
           for i in $(seq 1 12); do git ls-remote --exit-code --tags "https://github.com/$GITHUB_REPOSITORY" "refs/tags/lab-android-latest" > /dev/null 2>&1 || break; sleep 5; done
           SIZE=$(stat -c %s Podzemnaya-laboratoriya-Alfa-4.1.apk)
           cat > "$RUNNER_TEMP/notes.md" <<EOF
-          «Подземная лаборатория» Альфа 4.1 — звуковая игра для Android 9 и новее, по Android 17 включительно. Сборка ${GITHUB_RUN_NUMBER} из ${GITHUB_REF_NAME} (${GITHUB_SHA}).
+          «Подземная лаборатория» Альфа 4.1 — звуковая игра для Android 9 и новее, по Android 17 включительно.
 
           Полная сборка: вся игра внутри одного файла Podzemnaya-laboratoriya-Alfa-4.1.apk (${SIZE} байт) — речь, звуки, музыка. Сеть не нужна, докачивать ничего не надо. Подключённая клавиатура тоже работает: W A S D — шаг, R — оружие, стрелки — выстрел.
 
           Проверено: ставится и запускается на эмуляторах Android 9, Android 15 и Android 17, самопроверка игры пройдена.
+
+          Код: ветка ${GITHUB_REF_NAME}, коммит ${GITHUB_SHA}.
           EOF
           gh release create lab-android-latest Podzemnaya-laboratoriya-Alfa-4.1.apk --prerelease --target "$GITHUB_SHA" \
-            --title "Подземная лаборатория Альфа 4.1 для Android (сборка ${GITHUB_RUN_NUMBER})" \
+            --title "Подземная лаборатория Альфа 4.1 для Android" \
             --notes-file "$RUNNER_TEMP/notes.md"
           for i in $(seq 1 6); do
             sleep 10
