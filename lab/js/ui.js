@@ -683,6 +683,7 @@ function mixerMenu() {
     vol("Тревоги и сирены", "alarmVol"),
     vol("Маяки предметов", "beaconVol"),
     { kind: "slider", label: "Пространственные эффекты: отзвук помещений", min: 0, max: 1.5, step: 0.1, get: function () { return S.spaceVol == null ? 1 : +S.spaceVol; }, set: function (v) { S.spaceVol = Math.round(v * 10) / 10; LAB.saveSettings(); LAB.AE.applyVolumes(); }, fmt: function (v) { return Math.round(v * 100) + " процентов" + (Math.round(v * 10) === 10 ? ", как задумано" : v === 0 ? ", сухо" : ""); } },
+    vol("Отзвук коридоров: за несколько шагов до прохода или двери слышно, с какой стороны коридор", "corrVol"),
     vol("Все звуковые эффекты вместе", "fxVol"),
     { kind: "slider", label: "Низкие частоты", min: -12, max: 9, step: 3, get: function () { return +S.bass || 0; }, set: function (v) { S.bass = v; LAB.saveSettings(); if (LAB.AE.applyMix) LAB.AE.applyMix(); }, fmt: function (v) { return v === 0 ? "как записано" : (v > 0 ? "плюс " : "минус ") + Math.abs(v) + " " + LAB.plural(Math.abs(v), "децибел", "децибела", "децибел"); } }, /* (3.7) «плюс 3 децибела» */
     { kind: "choice", label: "Динамический диапазон", options: [{ v: 0, label: "широкий: громкое громче, тихое тише" }, { v: 1, label: "обычный" }, { v: 2, label: "сжатый: тихое слышно, громкое не оглушает — для наушников и тихой игры" }],

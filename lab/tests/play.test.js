@@ -7530,6 +7530,40 @@ LAB.ui.closeAll();
   ok(e1.loot, "касса и часовая мастерская — ценности или выручка, бюро находок — забытые мелочи");
   ok(e1.queen, "матки не развиваются");
 
+  console.log("Отзвук коридора: за несколько шагов слышно, с какой стороны коридор");
+  const ce = await page.evaluate(() => {
+    const g = LAB.game, out = { near: 0, far: 0, side: 0, cases: 0, c4: 0 };
+    LAB.ui.closeAll(); g.newGame(); LAB.combat.stop(); LAB.ui.closeAll();
+    const fl = g.CUR.fl, W = LAB.W, V = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    fl.corrs.filter(c => c.mouth && c.mouth.length).slice(0, 6).forEach(c => {
+      const m = c.mouth[Math.floor(c.mouth.length / 2)], into = V.find(v => fl.room[(m[1] + v[1]) * W + m[0] + v[0]] === c.mouthRoom);
+      if (!into) return;
+      for (let d = 1; d <= 5; d++) {
+        const x = m[0] + into[0] * d, y = m[1] + into[1] * d;
+        if (fl.room[y * W + x] !== c.mouthRoom) break;
+        g.G.x = x; g.G.y = y;
+        const o = LAB.atmos._corrOpenings().find(q => q.corr === c.id);
+        out.cases++; if (d <= 4) out.c4++;
+        if (d <= 4 && o && o.d === d) out.near++;
+        if (d === 5 && o) out.far++;
+        /* сторона: проём — против направления «в помещение» */
+        if (o && Math.sign(Math.round(o.x - x)) === -into[0] && Math.sign(Math.round(o.y - y)) === -into[1]) out.side++;
+      }
+    });
+    const c0 = fl.corrs[0]; g.G.x = c0.x0; g.G.y = c0.y0; out.inCorr = LAB.atmos._corrOpenings().length;
+    const sd = fl.doors.find(d => d.lock && d.lock.type === "secret");
+    if (sd) {
+      const v = { N: [0, 1], S: [0, -1], W: [1, 0], E: [-1, 0] }[sd.side];
+      g.G.x = sd.x + v[0]; g.G.y = sd.y + v[1];
+      out.secretHidden = !g.CUR.fs.secrets[sd.id] && !LAB.atmos._corrOpenings().some(o => o.key === "d" + sd.id);
+    } else out.secretHidden = true;
+    return out;
+  });
+  ok(ce.c4 >= 8 && ce.near >= ce.c4 - 1 && ce.far === 0, "коридор слышно за один–четыре шага, за пятью — нет (" + ce.near + " из " + ce.c4 + ", дальше — " + ce.far + ")");
+  ok(ce.side >= ce.near - 1, "отзвук — со стороны прохода в коридор");
+  ok(ce.inCorr === 0, "в самом коридоре отзвука нет: там гул уровня");
+  ok(ce.secretHidden, "нераскрытая потайная дверь коридор не выдаёт");
+
   const real = errors.filter(e => !/favicon|sounds\/|Failed to load resource/.test(e));
   ok(!real.length, "ошибок страницы нет" + (real.length ? ": " + real.slice(0, 5).join(" || ") : ""));
   ok(!external.length, "I: игра ничего не загружает из сети — все запросы к своим файлам" + (external.length ? ": " + external.slice(0, 3).join(", ") : ""));

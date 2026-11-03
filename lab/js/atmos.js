@@ -78,6 +78,7 @@ function step(surf, run, door) {
   if (sd.creak && has("floor_creak") && Math.random() < sd.creak * (run ? 0.6 : 1)) play("floor_creak", { gain: 0.55, delay: 0.05 + Math.random() * 0.08, pan: stepN % 2 ? -0.1 : 0.1, reverb: 0.12, bus: "fx" });
   if (door) play("door_threshold", { gain: 0.5 });
   wallEcho(id, rate);
+  corrUpdate(); corrEcho(id, rate);
 }
 /* Отзвук стены: если стена вплотную слева или справа, шаг отдаётся от неё
    тихим коротким эхом с той стороны — в широком коридоре так слышно, у какой
@@ -91,6 +92,115 @@ function wallEcho(id, rate) {
     if (!LAB.inb(x, y) || cur.fl.t[idx(x, y)] !== LAB.T.WALL) return;
     var pan = q[1] * 0.85, lp = q[2] > 0 ? 1800 : 5200;
     play(has("step_echo") ? "step_echo" : id, { gain: q[2] ? 0.14 : 0.22, rate: (rate || 1) * 1.08, pan: pan, lp: lp, delay: 0.035 + Math.random() * 0.01, reverb: 0, bus: "fx", vary: 0 });
+  });
+}
+/* ════════ (после 4.1, просьба автора) ОТЗВУК КОРИДОРА ════════
+   Коридор слышно за несколько шагов до него — до четырёх: из помещения, с лестничной клетки, из
+   кабинета, из тайного хода с той стороны, где в коридор ведёт проход или дверь, тихо дышит его
+   простор — полый шум длинного пустого коридора, — а каждый шаг отдаётся из него долгим отзвуком.
+   Ближе — громче и яснее; за закрытой дверью — глуше; за спиной — темнее, как всё в игре. Два
+   ближних проёма звучат сразу, каждый со своей стороны. В самом коридоре и в дверном проёме
+   отзвука нет: там звучит гул уровня. Нераскрытая потайная дверь коридора не выдаёт. Громкость —
+   в микшере («Отзвук коридоров»), ноль выключает. */
+var CORR_R = 4, CORR_G = [1, 1, 0.74, 0.5, 0.3];
+var corrSrc = {}, corrLast = [], corrTick = 0;
+function corrK() { return S.corrVol == null ? 1 : Math.max(0, Math.min(1, +S.corrVol)); }
+/* Проёмы в коридор не дальше CORR_R шагов — по клеткам пола: стены звук не пропускают, мебель ему
+   не помеха. Проём — открытый проход (клетки коридора у стены помещения) или дверь в коридор. */
+function corrOpenings() {
+  var g = G(), cur = CUR();
+  if (!g || !cur || !cur.fl || !cur.fl.t || !LAB.inb(g.x, g.y)) return [];
+  var fl = cur.fl, T = LAB.T, W = LAB.W, t = fl.t, i0 = idx(g.x, g.y);
+  if (t[i0] !== T.ROOM) return [];
+  var dist = {}, q = [i0], qi = 0, found = {}, list = [], sec = (cur.fs && cur.fs.secrets) || {};
+  var V4 = [1, 0, -1, 0, 0, 1, 0, -1];
+  dist[i0] = 0;
+  while (qi < q.length) {
+    var c = q[qi++], d = dist[c];
+    if (d >= CORR_R) continue;
+    var cx = c % W, cy = (c / W) | 0;
+    for (var k = 0; k < 8; k += 2) {
+      var nx = cx + V4[k], ny = cy + V4[k + 1];
+      if (!LAB.inb(nx, ny)) continue;
+      var j = idx(nx, ny);
+      if (dist[j] != null) continue;
+      var tj = t[j];
+      if (tj === T.WALL) continue;
+      dist[j] = d + 1;
+      if (tj === T.ROOM) { q.push(j); continue; }
+      var door = tj === T.DOOR ? fl.doorAt[j] : null;
+      if (door && door.lock && door.lock.type === "secret" && !sec[door.id]) continue;
+      var ci = fl.corrAt ? fl.corrAt[j] : -1;
+      if ((ci == null || ci < 0) && door) ci = door.corr >= 0 ? door.corr : (door.acorr != null ? door.acorr : -1);
+      if (ci == null || ci < 0) continue;
+      var key = door ? "d" + door.id : "c" + ci;
+      var o = found[key];
+      if (!o) { o = found[key] = { key: key, d: d + 1, sx: 0, sy: 0, n: 0, door: door, corr: ci }; list.push(o); }
+      if (d + 1 < o.d) o.d = d + 1;
+      o.sx += nx; o.sy += ny; o.n++;
+    }
+  }
+  list.sort(function (a, b) { return a.d - b.d; });
+  return list.slice(0, 2);
+}
+function corrClosed(o) { var cur = CUR(); return !!(o.door && !(cur && cur.fs && cur.fs.doors && cur.fs.doors[o.door.id] === 2)); }
+function corrMake() {
+  if (!AE.ensure() || !AE.amb) return null;
+  var s = new LAB.SFX(AE.amb), c = s.ctx;
+  /* простор: розовый шум в полосе голоса коридора, полый тон длинной трубы (короткая задержка с
+     обратной связью), медленное дыхание полосы — и всё это в одну сторону */
+  var n = s.noise("pink", 4, true), bp = s.filter("bandpass", 560, 0.55), lp = s.filter("lowpass", 2400, 0.7);
+  var dl = c.createDelay(0.1); dl.delayTime.value = 0.0117; s.nodes.push(dl);
+  var fb = s.gain(0.5), g = s.gain(0.0001);
+  var pn = c.createStereoPanner ? c.createStereoPanner() : null;
+  if (pn) s.nodes.push(pn);
+  n.connect(bp); bp.connect(lp); bp.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(lp);
+  lp.connect(g);
+  if (pn) { g.connect(pn); pn.connect(s.out()); } else g.connect(s.out());
+  s.send(g, 0.22);
+  s.lfo(0.08 + Math.random() * 0.04, 110, bp.frequency);
+  n.start();
+  return { s: s, g: g, pn: pn, lp: lp, v: 0 };
+}
+function corrSet(src, pan, v, lpHz) {
+  try {
+    var t = src.s.ctx.currentTime;
+    if (src.pn) src.pn.pan.setTargetAtTime(Math.max(-1, Math.min(1, pan)), t, 0.12);
+    src.lp.frequency.setTargetAtTime(Math.max(300, lpHz), t, 0.2);
+    src.g.gain.setTargetAtTime(Math.max(0.0001, v), t, src.v ? 0.25 : 0.5);
+    src.v = v;
+  } catch (e) { /* */ }
+}
+function corrStopAll(fade) { Object.keys(corrSrc).forEach(function (k) { try { corrSrc[k].s.stop(fade == null ? 0.8 : fade); } catch (e) { /* */ } }); corrSrc = {}; corrLast = []; }
+function corrUpdate() {
+  var g = G();
+  var on = worldOn && g && S.effects && corrK() > 0 && LAB.game && LAB.game.entered && !LAB.bg;
+  var want = on ? corrOpenings() : [];
+  var keep = {};
+  want.forEach(function (o) {
+    keep[o.key] = 1;
+    var x = o.sx / o.n, y = o.sy / o.n, closed = corrClosed(o);
+    var sp = LAB.spatial(x - g.x, y - g.y, closed);
+    var v = 0.085 * corrK() * CORR_G[Math.min(CORR_R, o.d)] * (closed ? 0.6 : 1);
+    var src = corrSrc[o.key];
+    if (!src) { src = corrMake(); if (!src) return; corrSrc[o.key] = src; }
+    corrSet(src, sp.pan, v, closed ? Math.min(sp.lp, 650) : Math.min(sp.lp, 2600 - o.d * 250));
+  });
+  Object.keys(corrSrc).forEach(function (k) { if (!keep[k]) { try { corrSrc[k].s.stop(0.8); } catch (e) { /* */ } delete corrSrc[k]; } });
+  corrLast = want;
+}
+/* Шаг отдаётся из коридора: долгий отзвук с его стороны, за ним — второй, тише (длинный коридор) */
+function corrEcho(id, rate) {
+  var g = G(), k = corrK();
+  if (!g || !k || !corrLast.length) return;
+  var rec = has("step_echo") ? "step_echo" : id;
+  corrLast.forEach(function (o) {
+    var x = o.sx / o.n, y = o.sy / o.n, closed = corrClosed(o);
+    var sp = LAB.spatial(x - g.x, y - g.y, closed);
+    var v = (closed ? 0.07 : 0.17) * k * CORR_G[Math.min(CORR_R, o.d)];
+    var dly = 0.075 + o.d * 0.022;
+    play(rec, { gain: v, rate: (rate || 1) * 0.94, pan: sp.pan, lp: closed ? 700 : Math.min(sp.lp, 3200), delay: dly, reverb: 0.6, bus: "fx", vary: 0 });
+    play(rec, { gain: v * 0.45, rate: (rate || 1) * 0.92, pan: sp.pan * 0.8, lp: closed ? 550 : Math.min(sp.lp, 2200), delay: dly + 0.16 + o.d * 0.02, reverb: 0.75, bus: "fx", vary: 0 });
   });
 }
 function bump() { play("bump_body", { gain: 0.8 }); }
@@ -336,7 +446,7 @@ function enterFloor(L, F) {
     if (oldBed && oldBed !== bid) releaseLater(oldBed, 3500);
     if (!bed.h) synthBed(L);
   }
-  if (!beaconT) beaconT = setInterval(function () { LAB.safe(beaconTick); if (++deadN % 20 === 0) LAB.safe(deadLoops); }, 220);
+  if (!beaconT) beaconT = setInterval(function () { LAB.safe(beaconTick); if (++deadN % 20 === 0) LAB.safe(deadLoops); if (++corrTick % 4 === 0) LAB.safe(corrUpdate); }, 220);
   if (!evTimer) scheduleEvent();
   var Ld = depthL(L);
   AE.setReverb(1.4 + Ld * 0.08, 0.3 + Ld * 0.015);
@@ -373,6 +483,7 @@ var BED_GAIN = 0.62, BED_DUCK = 0.38;
 function bedGain() { return roomLoop ? BED_DUCK : BED_GAIN; }
 function bedLevel(fade) { if (bed && bed.h && bed.h.setGain) bed.h.setGain(bedGain(), fade == null ? 1.2 : fade); }
 function setRoom(r) {
+  LAB.safe(corrUpdate);
   var id = r ? (ROOM_LOOP[r.type] || "") : "corridor";
   if (id === roomLoopId) return;
   roomLoopId = id;
@@ -434,6 +545,7 @@ function stopWorld() {
   if (eid) releaseLater(eid, 2500);
   clearInterval(beaconT); beaconT = null;
   clearTimeout(evTimer); evTimer = null;
+  corrStopAll(0.6);
   stopTension();
   if (hbLoop) { hbLoop.stop(0.5); hbLoop = null; }
   if (sirenOn) { sirenOn.stop(1); sirenOn = null; }
@@ -956,6 +1068,7 @@ var FB = {
    напряжение боя и синтезированная музыка — запускается заново. */
 Snd.onRebuild(function () {
   var g = G();
+  corrSrc = {}; corrLast = []; /* узлы отзвука коридора остались в прежнем устройстве — новые соберёт corrUpdate */
   if (synthBedS) { synthBedS = null; if (worldOn && g) synthBed(g.L); }
   if (tension) { try { if (tension.s && tension.s.stop) tension.s.stop(0); } catch (e) { /* */ } tension = null; startTension(); }
   if (mus.s) { var th = mus.theme; try { if (mus.s.stop) mus.s.stop(0); } catch (e) { /* */ } mus.s = null; mus.key = ""; mus.timers.forEach(function (t) { clearInterval(t); clearTimeout(t); }); mus.timers = []; if (th) music(th); }
@@ -965,6 +1078,9 @@ LAB.atmos = {
   _chOf: function (id, o) { return chOf(id, o || {}); },
   play: play, at: at, has: has,
   _bed: function () { return !!(bed && (bed.h || synthBedS)); }, _sources: function () { return lastSources; },
+  _corr: function () { return corrLast.map(function (o) { return { key: o.key, d: o.d, x: o.sx / o.n, y: o.sy / o.n, closed: corrClosed(o), corr: o.corr, live: !!corrSrc[o.key] }; }); },
+  _corrOpenings: function () { return corrOpenings().map(function (o) { return { key: o.key, d: o.d, x: o.sx / o.n, y: o.sy / o.n, corr: o.corr }; }); },
+  corrUpdate: corrUpdate,
   enterFloor: enterFloor, setRoom: setRoom, setEvent: setEvent, stopWorld: stopWorld,
   step: step, bump: bump, bumpWall: bumpWall, bumpSoft: bumpSoft, near: near, doorOpen: doorOpen, doorClose: doorClose, doorPass: doorPass, objUse: objUse,
   container: container, stairs: stairs, stairEnter: stairEnter, stairStep: stairStep, bumpRail: bumpRail, gate: gate, gateSeal: gateSeal, elevRide: elevRide, rest: rest, death: death, npcHello: npcHello,
