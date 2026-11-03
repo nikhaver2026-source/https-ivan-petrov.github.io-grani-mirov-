@@ -5532,8 +5532,13 @@ LAB.ui.closeAll();
       const spring = pick("spring") || { id: "t_spring", type: "fx", fx: "spring", x: G.x, y: G.y, room: g.CUR.room };
       G.hp = Math.max(1, G.hpMax - 30); const hp0 = G.hp;
       out.spring = use(spring, /^Напиться из родника/); out.springHp = G.hp > hp0;
-      const bush = pick("berrybush") || { id: "t_bush", type: "fx", fx: "berrybush", x: G.x, y: G.y, room: g.CUR.room };
+      /* (4.1) куст — тот, что плодоносит здесь обычными ягодами: с растениями 4.0 куст в газе плодов
+         не даёт, а в мутагенном тумане даёт ягоды с мутагеном (это проверяет раздел растений). Первый
+         попавшийся куст бывал таким примерно в одном мире из шести — и проверка падала, хотя игра права */
+      const plain = o => { const dv = LAB.fixtures.def(o); return !!(dv && (dv.a || []).some(a => a[0] === "harvest" && a[2] && a[2].item === "berries")); };
+      const bush = fl3.objs.find(o => o.type === "fx" && o.fx === "berrybush" && plain(o)) || { id: "t_bush", type: "fx", fx: "berrybush", x: G.x, y: G.y, room: g.CUR.room };
       const b0 = G.inv.berries || 0; out.bush = use(bush, /^Собрать ягод/); out.berries = (G.inv.berries || 0) > b0 && !!LAB.ITEMS.berries;
+      if (!out.berries) { const dv = LAB.fixtures.def(bush), rmB = bush.room >= 0 ? fl3.rooms[bush.room] : null; out.bushWhy = { fake: bush.id === "t_bush", acts: (dv && dv.a || []).map(a => a[0] + ":" + (a[2] && a[2].item || "")), fog: rmB && rmB.fog, gas: rmB && rmB.gas }; }
       LAB.ui.closeAll();
       /* «Отражение»: часы, идущие назад, — своя запись */
       go(45, 4);
@@ -5571,7 +5576,7 @@ LAB.ui.closeAll();
     ok(grow.deepN.O > 0 && grow.deepN.M > 0 && grow.deepN.I > 0 && grow.deep30 === 0, "у каждой нижней глубины свои вещи обстановки, выше их нет (" + JSON.stringify(grow.deepN) + ")");
     ok(/и ещё \d+ (вещь|вещи|вещей) — осмотритесь: два пальца вверх/.test(grow.entry) && !/и ещё \d+ (вещь|вещи|вещей) — осмотритесь/.test(grow.look || ""), "при входе в помещение, где больше десятка вещей, — ближние, остальное — «Осмотреться» (" + grow.busyN + " вещей)");
     ok(/Вода тёплая/.test(grow.spring) && grow.springHp, "тёплый родник Истока лечит (" + grow.spring.slice(0, 60) + ")");
-    ok(grow.berries && /Собрано: /.test(grow.bush), "ягодный куст: ягоды Истока в рюкзак");
+    ok(grow.berries && /Собрано: /.test(grow.bush), "ягодный куст: ягоды Истока в рюкзак" + (grow.berries ? "" : " (" + grow.bush + "; " + JSON.stringify(grow.bushWhy) + ")"));
     ok(grow.clockTitle === "Часы, идущие назад", "часы, идущие назад: своя запись (" + grow.clockTitle + ")");
     ok(grow.gearParts, "стену шестерён Механизма разбирают на детали: шестерни — лом, а не сервопривод");
     ok(/своим на смене/.test(grow.punch) && grow.punchHeat === "50→42→42", "табельные часы: отметка — ОКО подозревает меньше, один раз (" + grow.punchHeat + ")");
