@@ -5103,11 +5103,14 @@ const Speech={voice:null,keepAlive:null,
    if(gen!==this.gen||this.current!==m)return;this._part(m,i+1);};
   /* Судить по «не было начала» можно лишь о синтезаторе, который о начале
      сообщает: хоть раз сообщил — значит умеет, и молчание о начале значит потерю. */
-  const ещё=()=>{if(закрыт||повтор||начат||!a||(a.name!=="web"&&a.name!=="native")||!(this._startSeen&&this._startSeen[a.name]))return false;закрыт=true;this._stopWatch();
+  /* (3 ноября 2026) Пункт, на котором стоит игрок, — до трёх повторов с нарастающей паузой; прочее — один, как прежде. */
+  const важный=!!(m.nav||m.user),раз=Number(повтор)||0,можно=важный?3:1;let ранний=0;
+  const ещё=()=>{if(закрыт||раз>=можно||начат||!a||(a.name!=="web"&&a.name!=="native")||!(this._startSeen&&this._startSeen[a.name]))return false;закрыт=true;this._stopWatch();clearTimeout(ранний);
    if(gen!==this.gen||this.current!==m)return true;
    this.stats.retried=(this.stats.retried||0)+1;safeFn(()=>Речь.записать("игра","синтезатор потерял кусок — подан снова ("+a.name+")",m.parts[i]));
-   try{a.cancel();}catch(_){}
-   setTimeout(()=>{if(gen===this.gen&&this.current===m)this._part(m,i,true);},120);return true;};
+   /* родной синтезатор останавливать не нужно: новая фраза сама снимает прежнюю, а остановка перед ней и роняла пункт */
+   if(!(важный&&a.name==="native"))try{a.cancel();}catch(_){}
+   setTimeout(()=>{if(gen===this.gen&&this.current===m)this._part(m,i,раз+1);},важный?300+250*раз:120);return true;};
   const синтез=a&&a.name!=="gemini";
   const ok=a&&a.speak(m.parts[i],{rate:синтез?this.synthRate():+settings.rate||1,volume:синтез?this.synthVolume(+settings.voiceVol):+settings.voiceVol,
    onstart:()=>{начат=true;(this._startSeen||(this._startSeen={}))[a.name]=true;if(gen!==this.gen||this.current!==m)return;m.state="SPEAKING";this._keepAlive();},
@@ -5120,6 +5123,8 @@ const Speech={voice:null,keepAlive:null,
     /* Ошибка на середине длинного текста не глушит остальное: следующий кусок. */
     if(i+1<m.parts.length)this._part(m,i+1);else this._finish(m,i>0?"COMPLETED":"FAILED");}});
   if(!ok){if(ещё())return;this._finish(m,"FAILED");return;}
+  /* пункт игрока: синтезатор, который сообщает о начале, а начала нет за 0,7 с — фраза потеряна, подать снова сразу, не ждать сторожа */
+  if(важный&&a&&(a.name==="web"||a.name==="native")&&this._startSeen&&this._startSeen[a.name])ранний=setTimeout(()=>{if(!начат&&!закрыт)ещё();},700);
   this._watch(m,a,m.parts[i],дальше,()=>ещё());},
  /* ── СТОРОЖ ──
     Синтезатор устройства иногда не присылает конца фразы: Chrome теряет

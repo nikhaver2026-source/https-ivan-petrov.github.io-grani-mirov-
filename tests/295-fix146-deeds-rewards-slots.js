@@ -71,7 +71,12 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 2–3 ── */
  const р2=await p.evaluate(async()=>{const s=Deep.here();const x=Deep.st(s);const d=G.place.depth;
   const e=Deep.els(s,x,d).find(z=>z.t==="puzzle");const pz=e.ref;delete x.solved[pz.id];x.inp[pz.id]=[];
-  G.place.x=e.x;G.place.y=e.y+((tileAt(curLevel(),e.x,e.y+1)==="#")?-1:1);
+  /* (3 ноября 2026) встать у загадки с той стороны, где рядом нет другой вещи яруса: иначе двойное касание честно
+     открывает соседний механизм (так легла консоль под этой загадкой) */
+  const все=Deep.els(s,x,d);const lvl=curLevel();
+  const места=[[0,1],[0,-1],[1,0],[-1,0]].map(([dx,dy])=>[e.x+dx,e.y+dy]).filter(([hx,hy])=>tileAt(lvl,hx,hy)!=="#"&&
+   !все.some(z=>z!==e&&!(z.x===e.x&&z.y===e.y)&&Math.max(Math.abs(z.x-hx),Math.abs(z.y-hy))<=1));
+  const [hx,hy]=места[0]||[e.x,e.y+((tileAt(lvl,e.x,e.y+1)==="#")?-1:1)];G.place.x=hx;G.place.y=hy;
   const ok=useHere();const title=(document.getElementById("dpTitle")||{}).textContent||"";const body=(document.getElementById("dpBody")||{}).innerHTML||"";
   const xp0=Number(G.xp)||0;Speech.stop();ФАЛЬШ();ДОСКАЗАНО.length=0;ОБОРВАНО.length=0;__said.length=0;
   /* каждый шаг — отдельное касание игрока */
