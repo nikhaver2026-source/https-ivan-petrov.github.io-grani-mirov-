@@ -132,11 +132,15 @@ LAB.slotNeighbors = slotNeighbors;
 
 /* ── ПЛАН КОМПЛЕКСА: где лифты, шлюзы и лестничные клетки ── */
 var planCache = {};
+/* (после 4.1) План считается для первых ста уровней ровно как прежде (тот же поток случайностей,
+   то же число уровней в нём): этажи и записи уровней 1–100 не меняются, сколько бы глубоких блоков
+   ни было ниже. Уровни глубже сотого — свой план у каждого, по запросу (deepPlan). */
+var PLAN_BASE = 100;
 LAB.plan = function (seed) {
-  var key = seed + "#" + LAB.LEVELS_N;
+  var NL = Math.min(LAB.LEVELS_N, PLAN_BASE), NF = LAB.FLOORS_N;
+  var key = seed + "#" + NL;
   if (planCache[key]) return planCache[key];
   var r = Rng(seed, "plan");
-  var NL = LAB.LEVELS_N, NF = LAB.FLOORS_N;
   var E = [], G = [], P = [], blocked = [];
   var L, F;
   for (L = 1; L <= NL; L++) E[L] = r.int(0, COLS * ROWS - 1);
@@ -170,9 +174,54 @@ LAB.plan = function (seed) {
   return plan;
 };
 
+/* План уровня глубокого блока: лифт E, шлюз G (не в ячейке лифта ни этого, ни следующего уровня),
+   лестничные клетки P[F] и завалы — от своего зерна уровня, без перебора всех уровней. Первый глубокий
+   уровень принимает героя в ячейке зала «Истока» (G сотого уровня из общего плана). */
+var deepPlanCache = {}, deepPlanN = 0;
+function deepE(seed, L) {
+  var r = Rng(seed, "plane:" + L), e = r.int(0, COLS * ROWS - 1);
+  if (L === PLAN_BASE + 1) { var g0 = LAB.plan(seed).G[PLAN_BASE]; while (e === g0) e = r.int(0, COLS * ROWS - 1); }
+  return e;
+}
+function deepG(seed, L) {
+  var r = Rng(seed, "plang:" + L), e0 = deepE(seed, L), e1 = deepE(seed, L + 1), g;
+  do { g = r.int(0, COLS * ROWS - 1); } while (g === e0 || g === e1);
+  return g;
+}
+function deepPlan(seed, L) {
+  var key = seed + "@" + L;
+  if (deepPlanCache[key]) return deepPlanCache[key];
+  var NF = LAB.FLOORS_N, r = Rng(seed, "planp:" + L), E = deepE(seed, L), G = deepG(seed, L);
+  var U0 = L === PLAN_BASE + 1 ? LAB.plan(seed).G[PLAN_BASE] : deepG(seed, L - 1);
+  var P = [], blocked = [];
+  for (var F = 1; F < NF; F++) {
+    var U = F === 1 ? U0 : P[F - 1], cand = [];
+    for (var s = 0; s < COLS * ROWS; s++) {
+      if (s === E || s === U) continue;
+      if (F === NF - 1 && s === G) continue;
+      if (F === NF - 1 && !slotNeighbors(G).some(function (n) { return n !== s && n !== E; })) continue;
+      cand.push(s);
+    }
+    cand.sort(function (a, b) { return slotDist(b, U) - slotDist(a, U); });
+    var top = cand.slice(0, Math.max(3, Math.ceil(cand.length / 2)));
+    P[F] = r.pick(top);
+    blocked[F] = F >= 3 && F <= NF - 2 && !blocked[F - 1] && r.chance(0.1);
+  }
+  var dp = { E: E, G: G, U0: U0, P: P, blocked: blocked };
+  if (deepPlanN > 64) { deepPlanCache = {}; deepPlanN = 0; }
+  deepPlanCache[key] = dp; deepPlanN++;
+  return dp;
+}
+LAB.deepPlan = deepPlan;
 /* Ячейки входа (сверху), выхода (вниз) и лифта на этаже. */
 LAB.floorSlots = function (seed, L, F) {
-  var p = LAB.plan(seed), NF = LAB.FLOORS_N;
+  var NF = LAB.FLOORS_N;
+  if (L > PLAN_BASE) {
+    var dp = deepPlan(seed, L);
+    return { U: F === 1 ? dp.U0 : dp.P[F - 1], D: F === NF ? dp.G : dp.P[F], E: dp.E,
+      upBlocked: F > 1 && !!dp.blocked[F - 1], downBlocked: F < NF && !!dp.blocked[F] };
+  }
+  var p = LAB.plan(seed);
   var U = F === 1 ? (L === 1 ? p.start : p.G[L - 1]) : p.P[L][F - 1];
   var D = F === NF ? p.G[L] : p.P[L][F];
   return { U: U, D: D, E: p.E[L],
@@ -210,7 +259,7 @@ var capMemo = {};
 LAB.capBase = function (base) {
   var b = LAB.WEAPONS[base];
   if (!LAB.chargeGun(b)) return b ? b.cap || 0 : 0;
-  if (capMemo[base] == null) capMemo[base] = Math.max(30, Math.round(30 * Math.pow(shotPower(b) / shotPower(LAB.WEAPONS.spark), 0.4) * (1 + ((LAB.WEAPON_DEPTH[base] || 1) - 1) / 300)));
+  if (capMemo[base] == null) capMemo[base] = Math.max(30, Math.round(30 * Math.pow(shotPower(b) / shotPower(LAB.WEAPONS.spark), 0.4) * (1 + (LAB.Le(LAB.WEAPON_DEPTH[base] || 1) - 1) / 300))); /* (после 4.1) глубина — приведённая */
   return capMemo[base];
 };
 LAB.weaponCap = function (base, rank, lvl, qual) {
@@ -293,7 +342,7 @@ function recentPool(table, depthOf, L, skip) {
     var d = depthOf(k);
     if (d > L) continue;
     pool.push(k);
-    if (d > L - 20 && (L > 10 || d > L - 6)) recent.push(k);
+    if (LAB.Le(d) > LAB.Le(L) - 20 && (L > 10 || d > L - 6)) recent.push(k);
   }
   return { all: pool, recent: recent };
 }
@@ -324,7 +373,8 @@ var cacheOrder = [];
    виды прежних глубин: старые модели и твари никуда не делись, список
    растёт с глубиной. Один раз, когда все блоки уже подключены. */
 LAB.enrichLevelFoes = function () {
-  var N = LAB.LEVELS_N || 0, F0 = LAB.FOES;
+  /* (после 4.1) уровни глубоких блоков (ниже сотого) собирают своих врагов по секторам (deep.js) */
+  var N = Math.min(100, LAB.LEVELS_N || 0), F0 = LAB.FOES;
   if (LAB._foesRich || !N || !F0) return;
   LAB._foesRich = true;
   var usable = function (id) { var b = F0[id]; return !!b && !b.boss && !(b.beh || []).some(function (k) { return k === "turret" || k === "camera" || k === "stationary"; }); };
@@ -690,8 +740,8 @@ function genFloor(seed, L, F, attempt) {
     if (!rmm) continue;
     var type;
     if (s === secret) type = "secret";
-    else if (s === U) type = (L === 1 && F === 1) ? "wake" : (F === 1 ? (seamIn ? "seamin" : "gatein") : "stair");
-    else if (s === D) type = F === NF ? (reactor ? (LAB.isFinalLevel(L) && L !== 10 ? "source" : "reactor") : "gate") : "stair";
+    else if (s === U) type = (L === 1 && F === 1) ? "wake" : (F === 1 ? (seamIn ? (L === 101 ? "riftin" : "seamin") : "gatein") : "stair"); /* (после 4.1) под Истоком приходят Разломом */
+    else if (s === D) type = F === NF ? (reactor ? (LAB.isRiftRoot && LAB.isRiftRoot(L) ? "riftroot" : (LAB.isFinalLevel(L) || L === 100) && L !== 10 ? "source" : "reactor") : "gate") : "stair"; /* (после 4.1) Исток — на сотом, Ядро Разлома — на самом дне */
     else if (s === E) type = "lift";
     else { type = names[ni % names.length]; ni++; }
     rmm.type = type;
@@ -1072,7 +1122,7 @@ function genFloor(seed, L, F, attempt) {
     if (ak === "energy") continue;
     var ad0 = LAB.AMMO[ak].depth || 1;
     if (ad0 > L) continue;
-    var recentA = ad0 > L - 20;
+    var recentA = LAB.Le(ad0) > LAB.Le(L) - 20;
     for (nb2 = r.int(recentA ? 1 : 0, recentA ? 2 : 1); nb2 > 0; nb2--) if (recentA || r.chance(0.5)) addItem({ kind: "ammo", ammo: ak, n: 1 }, anyRoom());
   }
   for (nb2 = r.int(1, 3); nb2 > 0; nb2--) addItem({ kind: "item", item: "medkit_s", n: 1 }, anyRoom());
@@ -1087,7 +1137,7 @@ function genFloor(seed, L, F, attempt) {
   /* товары пунктов снабжения (с разделом cat) раскладывает по кабинетам annex.js — здесь их нет */
   /* (3.7, нелогичность) и не варианты химии (LAB.chemVariant): прежде на третьем–двадцатом уровне «предметы
      блоков» почти всегда были составами высших сортов, лежавшими раньше своего сырья */
-  for (var ik in LAB.ITEMS) { var idf = LAB.ITEMS[ik]; if (idf.kind !== "part" && !idf.cat && idf.depth && idf.depth <= L && idf.depth > L - 25 && LAB.srcOk(idf, "find") && !LAB.chemVariant(idf)) bItems.push(ik); }
+  for (var ik in LAB.ITEMS) { var idf = LAB.ITEMS[ik]; if (idf.kind !== "part" && !idf.cat && idf.depth && idf.depth <= L && LAB.Le(idf.depth) > LAB.Le(L) - 25 && LAB.srcOk(idf, "find") && !LAB.chemVariant(idf)) bItems.push(ik); }
   for (nb2 = bItems.length ? r.int(0, 2) : 0; nb2 > 0; nb2--) addItem({ kind: "item", item: r.pick(bItems), n: 1 }, anyRoom());
   for (nb2 = r.int(3, 6); nb2 > 0; nb2--) addItem({ kind: "item", item: partAt(r, L), n: 1 + (r.chance(0.3) ? 1 : 0) }, anyRoom());
   if (r.chance(Math.min(0.2, 0.07 + L * 0.006))) addItem({ kind: "armor", a: LAB.genArmor(r, L, F) }, anyRoom());
@@ -1128,7 +1178,8 @@ function genFloor(seed, L, F, attempt) {
     var b0 = LAB.FOES[fid];
     return b0 && b0.beh.indexOf("turret") < 0 && b0.beh.indexOf("camera") < 0 && b0.beh.indexOf("cleaner") < 0;
   });
-  if (F > LAB.FLOORS_N / 2 && L < LAB.LEVELS_N && LAB.LEVELS[L + 1]) {
+  /* (после 4.1) у сотого — нет: Разлом под Истоком закрыт, пока его не откроет ключ, и твари глубин сюда не поднимаются */
+  if (F > LAB.FLOORS_N / 2 && L < LAB.LEVELS_N && L !== 100 && LAB.LEVELS[L + 1]) {
     LAB.LEVELS[L + 1].foes.forEach(function (fid) {
       var b1 = LAB.FOES[fid];
       if (b1 && b1.kind === "mech" && foePool.indexOf(fid) < 0 && b1.beh.indexOf("turret") < 0 && b1.beh.indexOf("camera") < 0 && b1.beh.indexOf("cleaner") < 0 && r.chance(0.5)) foePool.push(fid);
@@ -1248,7 +1299,7 @@ function genFloor(seed, L, F, attempt) {
       /* (3.7, нелогичность) финальный страж не слабее стражей пяти уровней перед ним: здоровье — не меньше 1,15
          наибольшего из их здоровий, удар — не слабее наибольшего их удара. Те же формулы, уровень врагов — их
          последнего этажа, без случайностей (прежде «Заглушка» была вдвое слабее стража 99-го уровня) */
-      if (LAB.isFinalLevel(L)) {
+      if (LAB.isFinalLevel(L) || L === 100) { /* (после 4.1) страж Истока — прежней силы и с глубокими блоками ниже */
         for (var pL = Math.max(1, L - 5); pL < L; pL++) {
           var pLev = LAB.LEVELS[pL], pBd = pLev && LAB.BOSSES[pLev.boss], pBase = pBd && LAB.FOES[pBd.base];
           if (!pBase) continue;
@@ -1590,7 +1641,7 @@ function genFloor(seed, L, F, attempt) {
      а не только при входе на него (stash.js) — и проверки видят этаж таким, как игрок. */
   if (LAB.annex && LAB.annex.unlit) LAB.annex.unlit(fl, L);
 
-  fl.sample = d0;
+  fl.sample = L > 100 ? LAB.floorNo(L, F) : d0; /* (после 4.1) образец глубокого этажа — свой номер у каждого этажа */
   fl.turrets = turrets;
   return fl;
 }
@@ -1657,7 +1708,7 @@ function genLoot(r, L, F, ot, tag) {
   var ammoAt = function () {
     var pool = [];
     for (var k in LAB.AMMO) if ((LAB.AMMO[k].depth || 1) <= L && LAB.AMMO[k].loot !== false) pool.push(k);
-    var recent = pool.filter(function (k) { return (LAB.AMMO[k].depth || 1) > L - 20 && k !== "energy"; });
+    var recent = pool.filter(function (k) { return LAB.Le(LAB.AMMO[k].depth || 1) > LAB.Le(L) - 20 && k !== "energy"; });
     return recent.length && r.chance(0.5) ? r.pick(recent) : r.chance(0.7) ? "energy" : r.pick(pool);
   };
   for (var i = 0; i < n; i++) {
@@ -1696,7 +1747,7 @@ LAB.genLoot = genLoot;
 /* Случайная деталь, какая встречается на этой глубине; чаще — детали своего блока. */
 function partAt(r, L) {
   var pool = LAB.PARTS.filter(function (p) { return (LAB.PART_DEPTH[p] || 1) <= L; });
-  var recent = L > 10 ? pool.filter(function (p) { return (LAB.PART_DEPTH[p] || 1) > L - 20; }) : [];
+  var recent = L > 10 ? pool.filter(function (p) { return LAB.Le(LAB.PART_DEPTH[p] || 1) > LAB.Le(L) - 20; }) : [];
   return recent.length && r.chance(0.5) ? r.pick(recent) : r.pick(pool);
 }
 LAB.partAt = partAt;

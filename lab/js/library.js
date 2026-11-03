@@ -88,7 +88,7 @@ function flat(s) { return String(s || "").replace(/\s*\n\n+\s*/g, " "); }
 function note(q) {
   var e = era(), ee = String(q.era || "");
   if (q.kind !== "book") return "";
-  if (e === "P" && ee.indexOf("P") < 0 && ee.indexOf("K") >= 0) return "На форзаце — штамп библиотеки «Ковчега»: книгу принесли сверху. ";
+  if (e === "P" && ee.indexOf("P") < 0 && ee.indexOf("K") >= 0 && !(G() && G().L > 100)) return "На форзаце — штамп библиотеки «Ковчега»: книгу принесли сверху. ";
   if (e === "C" && ee.indexOf("C") < 0 && ee.indexOf("K") >= 0) return "Книга сверху, из «Ковчега»: в «Колыбели» её берегли — корешок подклеен, углы страниц разглажены. ";
   if (e === "O" && ee.indexOf("K") >= 0) return "Книга напечатана зеркально: «Эхо» переворачивает строки. ";
   if (e === "M" && /[KPCO]/.test(ee)) return "На корешке — инвентарный номер Складов памяти, на форзаце — штемпель: «Принято на хранение». ";
@@ -106,7 +106,7 @@ function anyone(r) {
   var ps = people();
   if (ps.length && r.chance(0.8)) return ps[r.int(0, ps.length - 1)];
   var posts = ["инженер", "лаборант", "техник", "оператор", "охранник", "диспетчер", "кладовщик", "врач"];
-  return [LAB.depth(G().L, G().F) * 512 + 420 + r.int(0, 80), r.pick(posts), r.chance(0.5) ? 1 : 0];
+  return [LAB.floorNo(G().L, G().F) * 512 + 420 + r.int(0, 80), r.pick(posts), r.chance(0.5) ? 1 : 0];
 }
 function personOf(p, e) { return LAB.agen && LAB.agen.personByG ? LAB.agen.personByG(G().seed, p[0], p[1], e, p[2] ? true : null) : { first: "Анна", sur: "Иванова", fio: "Анна Иванова", io: "Анна", sign: "А. Иванова", post: p[1], f: !!p[2] }; }
 /* подстановки — запоминаются ссылкой (src.c), текст собирается заново */

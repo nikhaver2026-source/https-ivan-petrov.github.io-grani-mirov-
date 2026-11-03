@@ -18,10 +18,10 @@
 "use strict";
 var LAB = (typeof window !== "undefined" ? window.LAB : globalThis.LAB);
 function h32(s) { return LAB.hash32(String(s)) >>> 0; }
-function eraOf(L) { return L <= 10 ? "K" : L <= 20 ? "P" : L <= 40 ? "C" : L <= 60 ? "O" : L <= 80 ? "M" : "I"; }
+function eraOf(L) { if (L > 100 && LAB.deepEra) return LAB.deepEra(L); return L <= 10 ? "K" : L <= 20 ? "P" : L <= 40 ? "C" : L <= 60 ? "O" : L <= 80 ? "M" : "I"; } /* (после 4.1) ниже сотого — уклад глубокого блока (deep.js) */
 function cap(s) { s = String(s || ""); return s.charAt(0).toUpperCase() + s.slice(1); }
-function FR(e) { var f = LAB.ANNEX_F || {}; return f[e] || f.K || null; }
-function NT(e) { var n = LAB.ANNEX_N || {}; return n[e] || null; }
+function FR(e, deep) { var f = LAB.ANNEX_F || {}, t = f[e] || f.K || null; return deep && t && LAB.deepClean ? LAB.deepClean(t, "F" + e) : t; }
+function NT(e, deep) { var n = LAB.ANNEX_N || {}, t = n[e] || null; return deep && t && LAB.deepClean ? LAB.deepClean(t, "N" + e) : t; }
 function VR(t) { return (LAB.ANNEX_V || {})[t] || []; }
 var ERA_NAME = { K: "«Ковчега»", P: "«Подножия»", C: "«Колыбели»", O: "«Отражения»", M: "«Механизма»", I: "«Истока»" };
 
@@ -52,7 +52,7 @@ function feistel20(x, key) {
   for (var i = 0; i < 4; i++) { var f = h32(key + ":" + i + ":" + r) & 1023, nl = r; r = l ^ f; l = nl; }
   return ((l << 10) | r) >>> 0;
 }
-function gid(L, F, local) { return (LAB.depth(L, F) * 512 + (local & 511)) >>> 0; }
+function gid(L, F, local) { return (LAB.floorNo(L, F) * 512 + (local & 511)) >>> 0; } /* (после 4.1) номер этажа, а не глубина: в огромных блоках глубина у многих уровней одна */
 /* Обозначение машины «Механизма»: код по должности и номер. */
 var MCODE = [[/регистр/, "РГ"], [/счёт|счет|учёт|учет|сверк/, "СЧ"], [/курьер|доставк|почт/, "КР"], [/штемпел|печат|сургуч/, "ШТ"], [/инспект|контрол|провер/, "ИН"], [/час|врем/, "ЧС"], [/машинопис|набор|пишущ/, "МП"], [/приём|прием|окн/, "ПР"], [/смаз|масл/, "СМ"], [/сторож|охран|караул/, "СТ"], [/архив/, "АР"], [/калибр|настро|эталон/, "КЛ"], [/жалоб|претенз|возраж/, "ЖБ"], [/бланк|форм/, "БЛ"], [/пружин|завод/, "ПЖ"], [/шестер|механик/, "ШС"], [/пломб/, "ПЛ"], [/билет|талон|очеред/, "ТЛ"], [/чернил/, "ЧН"], [/сказ|сон/, "СК"], [/сад|сем/, "СД"]];
 var MANY = ["УЗ", "ТК", "РЛ", "ДМ", "ОП", "ВН"];
@@ -294,7 +294,7 @@ var CATS = ["smell", "sound", "touch", "floor", "thing", "wall"];
 var SEWN = ["Эта комната будто вшита сюда из {era}: стык виден по шву в полу, где один настил переходит в другой.", "«Эхо» говорит, что эта комната — из {era}: её сюда принесло, как приносит река.", "Здесь кончается «Исток» и начинается кусок {era}: даже воздух за порогом другой.", "Стены этой комнаты помнят {era}: под ладонью — их прежняя кладка, сквозь неё проросли корни.", "Комната пришла сюда из {era} целиком, вместе с запахом и тишиной, и ещё не привыкла к новому месту."];
 var MIRROR = ["Всё как в настоящем «Ковчеге», только надписи читаются задом наперёд.", "Это отражение кабинета «Ковчега»: «Эхо» переворачивает надписи, прежде чем прочитать.", "Комната повторяет свою копию наверху, но зеркально: дверь открывается не в ту сторону.", "Здесь всё стоит наоборот, как в зеркале, и холоднее, чем должно быть.", "Отражение держится крепко, но шаги в нём возвращаются на полсекунды раньше."];
 GP.stateFor = function (rm, def, opt) {
-  var r = this.r, fr = FR(this.era), self = this;
+  var r = this.r, fr = FR(this.era, this.L > 100), self = this;
   /* состояние берётся, только пока у него на этаже остались свои фразы */
   var ok = function (k) { return !!(fr && fr.state && fr.state[k] && self.left("st:" + self.era + ":" + k, fr.state[k], 3) > 0); };
   var pick = function (w) { for (var k in w) if (!ok(k)) delete w[k]; var any = false; for (var q in w) { any = true; break; } return any ? r.weighted(w) : null; };
@@ -309,7 +309,7 @@ GP.stateFor = function (rm, def, opt) {
 };
 GP.describe = function (rm, def, it, owner, opt) {
   opt = opt || {};
-  var fr = FR(this.era), r = this.r, parts = [], v = it && it.vi >= 0 ? VR(it.t)[it.vi] : null, have = opt.have || null;
+  var fr = FR(this.era, this.L > 100), r = this.r, parts = [], v = it && it.vi >= 0 ? VR(it.t)[it.vi] : null, have = opt.have || null;
   parts.push(v ? v.d : def.desc);
   if (owner) parts.push(owner.m ? "На двери — бирка: «" + cap(owner.post) + ", " + owner.sign + "»." : "На двери изнутри — табличка: «" + cap(owner.post) + " " + owner.sign + "».");
   var stt = opt.state !== undefined ? opt.state : this.stateFor(rm, def, opt);
@@ -346,7 +346,7 @@ GP.describe = function (rm, def, it, owner, opt) {
 };
 /* Подробность для основного помещения уровня: состояние или одна деталь. */
 GP.mainDetail = function (rm, have) {
-  var fr = FR(this.era), r = this.r;
+  var fr = FR(this.era, this.L > 100), r = this.r;
   if (!fr) return "";
   if (r.chance(0.3) && fr.state) {
     var k = r.pick(["tidy", "hurry", "ransacked", "dust", "fresh", "dark"]);
@@ -360,7 +360,7 @@ GP.mainDetail = function (rm, have) {
 };
 /* Износ вещи обстановки: по классу вещи и номеру предмета (без колоды — вещей на этаже сотни). */
 GP.wear = function (cls, salt) {
-  var fr = FR(this.era); if (!fr || !fr.fxwear || !fr.fxwear[cls] || !fr.fxwear[cls].length) return "";
+  var fr = FR(this.era, this.L > 100); if (!fr || !fr.fxwear || !fr.fxwear[cls] || !fr.fxwear[cls].length) return "";
   var a = fr.fxwear[cls]; return a[h32(salt + "|" + this.L + "|" + this.F) % a.length];
 };
 
@@ -369,7 +369,7 @@ GP.wear = function (cls, salt) {
    текст собирается заново где угодно, без этажа под рукой. */
 GP.noteSrc = function (author, to, s3, rooms, myNum, opt) {
   opt = opt || {};
-  var nt = NT(this.era), r = this.r;
+  var nt = NT(this.era, this.L > 100), r = this.r;
   if (!nt || !nt.topics || !nt.topics.length) return null;
   var ti = opt.topic != null ? opt.topic : this.deck("nt:" + this.era, nt.topics.length, Math.ceil(this.n / 8)).next();
   var tp = nt.topics[ti];
@@ -408,7 +408,7 @@ function noteText(src) {
 }
 /* Журнал, заявки, слухи: строки из наборов глубины, с людьми и номерами этажа. */
 GP.lines = function (kind, n, ctxs) {
-  var nt = NT(this.era), arr = nt && nt[kind];
+  var nt = NT(this.era, this.L > 100), arr = nt && nt[kind];
   if (!arr || !arr.length) return [];
   var out = [], self = this;
   for (var i = 0; i < n; i++) {

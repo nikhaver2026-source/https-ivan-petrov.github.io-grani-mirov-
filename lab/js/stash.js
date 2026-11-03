@@ -393,8 +393,8 @@ function spring(o, s, cont) {
   /* урон ловушки — по режиму: в лёгком слабее, в сложных сильнее */
   var tk = Math.sqrt(dk().dmg || 1);
   if (fx.pd && C) { C.hurtPlayer(Math.max(1, Math.round(g.hpMax * fx.pd * tk)), fx.adt || "phys", null); if (g.dead) return; }
-  if (fx.poison && !(g.st.antitox > 0)) { if (!g.st.poison) A("play", "poisoned"); g.st.poison = Math.max(g.st.poison || 0, fx.poison + Math.floor(g.L / 3)); A("play", "inject"); }
-  if (fx.bleed) g.st.bleed = Math.max(g.st.bleed || 0, fx.bleed + Math.floor(g.L / 10));
+  if (fx.poison && !(g.st.antitox > 0)) { if (!g.st.poison) A("play", "poisoned"); g.st.poison = Math.max(g.st.poison || 0, fx.poison + Math.floor(LAB.Le(g.L) / 3)); A("play", "inject"); }
+  if (fx.bleed) g.st.bleed = Math.max(g.st.bleed || 0, fx.bleed + Math.floor(LAB.Le(g.L) / 10));
   if (fx.hold) g.st.trapHeld = Math.max(g.st.trapHeld || 0, fx.hold);
   if (fx.slow) g.st.slow = Math.max(g.st.slow || 0, fx.slow);
   if (fx.drain) { var w = gm().curWeapon ? gm().curWeapon() : null; if (w && w.cap && w.ammo !== "none" && w.charge > 0) { w.charge = Math.floor(w.charge * (1 - fx.drain)); msg.push("Батарея оружия подсела: " + w.charge + "."); } }
@@ -495,7 +495,7 @@ function tick() {
   if (st.parasite > 0) {
     st.parasite--;
     if (st.parasite % 4 === 0) {
-      g.hp -= 1 + Math.floor(g.L / 8);
+      g.hp -= 1 + Math.floor(LAB.Le(g.L) / 8);
       if (g.body) g.body.food = Math.max(0, (g.body.food || 0) - 0.5);
       if (st.parasite % 24 === 0) { A("play", "hit_flesh"); sayq("Клещ пьёт кровь: здоровье " + Math.max(0, g.hp) + ". Аптечка, бинт или антидот снимут его."); }
       if (g.hp <= 0) { g.hp = 0; gm().die(); return; }

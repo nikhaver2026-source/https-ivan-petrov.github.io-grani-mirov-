@@ -654,10 +654,10 @@ LAB.Bank = Bank;
    На экране подсказка остаётся как есть. */
 var KEY_SAY = { Enter: "Энтер", Tab: "Таб", Escape: "Эскейп", Backspace: "Бэкспейс", Home: "Хоум", End: "Энд", Ctrl: "Контрол", Shift: "Шифт", Alt: "Альт", F1: "Эф один", F11: "Эф одиннадцать" };
 var LAT_SAY = { A: "эй", B: "би", C: "си", D: "ди", E: "и", F: "эф", G: "джи", H: "эйч", I: "ай", J: "джей", K: "кей", L: "эл", M: "эм", N: "эн", O: "оу", P: "пи", Q: "кью", R: "ар", S: "эс", T: "ти", U: "ю", V: "ви", W: "дабл ю", X: "экс", Y: "уай", Z: "зед" };
-var ROMAN_W = { I: "первый", II: "второй", III: "третий", IV: "четвёртый", V: "пятый" };
+var ROMAN_W = { I: "первый", II: "второй", III: "третий", IV: "четвёртый", V: "пятый", VI: "шестой", VII: "седьмой", VIII: "восьмой", IX: "девятый", X: "десятый", XI: "одиннадцатый", XII: "двенадцатый", XIII: "тринадцатый", XIV: "четырнадцатый", XV: "пятнадцатый" };
 function keysSpoken(t) {
   /* «Блок I» — «Блок первый», а не «Блок ай» */
-  t = t.replace(/(^|[^А-Яа-яЁё])([Бб]лок)\s+(I{1,3}|IV|V)(?![A-Za-z])/g, function (m, a, w, r) { return a + w + " " + ROMAN_W[r]; });
+  t = t.replace(/(^|[^А-Яа-яЁё])([Бб]лок)\s+(XI{0,3}|XIV|XV|IX|VI{0,3}|IV|I{1,3})(?![A-Za-z])/g, function (m, a, w, r) { return a + w + " " + ROMAN_W[r]; });
   return t.replace(/\b(Enter|Tab|Escape|Backspace|Home|End|Ctrl|Shift|Alt|F11|F1)\b/g, function (m) { return KEY_SAY[m]; })
     .replace(/(^|[^A-Za-z0-9])([A-Z])(?![A-Za-z0-9])/g, function (m, a, b) { return a + LAT_SAY[b]; });
 }

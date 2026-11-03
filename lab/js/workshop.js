@@ -654,7 +654,7 @@ function refillKit(b) {
 }
 /* Ящик под верстаком: обрезки и крепёж — один раз на верстак. */
 function drawerGot(o) {
-  var g = G(), L = g.L, h = h32("drawer:" + L + "-" + g.F + "-" + (o && o.id)), out = { scrap: 1 + h % 2 + Math.floor(L / 25) };
+  var g = G(), L = g.L, h = h32("drawer:" + L + "-" + g.F + "-" + (o && o.id)), out = { scrap: 1 + h % 2 + Math.floor(LAB.Le(L) / 25) };
   if ((h >>> 3) % 3) out.wire = 1 + (L >= 30 ? 1 : 0);
   if ((h >>> 9) % 100 < 30) out.tape = 1;
   if ((h >>> 6) % 100 < 22 + Math.min(20, L / 3)) out.fieldkit = 1;

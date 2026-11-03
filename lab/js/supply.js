@@ -288,9 +288,9 @@ function shelfPool(L) {
     var dep = d.depth || (d.kind === "part" ? LAB.PART_DEPTH[id] || 1 : 1);
     if (dep > L || dep >= 99) continue;
     var c = catOf(id);
-    out.push({ id: id, cat: c, fresh: dep > L - (L > 10 ? 20 : 4) });
+    out.push({ id: id, cat: c, fresh: LAB.Le(dep) > LAB.Le(L) - (L > 10 ? 20 : 4) });
   }
-  for (var ak in LAB.AMMO) { var a = LAB.AMMO[ak]; if ((a.depth || 1) <= L) out.push({ ammo: ak, cat: "ammo", fresh: (a.depth || 1) > L - 20 }); }
+  for (var ak in LAB.AMMO) { var a = LAB.AMMO[ak]; if ((a.depth || 1) <= L) out.push({ ammo: ak, cat: "ammo", fresh: LAB.Le(a.depth || 1) > LAB.Le(L) - 20 }); }
   return out;
 }
 function makeStock(o) {

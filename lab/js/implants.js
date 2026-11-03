@@ -340,7 +340,7 @@ function secW(n) { return n + " " + pl(n, "секунду", "секунды", "�
 function params(id) {
   var d = def(id), fx = d.fx || {}, L = G().L, k = power(id), rx = reach(id), p = {};
   p.k = k;
-  p.dmg = fx.dmg ? Math.round((fx.dmg + (fx.perL || 0) * L) * k) : 0;
+  p.dmg = fx.dmg ? Math.round((fx.dmg + (fx.perL || 0) * LAB.Le(L)) * k) : 0;
   p.r = (fx.r || 0) + rx + (has(id, "wide") ? 1 : 0) + (has(id, "deep") ? 3 : 0) + (d.cat === "sensor" ? Math.round(stat("sense")) : 0);
   p.rng = (fx.rng || 0) + rx * 2 + (has(id, "long") ? 3 : 0) + (has(id, "swift") ? 2 : 0);
   p.dur = (has(id, "lasting") ? 1.5 : 1) * (has(id, "swift") ? 1.5 : 1) * (has(id, "persist") ? 2 : 1);
@@ -383,7 +383,7 @@ function fname(f) { return String(f.name || "").split(",")[0]; }
 function free(x, y) { return gm().passable(x, y) && !LAB.combat.foes().some(function (q) { return !q.dead && q.x === x && q.y === y; }) && !(G().x === x && G().y === y); }
 function healFx(id, fx, p) {
   var g = G(), b = g.body || {}, st = g.st, out = [];
-  if (fx.hp) { var hp0 = g.hp; g.hp = Math.min(g.hpMax, g.hp + Math.round((fx.hp + (fx.perL || 0) * g.L) * p.k)); if (g.hp > hp0) out.push("здоровье плюс " + (g.hp - hp0) + ", теперь " + g.hp); }
+  if (fx.hp) { var hp0 = g.hp; g.hp = Math.min(g.hpMax, g.hp + Math.round((fx.hp + (fx.perL || 0) * LAB.Le(g.L)) * p.k)); if (g.hp > hp0) out.push("здоровье плюс " + (g.hp - hp0) + ", теперь " + g.hp); }
   if ((fx.bleed || has(id, "antisep")) && st.bleed > 0) { st.bleed = 0; out.push("кровь остановлена"); }
   if (fx.poison && st.poison > 0) { st.poison = 0; out.push("яд вышел"); }
   if ((fx.tox || has(id, "purge")) && b.tox > 0) { b.tox = Math.max(0, b.tox - Math.round((fx.tox || 30) * p.k)); out.push("токсины " + Math.round(b.tox)); }
@@ -503,8 +503,8 @@ function run(id) {
     }
     case "buff": {
       var parts = [];
-      if (fx.shield) { st.shield = Math.max(st.shield || 0, Math.round((fx.shield + (fx.perL || 0) * g.L) * p.k * (has(id, "tempered") ? 1.3 : 1))); st.shieldT = Math.round(30 * p.dur); parts.push("щит " + st.shield); }
-      if (fx.nano) { st.nano = Math.round((fx.nano + (fx.perL || 0) * g.L) * p.k * (has(id, "tempered") ? 1.3 : 1)); st.nanoT = Math.round(24 * p.dur); parts.push("защита плюс " + st.nano + " на " + secW(Math.round(st.nanoT / 2))); }
+      if (fx.shield) { st.shield = Math.max(st.shield || 0, Math.round((fx.shield + (fx.perL || 0) * LAB.Le(g.L)) * p.k * (has(id, "tempered") ? 1.3 : 1))); st.shieldT = Math.round(30 * p.dur); parts.push("щит " + st.shield); }
+      if (fx.nano) { st.nano = Math.round((fx.nano + (fx.perL || 0) * LAB.Le(g.L)) * p.k * (has(id, "tempered") ? 1.3 : 1)); st.nanoT = Math.round(24 * p.dur); parts.push("защита плюс " + st.nano + " на " + secW(Math.round(st.nanoT / 2))); }
       if (fx.reflect) { st.reflectT = Math.round(fx.reflect * p.dur); parts.push(secW(Math.round(st.reflectT / 2)) + " удар отражается"); }
       if (fx.phase) { st.phaseT = Math.round(fx.phase * p.dur); parts.push(secW(Math.round(st.phaseT / 2)) + " вне фазы"); }
       if (fx.haste) { st.haste = Math.round(fx.haste * p.k * p.dur); parts.push("ускорение на " + secW(Math.round(st.haste / 2))); }

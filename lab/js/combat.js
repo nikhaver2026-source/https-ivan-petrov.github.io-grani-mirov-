@@ -2055,7 +2055,7 @@ function mutantTick(f, see, sense, d, canMove, canAct) {
 function mutantHit(f, fin) {
   var g = G();
   if (has(f, "psi")) {
-    var m = []; if (gm().bodyApply) gm().bodyApply({ neuro: 5 + Math.floor(g.L / 12) }, m);
+    var m = []; if (gm().bodyApply) gm().bodyApply({ neuro: 5 + Math.floor(LAB.Le(g.L) / 12) }, m);
     if (Math.random() < 0.25) g.st.navjam = Math.max(g.st.navjam || 0, 6);
     sayOnce("psi", "Удар по нервам: в голове звенит.", 8000);
   }
@@ -2145,9 +2145,9 @@ function attack(f, seen) {
   if (G().dead) return;
   if (spl) splashNear(f, dmg, false);
   if (has(f, "leech") && fin > 0) f.hp = Math.min(f.maxhp, f.hp + Math.round(fin * 0.5));
-  if (has(f, "drain") && g.en > 0) { var dr = 6 + Math.floor(g.L / 3); g.en = Math.max(0, g.en - dr); sayOnce("drain", "Энергия имплантов утекает: минус " + dr + "."); }
+  if (has(f, "drain") && g.en > 0) { var dr = 6 + Math.floor(LAB.Le(g.L) / 3); g.en = Math.max(0, g.en - dr); sayOnce("drain", "Энергия имплантов утекает: минус " + dr + "."); }
   if (!ranged && gm().armorSpecial("thorns") && !f.dead) damageFoe(f, Math.max(1, Math.round(dmg * 0.3)), "kinetic", { quiet: true });
-  if (has(f, "poison") && Math.random() < 0.5) poison(6 + Math.floor(G().L / 2));
+  if (has(f, "poison") && Math.random() < 0.5) poison(6 + Math.floor(LAB.Le(G().L) / 2));
   if (!ranged) bleed(f, fin);
   if (f.adt === "chem" && fin > 0) toxins(2 + Math.round(fin / 6));
   /* (3.7, нелогичность) замедляет каждый по-своему — холод, корни, хватка, петля, пыльца,
@@ -2230,7 +2230,7 @@ function bleed(f, fin) {
   if (!cut && (f.adt || "phys") !== "phys") return;
   var p = (cut ? 0.3 : f.kind === "bio" ? 0.1 : 0.05) + Math.min(0.15, fin / g.hpMax);
   if (Math.random() > p) return;
-  var t = 10 + Math.floor(Math.random() * 10) + Math.floor(g.L / 10);
+  var t = 10 + Math.floor(Math.random() * 10) + Math.floor(LAB.Le(g.L) / 10);
   if (!g.st.bleed) { sayq("Кровотечение: рана кровит. Бинт или аптечка остановят кровь."); A("play", "hurt_phys"); }
   g.st.bleed = Math.max(g.st.bleed || 0, t);
 }
@@ -2312,12 +2312,12 @@ function statusTick(onlyTimers) {
   var g = G(), st = g.st;
   if (st.poison > 0) {
     st.poison--;
-    if (st.poison % 2 === 0) { var pd = Math.max(1, Math.round((1 + Math.ceil(g.L / 2)) * (1 - (LAB.implants ? LAB.implants.stat("antitox") : 0)))); g.hp -= pd; A("play", "poison_tick"); if (g.hp <= 0) { g.hp = 0; gm().die(); return; } }
+    if (st.poison % 2 === 0) { var pd = Math.max(1, Math.round((1 + Math.ceil(LAB.Le(g.L) / 2)) * (1 - (LAB.implants ? LAB.implants.stat("antitox") : 0)))); g.hp -= pd; A("play", "poison_tick"); if (g.hp <= 0) { g.hp = 0; gm().die(); return; } }
     if (!st.poison) sayq("Яд выветрился.");
   }
   if (st.bleed > 0) {
     st.bleed--;
-    if (st.bleed % 2 === 0) { var bdm = 1 + Math.floor(g.L / 4); g.hp -= bdm; if (g.hp <= 0) { g.hp = 0; gm().die(); return; } }
+    if (st.bleed % 2 === 0) { var bdm = 1 + Math.floor(LAB.Le(g.L) / 4); g.hp -= bdm; if (g.hp <= 0) { g.hp = 0; gm().die(); return; } }
     if (!st.bleed) sayq("Кровотечение остановилось само.");
   }
   if (gm().bodyTick) { gm().bodyTick(); if (G().dead) return; }
@@ -2761,7 +2761,7 @@ function kill(f, quiet) {
       if (cheb(self, heroPos()) <= 1 && clearTo(self.x, self.y, G().x, G().y)) {
         var fin0 = hurtPlayer(Math.round(self.dmg * 1.4), self.kind === "bio" ? "chem" : "phys", self);
         /* (3.7, нелогичность) ядовитая тварь (poison) лопается ядовитым облаком: вдохнувший отравлен, фильтр спасает */
-        if (fin0 > 0 && self.kind === "bio" && has(self, "poison") && !G().dead) { if (G().st.antitox > 0) sayOnce("cloudF", "Фильтр задержал ядовитое облако."); else poison(6 + Math.floor(G().L / 2)); }
+        if (fin0 > 0 && self.kind === "bio" && has(self, "poison") && !G().dead) { if (G().st.antitox > 0) sayOnce("cloudF", "Фильтр задержал ядовитое облако."); else poison(6 + Math.floor(LAB.Le(G().L) / 2)); }
       }
     }, 350);
   }
@@ -3061,11 +3061,13 @@ function waveK(n) { return Math.max(0, 1 - WAVE_CUT * ((n || 1) - 1)); }
 /* Каратели: тяжёлые машины уровнем-двумя глубже (самые крепкие из них), а на дне комплекса — здешние. */
 function strikePool() {
   var L = G().L, out = [], bad = ["stationary", "cleaner", "mimic", "camera", "turret", "swarm", "stalker", "mines"];
-  for (var l = Math.min(LAB.LEVELS_N, L + 1); l <= Math.min(LAB.LEVELS_N, L + 2); l++) (LAB.LEVELS[l].foes || []).forEach(function (id) {
+  /* (после 4.1) карателей из-под Истока нет: Разлом закрыт до ключа — до сотого «дно» прежнее */
+  var top = L <= 100 ? Math.min(100, LAB.LEVELS_N) : LAB.LEVELS_N;
+  for (var l = Math.min(top, L + 1); l <= Math.min(top, L + 2); l++) (LAB.LEVELS[l].foes || []).forEach(function (id) {
     var b = LAB.FOES[id];
     if (b && b.kind === "mech" && bad.every(function (k) { return b.beh.indexOf(k) < 0; }) && out.indexOf(id) < 0) out.push(id);
   });
-  if (L >= LAB.LEVELS_N || !out.length) out = out.concat(okoPool("hunt").filter(function (id) { return out.indexOf(id) < 0; }));
+  if (L >= top || !out.length) out = out.concat(okoPool("hunt").filter(function (id) { return out.indexOf(id) < 0; }));
   out.sort(function (a, b) { var A0 = LAB.FOES[a], B0 = LAB.FOES[b]; return B0.hp * B0.dmg - A0.hp * A0.dmg || (a < b ? -1 : 1); });
   return out.slice(0, 3);
 }
@@ -3367,7 +3369,7 @@ function throwEmp(id) {
       /* (3.7, нелогичность) импульс не проходит сквозь стену и закрытую дверь */
       if (f.dead || Math.max(Math.abs(f.x - x), Math.abs(f.y - y)) > 2 || !clearTo(x, y, f.x, f.y)) return;
       if (f.kind === "mech" && !aff(f, "hardened")) f.shield = 0;
-      if (damageFoe(f, 50 + g.L * 15, "emp", { noarmor: true, quiet: true, stunMech: hang })) n++;
+      if (damageFoe(f, 50 + LAB.Le(g.L) * 15, "emp", { noarmor: true, quiet: true, stunMech: hang })) n++;
     });
     A("explosion", x, y, "emp");
     say((it === "emp" ? "ЭМИ-граната" : d.n) + " " + LAB.DIRTO[g.face] + ". Задето целей: " + n + "." + (it === "emp" ? " Осталось гранат: " : " Осталось: ") + (g.inv[it] || 0) + ".");

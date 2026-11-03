@@ -403,6 +403,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `674742_7157894-hq.ogg`
 
+## Ambience Pack 1: Sci-Fi Horror
+
+Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/ambience-pack-1-sci-fi-horror
+
+Файлы: `Cage_of_the_Cryptid.mp3`, `Final_Captain%27s_Log.mp3`, `Infestation_in_the_Control_Room.mp3`, `The_Depths_of_Hell.mp3`, `The_Surreal_Truth.mp3`
+
 ## Ambient horror
 
 Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/ambient-horror
@@ -943,6 +949,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `372086_6417448-hq.ogg`
 
+## Distant Tension
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Distant_Tension_(ISRC_USUAN1100257).mp3
+
+Файлы: `Distant_Tension_%28ISRC_USUAN1100257%29.mp3`
+
 ## Dog Growl - Beast / Creature
 
 Автор: coldvet. Лицензия: CC0 1.0. Источник: https://freesound.org/s/404920/
@@ -1026,6 +1038,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448612/
 
 Файлы: `448612_9311684-hq.ogg`
+
+## Echoes of Time v2
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Echoes_of_Time_v2_(ISRC_USUAN1300030).mp3
+
+Файлы: `Echoes_of_Time_v2_%28ISRC_USUAN1300030%29.mp3`
 
 ## Electric zap.wav
 
@@ -1212,6 +1230,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: xkeril. Лицензия: CC0 1.0. Источник: https://freesound.org/s/703248/
 
 Файлы: `703248_13504080-hq.ogg`
+
+## Fantozzi's footsteps (grass/sand/stone)
+
+Автор: Fantozzi. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/fantozzis-footsteps-grasssand-stone
+
+Файлы: `Fantozzi-SandL1.ogg`, `Fantozzi-SandL2.ogg`, `Fantozzi-SandL3.ogg`, `Fantozzi-SandR2.ogg`, `Fantozzi-SandR3.ogg`, `Fantozzi-StoneL1.ogg`, `Fantozzi-StoneL2.ogg`, `Fantozzi-StoneL3.ogg`, `Fantozzi-StoneR1.ogg`, `Fantozzi-StoneR2.ogg`, `Fantozzi-StoneR3.ogg`
 
 ## Fast whoosh, bamboo swoosh through air, version 1
 
@@ -1453,6 +1477,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `842748_71257-hq.ogg`
 
+## Gloom Horizon
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Gloom_Horizon_(ISRC_USUAN1100813).mp3
+
+Файлы: `Gloom_Horizon_%28ISRC_USUAN1100813%29.mp3`
+
 ## Grenade Explosion SFX (medium-sized, meaty, realistic)
 
 Автор: unfa. Лицензия: CC0 1.0. Источник: https://freesound.org/s/609587/
@@ -1625,7 +1655,7 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Автор: Kenney. Лицензия: CC0 1.0. Источник: https://kenney.nl/assets/impact-sounds
 
-Файлы: `impactBell_heavy_001.ogg`, `impactGlass_heavy_000.ogg`, `impactGlass_heavy_001.ogg`, `impactGlass_light_001.ogg`, `impactGlass_light_002.ogg`, `impactGlass_light_003.ogg`, `impactGlass_light_004.ogg`, `impactGlass_medium_000.ogg`, `impactGlass_medium_001.ogg`, `impactMetal_heavy_001.ogg`, `impactMetal_heavy_003.ogg`, `impactMetal_medium_000.ogg`, `impactMetal_medium_001.ogg`, `impactMetal_medium_002.ogg`, `impactMetal_medium_004.ogg`, `impactMining_000.ogg`, `impactMining_002.ogg`, `impactPlank_medium_000.ogg`, `impactPlank_medium_001.ogg`, `impactPlank_medium_003.ogg`, `impactPlate_light_000.ogg`, `impactPlate_light_001.ogg`, `impactPlate_light_003.ogg`, `impactPlate_light_004.ogg`, `impactPunch_heavy_000.ogg`, `impactPunch_heavy_001.ogg`, `impactPunch_heavy_002.ogg`, `impactPunch_medium_000.ogg`, `impactPunch_medium_001.ogg`, `impactPunch_medium_002.ogg`, `impactPunch_medium_004.ogg`, `impactTin_medium_000.ogg`, `impactTin_medium_002.ogg`, `impactTin_medium_004.ogg`
+Файлы: `impactBell_heavy_001.ogg`, `impactGlass_heavy_000.ogg`, `impactGlass_heavy_001.ogg`, `impactGlass_light_001.ogg`, `impactGlass_light_002.ogg`, `impactGlass_light_003.ogg`, `impactGlass_light_004.ogg`, `impactGlass_medium_000.ogg`, `impactGlass_medium_001.ogg`, `impactMetal_heavy_001.ogg`, `impactMetal_heavy_003.ogg`, `impactMetal_medium_000.ogg`, `impactMetal_medium_001.ogg`, `impactMetal_medium_002.ogg`, `impactMetal_medium_004.ogg`, `impactMining_000.ogg`, `impactMining_002.ogg`, `impactPlank_medium_000.ogg`, `impactPlank_medium_001.ogg`, `impactPlank_medium_003.ogg`, `impactPlate_light_000.ogg`, `impactPlate_light_001.ogg`, `impactPlate_light_003.ogg`, `impactPlate_light_004.ogg`, `impactPunch_heavy_000.ogg`, `impactPunch_heavy_001.ogg`, `impactPunch_heavy_002.ogg`, `impactPunch_medium_000.ogg`, `impactPunch_medium_001.ogg`, `impactPunch_medium_002.ogg`, `impactPunch_medium_004.ogg`, `impactTin_medium_000.ogg`, `impactTin_medium_002.ogg`, `impactTin_medium_004.ogg`, `footstep_carpet_000.ogg`, `footstep_carpet_001.ogg`, `footstep_carpet_002.ogg`, `footstep_carpet_003.ogg`, `footstep_carpet_004.ogg`, `footstep_grass_000.ogg`, `footstep_grass_001.ogg`, `footstep_grass_002.ogg`, `footstep_grass_003.ogg`, `footstep_grass_004.ogg`, `footstep_snow_001.ogg`, `footstep_snow_002.ogg`, `footstep_snow_004.ogg`
 
 ## implosion_near.WAV
 
@@ -1903,6 +1933,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `clank1.flac`, `mechanical1.flac`, `mechanical2.flac`
 
+## Mechanolith
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Mechanolith_(ISRC_USUAN1100879).mp3
+
+Файлы: `Mechanolith_%28ISRC_USUAN1100879%29.mp3`
+
 ## Meditation Impromptu 02
 
 Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Meditation_Impromptu_02_(ISRC_USUAN1100162).mp3
@@ -1992,6 +2028,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: DDT197. Лицензия: CC0 1.0. Источник: https://freesound.org/s/445775/
 
 Файлы: `445775_8292592-hq.ogg`
+
+## Metaphysik
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Metaphysik_(ISRC_USUAN1400056).mp3
+
+Файлы: `Metaphysik_%28ISRC_USUAN1400056%29.mp3`
 
 ## Minigun Burst Audio
 
@@ -2113,6 +2155,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `240311_864571-hq.ogg`
 
+## Night Break
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Night_Break_(ISRC_USUAN1100380).mp3
+
+Файлы: `Night_Break_%28ISRC_USUAN1100380%29.mp3`
+
 ## Nổ 4
 
 Автор: SieuAmThanh. Лицензия: CC0 1.0. Источник: https://freesound.org/s/620229/
@@ -2154,6 +2202,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: jwiese. Лицензия: CC0 1.0 / CC BY 3.0. Источник: https://opengameart.org/content/overloading-sound
 
 Файлы: `overloading.flac`
+
+## Penumbra
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Penumbra_(ISRC_USUAN1200105).mp3
+
+Файлы: `Penumbra_%28ISRC_USUAN1200105%29.mp3`
 
 ## Pig in slop squealing
 
@@ -2298,6 +2352,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: aust_paul. Лицензия: CC0 1.0. Источник: https://freesound.org/s/30931/
 
 Файлы: `30931_15696-hq.ogg`
+
+## River of Io
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:River_of_Io_(ISRC_USUAN1600065).mp3
+
+Файлы: `River_of_Io_%28ISRC_USUAN1600065%29.mp3`
 
 ## Robot / Mech movement
 
@@ -2479,6 +2539,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `531861_7542558-hq.ogg`
 
+## SCP-x1x (Gateway to Hell)
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 4.0. Источник: https://commons.wikimedia.org/wiki/File:Scp_x1x_(Gateway_to_Hell)_by_Kevin_MacLeod.ogg
+
+Файлы: `Scp_x1x_%28Gateway_to_Hell%29_by_Kevin_MacLeod.ogg`
+
 ## SCP-x2x (Unseen Presence)
 
 Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 4.0. Источник: https://commons.wikimedia.org/wiki/File:Spc_X2x_(Unseen_Presence)_by_Kevin_MacLeod.ogg
@@ -2574,6 +2640,24 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: SonoFxAudio. Лицензия: CC BY 4.0. Источник: https://freesound.org/s/679546/
 
 Файлы: `679546_14263543-hq.ogg`
+
+## Shadowlands 1 - Horizon
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Shadowlands_1_-_Horizon_(ISRC_USUAN1700034).mp3
+
+Файлы: `Shadowlands_1_-_Horizon_%28ISRC_USUAN1700034%29.mp3`
+
+## Shadowlands 2 - Bridge
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Shadowlands_2_-_Bridge_(ISRC_USUAN1700035).mp3
+
+Файлы: `Shadowlands_2_-_Bridge_%28ISRC_USUAN1700035%29.mp3`
+
+## Shadowlands 3 - Machine
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Shadowlands_3_-_Machine_(ISRC_USUAN1700036).mp3
+
+Файлы: `Shadowlands_3_-_Machine_%28ISRC_USUAN1700036%29.mp3`
 
 ## Shadowlands 4 - Breath
 
@@ -2862,6 +2946,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: denao270. Лицензия: CC0 1.0. Источник: https://freesound.org/s/346373/
 
 Файлы: `346373_4882199-hq.ogg`
+
+## Thunder Dreams
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Thunder_Dreams_(ISRC_USUAN1200063).mp3
+
+Файлы: `Thunder_Dreams_%28ISRC_USUAN1200063%29.mp3`
 
 ## Tire gauge pin ringing and clicks
 

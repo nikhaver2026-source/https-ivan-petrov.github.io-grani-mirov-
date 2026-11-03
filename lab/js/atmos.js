@@ -190,10 +190,17 @@ function corrUpdate() {
   corrLast = want;
 }
 /* Шаг отдаётся из коридора: долгий отзвук с его стороны, за ним — второй, тише (длинный коридор) */
+/* Отзвук коридора — своя запись «corr_echo»: те же файлы, что у эха шага у стены, но под своим именем,
+   чтобы эхо у стены и отзвук прохода не путались ни в микшере, ни в проверках */
+function corrRec(id) {
+  var B = LAB.Bank;
+  if (B && !B.has("corr_echo") && B.has("step_echo")) { var d = B.defs.step_echo; B.def("corr_echo", d.f.slice(), { v: d.v, bus: "fx", vary: 0 }); }
+  return has("corr_echo") ? "corr_echo" : has("step_echo") ? "step_echo" : id;
+}
 function corrEcho(id, rate) {
   var g = G(), k = corrK();
   if (!g || !k || !corrLast.length) return;
-  var rec = has("step_echo") ? "step_echo" : id;
+  var rec = corrRec(id);
   corrLast.forEach(function (o) {
     var x = o.sx / o.n, y = o.sy / o.n, closed = corrClosed(o);
     var sp = LAB.spatial(x - g.x, y - g.y, closed);
@@ -404,7 +411,7 @@ var levelIds = [], levelL = 0;
 function idsFor(L) {
   var lev = LAB.LEVELS[L], out = [], sets = {};
   var foes = lev.foes.slice();
-  if (L < LAB.LEVELS_N && LAB.LEVELS[L + 1]) LAB.LEVELS[L + 1].foes.forEach(function (f) { if (LAB.FOES[f] && LAB.FOES[f].kind === "mech") foes.push(f); });
+  if (L < LAB.LEVELS_N && L !== 100 && LAB.LEVELS[L + 1]) LAB.LEVELS[L + 1].foes.forEach(function (f) { if (LAB.FOES[f] && LAB.FOES[f].kind === "mech") foes.push(f); });
   foes.push("cam", "cleaner", "miniturret", "turret", "okodrone", "repairbot", "patrolbot");
   /* еда и лекарства — на каждом уровне */
   ["eat_crunch", "eat_chew", "food_wrapper", "pills_rattle", "bandage_tear", "stomach_growl", "cough", "yawn", "snack_drop", "water_pour", "bcn_snacks"].forEach(function (id) { if (LAB.SND && LAB.SND[id]) out.push(id); });
@@ -462,7 +469,7 @@ function deadLoops() {
 }
 /* «Глубина» уровня для синтеза: до Ядра — сам уровень (1–10), глубже — от
    середины к низу внутри блока, чтобы гул и отзвук не уходили за пределы слуха. */
-function depthL(L) { return L <= 10 ? L : 5 + ((L - 1) % 20) / 4; }
+function depthL(L) { if (L > 100 && LAB.blockRange) { var R = LAB.blockRange(LAB.blockOf(L)); return 5 + Math.min(19, Math.floor((L - R.from) * 20 / R.size)) / 4; } return L <= 10 ? L : 5 + ((L - 1) % 20) / 4; }
 var synthBedS = null;
 function synthBed(L) {
   if (synthBedS) { synthBedS.stop(2); synthBedS = null; }
@@ -930,7 +937,12 @@ function levelMusic(L) {
   var b = LAB.blockOf(L), set = [];
   for (var i = 1; i <= 8; i++) if (has("mus_b" + b + "_" + i)) set.push("mus_b" + b + "_" + i);
   if (!set.length) return "mus_l" + (((L - 1) % 10) + 1);
-  /* у первого блока свои треки — только ниже Ядра (уровни 11–20) */
+  /* у первого блока свои треки — только ниже Ядра (уровни 11–20); (после 4.1) у глубоких блоков —
+     свои давящие треки, сменяются каждые несколько уровней по кругу, сколько бы уровней ни было в блоке */
+  if (L > 100 && LAB.blockRange) {
+    var R = LAB.blockRange(b), per = Math.max(3, Math.round(R.size / 40));
+    return set[Math.floor((L - R.from) / per) % set.length];
+  }
   var first = b === 1 ? 11 : (b - 1) * 20 + 1, span = b === 1 ? 10 : 20;
   var k = Math.floor((L - first) * set.length / span);
   return set[Math.max(0, Math.min(set.length - 1, k))];

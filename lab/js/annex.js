@@ -17,7 +17,10 @@ var LAB = (typeof window !== "undefined" ? window.LAB : globalThis.LAB);
 
 /* ── ГЛУБИНЫ ── K — «Ковчег» (1–10), P — Подножие (11–20), C — Колыбель
    (21–40), O — Отражение (41–60), M — Механизм (61–80), I — Исток (81+). */
-function eraOf(L) { return L <= 10 ? "K" : L <= 20 ? "P" : L <= 40 ? "C" : L <= 60 ? "O" : L <= 80 ? "M" : "I"; }
+/* (после 4.1) Старший пропуск для замка кабинета: до сотого уровня — как прежде (по записанным пропускам),
+   ниже — пропуска глубоких блоков строятся по запросу, предел — ступень дна. */
+function tierCap(L) { return L > 100 ? Math.max(1, Math.ceil(LAB.LEVELS_N / 2)) : Math.max(1, Object.keys(LAB.TIERS).length - 1); }
+function eraOf(L) { if (L > 100 && LAB.deepEra) return LAB.deepEra(L); return L <= 10 ? "K" : L <= 20 ? "P" : L <= 40 ? "C" : L <= 60 ? "O" : L <= 80 ? "M" : "I"; } /* (после 4.1) ниже сотого — уклад глубокого блока (deep.js) */
 LAB.annexEra = eraOf;
 
 /* ── ПРЕДМЕТЫ ОБСТАНОВКИ КАБИНЕТОВ ── */
@@ -73,7 +76,7 @@ function catPick(r, L, cat) {
   var pool = itemsOf(L, function (d) { return d.cat === cat; });
   if (!pool.length) return null;
   /* свежие товары своей глубины — чаще */
-  var fresh = pool.filter(function (k) { return (LAB.ITEMS[k].depth || 1) > L - 15 && (LAB.ITEMS[k].depth || 1) > 1; });
+  var fresh = pool.filter(function (k) { return LAB.Le(LAB.ITEMS[k].depth || 1) > LAB.Le(L) - 15 && (LAB.ITEMS[k].depth || 1) > 1; });
   return fresh.length && r.chance(0.4) ? r.pick(fresh) : r.pick(pool);
 }
 function partPick(r, L) { return LAB.partAt ? LAB.partAt(r, L) : "scrap"; }
@@ -531,7 +534,7 @@ function lockFor(ctx, r, s, rm) {
   if (!mains.length) mains = [fl.U];
   /* (3.7, нелогичность) на последней ступени допуска (99–100 уровни) «пропуска старше вашего» нет:
      такой замок открывался бы вашим же пропуском — там замок под ключ */
-  if (q >= 0.78 && lev.tier + 1 > Math.max(1, Object.keys(LAB.TIERS).length - 1)) q = 0.5 + (q - 0.78);
+  if (q >= 0.78 && lev.tier + 1 > tierCap(L)) q = 0.5 + (q - 0.78);
   if (q < 0.5) {
     var code = String(r.int(1000, 9999)), sp = farMain(r, fl, mains, rm), cw = r.next();
     rm.codeAt = sp;
@@ -552,7 +555,7 @@ function lockFor(ctx, r, s, rm) {
     if (!done) ctx.addItem({ kind: "key", key: keyId, n: kname }, spot);
     return { type: "key", key: keyId, keyName: "Ключ от двери: " + rm.name };
   }
-  var tier = Math.min(Math.max(1, lev.tier + 1), Math.max(1, Object.keys(LAB.TIERS).length - 1));
+  var tier = Math.min(Math.max(1, lev.tier + 1), tierCap(L));
   if (!LAB.TIERS[tier]) tier = lev.tier;
   return { type: "card", tier: tier, over: true };
 }

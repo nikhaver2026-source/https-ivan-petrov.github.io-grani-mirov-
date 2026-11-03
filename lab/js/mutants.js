@@ -362,7 +362,8 @@ for (k in BODY) { var fb = LAB.FOES[k]; if (fb && !fb.body) fb.body = BODY[k]; }
 var hash = LAB.hash32 || function (s) { var h = 2166136261; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
 var listed = {};
 function distribute() {
-  var N = LAB.LEVELS_N || 10;
+  /* (после 4.1) глубокие блоки (ниже сотого уровня) строят списки врагов сами, по секторам (deep.js) */
+  var N = Math.min(100, LAB.LEVELS_N || 10);
   for (var L = 1; L <= N; L++) {
     var lev = LAB.LEVELS[L];
     if (!lev || !lev.foes) continue;

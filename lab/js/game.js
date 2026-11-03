@@ -232,7 +232,7 @@ function objName0(o) {
   if (o.type === "stairs_up" && stairBlocked(o)) return "Лестница вверх (завалена)";
   if (o.type === "reactor" && o.final) return G.done ? "Пульт «Истока» (ключ повёрнут)" : "Пульт «Истока»"; /* (3.7, нелогичность) не реактор */
   if (o.type === "reactor" && (G.done || (!o.final && G.cores && G.cores["used" + G.L]))) return "Пульт реактора (ключ повёрнут)";
-  if (o.type === "gate_sealed" && seamBottom()) return "Сомкнувшийся край Шва"; /* (3.7, нелогичность) пришли Швом, а не шлюзом */
+  if (o.type === "gate_sealed" && seamBottom()) return G.L === 101 ? "Сомкнувшийся край Разлома" : "Сомкнувшийся край Шва"; /* (3.7, нелогичность) пришли Швом, а не шлюзом */
   return LAB.OBJ[o.type] ? LAB.OBJ[o.type].n : o.type;
 }
 game.objName = objName;
@@ -255,7 +255,7 @@ function lockText(d) {
   if (lk.type === "power") return fsL.power ? "силовой замок, питание подано" : "силовой замок, этаж обесточен";
   if (lk.type === "rubble") return fsL.rubble ? "проход расчищен от обломков" : "проход завален обломками";
   if (lk.type === "lockdown") return fsL.lockdown ? "блокировка охраны снята" : "блокировка охраны";
-  if (lk.type === "gate") return LAB.isReactorLevel(G.L) ? (trueSource() ? "гермодверь «Истока», нужен ключ настоящего «Истока»" : "гермодверь реактора, нужен ключ доступа к «Истоку»") : "гермодверь шлюза, нужна шлюзовая ключ-карта уровня " + G.L;
+  if (lk.type === "gate") return LAB.isReactorLevel(G.L) ? (riftRoot() ? "гермодверь Ядра Разлома, нужен ключ Ядра Разлома" : trueSource() ? "гермодверь «Истока», нужен ключ настоящего «Истока»" : "гермодверь реактора, нужен ключ доступа к «Истоку»") : "гермодверь шлюза, нужна шлюзовая ключ-карта уровня " + G.L;
   if (lk.type === "riddle") return "голосовой замок с загадкой";
   if (lk.type === "circuit") return "электронный замок: схема реле";
   if (lk.type === "melody") return "звуковой замок: открывается мелодией";
@@ -284,7 +284,7 @@ function doorBlock(d) {
   if (lk.type === "power") return fs.power ? "" : "Нет питания. Запустите магнетронную установку этажа.";
   if (lk.type === "rubble") return fs.rubble ? "" : "Проход завален. Расчистить может аннигиляционный импульс позитронной установки.";
   if (lk.type === "lockdown") return fs.lockdown ? "" : "Блокировка охраны. Снимите её на терминале безопасности этажа.";
-  if (lk.type === "gate") return (LAB.isReactorLevel(G.L) ? hasCore(G.L) : G.gate[G.L]) ? "" : (LAB.isReactorLevel(G.L) ? (trueSource() ? "Нужен ключ настоящего «Истока»: он у стража этого этажа." : "Нужен ключ доступа к реактору «Исток»: он у стража этого этажа.") : "Нужна шлюзовая ключ-карта уровня " + G.L + ": " + (LAB.LEVELS[G.L].card === "hidden" ? "её спрятали где-то на этом этаже — слушайте маяк ключ-карты." : "её носит страж этого этажа."));
+  if (lk.type === "gate") return (LAB.isReactorLevel(G.L) ? hasCore(G.L) : G.gate[G.L]) ? "" : (LAB.isReactorLevel(G.L) ? (riftRoot() ? "Нужен ключ Ядра Разлома: он у стража этого этажа." : trueSource() ? "Нужен ключ настоящего «Истока»: он у стража этого этажа." : "Нужен ключ доступа к реактору «Исток»: он у стража этого этажа.") : "Нужна шлюзовая ключ-карта уровня " + G.L + ": " + (LAB.LEVELS[G.L].card === "hidden" ? "её спрятали где-то на этом этаже — слушайте маяк ключ-карты." : "её носит страж этого этажа."));
   if (lk.type === "riddle") return (fs.riddleWait && fs.riddleWait[d.id] > (fs.okoT || 0)) ? "Голосовой замок молчит после неверного ответа. Подождите." : "Голосовой замок задаёт загадку.";
   if (lk.type === "circuit") return "Схема реле горит. Погасите её.";
   if (lk.type === "logic") return "Замок ждёт решения задачи: " + (LAB.puzzles ? LAB.puzzles.nameOf(lk.kind) : "головоломка") + ".";
@@ -313,8 +313,11 @@ function hasCore(L) { return !!((G.cores && G.cores[L]) || (L === 10 && G.core))
 game.hasCore = hasCore;
 /* (3.7, нелогичность) На последнем уровне — не реактор, а сам Исток («Ниже — Исток. Не реактор», b5.js):
    зал, пульт, гермодверь, ключ и навигатор называют его так (зал — тип source, world.js). */
-function trueSource(L) { L = L || G.L; return LAB.isFinalLevel(L) && L !== 10; }
+function trueSource(L) { L = L || G.L; return (LAB.isFinalLevel(L) || L === 100) && L !== 10 && !(LAB.isRiftRoot && LAB.isRiftRoot(L)); } /* (после 4.1) настоящий Исток — всегда на сотом */
 game.trueSource = trueSource;
+/* (после 4.1) самое дно — Ядро Разлома, последний уровень последнего глубокого блока: финал там */
+function riftRoot(L) { L = L || G.L; return !!(LAB.isRiftRoot && LAB.isRiftRoot(L)); }
+game.riftRoot = riftRoot;
 /* (3.7, нелогичность) На первом уровне под Ядром приходят не шлюзом, а Швом из-под реактора (descend, seam):
    наверху не створки, а сомкнувшийся край Шва (помещение прибытия — дно Шва, тип seamin, world.js). */
 function seamBottom(L) { L = L || G.L; return L > 1 && LAB.isReactorLevel(L - 1) && !LAB.isFinalLevel(L - 1); }
@@ -328,11 +331,11 @@ function itemName(it) {
     case "weapon": return it.w.name;
     case "pass": return LAB.TIERS[it.tier].n;
     case "elevpass": return "Пропуск лифта уровня " + it.L;
-    case "gatepass": return it.core ? (LAB.isFinalLevel(it.L || G.L) && it.L !== 10 ? "Ключ настоящего «Истока»" : "Ключ доступа к реактору «Исток»") : "Шлюзовая ключ-карта уровня " + it.L;
+    case "gatepass": return it.core ? (riftRoot(it.L || G.L) ? "Ключ Ядра Разлома" : trueSource(it.L || G.L) ? "Ключ настоящего «Истока»" : "Ключ доступа к реактору «Исток»") : "Шлюзовая ключ-карта уровня " + it.L;
     case "armor": return it.a.name + ", защита " + LAB.armorDef(it.a);
     case "key": return it.n;
     case "note": return "Записка «" + noteText(it).t + "»";
-    case "sample": return "Образец «Колыбели» номер " + (it.sid + 1);
+    case "sample": return it.sid >= 2000 ? "Образец глубин" : "Образец «Колыбели» номер " + (it.sid + 1); /* (после 4.1) ниже Истока — образцы глубин */
     case "chip": return "Чип импланта «" + implantDef(it.implant).n + "»";
   }
   return "Вещь";
@@ -414,7 +417,7 @@ function noteText(it, L, F) {
   L = L || G.L; F = F || G.F;
   var h = LAB.hash32(it.id + ":" + L + ":" + F);
   if (it.note === "story") {
-    var s = LAB.STORY[(it.L || L) + "-" + (it.F || F)];
+    var s = LAB.storyAt ? LAB.storyAt(it.L || L, it.F || F) : LAB.STORY[(it.L || L) + "-" + (it.F || F)]; /* (после 4.1) ниже сотого — вехи и секторы блока */
     if (s) return { t: s.t, x: s.x, a: s.a, story: true };
     return staffNote(it, h, L, F);
   }
@@ -983,7 +986,7 @@ function giveItem(it, quiet) {
       if (it.tier > G.tier) { G.tier = it.tier; extra = " Теперь открываются двери с картридером " + LAB.TIERS[it.tier].short + (it.tier > 1 ? " и ниже." : "."); }
       break;
     case "elevpass": G.elev[it.L] = true; extra = " Лифт уровня " + it.L + " теперь ваш."; break;
-    case "gatepass": if (it.core) { G.cores = G.cores || {}; G.cores[it.L || G.L] = true; if ((it.L || G.L) === 10) G.core = true; } else G.gate[it.L] = true; extra = it.core ? (trueSource(it.L || G.L) ? " Гермодверь «Истока» откроется." : " Гермодверь реактора «Исток» откроется.") : " Гермошлюз на уровень ниже теперь откроется. Помните: назад пути не будет."; break;
+    case "gatepass": if (it.core) { G.cores = G.cores || {}; G.cores[it.L || G.L] = true; if ((it.L || G.L) === 10) G.core = true; } else G.gate[it.L] = true; extra = it.core ? (riftRoot(it.L || G.L) ? " Гермодверь Ядра Разлома откроется." : trueSource(it.L || G.L) ? " Гермодверь «Истока» откроется." : " Гермодверь реактора «Исток» откроется.") : " Гермошлюз на уровень ниже теперь откроется. Помните: назад пути не будет."; break;
     case "key": G.keys[it.key] = it.n; break;
     case "note": {
       var nt = noteText(it), nid = G.L + "-" + G.F + "-" + it.id;
@@ -1944,7 +1947,7 @@ function objMenu(o) {
       break;
     case "gate_sealed":
       /* (3.7, нелогичность) под Ядром пришли Швом: наверху не створки шлюза, а сомкнувшийся край провала */
-      if (seamBottom()) items.push({ label: "Ощупать край Шва", fn: function () { A("play", "gate_knock"); say("Край Шва сомкнулся над головой: скобы обрываются в камне, и камень гудит. Наверх пути нет — только вниз."); } });
+      if (seamBottom()) items.push({ label: G.L === 101 ? "Ощупать край Разлома" : "Ощупать край Шва", fn: function () { A("play", "gate_knock"); say(G.L === 101 ? "Край Разлома сомкнулся над головой: трещина затянулась камнем, и камень гудит голосом Истока. Наверх пути нет — только вниз." : "Край Шва сомкнулся над головой: скобы обрываются в камне, и камень гудит. Наверх пути нет — только вниз."); } });
       else items.push({ label: "Ощупать створки", fn: function () { A("play", "gate_knock"); say("Створки сведены намертво, засовы вошли в пазы. Наверх пути нет — только вниз."); } });
       break;
     case "elevator":
@@ -2171,7 +2174,7 @@ function descend(o, seam) {
   UIx("closeAll");
   A("gate", true);
   game.paused = true; game.descending = true;
-  say(seam ? "Вы спускаетесь по скобам в колодец Шва. Гул обнимает со всех сторон, металл под руками тёплый." : "Ключ-карта принята. Створки расходятся. Вы входите в шлюзовую камеру — и она уходит вниз.");
+  say(seam && L0 === 100 ? "Вы спускаетесь в Разлом. Трещина звенит, как натянутая струна, камень под руками тёплый и дрожит, а гул Истока уходит вверх и становится тише с каждым шагом." : seam ? "Вы спускаетесь по скобам в колодец Шва. Гул обнимает со всех сторон, металл под руками тёплый." : "Ключ-карта принята. Створки расходятся. Вы входите в шлюзовую камеру — и она уходит вниз.");
   later(function () {
     game.paused = false;
     var left = G.quests.filter(function (q) { return !q.done && q.type !== "main" && q.L === L0 && !q.cross; }); /* (3.5) поручения «уровнем ниже» — с собой */
@@ -2189,7 +2192,7 @@ function descend(o, seam) {
       var c = freeNear(findObj("capsule") || findObj("gate_sealed"));
       G.checkpoint = { L: G.L, F: 1, x: c[0], y: c[1] };
       A("gateSeal");
-      sayq(seam ? "Над головой с гулом сходится край Шва. Наверх пути нет." : "За спиной с грохотом сходятся створки. Засовы входят в пазы. Пути наверх больше нет.");
+      sayq(seam && L0 === 100 ? "Над головой с тихим звоном смыкается край Разлома. Наверх пути нет." : seam ? "Над головой с гулом сходится край Шва. Наверх пути нет." : "За спиной с грохотом сходятся створки. Засовы входят в пазы. Пути наверх больше нет.");
       if (left.length) sayq("Невыполненные задания уровня " + L0 + " остались наверху.");
       lost.forEach(function (q) { sayq("Доклад для " + q.giverName + " не передан: до этажа " + q.tF + " уровня " + q.tL + " вы так и не дошли."); journal("Не выполнено: " + q.short + "."); });
       gainXP(60);
@@ -2206,7 +2209,7 @@ function descend(o, seam) {
       if (B1 && B1.intro && B1.intro.length) pages = pages.concat(B1.intro);
       G.blockSeen[b1] = 1;
     }
-    if (pages.length) UIx("pages", pages, { title: b1 !== b0 && LAB.BLOCKS[b1] ? "Блок " + ["", "I", "II", "III", "IV", "V"][b1] + ". " + LAB.BLOCKS[b1].name : "", done: function () { UIx("showGame"); go(); } });
+    if (pages.length) UIx("pages", pages, { title: b1 !== b0 && LAB.BLOCKS[b1] ? "Блок " + (LAB.roman ? LAB.roman(b1) : b1) + ". " + LAB.BLOCKS[b1].name : "", done: function () { UIx("showGame"); go(); } });
     else go();
   }, 5200);
 }
@@ -2227,7 +2230,8 @@ function mainQuest() {
   if (!q) { q = { id: "main", giver: "main", giverName: "Эхо", type: "main", done: false }; G.quests.unshift(q); }
   var L = G.L, b = LAB.blockOf(L), B = LAB.BLOCKS[b];
   if (L <= 10) { q.short = "спуститься в Ядро и остановить Разлом"; q.text = "Спуститься в Ядро, на самый нижний уровень «Ковчега», и остановить Разлом у пульта реактора «Исток»."; }
-  else if (b === 1) { q.short = "спуститься по Шву к корню Разлома"; q.text = "Ключ у пульта «Истока» не заглушил реактор, а раскрыл Шов. Спуститься по нему туда, откуда идёт гул."; }
+  else if (b === 1) { q.short = "спуститься по Шву туда, откуда идёт гул"; q.text = "Ключ у пульта «Истока» не заглушил реактор, а раскрыл Шов. Спуститься по нему туда, откуда идёт гул."; }
+  else if (L > 100) { q.short = "идти вниз, к Ядру Разлома: " + (B && B.name ? "«" + B.name + "»" : "глубже"); q.text = "Граница ляжет только там, где Разлом кончается: у его ядра, на самом дне. Идти вниз. Сейчас путь лежит через " + (B && B.name ? "«" + B.name + "»" : "неизвестные уровни") + ". Срезы в тайных комнатах и подсобках уводят вниз сразу на много уровней."; }
   else { q.short = "идти вниз: " + (B && B.name ? "«" + B.name + "»" : "глубже"); q.text = "Идти вниз, к Истоку. Сейчас путь лежит через " + (B && B.name ? "«" + B.name + "»" : "неизвестные уровни") + "."; }
   q.L = L; q.F = LAB.FLOORS_N;
 }
@@ -2640,7 +2644,7 @@ function mapFloor() {
 game.mapFloor = mapFloor;
 function terminalLogs(o) {
   var key = G.L + "-" + G.F;
-  var story = LAB.STORY[key];
+  var story = LAB.storyAt ? LAB.storyAt(G.L, G.F) : LAB.STORY[key];
   /* (3.7) в архив — ссылкой (termText): история этажа, код двери, заявка о тайной двери, записка персонала */
   var src = { note: "term" };
   if (story) src.s = key;
@@ -2660,7 +2664,7 @@ var TERM_N = { sec: "Терминал безопасности", sci: "Науч�
    sr — помещение, где сквозит из стены, sp — записка персонала («блок.номер»), u — вид
    терминала (a — его название, если оно другое). */
 function termText(s, L, F) {
-  var t = [], story = s.s ? LAB.STORY[s.s] : null;
+  var t = [], story = s.s ? (LAB.storyAt ? LAB.storyAt(+String(s.s).split("-")[0], +String(s.s).split("-")[1]) : LAB.STORY[s.s]) : null;
   if (s.s && !story) return null;
   if (story) t.push("Запись: «" + story.t + "». " + story.x);
   if (s.c) t.push("Служебная запись: код двери «" + s.cr + "» — " + String(s.c).split("").join(" ") + ".");
@@ -2740,7 +2744,7 @@ function magnetronMenu(o) {
       if (st.over && st.over > G.min + G.day * 1440) { say("Установка ещё не остыла после перегрузки."); return; }
       st.over = G.min + G.day * 1440 + 360;
       A("play", "mag_overload");
-      var n = LAB.combat ? LAB.combat.areaDamage(G.x, G.y, 6, 60 + G.L * 18, "emp") : 0;
+      var n = LAB.combat ? LAB.combat.areaDamage(G.x, G.y, 6, 60 + LAB.Le(G.L) * 18, "emp") : 0;
       G.hp = Math.max(1, G.hp - Math.round(G.hpMax * 0.08));
       say("Импульс! " + (n ? "Задето целей: " + n + "." : "Роботов рядом не было.") + " Вас тоже тряхнуло.");
       UIx("refresh");
@@ -2918,13 +2922,13 @@ function vendingItems(o) {
   if (G.L >= 4) goods.push(["jammer", 1]);
   if (G.L >= 6) goods.push(["medkit_l", 1], ["turret_kit", 1]);
   /* батареи и расходники своей глубины */
-  for (var ak in LAB.AMMO) if (["energy", "magnetron", "positron"].indexOf(ak) < 0 && (LAB.AMMO[ak].depth || 1) <= G.L && (LAB.AMMO[ak].depth || 1) > G.L - 25) goods.push(["ammo:" + ak, 1]);
+  for (var ak in LAB.AMMO) if (["energy", "magnetron", "positron"].indexOf(ak) < 0 && (LAB.AMMO[ak].depth || 1) <= G.L && LAB.Le(LAB.AMMO[ak].depth || 1) > LAB.Le(G.L) - 25) goods.push(["ammo:" + ak, 1]);
   /* (1.5) товары с разделом cat — еда, лекарства, защита, инструменты, ценности — у пунктов снабжения */
   /* (3.7, нелогичность) без повторов — отмычки уже в списке выше (прежде синяя, зелёная и красная звучали
      дважды) — и без вариантов химии: сорт выше первого и модификации — работа химического стола
      (LAB.chemVariant); прежде с третьего уровня в терминале было до двухсот строк составов всех сортов */
   var inGoods = {}; goods.forEach(function (x) { inGoods[x[0]] = 1; });
-  for (var ik in LAB.ITEMS) { var idf = LAB.ITEMS[ik]; if (!inGoods[ik] && !LAB.chemVariant(idf) && idf.kind !== "part" && !idf.cat && idf.depth && idf.depth <= G.L && idf.depth > G.L - 20 && LAB.srcOk(idf, "buy")) goods.push([ik, 1]); }
+  for (var ik in LAB.ITEMS) { var idf = LAB.ITEMS[ik]; if (!inGoods[ik] && !LAB.chemVariant(idf) && idf.kind !== "part" && !idf.cat && idf.depth && idf.depth <= G.L && LAB.Le(idf.depth) > LAB.Le(G.L) - 20 && LAB.srcOk(idf, "buy")) goods.push([ik, 1]); }
   var items = goods.map(function (g) {
     var id = g[0], isAmmo = id.indexOf("ammo:") === 0, name = isAmmo ? LAB.AMMO[id.slice(5)].n : LAB.ITEMS[id].n;
     var base = isAmmo ? (LAB.AMMO[id.slice(5)].price || 40) : LAB.ITEMS[id].price;
@@ -3046,7 +3050,7 @@ function hqMenu(o) {
 function reactorMenu(o) {
   var st = objState(o);
   if (G.done) { say("Пульт молчит. «Исток» спит."); return; }
-  if (!o.final && st.key) { say("Ключ повёрнут. Под пультом раскрылся Шов: спуск ниже — там, где гул."); seamMenu(o); return; }
+  if (!o.final && st.key) { say(G.L === 100 ? "Ключ повёрнут. Под пультом раскрылся Разлом: спуск ниже — туда, где он начался." : "Ключ повёрнут. Под пультом раскрылся Шов: спуск ниже — там, где гул."); seamMenu(o); return; }
   var steps = [
     { k: "mag", label: "Шаг первый: выровнять магнетронное удержание", run: function (cb) { LAB.mini.tune(cb, { hard: true }); } },
     { k: "pos", label: "Шаг второй: стабилизировать позитронную ловушку", run: function (cb) { LAB.mini.rhythm(4, cb); } },
@@ -3069,26 +3073,29 @@ function reactorMenu(o) {
     } };
   });
   A("play", "reactor_hum_short");
-  UIx("menu", o.final ? "Пульт «Истока»" : "Пульт реактора «Исток»", items); /* (3.7, нелогичность) настоящий Исток — не реактор */
+  UIx("menu", riftRoot() ? "Пульт Ядра Разлома" : trueSource() ? "Пульт «Истока»" : "Пульт реактора «Исток»", items); /* (3.7, нелогичность) настоящий Исток — не реактор; (после 4.1) финал — у корня Разлома */
 }
 /* На 10-м уровне ключ не глушит «Исток», а сшивает: под пультом
    раскрывается Шов — путь глубже. Интерлюдия — из блока I. */
 function seamOpen(o) {
-  journal("Ключ «Эхо» повёрнут у пульта «Истока». Реактор не заглох — под ним раскрылся Шов.");
+  journal(G.L === 100 ? "Ключ «Эхо» повёрнут у пульта настоящего «Истока». Граница не легла: Разлом уходит ниже — его ядро на самом дне." : "Ключ «Эхо» повёрнут у пульта «Истока». Реактор не заглох — под ним раскрылся Шов.");
   G.cores["used" + G.L] = true;
   autosave();
-  var B = LAB.BLOCKS[1], pages = (B && B.interlude && B.interlude[G.L]) || [
+  /* интерлюдия — у блока ниже (на десятом — блок I, на сотом — блок VI), прежде — только у блока I */
+  var B = LAB.BLOCKS[LAB.blockOf(G.L + 1)], B0 = LAB.BLOCKS[LAB.blockOf(G.L)];
+  var pages = (B && B.interlude && B.interlude[G.L]) || (B0 && B0.interlude && B0.interlude[G.L]) || [
     "Ключ поворачивается. «Эхо» замолкает — и вместо тишины приходит гул, но не сверху: снизу.",
     "«Исток» не глохнет. Он сшивает. Пол реакторного зала расходится, и под ним открывается колодец — старая скважина, раздвинутая складкой. Шов.",
-    "Где-то наверху оживает скоростной лифт. Но Разлом не закрылся: его корень — глубже. Путь один — вниз."
+    "Где-то наверху оживает скоростной лифт. Но Разлом не закрылся: его ядро — на самом дне, далеко внизу. Путь один — вниз."
   ];
-  UIx("pages", pages, { title: "Шов", done: function () { UIx("showGame"); seamMenu(o); } });
+  UIx("pages", pages, { title: G.L === 100 ? "Разлом" : "Шов", done: function () { UIx("showGame"); seamMenu(o); } });
 }
 function seamMenu(o) {
   if (LAB.LEVELS_N <= G.L) { finale(o); return; }
-  UIx("menu", "Шов под реактором", [
-    { label: "Спуститься в Шов. Назад пути не будет", fn: function () { descend(o, true); } },
-    { label: "Остаться на этом этаже", fn: function () { say("Шов гудит под ногами и ждёт."); } }
+  var rift = G.L === 100;
+  UIx("menu", rift ? "Разлом под Истоком" : "Шов под реактором", [
+    { label: rift ? "Спуститься в Разлом. Назад пути не будет" : "Спуститься в Шов. Назад пути не будет", fn: function () { descend(o, true); } },
+    { label: "Остаться на этом этаже", fn: function () { say(rift ? "Разлом звенит под ногами и ждёт." : "Шов гудит под ногами и ждёт."); } }
   ]);
 }
 function finale(o) {
@@ -3200,12 +3207,12 @@ function tradeGoods(kind, L) {
   if (kind === "parts") for (var pk in LAB.PART_DEPTH) {
     var pd = LAB.PART_DEPTH[pk], pi = LAB.ITEMS[pk];
     if (pd <= 10 || pk === "proto" || !pi || !pi.price || goods.indexOf(pk) >= 0 || named[pi.n]) continue;
-    if ((pd <= L && pd > L - 20) || ownBlock(pd)) { goods.push(pk); own[pk] = 1; }
+    if ((pd <= L && LAB.Le(pd) > LAB.Le(L) - 20) || ownBlock(pd)) { goods.push(pk); own[pk] = 1; }
   }
   if (kind === "ammo") for (var ak in LAB.AMMO) {
     var ad = LAB.AMMO[ak], dp = ad.depth || 1;
     if (["energy", "magnetron", "slug", "positron"].indexOf(ak) >= 0 || ad.loot === false) continue;
-    if ((dp <= L && dp > L - 25) || ownBlock(dp)) { goods.push("ammo:" + ak); own["ammo:" + ak] = 1; }
+    if ((dp <= L && LAB.Le(dp) > LAB.Le(L) - 25) || ownBlock(dp)) { goods.push("ammo:" + ak); own["ammo:" + ak] = 1; }
   }
   /* (3.7) и всё прочее — по глубине */
   return goods.filter(function (id) { var d = id.indexOf("ammo:") === 0 ? LAB.AMMO[id.slice(5)] : LAB.ITEMS[id]; return !!d && (own[id] || (d.depth || 1) <= L); });
@@ -3589,7 +3596,7 @@ function useItem(id) {
   /* (3.7, нелогичность) стакан под крышкой горячий с полчаса, остывший — слабее: прежде «не остывал» никогда */
   var cupT = d.cup && G.cupT && G.cupT[id] && G.cupT[id].length ? G.cupT[id].shift() : null;
   var cold = cupT != null && (G.day || 0) * 1440 + (G.min || 0) - cupT > 40;
-  var hv = d.cup ? Math.round(d.heal * (1 + (Math.min(cupL, G.L) - 1) * 0.15) * (cold ? 0.6 : 1)) : d.heal;
+  var hv = d.cup ? Math.round(d.heal * (1 + (LAB.Le(Math.min(cupL, G.L)) - 1) * 0.15) * (cold ? 0.6 : 1)) : d.heal;
   if (cold) { msg.push("Напиток остыл: греет и бодрит слабее."); d = coldCup(d); }
   if (hv && LAB.chem) hv = Math.round(hv * LAB.chem.healK(id, d)); /* (3.0) фармакология: лекарства в умелых руках лечат сильнее */
   if (d.heal && !od) { var before = G.hp; G.hp = Math.min(G.hpMax, G.hp + (/^medkit|^bandage/.test(id) && LAB.ach && LAB.ach.has("medic") ? Math.round(hv * 1.17) : hv)); if (G.hp > before || !food) msg.push("Здоровье плюс " + (G.hp - before) + ", теперь " + G.hp + " из " + G.hpMax + "."); }

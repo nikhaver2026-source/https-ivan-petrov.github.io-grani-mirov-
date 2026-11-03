@@ -204,7 +204,7 @@ LAB.trapLoot = function (L, F, ot, tag) {
   if (tag !== "arms" && tag !== "tech" && tag !== "parts") return null;
   var h = LAB.hash32("trap:" + L + "-" + F + "-" + ot + "-" + tag);
   if (h % 100 >= 9) return null;
-  var pool = ORDER.filter(function (k) { return T[k].depth <= L && T[k].depth > L - 30 && T[k].trig !== "remote"; });
+  var pool = ORDER.filter(function (k) { return T[k].depth <= L && LAB.Le(T[k].depth) > LAB.Le(L) - 30 && T[k].trig !== "remote"; });
   if (!pool.length) return null;
   return { kind: "item", item: itemOf(pool[(h >>> 8) % pool.length]), n: 1 };
 };
@@ -755,7 +755,7 @@ function disarm(tp) {
     if (tp.by === "oko") { fs0.okoDis = (fs0.okoDis || 0) + 1; k = Math.max(0, 1 - (fs0.okoDis - 1) / 6); }
     var keep = k > 0.5; /* первые три: 1, 5/6, 4/6 */
     if (keep) g.inv[d.item] = (g.inv[d.item] || 0) + 1;
-    gm().gainXP(Math.round((6 + Math.floor(g.L / 4)) * k));
+    gm().gainXP(Math.round((6 + Math.floor(LAB.Le(g.L) / 4)) * k));
     ev("disarm", 1);
     if (tp.by === "oko" && LAB.oko && LAB.oko.react) setTimeout(function () { LAB.oko.react("oko_trap_off"); }, 1500);
     say(cap1(nameOf(tp)) + " " + gv(d, "обезврежен", "обезврежена", "обезврежены") + ". " + (keep ? cap1(d.n) + " теперь ваш" + gv(d, "", "а", "и") + ": в рюкзаке, раздел «Ловушки и мины»." : "Взять с " + gv(d, "него", "неё", "них") + " нечего: сапёры ОКО ставят такие наспех, из лома." + (k <= 0 ? " Опыта за мины ОКО на этом этаже больше нет." : "")));
@@ -926,7 +926,7 @@ function okoCount() { return list().filter(function (tp) { return tp.by === "oko
    кабинета, мина в закрытой зоне. Свои — у каждой глубины. Раскладка —
    по этажу, раз и навсегда; какие обезврежены и сработали — помнит этаж. */
 var OLD = { K: ["jaw", "alarm", "wire", "spikes", "shock", "mine", "glue"], P: ["press", "jaw", "mine", "alarm", "net"], C: ["resin", "spikes", "net", "gas", "glue"], O: ["mirror", "echo", "glue", "shock"], M: ["gear", "shock", "magnet", "emp"], I: ["roots", "glue", "timeless"] };
-function eraOf(L) { return L <= 10 ? "K" : L <= 20 ? "P" : L <= 40 ? "C" : L <= 60 ? "O" : L <= 80 ? "M" : "I"; }
+function eraOf(L) { if (L > 100 && LAB.deepEra) return LAB.deepEra(L); return L <= 10 ? "K" : L <= 20 ? "P" : L <= 40 ? "C" : L <= 60 ? "O" : L <= 80 ? "M" : "I"; } /* (после 4.1) ниже сотого — уклад глубокого блока (deep.js) */
 function worldGen() {
   var fs = CUR().fs, fl = CUR().fl, g = G();
   if (fs.trapGen) return;

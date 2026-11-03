@@ -867,7 +867,7 @@ function questGift(n, h, stage, avoid) {
     if (pick === "@herb") { var hb = LAB.medic && LAB.medic.HERBS; pick = hb && LAB.medic.era ? hb[LAB.medic.era(L)] : null; if (!pick) continue; }
     if (pick === "@part") {
       var parts = LAB.PARTS.filter(function (p) { return (LAB.PART_DEPTH[p] || 1) <= L && p !== avoid && !mine[p]; });
-      var own = parts.filter(function (p) { return (LAB.PART_DEPTH[p] || 1) > L - 20; }); /* (3.7) деталь своего блока */
+      var own = parts.filter(function (p) { return LAB.Le(LAB.PART_DEPTH[p] || 1) > LAB.Le(L) - 20; }); /* (3.7) деталь своего блока */
       if (own.length) parts = own;
       if (!parts.length) continue;
       pick = parts[(h >>> 11) % parts.length];
@@ -884,7 +884,7 @@ function giftName(it) { return gm().itemName(it).replace(/\.$/, "").replace(/^[�
 var REW = { fetch: [12, 12], kill: [12, 8], visit: [40, 28], clear: [24, 16], body: [40, 28], keep: [34, 22], courier: [55, 36], deep: [70, 42] };
 function legacyReward(q, n, h, L, F) {
   var b = REW[q.type] || [30, 30], cr = b[0], xp = b[1], st = q.stage || 0;
-  var r = { cr: LAB.credits(cr * (1 + 0.15 * st), L, F), xp: Math.round(xp * (1 + 0.4 * L) * (1 + 0.1 * st)) };
+  var r = { cr: LAB.credits(cr * (1 + 0.15 * st), L, F), xp: Math.round(xp * (1 + 0.4 * LAB.Le(L)) * (1 + 0.1 * st)) };
   if (q.type !== "deep") r.gift = questGift(n, h, Math.min(st, 2), q.item);
   return r;
 }
@@ -1193,7 +1193,7 @@ function crossQuest(n, t, h) {
     q.short = "дойти до этажа " + q.tF + " уровня " + q.tL;
     q.way = "дальняя просьба: доклад с нижнего уровня";
   }
-  q.reward = q.type === "courier" ? { cr: 0, xp: 0 } : { cr: LAB.credits(8 * (14 + 0.6 * t), g.L, g.F), xp: Math.round(5 * (14 + 0.6 * t) * (1 + 0.4 * g.L)) };
+  q.reward = q.type === "courier" ? { cr: 0, xp: 0 } : { cr: LAB.credits(8 * (14 + 0.6 * t), g.L, g.F), xp: Math.round(5 * (14 + 0.6 * t) * (1 + 0.4 * LAB.Le(g.L))) };
   q.t0 = nowMin();
   return q;
 }

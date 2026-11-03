@@ -40,8 +40,8 @@ var DRINKS = {
 };
 /* (3.5) цена растёт с глубиной так же, как лечение (прежде медленнее), и — по режиму
    сложности, как у прочих торговцев */
-function priceOf(d) { var dk = LAB.dk ? LAB.dk() : {}; return Math.round(d.p * (1 + (G().L - 1) * 0.15) * (dk.price || 1)); }
-function healOf(d) { return Math.round(d.hp * (1 + (G().L - 1) * 0.15)); }
+function priceOf(d) { var dk = LAB.dk ? LAB.dk() : {}; return Math.round(d.p * (1 + (LAB.Le(G().L) - 1) * 0.15) * (dk.price || 1)); }
+function healOf(d) { return Math.round(d.hp * (1 + (LAB.Le(G().L) - 1) * 0.15)); }
 function machineName(o) { return DRINKS[o.type] ? DRINKS[o.type].n : "Автомат"; }
 function drinkMenu(o) {
   var g = G(), st = gm().objState(o);
@@ -248,10 +248,12 @@ var poolCache = {};
    колоды, без повторов, пока колода не кончится. Выбор запоминается. */
 function thread(o, h) {
   var st = gm().objState(o), Lr = lore(), L = G().L;
-  var own = (Lr.mail && Lr.mail[L]) || [], gl = (Lr.mail && Lr.mail.g) || [];
+  /* (после 4.1) ниже сотого уровня — почта своего глубокого блока (LORE.mail["b6"] …), без почты «Ковчега» */
+  var dk = L > 100 ? "b" + LAB.blockOf(L) : null;
+  var own = (Lr.mail && Lr.mail[dk || L]) || [], gl = dk ? own : (Lr.mail && Lr.mail.g) || [];
   if (!st.th) {
-    var useOwn = own.length && gm().deckLeft("mail:" + L, own.length) > 0 && (h % 3 !== 0 || !gl.length || gm().deckLeft("mail:g", gl.length) <= 0);
-    if (useOwn) st.th = { L: L, i: gm().deckDraw("mail:" + L, own.length) };
+    var useOwn = own.length && gm().deckLeft("mail:" + (dk || L), own.length) > 0 && (dk || h % 3 !== 0 || !gl.length || gm().deckLeft("mail:g", gl.length) <= 0);
+    if (useOwn) st.th = { L: dk || L, i: gm().deckDraw("mail:" + (dk || L), own.length) };
     else if (gl.length) st.th = { L: "g", i: gm().deckDraw("mail:g", gl.length) };
     else return null;
   }
@@ -298,9 +300,10 @@ function pcData(o) {
   var rm = gm().roomAt(o.x, o.y);
   var lg = rm && Lr.logs && Lr.logs[rm.type];
   if (lg && lg.length && d.state === "ok") { d.logTitle = "Журнал испытаний: " + rm.name; var k0 = (h >>> 7) % lg.length; d.logs = logPair(lg, k0); d.logRef = { rt: rm.type, k: k0, r: rm.name }; }
-  var docs = Lr.docs && Lr.docs[L];
-  if (docs && docs.length && d.state === "ok" && (h >>> 9) % 2 === 0) { var di = (h >>> 10) % docs.length; d.docs = [docs[di]]; d.docRef = [L + "." + di]; }
-  var cams = Lr.cams && Lr.cams[L];
+  var Lk = L > 100 ? "b" + LAB.blockOf(L) : L; /* (после 4.1) у глубоких блоков — свои документы и записи камер на весь блок */
+  var docs = Lr.docs && Lr.docs[Lk];
+  if (docs && docs.length && d.state === "ok" && (h >>> 9) % 2 === 0) { var di = (h >>> 10) % docs.length; d.docs = [docs[di]]; d.docRef = [Lk + "." + di]; }
+  var cams = Lr.cams && Lr.cams[Lk];
   if (cams && cams.length && (h >>> 11) % 2 === 0) d.cams = [cams[(F + pcIndex(o)) % cams.length]];
   poolCache[key] = d;
   return d;
@@ -308,7 +311,7 @@ function pcData(o) {
 function randomOwner(L, h) {
   var N = LAB.NAMES || { m: ["Иван"], f: ["Анна"], sm: ["Петров"], sf: ["Петрова"] };
   var fem = h % 2 === 0, first = (fem ? N.f : N.m)[(h >>> 2) % (fem ? N.f : N.m).length], last = (fem ? N.sf : N.sm)[(h >>> 4) % (fem ? N.sf : N.sm).length];
-  var pos = (lore().posts && lore().posts[L]) || ["сотрудник"];
+  var pos = (lore().posts && lore().posts[L > 100 ? "b" + LAB.blockOf(L) : L]) || ["сотрудник"];
   return first + " " + last + ", " + pos[(h >>> 6) % pos.length];
 }
 

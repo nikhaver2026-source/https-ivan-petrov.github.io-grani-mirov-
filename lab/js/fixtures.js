@@ -233,7 +233,7 @@ function picker(o, sub) {
 }
 var fromPool = null;
 function NT() { return (LAB.ANNEX_N || {})[era()] || (LAB.ANNEX_N || {}).K || null; }
-function FR() { return (LAB.ANNEX_F || {})[era()] || (LAB.ANNEX_F || {}).K || null; }
+function FR() { var t = (LAB.ANNEX_F || {})[era()] || (LAB.ANNEX_F || {}).K || null; return t && G() && G().L > 100 && LAB.deepClean ? LAB.deepClean(t, "F" + era()) : t; } /* (после 4.1) в глубоких блоках — без имён верхних глубин */
 function lines(kind, n, r, pick) {
   var nt = NT(), arr = nt && nt[kind], out = [];
   if (!arr || !arr.length) return out;

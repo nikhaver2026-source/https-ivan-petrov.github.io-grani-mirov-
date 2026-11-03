@@ -812,6 +812,12 @@ LAB.ROBOT_NPC = {
 
 /* Оценки уровней врагов и предметов по глубине комплекса. */
 LAB.depth = function (L, F) { return (L - 1) * LAB.FLOORS_N + (F - 1); };
+/* (после 4.1) приведённый уровень (deep.js переопределяет для глубоких блоков; до сотого — сам уровень) */
+LAB.effL = function (L) { return L; };
+LAB.Le = function (L) { return L; };
+/* (после 4.1) номер этажа во всём комплексе — для имён, образцов и ссылок (не для роста врагов и цен):
+   до сотого уровня совпадает с глубиной, ниже — у каждого этажа свой */
+LAB.floorNo = function (L, F) { return (L - 1) * LAB.FLOORS_N + ((F || 1) - 1); };
 /* До Ядра враги растут быстро, ниже — медленнее: путь вниз долгий. */
 LAB.foeLevel = function (L, F) { var d = LAB.depth(L, F); return d < 200 ? 1 + Math.floor(d / 4) : 51 + Math.floor((d - 200) / 6); };
 /* Сколько стоят вещи и сколько кредитов попадается на этой глубине. */
@@ -909,9 +915,11 @@ LAB.addBlock = function (n, part) {
   if (part.events) { B.events = B.events.concat(part.events); LAB.EVENTS_B[n] = B.events; }
   /* уровней столько, сколько их готово подряд от первого: недописанный блок не ломает игру */
   var nL = 10;
-  while (LAB.LEVELS[nL + 1] && LAB.LEVELS[nL + 1].rooms && LAB.LEVELS[nL + 1].foes && LAB.BOSSES[LAB.LEVELS[nL + 1].boss] &&
+  /* (после 4.1) уровни глубоких блоков (ниже сотого) считает deep.js: здесь — только записанные заранее */
+  while (nL < 100 && LAB.LEVELS[nL + 1] && LAB.LEVELS[nL + 1].rooms && LAB.LEVELS[nL + 1].foes && LAB.BOSSES[LAB.LEVELS[nL + 1].boss] &&
     LAB.LEVELS[nL + 1].rooms.every(function (r) { return LAB.ROOMS[r]; }) && LAB.LEVELS[nL + 1].foes.every(function (f) { return LAB.FOES[f]; })) nL++;
   LAB.LEVELS_N = nL;
+  if (nL >= 100 && LAB.deepLevelsN) LAB.deepLevelsN();
   return B;
 };
 /* Блок уровня (данные блока или пустая заготовка). */

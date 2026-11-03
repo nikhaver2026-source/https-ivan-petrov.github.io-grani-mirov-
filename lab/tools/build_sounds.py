@@ -162,6 +162,20 @@ PACKS = {
   # (выбор автора 29.10) Музыка уровней 3 и 6 — в стерео.
   "lab_km_scp2": ("SCP-x2x (Unseen Presence)", "Kevin MacLeod (incompetech.com)", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:Spc_X2x_(Unseen_Presence)_by_Kevin_MacLeod.ogg"),
   "lab_km_shadow5": ("Shadowlands 5 - Antechamber", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Shadowlands_5_-_Antechamber_(ISRC_USUAN1700038).mp3"),
+  # (после 4.1, просьба автора) Музыка десяти новых блоков — давящая, гнетущая, как на уровнях 3, 6
+  # и 10 (SCP-x2x, Shadowlands 5, Elevator To Reactor): без мелодии и без ритма рока. Отбор — по
+  # спектру и движению главной ноты: у всех треков ниже оно не больше, чем у эталонов.
+  "lab_km_scp1": ("SCP-x1x (Gateway to Hell)", "Kevin MacLeod (incompetech.com)", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:Scp_x1x_(Gateway_to_Hell)_by_Kevin_MacLeod.ogg"),
+  "lab_km_shadow2": ("Shadowlands 2 - Bridge", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Shadowlands_2_-_Bridge_(ISRC_USUAN1700035).mp3"),
+  "lab_km_shadow3": ("Shadowlands 3 - Machine", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Shadowlands_3_-_Machine_(ISRC_USUAN1700036).mp3"),
+  "lab_km_penumbra": ("Penumbra", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Penumbra_(ISRC_USUAN1200105).mp3"),
+  "lab_km_gloom": ("Gloom Horizon", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Gloom_Horizon_(ISRC_USUAN1100813).mp3"),
+  "lab_km_distant": ("Distant Tension", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Distant_Tension_(ISRC_USUAN1100257).mp3"),
+  "lab_km_echoes": ("Echoes of Time v2", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Echoes_of_Time_v2_(ISRC_USUAN1300030).mp3"),
+  "lab_km_nightbreak": ("Night Break", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Night_Break_(ISRC_USUAN1100380).mp3"),
+  "lab_km_thunder": ("Thunder Dreams", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Thunder_Dreams_(ISRC_USUAN1200063).mp3"),
+  "lab_km_mechanolith": ("Mechanolith", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Mechanolith_(ISRC_USUAN1100879).mp3"),
+  "lab_km_riverofio": ("River of Io", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:River_of_Io_(ISRC_USUAN1600065).mp3"),
   # (заход H и запас захода F) Музыка глубоких блоков: по четыре трека на блок.
   "lab_km_celeste": ("Mary Celeste", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Mary_Celeste_(ISRC_USUAN1500016).mp3"),
   "lab_km_scp3": ("SCP-x3x (I Am Not OK)", "Kevin MacLeod (incompetech.com)", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:Scp_X3x_(I_Am_Not_OK)_by_Kevin_MacLeod.ogg"),
@@ -558,6 +572,17 @@ WOOD_AF = "highpass=f=55,equalizer=f=1800:t=q:w=1.1:g=4,treble=g=3:f=5000"
 # сухой треск и писк скрипучего пола (124289) убраны, а звучит скрип реже (floors.js).
 E("step_concrete", "step", [SPL(813622, 5, af=CONC_AF, min_len=0.06, clean="step"), SPL(554380, 7, af=CONC_AF, min_len=0.06, clean="step")], n=10, mx=0.4)
 E("step_wood", "step", [SPL(164315, 9, af=WOOD_AF, start=39.0, dur=6.0, min_len=0.06, clean="step")], n=9, mx=0.4)
+# (после 4.1, просьба автора) Полы новых блоков: в помещениях комплексов — свои поверхности.
+# Ковролин (жилые каюты, палаты, приёмные), газон и земля (оранжереи, парки), песок (испытательные
+# арены), камень (древние выработки), кафель (медицина, лаборатории), резиновые маты (спортзалы,
+# испытательные стенды). Записи — CC0: Kenney Impact Sounds и Fantozzi's footsteps.
+STEP_SOFT = "highpass=f=60,equalizer=f=2200:t=q:w=1.2:g=5,treble=g=4:f=5000"
+E("step_carpet", "step", [S(C, "lab_kimpact", "footstep_carpet_*.ogg", af=STEP_SOFT)], n=5, mx=0.4)
+E("step_grass", "step", [S(C, "lab_kimpact", "footstep_grass_*.ogg", af=STEP_SOFT)], n=5, mx=0.4)
+E("step_sand", "step", [S(C, "lab_stonesteps*", "Fantozzi-Sand*.ogg", af=STEP_SOFT), S(C, "lab_kimpact", "footstep_snow_*.ogg", af=STEP_SOFT)], n=8, mx=0.45)
+E("step_stone", "step", [S(C, "lab_stonesteps*", "Fantozzi-Stone*.ogg", af=CONC_AF)], n=6, mx=0.4)
+E("step_tile", "step", [S(C, "lab_stonesteps*", "Fantozzi-Stone*.ogg", af=PITCH(1.18) + ",highpass=f=180,equalizer=f=3200:t=q:w=1.2:g=6,treble=g=6:f=6000")], n=6, mx=0.3)
+E("step_rubber", "step", [S(C, "lab_kimpact", "footstep_carpet_*.ogg", af=PITCH(0.82) + ",highpass=f=50,lowpass=f=5200,equalizer=f=900:t=q:w=1.0:g=3")], n=5, mx=0.4)
 E("floor_creak", "step", [SPL(822745, 6, min_len=0.15, max_len=0.75, clean="creak")], n=6, mx=0.8, v=0.8)
 E("door_threshold", "step", [S(A, "lab_metalsteps*", "metal_steps_1[3-6].flac", af="asetrate=44100*0.7,aresample=44100")], n=3, v=0.6)
 
@@ -1129,6 +1154,25 @@ E("mus_b5_1", "music", [S(C, "lab_km_numinousshine", "*.mp3", start=85)], v=1.0,
 E("mus_b5_2", "music", [S(C, "lab_km_infiniteperspe", "*.mp3", start=45)], v=1.0, max=170)
 E("mus_b5_3", "music", [S(C, "lab_km_bathedinthelig", "*.mp3")], v=1.0, max=170)
 E("mus_b5_4", "music", [S(C, "lab_km_spacial", "*.mp3")], v=1.0, max=170)
+# (после 4.1) Новые блоки VI–XV: своя давящая музыка у каждого; стерео, как у уровней 3, 6 и 10.
+E("mus_b6_1", "music", [S(C, "lab_km_shadow2", "*.mp3")], v=1.0, max=170, ch=2, quiet=True)
+E("mus_b6_2", "music", [S(C, "lab_km_distant", "*.mp3")], v=1.0, max=170, ch=2, quiet=True)
+E("mus_b7_1", "music", [S(C, "lab_km_penumbra", "*.mp3", start=10)], v=1.0, max=170, ch=2, quiet=True)
+E("mus_b7_2", "music", [S(C, "lab_km_echoes", "*.mp3", start=20)], v=1.0, max=170, ch=2, quiet=True)
+E("mus_b8_1", "music", [S(C, "lab_km_scp1", "*.ogg", start=15)], v=1.0, max=170, ch=2, quiet=True)
+E("mus_b8_2", "music", [S(C, "lab_ambpack_The_20Surreal*", "*.mp3")], v=1.0, max=170, ch=2, quiet=True)
+E("mus_b9_1", "music", [S(C, "lab_km_nightbreak", "*.mp3")], v=1.0, max=170, ch=2, quiet=True)
+E("mus_b9_2", "music", [S(C, "lab_km_metaphysik", "*.mp3", start=20)], v=1.0, max=170, ch=2, quiet=True)
+E("mus_b10_1", "music", [S(C, "lab_km_shadow1", "*.mp3")], v=1.0, max=170, ch=2, quiet=True)
+E("mus_b10_2", "music", [S(C, "lab_km_riverofio", "*.mp3", start=15)], v=1.0, max=170, ch=2, quiet=True)
+E("mus_b11_1", "music", [S(C, "lab_km_thunder", "*.mp3", start=10)], v=1.0, max=170, ch=2, quiet=True)
+E("mus_b11_2", "music", [S(C, "lab_km_gloom", "*.mp3")], v=1.0, max=170, ch=2, quiet=True)
+E("mus_b12_1", "music", [S(C, "lab_km_shadow3", "*.mp3")], v=1.0, max=170, ch=2, quiet=True)
+E("mus_b12_2", "music", [S(C, "lab_km_mechanolith", "*.mp3")], v=1.0, max=170, ch=2, quiet=True)
+E("mus_b13_1", "music", [S(C, "lab_ambpack_Final*", "*.mp3")], v=1.0, max=170, ch=2, quiet=True)
+E("mus_b14_1", "music", [S(C, "lab_ambpack_Infestation*", "*.mp3")], v=1.0, max=170, ch=2, quiet=True)
+E("mus_b14_2", "music", [S(C, "lab_ambpack_Cage*", "*.mp3")], v=1.0, max=170, ch=2, quiet=True)
+E("mus_b15_1", "music", [S(C, "lab_ambpack_The_20Depths*", "*.mp3")], v=1.0, max=170, ch=2, quiet=True)
 
 # ═════ (2.0) ИНСТРУМЕНТЫ: записи настоящих нот (Freesound, CC0) ═════
 # Пианино — «88 piano keys, long reverb» (TEDAgame), гитара — «Nylon Guitar

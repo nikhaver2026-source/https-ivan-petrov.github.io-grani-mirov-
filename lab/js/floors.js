@@ -24,7 +24,14 @@
 var LAB = (typeof window !== "undefined" ? window.LAB : globalThis.LAB); /* и в Node — для проверок мира */
 
 LAB.SURF.concrete = { n: "бетон", base: "concrete" };
-LAB.SURF.wood = { n: "деревянный пол", base: "wood", creak: 0.07 }; /* (3.2) скрип — изредка: примерно на каждом пятнадцатом шаге, а не на пятом */
+LAB.SURF.wood = { n: "деревянный пол", base: "wood", creak: 0.07 };
+/* (после 4.1) Полы помещений глубоких блоков: своя запись шагов у каждого. */
+LAB.SURF.carpet = { n: "ковролин", base: "carpet" };
+LAB.SURF.grass = { n: "газон и мягкая земля", base: "grass" };
+LAB.SURF.sand = { n: "песок", base: "sand" };
+LAB.SURF.stone = { n: "каменная плитка", base: "stone" };
+LAB.SURF.tile = { n: "кафель", base: "tile" };
+LAB.SURF.rubber = { n: "резиновые маты", base: "rubber" }; /* (3.2) скрип — изредка: примерно на каждом пятнадцатом шаге, а не на пятом */
 
 function set(s) { var o = {}; s.split(/\s+/).forEach(function (k) { if (k) o[k] = 1; }); return o; }
 
@@ -67,12 +74,32 @@ var DEEP = [0, 0.6, 0.25, 0.05, 0.2, 0.3]; /* «Подножие», «Колыб
 var TECH = 0.35; /* прибавка к доле у коридора к техническому помещению (не к лестничной клетке) */
 function corrShare(L) { return CORR[L] != null ? CORR[L] : DEEP[Math.min(5, LAB.blockOf(L))] || 0; }
 
+/* (после 4.1, просьба автора) Глубокие блоки (ниже сотого уровня): все коридоры — бетонные; пол
+   помещения — свой у каждого: у помещения блока — его fl (кафель, ковролин, резина, песок, камень,
+   газон, дерево, бетон, металл…), иначе — по роду помещения в этом комплексе (deep.roomSurf блока:
+   кабинеты, лаборатории, жильё, склады…), иначе — пол сектора (песок арен, камень выработок), иначе —
+   общий пол блока для прочих помещений, иначе — как наверху. */
+function deepRoomSurf(fl, rm) {
+  var t = rm.type, def = LAB.ROOMS[t] || {};
+  if (def.fl) return def.fl === "metal" ? null : def.fl;
+  var D = LAB.DEEP && LAB.DEEP[LAB.blockOf(fl.L)], rs = D && D.roomSurf;
+  if (rs) {
+    var cat = LAB.garrison && LAB.garrison.category ? LAB.garrison.category(rm) : null;
+    if (WOOD[t] && rs.office) return rs.office;
+    if (CONC[t] && rs.tech) return rs.tech;
+    if (cat && rs[cat]) return rs[cat];
+  }
+  var so = LAB.deepSector ? LAB.deepSector(fl.L) : null;
+  if (so && so.s && so.s.surf) return so.s.surf === "metal" ? null : so.s.surf;
+  if (rs && rs.any) return rs.any;
+  return WOOD[t] ? "wood" : CONC[t] ? "concrete" : null;
+}
 function roomSurf(fl, r) {
   if (!fl.surfR) fl.surfR = [];
   var v = fl.surfR[r];
   if (v !== undefined) return v;
   var rm = fl.rooms[r], t = rm && rm.type;
-  v = !t ? null : WOOD[t] ? "wood" : CONC[t] ? "concrete" : null;
+  v = !t ? null : fl.L > 100 ? deepRoomSurf(fl, rm) : WOOD[t] ? "wood" : CONC[t] ? "concrete" : null;
   fl.surfR[r] = v;
   return v;
 }
@@ -82,7 +109,8 @@ function corrSurf(fl, c) {
   if (v !== undefined) return v;
   var cor = fl.corrs[c];
   v = null;
-  if (cor) {
+  if (cor && fl.L > 100) v = "concrete"; /* (после 4.1) в глубоких блоках коридоры — бетонные все */
+  else if (cor) {
     var d = null;
     for (var i = 0; i < fl.doors.length; i++) if (fl.doors[i].id === cor.door) { d = fl.doors[i]; break; }
     var ra = fl.rooms[cor.a], rb = fl.rooms[cor.b];
