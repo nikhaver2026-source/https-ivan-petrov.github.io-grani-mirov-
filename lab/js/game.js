@@ -4350,7 +4350,8 @@ function characterText() {
   if (st.length) lines.push("Состояние: " + st.join(", ") + ".");
   lines.push("Энергия имплантов " + G.en + " из " + G.enMax + ". Уровень героя " + G.lvl + ", опыт " + G.xp + " из " + LAB.xpNeed(G.lvl) + ". Сила " + statTxt("str") + ", ловкость " + statTxt("agi") + ", интеллект " + statTxt("mind") + ", харизма " + statTxt("cha") + ". Кредиты " + G.credits + ".");
   if (LAB.chem) lines.push(LAB.chem.line()); /* (3.0) ступени химии */
-  lines.push("Комплекс: уровень " + G.L + " «" + LAB.LEVELS[G.L].name + "», этаж " + G.F + ". Пропуск: " + (G.tier ? LAB.TIERS[G.tier].n.toLowerCase() : "нет") + ". Лифт этажей: " + (G.elev[G.L] ? "есть пропуск" : "нет пропуска") + ". " + (!LAB.isReactorLevel(G.L) ? "Шлюзовая ключ-карта уровня " + G.L + ": " + (G.gate[G.L] ? "есть" : "нет") : "Ключ доступа к «Истоку»: " + (hasCore(G.L) ? "есть" : "нет")) + ".");
+  if (LAB.traps && LAB.traps.stageCap && LAB.traps.stageCap() > 0 && LAB.traps.skillText) lines.push(LAB.traps.skillText()); /* (после 4.1) ловушечное дело — ниже Истока */
+  lines.push("Комплекс: уровень " + G.L + " «" + LAB.LEVELS[G.L].name + "», этаж " + G.F + ". Пропуск: " + (G.tier ? LAB.TIERS[G.tier].n.toLowerCase() : "нет") + ". Лифт этажей: " + (G.elev[G.L] ? "есть пропуск" : "нет пропуска") + ". " + (!LAB.isReactorLevel(G.L) ? "Шлюзовая ключ-карта уровня " + G.L + ": " + (G.gate[G.L] ? "есть" : "нет") : (riftRoot() ? "Ключ Ядра Разлома: " : "Ключ доступа к «Истоку»: ") + (hasCore(G.L) ? "есть" : "нет")) + "."); /* (после 4.1) на дне — Ядро Разлома, не Исток */
   lines.push("Образцов " + Object.keys(G.samples).length + ", тайников " + G.stats.secrets + ", записок " + G.stats.notes + ", побеждено врагов " + G.stats.kills + ". Режим сложности: " + LAB.dk().n.toLowerCase() + (S.turnBased ? ", бой пошаговый" : "") + ".");
   if (G.faction) lines.push("Фракция: " + LAB.FACTIONS[G.faction].n + ".");
   return lines;

@@ -132,7 +132,9 @@ function ammoBuyPrice(k) { return Math.max(2, Math.round((LAB.AMMO[k].price || 3
 /* (2.2) броня и оружие на прилавке — тоже по режиму: цена (price) и её рост с глубиной (pgrow) */
 function armorBuyPrice(a) { var L = G().L, dk = LAB.dk(), k = L <= 10 ? 1 + 0.15 * (L - 1) : 0.6 + 0.4 * LAB.wealth(L, G().F); return Math.round(armorValue(a) * (dk.price || 1) * (1 + (k - 1) * (dk.pgrow || 1))); }
 function weaponBuyPrice(w) { var dk = LAB.dk(); return Math.round(LAB.weaponPrice(w) * (LAB.QUAL_MULT[w.qual] || 1) * 1.1 * (dk.price || 1) * (1 + 0.15 * ((dk.pgrow || 1) - 1) * Math.min(9, LAB.blockOf ? LAB.blockOf(G().L) : 1))); }
-function bpPrice(rc) { return Math.round((90 + 25 * (rc.minL || 1)) * Math.min(4, buyK())); }
+/* (после 4.1) схема глубин — по приведённой глубине (LAB.Le): от настоящего уровня ниже Истока цена
+   доходила до миллионов кредитов; выше сотого уровня Le(L) = L, и цены прежние */
+function bpPrice(rc) { var m = rc.minL || 1; if (m > 100 && LAB.Le) m = LAB.Le(m); return Math.round((90 + 25 * m) * Math.min(4, buyK())); }
 
 /* ════════ СКУПКА ВСЕГО ════════
    ctx: { who: "supply" | "terminal" | "npc", prof — профиль пункта, npc —
