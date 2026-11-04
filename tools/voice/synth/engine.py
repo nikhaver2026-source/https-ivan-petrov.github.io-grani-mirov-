@@ -1,0 +1,655 @@
+#!/usr/bin/env python3.13
+"""engine.py — синтезатор-склейка голосами Gemini (с нуля, 4 ноября 2026). В игру пока не встраивается.
+
+Устройство:
+1. Текст: числа → слова, деление на интонационные отрезки по знакам препинания; у слова — место в отрезке.
+2. Единицы от длинных к коротким: цепочки слов подряд из одной записи (естественные стыки и интонация) →
+   отдельные слова → части слов (по времени букв) для слов, которых нет в базе.
+3. Выбор Витерби: цена единицы (последнее слово отрезка — из конца фразы-источника, чтобы окончание не
+   глоталось; соседние звуки как в цели, чтобы слова не слипались; длительность без выбросов) + цена стыка
+   (высота голоса, громкость, спектр на границе; слова подряд из одной записи — бесплатно).
+4. Склейка: стык с поиском лучшего совпадения волны и равномощным перекрытием; паузы по знакам; сглаживание
+   громкости соседних кусков.
+"""
+import re, json, os, functools, math
+import numpy as np, soundfile as sf
+
+SR = 24000
+R = "/home/user/https-ivan-petrov.github.io-grani-mirov-"
+ТУТ = "/root/S/us2"
+ГЛАСНЫЕ = set("аеиоуыэюяё")
+ЗВОНКИЕ = set("бвгджзй")
+СОНОРНЫЕ = set("лмнр")
+ГЛУХИЕ = set("пфктшсхцчщ")
+
+
+def класс(ch):
+    if not ch: return "п"
+    if ch in ГЛАСНЫЕ: return "г"
+    if ch in СОНОРНЫЕ: return "с"
+    if ch in ЗВОНКИЕ: return "з"
+    if ch in ГЛУХИЕ: return "к"
+    return "п"
+
+
+# ───────────────────────── 1. ТЕКСТ ─────────────────────────
+ЕД = ["", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять", "десять", "одиннадцать",
+      "двенадцать", "тринадцать", "четырнадцать", "пятнадцать", "шестнадцать", "семнадцать", "восемнадцать", "девятнадцать"]
+ДЕС = ["", "", "двадцать", "тридцать", "сорок", "пятьдесят", "шестьдесят", "семьдесят", "восемьдесят", "девяносто"]
+СОТ = ["", "сто", "двести", "триста", "четыреста", "пятьсот", "шестьсот", "семьсот", "восемьсот", "девятьсот"]
+
+
+def _до_тысячи(n, жен=False):
+    w = []
+    if n >= 100: w.append(СОТ[n // 100]); n %= 100
+    if n >= 20: w.append(ДЕС[n // 10]); n %= 10
+    if n:
+        if жен and n == 1: w.append("одна")
+        elif жен and n == 2: w.append("две")
+        else: w.append(ЕД[n])
+    return w
+
+
+def число(n):
+    n = int(n)
+    if n == 0: return "ноль"
+    if n < 0: return "минус " + число(-n)
+    w = []
+    if n >= 1_000_000:
+        м = n // 1_000_000; n %= 1_000_000; w += _до_тысячи(м)
+        w.append("миллион" if м % 10 == 1 and м % 100 != 11 else "миллиона" if 2 <= м % 10 <= 4 and not 12 <= м % 100 <= 14 else "миллионов")
+    if n >= 1000:
+        т = n // 1000; n %= 1000; w += _до_тысячи(т, жен=True)
+        w.append("тысяча" if т % 10 == 1 and т % 100 != 11 else "тысячи" if 2 <= т % 10 <= 4 and not 12 <= т % 100 <= 14 else "тысяч")
+    w += _до_тысячи(n)
+    return " ".join(x for x in w if x)
+
+
+# латиница: клавиши и частые слова игры, остальное — по правилам чтения
+ЛАТ_СЛОВА = {"enter": "энтер", "shift": "шифт", "alt": "альт", "ctrl": "контрол", "control": "контрол", "tab": "таб",
+             "esc": "эскейп", "escape": "эскейп", "space": "пробел", "backspace": "бэкспейс", "delete": "делит", "del": "делит",
+             "home": "хоум", "end": "энд", "page": "пейдж", "up": "ап", "down": "даун", "insert": "инсерт", "caps": "капс",
+             "lock": "лок", "windows": "виндоус", "android": "андроид", "gemini": "джемини", "elevenlabs": "элевен лабс",
+             "eleven": "элевен", "labs": "лабс", "flare": "флэр", "ok": "окей", "apk": "апэка", "wav": "вав", "mp": "эмпэ"}
+ЛАТ_БУКВЫ = {"a": "эй", "b": "би", "c": "си", "d": "ди", "e": "и", "f": "эф", "g": "джи", "h": "эйч", "i": "ай", "j": "джей",
+             "k": "кей", "l": "эл", "m": "эм", "n": "эн", "o": "оу", "p": "пи", "q": "кью", "r": "ар", "s": "эс", "t": "ти",
+             "u": "ю", "v": "ви", "w": "дабл ю", "x": "экс", "y": "уай", "z": "зед"}
+_ЛАТ_ПРАВИЛА = [("sch", "ш"), ("sh", "ш"), ("ch", "ч"), ("th", "т"), ("ph", "ф"), ("ck", "к"), ("qu", "кв"), ("oo", "у"),
+                ("ee", "и"), ("ea", "и"), ("ou", "ау"), ("ay", "эй"), ("ey", "эй"), ("y", "и"), ("a", "а"), ("b", "б"),
+                ("c", "к"), ("d", "д"), ("e", "е"), ("f", "ф"), ("g", "г"), ("h", "х"), ("i", "и"), ("j", "дж"), ("k", "к"),
+                ("l", "л"), ("m", "м"), ("n", "н"), ("o", "о"), ("p", "п"), ("q", "к"), ("r", "р"), ("s", "с"), ("t", "т"),
+                ("u", "у"), ("v", "в"), ("w", "в"), ("x", "кс"), ("z", "з")]
+
+
+def латиница(слово):
+    w = слово.lower()
+    if w in ЛАТ_СЛОВА: return ЛАТ_СЛОВА[w]
+    if re.fullmatch(r"f\d{1,2}", w): return "эф " + число(w[1:])
+    if len(w) == 1: return ЛАТ_БУКВЫ.get(w, w)
+    if w.isupper() if False else (слово.isupper() and len(w) <= 4): return " ".join(ЛАТ_БУКВЫ.get(ch, ch) for ch in w)
+    out, i = "", 0
+    while i < len(w):
+        for a, b in _ЛАТ_ПРАВИЛА:
+            if w.startswith(a, i): out += b; i += len(a); break
+        else: i += 1
+    return out
+
+
+ЗНАК_КОНЦА = {".": ".", "!": "!", "?": "?", "…": "…", ",": ",", ";": ";", ":": ":", "—": "—", "(": ",", ")": ","}
+
+
+def текст_в_отрезки(t):
+    """→ [{"w": [слова], "end": знак}] ; слова — нижний регистр, «ё» → «е»."""
+    t = str(t).replace("ё", "е").replace("Ё", "Е")
+    t = re.sub(r"\b[Ff](\d{1,2})\b", lambda m: " эф " + число(m.group(1)) + " ", t)
+    t = re.sub(r"[A-Za-z]+", lambda m: " " + латиница(m.group(0)) + " ", t)
+    t = re.sub(r"(\d+)\s*%", lambda m: число(m.group(1)) + " процентов", t)
+    t = re.sub(r"\d+", lambda m: " " + число(m.group(0)) + " ", t)
+    t = re.sub(r"\s[-–—]\s", " — ", t)
+    t = t.replace("...", "…")
+    out, cur = [], []
+    for tok in re.findall(r"[А-Яа-яA-Za-z]+(?:-[А-Яа-яA-Za-z]+)*|[.!?…,;:—()]", t):
+        if tok in ЗНАК_КОНЦА:
+            if cur: out.append({"w": cur, "end": ЗНАК_КОНЦА[tok]}); cur = []
+            elif out and tok in ".!?…": out[-1]["end"] = ЗНАК_КОНЦА[tok]
+        else:
+            for part in tok.lower().split("-"):
+                if part: cur.append(part)
+    if cur: out.append({"w": cur, "end": "."})
+    return out
+
+
+ПАУЗА = {".": 0.40, "!": 0.40, "?": 0.40, "…": 0.48, ",": 0.17, ";": 0.24, ":": 0.24, "—": 0.20}
+КОНЕЦ_ФРАЗЫ = set(".!?…")
+
+
+# ── ударения: словарь Koziev/NLP_Datasets all_accents (CC0), 1,68 млн словоформ ──
+_УД = None
+def ударение(w):
+    """Номер ударной буквы слова или −1, если слова нет в словаре."""
+    global _УД
+    if _УД is None:
+        p = f"{ТУТ}/dict/stress.json"
+        _УД = json.load(open(p, encoding="utf-8")) if os.path.exists(p) else {}
+    i = _УД.get(w, -1)
+    if i < 0 and sum(ch in ГЛАСНЫЕ for ch in w) == 1:   # одна гласная — она и ударная
+        i = next(k for k, ch in enumerate(w) if ch in ГЛАСНЫЕ)
+    return i
+
+
+def с_ударением(w):
+    """Слово, где ударная гласная — заглавная (для сравнения частей с учётом ударения); без словаря — как есть."""
+    i = ударение(w)
+    return w[:i] + w[i].upper() + w[i + 1:] if i >= 0 else w
+
+
+# ───────────────────────── 2. БАЗА ─────────────────────────
+def _yin_f0(x, sr=SR, fmin=70, fmax=400):
+    """Высота голоса окна x (Гц) или 0 — глухо. Упрощённый YIN."""
+    x = x - np.mean(x)
+    if np.sqrt(np.mean(x ** 2)) < 1e-3: return 0.0
+    tmin, tmax = int(sr / fmax), int(sr / fmin)
+    if len(x) < tmax * 2: return 0.0
+    W = len(x) - tmax
+    r = np.correlate(x, x[:W], mode="valid")[tmin:tmax]          # Σ x[j]·x[j+τ]
+    e = np.cumsum(np.concatenate([[0.0], x.astype(np.float64) ** 2]))
+    E0 = e[W]; Et = e[np.arange(tmin, tmax) + W] - e[np.arange(tmin, tmax)]
+    d = E0 + Et - 2 * r
+    cm = d * np.arange(1, len(d) + 1) / (np.cumsum(d) + 1e-12)
+    i = np.where(cm < 0.15)[0]
+    if not len(i): return 0.0
+    i = i[0]
+    while i + 1 < len(cm) and cm[i + 1] < cm[i]: i += 1
+    return sr / (tmin + i)
+
+
+@functools.lru_cache(maxsize=1)
+def _mel():
+    n_fft, n_mel = 512, 32
+    f = np.linspace(0, SR / 2, n_fft // 2 + 1)
+    m = lambda hz: 2595 * np.log10(1 + hz / 700)
+    im = lambda mm: 700 * (10 ** (mm / 2595) - 1)
+    pts = im(np.linspace(m(80), m(8000), n_mel + 2))
+    fb = np.zeros((n_mel, len(f)))
+    for i in range(n_mel):
+        l, c, r = pts[i], pts[i + 1], pts[i + 2]
+        fb[i] = np.clip(np.minimum((f - l) / (c - l), (r - f) / (r - c)), 0, None)
+    dct = np.cos(np.pi / n_mel * (np.arange(n_mel)[None, :] + 0.5) * np.arange(13)[:, None])
+    return fb, dct
+
+
+def _mfcc(x):
+    fb, dct = _mel()
+    if len(x) < 64: return np.zeros(13)
+    w = np.hanning(len(x)); spec = np.abs(np.fft.rfft(x * w, 512)) ** 2
+    return dct @ np.log(fb @ spec + 1e-8)
+
+
+def _db(x): return 10 * math.log10(float(np.mean(x ** 2)) + 1e-10)
+
+
+def _знаки(текст, слова):
+    """Знак после каждого слова по исходному тексту: '', '.', ',', '?', '!', ':', ';', '—', '…'; None — текст неизвестен."""
+    if not текст: return None
+    t = текст.replace("ё", "е").replace("Ё", "Е").replace("...", "…")
+    t = re.sub(r"\s[-–—]\s", " — ", t)
+    out, k = [], 0
+    for tok in re.findall(r"[А-Яа-яA-Za-z0-9]+(?:-[А-Яа-яA-Za-z0-9]+)*|[.!?…,;:—]", t):
+        if tok in ".!?…,;:—":
+            if out and out[-1] == "": out[-1] = tok
+            elif out and tok in ".!?…" and out[-1] in ",;:—": out[-1] = tok
+            continue
+        for part in tok.lower().split("-"):
+            if not part: continue
+            if k >= len(слова) or part != слова[k]: return None
+            out.append(""); k += 1
+    return out if k == len(слова) else None
+
+
+class Голос:
+    def __init__(self, голос):
+        self.г = голос
+        self.D = {"m": "gvoice", "f": "gvoice_f"}[голос]
+        self.recs = [json.loads(l) for l in open(f"{ТУТ}/db_{голос}.jsonl", encoding="utf-8")]
+        if os.path.exists(f"{ТУТ}/db_{голос}_pack.jsonl"):  # записи голосового пакета того же голоса
+            self.recs += [json.loads(l) for l in open(f"{ТУТ}/db_{голос}_pack.jsonl", encoding="utf-8")]
+        # знак препинания после каждого слова записи — по исходному тексту (punct.json), если он известен
+        тексты = json.load(open(f"{ТУТ}/punct.json", encoding="utf-8")) if os.path.exists(f"{ТУТ}/punct.json") else {}
+        for r in self.recs:
+            r["pz"] = _знаки(тексты.get(r["k"]), [w[0] for w in r["w"]])
+        self.occ = []  # (rec, j)
+        self.по_слову = {}
+        for ri, r in enumerate(self.recs):
+            for j, w in enumerate(r["w"]):
+                self.по_слову.setdefault(w[0], []).append(len(self.occ)); self.occ.append((ri, j))
+        self._признаки()
+        p = f"{ТУТ}/occ_{голос}.npy"
+        self.чистота = np.load(p) if os.path.exists(p) else None
+        if self.чистота is not None and len(self.чистота) != len(self.occ): self.чистота = None
+        self._мелодия()
+        self.медиана = {}
+        for w, os_ in self.по_слову.items():
+            d = [self.dur[o] for o in os_]; self.медиана[w] = float(np.median(d))
+
+    def _признаки(self):
+        p = f"{ТУТ}/feat_{self.г}.npz"
+        if os.path.exists(p):
+            z = np.load(p)
+            if len(z["dur"]) == len(self.occ) and "f0m" in z.files:
+                for k in z.files: setattr(self, k, z[k])
+                return
+        n = len(self.occ); f0s = np.zeros(n); f0e = np.zeros(n); ens = np.zeros(n); ene = np.zeros(n)
+        mfs = np.zeros((n, 13)); mfe = np.zeros((n, 13)); dur = np.zeros(n); f0m = np.zeros(n)
+        L = int(SR * 0.04); M = int(SR * 0.025)
+        for o, (ri, j) in enumerate(self.occ):
+            if j == 0: a = self.звук(ri)
+            w = self.recs[ri]["w"][j]; s, e = int(w[1] * SR), int(w[2] * SR)
+            seg = a[s:e]; dur[o] = (e - s) / SR
+            head = seg[int(SR * 0.005):int(SR * 0.005) + L]; tail = seg[max(0, len(seg) - L - int(SR * 0.005)):len(seg) - int(SR * 0.005)]
+            f0s[o] = _yin_f0(head) if len(head) == L else 0; f0e[o] = _yin_f0(tail) if len(tail) == L else 0
+            ens[o] = _db(seg[:M]) if len(seg) >= M else -60; ene[o] = _db(seg[-M:]) if len(seg) >= M else -60
+            mfs[o] = _mfcc(seg[:M]); mfe[o] = _mfcc(seg[-M:])
+            вз = [_yin_f0(seg[q:q + L]) for q in (len(seg) // 4, len(seg) // 2, 3 * len(seg) // 4) if q + L <= len(seg)]
+            вз = [v for v in вз if v > 0]; f0m[o] = float(np.median(вз)) if вз else 0.0
+        for k, v in dict(f0s=f0s, f0e=f0e, ens=ens, ene=ene, mfs=mfs, mfe=mfe, dur=dur, f0m=f0m).items(): setattr(self, k, v)
+        np.savez(p, f0s=f0s, f0e=f0e, ens=ens, ene=ene, mfs=mfs, mfe=mfe, dur=dur, f0m=f0m)
+
+    def _мелодия(self):
+        """Средний ход высоты (полутона от медианы голоса) по месту слова в отрезке (5 долей) и знаку конца отрезка."""
+        f = self.f0m[self.f0m > 0]; self.f0_мед = float(np.median(f)) if len(f) else 120.0
+        сумма = {}; o = 0
+        for r in self.recs:
+            pz = r.get("pz"); ws = r["w"]
+            # отрезки записи по знакам (без знаков — вся запись один отрезок с точкой)
+            границы = [j for j in range(len(ws)) if pz and pz[j]] if pz else []
+            if not границы or границы[-1] != len(ws) - 1: границы.append(len(ws) - 1)
+            нач = 0
+            for гр in границы:
+                конец = (pz[гр] if pz and pz[гр] else ".")
+                кл = "?" if конец == "?" else "," if конец in ",;—" else ":" if конец == ":" else "."
+                n = гр - нач + 1
+                for j in range(нач, гр + 1):
+                    v = self.f0m[o + j]
+                    if v > 0:
+                        доля = 0 if n == 1 else min(4, int(5 * (j - нач) / n)) if j < гр else 4
+                        k = (кл, доля); сумма.setdefault(k, []).append(12 * math.log2(v / self.f0_мед))
+                нач = гр + 1
+            o += len(ws)
+        self.мелодия = {k: float(np.median(v)) for k, v in сумма.items() if len(v) >= 20}
+
+    def высота_пт(self, o):
+        v = self.f0m[o]; return None if v <= 0 else 12 * math.log2(v / self.f0_мед)
+
+    @functools.lru_cache(maxsize=4096)
+    def звук(self, ri):
+        f = self.recs[ri]['f']
+        a, sr = sf.read(f"{R}/sounds/{f if '/' in f else self.D + '/' + f}.flac", dtype="float32")
+        return a
+
+    # ── свойства вхождения ──
+    def w(self, o): ri, j = self.occ[o]; return self.recs[ri]["w"][j]
+    def конец_фразы(self, o):
+        ri, j = self.occ[o]; w = self.recs[ri]["w"][j]; return j == len(self.recs[ri]["w"]) - 1 or w[4] > 0.15
+    def начало_фразы(self, o):
+        ri, j = self.occ[o]; w = self.recs[ri]["w"][j]; return j == 0 or w[3] > 0.15
+    def знак(self, o):
+        ri, j = self.occ[o]; pz = self.recs[ri].get("pz"); return None if pz is None else pz[j]
+    def сосед(self, o, d):
+        ri, j = self.occ[o]; ws = self.recs[ri]["w"]; k = j + d
+        return ws[k][0] if 0 <= k < len(ws) else None
+
+
+# ───────────────────────── 3. ВЫБОР ─────────────────────────
+_ТОЧКА, _ЗАПЯТАЯ = set(".!…"), set(",;—")
+
+
+def _цена_знака(цель, ист):
+    """Насколько интонация слова-источника (знак после него) подходит к месту в цели."""
+    if цель == ист: return 0.0
+    if цель in _ТОЧКА: return 0.3 if ист in _ТОЧКА else 2.0 if ист == "?" else 0.9 if ист in _ЗАПЯТАЯ or ист == ":" else 2.5
+    if цель == "?": return 1.5 if ист in _ТОЧКА else 2.0
+    if цель in _ЗАПЯТАЯ: return 0.2 if ист in _ЗАПЯТАЯ else 0.4 if ист == ":" else 0.8 if ист in _ТОЧКА else 1.0 if ист == "" else 1.5
+    if цель == ":": return 0.5 if ист in _ЗАПЯТАЯ else 0.8 if ист in _ТОЧКА else 1.0
+    return 1.0  # середина без паузы, а у источника после слова знак — интонация конца
+
+class Синтезатор:
+    def __init__(self, голос, веса=None):
+        self.V = Голос(голос)
+        self.в = dict(конец=3.0, середина_конец=1.2, начало=0.8, середина_начало=0.6, сосед=0.35, звук=0.3,
+                      длина=1.0, стык=1.0, знак=1.2, чистота=3.0, сгладить=1, мелодия=0.15, пауза_стык=0, края=1, f0=0.12, громк=0.08, спектр=0.02, K=60, часть=4.0)
+        if веса: self.в.update(веса)
+        self.скачки = []
+
+    def цена_единицы(self, o, слова, i, end):
+        V, в = self.V, self.в; n = len(слова); c = 0.0
+        последнее, первое = i == n - 1, i == 0
+        зн = V.знак(o); цель_зн = end if последнее else ""
+        if зн is not None:
+            c += _цена_знака(цель_зн, зн) * в["знак"]
+        elif последнее: c += 0 if V.конец_фразы(o) else (в["конец"] if end in КОНЕЦ_ФРАЗЫ else в["конец"] * 0.5)
+        elif V.конец_фразы(o): c += в["середина_конец"]
+        if первое: c += 0 if V.начало_фразы(o) else в["начало"]
+        elif V.начало_фразы(o) and V.w(o)[3] > 0.15: c += в["середина_начало"]
+        # соседи: тот же сосед — плюс; иначе звук на стыке того же класса
+        for d, idx in ((-1, i - 1), (1, i + 1)):
+            цель = слова[idx] if 0 <= idx < n else None; ист = V.сосед(o, d)
+            if цель is not None and ист == цель: c -= в["сосед"]
+            else:
+                кц = класс(цель[-1] if d < 0 and цель else (цель[0] if цель else ""))
+                ки = класс(ист[-1] if d < 0 and ист else (ист[0] if ист else ""))
+                if кц != ки: c += в["звук"]
+        if V.чистота is not None:
+            ч = float(V.чистота[o]); c += в["чистота"] * (0.3 if ч < 0 else ч)   # −1 — не проверено
+        h = V.высота_пт(o)
+        if h is not None:
+            кл = "?" if end == "?" else "," if end in ",;—" else ":" if end == ":" else "."
+            доля = 4 if последнее else (0 if n == 1 else min(4, int(5 * i / n)))
+            цель_h = V.мелодия.get((кл, доля))
+            if цель_h is not None: c += в["мелодия"] * min(6.0, abs(h - цель_h))
+        м = V.медиана.get(V.w(o)[0]) or V.dur[o]
+        if abs(math.log(max(1e-3, V.dur[o]) / max(1e-3, м))) > 0.35: c += в["длина"]
+        return c
+
+    def цена_стыка(self, o1, o2):
+        V, в = self.V, self.в
+        r1, j1 = V.occ[o1]; r2, j2 = V.occ[o2]
+        if r1 == r2 and j2 == j1 + 1: return 0.0
+        c = в["стык"]
+        a, b = V.f0e[o1], V.f0s[o2]
+        if a > 0 and b > 0: c += в["f0"] * min(12.0, abs(12 * math.log2(a / b)))
+        c += в["громк"] * min(20.0, abs(V.ene[o1] - V.ens[o2]))
+        c += в["спектр"] * float(np.linalg.norm(V.mfe[o1] - V.mfs[o2]))
+        return c
+
+    def кандидаты(self, слова, end):
+        V, K = self.V, self.в["K"]; out = []
+        for i, w in enumerate(слова):
+            os_ = V.по_слову.get(w, [])
+            if not os_: out.append(None); continue
+            # вхождения, продолжающие цепочку с соседом, — всегда в списке
+            цепь = [o for o in os_ if (i > 0 and V.сосед(o, -1) == слова[i - 1]) or (i + 1 < len(слова) and V.сосед(o, 1) == слова[i + 1])]
+            прочие = sorted((o for o in os_), key=lambda o: self.цена_единицы(o, слова, i, end))[:K]
+            out.append(list(dict.fromkeys(цепь[:K * 2] + прочие)))
+        return out
+
+    def витерби(self, слова, end):
+        """→ список единиц по словам: ("o", вхождение) или ("часть", [(rec, s, e), ...]) для слов вне базы."""
+        канд = self.кандидаты(слова, end)
+        # слова вне базы — заранее собираются из частей и стоят отдельно (стык с ними — обычной ценой)
+        res = [None] * len(слова)
+        i = 0
+        while i < len(слова):
+            if канд[i] is None:
+                res[i] = ("часть", self.из_частей(слова[i], слова[i - 1] if i else "", слова[i + 1] if i + 1 < len(слова) else "")); i += 1; continue
+            j = i
+            while j < len(слова) and канд[j] is not None: j += 1
+            # Витерби на отрезке i..j-1
+            best = [{o: (self.цена_единицы(o, слова, i, end), None) for o in канд[i]}]
+            for k in range(i + 1, j):
+                cur = {}
+                for o in канд[k]:
+                    u = self.цена_единицы(o, слова, k, end)
+                    p, v = min(((po, pv[0] + self.цена_стыка(po, o)) for po, pv in best[-1].items()), key=lambda x: x[1])
+                    cur[o] = (v + u, p)
+                best.append(cur)
+            o = min(best[-1], key=lambda x: best[-1][x][0]); путь = [o]
+            for k in range(len(best) - 1, 0, -1): o = best[k][o][1]; путь.append(o)
+            путь.reverse()
+            for k, o in enumerate(путь): res[i + k] = ("o", o)
+            i = j
+        return res
+
+    def из_частей(self, слово, лев="", прав=""):
+        r = self._из_частей(слово, True)
+        return r if r else self._из_частей(слово, False)
+
+    def _из_частей(self, слово, уд):
+        """Слово вне базы — из частей других слов (поиск по буквам). Часть — подстрока слова базы с временем букв.
+        Цена части: 1 за каждую (меньше стыков), однобуквенная — почти запрет; начало/конец слова — из начала/конца
+        слова-источника; соседние буквы источника совпадают с целью — дешевле (звуки переходят естественно);
+        разрез перед глухим согласным дешевле, между гласными дороже. → [(rec, t0, t1), ...]"""
+        V = self.V; w = с_ударением(слово) if уд else слово; n = len(w)
+        if not hasattr(self, "_указ"):
+            self._указ = {True: {}, False: {}}
+            for u, os_ in V.по_слову.items():
+                good = [o for o in os_ if len(V.w(o)[5]) == len(u)]
+                if good:
+                    м = V.медиана[u]
+                    чист = (lambda o: (0.3 if V.чистота[o] < 0 else float(V.чистота[o]))) if V.чистота is not None else (lambda o: 0.0)
+                    good.sort(key=lambda o: (чист(o) > 0.34, V.конец_фразы(o) or V.начало_фразы(o), abs(V.dur[o] - м)))
+                    self._указ[True][с_ударением(u)] = good[:6]; self._указ[False][u] = good[:6]
+            self._кэш_подстрок = {True: {}, False: {}}
+        слова = self._указ[уд]
+        best = [(0.0, [])] + [(1e9, None)] * n
+        for j in range(1, n + 1):
+            for i in range(max(0, j - 12), j):
+                if best[i][1] is None: continue
+                sub = w[i:j]; L = j - i
+                лучшая = None
+                for u in self._содержащие(sub, уд):
+                    p0 = u.find(sub)
+                    while p0 >= 0:
+                        c = 1.0 + (1.6 if L == 1 else 0.3 if L == 2 else 0.0)
+                        if i == 0: c += 0 if p0 == 0 else 0.6
+                        else:
+                            if p0 == 0: c += 0.4
+                            elif u[p0 - 1] == w[i - 1]: c -= 0.3
+                            elif класс(u[p0 - 1].lower()) != класс(w[i - 1].lower()): c += 0.3
+                            if w[i] in ГЛУХИЕ: c -= 0.2
+                            elif w[i].lower() in ГЛАСНЫЕ and w[i - 1].lower() in ГЛАСНЫЕ: c += 0.4
+                        q = p0 + L
+                        if j == n: c += 0 if q == len(u) else 0.6
+                        else:
+                            if q == len(u): c += 1.2 if u[-1].lower() in "бвгджз" else 0.4   # на конце слова — оглушена
+                            elif u[q] == w[j]: c -= 0.3
+                            elif класс(u[q].lower()) != класс(w[j].lower()): c += 0.3
+                        if лучшая is None or c < лучшая[0]: лучшая = (c, u, p0)
+                        p0 = u.find(sub, p0 + 1)
+                if лучшая and best[i][0] + лучшая[0] < best[j][0]:
+                    best[j] = (best[i][0] + лучшая[0], best[i][1] + [(лучшая[1], лучшая[2], L)])
+        if best[n][1] is None:
+            if not уд: print(f"[нет частей для слова: {слово}]")
+            return []
+        части = []
+        for (u, p0, L) in best[n][1]:
+            o = слова[u][0]; ri, j = V.occ[o]; ww = V.recs[ri]["w"][j]; б = ww[5]
+            t0 = ww[1] if p0 == 0 else self._граница(ri, (б[p0 - 1] + б[p0]) / 2)
+            t1 = ww[2] if p0 + L == len(u) else self._граница(ri, (б[p0 + L - 1] + б[p0 + L]) / 2)
+            if t1 - t0 > 0.02: части.append((ri, t0, t1))
+        return части
+
+    def _содержащие(self, sub, уд):
+        к = self._кэш_подстрок[уд]; r = к.get(sub)
+        if r is None:
+            r = [u for u in self._указ[уд] if sub in u]
+            r.sort(key=len); r = r[:60]; к[sub] = r
+        return r
+
+    def _граница(self, ri, t, окно=0.03):
+        """Разрез внутри слова: в ±30 мс от оценки по времени букв — точка наибольшего изменения спектра
+        (переход одного звука в другой); при равенстве — где тише."""
+        a = self.V.звук(ri); hop = int(SR * 0.005); N = int(SR * 0.02)
+        i0, i1 = max(0, int((t - окно) * SR) - N), min(len(a), int((t + окно) * SR) + N)
+        if i1 - i0 < N * 3: return t
+        кадры = [a[k:k + N] for k in range(i0, i1 - N, hop)]
+        M = np.array([_mfcc(x)[1:] for x in кадры]); E = np.array([_db(x) for x in кадры])
+        поток = np.r_[0, np.linalg.norm(np.diff(M, axis=0), axis=1)]
+        # близость к исходной оценке тоже ценится: разрез не уходит далеко от букв
+        центр = np.array([(i0 + k * hop + N / 2) / SR for k in range(len(кадры))])
+        оц = поток / (поток.max() + 1e-9) - 0.15 * (E - E.min()) / (np.ptp(E) + 1e-9) - 0.5 * np.abs(центр - t) / окно
+        k = int(np.argmax(оц)); return (i0 + k * hop + N // 2) / SR
+
+    # ───────────────────────── 4. СКЛЕЙКА ─────────────────────────
+    # сколько звука бывает до первой и после последней буквы (по классу звука), с запасом
+    ДО = {"г": 0.06, "с": 0.07, "з": 0.08, "к": 0.10, "п": 0.07}
+    ПОСЛЕ = {"г": 0.11, "с": 0.10, "з": 0.08, "к": 0.10, "п": 0.09}
+
+    @staticmethod
+    def _после(ch):
+        if ch in "птк": return 0.05      # смычный: хвост — только взрыв
+        if ch in "цч": return 0.07
+        if ch in "бдг": return 0.05
+        if ch in "ьъ": return 0.09
+        return Синтезатор.ПОСЛЕ[класс(ch)]
+
+    @staticmethod
+    def _до(ch):
+        if ch in "птк": return 0.09      # смычка перед взрывом — со своим словом
+        if ch in "сшфхщ": return 0.11     # длинный шум
+        return Синтезатор.ДО[класс(ch)]
+
+    def _края(self, ri, j0, j1, s, e):
+        """Кусок из слов j0..j1 записи ri вне своего окружения: края не дальше типичной длины звука от своих букв
+        (чужие хвосты соседних слов источника не попадают)."""
+        ws = self.V.recs[ri]["w"]
+        if self.в["края"] and j0 > 0 and ws[j0][5] and ws[j0][3] < 0.05:
+            s = max(s, ws[j0][5][0] - self._до(ws[j0][0][0]))
+        if self.в["края"] and j1 < len(ws) - 1 and ws[j1][5] and ws[j1][4] < 0.05:
+            e = min(e, ws[j1][5][-1] + self._после(ws[j1][0][-1]))
+        return s, e
+
+    def куски(self, res):
+        """Единицы → куски звука: подряд идущие слова одной записи сливаются в один кусок."""
+        V = self.V; out = []
+        for u in res:
+            if u[0] == "o":
+                ri, j = V.occ[u[1]]; w = V.recs[ri]["w"][j]
+                if out and out[-1][0] == ri and out[-1][3] == j - 1 and out[-1][4] == "o":
+                    out[-1] = (ri, out[-1][1], w[2], j, "o", u[1])
+                else: out.append((ri, w[1], w[2], j, "o", u[1]))
+            else:
+                for (ri, s, e) in u[1]: out.append((ri, s, e, -1, "ч", None))
+        # края кусков из слов: без чужих хвостов
+        итог = []
+        for (ri, s, e, j, вид, o) in out:
+            if вид == "o":
+                ws = V.recs[ri]["w"]; j0 = next(k for k in range(j, -1, -1) if abs(ws[k][1] - s) < 1e-6)
+                s, e = self._края(ri, j0, j, s, e)
+            итог.append((ri, s, e, j, вид, o))
+        return итог
+
+    @staticmethod
+    def стык(a, b, L=int(SR * 0.012), сдвиг=int(SR * 0.004)):
+        if len(a) < L or len(b) < L + сдвиг: return np.concatenate([a, b])
+        хвост = a[-L:]; лучш, лучш_d = -2, 0
+        for d in range(0, сдвиг, 4):
+            голова = b[d:d + L]; den = np.linalg.norm(хвост) * np.linalg.norm(голова) + 1e-9
+            c = float(np.dot(хвост, голова) / den)
+            if c > лучш: лучш, лучш_d = c, d
+        b = b[лучш_d:]
+        t = np.linspace(0, np.pi / 2, L); fo, fi = np.cos(t), np.sin(t)
+        return np.concatenate([a[:-L], a[-L:] * fo + b[:L] * fi, b[L:]])
+
+    def отрезок(self, слова, end):
+        res = self.витерби(слова, end)
+        кс = self.куски(res)
+        V = self.V; звуки = []
+        for ki, (ri, s, e, j, вид, o) in enumerate(кс):
+            a = V.звук(ri); последний = ki == len(кс) - 1
+            # конец отрезка, взятый не из конца фразы-источника: хвост на 30 мс шире и с затуханием —
+            # окончание не обрывается на полуслове
+            хвост = 0
+            if последний and вид == "o" and not V.конец_фразы(o): хвост = int(SR * 0.03)
+            i0, i1 = int(s * SR), min(len(a), int(e * SR) + хвост)
+            x = a[i0:i1].copy()
+            if хвост and len(x) > хвост: x[-хвост:] *= np.linspace(1, 0, хвост)
+            звуки.append(x)
+        # высота голоса на стыках — без скачков: каждому куску небольшой сдвиг (не больше 1,5 полутона)
+        if self.в["сгладить"] and len(звуки) > 1:
+            звуки = self._сгладить_высоту(звуки)
+        # мера плавности: скачки высоты на стыках (полутона)
+        L = int(SR * 0.04)
+        for x, y in zip(звуки, звуки[1:]):
+            b = _yin_f0(x[-L - 120:-120]) if len(x) > L + 120 else 0; a = _yin_f0(y[120:120 + L]) if len(y) > L + 120 else 0
+            if a > 0 and b > 0: self.скачки.append(abs(12 * math.log2(b / a)))
+        # громкость соседних кусков — без скачков
+        уровни = [_db(x) for x in звуки if len(x)]
+        if уровни:
+            ц = float(np.median(уровни))
+            for k, x in enumerate(звуки):
+                if len(x): g = np.clip(ц - _db(x), -6, 6) * 0.6; звуки[k] = x * 10 ** (g / 20)
+        out = звуки[0] if звуки else np.zeros(1)
+        пз = int(SR * self.в["пауза_стык"] / 1000)
+        for k, x in enumerate(звуки[1:], 1):
+            if пз > 0:   # короткая тишина между кусками из разных записей — слова не слипаются
+                f = min(int(SR * 0.004), len(out) // 2, len(x) // 2)
+                if f > 0: out = out.copy(); out[-f:] *= np.linspace(1, 0, f); x = x.copy(); x[:f] *= np.linspace(0, 1, f)
+                out = np.concatenate([out, np.zeros(пз, dtype=np.float32), x])
+            else: out = self.стык(out, x)
+        # края: короткое нарастание и затухание
+        f = min(len(out) // 4, int(SR * 0.006))
+        if f > 0: out[:f] *= np.linspace(0, 1, f); out[-f:] *= np.linspace(1, 0, f)
+        return out, res, кс
+
+    @staticmethod
+    def _сгладить_высоту(звуки, предел=1.5):
+        L = int(SR * 0.04)
+        края = []
+        for x in звуки:
+            a = _yin_f0(x[int(SR * 0.005):int(SR * 0.005) + L]) if len(x) > L + 120 else 0
+            b = _yin_f0(x[-L - 120:-120]) if len(x) > L + 120 else 0
+            края.append((a, b))
+        # сдвиги s_k (полутона): минимизировать Σ(конец_k + s_k − начало_{k+1} − s_{k+1})² + λ·Σ s_k²
+        n = len(звуки); A = np.eye(n) * 0.5; rhs = np.zeros(n)
+        for k in range(n - 1):
+            b, a = края[k][1], края[k + 1][0]
+            if b > 0 and a > 0:
+                d = 12 * math.log2(b / a)        # насколько конец k выше начала k+1
+                # (s_k − s_{k+1} + d)² → по s_k: +, по s_{k+1}: −
+                A[k, k] += 1; A[k + 1, k + 1] += 1; A[k, k + 1] -= 1; A[k + 1, k] -= 1
+                rhs[k] -= d; rhs[k + 1] += d
+        try: сдв = np.clip(np.linalg.solve(A, rhs), -предел, предел)
+        except Exception: return звуки
+        out = []
+        for x, st in zip(звуки, сдв):
+            if abs(st) < 0.15 or len(x) < 200: out.append(x); continue
+            k = 2 ** (st / 12)                    # выше на st полутонов — читать быстрее в k раз
+            idx = np.arange(0, len(x) - 1, k)
+            out.append(np.interp(idx, np.arange(len(x)), x).astype(np.float32))
+        return out
+
+    @staticmethod
+    def темп(y, k):
+        """Ускорить речь в k раз (k>1 — быстрее) без изменения высоты: WSOLA, окно 30 мс, поиск совпадения ±8 мс."""
+        if abs(k - 1) < 0.02 or len(y) < SR // 10: return y
+        N = int(SR * 0.03); H = N // 2; tol = int(SR * 0.008)
+        win = np.hanning(N).astype(np.float32)
+        n_out = int(len(y) / k) + N
+        out = np.zeros(n_out + N, dtype=np.float32); norm = np.zeros_like(out)
+        pos_in, pos_out, prev = 0.0, 0, None
+        while True:
+            c = int(pos_in)
+            if c + N + tol >= len(y) or pos_out + N >= len(out): break
+            if prev is None: d = 0
+            else:
+                best, d = -1e9, 0
+                for dd in range(-tol, tol + 1, 2):
+                    a0 = c + dd
+                    if a0 < 0: continue
+                    v = float(np.dot(y[a0:a0 + N], prev))
+                    if v > best: best, d = v, dd
+            a0 = max(0, c + d); seg = y[a0:a0 + N]
+            out[pos_out:pos_out + N] += seg * win; norm[pos_out:pos_out + N] += win
+            prev = y[a0 + H:a0 + H + N] if a0 + H + N <= len(y) else y[a0:a0 + N]
+            pos_in += H * k; pos_out += H
+        norm[norm < 1e-3] = 1.0
+        return (out / norm)[:pos_out + H]
+
+    def сказать(self, текст, скорость=1.0):
+        части, отчёт = [], []
+        for от in текст_в_отрезки(текст):
+            x, res, кс = self.отрезок(от["w"], от["end"])
+            части.append(x); части.append(np.zeros(int(SR * ПАУЗА.get(от["end"], 0.2))))
+            отчёт.append({"слова": от["w"], "кусков": len(кс), "вне базы": [w for w, u in zip(от["w"], res) if u[0] == "часть"]})
+        if части: части = части[:-1]
+        # тишина по краям, как в записях Gemini: 100 мс до и 200 мс после — последнее слово успевает договориться
+        части = [np.zeros(int(SR * 0.10))] + части + [np.zeros(int(SR * 0.20))]
+        y = np.concatenate(части)
+        # −18 LUFS приближённо: по средней громкости речи
+        речь = y[np.abs(y) > 1e-4]
+        if len(речь):
+            g = -20.5 - _db(речь); y = y * 10 ** (g / 20)
+        if скорость != 1.0: y = self.темп(y.astype(np.float32), скорость)
+        пик = np.max(np.abs(y)) + 1e-9
+        if пик > 0.89: y = y * 0.89 / пик
+        return y.astype(np.float32), отчёт
