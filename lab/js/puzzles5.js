@@ -305,7 +305,7 @@ function power(seed, cb, opts) {
   var cond = head(opts, d) + "Аварийная мощность. Насосу аварийной откачки нужно ровно " + D.T + " " + kw(D.T) + ". На щите " + cnt(n, "m", "блок", "блока", "блоков") +
     " питания: " + andList(listTxt) + ". Сумматор соединяет два числа знаком — " + signs + ", — и вместо них на столе остаётся одно новое число, связка; её тоже можно соединять дальше. Минус — только из большего меньшее" +
     (d === 0 ? "" : ", делить — только нацело") + ". Задействовать все блоки не обязательно. Получив нужное число, подайте его на шину." +
-    (d === 2 ? " Шина держит не больше " + D.cap + " " + kw(D.cap) + ": больше сумматор не соберёт. Сумматор делает не больше трёх соединений подряд, потом его надо разрядить — разъединить всё. Блок " + BLK[D.must] + " питает насос охлаждения: без него запуск не засчитают." : "") +
+    (d === 2 ? " Шина держит не больше " + D.cap + " " + kw(D.cap) + ": больше сумматор не соберёт. Сумматор делает не больше трёх соединений подряд, потом его надо разрядить — разъединить всё. Блок " + BLK[D.must] + " обязателен: через него идёт защита насоса, без него запуск не засчитают." : "") +
     " Решений несколько, годится любое; образцовое — с наименьшим числом соединений.";
   var last = start("power", d, P, "Аварийная мощность", cond, function (st, finish, fail) {
     var listOf = function (arr, fn) { var items = arr.map(function (x) { return pick(label(x), function () { fn(x); }); }); items.push(backItem()); return items; };
@@ -326,7 +326,7 @@ function power(seed, cb, opts) {
     };
     var submit = function (x) {
       if (x.v !== D.T) { A("play", "term_err"); fail("На шину ушло " + x.v + " " + kw(x.v) + ", а насосу нужно " + D.T + ". Защита сбросила нагрузку."); return; }
-      if (D.must >= 0 && !(x.mask & (1 << D.must))) { A("play", "term_err"); fail("Мощность верная, но блок " + BLK[D.must] + " в ней не участвует, а без него насос охлаждения не запустится."); return; }
+      if (D.must >= 0 && !(x.mask & (1 << D.must))) { A("play", "term_err"); fail("Мощность верная, но блок " + BLK[D.must] + " в ней не участвует, а без него защита насоса не даст запуска."); return; }
       A("play", "power_on");
       win(last, finish, "Шина приняла ровно " + D.T + " " + kw(D.T) + ", " + cnt(x.ops, "n", "соединение", "соединения", "соединений") + ". Насос загудел.", x.ops === D.minOps,
         "хватило бы " + GENW[D.minOps] + " " + (D.minOps === 1 ? "соединения" : "соединений"));
@@ -363,7 +363,9 @@ function power(seed, cb, opts) {
    три номинала; средняя — четыре «неудобных» номинала, где жадный
    способ (сначала крупные) подводит; сложная — расплатиться своими
    жетонами и взять сдачу из кассы: через руки должно пройти как можно
-   меньше жетонов. Образцовое — меньше всего жетонов.
+   меньше жетонов. Образцовое — меньше всего жетонов. Расчёт, где один
+   номинал и отдан, и взят сдачей, тоже верный, но в счёт решений (sol)
+   не идёт: это то же решение с лишним обменом.
    ════════════════════════════════════════════════════════════════════ */
 function gcnt(n, g1, g2) { return (n <= 10 ? GENW[n] : String(n)) + " " + (n % 10 === 1 && n % 100 !== 11 ? g1 : g2); }
 function cr(v) { return pl(v, "кредит", "кредита", "кредитов"); }
@@ -881,6 +883,7 @@ function resistors(seed, cb, opts) {
         var ok2 = D.second.some(function (m2) { return !(m2 & x.mask); });
         if (!ok2) { A("play", "term_err"); fail("Первая нагрузка собрана верно, но из оставшихся резисторов вторую не собрать. Сборку вернули на стол."); return; }
         fixed = x; stage = 2; last.stage = 2;
+        st.cond = cond + " Первый этап пройден: первая нагрузка — ровно " + qSay(t) + ", в ней " + cnt(x.leaves, "m", "резистор", "резистора", "резисторов") + ". " + stageText(2, 2) + ": второй нагрузке нужно ровно " + qSay(D.T2) + " из оставшихся резисторов.";
         parts = parts.filter(function (p) { return p !== x; });
         A("play", "power_on");
         say(stageText(1, 2) + " готов: первая нагрузка — ровно " + qSay(t) + ", её резисторы впаяны. " + stageText(2, 2) + ": второй нагрузке нужно ровно " + qSay(D.T2) + ". На столе: " + (parts.length ? table() : "пусто") + ".");
@@ -1219,7 +1222,7 @@ function route(seed, cb, opts) {
   var cond = head(opts, d) + "Маршрут обхода. Обходчик выходит из дежурки и должен побывать во всех помещениях, в каждом — ровно один раз" +
     (D.end >= 0 ? "; закончить надо в помещении " + q(D.end) + ": там выход" : ", а закончить можно где угодно") + ". Помещения: " + andList(nm) + ". Переходы и время на них: " + edgeTxt.join("; ") + ". " +
     (d === 0 ? "Все переходы двусторонние." : "Переходы двусторонние, кроме отмеченных «только туда»: по ним можно лишь от первого помещения ко второму.") +
-    (D.pre ? " Помещение " + q(D.pre[0]) + " надо пройти раньше, чем " + q(D.pre[1]) + ": там ждут ключ." : "") +
+    (D.pre ? " В помещении " + q(D.pre[0]) + " висит ключ от помещения " + q(D.pre[1]) + ": туда — только после " + q(D.pre[0]) + "." : "") +
     (D.L ? " Заряда фонаря — на " + D.L + " " + minsAcc(D.L) + "." : "") + " Решений несколько, годится любое; образцовое — самый быстрый обход.";
   var last = start("route", d, P, "Маршрут обхода", cond, function (st, finish, fail) {
     var cur = function () { return path[path.length - 1]; };
@@ -1227,6 +1230,7 @@ function route(seed, cb, opts) {
     var exits = function () { return out[cur()].filter(function (e) { return path.indexOf(e.to) < 0; }); };
     var routeTxt = function () { return path.map(function (k) { return nm[k]; }).join(", ") + " — " + time + " " + mins(time); };
     var go = function (e) {
+      if (D.pre && e.to === D.pre[1] && path.indexOf(D.pre[0]) < 0) { nope("Помещение " + q(D.pre[1]) + " заперто: ключ от него висит в помещении " + q(D.pre[0]) + "."); return; }
       path.push(e.to); steps.push(e.t); time += e.t; A("play", "step_concrete");
       var lf = left();
       sayq(cap(nm[e.to]) + ". Пройдено: " + routeTxt() + "." + (lf.length ? " Осталось: " + andList(lf.map(function (k) { return nm[k]; })) + "." + (exits().length ? "" : " Отсюда хода в необойдённые помещения нет.") : " Обойдено всё."));
@@ -1250,7 +1254,7 @@ function route(seed, cb, opts) {
         var lf = left();
         if (lf.length) { A("play", "term_err"); fail("Маршрут обходит не всё: нет " + (lf.length === 1 ? "помещения " : "помещений ") + andList(lf.map(q)) + "."); return; }
         if (D.end >= 0 && cur() !== D.end) { A("play", "term_err"); fail("Обход кончается в помещении " + q(cur()) + ", а выход — в помещении " + q(D.end) + "."); return; }
-        if (D.pre && path.indexOf(D.pre[0]) > path.indexOf(D.pre[1])) { A("play", "term_err"); fail("Помещение " + q(D.pre[1]) + " пройдено раньше, чем " + q(D.pre[0]) + ", а там ждут ключ."); return; }
+        if (D.pre && path.indexOf(D.pre[0]) > path.indexOf(D.pre[1])) { A("play", "term_err"); fail("В помещение " + q(D.pre[1]) + " без ключа не попасть, а ключ висит в помещении " + q(D.pre[0]) + ", которое по маршруту позже."); return; }
         if (D.L && time > D.L) { A("play", "term_err"); fail("Обход займёт " + time + " " + minsAcc(time) + ", а фонаря хватит на " + D.L + "."); return; }
         A("play", "door_unlock");
         win(last, finish, "Обход утверждён: " + time + " " + mins(time) + ".", time === D.minT, "можно было за " + D.minT + " " + minsAcc(D.minT));
@@ -1536,7 +1540,7 @@ function mixture(seed, cb, opts) {
     "Работа в два этапа, запас на оба — общий: " + stockTxt(comps) + ". " + stageText(1, 2) + ": в бак А нужно ровно " + D.V + " " + lit(D.V) + " по " + D.C + " " + pct(D.C) + ". " +
     stageText(2, 2) + ": в бак Б — ровно " + D.V2 + " " + lit(D.V2) + " по " + D.C2 + " " + pct(D.C2) + ", и смесь из бака А должна пойти в дело — хотя бы литр." :
     "Для промывки фильтров нужно ровно " + D.V + " " + lit(D.V) + " раствора крепостью " + D.C + " " + pct(D.C) + ". Есть: " + stockTxt(comps) + ".") +
-    " Наливать можно по литру. Крепость смеси — сколько процентов вещества во всём её объёме: например, 2 литра 50-процентного раствора и 2 литра воды дают 4 литра по 25 процентов." +
+    " Наливать можно по литру; мерный бак — ровно на нужный объём, больше не нальёшь. Крепость смеси — сколько процентов вещества во всём её объёме: например, 2 литра 50-процентного раствора и 2 литра воды дают 4 литра по 25 процентов." +
     " Решений несколько, годится любое; образцовое — где раствора " + D.comps[D.strong].c + " " + pct(D.comps[D.strong].c) + " ушло меньше всего: он дефицитный.";
   var last = start("mixture", d, P, "Смесь по пропорции", cond, function (st, finish, fail) {
     var status = function () { return (two ? stageText(stage, 2) + ". " : "") + "В баке " + (stage === 1 ? (two ? "А " : "") : "Б ") + vol() + " " + lit(vol()) + (vol() ? ", крепость " + conc() : "") + ". Нужно " + needV() + " " + lit(needV()) + " по " + needC() + " " + pct(needC()) + "."; };
@@ -1567,8 +1571,9 @@ function mixture(seed, cb, opts) {
         comps.push({ c: D.C, s: D.V, name: "смесь из бака А" });
         tank = rep(0, comps.length); hist = []; stage = 2; last.stage = 2;
         A("play", "ev_glass");
-        say(stageText(1, 2) + " готов: в баке А " + D.V + " " + lit(D.V) + " по " + D.C + " " + pct(D.C) + ". " + stageText(2, 2) + ": в бак Б нужно " + D.V2 + " " + lit(D.V2) + " по " + D.C2 + " " + pct(D.C2) +
-          ", смесь из бака А — в дело, хотя бы литр. В запасе: " + stockTxt(comps.slice(0, D.comps.length)) + ".");
+        var t2 = stageText(2, 2) + ": в бак Б нужно " + D.V2 + " " + lit(D.V2) + " по " + D.C2 + " " + pct(D.C2) + ", смесь из бака А — в дело, хотя бы литр. В запасе: " + stockTxt(comps.slice(0, D.comps.length)) + ".";
+        st.cond = cond + " Первый этап пройден: в баке А " + D.V + " " + lit(D.V) + " по " + D.C + " " + pct(D.C) + ". " + t2;
+        say(stageText(1, 2) + " готов: в баке А " + D.V + " " + lit(D.V) + " по " + D.C + " " + pct(D.C) + ". " + t2);
         return;
       }
       A("play", "ev_glass");
@@ -1595,7 +1600,10 @@ function mixture(seed, cb, opts) {
 var RT_TYPES = [{ n: "консервы", g: "консервов", a: "консервы", lo: 4, hi: 8 }, { n: "сухари", g: "сухарей", a: "сухари", lo: 3, hi: 6 }, { n: "крупа", g: "крупы", a: "крупу", lo: 5, hi: 9 },
   { n: "сгущёнка", g: "сгущёнки", a: "сгущёнку", lo: 2, hi: 5 }, { n: "вода", g: "воды", a: "воду", lo: 2, hi: 6 }, { n: "галеты", g: "галет", a: "галеты", lo: 3, hi: 7 }];
 var BRIG = ["Ильина", "Коваля", "Серовой", "Нагиева", "Брагиной", "Тихонова", "Лапиной", "Петровой"];
-var RT_NO = ["у них нет ножа", "у них с этим перебор", "им это не положено по норме", "у них такое уже есть"];
+/* почему бригаде нельзя такой ящик — своё для каждого вида */
+var RT_NO = [["у них нет консервного ножа", "консервы они уже получили на неделе"], ["сухарей у них и так с запасом", "сухари им по норме не положены"],
+  ["им негде варить: их печка сломана", "у них нет котла"], ["сгущёнку им по норме не положено", "сгущёнку они уже получили на неделе"],
+  ["у них свой фильтр и своя вода", "воду им носят из своего колодца"], ["галет у них и так с запасом", "в их штреке сыро: галеты отсыреют"]];
 function porc(v) { return pl(v, "порция", "порции", "порций"); }
 function rtOk(D, to, full) {
   /* to[i] — бригада ящика i или -1; full — всё роздано и проверить доли */
@@ -1657,7 +1665,7 @@ function genRations(seed, d, depth) {
     var nr = [0, 1, r.int(2, 3)][d], tries = 0, cur = base;
     while (D.rules.length < nr && tries++ < 30) {
       var kind = r.pick(d === 2 ? ["no", "with", "apart", "each"] : ["no", "with", "apart"]), ru = null;
-      if (kind === "no") { var bb = r.int(0, m - 1), ty = r.pick(boxes.map(function (x) { return x.t; })); if (boxes.some(function (x, k) { return hidden[k] === bb && x.t === ty; })) continue; ru = { t: "no", b: bb, ty: ty, why: r.int(0, RT_NO.length - 1) }; }
+      if (kind === "no") { var bb = r.int(0, m - 1), ty = r.pick(boxes.map(function (x) { return x.t; })); if (boxes.some(function (x, k) { return hidden[k] === bb && x.t === ty; })) continue; ru = { t: "no", b: bb, ty: ty, why: r.int(0, 1) }; }
       else if (kind === "with" || kind === "apart") { var xy = choose(r, nb, 2).sort(function (a, z) { return a - z; }); if ((hidden[xy[0]] === hidden[xy[1]]) !== (kind === "with")) continue; ru = { t: kind, x: xy[0], y: xy[1] }; }
       else { var ty2 = r.pick(boxes.map(function (x) { return x.t; })); var okE = true; for (var b2 = 0; b2 < m; b2++) if (!boxes.some(function (x, k) { return hidden[k] === b2 && x.t === ty2; })) okE = false; if (!okE) continue; ru = { t: "each", ty: ty2 }; }
       if (D.rules.some(function (z) { return JSON.stringify(z) === JSON.stringify(ru); })) continue;
@@ -1704,7 +1712,7 @@ function rations(seed, cb, opts) {
   var boxTxt = function (i) { var x = D.boxes[i]; return RT_TYPES[x.t].n + ", " + x.p + " " + porc(x.p); };
   var people = sum(D.sizes), total = people * D.q;
   var ruleTxt = D.rules.map(function (ru) {
-    if (ru.t === "no") return "бригаде " + BRIG[D.names[ru.b]] + " не давать " + RT_TYPES[ru.ty].a + ": " + RT_NO[ru.why];
+    if (ru.t === "no") return "бригаде " + BRIG[D.names[ru.b]] + " не давать " + RT_TYPES[ru.ty].a + ": " + RT_NO[ru.ty][ru.why];
     if (ru.t === "with") return "ящики " + (ru.x + 1) + " и " + (ru.y + 1) + " — одной бригаде: они в одной связке";
     if (ru.t === "apart") return "ящики " + (ru.x + 1) + " и " + (ru.y + 1) + " — разным бригадам: " + ["это неприкосновенный запас, его не держат в одних руках", "по описи они у разных бригадиров", "их понесут разными штреками"][(ru.x + ru.y) % 3];
     return "каждой бригаде — хотя бы один ящик " + RT_TYPES[ru.ty].g;
@@ -2228,7 +2236,7 @@ function pipes(seed, cb, opts) {
   var cond = head(opts, d) + "Трубопровод. Поле труб " + sizeW + ": ряды с севера на юг, клетки в ряду с запада на восток. Насос подаёт воду в ряд " + (D.pump.r + 1) + ", клетку " + (D.pump.c + 1) + " " + DIRF[D.pump.side] +
     ". Сток — у " + "ряда " + (D.drain.r + 1) + ", клетки " + (D.drain.c + 1) + ": вода должна уйти туда " + DIRA[D.drain.side] + ". В клетках — колена и прямые трубы: прямая соединяет две противоположные стороны, колено — две соседние. Каждую можно повернуть по часовой стрелке на четверть оборота." +
     (d === 2 ? " Завал — клетка без трубы; приваренные трубы не поворачиваются." : "") + " " + rowsTxt.join(". ") +
-    ". Поверните трубы так, чтобы вода от насоса дошла до стока; вода, ударившая из стыка, — авария. Решений несколько, годится любое; образцовое — с наименьшим числом поворотов.";
+    ". Поверните трубы так, чтобы вода от насоса дошла до стока; вода, ударившая из стыка, — авария. Решений несколько, годится любое; образцовое — с наименьшим числом поворотов: считается, на сколько четвертей каждая труба в итоге повёрнута от начала.";
   var last = start("pipes", d, P, "Трубопровод", cond, function (st, finish, fail) {
     var traceTxt = function (t) {
       var cells = t.path.map(where), head2 = "Вода входит в ряд " + (D.pump.r + 1) + ", клетку " + (D.pump.c + 1) + " " + DIRF[D.pump.side];
@@ -2263,7 +2271,7 @@ function pipes(seed, cb, opts) {
       if (!t.ok) { A("play", "ev_steam"); fail("Авария. " + traceTxt(t)); return; }
       A("play", "room_pumps");
       var c = ppCost(D, rot);
-      win(last, finish, "Вода прошла от насоса до стока через " + cnt(t.path.length, "f", "клетку", "клетки", "клеток") + ". Поворотов: " + c + ".", c === D.minC, "хватило бы " + gcnt(D.minC, "поворота", "поворотов"));
+      win(last, finish, "Вода прошла от насоса до стока через " + cnt(t.path.length, "f", "клетку", "клетки", "клеток") + ". Поворотов от начального положения: " + c + ".", c === D.minC, "хватило бы " + gcnt(D.minC, "поворота", "поворотов"));
     }));
     out.push(act("Вернуть как было", function () {
       if (rot.every(function (v, i) { return v === D.tiles[i].rot; })) { say("Трубы и так стоят как в начале."); return; }
@@ -2580,7 +2588,7 @@ function crews(seed, cb, opts) {
   var okTxt = function (b) { return andList(D.br[b].ok.map(function (t) { return JOB_T[t]; })); };
   var jobTxt = function (j) { var x = D.jobs[j]; return JOB_T[x.t] + ", " + JOB_W[x.t][x.w] + ", " + x.h + " " + hrs(x.h); };
   var ruleTxt = D.rules.map(function (ru) {
-    return ru.t === "with" ? "работы " + (ru.x + 1) + " и " + (ru.y + 1) + " делает одна бригада: это одно место" : "работы " + (ru.x + 1) + " и " + (ru.y + 1) + " — разным бригадам: проверка должна быть независимой";
+    return ru.t === "with" ? "работы " + (ru.x + 1) + " и " + (ru.y + 1) + " делает одна бригада: это одно место" : "работы " + (ru.x + 1) + " и " + (ru.y + 1) + " — разным бригадам: их надо вести одновременно, в разных концах шахты";
   });
   var cond = head(opts, d) + "Наряды бригад. " + cap(cnt(D.m, "f", "бригада", "бригады", "бригад")) + ": " + intList(D.m).map(function (b) { return bname(b) + " — смена " + D.br[b].lim + " " + hrs(D.br[b].lim) + ", допуск: " + okTxt(b); }).join("; ") +
     ". Работы: " + intList(k).map(function (j) { return "работа " + (j + 1) + " — " + jobTxt(j); }).join("; ") + ". Каждую работу — одной бригаде с допуском к ней; часы бригады — не больше её смены. Бригады работают одновременно." +
