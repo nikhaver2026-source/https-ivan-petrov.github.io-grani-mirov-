@@ -7607,6 +7607,21 @@ LAB.ui.closeAll();
     }
     /* допуск: дверь по статусу */
     out.rankBlock = LAB.deepSys.rankBlock({ rank: 4 }); out.rankOk = LAB.deepSys.rankBlock({ rank: 1 });
+    /* хранилище по допуску (в комнате с допуском, куда можно войти и так): без статуса не открыть —
+       ни обыском, ни силой; со статусом — открывается */
+    let bf = null;
+    for (let L = 101; L <= Math.min(LAB.LEVELS_N, 300) && !bf; L++) for (let F = 1; F <= 20 && !bf; F++) { const fl = LAB.getFloor(g.G.seed, L, F); if (fl.objs.some(o => o.rankLock && o.loot && o.loot.length)) bf = [L, F]; }
+    if (bf) {
+      g.enterFloor(bf[0], bf[1], "down", true); LAB.combat.stop();
+      const o = g.CUR.fl.objs.find(o => o.rankLock && o.loot && o.loot.length), st0 = g.G.deep.st;
+      g.CUR.fs.ctrap = g.CUR.fs.ctrap || {}; g.CUR.fs.ctrap[o.id] = { k: "" }; /* без пакости в хранилище: проверяется замок, а не ловушка */
+      out.boxType = o.type; out.boxRank = o.rankLock; out.boxName = g.objName(o);
+      g.G.deep.st = 0; said.length = 0;
+      g.openContainer(o); out.boxShut = !g.objState(o).looted && said.some(t => /Замок по допуску/.test(t));
+      g.G.deep.st = 6; said.length = 0;
+      g.openContainer(o); out.boxOpen = !!g.objState(o).looted && said.some(t => /Найдено/.test(t));
+      g.G.deep.st = st0; LAB.ui.closeAll();
+    }
     /* финал у Ядра Разлома: пульт на дне финальный, страницы финала — свои */
     const fb = LAB.getFloor(g.G.seed, LAB.LEVELS_N, 20);
     out.core = fb.rooms.some(r => r.type === "riftroot") && fb.objs.some(o => o.type === "reactor" && o.final);
@@ -7624,6 +7639,8 @@ LAB.ui.closeAll();
     ok(dp.trialMenu && dp.trialPts > 0, "стенд испытания открывается, пройденное испытание добавляет к статусу");
     ok(dp.cutLanded && dp.cutTo > 101, "срез уводит вниз на много уровней — к шлюзу первого этажа уровня " + dp.cutTo);
     ok(/статуса «бригадный»/.test(dp.rankBlock) && dp.rankOk === "", "дверь с допуском открывается по статусу, а не по силе (" + dp.rankBlock + ")");
+    if (dp.boxType) ok(dp.boxShut && dp.boxOpen && /по допуску/.test(dp.boxName), "хранилище по допуску («" + dp.boxName + "»): без статуса не открыть, со статусом — открывается");
+    else console.log("  (хранилищ по допуску на ближних уровнях этого зерна нет — проверка пропущена)");
     ok(dp.core, "на самом дне — Ядро Разлома с финальным пультом");
     ok(/Ядр/.test(dp.interlude) && /Гранью Миров/.test(dp.ending) && !/Гран[ьи] Мир/.test(dp.interlude), "интерлюдия на сотом ведёт к Ядру Разлома; «Грань Миров» — только в финале");
   } else console.log("  (глубоких блоков нет — проверка пропущена)");

@@ -648,7 +648,8 @@ function scPart(s, par) {
   }
   return 0;
 }
-function scCount(n, sts, limit) {
+function scCount(n, sts, limit, cap) {
+  cap = cap || 200000;
   var dom = [], x, y, k;
   for (x = 0; x < n; x++) { dom.push([-1]); for (y = 0; y < n; y++) if (y !== x) dom[x].push(y); }
   sts.forEach(function (s) {
@@ -664,7 +665,7 @@ function scCount(n, sts, limit) {
   var okNow = function () { for (var i = 0; i < sts.length; i++) if (scPart(sts[i], par) === 0) return false; return true; };
   var cyc = function (x0, v) { var z = v, g = 0; while (z >= 0 && g++ <= n) { if (z === x0) return true; z = par[z]; } return false; };
   var rec = function (kk) {
-    if (count >= limit || nodes > 200000) return;
+    if (count >= limit || nodes > cap) return;
     nodes++;
     if (kk === n) {
       if (roots !== 1) return;
@@ -679,7 +680,7 @@ function scCount(n, sts, limit) {
     }
   };
   rec(0);
-  return { count: nodes > 200000 ? limit : count, sol: sol };
+  return { count: nodes > cap ? limit : count, sol: sol };
 }
 function scTree(r, n, maxDep, minDep) {
   for (var g = 0; g < 200; g++) {
@@ -729,27 +730,29 @@ function scSay(s, ps, fl) {
 }
 function scArr(s) { return [s.t, s.x, s.y, s.z, s.k]; }
 function genSuccession(seed, d) {
-  var r = rngFor(seed, "succession", d), n = d === 0 ? r.int(4, 5) : d === 1 ? 6 : 7, G = null, i;
+  var r = rngFor(seed, "succession", d), n = d === 0 ? r.int(4, 5) : 6, G = null, i;
   var maxPar = [n - 2, 2, 1][d], lo = [2, 4, 5][d], hi = [7, 9, 11][d];
   for (var at = 0; at < 60 && !G; at++) {
-    var tr = scTree(r, n, [3, 4, 4][d], [2, 3, 3][d]);
+    var tr = scTree(r, n, [3, 4, 5][d], [2, 3, 4][d]);
     if (!tr) continue;
     var pool = scPool(tr.par, tr.root, d), w = SC_W[d];
     pool.forEach(function (s) { s.key = -Math.log(1 - r.next() * 0.999999) / w[s.t]; });
     pool.sort(function (a, b) { return a.key - b.key; });
-    var chosen = d === 0 ? [{ t: "ROOT", x: tr.root, y: -1, z: -1, k: -1 }] : [], npar = 0, res = scCount(n, chosen, 2);
+    var CAPN = [20000, 20000, 20000][d];
+    var chosen = d === 0 ? [{ t: "ROOT", x: tr.root, y: -1, z: -1, k: -1 }] : [], npar = 0, res = scCount(n, chosen, 2, CAPN), step = d === 0 ? 1 : 2, added = 0;
     for (i = 0; i < pool.length && res.count > 1; i++) {
       var s = pool[i];
       if (s.t === "ROOT" && d === 0) continue;
       if (s.t === "PAR" && npar >= maxPar) continue;
-      var tryS = chosen.concat([s]), rr = scCount(n, tryS, 2);
-      if (rr.count < 1) continue;
-      chosen = tryS; res = rr; if (s.t === "PAR") npar++;
+      chosen.push(s); if (s.t === "PAR") npar++; added++;
+      if (added % step === 0 || i === pool.length - 1) res = scCount(n, chosen, 2, CAPN);
     }
     if (res.count !== 1) continue;
-    for (i = chosen.length - 1; i >= (d === 0 ? 1 : 0); i--) {
-      var rest = chosen.slice(0, i).concat(chosen.slice(i + 1));
-      if (scCount(n, rest, 2).count === 1) chosen = rest;
+    var ordP = shuffled(r, intList(chosen.length).slice(d === 0 ? 1 : 0));
+    for (var oi = 0; oi < ordP.length; oi++) {
+      var drop = chosen[ordP[oi]];
+      var rest = chosen.filter(function (x) { return x !== drop; });
+      if (scCount(n, rest, 2, CAPN).count === 1) chosen = rest;
     }
     if (chosen.length < lo || chosen.length > hi) continue;
     var body = chosen.slice(d === 0 ? 1 : 0); r.shuffle(body);
@@ -933,11 +936,11 @@ function mnName(R, C) {
 function mnWords(v) { return v === 0 ? "мин нет" : cnt(v, "мина", "мины", "мин", "f"); }
 function genMines(seed, d) {
   var r = rngFor(seed, "mines", d), R = d + 1, G = null, i;
-  for (var at = 0; at < 500 && !G; at++) {
-    var C = d === 0 ? r.int(6, 8) : d === 1 ? r.int(5, 7) : r.int(5, 6), M = d === 0 ? r.int(2, 3) : d === 1 ? r.int(3, 4) : r.int(4, 6), N = R * C;
+  for (var at = 0; at < 900 && !G; at++) {
+    var C = d === 0 ? r.int(7, 12) : d === 1 ? r.int(5, 7) : r.int(5, 6), M = d === 0 ? r.int(2, 4) : d === 1 ? r.int(3, 4) : r.int(4, 6), N = R * C;
     var cells = shuffled(r, intList(N)), mine = intList(N).map(function () { return false; });
     for (i = 0; i < M; i++) mine[cells[i]] = true;
-    var safe = cells.slice(M), ns = d === 0 ? 1 : r.int(1, 2), startC = safe.slice(0, ns).sort(function (a, b) { return a - b; });
+    var safe = cells.slice(M), ns = d === 0 ? r.int(1, 2) : r.int(1, 3), startC = safe.slice(0, ns).sort(function (a, b) { return a - b; });
     var count = function (x) { return mnNb(R, C, x).filter(function (y) { return mine[y]; }).length; };
     var num = intList(N).map(function () { return -1; });
     startC.forEach(function (x) { num[x] = count(x); });
@@ -965,7 +968,7 @@ function genMines(seed, d) {
     var p = [], row = -1;
     ord.forEach(function (x) {
       var rr = Math.floor(x / C2);
-      if (R > 1 && rr !== row) { if (row >= 0) p.push("Назад"); p.push("Ряд " + (rr + 1)); row = rr; }
+      if (rr !== row) { if (row >= 0) p.push("Назад"); p.push(R > 1 ? "Ряд " + (rr + 1) : "Полоса"); row = rr; }
       p.push("Плита " + (x % C2 + 1));
     });
     return p;
@@ -973,7 +976,7 @@ function genMines(seed, d) {
   var ord1 = [], ord2 = [];
   G.batches.forEach(function (bt) { ord1 = ord1.concat(bt); ord2 = ord2.concat(bt.slice().reverse()); });
   var mines = []; G.mine.forEach(function (v, x) { if (v) mines.push(x); });
-  var wm = mines[0], wp = R > 1 ? ["Ряд " + (Math.floor(wm / C2) + 1), "Плита " + (wm % C2 + 1), "Назад"] : ["Плита " + (wm % C2 + 1)];
+  var wm = mines[0], wp = [R > 1 ? "Ряд " + (Math.floor(wm / C2) + 1) : "Полоса", "Плита " + (wm % C2 + 1), "Назад"];
   return { R: R, C: C2, M: G.M, mine: G.mine, start: G.start, batches: G.batches, plan: toPlan(ord1), wrong: rep(wp, 3),
     alts: [{ plan: toPlan(ord2), best: true }, { plan: ["Подсказка сапёра"].concat(toPlan(ord1)), best: false }], variable: true, sol: G.ways,
     ans: ord1.slice(), data: { R: R, C: C2, M: G.M, mines: mines, start: G.start.slice(), rounds: G.rounds, used: G.used },
@@ -1019,13 +1022,13 @@ function minesKind(seed, cb, opts) {
   };
   last = start("mines", d, P, "Минная полоса", cond, function (st, finish, fail) {
     var out = [];
-    if (R === 1) for (var x = 0; x < C; x++) out.push(cellItem(x, finish, fail, st));
-    else for (var rr = 0; rr < R; rr++) (function (rr) {
-      out.push(act(function () { return "Ряд " + (rr + 1) + ": " + rowText(rr); }, function () {
+    for (var rr = 0; rr < R; rr++) (function (rr) {
+      var nmR = R > 1 ? "Ряд " + (rr + 1) : "Полоса";
+      out.push(act(function () { return nmR + ": " + rowText(rr); }, function () {
         var items = [];
         for (var c = 0; c < C; c++) items.push(cellItem(rr * C + c, finish, fail, st));
         items.push(back("Назад"));
-        UIx("menu", "Ряд " + (rr + 1), items);
+        UIx("menu", nmR, items);
       }));
     })(rr);
     out.push(act(function () { return "Щуп или флажок: " + (flagMode ? "флажок" : "щуп"); }, function () { flagMode = !flagMode; A("play", "pc_click"); say(flagMode ? "Теперь выбор плиты ставит или снимает флажок." : "Теперь выбор плиты опускает на неё щуп."); }));
@@ -1395,37 +1398,53 @@ function rgStep(st, i, R) {
   if (R.cl && R.cl.i === i && st[R.cl.c] === R.cl.z) s2[R.cl.j] = ((s2[R.cl.j] + R.cl.dl) % R.m + R.m) % R.m;
   return s2;
 }
+function rgTable(R) {
+  if (R.tab) return R.tab;
+  var N = Math.pow(R.m, R.k), k = R.k, T = new Int32Array(N * k), x, i;
+  for (x = 0; x < N; x++) { var st = rgDec(x, k, R.m); for (i = 0; i < k; i++) T[x * k + i] = rgEnc(rgStep(st, i, R), R.m); }
+  var deg = new Int32Array(N + 1); for (x = 0; x < N * k; x++) deg[T[x] + 1]++;
+  for (x = 0; x < N; x++) deg[x + 1] += deg[x];
+  var fill = deg.slice(0, N), src = new Int32Array(N * k);
+  for (x = 0; x < N; x++) for (i = 0; i < k; i++) { var y = T[x * k + i]; src[fill[y]++] = x; }
+  R.tab = { N: N, T: T, off: deg, src: src };
+  return R.tab;
+}
 function rgBfs(R, from) {
-  var N = Math.pow(R.m, R.k), dist = new Int16Array(N), ways = new Float64Array(N), prev = new Int32Array(N), mv = new Int8Array(N), i;
+  var tb = rgTable(R), N = tb.N, k = R.k, T = tb.T, dist = new Int16Array(N), ways = new Float64Array(N), prev = new Int32Array(N), mv = new Int8Array(N), q = new Int32Array(N), i;
   for (i = 0; i < N; i++) { dist[i] = -1; prev[i] = -1; }
-  var s0 = rgEnc(from, R.m), q = [s0]; dist[s0] = 0; ways[s0] = 1;
-  for (var qi = 0; qi < q.length; qi++) {
-    var x = q[qi], st = rgDec(x, R.k, R.m);
-    for (i = 0; i < R.k; i++) {
-      var y = rgEnc(rgStep(st, i, R), R.m);
-      if (dist[y] < 0) { dist[y] = dist[x] + 1; ways[y] = ways[x]; prev[y] = x; mv[y] = i; q.push(y); }
+  var s0 = typeof from === "number" ? from : rgEnc(from, R.m), h = 0, t = 0; q[t++] = s0; dist[s0] = 0; ways[s0] = 1;
+  while (h < t) {
+    var x = q[h++];
+    for (i = 0; i < k; i++) {
+      var y = T[x * k + i];
+      if (dist[y] < 0) { dist[y] = dist[x] + 1; ways[y] = ways[x]; prev[y] = x; mv[y] = i; q[t++] = y; }
       else if (dist[y] === dist[x] + 1) ways[y] += ways[x];
     }
   }
   return { dist: dist, ways: ways, prev: prev, mv: mv };
 }
+function rgToGoal(R, g) {
+  var tb = rgTable(R), N = tb.N, D = new Int16Array(N), q = new Int32Array(N), h = 0, t = 0, i;
+  for (i = 0; i < N; i++) D[i] = -1;
+  D[g] = 0; q[t++] = g;
+  while (h < t) { var y = q[h++]; for (var e = tb.off[y]; e < tb.off[y + 1]; e++) { var x = tb.src[e]; if (D[x] < 0) { D[x] = D[y] + 1; q[t++] = x; } } }
+  return D;
+}
 function rgPath(B, to) { var p = [], x = to; while (B.prev[x] >= 0) { p.unshift(B.mv[x]); x = B.prev[x]; } return p; }
-function rgStage(R, from, to, slack, lo, hi) {
-  var B = rgBfs(R, from), g = rgEnc(to, R.m), min = B.dist[g];
-  if (min < lo || min > hi || B.ways[g] < 2) return null;
-  var limit = min + slack, path = rgPath(B, g), alt = null, wrong = -1, i, j;
-  for (i = 0; i < R.k && !alt; i++) {
-    var s1 = rgStep(from, i, R); if (rgEnc(s1, R.m) === g) continue;
-    var B1 = rgBfs(R, s1), d1 = B1.dist[g];
-    if (d1 >= 0 && 1 + d1 > min && 1 + d1 <= limit) alt = [i].concat(rgPath(B1, g));
+function rgDescend(R, D, x) { var tb = rgTable(R), p = [], g = 0; while (D[x] > 0 && g++ < 60) { for (var i = 0; i < R.k; i++) { var y = tb.T[x * R.k + i]; if (D[y] === D[x] - 1) { p.push(i); x = y; break; } } } return p; }
+function rgStage(R, from, slack, lo, hi, r) {
+  var tb = rgTable(R), k = R.k, s0 = rgEnc(from, R.m), B = rgBfs(R, s0), cands = [], x, i, j;
+  for (x = 0; x < tb.N; x++) if (B.dist[x] >= lo && B.dist[x] <= hi && B.ways[x] >= 2) cands.push(x);
+  if (!cands.length) return null;
+  r.shuffle(cands);
+  for (var c = 0; c < Math.min(8, cands.length); c++) {
+    var g = cands[c], min = B.dist[g], limit = min + slack, D = rgToGoal(R, g), alt = null, wrong = -1;
+    for (i = 0; i < k && !alt; i++) { var s1 = tb.T[s0 * k + i]; if (s1 === g) continue; var d1 = D[s1]; if (d1 >= 0 && 1 + d1 > min && 1 + d1 <= limit) alt = [i].concat(rgDescend(R, D, s1)); }
+    for (i = 0; i < k && wrong < 0; i++) { var y = s0, hit = false; for (j = 0; j < limit && !hit; j++) { y = tb.T[y * k + i]; if (y === g) hit = true; } if (!hit) wrong = i; }
+    if (!alt || wrong < 0) continue;
+    return { from: from.slice(), to: rgDec(g, k, R.m), min: min, limit: limit, ways: B.ways[g], path: rgPath(B, g), alt: alt, wrong: wrong };
   }
-  for (i = 0; i < R.k && wrong < 0; i++) {
-    var s = from.slice(), hit = false;
-    for (j = 0; j < limit && !hit; j++) { s = rgStep(s, i, R); if (rgEnc(s, R.m) === g) hit = true; }
-    if (!hit) wrong = i;
-  }
-  if (!alt || wrong < 0) return null;
-  return { from: from.slice(), to: to.slice(), min: min, limit: limit, ways: B.ways[g], path: path, alt: alt, wrong: wrong };
+  return null;
 }
 function rgStepWords(v) { return v === 1 ? "одно деление вперёд" : v === -1 ? "одно деление назад" : v === 2 ? "два деления вперёд" : "два деления назад"; }
 function genRings(seed, d) {
@@ -1442,11 +1461,10 @@ function genRings(seed, d) {
     var cl = null;
     if (d === 2) { var ci = r.int(0, k - 1), cc = r.int(0, k - 1), cj = r.pick(intList(k).filter(function (x) { return x !== ci; })); cl = { c: cc, z: r.int(0, m - 1), i: ci, j: cj, dl: r.pick([1, -1]) }; }
     var R = { k: k, m: m, eff: eff, cl: cl };
-    var rnd = function () { return intList(k).map(function () { return r.int(0, m - 1); }); };
-    var s0 = rnd(), t1 = rnd(), st1 = rgStage(R, s0, t1, [4, 3, 2][d], [3, 3, 6][d], [6, 6, 10][d]);
+    var s0 = intList(k).map(function () { return r.int(0, m - 1); }), st1 = rgStage(R, s0, [4, 3, 2][d], [3, 3, 6][d], [6, 6, 10][d], r);
     if (!st1) continue;
     var stages = [st1];
-    if (d === 1) { var t2 = rnd(), st2 = rgStage(R, t1, t2, 3, 3, 6); if (!st2) continue; stages.push(st2); }
+    if (d === 1) { var st2 = rgStage(R, st1.to, 3, 3, 6, r); if (!st2) continue; stages.push(st2); }
     G = { R: R, stages: stages };
   }
   var lbl = function (i) { return "Кнопка " + (i + 1); };
@@ -1455,7 +1473,7 @@ function genRings(seed, d) {
   alt = G.stages[0].alt.map(lbl); if (G.stages[1]) alt = alt.concat(G.stages[1].path.map(lbl));
   var st0 = G.stages[0], wrong = rep(intList(st0.limit).map(function () { return lbl(st0.wrong); }), 3), sol = 1;
   G.stages.forEach(function (s) { sol *= s.ways; });
-  var R2 = G.R;
+  var R2 = G.R; delete R2.tab;
   return { R: R2, stages: G.stages, plan: plan, wrong: wrong, alts: [{ plan: alt, best: false }], variable: true, sol: sol, ans: G.stages.map(function (s) { return s.path.slice(); }),
     data: { k: R2.k, m: R2.m, eff: R2.eff, cl: R2.cl, stages: G.stages.map(function (s) { return { from: s.from, to: s.to, min: s.min, limit: s.limit }; }) },
     sig: "rings|" + d + "|" + JSON.stringify([R2.k, R2.m, R2.eff, R2.cl || 0, G.stages.map(function (s) { return [s.from, s.to]; })]) };
@@ -1847,41 +1865,58 @@ function shApply(T, s, mv) {
   ns.out++;
   return { s: ns };
 }
-function shBfs(T, from) {
-  var mvs = T.moves, q = [from], dist = {}, ways = {}, prev = {}, pm = {}, k0 = shKey(from), goal = null;
-  dist[k0] = 0; ways[k0] = 1; prev[k0] = null;
-  var map = {}; map[k0] = from;
-  for (var qi = 0; qi < q.length; qi++) {
-    var s = q[qi], ks = shKey(s);
-    if (s.out === T.grp.length) { if (!goal) goal = ks; continue; }
-    for (var j = 0; j < mvs.length; j++) {
+function shGraph(T, from) {
+  var mvs = T.moves, q = [from], idx = {}, st = [], dist = [], ways = [], prev = [], pm = [], adj = [], goal = -1, i, j;
+  idx[shKey(from)] = 0; st.push(from); dist.push(0); ways.push(1); prev.push(-1); pm.push(null);
+  for (i = 0; i < st.length; i++) {
+    var s = st[i]; adj.push([]);
+    if (s.out === T.grp.length) { if (goal < 0) goal = i; continue; }
+    for (j = 0; j < mvs.length; j++) {
       var res = shApply(T, s, mvs[j]); if (!res.s) continue;
-      var kn = shKey(res.s);
-      if (dist[kn] == null) { dist[kn] = dist[ks] + 1; ways[kn] = ways[ks]; prev[kn] = ks; pm[kn] = mvs[j]; map[kn] = res.s; q.push(res.s); }
-      else if (dist[kn] === dist[ks] + 1) ways[kn] += ways[ks];
+      var kn = shKey(res.s), y = idx[kn];
+      if (y == null) { y = st.length; idx[kn] = y; st.push(res.s); dist.push(dist[i] + 1); ways.push(ways[i]); prev.push(i); pm.push(mvs[j]); }
+      else if (dist[y] === dist[i] + 1) ways[y] += ways[i];
+      adj[i].push([mvs[j], y]);
     }
   }
-  if (!goal) return null;
-  var path = [], x = goal; while (prev[x] !== null) { path.unshift(pm[x]); x = prev[x]; }
-  return { min: dist[goal], ways: ways[goal], path: path, dist: dist, map: map, goalKey: goal };
+  if (goal < 0) return null;
+  var toG = st.map(function () { return -1; }), rev = st.map(function () { return []; }), q2 = [goal];
+  adj.forEach(function (a, x) { a.forEach(function (e) { rev[e[1]].push(x); }); });
+  toG[goal] = 0;
+  for (i = 0; i < q2.length; i++) rev[q2[i]].forEach(function (x) { if (toG[x] < 0) { toG[x] = toG[q2[i]] + 1; q2.push(x); } });
+  var path = [], x0 = goal; while (prev[x0] >= 0) { path.unshift(pm[x0]); x0 = prev[x0]; }
+  var down = function (x) { var p = [], g = 0; while (toG[x] > 0 && g++ < 80) { for (var e = 0; e < adj[x].length; e++) if (toG[adj[x][e][1]] === toG[x] - 1) { p.push(adj[x][e][0]); x = adj[x][e][1]; break; } } return p; };
+  return { min: dist[goal], ways: ways[goal], path: path, adj: adj, toG: toG, down: down, st: st };
+}
+function shBfs(T, from) { var g = shGraph(T, from); return g ? { min: g.min, ways: g.ways, path: g.path } : null; }
+function shAlt(Gr, limit, wantWorse) {
+  var x = 0, pre = [];
+  for (var step = 0; step <= Gr.path.length; step++) {
+    var nextMv = Gr.path[step];
+    for (var e = 0; e < Gr.adj[x].length; e++) {
+      var mv = Gr.adj[x][e][0], y = Gr.adj[x][e][1];
+      if (mv === nextMv || Gr.toG[y] < 0) continue;
+      var len = step + 1 + Gr.toG[y];
+      if (wantWorse ? (len > Gr.min && len <= limit) : len === Gr.min) return pre.concat([mv], Gr.down(y));
+    }
+    if (step === Gr.path.length) break;
+    pre.push(nextMv);
+    for (var e2 = 0; e2 < Gr.adj[x].length; e2++) if (Gr.adj[x][e2][0] === nextMv) { x = Gr.adj[x][e2][1]; break; }
+  }
+  return null;
 }
 function genShunting(seed, d) {
   var r = rngFor(seed, "shunting", d), G = null, i;
   for (var at = 0; at < 300 && !G; at++) {
-    var n = d === 0 ? r.int(5, 6) : d === 1 ? r.int(6, 7) : r.int(7, 8), k = d === 0 ? r.int(2, 3) : d === 1 ? 3 : r.int(3, 4);
+    var n = d === 0 ? r.int(5, 8) : d === 1 ? r.int(6, 8) : r.int(7, 8), k = d === 0 ? r.int(2, 3) : d === 1 ? r.int(3, 4) : r.int(3, 4);
     var grp = intList(n).map(function (x) { return x < k ? x : r.int(0, k - 1); }); r.shuffle(grp);
     var T = { grp: grp, cap: d === 0 ? n : 2, capQ: d === 2 ? 2 : 0, moves: d === 2 ? ["IO", "IS", "SO", "IQ", "QO"] : ["IO", "IS", "SO"] };
-    var s0 = { i: 0, st: [], qu: [], out: 0 }, B = shBfs(T, s0);
-    if (!B || B.min < n + [2, 3, 4][d] || B.ways < 2) continue;
-    if (d === 2) { var B2 = shBfs({ grp: grp, cap: 2, capQ: 0, moves: ["IO", "IS", "SO"] }, s0); if (B2 && B2.min <= B.min) continue; }
-    var limit = B.min + [4, 2, 1][d], alt = null;
-    for (i = 0; i < T.moves.length && !alt; i++) {
-      var r1 = shApply(T, s0, T.moves[i]); if (!r1.s) continue;
-      var B1 = shBfs(T, r1.s); if (!B1) continue;
-      if (1 + B1.min > B.min && 1 + B1.min <= limit) alt = { plan: [T.moves[i]].concat(B1.path), best: false };
-      else if (1 + B1.min === B.min && T.moves[i] !== B.path[0]) alt = { plan: [T.moves[i]].concat(B1.path), best: true };
-    }
-    if (!alt) continue;
+    var s0 = { i: 0, st: [], qu: [], out: 0 }, Gr = shGraph(T, s0);
+    if (!Gr || Gr.min < n + [2, 2, 4][d] || Gr.ways < 2) continue;
+    if (d === 2) { var B2 = shBfs({ grp: grp, cap: 2, capQ: 0, moves: ["IO", "IS", "SO"] }, s0); if (B2 && B2.min <= Gr.min) continue; }
+    var limit = Gr.min + [4, 2, 1][d], altP = shAlt(Gr, limit, true), altBest = false;
+    if (!altP) { altP = shAlt(Gr, limit, false); altBest = true; }
+    if (!altP) continue;
     var wrong = null, seqs = [[]];
     for (var dep = 0; dep < 4 && !wrong; dep++) {
       var nx = [];
@@ -1894,7 +1929,7 @@ function genShunting(seed, d) {
       seqs = nx;
     }
     if (!wrong) continue;
-    G = { T: T, min: B.min, ways: B.ways, path: B.path, limit: limit, alt: alt, wrong: wrong };
+    G = { T: T, min: Gr.min, ways: Gr.ways, path: Gr.path, limit: limit, alt: { plan: altP, best: altBest }, wrong: wrong };
   }
   var lb = function (m) { return SH_LBL[m]; };
   var order = shuffled(r, intList(SH_CARGO.length)).slice(0, Math.max.apply(null, G.T.grp) + 1);
@@ -1952,49 +1987,52 @@ function shunting(seed, cb, opts) {
    где сказано. Кратчайшее — поиском с оценкой (IDA*); любое решение в
    пределах ходов принимается, кратчайшее — образцовое.
    ════════════════════════════════════════════════════════════════════ */
-function slIda(R, C, st, goal, maxNodes) {
-  var N = R * C, gp = [], i;
-  for (i = 0; i < N; i++) gp[goal[i]] = i;
-  var md = function (p, t) { var g = gp[t]; return Math.abs(Math.floor(p / C) - Math.floor(g / C)) + Math.abs(p % C - g % C); };
-  var s = st.slice(), h = 0, nodes = 0, found = 0, best = null, path = [], nextB = 0, bound;
-  for (i = 0; i < N; i++) if (s[i]) h += md(i, s[i]);
-  var nb = []; for (i = 0; i < N; i++) { var a = []; if (i >= C) a.push(i - C); if (i + C < N) a.push(i + C); if (i % C) a.push(i - 1); if (i % C < C - 1) a.push(i + 1); nb.push(a); }
-  var dfs = function (g, hh, blank, prevB) {
-    if (++nodes > maxNodes) return;
-    var f = g + hh;
-    if (f > bound) { if (f < nextB) nextB = f; return; }
-    if (hh === 0) { found++; if (!best) best = path.slice(); return; }
-    var ns = nb[blank];
-    for (var j = 0; j < ns.length && found < 300; j++) {
-      var p = ns[j]; if (p === prevB) continue;
-      var t = s[p], h2 = hh - md(p, t) + md(blank, t);
-      s[blank] = t; s[p] = 0; path.push(t);
-      dfs(g + 1, h2, p, blank);
-      path.pop(); s[p] = t; s[blank] = 0;
-    }
-  };
-  bound = h;
-  for (var it = 0; it < 60; it++) {
-    nextB = 1e9; dfs(0, h, s.indexOf(0), -1);
-    if (found || nodes > maxNodes) break;
-    bound = nextB;
+/* двунаправленный поиск в ширину: точное кратчайшее, число кратчайших и один кратчайший путь (номера сдвигаемых плиток) */
+function slBi(R, C, st, goal, maxD) {
+  var N = R * C, nb = [], i;
+  for (i = 0; i < N; i++) { var a = []; if (i >= C) a.push(i - C); if (i + C < N) a.push(i + C); if (i % C) a.push(i - 1); if (i % C < C - 1) a.push(i + 1); nb.push(a); }
+  var key = function (x) { var v = 0; for (var j = N - 1; j >= 0; j--) v = v * 9 + x[j]; return v; }, sk = key(st), gk = key(goal);
+  if (sk === gk) return { min: 0, count: 1, path: [] };
+  var mk = function (root, k) { var S = { d: new Map(), w: new Map(), p: new Map(), m: new Map(), front: [root], depth: 0 }; S.d.set(k, 0); S.w.set(k, 1); return S; };
+  var F = mk(st, sk), B = mk(goal, gk);
+  for (var guard = 0; guard < 60; guard++) {
+    if (F.depth + B.depth >= (maxD || 40)) return null;
+    var S = F.front.length <= B.front.length ? F : B, O = S === F ? B : F, nf = [];
+    S.front.forEach(function (x) {
+      var kx = key(x), b = x.indexOf(0), dx = S.d.get(kx), wx = S.w.get(kx);
+      nb[b].forEach(function (q) {
+        var t = x.slice(); t[b] = t[q]; t[q] = 0; var kt = key(t), dt = S.d.get(kt);
+        if (dt == null) { S.d.set(kt, dx + 1); S.w.set(kt, wx); S.p.set(kt, kx); S.m.set(kt, x[q]); nf.push(t); }
+        else if (dt === dx + 1) S.w.set(kt, S.w.get(kt) + wx);
+      });
+    });
+    S.front = nf; S.depth++;
+    if (!nf.length) return null;
+    var best = 1e9, meet = [];
+    nf.forEach(function (t) { var kt = key(t), od = O.d.get(kt); if (od != null) { var tot = S.depth + od; if (tot < best) { best = tot; meet = [kt]; } else if (tot === best && meet.indexOf(kt) < 0) meet.push(kt); } });
+    if (!meet.length) continue;
+    var count = 0; meet.forEach(function (kt) { count += S.w.get(kt) * O.w.get(kt); });
+    var x0 = meet[0], head = [], tail = [], z = x0;
+    while (F.p.has(z)) { head.unshift(F.m.get(z)); z = F.p.get(z); }
+    z = x0; while (B.p.has(z)) { tail.push(B.m.get(z)); z = B.p.get(z); }
+    return { min: best, count: count, path: head.concat(tail) };
   }
-  return { min: found && nodes <= maxNodes ? bound : -1, count: found, path: best, nodes: nodes };
+  return null;
 }
 function genSlider(seed, d) {
-  var r = rngFor(seed, "slider", d), R = d === 0 ? 2 : 3, C = 3, N = R * C, G = null;
-  var lo = [5, 8, 14][d], hi = [10, 13, 18][d];
+  var r = rngFor(seed, "slider", d), R = d === 0 ? r.pick([2, 3]) : 3, C = d === 0 ? 5 - R : 3, N = R * C, G = null;
+  var lo = [5, 8, 14][d], hi = [12, 13, 18][d];
   for (var at = 0; at < 200 && !G; at++) {
     var gb = r.int(0, N - 1), goal = [], t = 1, i;
     for (i = 0; i < N; i++) goal.push(i === gb ? 0 : t++);
-    var s = goal.slice(), b = gb, prev = -1, W = [r.int(8, 20), r.int(14, 30), r.int(30, 60)][d];
+    var s = goal.slice(), b = gb, prev = -1, W = [r.int(6, 24), r.int(9, 18), r.int(15, 26)][d];
     for (var k = 0; k < W; k++) {
       var opts2 = []; if (b >= C) opts2.push(b - C); if (b + C < N) opts2.push(b + C); if (b % C) opts2.push(b - 1); if (b % C < C - 1) opts2.push(b + 1);
       opts2 = opts2.filter(function (x) { return x !== prev; });
       var p = r.pick(opts2); s[b] = s[p]; s[p] = 0; prev = b; b = p;
     }
-    var sv = slIda(R, C, s, goal, d === 2 ? 120000 : 40000);
-    if (sv.min < lo || sv.min > hi || sv.count < 2) continue;
+    var sv = slBi(R, C, s, goal, hi + 1);
+    if (!sv || sv.min < lo || sv.min > hi || (d > 0 && sv.count < 2)) continue;
     G = { goal: goal, start: s, min: sv.min, count: sv.count, path: sv.path, limit: sv.min + [4, 4, 2][d] };
   }
   var b0 = G.start.indexOf(0), mvT = -1;
@@ -2009,7 +2047,7 @@ function slider(seed, cb, opts) {
   var d = diffOf(opts), P = genSlider(seed, d), R = P.R, C = P.C, N = R * C, s = P.start.slice(), used = 0, total = 0;
   var rowOf = function (arr, rr) { var a = []; for (var c = 0; c < C; c++) { var v = arr[rr * C + c]; a.push(v ? String(v) : "пусто"); } return a.join(", "); };
   var field = function (arr) { var a = []; for (var rr = 0; rr < R; rr++) a.push("ряд " + (rr + 1) + " — " + rowOf(arr, rr)); return a.join("; "); };
-  var cond = head(opts, d) + "Пятнашки щита. На щите управления — рамка " + (R === 2 ? "в два ряда по три ячейки" : "в три ряда по три ячейки") + "; в ячейках плитки с номерами контуров, одна ячейка пуста. Ряды считаются сверху вниз, ячейки — слева направо. Плитку, соседнюю с пустой ячейкой сверху, снизу или сбоку, можно сдвинуть в неё. Сейчас: " +
+  var cond = head(opts, d) + "Пятнашки щита. На щите управления — рамка в " + cnt(R, "ряд", "ряда", "рядов") + " по " + cnt(C, "ячейка", "ячейки", "ячеек", "f") + "; в ячейках плитки с номерами контуров, одна ячейка пуста. Ряды считаются сверху вниз, ячейки — слева направо. Плитку, соседнюю с пустой ячейкой сверху, снизу или сбоку, можно сдвинуть в неё. Сейчас: " +
     field(P.start) + ". Нужно: " + field(P.goal) + ". Защёлки рамки изношены: на всё — " + cnt(P.limit, "сдвиг", "сдвига", "сдвигов") + ", не больше, иначе рамка сбросится.";
   var last = start("slider", d, P, "Пятнашки щита", cond, function (st, finish, fail) {
     var out = [];
@@ -2414,7 +2452,7 @@ function genSwitchorder(seed, d) {
     var s = intList(n).map(function () { return r.int(4, 16); }), w = intList(n).map(function () { return r.int(1, 6); });
     var T = { n: n, deps: deps, nadj: nadj, s: s, w: w, lim: 0 };
     for (i = 0; i < [0, 1, r.int(1, 2)][d]; i++) { var x = r.int(0, n - 1), y = r.int(0, n - 2); if (y >= x) y++; nadj.push([x, y]); }
-    var all = U.perms(intList(n)).filter(function (o) { return swOk(T, o); });
+    var all = bkAll(n).filter(function (o) { return swOk(T, o); });
     if (d === 2) {
       var pk = all.map(function (o) { return swPeak(T, o); }).sort(function (a, b) { return a - b; }), lim = -1;
       for (i = pk.length - 1; i >= 1 && lim < 0; i--) if (pk[i] > pk[i - 1] && i >= 2) lim = pk[i - 1];
@@ -2566,7 +2604,7 @@ LAB.puzzles4 = {
   sig: function (kind, seed, diff) { var P = genFull(kind, seed, diff); return P ? P.sig : null; },
   gen: genFull,
   solve: function (kind, task, answer) { if (!GEN[kind]) return 0; try { return solveAns(kind, task, answer); } catch (e) { return 0; } },
-  _mnExact: mnExact, _scCount: scCount, _lkCount: lkCount, _ptLines: ptLines, _slIda: slIda, _tsWorlds: tsWorlds, _rcHyps: rcHyps, _rcTrue: rcTrue,
+  _mnExact: mnExact, _scCount: scCount, _lkCount: lkCount, _ptLines: ptLines, _slBi: slBi, _tsWorlds: tsWorlds, _rcHyps: rcHyps, _rcTrue: rcTrue,
   _bkTrue: bkTrue, _lgClue: lgClue, _lgOrder: lgOrder, _grEval: grEval, _rgStep: rgStep, _shApply: shApply, _swOk: swOk, _swPeak: swPeak, _num: nw
 };
 })();

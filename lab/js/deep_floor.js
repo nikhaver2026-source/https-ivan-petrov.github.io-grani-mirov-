@@ -10,8 +10,9 @@
    • Испытательный стенд — в каждой испытательной камере блока (trial).
    • Помещение вне надзора (dark): камер нет; бывает теневой торговец.
    • Дверь с допуском (rank): открывается статусом в списках Переклички.
-     Ставится, только если без этой комнаты этаж проходим и в ней нет ничего,
-     без чего дальше не пройти.
+     Ставится, только если без этой комнаты этаж проходим, в ней нет ничего,
+     без чего дальше не пройти, и без допуска в неё не войти (нет открытого
+     проёма). Иначе «по допуску» — хранилища комнаты (rankLock).
    Синтаксис — не новее ES2017; без DOM: файл читают и проверки в Node.
    ════════════════════════════════════════════════════════════════════ */
 (function () {
@@ -53,6 +54,16 @@ function roomHasKey(fl, ri) {
   for (var k = 0; k < fl.foes.length; k++) { var f = fl.foes[k]; if (f.room === ri && (f.boss || (f.carry && f.carry.length))) return true; }
   return false;
 }
+/* Досягаема ли хоть одна клетка комнаты (по карте решателя этажа). */
+function roomReached(fl, rm, ri, reach) {
+  if (!reach) return false;
+  var W = LAB.W;
+  for (var y = rm.y0; y <= rm.y1; y++) for (var x = rm.x0; x <= rm.x1; x++) { var j = y * W + x; if (fl.room[j] === ri && reach[j]) return true; }
+  return false;
+}
+/* Хранилища, которые бывают «по допуску», и вещи, без которых этаж не пройти (их не запирают). */
+var RANKBOX = { locker: 1, crate: 1, desk: 1 };
+function passItem(it) { return !!(it && (it.kind === "key" || it.kind === "pass" || it.kind === "gatepass" || it.kind === "elevpass" || it.rub || (it.kind === "note" && it.code))); }
 
 LAB.deepFloor = function (c) {
   var fl = c.fl, L = c.L, F = c.F, r = c.rng, n = LAB.blockOf(L), D = deepOf(L);
@@ -86,18 +97,30 @@ LAB.deepFloor = function (c) {
     if (tr0 !== c.U && tr0 !== c.D) c.addObj("dtrader", tr0, { market: n });
   }
 
-  /* ── двери с допуском ── */
+  /* ── двери с допуском ──
+     Замок на двери что-то значит, только если без допуска в комнату не войти: у многих помещений
+     есть открытый проём в коридор (или комната — проход между коридорами). Тогда дверь не
+     запирается, а «по допуску» становятся её хранилища — шкафчики, ящики, столы (но не те, где
+     лежит нужное для прохода: ключ, пропуск, код). */
   rooms.forEach(function (rm, ri) {
     var def = LAB.ROOMS[rm.type] || {};
-    if (!def.rank || ri === c.U || ri === c.D || ri === c.secret || roomHasKey(fl, ri)) return;
-    var ds = fl.doors.filter(function (d) { return d.room === ri && !d.lock && d.kind !== "secret"; });
-    if (!ds.length) return;
-    ds.forEach(function (d) { d.lock = { type: "rank", rank: Math.max(1, Math.min(6, def.rank)) }; });
-    /* без этой комнаты этаж проходим: иначе замок снимается */
-    var ok = true;
-    try { var res = LAB.solve(fl, { tier: 99999, gatepass: true, rank: 0 }); ok = !!(res && res.down && res.elev); } catch (e) { ok = false; }
-    if (!ok) ds.forEach(function (d) { d.lock = null; });
-    else rm.rank = def.rank;
+    if (!def.rank || ri === c.U || ri === c.D || ri === c.secret) return;
+    var rk = Math.max(1, Math.min(6, def.rank));
+    var ds = roomHasKey(fl, ri) ? [] : fl.doors.filter(function (d) { return d.room === ri && !d.lock && d.kind !== "secret"; });
+    if (ds.length) {
+      ds.forEach(function (d) { d.lock = { type: "rank", rank: rk }; });
+      /* без этой комнаты этаж проходим, и без допуска в неё не попасть: иначе замок снимается */
+      var ok = true;
+      try { var res = LAB.solve(fl, { tier: 99999, gatepass: true, rank: 0 }); ok = !!(res && res.down && res.elev) && !roomReached(fl, rm, ri, res.reach); } catch (e) { ok = false; }
+      if (ok) { rm.rank = rk; return; }
+      ds.forEach(function (d) { d.lock = null; });
+    }
+    var boxes = 0;
+    fl.objs.forEach(function (o) {
+      if (o.room !== ri || !RANKBOX[o.type] || !o.loot || !o.loot.length || o.loot.some(passItem)) return;
+      o.rankLock = rk; boxes++;
+    });
+    if (boxes) rm.rankBoxes = rk;
   });
 
   /* ── срез ── */

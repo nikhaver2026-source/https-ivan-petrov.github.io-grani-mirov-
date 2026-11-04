@@ -3,7 +3,8 @@
    секторам, этажи проходимы от прибытия до выхода вниз, лифт достижим; на сотом уровне прибытие
    прежнее, на 101-м — «Край Разлома»; на самом дне — «Ядро Разлома»; срезы стоят только в тайных
    комнатах и подсобках и ведут вниз, но не мимо двух последних уровней блока; у среза с кодом —
-   записка с этим кодом на том же этаже; двери с допуском не отрезают выход; стенды испытаний —
+   записка с этим кодом на том же этаже; двери с допуском не отрезают выход и запирают комнату
+   по-настоящему (без открытого проёма), хранилища по допуску не прячут нужное для прохода; стенды испытаний —
    в испытательных камерах; полы коридоров бетонные, полы помещений — свои; глубина растёт без
    скачков назад. Уровни 1–100 этой проверкой не меняются (их проверяет world.test.js).
    Запуск: node lab/tests/deep.test.js [уровней на блок, по умолчанию 6]
@@ -59,6 +60,24 @@ function checkFloor(L, F, tag) {
     if (o.type === "trialst" && !(LAB.ROOMS[fl.rooms[o.room].type] || {}).trial) err(`${L}-${F}: стенд испытания не в испытательной камере`);
   });
   fl.doors.forEach(d => { if (d.lock && d.lock.type === "rank" && !(LAB.ROOMS[fl.rooms[d.room].type] || {}).rank) err(`${L}-${F}: допуск на двери не той комнаты`); });
+  /* замок допуска что-то значит: без статуса в комнату не войти (нет открытого проёма) */
+  if (fl.rooms.some(r => r.rank)) {
+    const r0 = LAB.solve(fl, { tier: 999999, gatepass: true, rank: 0 });
+    fl.rooms.forEach((r, ri) => {
+      if (!r.rank) return;
+      let open = false;
+      for (let y = r.y0; y <= r.y1 && !open; y++) for (let x = r.x0; x <= r.x1; x++) if (fl.room[y * W + x] === ri && r0.reach[y * W + x]) { open = true; break; }
+      if (open) err(`${L}-${F}: дверь с допуском у «${r.type}», а в комнату можно войти и без допуска`);
+      if (!r0.down || !r0.elev) err(`${L}-${F}: без допуска этаж не пройти`);
+    });
+  }
+  /* хранилища по допуску: только шкафчики, ящики и столы, и в них нет нужного для прохода */
+  fl.objs.forEach(o => {
+    if (!o.rankLock) return;
+    if (!{ locker: 1, crate: 1, desk: 1 }[o.type]) err(`${L}-${F}: по допуску заперто «${o.type}»`);
+    if (!(LAB.ROOMS[fl.rooms[o.room].type] || {}).rank) err(`${L}-${F}: хранилище по допуску в комнате без допуска`);
+    if ((o.loot || []).some(it => it.kind === "key" || it.kind === "pass" || it.kind === "gatepass" || it.kind === "elevpass" || it.rub || (it.kind === "note" && it.code))) err(`${L}-${F}: в хранилище по допуску — вещь, нужная для прохода`);
+  });
   return fl;
 }
 /* прибытие и дно */
@@ -70,7 +89,7 @@ const fBot = LAB.getFloor(seed, LAB.LEVELS_N, 20);
 ok(fBot.rooms.some(r => r.type === "riftroot") && fBot.objs.some(o => o.type === "reactor" && o.final), "на самом дне — Ядро Разлома и финальный пульт");
 ok(LAB.ROOMS.riftroot && LAB.ROOMS.riftroot.n === "Ядро Разлома", "помещение на дне называется «Ядро Разлома»");
 /* каждый готовый блок */
-const stat = { srez: 0, trial: 0, dark: 0, rank: 0, trader: 0 };
+const stat = { srez: 0, trial: 0, dark: 0, rank: 0, boxes: 0, trader: 0 };
 for (let n = LAB.DEEP_FIRST; n <= LAB.blockOf(LAB.LEVELS_N); n++) {
   const R = LAB.blockRange(n), D = LAB.DEEP[n];
   if (!D || !LAB.deepReady(n)) { err("блок " + n + " не готов, а дно ниже"); continue; }
@@ -85,6 +104,7 @@ for (let n = LAB.DEEP_FIRST; n <= LAB.blockOf(LAB.LEVELS_N); n++) {
       if (!fl) continue;
       fl.objs.forEach(o => { if (o.type === "srez") stat.srez++; if (o.type === "trialst") stat.trial++; if (o.type === "dtrader") stat.trader++; });
       fl.rooms.forEach(r => { if (r.dark) stat.dark++; if (r.rank) stat.rank++; });
+      fl.objs.forEach(o => { if (o.rankLock) stat.boxes++; });
     }
   });
   ok(!bad, `блок ${LAB.roman(n)} «${LAB.BLOCKS[n].name}»: уровни строятся по секторам (${picks.size} проверено)`);
@@ -94,7 +114,7 @@ for (let n = LAB.DEEP_FIRST; n <= LAB.blockOf(LAB.LEVELS_N); n++) {
   stat.srez += cuts;
   ok(cuts >= 1, `блок ${LAB.roman(n)}: срезы вниз есть (${cuts} на 36 этажах)`);
 }
-console.log("  срезов " + stat.srez + ", стендов " + stat.trial + ", помещений вне надзора " + stat.dark + ", с допуском " + stat.rank + ", теневых торговцев " + stat.trader);
+console.log("  срезов " + stat.srez + ", стендов " + stat.trial + ", помещений вне надзора " + stat.dark + ", с допуском " + stat.rank + ", хранилищ по допуску " + stat.boxes + ", теневых торговцев " + stat.trader);
 ok(stat.srez > 0, "срезы есть");
 console.log(`Этажей: ${floors}, ${((Date.now() - t0) / 1000).toFixed(1)} с`);
 if (fails) { console.log("ПРОВАЛЕНО: " + fails); process.exit(1); }

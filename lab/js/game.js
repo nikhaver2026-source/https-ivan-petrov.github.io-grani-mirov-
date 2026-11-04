@@ -220,6 +220,7 @@ game.enterFloor = enterFloor;
 function objName(o, plain) {
   var n = objName0(o);
   if (!plain && n && LAB.stash && LAB.stash.knownTrap && LAB.stash.knownTrap(o)) n += ", с ловушкой";
+  if (!plain && n && o.rankLock && G.L > 100) n += ", по допуску"; /* (после 4.1) хранилище по допуску (deep_floor.js) */
   return n;
 }
 function objName0(o) {
@@ -2808,6 +2809,13 @@ function positronMenu(o) {
 function containerMenu(o) {
   var st = objState(o), name = objName(o), items = [];
   if (st.open) { say(name + ": пусто."); return; }
+  /* (после 4.1) по допуску: без статуса — только осмотреть; силой и инструментом не вскрыть */
+  var rbx = o.rankLock && LAB.deepSys && LAB.deepSys.boxBlock ? LAB.deepSys.boxBlock(o) : "";
+  if (rbx) {
+    items.push({ label: rbx, info: true, keep: true, fn: function () { say(rbx); } });
+    items.push({ label: "Осмотреть", fn: function () { say((LAB.fixtures ? LAB.fixtures.examine(o) : name + ". " + LAB.OBJ[o.type].desc) + " На замке — считыватель допуска: он сверяется со списками Переклички."); } });
+    UIx("menu", name, items); return;
+  }
   if (o.type === "safe") {
     /* Сейф открывается только кодом, который игрок набирает сам; код — в записке. */
     /* (3.0) первым пунктом — есть ли код в документах; коротко */
@@ -2876,6 +2884,9 @@ function openContainer(o) {
   /* (3.5) обысканное — пусто: из старого окна «Обыскать» второй раз ничего не даёт
      (прежде та же добыча выдавалась снова) */
   if (objState(o).looted) { say(objName(o) + ": пусто, здесь уже искали."); return; }
+  /* (после 4.1) хранилище по допуску (deep_floor.js): без нужного статуса в списках не открыть */
+  var rbx = o.rankLock && LAB.deepSys && LAB.deepSys.boxBlock ? LAB.deepSys.boxBlock(o) : "";
+  if (rbx) { A("play", "code_fail"); say(objName(o) + ". " + rbx); return; }
   /* (2.5) пакость в хранилище: ловушка, гнездо, шкафник (stash.js) */
   if (LAB.stash && LAB.stash.guard(o, function () { openContainer(o); })) return;
   var st = objState(o);

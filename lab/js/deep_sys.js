@@ -469,6 +469,9 @@ function cutNote(it, h) {
 /* ════════ ДОПУСК ════════ */
 function rankText(lk) { return "дверь с допуском: от статуса «" + stName(lk.rank) + "»"; }
 function rankBlock(lk) { return status() >= lk.rank ? "" : "Допуск ниже нужного: дверь открывается от статуса «" + stName(lk.rank) + "», у вас — «" + stName(status()) + "»."; }
+/* Хранилище по допуску (deep_floor.js, rankLock): шкафчик, ящик или стол в комнате с допуском,
+   куда можно войти и так, — открывается от статуса; силой и инструментом замок допуска не взять. */
+function boxBlock(o) { return !o || !o.rankLock || status() >= o.rankLock ? "" : "Замок по допуску: открывается от статуса «" + stName(o.rankLock) + "», у вас — «" + stName(status()) + "»."; }
 /* Оружие по допуску: стреляет только у того, чей статус не ниже. */
 var rankSaid = 0;
 function weaponOk(w) {
@@ -599,7 +602,7 @@ LAB.OBJ.dtrader = { n: "Теневой торговец", icon: "🕯️", desc:
 LAB.deepSys = {
   NAMES: NAMES, status: status, stName: stName, addPts: addPts, statusLine: statusLine, priceF: priceF,
   objMenu: objMenu, itemFx: itemFx, got: got, onKill: onKill, tick: tick, visit: visit, repaired: repaired,
-  rankText: rankText, rankBlock: rankBlock, weaponOk: weaponOk, defBonus: defBonus, rentHas: rentHas, returnRent: returnRent,
+  rankText: rankText, rankBlock: rankBlock, boxBlock: boxBlock, weaponOk: weaponOk, defBonus: defBonus, rentHas: rentHas, returnRent: returnRent,
   cutNote: cutNote, descendTo: descendTo, harness: harness, rename: rename, wrapUI: wrapUI, useSpecial: useSpecial, memoryDream: memoryDream,
   _trial: function () { return trial; }, _finish: finish, _onLevel: onLevel
 };
