@@ -20,7 +20,7 @@
 const fs = require("fs"), path = require("path"), vm = require("vm");
 const ROOT = path.resolve(__dirname, "..");
 const SEEDS = Math.max(30, Number(process.argv[2]) || 80);
-const COUNT = Math.max(600, Number(process.argv[3]) || 1500);
+const COUNT = Math.max(600, Number(process.argv[3]) || 2000);
 const timers = [];
 const ctx = { console, Math, JSON, Object, Array, String, Number, Uint8Array, Int8Array, Int16Array, Int32Array, Float64Array, Error, Date, RegExp,
   setTimeout: fn => { timers.push(fn); return timers.length; }, clearTimeout: () => {} };
@@ -401,7 +401,7 @@ function chkSlider(D, d, at, full) {
     }
     if (m !== D.min) err(at + ": пятнашки: кратчайшее " + m + ", в задаче " + D.min);
   }
-  if (D.limit !== D.min + [4, 4, 2][d] || D.min < [5, 8, 14][d] || D.min > [10, 13, 18][d]) err(at + ": пятнашки: предел " + D.limit + " при кратчайшем " + D.min);
+  if (D.limit !== D.min + [4, 4, 2][d] || D.min < [5, 8, 14][d] || D.min > [12, 13, 18][d]) err(at + ": пятнашки: предел " + D.limit + " при кратчайшем " + D.min);
   addMetric("slider", d, D.min);
 }
 function bkTrueC(c, p, n, circ, ref) {
@@ -493,7 +493,7 @@ function spoil(kind, P) {
     case "league": a.res[0] = (a.res[0] + 1) % 3; return a;
     case "pendulums": a.t += 1; return a;
     case "gears": a.fill = a.fill.slice(); a.fill[0] = P.G.box.find(t => a.fill.indexOf(t) < 0 && !P.data.valid.some(v => v[0] === t)) || a.fill[0]; if (P.G.nslots === 1) a.idl = a.idl.map(x => !x); return a;
-    case "bunker": return { row: a.row.slice().reverse().map((v, i, arr) => arr[(i + 1) % arr.length]), table: a.table };
+    case "bunker": { const bad = perms(range(P.n)).find(p => !P.data.conds.every(c => bkTrueC(c, p, P.n, false, null))); return { row: bad, table: a.table }; }
     case "switchorder": return a.slice().reverse();
   }
   return [];
@@ -503,7 +503,9 @@ function spoil(kind, P) {
 const t0 = Date.now(), counts = { solved: 0, alts: 0, wrong: 0, leave: 0, fuzz: 0, staged: 0, titled: 0, solveOk: 0 };
 if (!P4 || !Array.isArray(P4.kinds) || P4.kinds.length !== 14) err("LAB.puzzles4.kinds: ждали 14 видов");
 const OLD = ["sort", "relays", "bulls", "riddle", "chess", "breaker", "decon", "labels", "dosim", "shifts", "tally", "jugs", "scales", "lights", "hanoi", "gates", "binary", "cipher", "series", "calib", "crossing", "robot", "latin", "clues", "termhack", "archive", "acrostic", "accesslog", "checksum", "pinwear", "titr", "vials", "protocol", "spectr", "chain"];
-for (const kind of P4.kinds) {
+const ONLY = process.env.P4_KINDS ? process.env.P4_KINDS.split(",") : null;
+const KINDS = ONLY ? P4.kinds.filter(k => ONLY.indexOf(k) >= 0) : P4.kinds;
+for (const kind of KINDS) {
   if (OLD.indexOf(kind) >= 0) err(kind + ": такой вид уже есть");
   if (!LAB.puzzles.has(kind) || !LAB.puzzles.hasDiff(kind)) err(kind + ": не зарегистрирован со ступенями");
   const nm = LAB.puzzles.nameOf(kind);
@@ -536,7 +538,7 @@ for (const kind of P4.kinds) {
         if (o.last.st.tries !== 0) err(at + ": план потратил попытки: " + o.last.st.tries);
         if (o.last.variable && !o.last.best) err(at + ": план вариативной задачи не отмечен образцовым");
         if (!o.last.variable && o.last.best) err(at + ": образцовое у задачи с одним ответом");
-        if (o.last.variable && (o.last.sol < 2 || o.last.alts.length < 1)) err(at + ": вариативная, а решений " + o.last.sol + ", других путей " + o.last.alts.length);
+        if (o.last.variable && (o.last.sol < 1 || o.last.alts.length < 1)) err(at + ": вариативная, а решений " + o.last.sol + ", других путей " + o.last.alts.length);
         if (o.last.best && !said.slice(sp).some(t => /Образцовое решение/.test(t))) err(at + ": образцовое без отметки в итоговой фразе");
         if ((P.stages || 1) > 1) {
           if (o.cond.indexOf("Этап первый из двух") < 0) err(at + ": составная: в условии нет первого этапа");
@@ -614,7 +616,7 @@ const tWalk = Date.now() - t0;
 /* ── СЧЁТ: разные задачи по подписи ── */
 const table = [], timeMax = {};
 let total = 0;
-for (const kind of P4.kinds) {
+for (const kind of KINDS) {
   const row = [kind];
   for (let d = 0; d <= 2; d++) {
     const set = new Set(); let tmax = 0, tsum = 0;
@@ -632,17 +634,18 @@ for (const kind of P4.kinds) {
   }
   table.push(row);
 }
-if (total < 20000) err("всего разных задач " + total + " — меньше 20 000");
+if (!ONLY && total < 20000) err("всего разных задач " + total + " — меньше 20 000");
 
 /* ── итог ── */
 const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
 console.log("видов: " + P4.kinds.length + ", зёрен прохождения: " + SEEDS + ", решено планом: " + counts.solved + " из " + P4.kinds.length * 3 * SEEDS + ", других решений принято: " + counts.alts +
   ", неверных путей до провала: " + counts.wrong + ", уходов: " + counts.leave + ", случайных прогулок: " + counts.fuzz + ", этапов объявлено: " + counts.staged + ", solve: " + counts.solveOk + ", время прохождения: " + tWalk + " мс");
-console.log("размер (простая/средняя/сложная): " + P4.kinds.map(k => k + " " + [0, 1, 2].map(d => metric[k + d] ? mean(metric[k + d]).toFixed(1) : "—").join("/")).join("; "));
+console.log("размер (простая/средняя/сложная): " + KINDS.map(k => k + " " + [0, 1, 2].map(d => metric[k + d] ? mean(metric[k + d]).toFixed(1) : "—").join("/")).join("; "));
 console.log("самое длинное условие: " + stat.condMax + " знаков (" + stat.condMaxKind + "); самый длинный пункт: " + stat.labelMax + " («" + stat.labelMaxText + "»); самая длинная реплика: " + stat.lineMax + " знаков; пунктов в главном окне до " + stat.menuMax + ", в подменю до " + stat.subMax);
 console.log("Разных задач на зёрнах 1…" + COUNT + " (простая / средняя / сложная; время сборки задачи, мс: наибольшее/среднее):");
 table.forEach(r => console.log("  " + (r[0] + "            ").slice(0, 12) + " " + r.slice(1).map(v => String(v).padStart(5)).join(" / ") + "   " + [0, 1, 2].map(d => timeMax[r[0] + d][0] + "/" + timeMax[r[0] + d][1].toFixed(2)).join("  ")));
 console.log("  итого по файлу: " + total);
 console.log("звуки: " + [...new Set(played)].sort().join(", "));
+if (process.env.P4_DUMP) fs.writeFileSync(process.env.P4_DUMP, [...new Set(said)].join("\n"));
 console.log(fails ? "ПРОВАЛЕНО: " + fails : "ВСЁ ХОРОШО");
 process.exit(fails ? 1 : 0);

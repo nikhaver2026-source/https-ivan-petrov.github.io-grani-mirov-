@@ -105,6 +105,8 @@ function nw(n, g) {
   return parts.join(" ");
 }
 function cnt(n, one, few, many, g) { return nw(n, g) + " " + pl(n, one, few, many); }
+/* винительный падеж («через одну минуту», «тысячу оборотов») */
+function nwa(n, g) { return nw(n, g).replace(/^тысяча/, "тысячу").replace(/ тысяча /, " тысячу ").replace(/(^| )одна$/, "$1одну"); }
 var ORDM = ["нулевой", "первый", "второй", "третий", "четвёртый", "пятый", "шестой", "седьмой", "восьмой", "девятый", "десятый"];
 var ORDF = ["нулевая", "первая", "вторая", "третья", "четвёртая", "пятая", "шестая", "седьмая", "восьмая", "девятая", "десятая"];
 var ORDN = ["нулевое", "первое", "второе", "третье", "четвёртое", "пятое", "шестое", "седьмое", "восьмое", "девятое", "десятое"];
@@ -254,6 +256,7 @@ function genTestimony(seed, d) {
     }
     G = { c: c, L: L, kL: kL, sts: sts, sts2: sts2 };
   }
+  if (!G) return null;
   var ps = people(r, n), inc = r.pick(TS_INC), nm = function (i) { return ps[i].n; };
   var liars = intList(n).filter(function (i) { return G.L >> i & 1; }), honest = intList(n).filter(function (i) { return !(G.L >> i & 1); });
   var others = intList(n).filter(function (i) { return i !== G.c; }), plan, wrong;
@@ -270,7 +273,7 @@ function genTestimony(seed, d) {
     sig: "testimony|" + d + "|" + JSON.stringify([n, G.kL, tsArr(G.sts), G.sts2 ? tsArr(G.sts2) : 0]) };
 }
 function testimony(seed, cb, opts) {
-  var d = diffOf(opts), P = genTestimony(seed, d), ps = P.ps, n = P.n, marks = 0, culp = -1, stage = 1;
+  var d = diffOf(opts), P = GEN.testimony(seed, d), ps = P.ps, n = P.n, marks = 0, culp = -1, stage = 1;
   var nm = function (i) { return ps[i].n; };
   var line = function (s) { return nm(s.s) + ": «" + tsSay(s, ps) + "»"; };
   var lines = function (arr) { return arr.map(function (s) { return line(s) + "."; }).join(" "); };
@@ -281,6 +284,7 @@ function testimony(seed, cb, opts) {
   else cond += "Каждый из них либо всегда говорит правду, либо всегда лжёт; сколько среди них лжецов — неизвестно. " + stageHead(1, 2) + " Кто лжёт. Первый допрос — о честности. " + lines(P.sts) + " Отметьте лжецов; на втором допросе каждый скажет, кто, по его словам, виноват.";
   var stage2 = stageHead(2, 2) + " Кто виноват. Второй допрос. " + (P.sts2 ? lines(P.sts2) : "") + " Лжецы лгут и теперь. Назовите виновного.";
   var liarText = function (mask) { var a = marked(mask); return a.length ? andList(a) : "никто"; };
+  var liarVerb = function (mask, past) { var a = intList(n).filter(function (x) { return mask >> x & 1; }); if (a.length !== 1) return (past ? "лгали " : "лгут ") + liarText(mask); return past ? gv(ps[a[0]], "лгал ", "лгала ") + nm(a[0]) : "лжёт " + nm(a[0]); };
   var why = function (sts, c, mask) {
     var bad = tsBad(sts, c, mask);
     if (!bad) return "";
@@ -327,7 +331,7 @@ function testimony(seed, cb, opts) {
     }
     if (d === 2 && stage === 1) {
       out.push(act("Сдать вывод о лжецах", function () {
-        if (marks === P.L) { A("play", "paper_turn"); stage = 2; say("Верно: лгут " + liarText(P.L) + ". " + stage2); return; }
+        if (marks === P.L) { A("play", "paper_turn"); stage = 2; say("Верно: " + liarVerb(P.L) + ". " + stage2); return; }
         A("play", "term_err");
         fail("Не сходится: " + (why(P.sts, -1, marks) || "отметки не те."));
       }));
@@ -335,14 +339,14 @@ function testimony(seed, cb, opts) {
       out.push(act("Сдать вывод", function () {
         if (culp < 0) { nope("Сначала назовите виновного."); return; }
         if (d === 1) {
-          if (culp === P.c && marks === P.L) { win(last, finish, "Верно: это " + gv(ps[culp], "сделал", "сделала") + " " + nm(culp) + ", а лгут " + liarText(P.L) + ".", false); return; }
+          if (culp === P.c && marks === P.L) { win(last, finish, "Верно: это " + gv(ps[culp], "сделал", "сделала") + " " + nm(culp) + ", а " + liarVerb(P.L) + ".", false); return; }
           A("play", "term_err");
           var w1 = why(P.sts, culp, marks), mk = popcount(marks);
           if (!w1) w1 = (P.kL === 1 ? "лжёт ровно один" : "лгут ровно двое") + ", а " + (mk === 0 ? "не отмечен никто" : mk === 1 ? "отмечен один" : "отмечено " + COLL[mk]) + ".";
           fail("Не сходится: " + w1);
           return;
         }
-        if (culp === P.c) { win(last, finish, "Верно: это " + gv(ps[culp], "сделал", "сделала") + " " + nm(culp) + ". Лгали " + liarText(P.L) + ".", false); return; }
+        if (culp === P.c) { win(last, finish, "Верно: это " + gv(ps[culp], "сделал", "сделала") + " " + nm(culp) + ". " + cap(liarVerb(P.L, true)) + ".", false); return; }
         A("play", "term_err");
         var bad = tsBad(P.sts2, culp, P.L), sp = bad ? ps[bad.s] : ps[0], hon = bad ? !(P.L >> bad.s & 1) : true;
         fail("Нет: если это " + gv(ps[culp], "сделал", "сделала") + " " + nm(culp) + ", то слова " + dc(sp, "g") + " «" + (bad ? tsSay(bad, ps) : "") + "» — " + (hon ? "неправда, а " + sp.n + " говорит правду." : "правда, а " + sp.n + " лжёт."));
@@ -457,6 +461,7 @@ function genRollcall(seed, d) {
     if (d === 0) chosen.sort(function (x, y) { return (x.t === "HC" ? 0 : 1) - (y.t === "HC" ? 0 : 1); });
     G = { ans: ans, part: part, truth: truth, clues: chosen, hyps: hyps.length };
   }
+  if (!G) return null;
   var ps = people(r, n), posts = shuffled(r, RC_POSTS).slice(0, m), nm = function (x) { return ps[x].n; }, T = G.truth, plan, wrong, alts = [];
   var others = function (ex) { return intList(n).filter(function (x) { return ex.indexOf(x) < 0; }); };
   if (na === 1) {
@@ -481,7 +486,7 @@ function rcSame(h, T) {
   return key(h) === key(T);
 }
 function rollcall(seed, cb, opts) {
-  var d = diffOf(opts), P = genRollcall(seed, d), ps = P.ps, posts = P.posts, n = P.n, na = P.na;
+  var d = diffOf(opts), P = GEN.rollcall(seed, d), ps = P.ps, posts = P.posts, n = P.n, na = P.na;
   var selA = [-1, -1], selI = [-1, -1];
   var nm = function (x) { return ps[x].n; };
   var record = ps.map(function (p, x) { return p.n + " — " + posts[P.rec[x]].fr; }).join(", ");
@@ -581,7 +586,7 @@ var SC_FL = {
     more: function (Y, Z) { return "у " + dc(Y, "g") + " учеников больше, чем у " + dc(Z, "g"); },
     item: function (X, Y) { return X.n + ": " + (Y === undefined ? "наставник не указан" : Y === null ? gv(X, "основатель школы", "основательница школы") : "наставник — " + Y.n); },
     ask: function (X) { return X.n + ": кто наставник"; },
-    rootOpt: "Без наставника — основатель школы", rootPre: "Без наставника", noun: "школа", submit: "Сдать список школы",
+    rootOpt: "Без наставника — основатель школы", rootPre: "Без наставника", noun: "школа", chain: "наставников", submit: "Сдать список школы",
     two: "основателей выходит двое", none: "основателя нет", done: "Список школы восстановлен"
   },
   family: {
@@ -600,7 +605,7 @@ var SC_FL = {
     more: function (Y, Z) { return "у " + dc(Y, "g") + " детей больше, чем у " + dc(Z, "g"); },
     item: function (X, Y) { return X.n + ": " + (Y === undefined ? "родитель не указан" : Y === null ? gv(X, "родоначальник", "родоначальница") : "родитель — " + Y.n); },
     ask: function (X) { return X.n + ": кто родитель"; },
-    rootOpt: "Без родителя — родоначальник рода", rootPre: "Без родителя", noun: "род", submit: "Сдать родословную",
+    rootOpt: "Без родителя — родоначальник рода", rootPre: "Без родителя", noun: "род", chain: "родителей", submit: "Сдать родословную",
     two: "родоначальников выходит двое", none: "родоначальника нет", done: "Родословная восстановлена"
   }
 };
@@ -758,6 +763,7 @@ function genSuccession(seed, d) {
     var body = chosen.slice(d === 0 ? 1 : 0); r.shuffle(body);
     G = { par: tr.par, root: tr.root, sts: (d === 0 ? chosen.slice(0, 1) : []).concat(body) };
   }
+  if (!G) return null;
   var flk = r.chance(0.5) ? "school" : "family", fl = SC_FL[flk], ps;
   if (flk === "school") ps = people(r, n);
   else { var pool2 = FIRST_M.map(function (m) { return firstPerson(m, false); }).concat(FIRST_F.map(function (f) { return firstPerson(f, true); })); r.shuffle(pool2); ps = pool2.slice(0, n); }
@@ -774,7 +780,7 @@ function genSuccession(seed, d) {
     sig: "succession|" + d + "|" + JSON.stringify([n, G.par, stsA.map(String).sort()]) };
 }
 function succession(seed, cb, opts) {
-  var d = diffOf(opts), P = genSuccession(seed, d), ps = P.ps, n = P.n, fl = SC_FL[P.flk];
+  var d = diffOf(opts), P = GEN.succession(seed, d), ps = P.ps, n = P.n, fl = SC_FL[P.flk];
   var cur = intList(n).map(function () { return -2; });
   var lines = P.sts.map(function (s) { return scSay(s, ps, fl); });
   var cond = head(opts, d) + "Родословная списков. Страница списка истлела, остались обрывки. " + fl.intro + " В списке " + COLL[n] + ": " + andList(ps.map(function (p) { return p.n; })) +
@@ -784,7 +790,7 @@ function succession(seed, cb, opts) {
     var roots = cur.filter(function (v) { return v === -1; }).length;
     if (roots > 1) return "Так не бывает: " + fl.two + ".";
     if (roots === 0) return "Так не бывает: " + fl.none + ".";
-    for (var x = 0; x < n; x++) { var z = cur[x], g = 0; while (z >= 0 && g++ <= n) { if (z === x) return "Так не бывает: получился круг — " + ps[x].n + " в своей же цепочке."; z = cur[z]; } }
+    for (var x = 0; x < n; x++) { var z = cur[x], g = 0; while (z >= 0 && g++ <= n) { if (z === x) return "Так не бывает: получился круг — по цепочке " + fl.chain + " от " + dc(ps[x], "g") + " снова приходим к " + dc(ps[x], "d") + "."; z = cur[z]; } }
     for (var i = 0; i < P.sts.length; i++) if (scPart(P.sts[i], cur) !== 1) return "Не сходится с записью: «" + lines[i] + "».";
     return "Не сходится с записями.";
   };
@@ -891,7 +897,7 @@ function mnRules(R, C, M, num, known, names) {
   }
   info0.forEach(function (f) {
     if (!f.Un.length) return;
-    if (f.rem === 0) f.Un.forEach(function (x) { push(x, 2, num[f.y] === 0 ? "у " + names(f.y, "g") + " число ноль: рядом с ней мин нет" : "у " + names(f.y, "g") + " число " + nw(num[f.y]) + ", и все её мины уже известны: " + andList(f.K.map(function (k) { return names(k, "n"); })), 1); });
+    if (f.rem === 0) f.Un.forEach(function (x) { push(x, 2, num[f.y] === 0 ? "у " + names(f.y, "g") + " число ноль, значит, рядом с ней мин нет" : "у " + names(f.y, "g") + " число " + nw(num[f.y]) + ", и все её мины уже известны — " + andList(f.K.map(function (k) { return names(k, "n"); })), 1); });
     else if (f.rem === f.Un.length) f.Un.forEach(function (x) { push(x, 1, "у " + names(f.y, "g") + " число " + nw(num[f.y]) + ", а закрытых соседей, где может лежать мина, у неё ровно столько", 1); });
   });
   if (facts.length) return facts;
@@ -900,7 +906,7 @@ function mnRules(R, C, M, num, known, names) {
     var a = info0[i], b = info0[j];
     if (!a.Un.length || a.Un.length >= b.Un.length) continue;
     if (!a.Un.every(function (x) { return b.Un.indexOf(x) >= 0; })) continue;
-    var diff = b.Un.filter(function (x) { return a.Un.indexOf(x) < 0; }), base = "сравните " + names(a.y, "a") + " и " + names(b.y, "a") + ": все закрытые соседи " + names(a.y, "g") + " — соседи и " + names(b.y, "g");
+    var diff = b.Un.filter(function (x) { return a.Un.indexOf(x) < 0; }), base = "все закрытые соседи " + names(a.y, "g") + " — соседи и " + names(b.y, "g");
     if (b.rem === a.rem) diff.forEach(function (x) { push(x, 2, base + ", а мин не хватает обеим поровну — значит, у " + names(b.y, "g") + " вне общих соседей мин нет", 2); });
     else if (b.rem - a.rem === diff.length) diff.forEach(function (x) { push(x, 1, base + ", а у " + names(b.y, "g") + " мин не хватает больше ровно на число её остальных закрытых соседей", 2); });
   }
@@ -908,8 +914,8 @@ function mnRules(R, C, M, num, known, names) {
   var mines = 0, unk = [];
   for (i = 0; i < N; i++) { if (known[i] === 1) mines++; else if (num[i] < 0 && known[i] !== 2) unk.push(i); }
   if (unk.length) {
-    if (mines === M) unk.forEach(function (x) { push(x, 2, "все " + cnt(M, "мина", "мины", "мин", "f") + " уже найдены — остальные плиты пусты", 3); });
-    else if (M - mines === unk.length) unk.forEach(function (x) { push(x, 1, "мин осталось ровно столько, сколько закрытых плит без вывода", 3); });
+    if (mines === M) unk.forEach(function (x) { push(x, 2, "все мины уже найдены, остальные плиты пусты", 3); });
+    else if (M - mines === unk.length) unk.forEach(function (x) { push(x, 1, "мин осталось ровно столько, сколько закрытых плит, о которых ещё ничего не известно", 3); });
   }
   return facts;
 }
@@ -964,6 +970,7 @@ function genMines(seed, d) {
     if (ways < 2) continue;
     G = { C: C, M: M, mine: mine, start: startC, batches: batches, rounds: rounds, used: used, ways: ways };
   }
+  if (!G) return null;
   var C2 = G.C, toPlan = function (ord) {
     var p = [], row = -1;
     ord.forEach(function (x) {
@@ -977,13 +984,13 @@ function genMines(seed, d) {
   G.batches.forEach(function (bt) { ord1 = ord1.concat(bt); ord2 = ord2.concat(bt.slice().reverse()); });
   var mines = []; G.mine.forEach(function (v, x) { if (v) mines.push(x); });
   var wm = mines[0], wp = [R > 1 ? "Ряд " + (Math.floor(wm / C2) + 1) : "Полоса", "Плита " + (wm % C2 + 1), "Назад"];
-  return { R: R, C: C2, M: G.M, mine: G.mine, start: G.start, batches: G.batches, plan: toPlan(ord1), wrong: rep(wp, 3),
+  return { R: R, C: C2, M: G.M, mine: G.mine, start: G.start, batches: G.batches, plan: toPlan(ord1), wrong: [wp, wp.slice(), wp.slice(0, 2)],
     alts: [{ plan: toPlan(ord2), best: true }, { plan: ["Подсказка сапёра"].concat(toPlan(ord1)), best: false }], variable: true, sol: G.ways,
     ans: ord1.slice(), data: { R: R, C: C2, M: G.M, mines: mines, start: G.start.slice(), rounds: G.rounds, used: G.used },
     sig: "mines|" + d + "|" + JSON.stringify([R, C2, mines, G.start]) };
 }
 function minesKind(seed, cb, opts) {
-  var d = diffOf(opts), P = genMines(seed, d), R = P.R, C = P.C, N = R * C, M = P.M, nmf = mnName(R, C);
+  var d = diffOf(opts), P = GEN.mines(seed, d), R = P.R, C = P.C, N = R * C, M = P.M, nmf = mnName(R, C);
   var cntAround = function (x) { return mnNb(R, C, x).filter(function (y) { return P.mine[y]; }).length; };
   var num = intList(N).map(function () { return -1; }), flag = intList(N).map(function () { return false; }), flagMode = false, hints = 0;
   P.start.forEach(function (x) { num[x] = cntAround(x); });
@@ -999,7 +1006,7 @@ function minesKind(seed, cb, opts) {
     var cl = mnClose(R, C, M, num, nmf, 0), k = -1;
     for (var x = 0; x < N; x++) if (cl.known[x] === 2 && num[x] < 0) { k = x; break; }
     if (k < 0) { var ex = mnExact(R, C, M, num); for (var y = 0; y < N; y++) if (num[y] < 0 && !ex.canMine[y]) return "Подсказка: " + nmf(y) + " пуста — это следует из всех чисел вместе."; return "Подсказка: выводить больше нечего."; }
-    return "Подсказка: " + nmf(k) + " пуста: " + cl.reason[k] + ".";
+    return "Подсказка: " + nmf(k) + " пуста, потому что " + cl.reason[k] + ".";
   };
   var last;
   var probe = function (x, finish, fail, st) {
@@ -1124,6 +1131,7 @@ function genPunchtape(seed, d) {
       G = { grid: grid, runs: rr, known: grid.map(function () { return intList(L).map(function () { return -1; }); }), cols: cc, passes: sv.passes };
     }
   }
+  if (!G) return null;
   var plan = [], wrong;
   G.grid.forEach(function (rw, ri) {
     var ps = []; rw.forEach(function (v, j) { if (v && G.known[ri][j] < 0) ps.push("Позиция " + (j + 1)); });
@@ -1137,7 +1145,7 @@ function genPunchtape(seed, d) {
     sig: "punchtape|" + d + "|" + JSON.stringify([R, L, G.grid, G.known]) };
 }
 function punchtape(seed, cb, opts) {
-  var d = diffOf(opts), P = genPunchtape(seed, d), R = P.R, L = P.L;
+  var d = diffOf(opts), P = GEN.punchtape(seed, d), R = P.R, L = P.L;
   var cur = P.known.map(function (rw) { return rw.map(function (v) { return v === 1 ? 1 : 0; }); });
   var fixed = P.known.map(function (rw) { return rw.map(function (v) { return v >= 0; }); });
   var seen = function (ri) { var a = []; P.known[ri].forEach(function (v, j) { if (v >= 0) a.push("позиция " + (j + 1) + (v ? " пробита" : " цела")); }); return a.length ? ", видно: " + a.join(", ") : ""; };
@@ -1149,8 +1157,8 @@ function punchtape(seed, cb, opts) {
     (P.cols ? "Подсказки есть и у столбцов — позиций с одним номером во всех рядах, сверху вниз. Подсказки рядов: " + rowClues.join("; ") + ". Подсказки столбцов: " + colClues.join("; ") + "." : "Подсказки рядов: " + rowClues.join("; ") + ".") + " Пробейте ленту.";
   var clueAll = function () { return "Подсказки рядов: " + rowClues.join("; ") + "." + (P.cols ? " Подсказки столбцов: " + colClues.join("; ") + "." : ""); };
   var whyNot = function () {
-    for (var ri = 0; ri < R; ri++) { var a = ptRuns(cur[ri]); if (a.join() !== P.runs[ri].join()) return "В ряду " + (ri + 1) + " группы пробивок — " + ptClue(a) + ", а нужно — " + ptClue(P.runs[ri]) + "."; }
-    if (P.cols) for (var j = 0; j < L; j++) { var b = ptRuns(cur.map(function (rw) { return rw[j]; })); if (b.join() !== P.cols[j].join()) return "В столбце " + (j + 1) + " группы пробивок — " + ptClue(b) + ", а нужно — " + ptClue(P.cols[j]) + "."; }
+    for (var ri = 0; ri < R; ri++) { var a = ptRuns(cur[ri]); if (a.join() !== P.runs[ri].join()) return "В ряду " + (ri + 1) + (a.length ? " группы пробивок — " + ptClue(a) : " пробивок нет") + ", а нужно — " + ptClue(P.runs[ri]) + "."; }
+    if (P.cols) for (var j = 0; j < L; j++) { var b = ptRuns(cur.map(function (rw) { return rw[j]; })); if (b.join() !== P.cols[j].join()) return "В столбце " + (j + 1) + (b.length ? " группы пробивок — " + ptClue(b) : " пробивок нет") + ", а нужно — " + ptClue(P.cols[j]) + "."; }
     return "Лента не сходится с подсказками.";
   };
   var last = start("punchtape", d, P, "Перфолента", cond, function (st, finish, fail) {
@@ -1299,13 +1307,14 @@ function genLockers(seed, d) {
       var key = lkKey(cl); if (seen[key]) continue; seen[key] = 1; pool.push(cl);
     }
     var chosen = [], res = { count: 2 };
-    for (i = 0; i < pool.length && res.count > 1; i++) { chosen.push(pool[i]); if (chosen.length >= 3 || i === pool.length - 1) res = lkCount(n, K, chosen, 2); }
+    for (i = 0; i < pool.length && res.count > 1; i++) { chosen.push(pool[i]); if ((chosen.length >= 3 && (d === 0 || chosen.length % 2 === 0)) || i === pool.length - 1) res = lkCount(n, K, chosen, 2); }
     if (res.count !== 1) continue;
     for (i = chosen.length - 1; i >= 0; i--) { var rest = chosen.slice(0, i).concat(chosen.slice(i + 1)); if (lkCount(n, K, rest, 2).count === 1) chosen = rest; }
     if (chosen.length < lo || chosen.length > hi) continue;
     r.shuffle(chosen);
     G = { pos: pos, clues: chosen };
   }
+  if (!G) return null;
   var E = { own: people(r, n), item: shuffled(r, LK_ITEMS).slice(0, n), shift: LK_SH.slice(0, n), seal: [] };
   var sealPool = shuffled(r, intList(89).map(function (x) { return x + 11; })); E.seal = sealPool.slice(0, n).sort(function (a, b) { return a - b; });
   var at0 = function (c0, p0) { return G.pos[c0].indexOf(p0); };
@@ -1326,7 +1335,7 @@ function genLockers(seed, d) {
     sig: "lockers|" + d + "|" + JSON.stringify([n, K, G.pos, clA]) };
 }
 function lockers(seed, cb, opts) {
-  var d = diffOf(opts), P = genLockers(seed, d), n = P.n, K = P.K, E = P.E;
+  var d = diffOf(opts), P = GEN.lockers(seed, d), n = P.n, K = P.K, E = P.E;
   var cur = []; for (var c0 = 0; c0 < K; c0++) cur.push(intList(n).map(function () { return -1; })); /* cur[c][место] — значение */
   var lines = P.clues.map(function (cl) { return lkSay(cl, E); });
   var catList = ["хозяин", "вещь внутри", "смена хозяина", "номер пломбы"].slice(0, K);
@@ -1437,7 +1446,7 @@ function rgStage(R, from, slack, lo, hi, r) {
   for (x = 0; x < tb.N; x++) if (B.dist[x] >= lo && B.dist[x] <= hi && B.ways[x] >= 2) cands.push(x);
   if (!cands.length) return null;
   r.shuffle(cands);
-  for (var c = 0; c < Math.min(8, cands.length); c++) {
+  for (var c = 0; c < Math.min(5, cands.length); c++) {
     var g = cands[c], min = B.dist[g], limit = min + slack, D = rgToGoal(R, g), alt = null, wrong = -1;
     for (i = 0; i < k && !alt; i++) { var s1 = tb.T[s0 * k + i]; if (s1 === g) continue; var d1 = D[s1]; if (d1 >= 0 && 1 + d1 > min && 1 + d1 <= limit) alt = [i].concat(rgDescend(R, D, s1)); }
     for (i = 0; i < k && wrong < 0; i++) { var y = s0, hit = false; for (j = 0; j < limit && !hit; j++) { y = tb.T[y * k + i]; if (y === g) hit = true; } if (!hit) wrong = i; }
@@ -1467,6 +1476,7 @@ function genRings(seed, d) {
     if (d === 1) { var st2 = rgStage(R, st1.to, 3, 3, 6, r); if (!st2) continue; stages.push(st2); }
     G = { R: R, stages: stages };
   }
+  if (!G) return null;
   var lbl = function (i) { return "Кнопка " + (i + 1); };
   var plan = [], alt = [];
   G.stages.forEach(function (s) { plan = plan.concat(s.path.map(lbl)); });
@@ -1479,7 +1489,7 @@ function genRings(seed, d) {
     sig: "rings|" + d + "|" + JSON.stringify([R2.k, R2.m, R2.eff, R2.cl || 0, G.stages.map(function (s) { return [s.from, s.to]; })]) };
 }
 function rings(seed, cb, opts) {
-  var d = diffOf(opts), P = genRings(seed, d), R = P.R, k = R.k, ns = P.stages.length, si = 0, S = P.stages[0];
+  var d = diffOf(opts), P = GEN.rings(seed, d), R = P.R, k = R.k, ns = P.stages.length, si = 0, S = P.stages[0];
   var s = S.from.slice(), used = 0, total = 0, clean = true;
   var effText = function (i) {
     var parts = [];
@@ -1539,7 +1549,7 @@ var GR_SHG = ["вала мотора", "второго вала", "третье�
 var GR_SHI = ["валом мотора", "вторым валом", "третьим валом", "четвёртым валом", "пятым валом"];
 var GR_SL = ["А", "Б", "В"];
 function grTeeth(t) { return nw(t) + " " + pl(t, "зуб", "зуба", "зубьев"); }
-function grSpeed(num, den) { var ex = num % den === 0, v = Math.round(num / den); return (ex ? "" : "около ") + nw(v) + " " + pl(v, "оборот", "оборота", "оборотов") + " в минуту"; }
+function grSpeed(num, den) { var ex = num % den === 0, v = Math.round(num / den); return (ex ? "" : "примерно ") + nwa(v) + " " + pl(v, "оборот", "оборота", "оборотов") + " в минуту"; }
 function grDir(dir) { return dir > 0 ? "по часовой стрелке" : "против часовой стрелки"; }
 /* привод: sh[j] = { i: зубья входной шестерни или «гнездо», o: выходной }; гнездо — { s: номер }; сокеты — номера зацеплений для паразитной */
 function grEval(G, fill, idl) {
@@ -1623,6 +1633,7 @@ function genGears(seed, d) {
     if (d > 0 && (V.list.length < 2 || V.list.length > 8)) continue;
     GG.V = V; G = GG;
   }
+  if (!G) return null;
   var gl = function (t) { return "Шестерня на " + t + " " + pl(t, "зуб", "зуба", "зубьев"); };
   var mk = function (fill, idl) {
     var p = [];
@@ -1652,18 +1663,19 @@ function grDesc(G) {
   var parts = ["мотор крутит " + grDir(1) + " свою шестерню на " + grTeeth(G.sh[0].o.t) + ", " + grSpeed(G.S, 1)];
   for (var j = 1; j < G.sh.length; j++) {
     var prev = G.sh[j - 1].o, cur = G.sh[j].i, last = j === G.sh.length - 1;
-    parts.push((j === 1 ? "шестерня мотора" : ref(prev)) + " цепляет " + ref(cur, "a") + (last ? " выходного вала" : " — она на " + (j === 1 ? "втором" : j === 2 ? "третьем" : "четвёртом") + " валу"));
-    if (!last && G.sh[j].o !== G.sh[j].i) parts.push("на том же валу вместе с ней крутится " + ref(G.sh[j].o));
+    var slotIn = cur.s != null;
+    parts.push((j === 1 ? "шестерня мотора" : ref(prev)) + " цепляет " + ref(cur, "a") + (last ? " выходного вала" : " — " + (slotIn ? "оно" : "она") + " на " + (j === 1 ? "втором" : j === 2 ? "третьем" : "четвёртом") + " валу"));
+    if (!last && G.sh[j].o !== G.sh[j].i) parts.push("на том же валу вместе с " + (slotIn ? "ним" : "ней") + " крутится " + ref(G.sh[j].o));
   }
   var sk = G.sock.map(function (s) { return "между " + GR_SHI[s - 1] + " и " + (s === G.sh.length - 1 ? "выходным валом" : GR_SHI[s]); });
   return cap(parts.join("; ")) + ". Место для паразитной шестерни — " + andList(sk) + ": паразитная меняет направление, но не скорость.";
 }
 function gears(seed, cb, opts) {
-  var d = diffOf(opts), P = genGears(seed, d), G = P.G, ns = G.nslots, fill = intList(ns).map(function () { return 0; }), idl = G.sock.map(function () { return false; });
+  var d = diffOf(opts), P = GEN.gears(seed, d), G = P.G, ns = G.nslots, fill = intList(ns).map(function () { return 0; }), idl = G.sock.map(function () { return false; });
   var boxText = "В ящике шестерни на " + andList(G.box.slice().sort(function (a, b) { return a - b; }).map(function (t) { return nw(t); })) + " " + pl(G.box.slice().sort(function (a, b) { return a - b; })[G.box.length - 1], "зуб", "зуба", "зубьев") + ", каждая в одном экземпляре.";
-  var need = "Выходной вал должен крутиться " + grDir(G.D) + ", " + grSpeed(G.X, 1) + "." + (G.vmax ? " Подшипник третьего вала держит не больше " + grSpeed(G.vmax, 1) + "." : "");
-  var cond = head(opts, d) + "Шестерни привода. Правила: сцепленные шестерни крутятся в разные стороны; скорость ведомой шестерни во столько раз меньше скорости ведущей, во сколько у неё больше зубьев; шестерни на одном валу крутятся вместе. Привод: " + grDesc(G) + " " + need + " " + boxText +
-    " Поставьте шестерни в " + (ns === 1 ? "гнездо" : "гнёзда") + " и решите, нужна ли паразитная." + (d > 0 ? " Подходящих наборов может быть несколько; лучший — самый лёгкий, с наименьшим числом зубьев." : "");
+  var need = "Выходной вал должен крутиться " + grDir(G.D) + ", делать " + grSpeed(G.X, 1) + "." + (G.vmax ? " Подшипник третьего вала выдерживает самое большее " + grSpeed(G.vmax, 1) + "." : "");
+  var cond = head(opts, d) + "Шестерни привода. Правила: сцепленные шестерни крутятся в разные стороны; скорость ведомой шестерни во столько раз меньше скорости ведущей, во сколько у неё больше зубьев; шестерни на одном валу крутятся вместе. Привод: " + grDesc(G).charAt(0).toLowerCase() + grDesc(G).slice(1) + " " + need + " " + boxText +
+    " Поставьте " + (ns === 1 ? "шестерню в гнездо" : "шестерни в гнёзда") + " и решите, нужна ли паразитная." + (d > 0 ? " Подходящих наборов может быть несколько; лучший — самый лёгкий, с наименьшим числом зубьев." : "");
   var gl = function (t) { return "шестерня на " + t + " " + pl(t, "зуб", "зуба", "зубьев"); };
   var state = function () {
     var a = fill.map(function (t, k) { return "гнездо " + GR_SL[k] + " — " + (t ? gl(t) : "пусто"); });
@@ -1697,15 +1709,15 @@ function gears(seed, cb, opts) {
     out.push(act("Запустить привод", function () {
       if (fill.some(function (t) { return !t; })) { nope("Сначала поставьте шестерни во все гнёзда."); return; }
       var ev = grEval(G, fill, idl);
-      if (G.vmax && ev.sp[G.vshaft].num > G.vmax * ev.sp[G.vshaft].den) { A("play", "term_err"); fail("Подшипник третьего вала взвыл: вал разогнался до " + grSpeed(ev.sp[G.vshaft].num, ev.sp[G.vshaft].den) + ", а держит не больше " + grSpeed(G.vmax, 1) + ". Привод остановлен."); return; }
+      if (G.vmax && ev.sp[G.vshaft].num > G.vmax * ev.sp[G.vshaft].den) { A("play", "term_err"); fail("Подшипник третьего вала взвыл: вал разогнался до " + grSpeed(ev.sp[G.vshaft].num, ev.sp[G.vshaft].den).replace(/^примерно /, "").replace(/тысячу/, "тысячи") + ", а выдерживает самое большее " + grSpeed(G.vmax, 1) + ". Привод остановлен."); return; }
       if (ev.num === G.X * ev.den && ev.dir === G.D) {
         var sum = fill.reduce(function (a, b) { return a + b; }, 0), ni = idl.filter(Boolean).length;
         A("play", "power_on");
-        win(last, finish, "Привод загудел ровно: выходной вал крутится " + grDir(G.D) + ", " + grSpeed(G.X, 1) + ".", d > 0 && sum === G.V.minSum && ni === G.V.minIdl, "самая лёгкая передача, без лишних шестерён");
+        win(last, finish, "Привод загудел ровно: выходной вал крутится " + grDir(G.D) + " и делает " + grSpeed(G.X, 1) + ".", d > 0 && sum === G.V.minSum && ni === G.V.minIdl, "самая лёгкая передача, без лишних шестерён");
         return;
       }
       A("play", "term_err");
-      fail("Выходной вал крутится " + grDir(ev.dir) + ", " + grSpeed(ev.num, ev.den) + ", а нужно " + grDir(G.D) + ", " + grSpeed(G.X, 1) + ".");
+      fail("Выходной вал крутится " + grDir(ev.dir) + " и делает " + grSpeed(ev.num, ev.den) + ", а нужно " + grDir(G.D) + " и " + grSpeed(G.X, 1) + ".");
     }));
     out.push(act("Что сейчас", function () { say(state() + " " + need); }));
     return out;
@@ -1762,6 +1774,7 @@ function genPendulums(seed, d) {
       G = g2;
     }
   }
+  if (!G) return null;
   var plan = numPlan(G.ans), wrongV = [], alts = [];
   for (var k = 1; wrongV.length < 3 && k < 50; k++) { var w = G.ans + (k % 2 ? k : -k); if (w > 0 && wrongV.indexOf(w) < 0) wrongV.push(w); }
   if (d === 2) {
@@ -1776,24 +1789,24 @@ function genPendulums(seed, d) {
     sig: "pendulums|" + d + "|" + JSON.stringify(sigArr) };
 }
 function pendulums(seed, cb, opts) {
-  var d = diffOf(opts), P = genPendulums(seed, d), G = P.G, stage = 1, cur = "";
+  var d = diffOf(opts), P = GEN.pendulums(seed, d), G = P.G, stage = 1, cur = "";
   var m = G.ps.length, sn = function (i) { return d === 0 ? PD_ORD[i] + " маятник" : PD_SIG[G.sigs[i]].n; };
   var desc, ask;
   if (d === 0) {
-    desc = G.ps.map(function (p, i) { return (i ? PD_ORD[i] : "Первый маятник") + " бьёт каждые " + nw(p, "f") + " " + pdSec(p); }).join(", ") + ". " + (m === 2 ? "Оба" : "Все три") + " только что ударили вместе.";
+    desc = G.ps.map(function (p, i) { return (i ? PD_ORD[i] : "Первый маятник") + " бьёт каждые " + nwa(p, "f") + " " + pdSec(p); }).join(", ") + ". " + (m === 2 ? "Оба" : "Все три") + " только что ударили вместе.";
     ask = G.q === "first" ? "Через сколько секунд они впервые снова ударят вместе?" : G.q === "count" ? "Сколько раз ударит " + PD_ORD[G.who] + " маятник до первой новой встречи, считая и удар встречи?" :
-      "Сколько раз за " + nw(G.T, "f") + " " + pdSec(G.T) + " они ударят вместе, не считая самого начала?";
+      "Сколько раз за " + nwa(G.T, "f") + " " + pdSec(G.T) + " они ударят вместе, не считая самого начала?";
   } else {
-    desc = G.ps.map(function (p, i) { return cap(sn(i)) + " " + PD_SIG[G.sigs[i]].v + " каждые " + nw(p, "f") + " " + pdMin(p) + ", впервые — через " + nw(G.ss[i], "f") + " " + pdMin(G.ss[i]) + " после начала смены"; }).join("; ") + ".";
+    desc = G.ps.map(function (p, i) { return (i ? sn(i) : cap(sn(i))) + " " + PD_SIG[G.sigs[i]].v + " каждые " + nwa(p, "f") + " " + pdMin(p) + ", впервые — через " + nwa(G.ss[i], "f") + " " + pdMin(G.ss[i]) + " после начала смены"; }).join("; ") + ".";
     var both = m === 2 ? "оба" : "все три";
     ask = G.q === "first" ? "Через сколько минут после начала смены " + both + " впервые сработают вместе?" : G.q === "second" ? "Через сколько минут после начала смены " + both + " сработают вместе во второй раз?" :
       "Сколько раз за смену в четыреста восемьдесят минут " + both + " сработают вместе?";
   }
   var ask2 = "", pump = d === 2 ? PD_SIG[G.sigs[0]].n : "";
-  if (d === 2) ask2 = "Нужен отбой — сигнал, который включится через " + nw(G.r0, "f") + " " + pdMin(G.r0) + " после начала смены и дальше будет бить с постоянным периодом от двух до тридцати минут. Он должен впервые совпасть со всеми тремя ровно в ту минуту, что вы нашли, а с " + PD_SIG[G.sigs[0]].i + " до неё не совпадать ни разу. Какой период поставить? Подходит не один; лучший — самый редкий.";
+  if (d === 2) ask2 = "Нужен отбой — сигнал, который включится через " + nwa(G.r0, "f") + " " + pdMin(G.r0) + " после начала смены и дальше будет бить с постоянным периодом от двух до тридцати минут. Он должен впервые совпасть со всеми тремя ровно в ту минуту, что вы нашли, а с " + PD_SIG[G.sigs[0]].i + " до неё не совпадать ни разу. Какой период поставить? Подходит не один; лучший — самый редкий.";
   var cond = head(opts, d) + "Маятники смены. " + desc + " " + (d === 2 ? stageHead(1, 2) + " " : "") + ask + (d === 2 ? " Потом — второй этап: по найденной минуте настроить новый сигнал." : "");
   var fires = function (i, t) { return t >= G.ss[i] && (t - G.ss[i]) % G.ps[i] === 0; };
-  var unit = d === 0 ? function (v) { return nw(v, "f") + " " + pdSec(v); } : function (v) { return nw(v, "f") + " " + pdMin(v); };
+  var unit = d === 0 ? function (v) { return nwa(v, "f") + " " + pdSec(v); } : function (v) { return nwa(v, "f") + " " + pdMin(v); };
   var whyNot = function (v) {
     if (G.q === "first" || G.q === "second") {
       var miss = -1; for (var i = 0; i < m; i++) if (!fires(i, v)) { miss = i; break; }
@@ -1908,7 +1921,7 @@ function shAlt(Gr, limit, wantWorse) {
 function genShunting(seed, d) {
   var r = rngFor(seed, "shunting", d), G = null, i;
   for (var at = 0; at < 300 && !G; at++) {
-    var n = d === 0 ? r.int(5, 8) : d === 1 ? r.int(6, 8) : r.int(7, 8), k = d === 0 ? r.int(2, 3) : d === 1 ? r.int(3, 4) : r.int(3, 4);
+    var n = d === 0 ? r.int(5, 8) : d === 1 ? r.int(6, 8) : r.int(7, 8), k = d === 0 ? r.int(2, 4) : d === 1 ? r.int(3, 4) : r.int(3, 4);
     var grp = intList(n).map(function (x) { return x < k ? x : r.int(0, k - 1); }); r.shuffle(grp);
     var T = { grp: grp, cap: d === 0 ? n : 2, capQ: d === 2 ? 2 : 0, moves: d === 2 ? ["IO", "IS", "SO", "IQ", "QO"] : ["IO", "IS", "SO"] };
     var s0 = { i: 0, st: [], qu: [], out: 0 }, Gr = shGraph(T, s0);
@@ -1931,6 +1944,7 @@ function genShunting(seed, d) {
     if (!wrong) continue;
     G = { T: T, min: Gr.min, ways: Gr.ways, path: Gr.path, limit: limit, alt: { plan: altP, best: altBest }, wrong: wrong };
   }
+  if (!G) return null;
   var lb = function (m) { return SH_LBL[m]; };
   var order = shuffled(r, intList(SH_CARGO.length)).slice(0, Math.max.apply(null, G.T.grp) + 1);
   return { T: G.T, order: order, min: G.min, limit: G.limit, plan: G.path.map(lb), wrong: rep(G.wrong.map(lb), 3), alts: [{ plan: G.alt.plan.map(lb), best: G.alt.best }], variable: true, sol: G.ways,
@@ -1938,7 +1952,7 @@ function genShunting(seed, d) {
     sig: "shunting|" + d + "|" + JSON.stringify([G.T.grp, G.T.cap, G.T.capQ]) };
 }
 function shunting(seed, cb, opts) {
-  var d = diffOf(opts), P = genShunting(seed, d), T = P.T, n = T.grp.length;
+  var d = diffOf(opts), P = GEN.shunting(seed, d), T = P.T, n = T.grp.length;
   var s = { i: 0, st: [], qu: [], out: 0 }, used = 0, total = 0;
   var cg = function (w) { return SH_CARGO[P.order[T.grp[w]]]; };
   var wn = function (w) { return "вагонетка " + (w + 1) + " " + cg(w).i; };
@@ -2035,6 +2049,7 @@ function genSlider(seed, d) {
     if (!sv || sv.min < lo || sv.min > hi || (d > 0 && sv.count < 2)) continue;
     G = { goal: goal, start: s, min: sv.min, count: sv.count, path: sv.path, limit: sv.min + [4, 4, 2][d] };
   }
+  if (!G) return null;
   var b0 = G.start.indexOf(0), mvT = -1;
   [b0 - C, b0 + C, b0 % C ? b0 - 1 : -1, b0 % C < C - 1 ? b0 + 1 : -1].forEach(function (p) { if (mvT < 0 && p >= 0 && p < N) mvT = G.start[p]; });
   var tl = function (t) { return "Плитка " + t; };
@@ -2044,7 +2059,7 @@ function genSlider(seed, d) {
     sig: "slider|" + d + "|" + JSON.stringify([R, G.goal, G.start]) };
 }
 function slider(seed, cb, opts) {
-  var d = diffOf(opts), P = genSlider(seed, d), R = P.R, C = P.C, N = R * C, s = P.start.slice(), used = 0, total = 0;
+  var d = diffOf(opts), P = GEN.slider(seed, d), R = P.R, C = P.C, N = R * C, s = P.start.slice(), used = 0, total = 0;
   var rowOf = function (arr, rr) { var a = []; for (var c = 0; c < C; c++) { var v = arr[rr * C + c]; a.push(v ? String(v) : "пусто"); } return a.join(", "); };
   var field = function (arr) { var a = []; for (var rr = 0; rr < R; rr++) a.push("ряд " + (rr + 1) + " — " + rowOf(arr, rr)); return a.join("; "); };
   var cond = head(opts, d) + "Пятнашки щита. На щите управления — рамка в " + cnt(R, "ряд", "ряда", "рядов") + " по " + cnt(C, "ячейка", "ячейки", "ячеек", "f") + "; в ячейках плитки с номерами контуров, одна ячейка пуста. Ряды считаются сверху вниз, ячейки — слева направо. Плитку, соседнюю с пустой ячейкой сверху, снизу или сбоку, можно сдвинуть в неё. Сейчас: " +
@@ -2138,7 +2153,7 @@ function bkRand(r, w, n, circ) {
 function bkArr(c) { return [c.t, c.a, c.b, c.k]; }
 function bkPick(r, w, n, circ, sols, ref, lo, hi, H) {
   var chosen = [], cur = sols;
-  for (var g = 0; g < 300 && cur.length > hi; g++) {
+  for (var g = 0; g < 150 && cur.length > hi; g++) {
     var c = bkRand(r, w, n, circ);
     if (!bkTrue(c, H, n, circ, ref)) continue;
     if (chosen.some(function (x) { return bkArr(x).join() === bkArr(c).join(); })) continue;
@@ -2181,6 +2196,7 @@ function genBunker(seed, d) {
     if (!wish2) continue;
     G = { st1: st1, conds2: conds2, per: per, wish: wish2 };
   }
+  if (!G) return null;
   var ps = people(r, n), nm = function (x) { return ps[x].n; };
   var seatPlan = function (p, lbl) { var q = []; for (var s = 0; s < n; s++) { q.push(lbl + " " + (s + 1)); q.push(nm(p.indexOf(s))); } return q; };
   var plan, alts = [], wrong, sol;
@@ -2205,11 +2221,11 @@ function genBunker(seed, d) {
     sig: "bunker|" + d + "|" + JSON.stringify([n, G.st1.conds.map(bkArr), G.conds2 ? G.conds2.map(bkArr) : 0, bkArr(G.wish)]) };
 }
 function bunker(seed, cb, opts) {
-  var d = diffOf(opts), P = genBunker(seed, d), ps = P.ps, n = P.n, stage = 1, rowRef = null;
+  var d = diffOf(opts), P = GEN.bunker(seed, d), ps = P.ps, n = P.n, stage = 1, rowRef = null;
   var seat = intList(n).map(function () { return -1; }); /* seat[место] — человек */
   var lines = P.conds.map(function (c) { return bkSay(c, ps, n); }), lines2 = P.conds2 ? P.conds2.map(function (c) { return bkSay(c, ps, n); }) : [];
   var wishText = bkSay(P.wish, ps, n);
-  var cond = head(opts, d) + "Рассадка в бункере. В спальном отсеке " + cnt(n, "место", "места", "мест", "n") + " на нарах в ряд, первое — у двери. Расселить нужно " + COLLA[n] + ": " + andList(ps.map(function (p) { return p.n; })) + ". Условия: " + lines.join("; ") + "." +
+  var cond = head(opts, d) + "Рассадка в бункере. В спальном отсеке " + cnt(n, "место", "места", "мест", "n") + " на нарах в ряд, первое — у двери. Жильцов " + COLL[n] + ": " + andList(ps.map(function (p) { return p.n; })) + ". Условия: " + lines.join("; ") + "." +
     (d < 2 ? " Пожелание коменданта, если получится: " + wishText + ". Верных рассадок несколько — годится любая." : " " + stageHead(1, 2) + " Нары. Верных рассадок несколько — годится любая. Потом — ужин за круглым столом, и там условия будут о соседях по нарам.");
   var stage2Text = function () { return stageHead(2, 2) + " Ужин за круглым столом на " + nw(n, "n") + " мест; место 1 — во главе стола, дальше места по часовой стрелке. Условия стола: " + lines2.join("; ") + ". Пожелание коменданта, если получится: " + wishText + "."; };
   var lbl = function () { return stage === 1 ? "Нары" : "Место"; };
@@ -2313,6 +2329,7 @@ function genLeague(seed, d) {
     }
     G = { vals: vals, miss: miss, clues: clues, ord: ord };
   }
+  if (!G) return null;
   var ps = people(r, n), nmx = function (x) { return ps[x].n; };
   var outLbl = function (k, v) { var m = ms[k]; return v === 1 ? "Ничья" : v === 2 ? gv(ps[m[0]], "Победил ", "Победила ") + nmx(m[0]) : gv(ps[m[1]], "Победил ", "Победила ") + nmx(m[1]); };
   var mk = function (wrongK) {
@@ -2329,7 +2346,7 @@ function genLeague(seed, d) {
     sig: "league|" + d + "|" + JSON.stringify([n, G.vals, G.miss, G.clues.map(function (c) { return [c.t, c.a, c.k]; })]) };
 }
 function league(seed, cb, opts) {
-  var d = diffOf(opts), P = genLeague(seed, d), ps = P.ps, n = P.n, ms = P.ms, stage = 1;
+  var d = diffOf(opts), P = GEN.league(seed, d), ps = P.ps, n = P.n, ms = P.ms, stage = 1;
   var cur = P.vals.map(function (v, k) { return P.miss.indexOf(k) >= 0 ? -1 : v; }), place = intList(n).map(function () { return -1; });
   var nm = function (x) { return ps[x].n; };
   var resText = function (k, v) { var m = ms[k], a = ps[m[0]], b = ps[m[1]]; return v === 1 ? a.n + " и " + b.n + " — ничья" : v === 2 ? a.n + " " + gv(a, "выиграл", "выиграла") + " у " + dc(b, "g") : b.n + " " + gv(b, "выиграл", "выиграла") + " у " + dc(a, "g"); };
@@ -2349,7 +2366,7 @@ function league(seed, cb, opts) {
   var placeRule = "При равенстве очков выше тот, кто выиграл личную встречу; если и она — ничья, выше тот, у кого больше побед.";
   var cond = head(opts, d) + "Таблица испытаний. " + cap(COLL[n]) + " испытателей — " + andList(ps.map(function (p) { return p.n; })) + " — прошли круговой турнир на тренажёрах: каждый с каждым по одному испытанию. " + rules +
     " Часть таблицы смыло водой. Уцелели результаты: " + known.join("; ") + ". Итоговые очки: " + pts.join("; ") + "." + (notes.length ? " Ещё записано: " + notes.join("; ") + "." : "") +
-    (d === 2 ? " " + stageHead(1, 2) + " Восстановите смытые результаты. Потом — расставить места: " + placeRule : " Восстановите смытые результаты.");
+    (d === 2 ? " " + stageHead(1, 2) + " Восстановите смытые результаты. Потом — расставить места. " + placeRule : " Восстановите смытые результаты.");
   var allVals = function () { return cur.slice(); };
   var whyNot = function () {
     var v = allVals(), p = lgPts(n, ms, v);
@@ -2468,6 +2485,7 @@ function genSwitchorder(seed, d) {
     if (!hasPre.length) continue;
     G = { T: T, all: all, minP: minP, bestO: bestO, worse: worse, pre: hasPre[0] };
   }
+  if (!G) return null;
   var nodes = shuffled(r, SW_NODES).slice(0, n), lbl = function (v) { return "Включить " + nodes[v].a; };
   var alts = [{ plan: G.worse[0].map(lbl), best: false }];
   if (G.bestO.length > 1) alts.push({ plan: G.bestO[1].map(lbl), best: true });
@@ -2477,12 +2495,12 @@ function genSwitchorder(seed, d) {
     sig: "switchorder|" + d + "|" + JSON.stringify([T2.n, T2.deps.map(String).sort(), T2.nadj, T2.s, T2.w, T2.lim]) };
 }
 function switchorder(seed, cb, opts) {
-  var d = diffOf(opts), P = genSwitchorder(seed, d), T = P.T, nodes = P.nodes, n = T.n, on = [], load = 0, peak = 0;
+  var d = diffOf(opts), P = GEN.switchorder(seed, d), T = P.T, nodes = P.nodes, n = T.n, on = [], load = 0, peak = 0;
   var kw = function (v) { return cnt(v, "киловатт", "киловатта", "киловатт"); };
   var depText = T.deps.map(function (dp) { return nodes[dp[1]].n + " — только после " + nodes[dp[0]].g; });
   var nadjText = T.nadj.map(function (dp) { return nodes[dp[0]].a + " нельзя пускать сразу после " + nodes[dp[1]].g; });
   var loads = nodes.map(function (nd, v) { return nd.n + " — пуск " + T.s[v] + ", работа " + T.w[v]; });
-  var scheme = "Правила щита: " + depText.concat(nadjText).join("; ") + ". Нагрузка в киловаттах: " + loads.join("; ") + "." + (T.lim ? " Щит держит бросок не больше " + kw(T.lim) + "." : "");
+  var scheme = "Правила щита: " + depText.concat(nadjText).join("; ") + ". Нагрузка в киловаттах: " + loads.join("; ") + "." + (T.lim ? " Самый большой бросок, который выдержит щит, — " + kw(T.lim) + "." : "");
   var cond = head(opts, d) + "Порядок рубильников. После обесточки нужно пустить " + cnt(n, "узел", "узла", "узлов") + ": " + andList(nodes.map(function (nd) { return nd.n; })) + ". Узлы пускают по одному. Бросок при пуске — пусковой ток узла плюс то, что уже работает. " + scheme +
     " Нарушите правило — щит выбьет, и всё начнётся сначала. Верных порядков несколько, годится любой; лучший — тот, где самый большой бросок меньше всего.";
   var reset = function () { on = []; load = 0; peak = 0; };
@@ -2496,7 +2514,7 @@ function switchorder(seed, cb, opts) {
         var nj = T.nadj.filter(function (dp) { return dp[0] === v && on.length && on[on.length - 1] === dp[1]; })[0];
         if (nj) { reset(); A("play", "term_err"); fail("Щит выбило: " + nodes[v].a + " нельзя пускать сразу после " + nodes[nj[1]].g + ". Все рубильники разомкнуты, начните сначала."); return; }
         var surge = load + T.s[v];
-        if (T.lim && surge > T.lim) { reset(); A("play", "term_err"); fail("Сработал автомат щита: бросок " + kw(surge) + ", а щит держит не больше " + kw(T.lim) + ". Все рубильники разомкнуты, начните сначала."); return; }
+        if (T.lim && surge > T.lim) { reset(); A("play", "term_err"); fail("Сработал автомат щита: бросок — " + kw(surge) + ", а щит выдерживает самое большее " + kw(T.lim) + ". Все рубильники разомкнуты, начните сначала."); return; }
         on.push(v); load += T.w[v]; peak = Math.max(peak, surge);
         if (on.length === n) { A("play", "power_on"); win(last, finish, "Все узлы под током. Самый большой бросок за пуск — " + kw(peak) + ".", peak === P.minP, "меньшего броска добиться нельзя"); return; }
         A("play", "power_on");
@@ -2517,8 +2535,16 @@ var NAMES4 = {
   lockers: "пломбы на шкафчиках", rings: "сейф с дисками", gears: "шестерни привода", pendulums: "маятники смены", shunting: "сортировочная горка",
   slider: "пятнашки щита", bunker: "рассадка в бункере", league: "таблица испытаний", switchorder: "порядок рубильников"
 };
-var GEN = { testimony: genTestimony, rollcall: genRollcall, succession: genSuccession, mines: genMines, punchtape: genPunchtape, lockers: genLockers, rings: genRings,
-  gears: genGears, pendulums: genPendulums, shunting: genShunting, slider: genSlider, bunker: genBunker, league: genLeague, switchorder: genSwitchorder };
+/* страховка: генератор не нашёл задачу за свои попытки — то же зерно с солью, детерминированно */
+function salted(fn) {
+  return function (seed, d) {
+    for (var k = 0; k < 40; k++) { var P = fn(k ? seed + "~" + k : seed, d); if (P) { P.salt = k; return P; } }
+    throw new Error("puzzles4: задача не собралась");
+  };
+}
+var GEN = { testimony: salted(genTestimony), rollcall: salted(genRollcall), succession: salted(genSuccession), mines: salted(genMines), punchtape: salted(genPunchtape),
+  lockers: salted(genLockers), rings: salted(genRings), gears: salted(genGears), pendulums: salted(genPendulums), shunting: salted(genShunting), slider: salted(genSlider),
+  bunker: salted(genBunker), league: salted(genLeague), switchorder: salted(genSwitchorder) };
 var UIF = { testimony: testimony, rollcall: rollcall, succession: succession, mines: minesKind, punchtape: punchtape, lockers: lockers, rings: rings,
   gears: gears, pendulums: pendulums, shunting: shunting, slider: slider, bunker: bunker, league: league, switchorder: switchorder };
 KINDS4.forEach(function (k) { LAB.puzzles.register(k, NAMES4[k], UIF[k], { diffs: true }); });
@@ -2528,7 +2554,16 @@ function genFull(kind, seed, diff) {
   P.kind = kind; P.d = d;
   return P;
 }
-/* Проверка ответа без окон: 0 — неверно, 1 — верно, 2 — верно и образцово. */
+/* Проверка ответа без окон: 0 — неверно, 1 — верно, 2 — верно и образцово. Ответ (как ans в gen):
+   testimony { c — виновный, L — маска лжецов }; rollcall { abs: [не ответившие], imp: [ответившие за них] },
+   порядок пар любой; succession — родители по номерам (-1 — основатель); mines — порядок вскрытия плит
+   (любой, если каждый ход следует из чисел); punchtape — ряды из 0 и 1; lockers — pos[признак][значение]
+   = место; rings — нажатия кнопок (номера с нуля; можно списком по этапам); gears { fill — зубья по
+   гнёздам, idl — паразитные }; pendulums { t, p — период отбоя на сложной }; shunting — ходы «IO», «IS»,
+   «SO», «IQ», «QO»; slider — номера сдвигаемых плиток; bunker { row, table } — место каждого по
+   номерам людей; league { res — исходы смытых встреч (2 — победа первого, 1 — ничья, 0 — второго),
+   places — люди по местам }; switchorder — порядок узлов. _last.sol — число верных решений; где
+   путей к цели бесконечно много (сейф, горка, пятнашки), — число кратчайших. */
 function solveAns(kind, task, a) {
   var P = task && task.sig && task.kind === kind ? task : genFull(kind, task && task.seed, task && task.diff), d = P.d, i, j;
   if (a == null) return 0;
