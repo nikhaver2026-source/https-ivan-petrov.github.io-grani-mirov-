@@ -117,6 +117,38 @@ function partFrom(p) {
   if (/эхо|песн|звучащ|слоя|трещин|разлом|складк|осколок звук|время|тишин/i.test(t)) return "anom";
   return "mech";
 }
+/* (4.5, нелогичность) Живая деталь комплекса и её хозяева: «косточка из уха ушана или слухача»,
+   «панцирь берегового рачника», «коконный шёлк — коконопряды, вылупки и матки». Такую деталь снимают
+   с тех тварей, которых называет её описание: у детали блока — поле foes, иначе — таблица ниже,
+   составленная по описаниям деталей. Прочую органику — войлок, закваски, посев, мох, брезент — находят
+   в ящиках и на складах, с тварей она не падает (combat.js, kill; «где найти» — workshop.js, partWhere). */
+var BIO_FROM = {
+  v7_ossicle: ["v7_ushan", "v7_hound"],                 /* «из уха ушана или слухача» */
+  v8_silk: ["v8_spinner", "v8_hatchling", "v8_queen"],  /* «коконопряды, вылупки и матки» */
+  v8_bracelet: ["v8_remade", "v8_spitter", "v8_brigadier"], /* «переделанные, кислотники и бригадиры переделанных» */
+  v9_hypha: ["v9_mycel"],                               /* грибница фильтрующего поля — с узла биофильтра */
+  v11_thread: ["v11_trapper"],                          /* «её носят хирургические автоматы и шовники» */
+  v11_hinge: ["v11_rejected"],                          /* «из протезов отторгнутых» */
+  v11_plasma: ["v11_overgrown"],                        /* «копят разросшиеся» */
+  v11_regen: ["v11_overgrown"],                         /* «клетки разросшихся» */
+  v12_tavot: ["v12_oilleech"],                          /* «масляные пиявки набиты ею до отказа» */
+  v12_scaleshell: ["v12_scalebug", "v12_scalequeen"],   /* «пластины с панцирей окалинников» */
+  v12_slag: ["v12_slagworm"],                           /* «в брюхе шлаковые черви» */
+  v15_chitin: ["v15_crayfish"]                          /* «с панциря берегового рачника» */
+};
+LAB.DEEP_BIO_FROM = BIO_FROM;
+function bioOwners(p) { var it = LAB.ITEMS[p]; return ((it && it.foes) || BIO_FROM[p] || []).filter(function (t) { return !!LAB.FOES[t]; }); }
+var bioByFoe = {};
+LAB.deepBioParts = function (type, L) {
+  var n = LAB.blockOf(L); if (n < FIRST || !DEEP[n]) return [];
+  var key = n + ":" + type; if (bioByFoe[key]) return bioByFoe[key];
+  var from = LAB.PART_FROM || {};
+  return (bioByFoe[key] = LAB.PARTS.filter(function (p) {
+    return (" " + (from[p] || "") + " ").indexOf(" bio ") >= 0 && LAB.blockOf(LAB.PART_DEPTH[p] || 1) === n && (LAB.PART_DEPTH[p] || 1) <= L && bioOwners(p).indexOf(type) >= 0;
+  }));
+};
+/* С каких тварей снимают деталь (для «где найти»). */
+LAB.deepPartOwners = bioOwners;
 /* Готов ли глубокий блок: есть секторы, и у каждого — помещения, враги и стражи из таблиц. */
 function deepReady(n) {
   var D = DEEP[n];

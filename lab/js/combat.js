@@ -2714,6 +2714,12 @@ function kill(f, quiet) {
       if (r() < 0.35 * dk) drops.push({ kind: "item", item: r() < 0.6 ? "gel" : "reagent", n: 1 });
       if (r() < 0.12 * dk) drops.push({ kind: "item", item: "medkit_s", n: 1 });
     } else if (r() < 0.21 * dk) drops.push({ kind: "item", item: "gel", n: 1 }); /* (3.7) зверь, растение, гриб — без аптечек и реагентов */
+    /* (4.5, нелогичность) ниже Истока живую деталь комплекса снимают с той твари, которую называет её
+       описание: косточку — с ушана, панцирь — с рачника (deep.js, deepBioParts); прочая органика — в ящиках */
+    if (L > 100 && f.kind !== "mech" && f.kind !== "anom" && LAB.deepBioParts) {
+      var bps = LAB.deepBioParts(f.type, L);
+      if (bps.length && r() < 0.45 * dk) drops.push({ kind: "item", item: bps[Math.floor(r() * bps.length)], n: 1 });
+    }
     if (LAB.workshop) LAB.workshop.drops(f, drops, r, dk);
     if (LAB.chem) LAB.chem.drops(f, drops, r, dk); /* (3.0) сырьё химии: ткани тварей, жидкости машин */
     if (carrier(f) && r() < crP() * sk) drops.push({ kind: "credits", n: LAB.credits(4 + r() * 12, L, g.F) }); /* (3.7) кредиты — у машин и людей */

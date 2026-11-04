@@ -102,7 +102,20 @@ DEEP_IDS.forEach(function (k) {
   SRC[k] = DEEP_SRC[k];
 });
 if (LAB.armsLate) LAB.armsLate(); /* (3.5) рецепты arms.js, ждавшие этих деталей */
-function srcOf(k) { var s0 = LAB.ITEMS[k] && LAB.ITEMS[k].src; if (LAB.ARSENAL17 && LAB.ARSENAL17.srcText[s0]) return LAB.ARSENAL17.srcText[s0]; return SRC[k] || s0 || (LAB.ITEMS[k] && LAB.ITEMS[k].kind === "part" ? "попадается на своей глубине: ящики, склады, обломки машин" : "собирают в мастерской или покупают"); }
+function srcOf(k) { var s0 = LAB.ITEMS[k] && LAB.ITEMS[k].src; if (LAB.ARSENAL17 && LAB.ARSENAL17.srcText[s0]) return LAB.ARSENAL17.srcText[s0]; return SRC[k] || s0 || (LAB.ITEMS[k] && LAB.ITEMS[k].kind === "part" ? partWhere(k) : "собирают в мастерской или покупают"); }
+/* (4.5, нелогичность) «Где найти» у детали без своего описания — по её природе: живую деталь глубин
+   снимают с тех тварей, кого называет её описание (deep.js, deepPartOwners), прочую органику и вещество
+   слоя находят в ящиках и на складах; машинную — ещё и на обломках машин */
+function partWhere(k) {
+  var from = " " + ((LAB.PART_FROM || {})[k] || "mech") + " ", deep = (LAB.PART_DEPTH[k] || 1) > 100;
+  if (deep && from.indexOf(" bio ") >= 0 && LAB.deepPartOwners) {
+    var own = LAB.deepPartOwners(k).map(function (t) { return LAB.FOES[t] ? String(LAB.FOES[t].n).toLowerCase() : ""; }).filter(Boolean);
+    if (own.length) return (from.indexOf(" mech ") >= 0 ? "снимают с машин своей глубины и с тварей — " : "снимают с тварей своего комплекса — ") + own.join(", ") + "; ещё — в ящиках и на складах своей глубины";
+    if (from.indexOf(" mech ") < 0) return "попадается на своей глубине: ящики, шкафы и склады";
+  }
+  if (from.indexOf(" mech ") < 0) return from.indexOf(" anom ") >= 0 ? "вещество своей глубины: ящики и склады, бывает — с аномалий" : "попадается на своей глубине: ящики, шкафы и склады";
+  return "попадается на своей глубине: ящики, склады, обломки машин";
+}
 
 /* ════════ ПАТРОНЫ, ОРУЖИЕ, УСТРОЙСТВА ════════ */
 /* стальные пули — только из мастерской и у торговцев: в случайной добыче их нет (этажи не меняются) */

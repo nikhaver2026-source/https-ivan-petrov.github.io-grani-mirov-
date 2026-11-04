@@ -126,6 +126,19 @@ LAB.PARTS.forEach(k => {
   if (!LAB.RECIPES.some(rc => rc.need && rc.need[k] && !(rc.minL && rc.minL > pd + ahead))) useless.push(k);
 });
 ok(!useless.length, "у каждой детали глубин есть применение в её блоке" + (useless.length ? ": без пользы " + useless.join(", ") : ""));
+/* (4.5, нелогичность) живая деталь, которую описание велит снимать с тварей, с них и падает: хозяева —
+   твари секторов её блока (deep.js, DEEP_BIO_FROM), с чужих тварей и машин живая деталь не падает */
+{
+  const bad = [], T = LAB.DEEP_BIO_FROM || {};
+  Object.keys(T).forEach(p => {
+    const dL = LAB.PART_DEPTH[p], n = dL ? LAB.blockOf(dL) : 0, D = LAB.DEEP[n];
+    if (!LAB.ITEMS[p] || !D || !/ bio /.test(" " + (LAB.PART_FROM[p] || "") + " ")) { bad.push(p + ": нет живой детали глубин"); return; }
+    const sec = new Set([].concat(...D.sectors.map(s => s.foes || [])));
+    T[p].forEach(t => { if (!LAB.FOES[t] || !sec.has(t)) bad.push(p + " ← " + t + ": нет такой твари в секторах блока"); else if (LAB.deepBioParts(t, LAB.blockRange(n).to).indexOf(p) < 0) bad.push(p + " с " + t + " не падает"); });
+  });
+  if (LAB.FOES.v7_mockbird && LAB.deepBioParts("v7_mockbird", LAB.blockRange(7).to).length) bad.push("с пересмешника падает живая деталь, хотя описания этого не говорят");
+  ok(!bad.length && Object.keys(T).length >= 10, "живые детали глубин снимают с тех тварей, кого называет их описание (" + Object.keys(T).length + " деталей" + (bad.length ? "; " + bad.join("; ") : "") + ")");
+}
 console.log("  срезов " + stat.srez + ", стендов " + stat.trial + ", помещений вне надзора " + stat.dark + ", с допуском " + stat.rank + ", хранилищ по допуску " + stat.boxes + ", теневых торговцев " + stat.trader);
 ok(stat.srez > 0, "срезы есть");
 console.log(`Этажей: ${floors}, ${((Date.now() - t0) / 1000).toFixed(1)} с`);
