@@ -8,7 +8,8 @@ import numpy as np, soundfile as sf
 sys.path.insert(0, "/root/S/us2")
 import engine as E
 
-ГОЛОС = sys.argv[1]; N = int(sys.argv[2]) if len(sys.argv) > 2 else 60; МЕТКА = sys.argv[3] if len(sys.argv) > 3 else "проба"
+ГОЛОС = sys.argv[1]; _N = sys.argv[2] if len(sys.argv) > 2 else "60"
+N0, N = (int(_N.split(":")[0]), int(_N.split(":")[1])) if ":" in _N else (0, int(_N)); МЕТКА = sys.argv[3] if len(sys.argv) > 3 else "проба"
 М = "/root/S/asr/sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19"
 import sherpa_onnx
 rec = sherpa_onnx.OfflineRecognizer.from_nemo_ctc(model=f"{М}/model.int8.onnx", tokens=f"{М}/tokens.txt", num_threads=3)
@@ -51,7 +52,7 @@ def тестовые(n):
 def main():
     веса = json.loads(sys.argv[4]) if len(sys.argv) > 4 else None
     S = E.Синтезатор(ГОЛОС, веса)
-    фразы = тестовые(N); итог = []; пробы = []; t0 = time.time()
+    фразы = тестовые(N)[N0:]; итог = []; пробы = []; t0 = time.time()
     for ф in фразы:
         y, отчёт = S.сказать(ф, (веса or {}).get("скорость", 1.0))
         цель = норм(" ".join(" ".join(o["w"]) for o in E.текст_в_отрезки(ф)))

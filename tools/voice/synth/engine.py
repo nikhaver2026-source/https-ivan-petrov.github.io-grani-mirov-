@@ -316,7 +316,7 @@ class Синтезатор:
     def __init__(self, голос, веса=None):
         self.V = Голос(голос)
         self.в = dict(конец=3.0, середина_конец=1.2, начало=0.8, середина_начало=0.6, сосед=0.35, звук=0.3,
-                      длина=1.0, стык=1.0, знак=1.2, чистота=3.0, сгладить=1, мелодия=0.15, пауза_стык=0, края=1, f0=0.12, громк=0.08, спектр=0.02, K=60, часть=4.0)
+                      длина=1.0, стык=1.0, знак=1.2, чистота=3.0, сгладить=1, мелодия=0.15, пауза_стык=0, края=1, встык=1, сжать_тишину=0, тишина_нач=0.07, тишина_кон=0.04, короткие=1.0, умный_темп=0, f0=0.12, громк=0.08, спектр=0.02, K=60, часть=4.0)
         if веса: self.в.update(веса)
         self.скачки = []
 
@@ -331,13 +331,15 @@ class Синтезатор:
         if первое: c += 0 if V.начало_фразы(o) else в["начало"]
         elif V.начало_фразы(o) and V.w(o)[3] > 0.15: c += в["середина_начало"]
         # соседи: тот же сосед — плюс; иначе звук на стыке того же класса
+        кор = в["короткие"] if len(слова[i]) <= 2 else 1.0   # «до», «у», «в»: свои соседи (1 — как у прочих слов)
         for d, idx in ((-1, i - 1), (1, i + 1)):
             цель = слова[idx] if 0 <= idx < n else None; ист = V.сосед(o, d)
-            if цель is not None and ист == цель: c -= в["сосед"]
+            if цель is not None and ист == цель: c -= в["сосед"] * кор
+            elif кор > 1.01 and цель and ист and (цель[-1] if d < 0 else цель[0]) == (ист[-1] if d < 0 else ист[0]): c -= в["сосед"]
             else:
                 кц = класс(цель[-1] if d < 0 and цель else (цель[0] if цель else ""))
                 ки = класс(ист[-1] if d < 0 and ист else (ист[0] if ист else ""))
-                if кц != ки: c += в["звук"]
+                if кц != ки: c += в["звук"] * кор
         if V.чистота is not None:
             ч = float(V.чистота[o]); c += в["чистота"] * (0.3 if ч < 0 else ч)   # −1 — не проверено
         h = V.высота_пт(o)
@@ -503,10 +505,25 @@ class Синтезатор:
         (чужие хвосты соседних слов источника не попадают)."""
         ws = self.V.recs[ri]["w"]
         if self.в["края"] and j0 > 0 and ws[j0][5] and ws[j0][3] < 0.05:
-            s = max(s, ws[j0][5][0] - self._до(ws[j0][0][0]))
+            перв = ws[j0][5][0]; lo = max(s, перв - self._до(ws[j0][0][0])); hi = перв - 0.008
+            s = self._переход(ri, lo, hi, к_концу=True) if self.в["края"] == 2 and hi - lo > 0.015 else lo
         if self.в["края"] and j1 < len(ws) - 1 and ws[j1][5] and ws[j1][4] < 0.05:
-            e = min(e, ws[j1][5][-1] + self._после(ws[j1][0][-1]))
+            посл = ws[j1][5][-1]; lo = посл + 0.02; hi = min(e, посл + self._после(ws[j1][0][-1]))
+            e = self._переход(ri, lo, hi, к_концу=False) if self.в["края"] == 2 and hi - lo > 0.015 else hi
         return s, e
+
+    def _переход(self, ri, lo, hi, к_концу):
+        """Точка наибольшего изменения спектра в [lo, hi] — переход от чужого звука к своему (или наоборот).
+        к_концу=True — при равенстве ближе к своему слову справа, иначе — слева."""
+        a = self.V.звук(ri); hop = int(SR * 0.004); N = int(SR * 0.016)
+        i0, i1 = max(0, int(lo * SR) - N // 2), min(len(a), int(hi * SR) + N // 2)
+        if i1 - i0 < N + 3 * hop: return lo if к_концу else hi
+        кадры = [a[k:k + N] for k in range(i0, i1 - N, hop)]
+        M = np.array([_mfcc(x)[1:] for x in кадры]); En = np.array([_db(x) for x in кадры])
+        поток = np.r_[0, np.linalg.norm(np.diff(M, axis=0), axis=1)] + 0.5 * np.r_[0, np.abs(np.diff(En))]
+        д = np.linspace(0, 1, len(кадры)); д = д if к_концу else 1 - д
+        k = int(np.argmax(поток / (поток.max() + 1e-9) + 0.15 * д))
+        return min(hi, max(lo, (i0 + k * hop + N // 2) / SR))
 
     def куски(self, res):
         """Единицы → куски звука: подряд идущие слова одной записи сливаются в один кусок."""
@@ -527,6 +544,40 @@ class Синтезатор:
                 s, e = self._края(ri, j0, j, s, e)
             итог.append((ri, s, e, j, вид, o))
         return итог
+
+    @staticmethod
+    def встык(a, b, f=int(SR * 0.002), ноль=int(SR * 0.002)):
+        """Стык на переходе звуков: без перекрытия — короткий взрыв согласного не тонет в нарастании.
+        Разрез подтягивается к переходу волны через ноль на подъёме (в пределах 2 мс) — против щелчка;
+        по 2 мс затухания и нарастания на самых краях."""
+        if len(a) > 4 * ноль:
+            хв = a[-2 * ноль:]; zc = np.where((хв[:-1] <= 0) & (хв[1:] > 0))[0]
+            if len(zc): a = a[:len(a) - 2 * ноль + int(zc[-1]) + 1]
+        if len(b) > 4 * ноль:
+            гл = b[:2 * ноль]; zc = np.where((гл[:-1] <= 0) & (гл[1:] > 0))[0]
+            if len(zc): b = b[int(zc[0]) + 1:]
+        if len(a) > 2 * f: a = a.copy(); a[-f:] *= np.linspace(1, 0, f)
+        if len(b) > 2 * f: b = b.copy(); b[:f] *= np.linspace(0, 1, f)
+        return np.concatenate([a, b])
+
+    @staticmethod
+    def _тишина_краёв(x, с_начала, с_конца, нач_макс=0.05, кон_макс=0.02):
+        if len(x) < SR // 20: return x
+        fr = int(SR * 0.005); n = len(x) // fr
+        e = np.sqrt(np.mean(x[:n * fr].reshape(n, fr) ** 2, axis=1) + 1e-10)
+        тихо = e < np.max(e) * 10 ** (-38 / 20)
+        i0, i1 = 0, len(x)
+        if с_начала:
+            k = 0
+            while k < n and тихо[k]: k += 1
+            лишнее = k * fr - int(SR * нач_макс)
+            if лишнее > 0: i0 = лишнее
+        if с_конца:
+            k = n - 1
+            while k >= 0 and тихо[k]: k -= 1
+            лишнее = (n - 1 - k) * fr - int(SR * кон_макс)
+            if лишнее > 0: i1 = len(x) - лишнее
+        return x[i0:i1] if i1 - i0 > SR // 50 else x
 
     @staticmethod
     def стык(a, b, L=int(SR * 0.012), сдвиг=int(SR * 0.004)):
@@ -568,6 +619,9 @@ class Синтезатор:
             ц = float(np.median(уровни))
             for k, x in enumerate(звуки):
                 if len(x): g = np.clip(ц - _db(x), -6, 6) * 0.6; звуки[k] = x * 10 ** (g / 20)
+        # тишина на стыках — не длиннее естественной: смычка перед согласным ≤ 50 мс, хвост слова ≤ 20 мс
+        if self.в["сжать_тишину"]:
+            звуки = [self._тишина_краёв(x, k > 0, k < len(звуки) - 1, self.в["тишина_нач"], self.в["тишина_кон"]) for k, x in enumerate(звуки)]
         out = звуки[0] if звуки else np.zeros(1)
         пз = int(SR * self.в["пауза_стык"] / 1000)
         for k, x in enumerate(звуки[1:], 1):
@@ -575,6 +629,7 @@ class Синтезатор:
                 f = min(int(SR * 0.004), len(out) // 2, len(x) // 2)
                 if f > 0: out = out.copy(); out[-f:] *= np.linspace(1, 0, f); x = x.copy(); x[:f] *= np.linspace(0, 1, f)
                 out = np.concatenate([out, np.zeros(пз, dtype=np.float32), x])
+            elif self.в["встык"]: out = self.встык(out, x)
             else: out = self.стык(out, x)
         # края: короткое нарастание и затухание
         f = min(len(out) // 4, int(SR * 0.006))
@@ -635,6 +690,47 @@ class Синтезатор:
         norm[norm < 1e-3] = 1.0
         return (out / norm)[:pos_out + H]
 
+    @staticmethod
+    def темп_умный(y, k, сила=0.7):
+        """Ускорение в k раз с сохранением согласных: переходы (спектр быстро меняется) сжимаются слабо, тянущиеся
+        гласные и паузы — сильнее; общая длина — как задано. WSOLA с переменным шагом чтения."""
+        if abs(k - 1) < 0.02 or len(y) < SR // 10: return y
+        hop = int(SR * 0.01); n = len(y) // hop
+        if n < 4: return Синтезатор.темп(y, k)
+        M = np.array([_mfcc(y[i * hop:i * hop + 2 * hop])[1:] for i in range(n)]); En = np.array([_db(y[i * hop:i * hop + hop]) for i in range(n)])
+        поток = np.r_[0, np.linalg.norm(np.diff(M, axis=0), axis=1)]
+        поток = np.convolve(поток, np.ones(3) / 3, "same"); пн = поток / (np.percentile(поток, 95) + 1e-9)
+        тихо = En < En.max() - 35
+        ровно = np.clip(1 - пн, 0, 1) ** 1.5
+        вес = np.where(тихо, 1.6, ровно * сила + (1 - сила) * 0.5)   # чем больше, тем сильнее сжимать участок
+        # скорость участка s_i = 1 + a·вес_i; a — чтобы общая длина стала len/k
+        lo, hi = 0.0, 20.0
+        for _ in range(40):
+            a = (lo + hi) / 2; dur = np.sum(1.0 / (1 + a * вес))
+            if dur > n / k: lo = a
+            else: hi = a
+        скор = 1 + a * вес
+        N = int(SR * 0.024); H = N // 2; tol = int(SR * 0.006); win = np.hanning(N).astype(np.float32)
+        out = np.zeros(int(len(y) / k) + 4 * N, dtype=np.float32); norm = np.zeros_like(out)
+        pos_in, pos_out, prev = 0.0, 0, None
+        while True:
+            c = int(pos_in)
+            if c + N + tol >= len(y) or pos_out + N >= len(out): break
+            d = 0
+            if prev is not None:
+                best = -1e9
+                for dd in range(-tol, tol + 1, 2):
+                    a0 = c + dd
+                    if a0 < 0: continue
+                    v = float(np.dot(y[a0:a0 + N], prev))
+                    if v > best: best, d = v, dd
+            a0 = max(0, c + d); seg = y[a0:a0 + N]
+            out[pos_out:pos_out + N] += seg * win; norm[pos_out:pos_out + N] += win
+            prev = y[a0 + H:a0 + H + N] if a0 + H + N <= len(y) else y[a0:a0 + N]
+            pos_in += H * скор[min(n - 1, c // hop)]; pos_out += H
+        norm[norm < 1e-3] = 1.0
+        return (out / norm)[:pos_out + H]
+
     def сказать(self, текст, скорость=1.0):
         части, отчёт = [], []
         for от in текст_в_отрезки(текст):
@@ -649,7 +745,7 @@ class Синтезатор:
         речь = y[np.abs(y) > 1e-4]
         if len(речь):
             g = -20.5 - _db(речь); y = y * 10 ** (g / 20)
-        if скорость != 1.0: y = self.темп(y.astype(np.float32), скорость)
+        if скорость != 1.0: y = (self.темп_умный if self.в["умный_темп"] else self.темп)(y.astype(np.float32), скорость)
         пик = np.max(np.abs(y)) + 1e-9
         if пик > 0.89: y = y * 0.89 / пик
         return y.astype(np.float32), отчёт

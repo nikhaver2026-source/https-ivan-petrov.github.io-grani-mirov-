@@ -70,6 +70,19 @@ def main():
                 if k in не_просить: continue
                 счёт[k] += 1; образ.setdefault(k, к)
         q = [{"t": образ[k], "n": n} for k, n in sorted(счёт.items(), key=lambda x: (-x[1], len(x[0])))]
+        # (4 ноября) сперва — фразы со словами, которых нет в базе синтезатора-склейки (us2/db_m*.jsonl): жадно, чтобы
+        # каждое следующее покрывало больше недостающих; запись одна — польза и игре, и синтезатору
+        нет_слов = set()
+        if голос == "m" and os.path.exists("/root/S/us2/corpus/oov_words.json"):
+            нет_слов = set(json.load(open("/root/S/us2/corpus/oov_words.json", encoding="utf-8")))
+        if нет_слов:
+            покрыто = set(); впереди = []; ост = []
+            for x in q:
+                нов = {w for w in re.findall(r"[а-я]+", ключ(x["t"])) if w in нет_слов and len(w) > 2} - покрыто
+                if нов: впереди.append(x); покрыто |= нов
+                else: ост.append(x)
+            q = впереди + ост
+            print(f"{голос}: впереди {len(впереди)} фраз с {len(покрыто)} словами, которых нет у синтезатора")
         json.dump(q, open(f"{ТУТ}/queue_{голос}.json", "w", encoding="utf-8"), ensure_ascii=False, indent=0)
         print(f"{голос}: текстов {len(тексты)}, в очереди {len(q)}, из них встречались не раз {sum(1 for x in q if x['n'] > 1)}")
 
