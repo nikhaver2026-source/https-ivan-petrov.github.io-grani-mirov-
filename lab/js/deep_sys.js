@@ -70,7 +70,7 @@ function addPts(x, why) {
   else if (down) { A("play", "term_err"); roll("Седьмой. Статус понижен: " + stName(s.st) + "." + (why ? " " + why : ""), 1200); journal("Статус понижен: " + stName(s.st) + "."); }
 }
 /* Цены Нижних: вне списка — дороже, смотрителю — дешевле. */
-function priceF() { var g = G(); if (!g || !deepL(g.L)) return 1; var st = status(); return st === 0 ? 1.25 : 1.12 - 0.045 * st; }
+function priceF() { var g = G(); if (!g || !deepL(g.L)) return 1; var st = status(), k = st === 0 ? 1.25 : 1.12 - 0.045 * st; return g.deep && g.deep.disc === g.L ? k * 0.9 : k; } /* скидка за норму — до конца уровня */
 function nextLine() { var s = S(); return s.st >= 6 ? "Выше статуса нет." : s.st === 0 ? "Пока вас нет в списках." : "До статуса «" + stName(s.st + 1) + "» — " + Math.max(0, NEED[s.st + 1] - s.pts) + " " + pl(NEED[s.st + 1] - s.pts, "очко", "очка", "очков") + "."; }
 function statusLine() {
   var s = S(), q = s.norm, r = s.rent;
@@ -155,13 +155,49 @@ function normEv(kind, n) {
   q.have = Math.min(q.need, q.have + (n || 1));
   if (q.have < q.need) { if (q.need - q.have <= 2) sayq("Норма смены: осталось " + (q.need - q.have) + "."); return; }
   q.done = true;
-  var pay = LAB.credits ? LAB.credits(18 + 4 * q.need, G().L, G().F) : 40;
-  G().credits += pay;
+  var got = normPay(q);
   A("play", "term_ok");
   addPts(10 + q.need);
-  roll("Норма «" + q.n + "» выполнена. Начислено: " + pay + " " + pl(pay, "кредит", "кредита", "кредитов") + ". Списки довольны.", 400);
+  roll("Норма «" + q.n + "» выполнена. Выдано: " + got + ". Списки довольны.", 400);
   journal("Норма смены выполнена: " + q.n + ".");
   if (LAB.ach) LAB.ach.ev("norm", 1);
+}
+
+/* Оплата нормы — тем, что объявлено при выдаче (q.pay): паёк, вода, батареи, антидоты, реактивы,
+   стекло, скидка у Нижних; жетоны, талоны и кредиты — кредитами. За натуру — и половина кредитов. */
+var PAY_GOODS = [
+  { re: /паёк|паек|рацион|хлеб|еда/, id: "ration", n: function (q) { return Math.max(2, Math.round(q.need / 3)); }, w: ["сухпаёк", "сухпайка", "сухпайков"] },
+  { re: /вод/, id: "water", n: function () { return 3; }, w: ["бутылка воды", "бутылки воды", "бутылок воды"] },
+  { re: /антидот/, id: "antidote", n: function () { return 2; }, w: ["антидот", "антидота", "антидотов"] },
+  { re: /реактив|реагент/, id: "reagent", n: function (q) { return Math.max(3, Math.round(q.need / 2)); }, w: ["реагент", "реагента", "реагентов"] },
+  { re: /стекл/, id: "v9_glass", n: function () { return 2; }, w: ["лабораторное стекло", "лабораторных стекла", "лабораторных стёкол"] },
+  { re: /аптеч|лекарств|медикамент/, id: "medkit_s", n: function () { return 2; }, w: ["аптечка", "аптечки", "аптечек"] },
+  { re: /детал|лом/, id: "scrap", n: function (q) { return Math.max(3, Math.round(q.need / 2)); }, w: ["металлолом", "металлолома", "металлолома"] },
+  { re: /чай/, id: "v10_tea", n: function () { return 2; }, w: ["пачка чая", "пачки чая", "пачек чая"] },
+  { re: /бинт|повязк/, id: "bandage", n: function () { return 3; }, w: ["бинт", "бинта", "бинтов"] }
+];
+function normPay(q) {
+  var g = G(), base = LAB.credits ? LAB.credits(18 + 4 * q.need, g.L, g.F) : 40, p = String(q.pay || "кредиты").toLowerCase(), out = [];
+  var money = function (c) { g.credits += c; out.push(c + " " + pl(c, "кредит", "кредита", "кредитов")); };
+  if (/кредит|жетон|талон|деньг|монет/.test(p)) { money(base); return out.join(" и "); }
+  if (/батаре|заряд/.test(p)) {
+    var b = Math.max(2, Math.round(q.need / 3)); g.ammo.energy = (g.ammo.energy || 0) + b;
+    out.push(b + " " + pl(b, "энергобатарея", "энергобатареи", "энергобатарей"));
+    money(Math.round(base / 2)); return out.join(" и ");
+  }
+  /* «допуск», «отметка в списках / в журнале» — шаг к статусу сверх обычного за норму */
+  if (/допуск|отметк|списк|статус/.test(p) && !/кредит/.test(p)) { addPts(10); out.push("отметка в списках: десять очков к статусу"); money(Math.round(base / 2)); return out.join(" и "); }
+  if (/скидк/.test(p)) { S().disc = g.L; out.push("скидка у Нижних до конца уровня"); money(Math.round(base / 2)); return out.join(" и "); }
+  for (var i = 0; i < PAY_GOODS.length; i++) {
+    var k = PAY_GOODS[i];
+    if (!k.re.test(p) || !LAB.ITEMS[k.id]) continue;
+    var n = k.n(q);
+    g.inv[k.id] = (g.inv[k.id] || 0) + n; /* прямо в рюкзак: выдача нормы — не находка (не считается в нормы и испытания) */
+    out.push(n + " " + pl(n, k.w[0], k.w[1], k.w[2]));
+    money(Math.round(base / 2)); return out.join(" и ");
+  }
+  money(base);
+  return out.join(" и ");
 }
 
 /* ════════ УРОВЕНЬ ════════ */
