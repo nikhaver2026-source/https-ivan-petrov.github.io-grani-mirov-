@@ -190,7 +190,7 @@ function enterFloor(L, F, how, silent) {
   G.x = spot[0]; G.y = spot[1];
   G.maxF[L] = Math.max(G.maxF[L] || 0, F);
   navStop(); /* навигатор ведёт только по своему этажу */
-  if (firstVisit) { if (L > 10) tutor("seam"); else if (how === "down" || how === "gatedown") tutor("sector"); }
+  if (firstVisit) { if (L > 10 && L <= 100) tutor("seam"); else if (L <= 10 && (how === "down" || how === "gatedown")) tutor("sector"); } /* (после 4.1) ниже Истока — не Шов */
   markSeen();
   A("enterFloor", L, F);
   if (LAB.oko) LAB.oko.event("floor", { how: how });
