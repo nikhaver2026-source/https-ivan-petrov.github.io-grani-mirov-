@@ -661,7 +661,7 @@ function container(seed, cb, opts) {
    вторую не собрать, первую возвращают — это ошибка). Образцовое — из
    наименьшего числа резисторов. Дроби считаются точно.
    ════════════════════════════════════════════════════════════════════ */
-var RS_POOL = [[2, 3, 4, 6, 8, 12], [1, 2, 3, 4, 5, 6, 8, 10, 12, 15], [2, 3, 4, 5, 6, 8, 10, 12, 15, 20]];
+var RS_POOL = [[1, 2, 3, 4, 5, 6, 8, 9, 10, 12], [1, 2, 3, 4, 5, 6, 8, 10, 12, 15], [2, 3, 4, 5, 6, 8, 10, 12, 15, 20]];
 function rq(n, d) { var g = gcd(n, d); return { n: n / g, d: d / g }; }
 function rsSer(a, b) { return rq(a.n * b.d + b.n * a.d, a.d * b.d); }
 function rsPar(a, b) { return rq(a.n * b.n, a.n * b.d + b.n * a.d); }
@@ -857,9 +857,9 @@ function resistors(seed, cb, opts) {
   var table = function () { return parts.map(function (x) { return x.name + " — " + qText(x.q); }).join(", "); };
   var need = function () { return stage === 1 ? D.T : D.T2; };
   var listTxt = D.vals.map(function (v, i) { return "резистор " + (i + 1) + " — " + v + " " + pl(v, "ом", "ома", "ом"); });
-  var cond = head(opts, d) + "Резисторная цепь. " + (D.T2 ? "Двум нагрузкам нужно ровно " + qSay(D.T) + " — первой — и ровно " + qSay(D.T2) + " — второй." : "Нагрузке нужно ровно " + qSay(D.T) + ".") +
+  var cond = head(opts, d) + "Резисторная цепь. " + (D.T2 ? "Работа в два этапа. " + stageText(1, 2) + ": собрать и подключить первую нагрузку — ровно " + qSay(D.T) + "; её резисторы впаяют насовсем. " + stageText(2, 2) + ": из оставшихся — вторую нагрузку, ровно " + qSay(D.T2) + "." : "Нагрузке нужно ровно " + qSay(D.T) + ".") +
     " На столе " + cnt(n, "m", "резистор", "резистора", "резисторов") + ": " + andList(listTxt) + ". Две детали можно соединить последовательно — сопротивления складываются, или параллельно — тогда общее сопротивление равно произведению, делённому на сумму: 6 и 3 ома параллельно дают 2. Готовая сборка — тоже деталь, её можно соединять дальше. Задействовать все резисторы не обязательно." + (n > 4 ? " В одну сборку — не больше четырёх резисторов: больше плата не держит." : "") +
-    (D.T2 ? " Сначала соберите и подключите первую нагрузку — её детали впаяют насовсем; потом из оставшихся — вторую. Решений несколько, годится любое; образцовое — когда на обе нагрузки ушло меньше всего резисторов." : " Решений несколько, годится любое; образцовое — из наименьшего числа резисторов.");
+    (D.T2 ? " Решений несколько, годится любое; образцовое — когда на обе нагрузки ушло меньше всего резисторов." : " Решений несколько, годится любое; образцовое — из наименьшего числа резисторов.");
   var last = start("resistors", d, P, "Резисторная цепь", cond, function (st, finish, fail) {
     var listOf = function (arr, fn) { var items = arr.map(function (x) { return pick(label(x), function () { fn(x); }); }); items.push(backItem()); return items; };
     var combine = function (x, op, y) {
@@ -1429,7 +1429,7 @@ function genMixture(seed, d, depth) {
   for (guard = 0; guard < 400 && !sols; guard++) {
     var k = d === 1 ? 3 : 2, cs = choose(r, 9, k).map(function (x) { return (x + 1) * 10; }).sort(function (a, b) { return a - b; });
     comps = [{ c: 0, s: 0 }].concat(cs.map(function (c) { return { c: c, s: 0 }; }));
-    comps.forEach(function (x) { x.s = d === 0 ? 10 : d === 1 ? r.int(2, 8) : r.int(4, 10); });
+    comps.forEach(function (x) { x.s = d === 0 ? r.int(6, 12) : d === 1 ? r.int(2, 8) : r.int(4, 10); });
     strong = comps.length - 1;
     var top = comps[strong].c;
     /* цель — из случайного набора по литру: крепость кратна пяти и не совпадает с готовым раствором */
@@ -1938,12 +1938,15 @@ function genLamps(seed, d, depth) {
     for (var qi = 0; qi < q.length; qi++) { var c = q[qi], r0 = Math.floor(c / R), c0 = c % R; for (var dd = 0; dd < 4; dd++) { var rr = r0 + DR[dd], cc = c0 + DC[dd], nc = rr * R + cc; if (rr >= 0 && cc >= 0 && rr < R && cc < R && !walls[nc] && !seen[nc]) { seen[nc] = 1; q.push(nc); } } }
     if (q.length !== K) continue;
     min = 0;
-    for (var L = 1; L <= mr[1]; L++) { var t = lmCount(M, L, rule, 1, 15000); if (t.over) break; if (t.list.length) { min = L; break; } }
+    var minSol = null;
+    for (var L = 1; L <= mr[1]; L++) { var t = lmCount(M, L, rule, 1, 15000); if (t.over) break; if (t.list.length) { min = L; minSol = t.list[0]; break; } }
     if (!min || min < mr[0]) continue;
     limit = min + 1;
     var all = lmCount(M, limit, rule, CAPN, 40000);
     if (all.over || all.list.length < 2) continue;
     sols = all.list;
+    /* счёт мог остановиться на потолке раньше, чем дошёл до образцовых: одна образцовая — из поиска наименьшего */
+    if (!sols.some(function (s2) { return s2.length === min; })) sols = [minSol].concat(sols.slice(0, sols.length - 1));
   }
   if (!sols) return genLamps(seed + 7919, d, (depth || 0) + 1);
   var best = sols.filter(function (s) { return s.length === min; }), other = sols.filter(function (s) { return s.length !== min; });
@@ -2335,7 +2338,7 @@ function mrSolve(D, limit, capn, budget) {
 }
 function genMirrors(seed, d, depth) {
   var r = rngFor(seed, "mirrors", d), R = d + 4, guard, i, D = null, sols = null, min = 0;
-  var nCol = [[1, 2], [3, 4], [4, 6]][d], bestR = [[1, 2], [2, 3], [3, 3]][d];
+  var nCol = [[1, 2], [3, 4], [4, 6]][d], bestR = [[1, 2], [2, 3], [2, 3]][d];
   for (guard = 0; guard < 400 && !sols; guard++) {
     var grid = rep(0, R * R), cells = intList(R * R); r.shuffle(cells);
     var nc = r.int(nCol[0], nCol[1]), ci = 0;
