@@ -1270,10 +1270,17 @@ function researchMenu() {
   menu("Исследование схем", items, { intro: "Известно схем: " + bpList().filter(known).length + " из " + bpList().filter(function (rc) { return known(rc) || near(rc); }).length + ". Новые схемы дают и документы, и инженеры, и разбор устройств, и установки глубин." });
 }
 /* Справочник деталей: сколько есть, где взять, для каких схем. */
+/* (после 4.1) «Чуть глубже» детали: наверху — пять уровней; ниже Истока блоки огромны (сотни и тысячи
+   уровней), и схемы с деталью блока идут по всему блоку — четверть блока детали. */
+function aheadOf(pd) {
+  if (pd <= 100 || !LAB.blockRange || !LAB.blockOf) return 5;
+  var R = LAB.blockRange(LAB.blockOf(pd));
+  return R && R.size ? Math.max(5, Math.round(R.size / 4)) : 5;
+}
 function uses(k) {
   /* (2.0) только схемы своей глубины — вашей или самой детали (и чуть глубже);
      до десятого уровня о рецептах глубин для простых деталей — ни слова */
-  var kn = [], unk = 0, L0 = G().L, pd = LAB.PART_DEPTH[k] || 1, L = Math.max(L0, pd + 5);
+  var kn = [], unk = 0, L0 = G().L, pd = LAB.PART_DEPTH[k] || 1, L = Math.max(L0, pd + aheadOf(pd));
   if (L0 < 10 && pd < 10) L = Math.min(L, 9);
   LAB.RECIPES.forEach(function (rc) { if (!rc.need || !rc.need[k] || (rc.minL && rc.minL > L)) return; if (known(rc)) kn.push(rc.n.toLowerCase()); else unk++; });
   return { kn: kn, unk: unk };

@@ -114,6 +114,15 @@ for (let n = LAB.DEEP_FIRST; n <= LAB.blockOf(LAB.LEVELS_N); n++) {
   stat.srez += cuts;
   ok(cuts >= 1, `блок ${LAB.roman(n)}: срезы вниз есть (${cuts} на 36 этажах)`);
 }
+/* у каждой детали глубин есть применение не дальше четверти блока от глубины, где она попадается
+   (как считает окно «Детали: где найти и для чего», workshop.js) */
+const useless = [];
+LAB.PARTS.forEach(k => {
+  const pd = LAB.PART_DEPTH[k] || 1; if (pd <= 100) return;
+  const R = LAB.blockRange(LAB.blockOf(pd)), ahead = Math.max(5, Math.round(R.size / 4));
+  if (!LAB.RECIPES.some(rc => rc.need && rc.need[k] && !(rc.minL && rc.minL > pd + ahead))) useless.push(k);
+});
+ok(!useless.length, "у каждой детали глубин есть применение в её блоке" + (useless.length ? ": без пользы " + useless.join(", ") : ""));
 console.log("  срезов " + stat.srez + ", стендов " + stat.trial + ", помещений вне надзора " + stat.dark + ", с допуском " + stat.rank + ", хранилищ по допуску " + stat.boxes + ", теневых торговцев " + stat.trader);
 ok(stat.srez > 0, "срезы есть");
 console.log(`Этажей: ${floors}, ${((Date.now() - t0) / 1000).toFixed(1)} с`);

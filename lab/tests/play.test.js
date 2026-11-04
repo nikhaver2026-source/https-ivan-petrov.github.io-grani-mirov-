@@ -3420,7 +3420,9 @@ LAB.ui.closeAll();
     return out;
   });
   const rowsTxt = dense.rows.map(r => r.L + "-" + r.F + ": " + r.n + " врагов, патрулей " + r.patrols + " (дронов " + r.drones + "), кабинетов под охраной " + r.rooms + " из " + r.roomsAll + ", у лестниц " + r.stair + ", тварей " + r.bio + (r.anom ? ", аномалий " + r.anom : "") + ", видов " + r.types).join("; ");
-  ok(dense.rows.every(r => r.n >= 150 && r.patrols >= 5 && r.stair >= 1 && r.bio >= 1 && r.rooms >= r.roomsAll * 0.6), "охрана плотная на всех уровнях: робот почти в каждом кабинете, патрули, стражи у лестниц, твари — " + rowsTxt);
+  /* (после 4.1) плотность — на кабинет: у иного зерна этаж меньше (77 кабинетов вместо 120) и врагов
+     на нём меньше 150, хотя на кабинет их столько же */
+  ok(dense.rows.every(r => r.n >= Math.min(150, 1.6 * r.roomsAll) && r.patrols >= 5 && r.stair >= 1 && r.bio >= 1 && r.rooms >= r.roomsAll * 0.6), "охрана плотная на всех уровнях: робот почти в каждом кабинете, патрули, стражи у лестниц, твари — " + rowsTxt);
   ok(dense.rows.some(r => r.drones >= 1), "по коридорам летают патрульные дроны");
   const d1 = dense.avg1, dz = dense.avgZ;
   ok(dz.types > d1.types && dz.n >= d1.n, "чем глубже, тем разнообразнее и больше (в среднем по четырём мирам): видов " + d1.types + " → " + dz.types + ", врагов " + d1.n + " → " + dz.n);
