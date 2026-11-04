@@ -53,7 +53,13 @@ function S() {
   if (!g.deep) g.deep = { st: 0, pts: 0, cards: {}, mem: {}, trials: {}, norm: null, rent: null, regen: [], lastL: 0 };
   return g.deep;
 }
-function status() { var g = G(); return g && g.deep ? g.deep.st : 0; }
+function status() {
+  var g = G(); if (!g || !g.deep) return 0;
+  /* на Полигоне номер в списках — браслет проката: сдали его — счётчики видят чужака */
+  var r = g.deep.rent;
+  if (r && r.everId && !rentHas("id") && Dd() && Dd().rent && Dd().rent.length) return 0;
+  return g.deep.st;
+}
 function stName(n) { return NAMES[Math.max(0, Math.min(6, n || 0))]; }
 function addPts(x, why) {
   var s = S(), up = false, down = false;
@@ -75,29 +81,62 @@ function statusLine() {
 }
 
 /* ════════ ПРОКАТ (блок VI) ════════ */
-var RENT_FX = ["def", "silent", "regen", "eyes"];
+/* Что делает модуль проката — по его слову (fx) или по названию: браслет с номером держит в списках
+   (без него статус не считается: «счётчики видят чужака»), жилет держит удар, стартовик — оружие в
+   руках, пояс — ампулы обезболивающего на каждую смену. */
+function rentFx(m) {
+  if (m.fx) return m.fx;
+  var t = (m.id || "") + " " + (m.n || "") + " " + (m.desc || "");
+  if (/band|браслет|номерн/i.test(t)) return "id";
+  if (/vest|жилет|брон|пластин|щит/i.test(t)) return "def";
+  if (/starter|gun|стартов|пистолет|оружи|ствол/i.test(t)) return "gun";
+  if (/belt|пояс|аптеч|ампул/i.test(t)) return "belt";
+  return "regen";
+}
 function rentFee() { var r = S().rent; return r && r.mods ? r.mods.reduce(function (a, m) { return a + (m.fee || 0); }, 0) : 0; }
 function rentHas(fx) { var r = G() && G().deep && G().deep.rent; return !!(r && r.mods && r.mods.some(function (m) { return m.fx === fx; })); }
+/* Стартовик Полигона — настоящий ствол в руках, но прокатный: сдали модуль — ствол забирают. */
+function rentGun(on) {
+  var g = G(), base = LAB.WEAPONS.v6_starter ? "v6_starter" : null;
+  if (!base) return;
+  if (on) {
+    if (g.weapons.some(function (w) { return w.rented; })) return;
+    var w = LAB.makeWeapon(base, Math.max(1, LAB.foeLevel ? Math.round(LAB.Le(g.L) / 3) : 30), 0, 1);
+    w.rented = 1; w.name = "прокатный " + w.name; g.weapons.push(w);
+  } else {
+    var i = -1; g.weapons.forEach(function (w, k) { if (w.rented) i = k; });
+    if (i >= 0) { var wasCur = g.wi === i; g.weapons.splice(i, 1); if (wasCur || g.wi >= g.weapons.length) g.wi = 0; }
+  }
+}
 function giveRent(D) {
   if (!D.rent || !D.rent.length) return;
-  S().rent = { mods: D.rent.map(function (m, i) { return { id: m.id, n: m.n, desc: m.desc, fee: m.fee || 10, fx: m.fx || RENT_FX[i % RENT_FX.length] }; }) };
+  S().rent = { mods: D.rent.map(function (m) { return { id: m.id, n: m.n, desc: m.desc, fee: m.fee || 10, fx: rentFx(m) }; }) };
+  S().rent.everId = rentHas("id");
+  if (rentHas("gun")) rentGun(true);
 }
+function dropMod(m) { if (m && m.fx === "gun") rentGun(false); }
 function rentCharge(L) {
   var s = S(), r = s.rent;
   if (!r || !r.mods || !r.mods.length) return;
   var D = Dd(L);
-  if (!D || !D.rent || !D.rent.length) { r.mods = []; sayq("Прокатный комплект сдан на границе блока: за пределами Полигона он не числится."); return; }
+  if (!D || !D.rent || !D.rent.length) { r.mods.forEach(dropMod); r.mods = []; sayq("Прокатный комплект сдан на границе блока: за пределами Полигона он не числится."); return; }
   var fee = rentFee(), g = G();
-  if (g.credits >= fee) { g.credits -= fee; sayq("Прокат: за смену списано " + fee + " " + pl(fee, "кредит", "кредита", "кредитов") + "."); return; }
+  if (g.credits >= fee) {
+    g.credits -= fee;
+    var belt = rentHas("belt") ? " Ампулы пояса пополнены." : "";
+    if (belt) g.inv.medkit_s = (g.inv.medkit_s || 0) + 1;
+    sayq("Прокат: за смену списано " + fee + " " + pl(fee, "кредит", "кредита", "кредитов") + "." + belt);
+    return;
+  }
   r.mods.sort(function (a, b) { return b.fee - a.fee; });
-  var m = r.mods.shift();
+  var m = r.mods.shift(); dropMod(m);
   addPts(-4);
   roll("Седьмой. Долг за прокат. Модуль «" + m.n + "» отозван.", 2500);
 }
 function returnRent(i) {
   var r = S().rent; if (!r || !r.mods[i]) return;
-  var m = r.mods.splice(i, 1)[0];
-  A("play", "craft_off"); say("Модуль «" + m.n + "» сдан в прокат. Плата за смену теперь — " + rentFee() + ".");
+  var m = r.mods.splice(i, 1)[0]; dropMod(m);
+  A("play", "craft_off"); say("Модуль «" + m.n + "» сдан в прокат. Плата за смену теперь — " + rentFee() + "." + (m.fx === "id" ? " Без браслета счётчики видят в вас чужака: статус в списках не считается, пока браслет не на руке." : ""));
 }
 function defBonus() { return rentHas("def") ? 4 + Math.min(6, status()) : 0; }
 
