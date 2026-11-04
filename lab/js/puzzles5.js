@@ -980,11 +980,11 @@ function genFrequencies(seed, d, depth) {
       var bad = intList(k).map(function (x) { return x + 1; }).filter(function (c) { return c !== H[v]; });
       G.forb[v] = [r.pick(bad)]; fb++;
     }
-    var maxC = [24, 20, 40][d], res = fqSearch(G, limitR, CAPN, true), more = 0;
+    var maxC = [24, 20, 40][d], res = fqSearch(G, limitR, maxC + 1, true), more = 0;
     while (res.count > maxC && more++ < 4) {
       var free = intList(n).filter(function (x) { return !G.fix[x]; }); if (!free.length) break;
       var w = r.pick(free); G.fix[w] = H[w]; G.forb[w] = null;
-      res = fqSearch(G, limitR, CAPN, true);
+      res = fqSearch(G, limitR, maxC + 1, true);
     }
     if (res.count < 2 || res.count > maxC) continue;
     minR = Math.min.apply(null, res.list.map(function (c) { return fqReserve(G, c); }));
@@ -1329,7 +1329,7 @@ function genValves(seed, d, depth) {
       /* ловушка: открывать образцовые клапаны просто по номерам — сорвёт мембрану */
       var bestS = list.filter(function (x) { return x.n === mn; })[0].S, p = p0.slice(), bad = false;
       for (k = 0; k < nv; k++) if (bestS >> k & 1) { for (t = 0; t < m; t++) { p[t] += eff[k][t]; if (p[t] < 0 || p[t] > capP) bad = true; } }
-      if (!bad && r.chance(0.75)) continue;
+      if (!bad && r.chance(0.5)) continue;
     }
     sols = list;
   }
@@ -1432,26 +1432,46 @@ function genMixture(seed, d, depth) {
     comps.forEach(function (x) { x.s = d === 0 ? 10 : d === 1 ? r.int(2, 8) : r.int(4, 10); });
     strong = comps.length - 1;
     var top = comps[strong].c;
+    /* цель — из случайного набора по литру: крепость кратна пяти и не совпадает с готовым раствором */
+    var aim = function (cs2, Vx, needLast, avoid) {
+      for (var t = 0; t < 25; t++) {
+        var v = rep(0, cs2.length), left = Vx, g = 0;
+        if (needLast) { if (cs2[cs2.length - 1].s < 1) return -1; v[cs2.length - 1] = 1; left--; }
+        while (left > 0 && g++ < 200) { var j = r.int(0, cs2.length - 1); if (v[j] < cs2[j].s) { v[j]++; left--; } }
+        if (left) continue;
+        var sub = 0; for (var q = 0; q < v.length; q++) sub += v[q] * cs2[q].c;
+        if (sub % Vx || (sub / Vx) % 5) continue;
+        var Cx = sub / Vx;
+        if (Cx <= 0 || Cx >= top || cs2.some(function (x) { return x.c === Cx; }) || Cx === avoid) continue;
+        return Cx;
+      }
+      return -1;
+    };
     if (d < 2) {
       V = d === 0 ? r.int(5, 10) : r.int(8, 14);
-      C = 5 * r.int(1, Math.floor(top / 5) - 1);
-      if (comps.some(function (x) { return x.c === C; })) continue;
+      if (sum(comps.map(function (x) { return x.s; })) < V) continue;
+      C = aim(comps, V, false, -1);
+      if (C < 0) continue;
       var L = mxComps(comps, V, C, false);
       if (L.length < 2 || L.length > (d === 0 ? 8 : 10)) continue;
       if (d === 1) {
         /* ловушка: смеси из воды и одного раствора (или из двух растворов) не хватает запаса */
         var two = L.filter(function (v) { return v.filter(function (x) { return x; }).length <= 2; }).length;
-        if (two === L.length && r.chance(0.8)) continue;
+        if (two === L.length && r.chance(0.6)) continue;
       }
       var mnS = Math.min.apply(null, L.map(function (v) { return v[strong]; }));
-      if (!L.some(function (v) { return v[strong] > mnS; }) && r.chance(0.7)) continue;
+      if (!L.some(function (v) { return v[strong] > mnS; }) && r.chance(0.6)) continue;
       sols = L.map(function (v) { return { v: v, cost: v[strong] }; });
     } else {
-      V = r.int(6, 10); C = 5 * r.int(1, Math.floor(top / 5) - 1);
-      V2 = r.int(4, 8); C2 = 5 * r.int(1, Math.floor(top / 5) - 1);
-      if (C === C2 || comps.some(function (x) { return x.c === C || x.c === C2; })) continue;
+      V = r.int(6, 10); V2 = r.int(4, 8);
+      if (sum(comps.map(function (x) { return x.s; })) < V + V2) continue;
+      C = aim(comps, V, false, -1);
+      if (C < 0) continue;
       var S1 = mxComps(comps, V, C, false);
       if (!S1.length || S1.length > 12) continue;
+      var h1 = r.pick(S1), rest0 = comps.map(function (x, j) { return { c: x.c, s: x.s - h1[j] }; }).concat([{ c: C, s: V }]);
+      C2 = aim(rest0, V2, true, C);
+      if (C2 < 0) continue;
       var pairs = [], fair = true;
       for (i = 0; i < S1.length && fair; i++) {
         var rest = comps.map(function (x, j) { return { c: x.c, s: x.s - S1[i][j] }; }).concat([{ c: C, s: V }]);
@@ -1461,7 +1481,7 @@ function genMixture(seed, d, depth) {
       }
       if (!fair || pairs.length < 2 || pairs.length > 40) continue;
       var mnc = Math.min.apply(null, pairs.map(function (p) { return p.cost; }));
-      if (!pairs.some(function (p) { return p.cost > mnc; }) && r.chance(0.7)) continue;
+      if (!pairs.some(function (p) { return p.cost > mnc; }) && r.chance(0.6)) continue;
       sols = pairs;
     }
   }
@@ -1907,7 +1927,7 @@ function lmCount(M, limit, rule, capn, budget) {
 }
 function genLamps(seed, d, depth) {
   var r = rngFor(seed, "lamps", d), R = [4, 5, 6][d], guard, i, M = null, sols = null, min = 0, limit = 0, walls = null, rule = d === 2;
-  var kr = [[8, 12], [12, 19], [17, 27]][d], mr = [[2, 3], [3, 4], [4, 6]][d];
+  var kr = [[8, 12], [12, 19], [17, 26]][d], mr = [[2, 3], [3, 4], [4, 5]][d];
   for (guard = 0; guard < 400 && !sols; guard++) {
     walls = rep(0, R * R); var pw = [0.3, 0.3, 0.32][d];
     for (i = 0; i < R * R; i++) if (r.chance(pw)) walls[i] = 1;
@@ -1918,10 +1938,10 @@ function genLamps(seed, d, depth) {
     for (var qi = 0; qi < q.length; qi++) { var c = q[qi], r0 = Math.floor(c / R), c0 = c % R; for (var dd = 0; dd < 4; dd++) { var rr = r0 + DR[dd], cc = c0 + DC[dd], nc = rr * R + cc; if (rr >= 0 && cc >= 0 && rr < R && cc < R && !walls[nc] && !seen[nc]) { seen[nc] = 1; q.push(nc); } } }
     if (q.length !== K) continue;
     min = 0;
-    for (var L = 1; L <= mr[1]; L++) { var t = lmCount(M, L, rule, 1, 60000); if (t.over) break; if (t.list.length) { min = L; break; } }
+    for (var L = 1; L <= mr[1]; L++) { var t = lmCount(M, L, rule, 1, 15000); if (t.over) break; if (t.list.length) { min = L; break; } }
     if (!min || min < mr[0]) continue;
     limit = min + 1;
-    var all = lmCount(M, limit, rule, CAPN, 120000);
+    var all = lmCount(M, limit, rule, CAPN, 40000);
     if (all.over || all.list.length < 2) continue;
     sols = all.list;
   }
@@ -2092,7 +2112,7 @@ function genPipes(seed, d, depth) {
     }
     if (!path) continue;
     var tiles = [], onPath = {};
-    for (i = 0; i < R * R; i++) tiles.push({ t: r.chance(0.4) ? "s" : "e", rot: 0, fix: false });
+    for (i = 0; i < R * R; i++) tiles.push({ t: r.chance(d === 0 ? 0.25 : 0.35) ? "s" : "e", rot: 0, fix: false });
     var ok = true;
     for (i = 0; i < path.length; i++) {
       var c = path[i], pr = Math.floor(c / R), pc = c % R, entry, ex;
@@ -2119,7 +2139,7 @@ function genPipes(seed, d, depth) {
     if (res.over || res.list.length < 2) continue;
     minC = Math.min.apply(null, res.list.map(function (x) { return x.cost; }));
     if (minC < costMin) continue;
-    if (!res.list.some(function (x) { return x.cost > minC; }) && r.chance(0.7)) continue;
+    if (d && !res.list.some(function (x) { return x.cost > minC; }) && r.chance(0.6)) continue;
     sols = res.list;
   }
   if (!sols) return genPipes(seed + 7919, d, (depth || 0) + 1);
@@ -2284,12 +2304,27 @@ function genMirrors(seed, d, depth) {
     var grid = rep(0, R * R), cells = intList(R * R); r.shuffle(cells);
     var nc = r.int(nCol[0], nCol[1]), ci = 0;
     for (i = 0; i < nc; i++) grid[cells[ci++]] = 1;
-    var rcv = cells[ci++]; grid[rcv] = 2;
     var fixed = {};
     if (d === 2) { var nf = r.int(1, 2); for (i = 0; i < nf; i++) fixed[cells[ci++]] = r.chance(0.5) ? "L" : "R"; }
     D = { R: R, grid: grid, fixed: fixed, em: { side: r.int(0, 3), k: r.int(0, R - 1) } };
     var st = mrStart(D), first = st.r * R + st.c;
     if (grid[first] || fixed[first]) continue;
+    /* приёмник — в конце случайного пути луча с нужным числом поворотов */
+    var want = r.int(bestR[0], bestR[1]), pr = st.r, pc = st.c, pd = st.dir, okP = true, usedC = {}, rcv = -1;
+    for (var tt = 0; tt <= want && okP; tt++) {
+      var run = [], rr = pr, cc = pc;
+      while (rr >= 0 && cc >= 0 && rr < R && cc < R && !grid[rr * R + cc] && !usedC[rr * R + cc]) {
+        if (fixed[rr * R + cc]) { okP = false; break; }
+        run.push([rr, cc]); rr += DR[pd]; cc += DC[pd];
+      }
+      if (!okP || !run.length) { okP = false; break; }
+      var at = run[r.int(tt ? 0 : 0, run.length - 1)];
+      for (var u = 0; u < run.length; u++) { usedC[run[u][0] * R + run[u][1]] = 1; if (run[u] === at) break; }
+      if (tt === want) { rcv = at[0] * R + at[1]; break; }
+      pd = mrTurn(pd, r.chance(0.5) ? "L" : "R"); pr = at[0] + DR[pd]; pc = at[1] + DC[pd];
+    }
+    if (!okP || rcv < 0 || rcv === first) continue;
+    grid[rcv] = 2;
     if (mrSim(D, {}).ok) continue;
     min = 0;
     for (var L = 1; L <= bestR[1]; L++) { var t = mrSolve(D, L, 1, 20000); if (t.over) break; if (t.list.length) { min = L; break; } }
