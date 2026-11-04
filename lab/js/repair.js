@@ -144,6 +144,7 @@ function apply(id, t) {
   var top = (t.k === "w" || t.k === "a") && cap < 100 && (t.k === "w" ? t.w.cond : t.a.cond) >= cap ? " Полный ремонт — у верстака." : "";
   say(msg + top + " " + leftText(id));
   if (LAB.ach && LAB.ach.ev) LAB.ach.ev("repair", 1);
+  if (LAB.deepSys) LAB.deepSys.repaired(); /* (после 4.1) норма смены «ремонт» */
   if (LAB.ui && LAB.ui.refresh) LAB.ui.refresh();
   if (LAB.combat && LAB.settings.turnBased) LAB.combat.tick();
   return true;

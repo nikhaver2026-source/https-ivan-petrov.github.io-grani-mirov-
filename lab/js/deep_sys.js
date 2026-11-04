@@ -60,7 +60,7 @@ function addPts(x, why) {
   s.pts = Math.max(0, s.pts + x);
   while (s.st >= 1 && s.st < 6 && s.pts >= NEED[s.st + 1]) { s.st++; up = true; }
   while (s.st > 1 && s.pts < NEED[s.st]) { s.st--; down = true; }
-  if (up) { A("play", "term_ok"); roll("Седьмой. Новый статус: " + stName(s.st) + ". Внесено в списки.", 1200); journal("Статус в списках Переклички: " + stName(s.st) + "."); }
+  if (up) { A("play", "term_ok"); roll("Седьмой. Новый статус: " + stName(s.st) + ". Внесено в списки.", 1200); journal("Статус в списках Переклички: " + stName(s.st) + "."); if (LAB.ach) LAB.ach.ev("status", s.st); }
   else if (down) { A("play", "term_err"); roll("Седьмой. Статус понижен: " + stName(s.st) + "." + (why ? " " + why : ""), 1200); journal("Статус понижен: " + stName(s.st) + "."); }
 }
 /* Цены Нижних: вне списка — дороже, смотрителю — дешевле. */
@@ -122,6 +122,7 @@ function normEv(kind, n) {
   addPts(10 + q.need);
   roll("Норма «" + q.n + "» выполнена. Начислено: " + pay + " " + pl(pay, "кредит", "кредита", "кредитов") + ". Списки довольны.", 400);
   journal("Норма смены выполнена: " + q.n + ".");
+  if (LAB.ach) LAB.ach.ev("norm", 1);
 }
 
 /* ════════ УРОВЕНЬ ════════ */
@@ -131,7 +132,7 @@ function onLevel(L, L0) {
   /* уходя, норму прошлого уровня уже не сдать */
   if (s.norm && !s.norm.done && s.norm.L !== L) { addPts(-6, "Норма «" + s.norm.n + "» не выполнена."); s.norm = null; }
   if (s.st === 0) {
-    s.st = 1;
+    s.st = 1; if (LAB.ach) LAB.ach.ev("status", 1);
     roll("Новый в списках. Испытуемый номер семь. Опять семь. Статус: низший. Нормы, испытания, допуск — по статусу.", 14000);
     journal("Внесён в списки Переклички: статус «низший».");
     if (D.rent && D.rent.length && !s.rent) { giveRent(D); later(function () { sayq("Выдан прокатный комплект: " + s.rent.mods.map(function (m) { return "«" + m.n + "»"; }).join(", ") + ". Плата — за каждую смену; список — в окне персонажа."); }, 22000); }
@@ -157,6 +158,22 @@ function memory() {
   A("play", "ev_far_door");
   UIx("note", "Вспышка памяти: " + m.t, m.x, null, { closeLabel: "Очнуться" });
   journal("Вспышка памяти: " + m.t + ".");
+}
+
+/* Вещи глубин, что применяют не из рюкзака, а на месте: страховочную сбрую пристёгивают у ствола
+   среза (она не тратится). true — вещь обработана здесь, и рюкзак её не списывает. */
+function useSpecial(id, d) {
+  if (id === "v6_harness" || (d && d.harness)) { say((d && d.n ? d.n : "Страховочная сбруя") + " нужна у вертикального ствола среза: там вы её пристегнёте, и она останется с вами."); return true; }
+  return false;
+}
+/* Сон в капсуле глубин бывает вспышкой памяти Нижних (deep.memories блока) — пока они не кончились. */
+function memoryDream() {
+  var g = G(), n = LAB.blockOf(g.L), D = Dd(), s = S();
+  var list = (D && D.memories) || [];
+  var i = s.mem[n] || 0;
+  if (!list.length || i >= list.length || Math.random() < 0.5) return null;
+  s.mem[n] = i + 1;
+  return { id: "mem" + n + ":" + i, t: list[i].t, x: list[i].x, mood: "strange" };
 }
 
 /* ════════ КАРТОЧКИ ТВАРЕЙ ════════ */
@@ -276,6 +293,7 @@ function finish(o, q, ok) {
   addPts(pts);
   roll("Испытание «" + q.n + "» пройдено. Отметка внесена. Премия — " + cr + " " + pl(cr, "кредит", "кредита", "кредитов") + ".", 300);
   journal("Испытание пройдено: " + q.n + ".");
+  if (LAB.ach) LAB.ach.ev("trial", 1);
   if (gm().autosaveSoon) gm().autosaveSoon();
 }
 function trialTick() {
@@ -399,6 +417,7 @@ function descendTo(L1, L0) {
   sayq("Срез кончается у шлюза. Уровень " + g.L + ": " + (LAB.LEVELS[g.L] ? LAB.LEVELS[g.L].name : "") + ". Путь наверх закрыт.");
   lost.forEach(function (q) { sayq("Доклад для " + q.giverName + " не передан: срез увёл вас мимо уровня " + q.tL + "."); });
   if (gm0.gainXP) gm0.gainXP(80);
+  if (LAB.ach) LAB.ach.ev("cut", 1);
   journal("Срезом вниз — на уровень " + g.L + ": " + (LAB.LEVELS[g.L] ? LAB.LEVELS[g.L].name : "") + ". Путь наверх закрыт.");
   gm0.mainQuest();
   UIx("levelBanner");
@@ -542,7 +561,7 @@ LAB.deepSys = {
   NAMES: NAMES, status: status, stName: stName, addPts: addPts, statusLine: statusLine, priceF: priceF,
   objMenu: objMenu, itemFx: itemFx, got: got, onKill: onKill, tick: tick, visit: visit, repaired: repaired,
   rankText: rankText, rankBlock: rankBlock, weaponOk: weaponOk, defBonus: defBonus, rentHas: rentHas, returnRent: returnRent,
-  cutNote: cutNote, descendTo: descendTo, harness: harness, rename: rename, wrapUI: wrapUI,
+  cutNote: cutNote, descendTo: descendTo, harness: harness, rename: rename, wrapUI: wrapUI, useSpecial: useSpecial, memoryDream: memoryDream,
   _trial: function () { return trial; }, _finish: finish, _onLevel: onLevel
 };
 })();

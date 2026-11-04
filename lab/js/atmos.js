@@ -79,6 +79,17 @@ function step(surf, run, door) {
   if (door) play("door_threshold", { gain: 0.5 });
   wallEcho(id, rate);
   corrUpdate(); corrEcho(id, rate);
+  galleryTail(id, rate);
+}
+/* (после 4.1) В глубоких блоках длинный коридор — галерея: высокий свод возвращает шаг дальним гулким
+   отзвуком; короткий переход — сухой и тесный, без хвоста. */
+function galleryTail(id, rate) {
+  var g = G(), cur = LAB.game && LAB.game.CUR;
+  if (!g || g.L <= 100 || !cur || !cur.fl) return;
+  var c = cur.fl.corrAt[g.y * LAB.W + g.x], cor = c >= 0 ? cur.fl.corrs[c] : null;
+  if (!cor || (cor.len || 0) < 18) return;
+  var rec = has("corr_echo") ? "corr_echo" : has("step_echo") ? "step_echo" : id;
+  play(rec, { gain: 0.09, rate: (rate || 1) * 0.86, pan: stepN % 2 ? 0.35 : -0.35, lp: 1500, delay: 0.24 + Math.random() * 0.06, reverb: 0.9, bus: "fx", vary: 0 });
 }
 /* Отзвук стены: если стена вплотную слева или справа, шаг отдаётся от неё
    тихим коротким эхом с той стороны — в широком коридоре так слышно, у какой

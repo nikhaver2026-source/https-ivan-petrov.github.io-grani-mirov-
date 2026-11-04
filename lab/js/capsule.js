@@ -299,6 +299,8 @@ function sleep(s) {
 }
 /* Какой сон приснится: кошмар — если облучены, отравлены или на этаже тревога; странный — глубже; спокойный — чаще. */
 function pickDream() {
+  /* (после 4.1) ниже Истока сон бывает вспышкой памяти Нижних */
+  if (G().L > 100 && LAB.deepSys && LAB.deepSys.memoryDream) { var md = LAB.deepSys.memoryDream(); if (md) return md; }
   var list = (TX().dreams || []).filter(function (d) { return (d.minL || 1) <= G().L; });
   if (!list.length) return null;
   var b = G().body || {}, lv = LAB.oko ? LAB.oko.level() : 0;

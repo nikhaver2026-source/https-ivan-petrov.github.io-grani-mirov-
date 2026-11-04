@@ -99,7 +99,13 @@ LAB.LOGIC_KINDS = LOGIC_KINDS;
    чаще средние и сложные; на первом уровне — почти всегда простые. */
 /* (3.5) и задачи части третьей (puzzles3.js): пароли, архивы, взломы. Вид выбирается своим
    потоком случайностей (pz17) — этажи от этого не меняются */
-function logicKinds() { return LOGIC_KINDS.concat(LAB.puzzles2 && LAB.puzzles2.kinds ? LAB.puzzles2.kinds : [], LAB.puzzles3 && LAB.puzzles3.kinds ? LAB.puzzles3.kinds : []); }
+/* (после 4.1) и задачи частей четвёртой–шестой (puzzles4–6.js): логика и вывод, числа и задачи с
+   несколькими верными решениями, составные, словесные и на слух */
+function logicKinds() {
+  var out = LOGIC_KINDS.slice();
+  [LAB.puzzles2, LAB.puzzles3, LAB.puzzles4, LAB.puzzles5, LAB.puzzles6].forEach(function (m) { if (m && m.kinds) out = out.concat(m.kinds); });
+  return out;
+}
 function stationKinds() { return ["sort", "relays", "bulls", "riddle"].concat(logicKinds(), ["chess"]); }
 var CHEM_PZ = ["titr", "vials", "protocol", "spectr", "chain"]; /* (3.6) химические задачи (chempuz.js, KINDS) */
 LAB.logicKinds = logicKinds;

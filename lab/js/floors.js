@@ -87,7 +87,10 @@ function deepRoomSurf(fl, rm) {
     var cat = LAB.garrison && LAB.garrison.category ? LAB.garrison.category(rm) : null;
     if (WOOD[t] && rs.office) return rs.office;
     if (CONC[t] && rs.tech) return rs.tech;
-    if (cat && rs[cat]) return rs[cat];
+    /* жильё — по названию (охрана рода «жильё» не знает); «кабинет» — только у настоящих кабинетов:
+       охрана относит к нему всё, чего не узнала (спортзал, столовую…) */
+    if (rs.living && /спальн|общежит|квартир|жил|кают|казарм|ночлеж|комнат[аы]? отдыха|барак|детск/i.test(def.n || "")) return rs.living;
+    if (cat && cat !== "office" && rs[cat]) return rs[cat];
   }
   var so = LAB.deepSector ? LAB.deepSector(fl.L) : null;
   if (so && so.s && so.s.surf) return so.s.surf === "metal" ? null : so.s.surf;

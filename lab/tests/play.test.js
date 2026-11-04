@@ -7036,7 +7036,11 @@ LAB.ui.closeAll();
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {
     const g = LAB.game, G = g.G, out = { floors: 0, err: [], want: 0 };
-    for (let L = 1; L <= LAB.LEVELS_N; L++) {
+    /* (после 4.1) уровни 1–100 — все; ниже — начало и конец каждого готового глубокого блока */
+    const levels = [];
+    for (let L = 1; L <= Math.min(100, LAB.LEVELS_N); L++) levels.push(L);
+    if (LAB.LEVELS_N > 100) for (let n = LAB.DEEP_FIRST; n <= LAB.blockOf(LAB.LEVELS_N); n++) { const R = LAB.blockRange(n); [R.from, R.from + 1, R.to - 1, R.to].forEach(L => { if (L <= LAB.LEVELS_N && levels.indexOf(L) < 0) levels.push(L); }); }
+    for (const L of levels) {
       const list = L <= 2 ? Array.from({ length: 20 }, (_, i) => i + 1) : [1, (L % 18) + 2, 20];
       for (const F of list) {
         out.want++;
@@ -7563,6 +7567,66 @@ LAB.ui.closeAll();
   ok(ce.side >= ce.near - 1, "отзвук — со стороны прохода в коридор");
   ok(ce.inCorr === 0, "в самом коридоре отзвука нет: там гул уровня");
   ok(ce.secretHidden, "нераскрытая потайная дверь коридор не выдаёт");
+
+  /* (после 4.1) Ниже Истока: Перекличка, статус, норма, прокат, стенд испытания, срез, допуск,
+     ОКО → Перекличка в словах этажа, финал у Ядра Разлома. Глубокие блоки страница подключает
+     подряд от VI; пока их нет — первый догружается для проверки. */
+  console.log("Ниже Истока: Перекличка, статус, нормы, испытания, срезы, Ядро Разлома");
+  if (await page.evaluate(() => LAB.LEVELS_N <= 100)) { try { await page.addScriptTag({ url: "js/d6.js" }); } catch (e) { /* нет блока */ } }
+  const dp = await page.evaluate(async () => {
+    const out = {}, g = LAB.game, wait = ms => new Promise(r => setTimeout(r, ms));
+    out.N = LAB.LEVELS_N;
+    if (LAB.LEVELS_N <= 100) return out;
+    const said = []; const s0 = LAB.say; LAB.say = function (t, o) { said.push(String(t)); return s0.apply(this, arguments); };
+    LAB.ui.closeAll(); g.newGame(); LAB.combat.stop(); LAB.ui.closeAll();
+    g.G.L = 100; g.enterFloor(101, 1, "gatedown", true);
+    for (let i = 0; i < 4; i++) LAB.deepSys.tick();
+    out.st = g.G.deep && g.G.deep.st; out.norm = !!(g.G.deep && g.G.deep.norm); out.rent = g.G.deep && g.G.deep.rent ? g.G.deep.rent.mods.length : 0;
+    out.form = LAB.okoForms.cur().id; out.lead = LAB.okoForms.frame("enter").lead;
+    out.arrive = g.CUR.fl.rooms.some(r => r.type === "riftin");
+    out.ren = LAB.deepRename("Камеры ОКО видят вас: ОКО ничего не заметило.");
+    out.charLine = g.characterText().some(t => /Статус в списках Переклички: низший/.test(t));
+    /* норма: «твари» или «детали» засчитываются */
+    const q = g.G.deep.norm; if (q) { const k0 = q.have; for (let i = 0; i < q.need; i++) { if (q.kind === "kills") LAB.deepSys.onKill({}); else if (q.kind === "parts") LAB.deepSys.got({ kind: "item", item: "scrap", n: 1 }); else if (q.kind === "samples") LAB.deepSys.got({ kind: "sample", sid: 2001 }); else if (q.kind === "visit") LAB.deepSys.visit(); else LAB.deepSys.repaired(); } out.normDone = q.done; out.pts = g.G.deep.pts; }
+    /* стенд испытания и срез на ближних уровнях */
+    let tf = null, cf = null;
+    for (let L = 101; L <= 160 && !(tf && cf); L++) for (let F = 1; F <= 20 && !(tf && cf); F++) { const fl = LAB.getFloor(g.G.seed, L, F); if (!tf && fl.objs.some(o => o.type === "trialst")) tf = [L, F]; if (!cf && fl.objs.some(o => o.type === "srez")) cf = [L, F]; }
+    if (tf) {
+      g.enterFloor(tf[0], tf[1], "down", true);
+      const o = g.CUR.fl.objs.find(o => o.type === "trialst"), q2 = LAB.deepSys._trial;
+      LAB.deepSys.objMenu(o); await wait(50);
+      out.trialMenu = said.some(t => /Испытательный стенд/.test(t));
+      LAB.ui.closeAll();
+      const d = (LAB.DEEP[6].trials || []).find(t => t.id === o.trial);
+      const p0 = g.G.deep.pts; LAB.deepSys._finish(o, d, true); out.trialPts = g.G.deep.pts - p0;
+    }
+    if (cf) {
+      g.enterFloor(cf[0], cf[1], "down", true);
+      const o = g.CUR.fl.objs.find(o => o.type === "srez"), L0 = g.G.L;
+      out.cutTo = o.to; g.objState(o).open = true; LAB.deepSys.descendTo(o.to, L0); out.cutLanded = g.G.L === o.to && g.G.F === 1;
+    }
+    /* допуск: дверь по статусу */
+    out.rankBlock = LAB.deepSys.rankBlock({ rank: 4 }); out.rankOk = LAB.deepSys.rankBlock({ rank: 1 });
+    /* финал у Ядра Разлома: пульт на дне финальный, страницы финала — свои */
+    const fb = LAB.getFloor(g.G.seed, LAB.LEVELS_N, 20);
+    out.core = fb.rooms.some(r => r.type === "riftroot") && fb.objs.some(o => o.type === "reactor" && o.final);
+    out.ending = (LAB.ENDING_DEEP || []).join(" ");
+    out.interlude = (LAB.DEEP_INTERLUDE || []).join(" ");
+    LAB.say = s0;
+    return out;
+  });
+  if (dp.N > 100) {
+    ok(dp.arrive && dp.form === "roll" && /по громкой связи/.test(dp.lead) && !/ОКО/.test(dp.lead), "на 101-м — «Край Разлома», по громкой связи говорит облик Переклички (" + dp.lead + ")");
+    ok(dp.st === 1 && dp.norm && dp.rent >= 3, "Перекличка вносит седьмого в списки низшим, даёт норму смены и прокатный комплект");
+    ok(dp.ren === "Камеры Переклички видят вас: Перекличка ничего не заметила.", "ниже Истока «ОКО» в словах этажа — Перекличка, в нужном падеже и роде (" + dp.ren + ")");
+    ok(dp.charLine, "статус в списках — в окне персонажа");
+    ok(dp.normDone === true && dp.pts > 0, "выполненная норма засчитывается и даёт шаг к статусу");
+    ok(dp.trialMenu && dp.trialPts > 0, "стенд испытания открывается, пройденное испытание добавляет к статусу");
+    ok(dp.cutLanded && dp.cutTo > 101, "срез уводит вниз на много уровней — к шлюзу первого этажа уровня " + dp.cutTo);
+    ok(/статуса «старший/.test(dp.rankBlock) && dp.rankOk === "", "дверь с допуском открывается по статусу, а не по силе");
+    ok(dp.core, "на самом дне — Ядро Разлома с финальным пультом");
+    ok(/Ядр/.test(dp.interlude) && /Гранью Миров/.test(dp.ending) && !/Гран[ьи] Мир/.test(dp.interlude), "интерлюдия на сотом ведёт к Ядру Разлома; «Грань Миров» — только в финале");
+  } else console.log("  (глубоких блоков нет — проверка пропущена)");
 
   const real = errors.filter(e => !/favicon|sounds\/|Failed to load resource/.test(e));
   ok(!real.length, "ошибок страницы нет" + (real.length ? ": " + real.slice(0, 5).join(" || ") : ""));

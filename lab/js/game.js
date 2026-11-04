@@ -1305,6 +1305,7 @@ function roomCheck(full, run, mute) {
   var first = !CUR.fs.objs["room" + r.id];
   CUR.fs.objs["room" + r.id] = 1;
   if (first && r.annex && LAB.ach) LAB.ach.ev("room", 1);
+  if (first && LAB.deepSys) LAB.deepSys.visit(); /* (после 4.1) норма смены «обход» */
   /* (2.0) важное помещение (оружейная, пост охраны, серверная, хранилище) — ОКО это замечает */
   if (first && r.annex && LAB.garrison && LAB.oko && LAB.oko.react && LAB.garrison.CAT[LAB.garrison.category(r)].imp >= 3) LAB.oko.react("vault", { room: r.name });
   /* (2.3) безопасная зона у капсулы — так и сказать при входе */
@@ -3561,6 +3562,7 @@ game.useMedkit = useMedkit;
 function useItem(id) {
   var d = LAB.ITEMS[id];
   if (!d || !(G.inv[id] > 0)) { say("Нет: " + (d ? d.n : id) + "."); return false; }
+  if (LAB.deepSys && LAB.deepSys.useSpecial(id, d)) return false; /* (после 4.1) страховочная сбруя — у ствола среза */
   if (LAB.repair && LAB.repair.isKit(id)) return LAB.repair.use(id); /* (2.0) походные ремкомплекты */
   if (d.kind === "implant" && LAB.implants) return LAB.implants.useChip(id); /* (2.0) чип импланта — вживить */
   if (d.kind === "trap" && LAB.traps) return LAB.traps.use(id);

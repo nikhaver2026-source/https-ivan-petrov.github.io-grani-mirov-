@@ -88,6 +88,11 @@ for (let n = LAB.DEEP_FIRST; n <= LAB.blockOf(LAB.LEVELS_N); n++) {
     }
   });
   ok(!bad, `блок ${LAB.roman(n)} «${LAB.BLOCKS[n].name}»: уровни строятся по секторам (${picks.size} проверено)`);
+  /* срезы: на двух уровнях блока, где они бывают, — каждый этаж со второго по девятнадцатый */
+  let cuts = 0;
+  for (const L of [R.from + 6, R.from + 7]) for (let F = 2; F <= 19; F++) { const fl = checkFloor(L, F, "блок " + n); if (fl) cuts += fl.objs.filter(o => o.type === "srez").length; }
+  stat.srez += cuts;
+  ok(cuts >= 1, `блок ${LAB.roman(n)}: срезы вниз есть (${cuts} на 36 этажах)`);
 }
 console.log("  срезов " + stat.srez + ", стендов " + stat.trial + ", помещений вне надзора " + stat.dark + ", с допуском " + stat.rank + ", теневых торговцев " + stat.trader);
 ok(stat.srez > 0, "срезы есть");
