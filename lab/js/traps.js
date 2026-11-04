@@ -171,12 +171,74 @@ var T = {
     d: "Песок безвременья в стеклянной колбе на струне слоя: когда кто-то подходит, время на два шага вокруг густеет и почти останавливается. Все, кто внутри, замирают на восемь секунд — и вы, если окажетесь рядом.",
     hit: "Время вокруг вас густеет и останавливается!" }
 };
+/* ── (после 4.1) Глубины: ловушки Нижних, по одной-две на блок — со своими действиями ──
+   tag — метит и считает тех, кто задел; cluster — разлетается малыми зарядами; pull — стягивает к себе;
+   remake — переделка: живое слабеет навсегда; lureLife — зовёт голосом, пока ждёт; donor — перекачивает
+   кровь пойманного вам; harvest — отдаёт вам заряд пойманной машины; zone steam — пар жжёт всех и слепит
+   датчики; hush — круг глухоты; crowd — чем больше вокруг, тем сильнее. blk — блок глубин (глубина и
+   сборка — с его первого уровня), выше сотого уровня их нет. Собирают их только с ловушечным делом. */
+function blockFrom(n) { var R = LAB.blockRange && LAB.blockRange(n); return R && R.from ? R.from : 101 + 200 * (Math.pow(2, n - 6) - 1); }
+function blockAt(L) { if (L <= 100) return Math.max(1, Math.ceil(L / 20)); if (LAB.DEEP_FIRST && LAB.blockOf) return LAB.blockOf(L); var n = 6; while (n < 15 && L >= blockFrom(n + 1)) n++; return n; }
+var DEEP_T = {
+  rollcall: { n: "счётная растяжка", g: "f", blk: 6, price: 180, trig: "wire", who: "walk", alarm: true, tag: 30, verb: "щёлкнула", uses: 99, loud: 0, stealth: 0.6, cue: "tick", snd: "term_beep",
+    pnoise: 4, need: { dp_coil: 1, wire: 2 },
+    d: "Нить поперёк прохода и счётная катушка Переклички: каждого, кто заденет, она считает — «Эхо» скажет, где и который по счёту, — и метит: по нему бьют сильнее, и его маяк слышно. Никого не ранит; считает снова и снова.",
+    hit: "Вы задели нить — катушка щёлкнула и сосчитала вас!" },
+  cluster: { n: "дробящий заряд", g: "m", blk: 7, mine: true, price: 260, trig: "step", who: "walk", dmg: 70, dt: "kinetic", r: 1, noarmor: true, boom: true, cluster: 3, uses: 1, loud: 12, stealth: 0.5, cue: "beep", snd: "boom",
+    pd: 0.3, need: { dp_alloy: 2, reagent: 2, cap: 1 },
+    d: "Мина Института в звонком корпусе: рвётся под ногой, а корпус разлетается тремя малыми зарядами — они рвутся рядом ещё пару секунд. Громкий; держитесь подальше.",
+    hit: "Под ногой щёлкнуло — дробящий заряд!" },
+  gravwell: { n: "гравитационная воронка", g: "f", blk: 8, price: 320, trig: "prox", pr: 2, who: "all", air: true, r: 3, pull: 2, hold: 8, dmg: 20, dt: "grav", uses: 2, loud: 4, stealth: 0.4, cue: "beep", snd: "ev_phase",
+    pd: 0.05, ph: 4, need: { dp_coil: 1, magnet: 2, supercond: 1 },
+    d: "Опытный узел тяжести на треноге: когда кто-то подходит, воронка стягивает всех в трёх шагах к себе и держит — тварей, машины и дронов. Срабатывает дважды. Вас тоже прихватит.",
+    hit: "Воронка тянет вас к себе!" },
+  remake: { n: "капкан переделки", g: "m", blk: 8, price: 300, trig: "step", who: "bio", dmg: 30, dt: "bio", hold: 6, remake: 1, uses: 2, loud: 2, stealth: 0.5, cue: "tick", snd: "trap_snap",
+    pd: 0.08, ph: 3, ptox: 15, need: { dp_nerve: 1, scrap: 3, reagent: 1 },
+    d: "Капкан Опытного корпуса с иглой переделки: живое, что в него попало, слабеет навсегда — меньше сил, слабее удар, вялый ход. Стражи только вязнут. Машинам он ни к чему. Хватает на два раза.",
+    hit: "Игла капкана вошла в ногу — по жилам холодная тяжесть!" },
+  baitbomb: { n: "говорящая мина", g: "f", blk: 10, mine: true, price: 340, trig: "step", who: "walk", dmg: 90, dt: "kinetic", r: 1, noarmor: true, boom: true, lureLife: 60, uses: 1, loud: 12, stealth: 0.6, cue: "beep", snd: "boom_big",
+    pd: 0.45, need: { dp_coil: 1, dp_alloy: 1, reagent: 2, cap: 1 },
+    d: "Мина с динамиком Посёлка: полминуты она голосом Переклички зовёт на перекличку — и твари, и машины идут на голос, — а кто наступит, тот подорвётся. Потом молчит и ждёт.",
+    hit: "Под ногой щёлкнуло — говорящая мина!" },
+  donor: { n: "капкан-донор", g: "m", blk: 11, price: 380, trig: "step", who: "walk", dmg: 25, dt: "kinetic", hold: 10, donor: 0.08, drain: 4, uses: 3, rearm: true, loud: 3, stealth: 0.4, cue: "tick", snd: "trap_snap",
+    pd: 0.1, ph: 5, need: { dp_nerve: 1, gel: 2, scrap: 2 },
+    d: "Капкан Лечебницы с трубками переливания: держит живое и перекачивает его кровь вам — сколько бы шагов вас ни разделяло. Машин держит, но крови у них нет. Взводится снова.",
+    hit: "Капкан-донор сомкнулся на ноге — кровь уходит в трубки!" },
+  harvester: { n: "ловушка-накопитель", g: "f", blk: 12, price: 400, trig: "step", who: "mech", harvest: 0.15, stun: 10, emp: true, dmg: 30, dt: "emp", uses: 3, loud: 3, stealth: 0.5, cue: "beep", snd: "emp",
+    need: { dp_valve: 1, dp_coil: 1, cell: 2 },
+    d: "Плита Цехов с отборником тока: машина, что на неё встанет, теряет щит и замирает на пять секунд, а её заряд уходит вам — в энергию имплантов. Живых не трогает. Хватает на три машины.",
+    hit: "Плита-накопитель щёлкнула под ногой." },
+  steamvalve: { n: "паровой клапан", g: "m", blk: 13, price: 420, trig: "step", who: "walk", dmg: 30, dt: "thermo", zone: { k: "steam", r: 2, t: 12, d: 14 }, uses: 1, loud: 8, stealth: 0.5, cue: "tick", snd: "ev_steam",
+    pd: 0.12, adt: "therm", need: { dp_valve: 1, dp_alloy: 1, cap: 2 },
+    d: "Клапан Котла под нажимной пластиной: наступившего обваривает струёй, и шесть секунд пар на два шага вокруг жжёт всех — и тварей, и машины — и слепит датчики. Сами в пар не входите.",
+    hit: "Из-под ноги ударил пар!" },
+  hushwire: { n: "тихая растяжка", g: "f", blk: 14, price: 440, trig: "wire", who: "walk", hush: { r: 3, t: 30 }, uses: 2, loud: 0, stealth: 0.7, cue: "tick", snd: "ev_far_door",
+    need: { dp_reed: 1, dp_alloy: 1, wire: 2 },
+    d: "Нить Карантина с войлочной глушилкой: кто заденет — на три шага вокруг пятнадцать секунд глохнет звук: твари и машины в этом круге ничего не слышат и теряют след, а ваших шагов там не слышно. Срабатывает дважды.",
+    hit: "Вы задели нить — вокруг всё глохнет." },
+  countmine: { n: "мина последнего счёта", g: "f", blk: 15, mine: true, price: 560, trig: "prox", pr: 2, who: "walk", dmg: 110, dt: "kinetic", r: 2, noarmor: true, boom: true, crowd: 0.3, uses: 1, loud: 14, stealth: 0.6, cue: "beep", snd: "boom_big",
+    pd: 0.5, need: { dp_shard: 1, dp_coil: 1, reagent: 3 },
+    d: "Мина Основания со счётной катушкой: срабатывает, когда в двух шагах кто-то есть, и считает всех вокруг — за каждого лишнего бьёт на треть сильнее. Не стойте рядом.",
+    hit: "Мина последнего счёта сосчитала и вас!" }
+};
+var DEEP_TO = Object.keys(DEEP_T);
+DEEP_TO.forEach(function (k) {
+  if (T[k]) return;
+  var d = DEEP_T[k];
+  d.depth = blockFrom(d.blk); d.minL = d.depth;
+  d.cls = LAB.deepCls ? LAB.deepCls(d.blk) : d.blk >= 15 ? "d5" : d.blk >= 13 ? "d4" : d.blk >= 10 ? "d3" : d.blk >= 7 ? "d2" : "d1";
+  d.bp = d.blk >= 7; d.trapN = Math.max(1, d.blk - 6);
+  T[k] = d;
+});
 LAB.TRAPS = T;
 var ORDER = Object.keys(T);
 /* Винительный падеж — «заметил вашу мину». */
 var ACC = { glue: "клеевую ловушку", alarm: "сигнальную растяжку", wire: "растяжку с гранатой", shock: "шоковую пластину", mine: "противопехотную мину", net: "сеть-ловушку", emp: "ЭМИ-мину", lure: "приманку-пищалку",
   fire: "зажигательную ловушку", gas: "газовую ловушку", claymore: "направленную мину", cryo: "криоловушку", acid: "кислотную ловушку", quartz: "кварцевую сирену", resin: "смоляную ловушку", mirror: "зеркальную ловушку",
   logic: "логическую мину", roots: "корневую ловушку", timeless: "ловушку безвременья" };
+/* (после 4.1) ловушки глубин */
+var ACC_DEEP = { rollcall: "счётную растяжку", gravwell: "гравитационную воронку", baitbomb: "говорящую мину", harvester: "ловушку-накопитель", hushwire: "тихую растяжку", countmine: "мину последнего счёта" };
+for (var akk in ACC_DEEP) if (!ACC[akk]) ACC[akk] = ACC_DEEP[akk];
 function itemOf(k) { return "tr_" + k; }
 function cap1(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 /* (3.7) точка в конце — только если там ещё нет знака (как LAB.dot в engine.js): traps.js грузят и без engine.js —
@@ -193,6 +255,7 @@ ORDER.forEach(function (k) {
     if (d.bp) rc.bp = true;
     /* (3.7, нелогичность) схема — не раньше самой ловушки (depth): растяжку с гранатой, мину и ЭМИ-мину прежде собирали на уровень раньше */
     if (d.minL || (d.depth || 1) > 1) rc.minL = Math.max(d.minL || 1, d.depth || 1);
+    if (d.blk) { rc.deep = d.blk; rc.trapN = d.trapN; } /* (после 4.1) ловушка глубин: ниже Истока и с ловушечным делом */
     LAB.RECIPES.push(rc);
   }
 });
@@ -321,7 +384,7 @@ function stateWord(tp) {
 }
 function nameOf(tp) {
   var d = D(tp);
-  if (tp.by === "oko") return d.n + " сапёра ОКО";
+  if (tp.by === "oko") return d.n + (G().L > 100 ? " сапёра Переклички" : " сапёра ОКО");
   if (tp.by === "hive") return d.n + " тварей"; /* (2.5) ловушку сплёл ткач */
   if (!tp.own) return (d.g === "p" ? "старые " : d.g === "f" ? "старая " : "старый ") + d.n;
   return (d.g === "p" ? "ваши " : d.g === "f" ? "ваша " : "ваш ") + d.n;
@@ -339,12 +402,96 @@ function nextId() { var fs = CUR().fs; fs.trapSeq = (fs.trapSeq || 0) + 1; retur
 function sndAt(id, x, y, o) { if (LAB.atmos && LAB.atmos.at) A("at", id, x, y, o || {}); else A("play", id, o || {}); }
 /* (2.6) взрывные ловушки и мины — свои взрывы (atmos.js, EXPL): щелчок
    взрывателя, рывок проволоки, осколки, огонь, лёд, газ */
-var BOOM = { wire: "wire", mine: "mine", claymore: "claymore", remote: "charge", drill: "big", emp: "emp", fire: "fire", cryo: "cryo", gas: "gas", acid: "acid" };
+var BOOM = { wire: "wire", mine: "mine", claymore: "claymore", remote: "charge", drill: "big", emp: "emp", fire: "fire", cryo: "cryo", gas: "gas", acid: "acid", cluster: "mine", baitbomb: "charge", countmine: "big" };
 function fireSound(d, x, y) {
   if (BOOM[d.id]) { A("explosion", x, y, BOOM[d.id]); return; }
   sndAt(d.snd || "hit_metal", x, y, { gain: 1, rate: d.id === "bonebell" ? 0.7 : 1 });
 }
 
+/* ════════ (после 4.1) ЛОВУШЕЧНОЕ ДЕЛО ════════
+   Ступени 1–10 — ниже Истока: каждая следующая открывается следующим глубоким блоком (Полигон — первая …
+   Основание — десятая). Опыт — за свои ловушки: поставить, победить ими, собрать у верстака, обезвредить
+   чужую. Каждая ступень — ваши ловушки бьют на шесть сотых сильнее и держат на пять сотых дольше, и даёт
+   своё (TRAP_PERK). Ловушки глубин собирают со ступени trapN. Выше сотого уровня ступень нулевая —
+   всё по-прежнему. */
+var TRAP_XP = [0, 20, 60, 120, 200, 300, 420, 560, 720, 900, 1100];
+var TRAP_PERK = ["",
+  "своя рука: ваши ловушки бьют по вам вдвое слабее",
+  "быстрый взвод: ваши ловушки взводятся вдвое быстрее",
+  "на этаже — до шестнадцати ваших ловушек",
+  "умные машины замечают ваши ловушки вдвое реже",
+  "бережливость: одноразовая ловушка с шансом в четверть не расходуется и остаётся взведённой",
+  "на этаже — до двадцати ваших ловушек",
+  "хватка: ваши ловушки держат, морозят и сбивают с толку ещё на треть дольше",
+  "мастер обезвреживания: у чужих ловушек сигнал на два короче, опыта за них вдвое больше",
+  "капкан, что взводится снова, после срабатывания взводится сам через десять секунд",
+  "сапёр Нижних: ваши ловушки на вас не срабатывают"];
+function sk() { var g = G(); if (!g.trapSk) g.trapSk = { xp: 0 }; return g.trapSk; }
+function reachL() { var g = G(), s = sk(); if (s.deepL == null) { var m = 1; if (g.maxF) for (var k in g.maxF) if (+k > m) m = +k; s.deepL = m; } if ((g.L || 1) > s.deepL) s.deepL = g.L || 1; return s.deepL; }
+function trapCap() { var L = reachL(); return L > 100 ? Math.max(1, Math.min(10, blockAt(L) - 5)) : 0; }
+function stg() { if (!LAB.game || !G()) return 0; var x = sk().xp || 0, n = 0, top = trapCap(); for (var i = 1; i < TRAP_XP.length && i <= top; i++) if (x >= TRAP_XP[i]) n = i; return n; }
+function skK() { return 1 + 0.06 * stg(); }
+function durK() { var s = stg(); return 1 + 0.05 * s + (s >= 7 ? 0.33 : 0); }
+function gainTrap(n, key) {
+  if (!LAB.game || !G()) return;
+  var s = sk();
+  if (key) { s.once = s.once || {}; if (s.once[key]) return; s.once[key] = 1; }
+  var b = stg();
+  s.xp = (s.xp || 0) + n;
+  var a = stg();
+  if (a > b) gm().later(function () { A("play", "ui_levelup"); LAB.say("Ловушечное дело: ступень " + a + ". " + cap1(TRAP_PERK[a]) + ".", { interrupt: false }); }, 700);
+}
+function craftWhy(rc) { if (!rc || !rc.trapN) return ""; var s = stg(); return s < rc.trapN ? "Не хватает ловушечного дела: нужна ступень " + rc.trapN + ", у вас " + s + ". Оно растёт ниже Истока: ставьте свои ловушки, побеждайте ими, собирайте их у верстака и обезвреживайте чужие." : ""; }
+function crafted(rc) { if (rc && rc.out && LAB.ITEMS[rc.out] && LAB.ITEMS[rc.out].trap) gainTrap(10, "craft:" + rc.id); }
+function skillText() {
+  var s = stg(), top = trapCap(), x = sk().xp || 0;
+  return "Ловушечное дело: ступень " + s + (s < top ? ", до следующей " + (TRAP_XP[s + 1] - x) + " опыта" : s < 10 ? ", высшая на этой глубине: следующая откроется в следующем блоке" : ", высшая") + "." +
+    (s ? " Ваши ловушки бьют сильнее на " + 6 * s + " процентов и держат дольше на " + Math.round((durK() - 1) * 100) + " процентов." : "");
+}
+function perksText() {
+  var s = stg(), out = [];
+  for (var i = 1; i <= s; i++) out.push(TRAP_PERK[i]);
+  return (out.length ? "Ступени дают: " + out.join("; ") + "." : "") + (s < 10 ? " Дальше: " + TRAP_PERK[s + 1] + "." : "");
+}
+/* вытянуть врага к ловушке (воронка): не стражей, не неподвижных, не на саму ловушку */
+function pullTo(f, x, y, steps) {
+  var C = cb(); if (!C || !C.canStand || f.boss || fhas(f, "stationary") || fhas(f, "turret")) return;
+  for (var i = 0; i < steps; i++) {
+    var dx = Math.sign(x - f.x), dy = Math.sign(y - f.y);
+    if (!dx && !dy) return;
+    var nx = f.x + dx, ny = f.y + dy;
+    if ((nx === x && ny === y) || !C.canStand(f, nx, ny)) return;
+    f.x = nx; f.y = ny;
+  }
+}
+/* малые заряды дробящего: рвутся рядом по очереди (такт ловушек) */
+var shards = [];
+function addShards(tp, d, x, y, k) {
+  var cells = [];
+  for (var yy = y - 2; yy <= y + 2; yy++) for (var xx = x - 2; xx <= x + 2; xx++) if ((xx !== x || yy !== y) && floorOk(xx, yy) && clear(x, y, xx, yy)) cells.push([xx, yy]);
+  for (var i = 0; i < (d.cluster || 3) && cells.length; i++) {
+    var c = cells.splice(Math.floor(Math.random() * cells.length), 1)[0];
+    shards.push({ x: c[0], y: c[1], t: 2 + i * 2, dmg: Math.max(1, Math.round((d.dmg || 0) * 0.4 * k)), own: tp.own });
+  }
+}
+function shardTick(g, foes) {
+  for (var si = shards.length - 1; si >= 0; si--) {
+    var sh = shards[si];
+    if (--sh.t > 0) continue;
+    shards.splice(si, 1);
+    A("explosion", sh.x, sh.y, "mine");
+    foes.forEach(function (f) {
+      if (f.dead || f.ally || cheb(f.x, f.y, sh.x, sh.y) > 1 || !clear(sh.x, sh.y, f.x, f.y) || !cb()) return;
+      cb().damageFoe(f, sh.dmg, "kinetic", { noarmor: true, quiet: true, by: sh.own ? "hero" : "trap" });
+      if (f.dead && sh.own) { ev("trap_kill", 1); if (f.kind === "mech") ev("trap_mech", 1); gainTrap(6); }
+    });
+    if (cheb(g.x, g.y, sh.x, sh.y) <= 1 && clear(sh.x, sh.y, g.x, g.y) && !(sh.own && stg() >= 10) && cb()) {
+      cb().hurtPlayer(Math.max(1, Math.round(g.hpMax * 0.1 * (sh.own && (sapper() || stg() >= 1) ? 0.5 : 1))), "phys", null);
+      if (g.dead) return;
+    }
+  }
+}
+var gotEn = 0, gotHp = 0;
 /* ════════ СРАБАТЫВАНИЕ ════════
    who — { f: враг } или { hero: true } или null (подрыв по сигналу, цепной). */
 var pending = [];
@@ -354,7 +501,13 @@ function fire(tp, who, at) {
   var d = D(tp), g = G(), x = at ? at[0] : tp.x, y = at ? at[1] : tp.y;
   if (tp.st === "gone") return;
   tp.uses = (tp.uses == null ? (d.uses || 1) : tp.uses) - 1;
-  var k = K(), hitF = [], hero = false;
+  var k = K(), hitF = [], hero = false, frugal = false;
+  gotEn = 0; gotHp = 0;
+  /* (после 4.1) ловушечное дело: свои ловушки сильнее; бережливость — одноразовая цела */
+  if (tp.own) {
+    k *= skK();
+    if (stg() >= 5 && (d.uses || 1) === 1 && !d.alarm && Math.random() < 0.25) { tp.uses++; frugal = true; }
+  }
   /* кого задело */
   var foes = cb() ? cb().foes() : [];
   if (d.trig === "cone") {
@@ -369,6 +522,9 @@ function fire(tp, who, at) {
     if (who && who.f) hitF.push(who.f);
     hero = !!(who && who.hero);
   }
+  if (tp.own && stg() >= 10) hero = false; /* (после 4.1) сапёр Нижних: свои на вас не срабатывают */
+  if (d.pull) hitF.forEach(function (f) { pullTo(f, x, y, d.pull); });
+  if (d.crowd && hitF.length > 1) k *= Math.min(2.5, 1 + d.crowd * (hitF.length - 1));
   if (d.alarm) { alarmFire(tp, d, who, x, y); if (who && who.hero) applyHero(tp, d); return finish(tp, d); }
   fireSound(d, x, y);
   if (d.loud && cb()) cb().noise(d.loud);
@@ -380,11 +536,13 @@ function fire(tp, who, at) {
     if (f.dead && !before) { killed++; if (f.kind === "mech") mech++; }
     else if (!f.dead && (d.hold || d.freeze || d.stun || d.ally)) caught.push(f);
   });
-  if (killed && tp.own) { ev("trap_kill", killed); if (mech) ev("trap_mech", mech); }
+  if (killed && tp.own) { ev("trap_kill", killed); if (mech) ev("trap_mech", mech); gainTrap(6 * killed); }
   /* вы */
   if (hero) { applyHero(tp, d); if (tp.by === "oko" && LAB.oko && LAB.oko.react) LAB.oko.react("oko_trap"); }
   /* огонь и газ остаются на месте */
   if (d.zone) zones.push({ k: d.zone.k, x: x, y: y, r: d.zone.r, t: d.zone.t, d: d.zone.d, own: tp.own });
+  if (d.hush) zones.push({ k: "hush", x: x, y: y, r: d.hush.r, t: d.hush.t, d: 0, own: tp.own });
+  if (d.cluster) addShards(tp, d, x, y, k);
   /* взрыв задевает соседние заряды */
   if (d.boom) list().forEach(function (o) { if (o !== tp && o.st === "on" && D(o).boom && cheb(o.x, o.y, x, y) <= (d.r || 1) + 1 && clear(x, y, o.x, o.y) && pending.indexOf(o) < 0) pending.push(o); }); /* (3.7) и соседний заряд — не сквозь стену */
   /* что сказать */
@@ -394,6 +552,7 @@ function fire(tp, who, at) {
       var f1 = hitF[0], fem = f1.g === "f";
       nm += foeShort(f1).toLowerCase() + " " + (f1.dead ? (fem ? "уничтожена" : "уничтожен") : d.ally ? (fem ? "перепрошита и бьёт своих" : "перепрошит и бьёт своих") : (d.hold || d.freeze) ? (fem ? "попалась" : "попался") : d.confuse ? (fem ? "сбита с толку" : "сбит с толку") : (fem ? "задета" : "задет")) + ".";
     } else nm += "задето " + hitF.length + (killed ? ", уничтожено " + killed : "") + ".";
+    nm += (gotEn ? " Энергия плюс " + gotEn + "." : "") + (gotHp ? " Здоровье плюс " + gotHp + "." : "") + (frugal ? " Бережливость: ловушка цела и снова взведена." : "");
     LAB.say(nm, { prio: "event" });
   } else if (!tp.own && !hero && hitF.length) sayq(cap1(nameOf(tp)) + " " + gv(d, "сработал", "сработала", "сработали") + " " + rel(x, y) + ".");
   if (d.hold && caught.length && who && who.f && caught.indexOf(who.f) >= 0 && !d.r) { tp.st = "held"; tp.held = who.f.id; }
@@ -408,7 +567,8 @@ function finish(tp, d) {
 }
 function applyFoe(tp, d, f, k) {
   var boss = !!f.boss, mechF = f.kind === "mech", hard = !!(f.aff && f.aff.indexOf("hardened") >= 0);
-  var half = function (n) { return boss ? Math.ceil(n / 2) : n; };
+  var dkk = tp.own ? durK() : 1; /* (после 4.1) ловушечное дело: свои держат дольше */
+  var half = function (n) { n = dkk === 1 ? n : Math.round(n * dkk); return boss ? Math.ceil(n / 2) : n; };
   if (d.ally) {
     if (!mechF) return;
     if (boss) { f.frozen = Math.max(f.frozen || 0, 6); return; }
@@ -419,6 +579,10 @@ function applyFoe(tp, d, f, k) {
   if (tp.dmgAbs) dmg = tp.dmgAbs;
   if (dmg > 0 && cb()) cb().damageFoe(f, Math.round(dmg), d.dt || "kinetic", { noarmor: !!d.noarmor, quiet: true, by: tp.own ? "hero" : "trap" }); /* (3.7) своя ловушка — рука героя, ловушка этажа — нет (премия «без крови») */
   if (f.dead) return;
+  /* (после 4.1) действия ловушек глубин: накопитель, донор, переделка */
+  if (d.harvest && mechF && tp.own) { var g0 = G(), en0 = Math.max(1, Math.round(g0.enMax * d.harvest)); g0.en = Math.min(g0.enMax, (g0.en || 0) + en0); gotEn += en0; }
+  if (d.donor && !mechF && tp.own) { var g1 = G(), hv0 = Math.max(1, Math.round(g1.hpMax * d.donor)); g1.hp = Math.min(g1.hpMax, g1.hp + hv0); gotHp += hv0; }
+  if (d.remake && !mechF) { if (boss) f.slowT = Math.max(f.slowT || 0, 10); else if (!f.remade) { f.remade = 1; f.maxhp = Math.max(1, Math.round(f.maxhp * 0.7)); f.hp = Math.min(f.hp, f.maxhp); f.dmg = Math.max(1, Math.round((f.dmg || 1) * 0.8)); f.slowT = Math.max(f.slowT || 0, 20); } }
   if (d.emp && mechF && !hard) f.shield = 0;
   if (d.hold && (d.id !== "magnet" || mechF) && (d.id !== "gear" || mechF)) f.frozen = Math.max(f.frozen || 0, half(d.hold));
   if (d.id === "gear" && !mechF) f.frozen = Math.max(f.frozen || 0, half(6));
@@ -430,11 +594,11 @@ function applyFoe(tp, d, f, k) {
   if (d.confuse && (!d.alarm || !mechF)) f.confused = Math.max(f.confused || 0, half(d.confuse));
   if (d.deaf) f.deafT = Math.max(f.deafT || 0, d.deaf);
   if (d.shred) f.arm = Math.round((f.arm || 0) * (1 - d.shred));
-  if (!f.dead && f.state === "idle") { f.state = "alert"; f.lastKnown = { x: f.x, y: f.y }; }
+  if (!f.dead && f.state === "idle" && !d.hush) { f.state = "alert"; f.lastKnown = { x: f.x, y: f.y }; } /* (после 4.1) тихая растяжка не будит */
 }
 function applyHero(tp, d) {
   var g = G(), msg = [];
-  var soft = tp.own && sapper() ? 0.5 : 1;
+  var soft = tp.own && (sapper() || stg() >= 1) ? (sapper() && stg() >= 1 ? 0.35 : 0.5) : 1; /* (после 4.1) и ловушечное дело */
   urgent(d.hit || (cap1(nameOf(tp)) + " " + gv(d, "сработал", "сработала", "сработали") + " на вас!"));
   if (tp.own) ev("self_trap", 1);
   if (d.pd || tp.dmgAbs) {
@@ -462,9 +626,11 @@ function alarmFire(tp, d, who, x, y) {
   var now = Date.now();
   fireSound(d, x, y);
   if (who && who.hero) return;
+  /* (после 4.1) счётная растяжка: метит и считает каждого, кто задел */
+  if (d.tag && who && who.f && !who.f.dead) { who.f.markT = Math.max(who.f.markT || 0, d.tag); who.f.mark = Date.now() + 45000; tp.count = (tp.count || 0) + 1; }
   if (lastAlarm[tp.id] && now - lastAlarm[tp.id] < 2500) return;
   lastAlarm[tp.id] = now;
-  LAB.say(cap1(d.n) + " " + (d.id === "bonebell" ? "запел" : "загремела") + ": кто-то идёт, " + rel(x, y) + ".", { prio: "event" });
+  LAB.say(cap1(d.n) + " " + (d.verb || (d.id === "bonebell" ? "запел" : "загремела")) + ": " + (d.tag && tp.count ? "по счёту " + tp.count + ", " : "") + "кто-то идёт, " + rel(x, y) + "." + (d.tag && who && who.f ? " " + foeShort(who.f) + " помечен" + (who.f.g === "f" ? "а" : "") + "." : ""), { prio: "event" });
   if (d.confuse && cb()) cb().foes().forEach(function (f) { if (!f.dead && f.kind !== "mech" && cheb(f.x, f.y, x, y) <= (d.r || 3) && foeOk(d, f) && clear(x, y, f.x, f.y)) f.confused = Math.max(f.confused || 0, d.confuse); }); /* (3.7) звон — не сквозь стену */
 }
 
@@ -496,12 +662,12 @@ function playerStep() {
     if (tp.st === "wait" && !inZone(tp, g.x, g.y) && !(tp.x === g.x && tp.y === g.y)) { tp.st = "arm"; tp.arm = armTicks(d); }
     if (tp.st !== "on" || tp.gone) continue;
     if (d.trig === "remote" || d.trig === "lure") continue;
-    if (heroOk(d) && inZone(tp, g.x, g.y)) { fire(tp, { hero: true }, [g.x, g.y]); if (g.dead) return; }
+    if (heroOk(d) && inZone(tp, g.x, g.y) && !(tp.own && stg() >= 10)) { fire(tp, { hero: true }, [g.x, g.y]); if (g.dead) return; }
   }
   discover(2);
   nearCue();
 }
-function armTicks(d) { var a = d.trig === "remote" ? 2 : 4; return sapper() ? Math.ceil(a / 2) : a; }
+function armTicks(d) { var a = d.trig === "remote" ? 2 : 4; return sapper() || stg() >= 2 ? Math.ceil(a / 2) : a; }
 /* Старые ловушки и мины сапёра слышно за два шага. */
 function discover(rad) {
   var g = G(), found = [];
@@ -590,8 +756,11 @@ function tick() {
       continue;
     }
     if (tp.st === "held") { if (!heldFoe(tp) || !(heldFoe(tp).frozen > 0)) { tp.held = null; tp.st = "on"; finish(tp, d); } continue; }
+    /* (после 4.1) девятая ступень ловушечного дела: капкан взводится сам через десять секунд */
+    if (tp.st === "sprung" && tp.own && d.rearm && !d.regrow && tp.uses > 0 && stg() >= 9) { tp.autoT = (tp.autoT == null ? 20 : tp.autoT) - 1; if (tp.autoT <= 0) { tp.autoT = null; tp.st = "arm"; tp.arm = armTicks(d); } continue; }
     if (tp.st === "sprung" && d.regrow && tp.uses > 0) { if (--tp.grow <= 0) { tp.st = "on"; if (cheb(tp.x, tp.y, g.x, g.y) <= 8) sndAt("vine_idle", tp.x, tp.y, { gain: 0.5 }); } continue; }
     if (tp.st !== "on") continue;
+    if (tp.lureL > 0) { tp.lureL--; if (tp.lureL % 4 === 0 && cb()) cb().noiseLure(tp.x, tp.y); } /* (после 4.1) говорящая мина зовёт, пока ждёт */
     if (d.trig === "lure") {
       tp.life = (tp.life == null ? d.life : tp.life) - 1;
       if (tp.life % 4 === 0 && cb()) { cb().noiseLure(tp.x, tp.y); }
@@ -603,13 +772,13 @@ function tick() {
       /* (проверка перед сборкой) свои ловушки ОКО и улья своих не ловят — как и при шаге (foeStep) */
       for (var j = 0; j < foes.length && !hit; j++) { var f = foes[j]; if ((tp.by === "oko" && f.kind === "mech") || (tp.by === "hive" && f.kind === "bio")) continue; if (foeOk(d, f) && (tp.own || f.spawned) && cheb(f.x, f.y, tp.x, tp.y) <= (d.pr || 1)) hit = f; }
       if (hit) { fire(tp, { f: hit }, [tp.x, tp.y]); if (g.dead) return; continue; }
-      if (heroOk(d) && cheb(g.x, g.y, tp.x, tp.y) <= (d.pr || 1)) { fire(tp, { hero: true }, [tp.x, tp.y]); if (g.dead) return; continue; }
+      if (heroOk(d) && cheb(g.x, g.y, tp.x, tp.y) <= (d.pr || 1) && !(tp.own && stg() >= 10)) { fire(tp, { hero: true }, [tp.x, tp.y]); if (g.dead) return; continue; }
     }
     /* умная машина может заметить вашу ловушку и обойти её */
     if (tp.own && d.stealth < 1) foes.forEach(function (f) {
       if (f.dead || f.kind !== "mech" || f.state === "hunt" || !foeOk(d, f) || (f.iq || 0) < 6 || (tp.seen && tp.seen[f.id])) return;
       if (cheb(f.x, f.y, tp.x, tp.y) > 2) return;
-      if (Math.random() < ((f.iq || 0) - 5) * 0.02 * (1 - d.stealth)) {
+      if (Math.random() < ((f.iq || 0) - 5) * 0.02 * (1 - d.stealth) * (stg() >= 4 ? 0.5 : 1)) {
         tp.seen = tp.seen || {}; tp.seen[f.id] = 1;
         LAB.say(foeShort(f) + " " + (f.g === "f" ? "заметила" : "заметил") + " " + gv(d, "ваш ", "вашу ", "ваши ") + (ACC[d.id] || d.n) + " и обходит " + gv(d, "его", "её", "их") + ", " + rel(tp.x, tp.y) + ".", { prio: "event" });
       }
@@ -623,25 +792,32 @@ function tick() {
     /* (3.7, нелогичность) огонь и газ — по эту сторону стены: за стеной и закрытой дверью не жгут и не травят */
     foes.forEach(function (f) {
       if (f.dead || f.ally || cheb(f.x, f.y, zn.x, zn.y) > zn.r || !clear(zn.x, zn.y, f.x, f.y)) return;
+      /* (после 4.1) круг глухоты: не слышат, теряют след; пар слепит датчики и жжёт и машины */
+      if (zn.k === "hush") { f.deafT = Math.max(f.deafT || 0, 4); if (f.kind !== "mech" && !f.boss) f.confused = Math.max(f.confused || 0, 2); if (f.state === "hunt") { f.state = "alert"; f.lastKnown = null; f.aim = false; } return; }
       if (zn.k === "gas" && f.kind === "mech") return;
-      if (cb()) cb().damageFoe(f, Math.round(zn.d * kk), zn.k === "fire" ? "thermo" : "bio", { noarmor: true, quiet: true, by: zn.own ? "hero" : "trap" });
-      if (f.dead && zn.own) { ev("trap_kill", 1); if (f.kind === "mech") ev("trap_mech", 1); }
+      if (zn.k === "steam" && f.kind === "mech") f.blindT = Math.max(f.blindT || 0, 4);
+      if (cb()) cb().damageFoe(f, Math.round(zn.d * kk), zn.k === "fire" || zn.k === "steam" ? "thermo" : "bio", { noarmor: true, quiet: true, by: zn.own ? "hero" : "trap" });
+      if (f.dead && zn.own) { ev("trap_kill", 1); if (f.kind === "mech") ev("trap_mech", 1); gainTrap(6); }
     });
     if (cheb(g.x, g.y, zn.x, zn.y) <= zn.r && clear(zn.x, zn.y, g.x, g.y)) {
-      if (zn.k === "fire") { if (cb()) cb().hurtPlayer(Math.max(1, Math.round(g.hpMax * 0.04)), "therm", null); if (g.dead) return; }
+      if (zn.k === "hush") g.st.muteT = Math.max(g.st.muteT || 0, 2);
+      else if (zn.k === "fire" || zn.k === "steam") { if (cb()) cb().hurtPlayer(Math.max(1, Math.round(g.hpMax * 0.04)), "therm", null); if (g.dead) return; }
       else if (zn.t % 2 === 0 && !(g.st.antitox > 0) && !gm().armorSpecial("antitox")) gm().bodyApply({ tox: 6 }, []);
     }
-    if (zn.t % 4 === 0) sndAt(zn.k === "fire" ? "implant_thermal" : "ev_steam", zn.x, zn.y, { gain: 0.35 });
+    if (zn.t % 4 === 0 && zn.k !== "hush") sndAt(zn.k === "fire" ? "implant_thermal" : "ev_steam", zn.x, zn.y, { gain: 0.35 });
   }
-  /* перепрошитые машины возвращаются к ОКО */
+  if (shards.length) { shardTick(g, foes); if (g.dead) return; } /* (после 4.1) малые заряды дробящего */
+  /* перепрошитые машины возвращаются к ОКО (ниже Истока — к Перекличке) */
   foes.forEach(function (f) {
-    if (f.allyT > 0 && --f.allyT === 0) { f.ally = false; f.hackT = 0; f.state = "alert"; f.lastKnown = { x: g.x, y: g.y }; sayq(foeShort(f) + " " + gv({ g: f.g }, "стряхнул", "стряхнула", "стряхнули") + " чужую прошивку и снова слушает ОКО."); }
+    if (f.allyT > 0 && --f.allyT === 0) { f.ally = false; f.hackT = 0; f.state = "alert"; f.lastKnown = { x: g.x, y: g.y }; sayq(foeShort(f) + " " + gv({ g: f.g }, "стряхнул", "стряхнула", "стряхнули") + " чужую прошивку и снова слушает " + (g.L > 100 ? "Перекличку." : "ОКО.")); }
     if (f.deafT > 0) f.deafT--;
   });
 }
 
 /* ════════ ПОСТАВИТЬ, СНЯТЬ, ПОДОРВАТЬ ════════ */
 var MAX_OWN = 12;
+/* (после 4.1) ловушечное дело: третья ступень — шестнадцать, шестая — двадцать */
+function maxOwn() { var s = stg(); return s >= 6 ? 20 : s >= 3 ? 16 : MAX_OWN; }
 function ownCount() { return list().filter(function (tp) { return tp.own; }).length; }
 function frontCell() { var g = G(), v = DV[g.face] || DV.N; return [g.x + v[0], g.y + v[1]]; }
 function frontOk() {
@@ -655,7 +831,7 @@ function place(k, where) {
   var g = G(), d = T[k], item = itemOf(k);
   if (!d || !(g.inv[item] > 0)) { say("Нет: " + (d ? d.n : k) + "."); return false; }
   if (g.stair) { say("На лестнице ловушку не поставить."); return false; }
-  if (ownCount() >= MAX_OWN) { LAB.UI.error(); say("На этаже уже " + MAX_OWN + " ваших ловушек: больше не уследить. Снимите какую-нибудь."); return false; }
+  if (ownCount() >= maxOwn()) { LAB.UI.error(); say("На этаже уже " + maxOwn() + " ваших ловушек: больше не уследить. Снимите какую-нибудь."); return false; }
   var c = where === "front" ? frontCell() : [g.x, g.y];
   if (where === "front" ? !frontOk() : !hereOk()) { LAB.UI.error(); say(where === "front" ? "Впереди ловушку не поставить: там стена, дверь, вещь, враг или уже стоит ловушка." : "Здесь ловушку не поставить: дверной проём или тут уже стоит ловушка."); return false; }
   UIx("closeAll");
@@ -663,8 +839,10 @@ function place(k, where) {
   if (d.trig === "wire") tp.cells = wireCells(c[0], c[1], g.face);
   if (d.trig === "cone") { tp.dir = g.face; tp.cells = coneCells(c[0], c[1], g.face); }
   if (d.trig === "lure") tp.life = d.life;
+  if (d.lureLife) tp.lureL = d.lureLife;
   if (tp.cells && tp.cells.some(function (q) { return trapOn(q[0], q[1]); })) { LAB.UI.error(); say("Здесь проволоку не натянуть: поперёк уже стоит другая ловушка."); return false; }
   g.inv[item]--;
+  gainTrap(3);
   list().push(tp);
   A("play", "mine_set");
   if (d.mine) A("play", "mine_arm", { delay: 0.35 }); /* (2.6) мина взведена: короткие писки взрывателя */
@@ -740,6 +918,7 @@ function disarm(tp) {
   if (g.inv.toolkit > 0) len--;
   if (g.inv.wirecutters > 0 && (d.trig === "wire" || d.cue === "beep")) len--;
   if (sapper()) len--;
+  if (stg() >= 8) len -= 2; /* (после 4.1) мастер обезвреживания */
   len = Math.max(3, len);
   UIx("closeAll");
   LAB.mini.hack(len, function (ok) {
@@ -755,8 +934,9 @@ function disarm(tp) {
     if (tp.by === "oko") { fs0.okoDis = (fs0.okoDis || 0) + 1; k = Math.max(0, 1 - (fs0.okoDis - 1) / 6); }
     var keep = k > 0.5; /* первые три: 1, 5/6, 4/6 */
     if (keep) g.inv[d.item] = (g.inv[d.item] || 0) + 1;
-    gm().gainXP(Math.round((6 + Math.floor(LAB.Le(g.L) / 4)) * k));
+    gm().gainXP(Math.round((6 + Math.floor(LAB.Le(g.L) / 4)) * k * (stg() >= 8 ? 2 : 1)));
     ev("disarm", 1);
+    if (k > 0) gainTrap(8);
     if (tp.by === "oko" && LAB.oko && LAB.oko.react) setTimeout(function () { LAB.oko.react("oko_trap_off"); }, 1500);
     say(cap1(nameOf(tp)) + " " + gv(d, "обезврежен", "обезврежена", "обезврежены") + ". " + (keep ? cap1(d.n) + " теперь ваш" + gv(d, "", "а", "и") + ": в рюкзаке, раздел «Ловушки и мины»." : "Взять с " + gv(d, "него", "неё", "них") + " нечего: сапёры ОКО ставят такие наспех, из лома." + (k <= 0 ? " Опыта за мины ОКО на этом этаже больше нет." : "")));
     UIx("refresh");
@@ -784,7 +964,17 @@ function effLine(d) {
   if (d.deaf) s.push("лишает слуха");
   if (d.emp) s.push("снимает щиты");
   if (d.shred) s.push("разъедает броню");
-  if (d.zone) s.push(d.zone.k === "fire" ? "оставляет огонь" : "оставляет облако газа");
+  if (d.zone) s.push(d.zone.k === "fire" ? "оставляет огонь" : d.zone.k === "steam" ? "оставляет пар" : "оставляет облако газа");
+  /* (после 4.1) действия ловушек глубин */
+  if (d.tag) s.push("считает и метит каждого, кто задел");
+  if (d.pull) s.push("стягивает всех вокруг к себе");
+  if (d.cluster) s.push("разлетается малыми зарядами");
+  if (d.remake) s.push("ослабляет живое навсегда");
+  if (d.lureLife) s.push("полминуты зовёт врагов голосом");
+  if (d.donor) s.push("перекачивает кровь пойманного вам");
+  if (d.harvest) s.push("отдаёт вам заряд пойманной машины");
+  if (d.hush) s.push("глушит звук вокруг");
+  if (d.crowd) s.push("чем больше врагов рядом, тем сильнее");
   if (d.ally) s.push("перепрошивает робота на вашу сторону");
   if (d.uses > 1 && d.uses < 99) s.push((d.rearm ? "взводится снова, " : "") + "до " + d.uses + " раз");
   else if (d.uses >= 99) s.push("срабатывает сколько угодно");
@@ -802,6 +992,7 @@ function menu() {
   if (!items.length) items.push({ label: "Ловушек и мин нет. Их продают пункты снабжения, собирают у верстака, снимают обезвреженными с чужих мест.", info: true, keep: true, fn: function () { say("Ловушек и мин нет. Их продают пункты снабжения на каждом этаже, собирают у верстака из деталей, а чужие ловушки и мины можно обезвредить и забрать."); } });
   var own = list().filter(function (tp) { return tp.own; });
   items.push({ label: "Ваши ловушки на этом этаже: " + own.length, fn: ownMenu });
+  if (trapCap() > 0) items.push({ label: skillText(), info: true, keep: true, fn: function () { say(skillText() + " " + perksText()); } }); /* (после 4.1) ловушечное дело — ниже Истока */
   items.push({ label: "Как обращаться с ловушками", keep: true, fn: help });
   items.push(back());
   UIx("menu", "Ловушки и мины", items);
@@ -900,7 +1091,7 @@ var OKO_KINDS = {
   M: ["gear", "shock", "magnet", "mine", "glue"], I: ["roots", "glue", "shock", "mine"]
 };
 function okoKinds(L) {
-  var pool = OKO_KINDS[eraOf(L)].filter(function (k) { var d = T[k]; return d && d.depth <= Math.max(L, 2) && d.trig !== "remote" && d.trig !== "lure" && d.trig !== "cone"; });
+  var pool = (OKO_KINDS[eraOf(L)] || OKO_KINDS.P).concat(L > 100 ? DEEP_TO : []).filter(function (k) { var d = T[k]; return d && d.depth <= Math.max(L, 2) && d.trig !== "remote" && d.trig !== "lure" && d.trig !== "cone" && !(d.who === "mech" && d.harvest); }); /* (после 4.1) ниже Истока сапёры Переклички ставят и ловушки глубин */
   /* мины и тяжёлое — не с первых уровней */
   if (L <= 3) pool = pool.filter(function (k) { return !T[k].boom; });
   return pool.length ? pool : ["alarm"];
@@ -933,7 +1124,7 @@ function worldGen() {
   fs.trapGen = 1;
   if (LAB.depth(g.L, g.F) < 2) return;
   var r = LAB.Rng(g.seed, "oldtraps:" + g.L + ":" + g.F);
-  var pool = OLD[eraOf(g.L)].filter(function (k) { return T[k] && T[k].depth <= g.L; });
+  var pool = (OLD[eraOf(g.L)] || OLD.P).concat(g.L > 100 ? DEEP_TO.filter(function (k) { return !T[k].harvest && !T[k].lureLife; }) : []).filter(function (k) { return T[k] && T[k].depth <= g.L; }); /* (после 4.1) ниже Истока — и ловушки Нижних */
   if (!pool.length) return;
   var max = g.L <= 10 ? 2 : 3, n = 0, used = {};
   var bad = function (x, y) {
@@ -963,7 +1154,7 @@ function worldGen() {
   });
 }
 function enterFloor() {
-  zones = []; pending = []; warned = {};
+  zones = []; pending = []; warned = {}; shards = [];
   if (!CUR() || !CUR().fs) return;
   list().forEach(function (tp) { if (tp.st === "held") { tp.held = null; tp.st = D(tp) && D(tp).rearm ? "sprung" : "on"; } });
   LAB.safe(worldGen);
@@ -979,6 +1170,9 @@ LAB.traps = {
   okoTrap: okoTrap, okoKinds: okoKinds, okoCount: okoCount, at: function (x, y) { return trapOn(x, y); }, enterFloor: enterFloor, count: count, list: function () { return list(); },
   nameOf: nameOf, stateWord: stateWord, effLine: effLine, ids: ORDER, T: T,
   use: function (id) { var k = LAB.ITEMS[id] && LAB.ITEMS[id].trap; if (k) itemMenu(k); return false; },
-  _zones: function () { return zones; }, _wireCells: wireCells
+  _zones: function () { return zones; }, _wireCells: wireCells,
+  /* (после 4.1) ловушечное дело и ловушки глубин */
+  craftWhy: craftWhy, crafted: crafted, stage: stg, stageCap: trapCap, skillText: skillText, perksText: perksText, gainSkill: gainTrap, TRAP_XP: TRAP_XP, TRAP_PERK: TRAP_PERK, DEEP_T: DEEP_T, maxOwn: maxOwn,
+  _shards: function () { return shards; }
 };
 })();
