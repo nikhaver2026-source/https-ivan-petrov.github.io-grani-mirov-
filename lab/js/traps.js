@@ -210,9 +210,9 @@ var DEEP_T = {
     need: { dp_valve: 1, dp_coil: 1, cell: 2 },
     d: "Плита Цехов с отборником тока: машина, что на неё встанет, теряет щит и замирает на пять секунд, а её заряд уходит вам — в энергию имплантов. Живых не трогает. Хватает на три машины.",
     hit: "Плита-накопитель щёлкнула под ногой." },
-  steamvalve: { n: "паровой клапан", g: "m", blk: 13, price: 420, trig: "step", who: "walk", dmg: 30, dt: "thermo", zone: { k: "steam", r: 2, t: 12, d: 14 }, uses: 1, loud: 8, stealth: 0.5, cue: "tick", snd: "ev_steam",
+  steamvalve: { n: "паровая плита", g: "f", blk: 13, price: 420, trig: "step", who: "walk", dmg: 30, dt: "thermo", zone: { k: "steam", r: 2, t: 12, d: 14 }, uses: 1, loud: 8, stealth: 0.5, cue: "tick", snd: "ev_steam",
     pd: 0.12, adt: "therm", need: { dp_valve: 1, dp_alloy: 1, cap: 2 },
-    d: "Клапан Котла под нажимной пластиной: наступившего обваривает струёй, и шесть секунд пар на два шага вокруг жжёт всех — и тварей, и машины — и слепит датчики. Сами в пар не входите.",
+    d: "Нажимная плита Котла над паровым клапаном: наступившего обваривает струёй, и шесть секунд пар на два шага вокруг жжёт всех — и тварей, и машины — и слепит датчики. Сами в пар не входите.",
     hit: "Из-под ноги ударил пар!" },
   hushwire: { n: "тихая растяжка", g: "f", blk: 14, price: 440, trig: "wire", who: "walk", hush: { r: 3, t: 30 }, uses: 2, loud: 0, stealth: 0.7, cue: "tick", snd: "ev_far_door",
     need: { dp_reed: 1, dp_alloy: 1, wire: 2 },
@@ -239,7 +239,7 @@ var ACC = { glue: "клеевую ловушку", alarm: "сигнальную 
   fire: "зажигательную ловушку", gas: "газовую ловушку", claymore: "направленную мину", cryo: "криоловушку", acid: "кислотную ловушку", quartz: "кварцевую сирену", resin: "смоляную ловушку", mirror: "зеркальную ловушку",
   logic: "логическую мину", roots: "корневую ловушку", timeless: "ловушку безвременья" };
 /* (после 4.1) ловушки глубин */
-var ACC_DEEP = { rollcall: "счётную растяжку", gravwell: "гравитационную воронку", baitbomb: "говорящую мину", harvester: "ловушку-накопитель", hushwire: "тихую растяжку", countmine: "мину последнего счёта" };
+var ACC_DEEP = { rollcall: "счётную растяжку", gravwell: "гравитационную воронку", baitbomb: "говорящую мину", harvester: "ловушку-накопитель", steamvalve: "паровую плиту", hushwire: "тихую растяжку", countmine: "мину последнего счёта" };
 for (var akk in ACC_DEEP) if (!ACC[akk]) ACC[akk] = ACC_DEEP[akk];
 function itemOf(k) { return "tr_" + k; }
 function cap1(s) { return s.charAt(0).toUpperCase() + s.slice(1); }

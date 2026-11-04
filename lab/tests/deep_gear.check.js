@@ -33,6 +33,14 @@ MINE.forEach(f => {
   if (/(^|[^\w$.])(let|const)\s+[\w$[{]/m.test(code)) err(f + ": let или const");
 });
 ok(!fails, "мои файлы — ES2017 без стрелок, let, const и шаблонных строк" + (acorn ? " (acorn)" : " (Node)"));
+/* имена в LAB: мои файлы не перезаписывают того, что заводят другие (как было с LAB.deepTier — пропуска глубин) */
+{
+  const names = f => { const s = fs.readFileSync(path.join(ROOT, f), "utf8").replace(/\/\*[\s\S]*?\*\//g, ""), out = new Set(); let m; const re = /\bLAB\.([A-Za-z_$][\w$]*)\s*=(?!=)/g; while ((m = re.exec(s))) out.add(m[1]); return out; };
+  const mine = new Set(); MINE.forEach(f => names(f).forEach(n => mine.add(n)));
+  const clash = [];
+  fs.readdirSync(path.join(ROOT, "js")).filter(f => /\.js$/.test(f) && MINE.indexOf("js/" + f) < 0).forEach(f => names("js/" + f).forEach(n => { if (mine.has(n)) clash.push(n + " (" + f + ")"); }));
+  ok(!clash.length, "мои файлы не заводят в LAB имён, которые уже заводят другие" + (clash.length ? ": " + clash.join(", ") : ""));
+}
 
 /* ── 2. загрузка ── */
 function seeded(s) { return function () { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; }; }
@@ -62,6 +70,7 @@ function load(over) {
 const LAB = load();
 const IM = LAB.implants, TR = LAB.traps, C = LAB.chem, W = LAB.workshop;
 ok(IM && TR && C && W && LAB.chemlab, "загружены кибернетика, ловушки, химия, работа руками и мастерская");
+ok(LAB.LEVELS_N <= 100 || (LAB.TIERS[51] && typeof LAB.TIERS[51].n === "string" && typeof LAB.deepTier === "function"), "пропуска глубин (LAB.deepTier, LAB.TIERS выше пятидесятой ступени) целы");
 
 /* ── 3. уровни 1–100 не меняются: слепок прежних таблиц ── */
 function fnv(s) { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return ("0000000" + h.toString(16)).slice(-8); }
