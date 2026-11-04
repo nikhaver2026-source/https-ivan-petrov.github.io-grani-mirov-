@@ -2096,34 +2096,70 @@ function genPipes(seed, d, depth) {
     var ps = r.int(0, 3), pump = ppBorder(R, ps, r.int(0, R - 1));
     var ds = r.chance(0.6) ? (ps + 2) % 4 : (ps + r.pick([1, 3])) % 4, drain = ppBorder(R, ds, r.int(0, R - 1));
     if (pump.r === drain.r && pump.c === drain.c) continue;
-    /* путь воды: случайное блуждание без повторов от насоса к стоку */
-    var path = null;
-    for (var w = 0; w < 30 && !path; w++) {
-      var cur = [pump.r, pump.c], vis = {}, pth = [cur[0] * R + cur[1]];
-      vis[pth[0]] = 1;
-      for (var st = 0; st < R * R; st++) {
-        if (cur[0] === drain.r && cur[1] === drain.c) break;
-        var nb = [];
-        for (var dd = 0; dd < 4; dd++) { var rr = cur[0] + DR[dd], cc = cur[1] + DC[dd]; if (rr >= 0 && cc >= 0 && rr < R && cc < R && !vis[rr * R + cc]) nb.push(rr * R + cc); }
-        if (!nb.length) break;
-        var nx = r.pick(nb); vis[nx] = 1; pth.push(nx); cur = [Math.floor(nx / R), nx % R];
+    /* пути воды: случайные блуждания без повторов от насоса к стоку; второй путь — запасной,
+       и где пути пересекаются, вид трубы у них должен совпасть */
+    var walk = function () {
+      for (var w = 0; w < 30; w++) {
+        var cur = [pump.r, pump.c], vis = {}, pth = [cur[0] * R + cur[1]];
+        vis[pth[0]] = 1;
+        for (var st = 0; st < R * R; st++) {
+          if (cur[0] === drain.r && cur[1] === drain.c) break;
+          var nb = [];
+          for (var dd = 0; dd < 4; dd++) { var rr = cur[0] + DR[dd], cc = cur[1] + DC[dd]; if (rr >= 0 && cc >= 0 && rr < R && cc < R && !vis[rr * R + cc]) nb.push(rr * R + cc); }
+          if (!nb.length) break;
+          var nx = r.pick(nb); vis[nx] = 1; pth.push(nx); cur = [Math.floor(nx / R), nx % R];
+        }
+        if (cur[0] === drain.r && cur[1] === drain.c && pth.length >= lenMin) return pth;
       }
-      if (cur[0] === drain.r && cur[1] === drain.c && pth.length >= lenMin) path = pth;
+      return null;
+    };
+    var shape = function (pth) {
+      var out = {};
+      for (var k = 0; k < pth.length; k++) {
+        var c = pth[k], pr = Math.floor(c / R), pc = c % R, entry, ex;
+        if (k === 0) entry = pump.side; else { var p0 = pth[k - 1]; entry = dirTo(pr, pc, Math.floor(p0 / R), p0 % R); }
+        if (k === pth.length - 1) ex = drain.side; else { var n0 = pth[k + 1]; ex = dirTo(pr, pc, Math.floor(n0 / R), n0 % R); }
+        if (entry === ex) return null;
+        out[c] = { t: (entry + 2) % 4 === ex ? "s" : "e", need: -1 };
+        out[c].need = ppNeed(out[c].t, entry, ex);
+      }
+      return out;
+    };
+    var path = walk(); if (!path) continue;
+    var sh1 = shape(path); if (!sh1) continue;
+    /* запасной путь: от колена основного пути уйти в другую сторону и вернуться в другое его колено */
+    var sh2 = null, onP1 = {};
+    path.forEach(function (c) { onP1[c] = 1; });
+    var elb = []; for (i = 0; i < path.length; i++) if (sh1[path[i]].t === "e") elb.push(i);
+    for (var tr = 0; tr < 10 && !sh2 && elb.length >= 2; tr++) {
+      var ia = r.int(0, elb.length - 2), ib = r.int(ia + 1, elb.length - 1), ka = elb[ia], kb = elb[ib], ca = path[ka], cb = path[kb];
+      var xa = ka + 1 < path.length ? dirTo(Math.floor(ca / R), ca % R, Math.floor(path[ka + 1] / R), path[ka + 1] % R) : drain.side;
+      var eb = kb > 0 ? dirTo(Math.floor(cb / R), cb % R, Math.floor(path[kb - 1] / R), path[kb - 1] % R) : pump.side;
+      var xa2 = (xa + 2) % 4, eb2 = (eb + 2) % 4;
+      var sr = Math.floor(ca / R) + DR[xa2], sc = ca % R + DC[xa2], tr2 = Math.floor(cb / R) + DR[eb2], tc = cb % R + DC[eb2];
+      if (sr < 0 || sc < 0 || sr >= R || sc >= R || tr2 < 0 || tc < 0 || tr2 >= R || tc >= R) continue;
+      if (onP1[sr * R + sc] || onP1[tr2 * R + tc]) continue;
+      for (var wv = 0; wv < 8 && !sh2; wv++) {
+        var cur = [sr, sc], vis = {}, det = [sr * R + sc]; vis[det[0]] = 1;
+        for (var st2 = 0; st2 < R * R && !(cur[0] === tr2 && cur[1] === tc); st2++) {
+          var nb = [];
+          for (var dd = 0; dd < 4; dd++) { var rr = cur[0] + DR[dd], cc = cur[1] + DC[dd], nc = rr * R + cc; if (rr >= 0 && cc >= 0 && rr < R && cc < R && !vis[nc] && !onP1[nc]) nb.push(nc); }
+          if (!nb.length) break;
+          var nx = r.pick(nb); vis[nx] = 1; det.push(nx); cur = [Math.floor(nx / R), nx % R];
+        }
+        if (!(cur[0] === tr2 && cur[1] === tc)) continue;
+        var p2 = path.slice(0, ka + 1).concat(det, path.slice(kb));
+        var s2 = shape(p2);
+        if (s2) sh2 = s2;
+      }
     }
-    if (!path) continue;
     var tiles = [], onPath = {};
-    for (i = 0; i < R * R; i++) tiles.push({ t: r.chance(d === 0 ? 0.25 : 0.35) ? "s" : "e", rot: 0, fix: false });
-    var ok = true;
-    for (i = 0; i < path.length; i++) {
-      var c = path[i], pr = Math.floor(c / R), pc = c % R, entry, ex;
-      if (i === 0) entry = pump.side; else { var p0 = path[i - 1]; entry = dirTo(pr, pc, Math.floor(p0 / R), p0 % R); }
-      if (i === path.length - 1) ex = drain.side; else { var n0 = path[i + 1]; ex = dirTo(pr, pc, Math.floor(n0 / R), n0 % R); }
-      if (entry === ex) { ok = false; break; }
-      tiles[c].t = (entry + 2) % 4 === ex ? "s" : "e";
-      onPath[c] = ppNeed(tiles[c].t, entry, ex);
-    }
-    if (!ok) continue;
-    var free = intList(R * R).filter(function (x) { return onPath[x] == null; });
+    for (i = 0; i < R * R; i++) tiles.push({ t: r.chance(0.35) ? "s" : "e", rot: 0, fix: false });
+    var key2;
+    for (key2 in sh1) { tiles[key2].t = sh1[key2].t; onPath[key2] = sh1[key2].need; }
+    var spare = {};
+    if (sh2) for (key2 in sh2) { tiles[key2].t = sh2[key2].t; if (onPath[key2] == null) spare[key2] = 1; }
+    var free = intList(R * R).filter(function (x) { return onPath[x] == null && !spare[x]; });
     r.shuffle(free);
     var fi = 0;
     if (d === 2) { var nw2 = r.int(2, 3); for (var q = 0; q < nw2 && fi < free.length; q++) tiles[free[fi++]].t = "w"; }
@@ -2313,11 +2349,8 @@ function genMirrors(seed, d, depth) {
     var want = r.int(bestR[0], bestR[1]), pr = st.r, pc = st.c, pd = st.dir, okP = true, usedC = {}, rcv = -1;
     for (var tt = 0; tt <= want && okP; tt++) {
       var run = [], rr = pr, cc = pc;
-      while (rr >= 0 && cc >= 0 && rr < R && cc < R && !grid[rr * R + cc] && !usedC[rr * R + cc]) {
-        if (fixed[rr * R + cc]) { okP = false; break; }
-        run.push([rr, cc]); rr += DR[pd]; cc += DC[pd];
-      }
-      if (!okP || !run.length) { okP = false; break; }
+      while (rr >= 0 && cc >= 0 && rr < R && cc < R && !grid[rr * R + cc] && !usedC[rr * R + cc] && !fixed[rr * R + cc]) { run.push([rr, cc]); rr += DR[pd]; cc += DC[pd]; }
+      if (!run.length) { okP = false; break; }
       var at = run[r.int(tt ? 0 : 0, run.length - 1)];
       for (var u = 0; u < run.length; u++) { usedC[run[u][0] * R + run[u][1]] = 1; if (run[u] === at) break; }
       if (tt === want) { rcv = at[0] * R + at[1]; break; }
