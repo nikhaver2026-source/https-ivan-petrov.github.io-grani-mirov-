@@ -94915,6 +94915,31 @@ safeFn(()=>{const r0=refresh;refresh=matKeep(r0,function(){const r=r0.apply(this
  try{if(!G.inCombat){const bar=document.getElementById("combatBar");if(bar&&!bar.hidden){bar.hidden=true;const log=document.getElementById("cbLog");if(log)log.textContent="";}}}catch(_){}
  return r;});});
 
+/* ── 4. После поражения здоровье не выше предела ──
+   Павший встаёт с пятьюдесятью здоровья (с милостью Мортаны — больше). Когда предел здоровья ниже (шрамы, слабое тело),
+   герой вставал здоровее, чем может быть. Теперь — не выше предела. */
+safeFn(()=>{const d0=defeat;defeat=matKeep(d0,function(){const r=d0.apply(this,arguments);
+ try{const м=Number(G.hpMax)||0;if(м>0&&Number(G.hp)>м)G.hp=м;}catch(_){}return r;});});
+
+/* ── 5. Карты в таверне: исход — сразу ──
+   Ставка снималась сразу, а выигрыш приходил таймером через 0,7 с. Загрузка сохранения в этот миг возвращала прежний
+   кошель, и выигрыш ложился поверх него — золото из ничего. Теперь исход считается и записывается в ту же секунду,
+   а голос объявляет его после сдачи, как прежде. */
+safeFn(()=>{const pc0=playCards;playCards=matKeep(pc0,function(bet){
+ const ставка=Math.floor(Number(bet));
+ if(!Number.isFinite(ставка)||ставка<=0){narrate("Такую ставку принять нельзя.");return;}
+ if(G.gold<ставка){narrate(`Нужно ${ставка} золота для ставки.`);return;}
+ safeFn(()=>AE.ensure());safeFn(()=>UI.nat("cards_deal",0.6));
+ const you=2+Math.floor(Math.random()*13),foe=2+Math.floor(Math.random()*13);
+ const names=["","","Двойка","Тройка","Четвёрка","Пятёрка","Шестёрка","Семёрка","Восьмёрка","Девятка","Десятка","Валет","Дама","Король","Туз"];
+ G.gold=(Number(G.gold)||0)-ставка+(you>foe?ставка*2:you===foe?ставка:0);
+ safeFn(()=>saveGame(true));
+ setTimeout(()=>{
+  if(you>foe){safeFn(()=>UI.triumph());narrate(`Карты: у вас ${names[you]}, у соперника ${names[foe]}. Вы выиграли ${ставка*2} золота!`);}
+  else if(you===foe){safeFn(()=>UI.nat("bet_back",0.6));narrate(`Ничья: обе карты ${names[you]}. Ставка возвращена.`);}
+  else{safeFn(()=>UI.hit());narrate(`Карты: у вас ${names[you]}, у соперника ${names[foe]}. Проигрыш.`);}
+  safeFn(()=>refresh());},700);});});
+
 /* ════════════════════════════════════════════════════════════════════════
    НОЧНОЙ ДОЗОР СО СТРАЖЕЙ (3 ноября 2026)
    Просьба игрока: «чтобы игрок реально стоял, вернее, ходил со стражей в
