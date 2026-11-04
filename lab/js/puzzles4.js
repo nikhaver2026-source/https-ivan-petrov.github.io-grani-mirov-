@@ -71,7 +71,7 @@ function tone(f, dur, when) {
 function start(kind, d, P, title, cond, build, cb) {
   var last = LAB.puzzles._last = { kind: kind, diff: d, plan: P.plan.slice(), wrong: P.wrong.map(function (w) { return w.slice(); }),
     alts: (P.alts || []).map(function (a) { return { plan: a.plan.slice(), best: !!a.best }; }), sol: P.sol == null ? 1 : P.sol,
-    stages: P.stages || 1, variable: !!P.variable, best: false, data: P.data || null, sig: P.sig, cond: cond, st: null };
+    stages: typeof P.stages === "number" ? P.stages : (P.stages && P.stages.length) || 1, variable: !!P.variable, best: false, data: P.data || null, sig: P.sig, cond: cond, st: null };
   last.st = run(title, cond, build, cb);
   return last;
 }
@@ -331,7 +331,7 @@ function testimony(seed, cb, opts) {
     }
     if (d === 2 && stage === 1) {
       out.push(act("Сдать вывод о лжецах", function () {
-        if (marks === P.L) { A("play", "paper_turn"); stage = 2; say("Верно: " + liarVerb(P.L) + ". " + stage2); return; }
+        if (marks === P.L) { A("play", "paper_turn"); stage = 2; st.cond = cond + " Первый этап пройден: " + liarVerb(P.L) + ". " + stage2; say("Верно: " + liarVerb(P.L) + ". " + stage2); return; }
         A("play", "term_err");
         fail("Не сходится: " + (why(P.sts, -1, marks) || "отметки не те."));
       }));
@@ -1511,7 +1511,9 @@ function rings(seed, cb, opts) {
           if (total !== S.min) clean = false;
           if (si + 1 < ns) {
             si++; S = P.stages[si]; used = 0; total = 0; A("play", "door_unlock");
-            say("Щёлкнул замок: наружная дверца открыта. " + stageHead(si + 1, ns) + " Внутренняя дверца: нужно " + code(S.to) + ", диски стоят, как остались: " + code(s) + ". На эту дверцу — " + cnt(S.limit, "нажатие", "нажатия", "нажатий", "n") + ", не больше.");
+            var t2 = stageHead(si + 1, ns) + " Внутренняя дверца: нужно " + code(S.to) + ", диски стоят, как остались: " + code(S.from) + ". На эту дверцу — " + cnt(S.limit, "нажатие", "нажатия", "нажатий", "n") + ", не больше.";
+            st.cond = cond + " Первый этап пройден: наружная дверца открыта. " + t2;
+            say("Щёлкнул замок: наружная дверца открыта. " + t2);
             return;
           }
           win(last, finish, "Диски показывают " + code(s) + ": замок щёлкнул, сейф открыт.", clean && st.tries === 0, "меньше нажатий не бывает");
@@ -1834,7 +1836,11 @@ function pendulums(seed, cb, opts) {
         var v = Number(cur);
         if (stage === 1) {
           if (v === G.ans) {
-            if (d === 2) { stage = 2; cur = ""; A("play", "paper_turn"); say("Верно: все три сойдутся через " + unit(G.ans) + " после начала смены. " + stageHead(2, 2) + " " + ask2); return; }
+            if (d === 2) {
+              stage = 2; cur = ""; A("play", "paper_turn");
+              st.cond = cond + " Первый этап пройден: все три сработают вместе через " + unit(G.ans) + " после начала смены. " + stageHead(2, 2) + " " + ask2;
+              say("Верно: все три сойдутся через " + unit(G.ans) + " после начала смены. " + stageHead(2, 2) + " " + ask2); return;
+            }
             win(last, finish, "Верно: " + v + ". Журнал маятников сошёлся.", false); return;
           }
           A("play", "term_err"); fail(whyNot(v)); return;
@@ -2253,7 +2259,12 @@ function bunker(seed, cb, opts) {
       if (seat.some(function (x) { return x < 0; })) { nope("Сначала займите все " + (stage === 1 ? "нары." : "места.")); return; }
       var p = pos(), conds = stage === 1 ? P.conds : P.conds2, txt = stage === 1 ? lines : lines2, circ = stage === 2;
       for (var i = 0; i < conds.length; i++) if (!bkTrue(conds[i], p, n, circ, rowRef)) { A("play", "term_err"); fail("Не выходит: нарушено условие «" + txt[i] + "»."); return; }
-      if (stage === 1 && d === 2) { rowRef = p; stage = 2; seat = intList(n).map(function () { return -1; }); A("play", "paper_turn"); say("Нары распределены. " + stage2Text()); return; }
+      if (stage === 1 && d === 2) {
+        var rowTxt = seatText();
+        rowRef = p; stage = 2; seat = intList(n).map(function () { return -1; }); A("play", "paper_turn");
+        st.cond = cond + " Первый этап пройден, расселение по нарам: " + rowTxt + ". " + stage2Text();
+        say("Нары распределены. " + stage2Text()); return;
+      }
       var wishOk = bkTrue(P.wish, p, n, circ, rowRef);
       win(last, finish, (stage === 2 ? "Ужин прошёл мирно: все условия стола выполнены." : "Все разместились: условия выполнены.") + (wishOk ? "" : " Пожелание коменданта на этот раз не учтено."), wishOk, "учтено и пожелание коменданта");
     }));
@@ -2413,7 +2424,12 @@ function league(seed, cb, opts) {
       out.push(act("Сдать таблицу", function () {
         if (cur.some(function (v) { return v < 0; })) { nope("Впишите все смытые результаты."); return; }
         if (cur.join() === P.vals.join()) {
-          if (d === 2) { stage = 2; A("play", "paper_turn"); var p0 = lgPts(n, ms, P.vals); say("Таблица сошлась. " + stageHead(2, 2) + " Места. Очки: " + ps.map(function (q, x) { return q.n + " — " + cnt(p0[x], "очко", "очка", "очков", "n"); }).join("; ") + ". " + placeRule); return; }
+          if (d === 2) {
+            stage = 2; A("play", "paper_turn");
+            var p0 = lgPts(n, ms, P.vals), t2 = stageHead(2, 2) + " Места. Очки: " + ps.map(function (q, x) { return q.n + " — " + cnt(p0[x], "очко", "очка", "очков", "n"); }).join("; ") + ". " + placeRule;
+            st.cond = cond + " Первый этап пройден, смытые результаты: " + P.miss.map(function (k) { return resText(k, P.vals[k]); }).join("; ") + ". " + t2;
+            say("Таблица сошлась. " + t2); return;
+          }
           win(last, finish, "Таблица восстановлена: все очки и записи сходятся.", false); return;
         }
         A("play", "term_err"); fail(whyNot());

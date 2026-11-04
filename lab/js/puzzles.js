@@ -31,7 +31,8 @@ var KINDS = ["breaker", "decon", "labels", "dosim", "shifts", "tally"];
 /* Окно условия: прочитать, потом — к решению. Условие всегда можно
    переслушать пунктом «Условие ещё раз». */
 function run(name, cond, build, cb) {
-  var state = { tries: 0, limit: 3, done: false, touched: false };
+  var state = { tries: 0, limit: 3, done: false, touched: false, cond: null };
+  var condText = function () { return typeof cond === "function" ? cond() : cond; };
   var finish = function (ok, text) {
     if (state.done) return; state.done = true;
     UIx("closeAll");
@@ -67,13 +68,15 @@ function run(name, cond, build, cb) {
       if (it.keep == null) it.keep = true;
       var f0 = it.fn; if (typeof f0 === "function") it.fn = function () { state.touched = true; return f0.apply(this, arguments); };
     });
-    items.push({ label: "Условие ещё раз", keep: true, fn: function () { say(cond, { read: true }); } });
+    /* (после 4.1) у составной задачи «Условие ещё раз» читает текущий этап: задача кладёт его в
+       state.cond при смене этапа (или передаёт условие функцией) */
+    items.push({ label: "Условие ещё раз", keep: true, fn: function () { say(state.cond || condText(), { read: true }); } });
     items.push({ label: "Отойти от задачи", fn: away });
     return items;
   };
   var open = function () { UIx("menu", name, menuItems(), { intro: "", rebuild: menuItems, puzzle: true, onClose: away }); };
   UIx("closeAll");
-  UIx("note", name, cond, open, { closeLabel: "К решению", puzzle: true });
+  UIx("note", name, condText(), open, { closeLabel: "К решению", puzzle: true });
   return state;
 }
 

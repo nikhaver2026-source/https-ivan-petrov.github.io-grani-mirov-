@@ -462,6 +462,8 @@ function chkSwitch(D, d, at) {
   if (D.lim && all.filter(o => D.deps.every(([a, b]) => o.indexOf(a) < o.indexOf(b)) && D.nadj.every(([a, b]) => o.indexOf(a) !== o.indexOf(b) + 1)).length <= v.length) err(at + ": рубильники: предел щита ничего не отсекает");
   addMetric("switchorder", d, n);
 }
+/* число этапов: у сейфа stages — список этапов, у остальных — число */
+const nStages = P => typeof P.stages === "number" ? P.stages : (P.stages && P.stages.length) || 1;
 function independent(kind, d, P, seed) {
   const D = P.data, at = kind + "/" + d + "/" + seed;
   switch (kind) {
@@ -500,7 +502,7 @@ function spoil(kind, P) {
 }
 
 /* ── прогон ── */
-const t0 = Date.now(), counts = { solved: 0, alts: 0, wrong: 0, leave: 0, fuzz: 0, staged: 0, titled: 0, solveOk: 0 };
+const t0 = Date.now(), counts = { solved: 0, alts: 0, wrong: 0, leave: 0, fuzz: 0, staged: 0, titled: 0, solveOk: 0, condStage: 0, condSame: 0 };
 if (!P4 || !Array.isArray(P4.kinds) || P4.kinds.length !== 14) err("LAB.puzzles4.kinds: ждали 14 видов");
 const OLD = ["sort", "relays", "bulls", "riddle", "chess", "breaker", "decon", "labels", "dosim", "shifts", "tally", "jugs", "scales", "lights", "hanoi", "gates", "binary", "cipher", "series", "calib", "crossing", "robot", "latin", "clues", "termhack", "archive", "acrostic", "accesslog", "checksum", "pinwear", "titr", "vials", "protocol", "spectr", "chain"];
 const ONLY = process.env.P4_KINDS ? process.env.P4_KINDS.split(",") : null;
@@ -537,10 +539,11 @@ for (const kind of KINDS) {
         if (stack.length) err(at + ": после решения окна не закрылись");
         if (o.last.st.tries !== 0) err(at + ": план потратил попытки: " + o.last.st.tries);
         if (o.last.variable && !o.last.best) err(at + ": план вариативной задачи не отмечен образцовым");
+        if (o.last.stages !== nStages(P)) err(at + ": _last.stages " + o.last.stages + ", а этапов " + nStages(P));
         if (!o.last.variable && o.last.best) err(at + ": образцовое у задачи с одним ответом");
         if (o.last.variable && (o.last.sol < 1 || o.last.alts.length < 1)) err(at + ": вариативная, а решений " + o.last.sol + ", других путей " + o.last.alts.length);
         if (o.last.best && !said.slice(sp).some(t => /Образцовое решение/.test(t))) err(at + ": образцовое без отметки в итоговой фразе");
-        if ((P.stages || 1) > 1) {
+        if (nStages(P) > 1) {
           if (o.cond.indexOf("Этап первый из двух") < 0) err(at + ": составная: в условии нет первого этапа");
           const st2 = said.slice(sp).findIndex(t => /Этап второй из двух/.test(t));
           if (st2 < 0) err(at + ": составная: второй этап не объявлен"); else counts.staged++;
@@ -555,6 +558,27 @@ for (const kind of KINDS) {
           stack.length = 0;
         });
         if (seed % 10 === 1) { const o2 = openPuzzle(kind, seed, d, title); if (o2.cond !== o.cond) err(at + ": то же зерно — другое условие"); stack.length = 0; }
+        /* «Условие ещё раз»: до смены этапа — исходное условие; после — исходное, итог первого этапа и задание второго */
+        if (nStages(P) > 1 || seed % 10 === 3) {
+          const c2 = openPuzzle(kind, seed, d);
+          markMain(); clickPrefix("Условие ещё раз", at + " условие до смены этапа");
+          if (said[said.length - 1] !== c2.cond) err(at + ": «Условие ещё раз» говорит не исходное условие"); else counts.condSame++;
+          if (nStages(P) > 1) {
+            const pl = c2.last.plan, s1 = said.length; let i = 0;
+            for (; i < pl.length; i++) { markMain(); clickPrefix(pl[i], at + " к этапу два, шаг " + (i + 1)); if (said.slice(s1).some(x => /Этап второй из двух/.test(x))) break; }
+            if (i >= pl.length) err(at + ": второй этап не наступил");
+            else {
+              while (stack.length > 1) LAB.ui.closeTop(true);
+              markMain(); clickPrefix("Условие ещё раз", at + " условие после смены этапа");
+              const tc = said[said.length - 1], rest = tc.slice(c2.cond.length);
+              if (tc.indexOf(c2.cond) !== 0 || !/^ Первый этап пройден/.test(rest) || !/Этап второй из двух/.test(rest)) err(at + ": после смены этапа «Условие ещё раз» не о втором этапе: «" + tc.slice(-160) + "»");
+              else counts.condStage++;
+              follow(c2, pl.slice(i + 1), at + " после повтора условия второго этапа");
+              if (c2.res.length !== 1 || c2.res[0] !== true) err(at + ": после повтора условия второй этап не решён планом");
+            }
+          }
+          stack.length = 0;
+        }
         /* неверный путь: три попытки, потом провал */
         if (seed % 3 === 0) {
           const w = openPuzzle(kind, seed, d);
@@ -638,8 +662,8 @@ if (!ONLY && total < 20000) err("всего разных задач " + total + 
 
 /* ── итог ── */
 const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
-console.log("видов: " + P4.kinds.length + ", зёрен прохождения: " + SEEDS + ", решено планом: " + counts.solved + " из " + P4.kinds.length * 3 * SEEDS + ", других решений принято: " + counts.alts +
-  ", неверных путей до провала: " + counts.wrong + ", уходов: " + counts.leave + ", случайных прогулок: " + counts.fuzz + ", этапов объявлено: " + counts.staged + ", solve: " + counts.solveOk + ", время прохождения: " + tWalk + " мс");
+console.log("видов: " + P4.kinds.length + ", зёрен прохождения: " + SEEDS + ", решено планом: " + counts.solved + " из " + KINDS.length * 3 * SEEDS + ", других решений принято: " + counts.alts +
+  ", неверных путей до провала: " + counts.wrong + ", уходов: " + counts.leave + ", случайных прогулок: " + counts.fuzz + ", этапов объявлено: " + counts.staged + ", повтор условия второго этапа: " + counts.condStage + ", исходного условия: " + counts.condSame + ", solve: " + counts.solveOk + ", время прохождения: " + tWalk + " мс");
 console.log("размер (простая/средняя/сложная): " + KINDS.map(k => k + " " + [0, 1, 2].map(d => metric[k + d] ? mean(metric[k + d]).toFixed(1) : "—").join("/")).join("; "));
 console.log("самое длинное условие: " + stat.condMax + " знаков (" + stat.condMaxKind + "); самый длинный пункт: " + stat.labelMax + " («" + stat.labelMaxText + "»); самая длинная реплика: " + stat.lineMax + " знаков; пунктов в главном окне до " + stat.menuMax + ", в подменю до " + stat.subMax);
 console.log("Разных задач на зёрнах 1…" + COUNT + " (простая / средняя / сложная; время сборки задачи, мс: наибольшее/среднее):");
