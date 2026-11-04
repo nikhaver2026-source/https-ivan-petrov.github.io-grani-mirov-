@@ -490,9 +490,10 @@ function till(seed, cb, opts) {
     " Решений несколько, годится любое; образцовое — с наименьшим числом жетонов.";
   var last = start("till", d, P, "Разменная касса", cond, function (st, finish, fail) {
     var status = function () {
-      if (!two) return "В выдаче " + listOf(D.dens, x) + ": " + sumOf(D.dens, x) + " " + cr(sumOf(D.dens, x)) + " из " + D.S + ", жетонов " + sum(x) + ".";
+      if (!two) return sum(x) ? "В выдаче " + listOf(D.dens, x) + ": " + sumOf(D.dens, x) + " " + cr(sumOf(D.dens, x)) + " из " + D.S + ", жетонов " + sum(x) + "." : "В выдаче пусто, а нужно " + D.S + " " + cr(D.S) + ".";
       var a = sumOf(D.dens, x), b = sumOf(D.dens2, y);
-      return "Отдано " + listOf(D.dens, x) + ", это " + a + "; сдача " + listOf(D.dens2, y) + ", это " + b + ". Итого заплачено " + (a - b) + " из " + D.S + ", жетонов через руки " + tokens() + ".";
+      return (a ? "Отдано " + a + " (" + listOf(D.dens, x) + ")" : "Пока ничего не отдано") + (b ? ", сдача " + b + " (" + listOf(D.dens2, y) + ")" : ", сдачи нет") +
+        ". Итого заплачено " + (a - b) + " из " + D.S + ", жетонов через руки " + tokens() + ".";
     };
     var addTo = function (ds, st0, v, h, j, what) {
       if (v[j] >= st0[j]) { nope("Жетонов по " + ds[j] + " больше нет."); return; }
@@ -556,6 +557,7 @@ function till(seed, cb, opts) {
 var CARGO = ["Насос", "Генератор", "Аптечка", "Канистра воды", "Мешок сухарей", "Кислородный баллон", "Катушка кабеля", "Ящик фильтров", "Рация", "Палатка",
   "Аккумулятор", "Ящик инструментов", "Дозиметр", "Запасные лампы", "Трос", "Медикаменты", "Реактивы", "Респираторы", "Спальники", "Сварочный аппарат"];
 function kg(v) { return pl(v, "килограмм", "килограмма", "килограммов"); }
+function kgGen(v) { return pl(v, "килограмма", "килограммов", "килограммов"); }
 function ctEval(D, m) {
   var w = 0, v = 0, k = 0;
   for (var i = 0; i < D.w.length; i++) if (m >> i & 1) { w += D.w[i]; v += D.v[i]; k++; }
@@ -625,8 +627,8 @@ function checkContainer(P, ans) {
 function container(seed, cb, opts) {
   var d = diffOf(opts), P = genContainer(seed, d), D = P.data, n = D.w.length, m = 0;
   var desc = function (j) { return D.names[j] + ": " + D.w[j] + " " + kg(D.w[j]) + ", ценность " + D.v[j]; };
-  var cond = head(opts, d) + "Укладка контейнера. Экспедиция Нижних уходит в дальний штрек; контейнер выдержит не больше " + D.W + " " + kg(D.W) +
-    (D.K ? ", и мест в нём " + cnt(D.K, "n", "место", "места", "мест") : "") + ". Груз должен быть ценностью не меньше " + D.V + ". На складе: " +
+  var cond = head(opts, d) + "Укладка контейнера. Экспедиция Нижних уходит в дальний штрек; контейнер выдержит не больше " + D.W + " " + kgGen(D.W) +
+    (D.K ? ", и мест в нём — всего " + nw(D.K, "n") : "") + ". Груз должен быть ценностью не меньше " + D.V + ". На складе: " +
     intList(n).map(function (j) { return low(desc(j)); }).join("; ") + "." + (D.bad ? " " + D.names[D.bad[0]] + " и " + low(D.names[D.bad[1]]) + " вместе не везут: опасно." : "") +
     " Решений несколько, годится любое; образцовое — с самой большой ценностью, какая возможна.";
   var last = start("container", d, P, "Укладка контейнера", cond, function (st, finish, fail) {
@@ -709,10 +711,11 @@ function rsLevels(vals, maxL) {
 }
 /* формулы по значению: ключ — само число (дробь как частное: равные дроби дают одно и то же число) */
 function rsByValue(E) {
-  var by = new Map(), seen = {};
+  /* в одной маске формулы и так разные, а разные маски — разные наборы резисторов */
+  var by = new Map();
   for (var mk in E) E[mk].forEach(function (x) {
-    if (x.leaves < 2 || seen[x.key]) return;
-    seen[x.key] = 1; var k = x.q.n / x.q.d, l = by.get(k);
+    if (x.leaves < 2) return;
+    var k = x.q.n / x.q.d, l = by.get(k);
     if (l) l.push(x); else by.set(k, [x]);
   });
   return by;
@@ -747,10 +750,11 @@ function rsTopBy(E, n, L) {
   }
   return { top: top, tq: tq };
 }
+function rsUniq(L) { var seen = {}; return L.filter(function (x) { if (seen[x.key]) return false; seen[x.key] = 1; return true; }); }
 function rsSols(by, top, k) {
   var seen = {}, out = [];
-  (by.get(k) || []).forEach(function (x) { if (!seen[x.key]) { seen[x.key] = 1; out.push(x); } });
-  (top.get(k) || []).forEach(function (t) { var z = rsComb(t[0], t[1], t[2]); if (!seen[z.key]) { seen[z.key] = 1; out.push(z); } });
+  (by.get(k) || []).forEach(function (x) { out.push(x); });
+  (top.get(k) || []).forEach(function (t) { var z = rsComb(t[0], t[1], t[2]), sk = z.key + "@" + z.mask; if (!seen[sk]) { seen[sk] = 1; out.push(z); } });
   return out;
 }
 function genResistors(seed, d, depth) {
@@ -775,18 +779,18 @@ function genResistors(seed, d, depth) {
     if (d < 2) {
       var src = pref.length && r.chance(0.8) ? pref : cands;
       for (var tr = 0; tr < 6 && src.length && !sols; tr++) {
-        var ti = r.int(0, src.length - 1), L = solsOf(src[ti]);
+        var ti = r.int(0, src.length - 1), L = rsUniq(solsOf(src[ti]));
         if (L.length >= 2 && L.length <= 40) { T = L[0].q; sols = L; }
         else src = src.slice(0, ti).concat(src.slice(ti + 1));
       }
     } else {
       if (cands.length < 2) continue;
-      var ck = cands.slice(); r.shuffle(ck); ck = ck.slice(0, 30);
+      var ck = cands.slice(); r.shuffle(ck); ck = ck.slice(0, 20);
       var found = [];
-      for (var ia = 0; ia < ck.length && found.length < 12; ia++) for (var ib = 0; ib < ck.length && found.length < 12; ib++) {
+      for (var ia = 0; ia < ck.length && found.length < 6; ia++) for (var ib = 0; ib < ck.length && found.length < 6; ib++) {
         if (ia === ib) continue;
         var k1 = ck[ia], k2 = ck[ib], ps = [], seenP = {}, dead = false, L1 = solsOf(k1), L2 = solsOf(k2);
-        if (L1.length > 30 || L2.length > 30) continue;
+        if (L1.length > 40 || L2.length > 40) continue;
         L1.forEach(function (x) {
           var any = false;
           L2.forEach(function (y) { if (x.mask & y.mask) return; any = true; var pk = x.key + "|" + y.key; if (!seenP[pk]) { seenP[pk] = 1; ps.push({ x: x, y: y, leaves: x.leaves + y.leaves }); } });
@@ -1050,7 +1054,7 @@ function frequencies(seed, cb, opts) {
     if (D.forb[i0]) forbTxt.push("узлу " + (i0 + 1) + " нельзя частоту " + D.forb[i0][0] + ": " + D.why[i0]);
   }
   var cond = head(opts, d) + "Частоты узлов. " + cap(cnt(n, "m", "узел", "узла", "узлов")) + " связи, номера с первого по " + ORDM[n] + ". Соседние узлы слышат друг друга, и на одной частоте им нельзя: будут помехи. Соседи: " +
-    neighTxt.join("; ") + ". Частот " + nw(k) + "; " + ORDF[k] + " — резервная, её лучше занимать как можно реже" + (d === 2 ? ": без неё здесь не обойтись, но больше чем на " + pcnt(D.limitR, "узле", "узлах") + " её не дадут" : "") + ". Уже настроены: " +
+    neighTxt.join("; ") + ". Частот " + nw(k) + "; " + ORDF[k] + " — резервная, её лучше занимать как можно реже" + (d === 2 ? ": без неё здесь не обойтись, но больше чем на " + pcnt(D.limitR, "узле", "узлах") + " её не дадут" : "") + ". " + (fixTxt.length === 1 ? "Уже настроен: " : "Уже настроены: ") +
     fixTxt.join(", ") + "." + (forbTxt.length ? " " + cap(forbTxt.join("; ")) + "." : "") + " Раздайте частоты всем узлам. Решений несколько, годится любое без помех; образцовое — когда на резервной частоте меньше всего узлов.";
   var last = start("frequencies", d, P, "Частоты узлов", cond, function (st, finish, fail) {
     var nodeLabel = function (u) { return "Узел " + (u + 1) + ": " + (col[u] ? fname(col[u]) : "без частоты") + (D.fix[u] ? ", настроен заранее" : ""); };
@@ -1527,7 +1531,7 @@ function mixture(seed, cb, opts) {
   var needV = function () { return stage === 1 ? D.V : D.V2; }, needC = function () { return stage === 1 ? D.C : D.C2; };
   var vol = function () { return sum(tank); };
   var conc = function () { var v = vol(); if (!v) return ""; var s = 0; for (var j = 0; j < tank.length; j++) s += tank[j] * comps[j].c; return s % v ? "около " + Math.round(s / v) + " " + pct(Math.round(s / v)) : "ровно " + (s / v) + " " + pct(s / v); };
-  var stockTxt = function (arr) { return andList(arr.map(function (x) { return x.name + " — " + x.s + " " + lit(x.s); })); };
+  var stockTxt = function (arr) { return andList(arr.map(function (x) { return x.name + " — " + (x.s ? x.s + " " + lit(x.s) : x.c ? "кончился" : "кончилась"); })); };
   var cond = head(opts, d) + "Смесь по пропорции. " + (two ?
     "Работа в два этапа, запас на оба — общий: " + stockTxt(comps) + ". " + stageText(1, 2) + ": в бак А нужно ровно " + D.V + " " + lit(D.V) + " по " + D.C + " " + pct(D.C) + ". " +
     stageText(2, 2) + ": в бак Б — ровно " + D.V2 + " " + lit(D.V2) + " по " + D.C2 + " " + pct(D.C2) + ", и смесь из бака А должна пойти в дело — хотя бы литр." :
@@ -1663,6 +1667,7 @@ function genRations(seed, d, depth) {
       cur = nxt;
     }
     if (D.rules.length < nr) continue;
+    if (D.rules.length) cur = rtAll(D, 31); /* счёт заново: прежний список мог упереться в потолок */
     if (cur.length < 2 || cur.length > 30) continue;
     var mnS = Math.min.apply(null, cur.map(function (to) { return rtSpread(D, to); }));
     if (!cur.some(function (to) { return rtSpread(D, to) > mnS; }) && r.chance(0.7)) continue;
@@ -1701,7 +1706,7 @@ function rations(seed, cb, opts) {
   var ruleTxt = D.rules.map(function (ru) {
     if (ru.t === "no") return "бригаде " + BRIG[D.names[ru.b]] + " не давать " + RT_TYPES[ru.ty].a + ": " + RT_NO[ru.why];
     if (ru.t === "with") return "ящики " + (ru.x + 1) + " и " + (ru.y + 1) + " — одной бригаде: они в одной связке";
-    if (ru.t === "apart") return "ящики " + (ru.x + 1) + " и " + (ru.y + 1) + " — разным бригадам: это неприкосновенный запас, его не держат в одних руках";
+    if (ru.t === "apart") return "ящики " + (ru.x + 1) + " и " + (ru.y + 1) + " — разным бригадам: " + ["это неприкосновенный запас, его не держат в одних руках", "по описи они у разных бригадиров", "их понесут разными штреками"][(ru.x + ru.y) % 3];
     return "каждой бригаде — хотя бы один ящик " + RT_TYPES[ru.ty].g;
   });
   var cond = head(opts, d) + "Делёж пайков. " + cap(cnt(D.m, "f", "бригада", "бригады", "бригад")) + ": " + andList(intList(D.m).map(function (b) { return bname(b) + " — " + cnt(D.sizes[b], "m", "человек", "человека", "человек"); })) +
@@ -1986,7 +1991,7 @@ function lamps(seed, cb, opts) {
   var wallsTxt = []; for (var r0 = 0; r0 < R; r0++) { var ws = []; for (var c0 = 0; c0 < R; c0++) if (D.walls[r0 * R + c0]) ws.push(c0 + 1); wallsTxt.push("ряд " + (r0 + 1) + ": " + (ws.length ? (ws.length === 1 ? "стена на клетке " : "стены на клетках ") + andList(ws) : "стен нет")); }
   var sizeW = ["", "", "", "", "четыре на четыре", "пять на пять", "шесть на шесть"][R];
   var cond = head(opts, d) + "Расстановка ламп. План коридоров " + sizeW + ": ряды с севера на юг, клетки в ряду с запада на восток. " + cap(wallsTxt.join("; ")) +
-    ". Всё, что не стена, — коридор. Лампа освещает свою клетку и коридор по прямой во все четыре стороны — до стены или края плана. Осветите все клетки коридоров, ламп — не больше " + D.limit + "." +
+    ". Всё, что не стена, — коридор. Лампа освещает свою клетку и коридор по прямой во все четыре стороны — до стены или края плана. Осветите все клетки коридоров, ламп — не больше " + GENW[D.limit] + "." +
     (D.rule ? " Лампы не должны видеть друг друга — по прямой без стены между ними они слепят; такую лампу просто не поставить." : "") + " Решений несколько, годится любое; образцовое — с наименьшим числом ламп.";
   var last = start("lamps", d, P, "Расстановка ламп", cond, function (st, finish, fail) {
     var darkList = function () { var a = []; for (var k = 0; k < K; k++) if (!lit[k]) { var c = M.cells[k]; a.push(rc(Math.floor(c / R), c % R)); } return a; };
@@ -2175,7 +2180,7 @@ function genPipes(seed, d, depth) {
     var rot0 = tiles.map(function (T) { return T.rot; });
     if (ppTrace(D, rot0).ok) continue;
     var res = ppPaths(D, CAPN, 40000);
-    if (res.over || res.list.length < 2) continue;
+    if (res.over || res.list.length < 2 || res.list.length >= CAPN) continue;
     minC = Math.min.apply(null, res.list.map(function (x) { return x.cost; }));
     if (minC < costMin) continue;
     if (d && !res.list.some(function (x) { return x.cost > minC; }) && r.chance(0.6)) continue;
@@ -2414,7 +2419,7 @@ function mirrors(seed, cb, opts) {
   var turnW = function (t) { return t === "L" ? "налево" : "направо"; };
   var cond = head(opts, d) + "Отражатели. Поле " + sizeW + ": ряды с севера на юг, клетки в ряду с запада на восток. " + emTxt + ". Приёмник — " + rc(Math.floor(rcv / R), rcv % R) + ". " +
     (cols.length === 1 ? "Колонна" : "Колонны") + ": " + cols.join("; ") + "." + (fx.length ? " Закреплённые отражатели, их не снять: " + fx.join("; ") + "." : "") +
-    " Отражатель ставится в пустую клетку и поворачивает луч на четверть оборота — налево или направо по ходу луча. Луч, ушедший за край поля или в колонну, пропадает. Отражателей у вас — не больше " + D.limit + ". Решений несколько, годится любое; образцовое — с наименьшим числом отражателей.";
+    " Отражатель ставится в пустую клетку и поворачивает луч на четверть оборота — налево или направо по ходу луча. Луч, ушедший за край поля или в колонну, пропадает. Отражателей у вас — не больше " + GENW[D.limit] + ". Решений несколько, годится любое; образцовое — с наименьшим числом отражателей.";
   var last = start("mirrors", d, P, "Отражатели", cond, function (st, finish, fail) {
     var beamTxt = function (res) {
       var t = res.turns.map(function (x) { return "в " + rc(x.r, x.c).replace("ряд ", "ряду ").replace("клетка ", "клетке ") + " — " + DIRA[x.dir]; });
@@ -2540,6 +2545,7 @@ function genCrews(seed, d, depth) {
         cur = nxt;
       }
       if (!D.rules.length) continue;
+      cur = cwAll(D, 31, true); /* счёт заново: прежний список мог упереться в потолок */
     }
     if (cur.length < 2 || cur.length > 30) continue;
     var mn = Math.min.apply(null, cur.map(function (to) { return cwSpan(D, to); }));
