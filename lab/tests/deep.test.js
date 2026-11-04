@@ -24,6 +24,7 @@ for (const f of files) {
   if (fs.existsSync(p)) vm.runInContext(fs.readFileSync(p, "utf8"), ctx, { filename: f });
 }
 const LAB = ctx.LAB;
+if (LAB.deepLevelsN) LAB.deepLevelsN(); /* как main.js: после всех файлов (враги блоков — и из mutants.js) */
 let fails = 0, floors = 0;
 const t0 = Date.now();
 function err(m) { fails++; if (fails <= 40) console.error("✗ " + m); }
