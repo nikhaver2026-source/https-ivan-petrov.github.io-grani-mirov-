@@ -238,7 +238,7 @@ LAB.RECIPES.forEach(function (rc) { if (rc.id === "wmod") { rc.out = "m_power"; 
    своих деталей: выше сотого уровня ни один из них не встаёт. */
 /* схемы глубин — класса «схема синтеза» (как прежние высшие), а нужная оснастка — своя: deepT, ступень 6–10 */
 function deepTier(blk) { return blk >= 15 ? 10 : blk >= 13 ? 9 : blk >= 10 ? 8 : blk >= 7 ? 7 : 6; }
-LAB.deepTier = deepTier;
+LAB.deepBenchTier = deepTier; /* ступень верстака для схем глубин; LAB.deepTier — пропуска глубин (deep.js), не путать */
 var R_DEEP = [
   { id: "r_dcoil", out: "dp_coil", n: "Перемотать счётную катушку", need: { relay: 2, wire: 2, chip: 1 }, blk: 6, group: "restore", desc: "Два реле на одном сердечнике и микросхема счёта: катушка слышит шаги, как сфера Переклички." },
   { id: "r_dalloy", out: "dp_alloy", n: "Переплавить звонкий сплав", need: { scrap: 4, ceramic: 1 }, blk: 6, group: "restore", desc: "Металлолом с керамикой — в тигель стапеля: остывая, слиток начинает звенеть." },

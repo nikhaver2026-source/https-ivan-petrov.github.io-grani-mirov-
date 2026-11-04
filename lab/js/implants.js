@@ -749,6 +749,8 @@ function tick() {
   var g = G(); if (!g || !g.st) return;
   var st = g.st;
   tickN++;
+  /* (после 4.1) новый глубокий блок поднимает потолок ступеней — «Эхо» говорит об этом один раз на блок */
+  if (tickN % 8 === 0) { var ds = deepStep(); if (ds > (cy().stepSeen || 0)) { cy().stepSeen = ds; gm().later(stepNews, 9000); } }
   ["overT", "reflectT", "phaseT", "muteT", "mimicT", "mirrorT", "groundT"].forEach(function (k) { if (st[k] > 0) { st[k]--; if (!st[k]) offSay(k); } });
   if (st.nanoT > 0) { st.nanoT--; if (!st.nanoT) { st.nano = 0; offSay("nanoT"); } }
   if (st.regenT > 0) { st.regenT--; g.hp = Math.min(g.hpMax, g.hp + (st.regenHp || 1)); }
@@ -804,7 +806,7 @@ LAB.IMPLANTS.forEach(function (im) {
   for (var pk0 in need0) if (pk0 !== "proto") pd = Math.max(pd, LAB.PART_DEPTH[pk0] || 1);
   if (im.deep) { LAB.ITEMS[id].depth = im.minL; LAB.ITEMS[id].price = im.price; }
   if (!LAB.RECIPES.some(function (q) { return q.id === id; })) {
-    var rcI = { id: id, out: id, n: LAB.ITEMS[id].n, need: need0, cls: im.deep ? "syn" : CLS_BY_T[im.t], bp: true, minL: pd, cyb: im.cat, cybN: im.deep ? im.t : Math.max(0, im.t - 1), desc: im.desc };
+    var rcI = { id: id, out: id, n: LAB.ITEMS[id].n, need: need0, cls: im.deep ? "syn" : CLS_BY_T[im.t], bp: true, minL: pd, cyb: im.cat, cybN: im.deep ? ({ 5: 6, 6: 8, 7: 10, 8: 12 })[im.t] : Math.max(0, im.t - 1), desc: im.desc };
     if (im.deep) { rcI.deep = im.blk; rcI.deepT = deepTierI(im.blk); }
     LAB.RECIPES.push(rcI);
   }
@@ -1070,7 +1072,7 @@ function station(o) {
 }
 
 /* ════════ (после 4.1) ДЕЙСТВИЯ ИМПЛАНТОВ ГЛУБИН ════════ */
-function deepTierI(blk) { return LAB.deepTier ? LAB.deepTier(blk) : blk >= 15 ? 10 : blk >= 13 ? 9 : blk >= 10 ? 8 : blk >= 7 ? 7 : 6; }
+function deepTierI(blk) { return LAB.deepBenchTier ? LAB.deepBenchTier(blk) : blk >= 15 ? 10 : blk >= 13 ? 9 : blk >= 10 ? 8 : blk >= 7 ? 7 : 6; }
 /* схема импланта или чипа глубин: детали направления и детали Нижних по классу (катушка, нервная нить,
    резонансная пластина, кристалл слоя; Цехам — паровой клапан) */
 function deepNeed(d, c) {
@@ -1343,6 +1345,16 @@ function deepHurt(fin, adt, src) {
   if (st.deferT > 0 && fin > 0) { var now = Math.max(1, Math.round(fin / 3)); st.deferPool = (st.deferPool || 0) + (fin - now); fin = now; }
   if (LAB.chem && LAB.chem.hurtK) fin = LAB.chem.hurtK(fin, adt, src);
   return fin;
+}
+/* «Эхо» о потолке ступеней глубин: кибернетика, химия, ловушечное дело — сколько можно и сколько есть */
+function stepNews() {
+  var g = G(); if (!g || g.dead) return;
+  var Ch = LAB.chem, Tr = LAB.traps, best = 0;
+  CAT_ORDER.forEach(function (c) { best = Math.max(best, catLv(c)); });
+  var t = "«Эхо»: глубже — и умения глубже. Кибернетика растёт теперь до ступени " + catCap() + " по направлению и до " + lvlCap() + " общей" +
+    (Ch && Ch.brCap ? ", химия — до " + Ch.brCap() + " по направлению" : "") + (Tr && Tr.stageCap ? ", ловушечное дело — до " + Tr.stageCap() : "") + ". Сейчас: кибернетика — общая " + level() + ", лучшее направление — " + best +
+    (Ch && Ch.level ? "; химия — общая " + Ch.level() : "") + (Tr && Tr.stage ? "; ловушечное дело — " + Tr.stage() : "") + ".";
+  LAB.say(t, { interrupt: false });
 }
 /* последняя перекличка (и капсула последнего вдоха, chem.js): смертельный удар оставляет единицу */
 function lastWard(fin) {
