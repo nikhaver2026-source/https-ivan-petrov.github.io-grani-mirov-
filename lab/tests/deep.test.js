@@ -1,0 +1,96 @@
+#!/usr/bin/env node
+/* Проверка глубоких блоков (VI–XV) в Node: для каждого готового блока — уровни строятся по
+   секторам, этажи проходимы от прибытия до выхода вниз, лифт достижим; на сотом уровне прибытие
+   прежнее, на 101-м — «Край Разлома»; на самом дне — «Ядро Разлома»; срезы стоят только в тайных
+   комнатах и подсобках и ведут вниз, но не мимо двух последних уровней блока; у среза с кодом —
+   записка с этим кодом на том же этаже; двери с допуском не отрезают выход; стенды испытаний —
+   в испытательных камерах; полы коридоров бетонные, полы помещений — свои; глубина растёт без
+   скачков назад. Уровни 1–100 этой проверкой не меняются (их проверяет world.test.js).
+   Запуск: node lab/tests/deep.test.js [уровней на блок, по умолчанию 6]
+   Пробные блоки из другой папки: DEEP_DIR=… node lab/tests/deep.test.js */
+"use strict";
+const fs = require("fs"), path = require("path"), vm = require("vm");
+const ROOT = path.resolve(__dirname, ".."), DIR = process.env.DEEP_DIR || ROOT;
+const PER = Math.max(2, Number(process.argv[2]) || 6);
+const ctx = { console: { log() {}, warn() {}, error: console.error }, Math, JSON, Object, Array, String, Number, Uint8Array, Int8Array, Int16Array, Int32Array, Float64Array, Error, Date, RegExp, Proxy, Symbol, Map, Set };
+ctx.globalThis = ctx; vm.createContext(ctx);
+const deepFiles = [];
+for (let n = 6; n <= 15; n++) { const f = path.join(DIR, "js/d" + n + ".js"); if (fs.existsSync(f)) deepFiles.push(f); }
+const files = ["js/data.js", "js/texts.js", "js/lore.js", "js/b1.js", "js/b2.js", "js/b3.js", "js/b4.js", "js/b5.js", "js/deep.js", "js/deep_texts.js", "js/deep_floor.js", "DEEP", "js/world.js", "js/mutants.js", "js/depths.js", "js/goods.js", "js/medic.js", "js/arms.js", "js/traps.js", "js/puzzles.js", "js/puzzles2.js", "js/puzzles3.js", "js/chempuz.js", "js/annex_rooms.js", "js/annex_var.js", "js/annex_frag.js", "js/annex_gen.js", "js/fixtures_data.js", "js/annex_texts.js", "js/library_texts.js", "js/library.js", "js/annex.js", "js/garrison.js", "js/workshop.js", "js/repair.js", "js/implants.js", "js/arsenal.js", "js/chem.js", "js/kitchen.js", "js/floors.js"];
+for (const f of files) {
+  if (f === "DEEP") { deepFiles.forEach(p => vm.runInContext(fs.readFileSync(p, "utf8"), ctx, { filename: p })); continue; }
+  const p = path.join(ROOT, f);
+  if (fs.existsSync(p)) vm.runInContext(fs.readFileSync(p, "utf8"), ctx, { filename: f });
+}
+const LAB = ctx.LAB;
+let fails = 0, floors = 0;
+const t0 = Date.now();
+function err(m) { fails++; if (fails <= 40) console.error("✗ " + m); }
+function ok(c, m) { if (c) console.log("  ✓ " + m); else err(m); }
+if (LAB.LEVELS_N <= 100) {
+  console.log("Глубоких блоков ещё нет (LEVELS_N = " + LAB.LEVELS_N + "): проверять нечего.");
+  process.exit(0);
+}
+console.log("Глубоких файлов: " + deepFiles.length + ", дно на уровне " + LAB.LEVELS_N + " (блок " + LAB.roman(LAB.blockOf(LAB.LEVELS_N)) + ")");
+/* глубина растёт без скачков назад */
+let prev = LAB.depth(100, 20), mono = true;
+for (let L = 101; L <= LAB.LEVELS_N; L += Math.max(1, Math.floor((LAB.LEVELS_N - 100) / 3000))) for (const F of [1, 20]) { const d = LAB.depth(L, F); if (d < prev) mono = false; prev = d; }
+ok(mono, "глубина растёт без скачков назад от сотого уровня до дна");
+const seed = "deepT";
+const T = LAB.T, W = LAB.W;
+const UTIL_OK = (fl, ri) => ri === fl.secret || (() => { const t = fl.rooms[ri].type, def = LAB.ROOMS[t] || {}; return !!(def.util || { storage: 1, parts: 1, locker: 1, pumps: 1, switchboard: 1, workroom: 1, repair: 1, charging: 1, janitor: 1, boiler: 1, generator: 1, laundry: 1, archive: 1 }[t] || (LAB.floors.CONC && LAB.floors.CONC[t])); })();
+function checkFloor(L, F, tag) {
+  let fl;
+  try { fl = LAB.getFloor(seed, L, F); } catch (e) { err(`${tag} ${L}-${F}: этаж не строится: ${e.message}`); return null; }
+  floors++;
+  const res = LAB.solve(fl, { tier: 999999 });
+  if (!res.down) err(`${L}-${F}: выход вниз недостижим`);
+  if (!res.elev) err(`${L}-${F}: лифт недостижим`);
+  /* коридоры бетонные */
+  for (let c = 0; c < fl.corrs.length; c++) if (LAB.floors.corr(fl, c) !== "concrete") { err(`${L}-${F}: коридор ${c} не бетонный`); break; }
+  fl.objs.forEach(o => {
+    if (o.type === "srez") {
+      const R = LAB.blockRange(LAB.blockOf(L));
+      if (!(o.to > L && o.to <= R.to - 2)) err(`${L}-${F}: срез ${o.id} ведёт на ${o.to} (блок ${R.from}–${R.to})`);
+      if (!UTIL_OK(fl, o.room)) err(`${L}-${F}: срез не в тайной комнате и не в подсобке (${fl.rooms[o.room].type})`);
+      if (o.need === "code" && !fl.items.some(it => it.note === "cutcode" && it.code === o.code)) err(`${L}-${F}: у среза с кодом нет записки с кодом`);
+      if (o.need === "code" && fl.items.some(it => it.note === "cutcode" && fl.room[it.y * W + it.x] === o.room)) err(`${L}-${F}: записка с кодом среза — в той же комнате`);
+    }
+    if (o.type === "trialst" && !(LAB.ROOMS[fl.rooms[o.room].type] || {}).trial) err(`${L}-${F}: стенд испытания не в испытательной камере`);
+  });
+  fl.doors.forEach(d => { if (d.lock && d.lock.type === "rank" && !(LAB.ROOMS[fl.rooms[d.room].type] || {}).rank) err(`${L}-${F}: допуск на двери не той комнаты`); });
+  return fl;
+}
+/* прибытие и дно */
+const f101 = LAB.getFloor(seed, 101, 1);
+ok(f101.rooms.some(r => r.type === "riftin"), "на 101-м уровне прибытие — «Край Разлома»");
+const f100 = LAB.getFloor(seed, 100, 20);
+ok(f100.rooms.some(r => r.type === "source") && f100.objs.some(o => o.type === "reactor" && !o.final), "на сотом — настоящий Исток, и его пульт уже не финал");
+const fBot = LAB.getFloor(seed, LAB.LEVELS_N, 20);
+ok(fBot.rooms.some(r => r.type === "riftroot") && fBot.objs.some(o => o.type === "reactor" && o.final), "на самом дне — Ядро Разлома и финальный пульт");
+ok(LAB.ROOMS.riftroot && LAB.ROOMS.riftroot.n === "Ядро Разлома", "помещение на дне называется «Ядро Разлома»");
+/* каждый готовый блок */
+const stat = { srez: 0, trial: 0, dark: 0, rank: 0, trader: 0 };
+for (let n = LAB.DEEP_FIRST; n <= LAB.blockOf(LAB.LEVELS_N); n++) {
+  const R = LAB.blockRange(n), D = LAB.DEEP[n];
+  if (!D || !LAB.deepReady(n)) { err("блок " + n + " не готов, а дно ниже"); continue; }
+  const picks = new Set([R.from, R.from + 4, R.to - 2, R.to]);
+  for (let k = 0; picks.size < PER + 4 && k < 400; k++) picks.add(R.from + (LAB.hash32("pick" + n + ":" + k) >>> 0) % R.size);
+  let bad = 0;
+  [...picks].sort((a, b) => a - b).forEach(L => {
+    const lv = LAB.LEVELS[L];
+    if (!lv || !lv.name || !LAB.BOSSES[lv.boss]) { bad++; return; }
+    for (const F of [1, 2 + (L % 9), 8 + (L % 7), 20]) {
+      const fl = checkFloor(L, F, "блок " + n);
+      if (!fl) continue;
+      fl.objs.forEach(o => { if (o.type === "srez") stat.srez++; if (o.type === "trialst") stat.trial++; if (o.type === "dtrader") stat.trader++; });
+      fl.rooms.forEach(r => { if (r.dark) stat.dark++; if (r.rank) stat.rank++; });
+    }
+  });
+  ok(!bad, `блок ${LAB.roman(n)} «${LAB.BLOCKS[n].name}»: уровни строятся по секторам (${picks.size} проверено)`);
+}
+console.log("  срезов " + stat.srez + ", стендов " + stat.trial + ", помещений вне надзора " + stat.dark + ", с допуском " + stat.rank + ", теневых торговцев " + stat.trader);
+ok(stat.srez > 0, "срезы есть");
+console.log(`Этажей: ${floors}, ${((Date.now() - t0) / 1000).toFixed(1)} с`);
+if (fails) { console.log("ПРОВАЛЕНО: " + fails); process.exit(1); }
+console.log("Все проверки пройдены.");

@@ -2329,6 +2329,7 @@ function statusTick(onlyTimers) {
   if (LAB.zones && LAB.zones.tick) LAB.zones.tick(); /* облучение и газ, пока стоите в особой зоне (1.5) */
   if (LAB.implants) LAB.implants.tick(); /* (2.0) действие имплантов во времени, чип регенерации */
   if (LAB.chem) LAB.chem.tick(); /* (3.0) химия: регенерация, репеллент, токсиколог */
+  if (LAB.deepSys) LAB.safe(LAB.deepSys.tick); /* (после 4.1) глубокие блоки: статус, нормы, прокат, испытания */
   if (st.haste > 0) { st.haste--; if (!st.haste) sayq("Ускорение закончилось."); }
   if (st.cloak > 0) { st.cloak--; if (!st.cloak) { sayq("Маскировка спала."); A("play", "cloak_off"); } }
   if (st.hide && !hidden()) unhide("Вы выбрались из укрытия: теперь вас видно.");
@@ -2387,6 +2388,7 @@ function fire(dir, burst) {
   if (now - lastShot < shotGap(w) * (burst ? 0.6 : 1)) return false;
   if (now < reloadUntil) { sayOnce("reloading", "Перезарядка..."); return false; }
   g.face = dir;
+  if (LAB.deepSys && !LAB.deepSys.weaponOk(w)) { stopFire(); return false; } /* (после 4.1) оружие по допуску */
   /* мастерская: ствол перегрет — ждём; изношенное оружие даёт осечки */
   var wk = LAB.workshop ? LAB.workshop.beforeShot(w, now) : null;
   if (wk === "hot") { stopFire(); return false; }
@@ -2638,6 +2640,7 @@ function kill(f, quiet) {
   /* (3.7, нелогичность) ОКО помнит, кто пал только что — машина или тварь: реплики о серии потерь
      и о сработавшей ловушке — о том, кто пал (oko.js, loss) */
   if (LAB.oko && LAB.oko.loss && !f.ally) LAB.oko.loss(f.kind === "mech");
+  if (LAB.deepSys && !f.ally) LAB.deepSys.onKill(f); /* (после 4.1) норма смены «твари» */
   /* (2.0) ОКО отвечает на потери: машина, тварь, турель — или серия подряд */
   if (LAB.oko && LAB.oko.react && !f.ally && !f.boss) {
     var kn = Date.now();

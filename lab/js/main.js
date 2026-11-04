@@ -142,7 +142,14 @@ LAB.selftest = function () {
      и последний уровень каждого блока и каждый пятый (все уровни целиком
      проверяет генератор при сборке, tests/world.test.js). */
   var phone = !!window.LabTTS && !LAB.desktop;
-  var deepPick = function (L) { return L <= 11 || !phone || L === LAB.LEVELS_N || L % 5 === 0 || L % 20 === 1; };
+  /* (после 4.1) ниже сотого уровней сотни тысяч: в обходе — начало и конец каждого глубокого блока и
+     начала его первых полос (секторов), а не каждый уровень */
+  var deepSet = {};
+  if (LAB.blockRange && LAB.DEEP_FIRST) for (var nb = LAB.DEEP_FIRST; nb <= LAB.DEEP_LAST; nb++) {
+    var R = LAB.blockRange(nb), bl = Math.max(1, Math.round(R.size / 40));
+    [R.from, R.from + 1, R.from + bl, R.from + 2 * bl, R.from + 3 * bl, R.to - 1, R.to].forEach(function (x) { deepSet[x] = 1; });
+  }
+  var deepPick = function (L) { return L > 100 ? !!deepSet[L] || L === LAB.LEVELS_N : L <= 11 || !phone || L === LAB.LEVELS_N || L % 5 === 0 || L % 20 === 1; };
   /* обход — без звука: сотни этажей подряд, иначе игра закажет музыку и
      голоса каждого уровня разом (памяти телефона не хватит). И по уровню за
      раз: между уровнями страница передыхает и убирает мусор прошлых этажей —

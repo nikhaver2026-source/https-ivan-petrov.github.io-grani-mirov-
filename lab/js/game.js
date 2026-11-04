@@ -228,6 +228,7 @@ function objName0(o) {
   if (o.type === "hq") return "Штаб: " + LAB.FACTIONS[o.faction].n;
   if (o.type === "comp" && LAB.COMPS) return (LAB.COMPS[o.kind] || LAB.COMPS.archive).n;
   if (o.type === "fx" && LAB.FIX && LAB.FIX.T[o.fx]) { var pn = LAB.plants && LAB.plants.nameOf ? LAB.plants.nameOf(o) : null; return pn || LAB.FIX.T[o.fx].n; } /* (после 4.0) растение — по виду */
+  if ((o.type === "stairs_down" || o.type === "stairs_up") && LAB.deepStairName && G.L > 100) { var sn = LAB.deepStairName(G.L, o.type === "stairs_down"); if (sn) return sn + (stairBlocked(o) ? ", под завалом" : ""); } /* (после 4.1) лестница комплекса */
   if (o.type === "stairs_down" && stairBlocked(o)) return "Лестница вниз (завалена)";
   if (o.type === "stairs_up" && stairBlocked(o)) return "Лестница вверх (завалена)";
   if (o.type === "reactor" && o.final) return G.done ? "Пульт «Истока» (ключ повёрнут)" : "Пульт «Истока»"; /* (3.7, нелогичность) не реактор */
@@ -261,6 +262,7 @@ function lockText(d) {
   if (lk.type === "melody") return "звуковой замок: открывается мелодией";
   if (lk.type === "hazard") return "санпропускник горячей камеры: пускает только в защитном костюме";
   if (lk.type === "logic") return "логический замок: " + (LAB.puzzles ? LAB.puzzles.nameOf(lk.kind) : "задача");
+  if (lk.type === "rank" && LAB.deepSys) return LAB.deepSys.rankText(lk); /* (после 4.1) дверь с допуском Переклички */
   return "заперто";
 }
 game.lockText = lockText;
@@ -288,6 +290,7 @@ function doorBlock(d) {
   if (lk.type === "riddle") return (fs.riddleWait && fs.riddleWait[d.id] > (fs.okoT || 0)) ? "Голосовой замок молчит после неверного ответа. Подождите." : "Голосовой замок задаёт загадку.";
   if (lk.type === "circuit") return "Схема реле горит. Погасите её.";
   if (lk.type === "logic") return "Замок ждёт решения задачи: " + (LAB.puzzles ? LAB.puzzles.nameOf(lk.kind) : "головоломка") + ".";
+  if (lk.type === "rank") return LAB.deepSys ? LAB.deepSys.rankBlock(lk) : "Заперто.";
   if (lk.type === "melody") return G.melodies[melKey(d.id)] ? "Замок ждёт мелодию. «Эхо» её помнит." : "Замок ждёт мелодию. Её проигрывает радиоприёмник где-то на этом этаже.";
   return "Заперто.";
 }
@@ -306,6 +309,7 @@ function openNote(d) {
   if (lk.type === "rubble") return "Проход расчищен";
   if (lk.type === "lockdown") return "Блокировка снята";
   if (lk.type === "secret") return "Тайник вскрыт";
+  if (lk.type === "rank") return "Допуск есть";
   return "Можно открыть";
 }
 /* Ключ «Истока» этого уровня (на 10-м — от стража Ядра, на самом нижнем — свой). */
@@ -334,6 +338,7 @@ function itemName(it) {
     case "gatepass": return it.core ? (riftRoot(it.L || G.L) ? "Ключ Ядра Разлома" : trueSource(it.L || G.L) ? "Ключ настоящего «Истока»" : "Ключ доступа к реактору «Исток»") : "Шлюзовая ключ-карта уровня " + it.L;
     case "armor": return it.a.name + ", защита " + LAB.armorDef(it.a);
     case "key": return it.n;
+    case "trialtoken": return "Жетон испытания";
     case "note": return "Записка «" + noteText(it).t + "»";
     case "sample": return it.sid >= 2000 ? "Образец глубин" : "Образец «Колыбели» номер " + (it.sid + 1); /* (после 4.1) ниже Истока — образцы глубин */
     case "chip": return "Чип импланта «" + implantDef(it.implant).n + "»";
@@ -425,6 +430,7 @@ function noteText(it, L, F) {
   if (it.note === "code") return LAB.codeNote(it.code, it.room, h);
   if (it.note === "safe") return LAB.safeNote(it.code, it.room, h);
   if (it.note === "pcpin" && LAB.pinNote) return LAB.pinNote(it.code, it.room, h);
+  if (it.note === "cutcode" && LAB.deepSys) return LAB.deepSys.cutNote(it, h); /* (после 4.1) код замка среза */
   if (it.note === "formula" && LAB.chem) return LAB.chem.noteText(it, h); /* (3.0) лабораторный журнал с рецептурой */
   if (it.note === "secret") return LAB.secretNote(it.room, it.side, h);
   if (it.note === "depth" && LAB.depths) return LAB.depths.noteText(it, L, F);
@@ -548,6 +554,7 @@ function armorValue() {
   /* (2.0) чип кожного панциря и наноброня */
   if (LAB.implants) a += Math.round(LAB.implants.stat("armor")) + (G.st.nanoT > 0 ? G.st.nano || 0 : 0);
   if (G.faction === "sec") a = Math.round(a * 1.15);
+  if (LAB.deepSys && G.L > 100) a += LAB.deepSys.defBonus(); /* (после 4.1) прокатный бронемодуль Полигона */
   return a;
 }
 game.armorValue = armorValue;
@@ -956,7 +963,9 @@ game.gainXP = gainXP;
 /* ════════ ВЕЩИ ════════ */
 function giveItem(it, quiet) {
   var phrase = itemName(it), extra = "";
+  if (LAB.deepSys) LAB.deepSys.got(it); /* (после 4.1) нормы смены и испытание «найти» */
   switch (it.kind) {
+    case "trialtoken": break; /* жетон испытания: сдаётся стенду сразу */
     case "ammo": G.ammo[it.ammo] = (G.ammo[it.ammo] || 0) + (it.n || 1); break;
     case "item":
       G.inv[it.item] = (G.inv[it.item] || 0) + (it.n || 1);
@@ -1206,7 +1215,8 @@ function corridorText(cor, entering) {
   var sideA = cor.axis === "h" ? "N" : "W", sideB = cor.axis === "h" ? "S" : "E";
   /* (3.2) с третьего блока коридоры шире (world.js, GROW) */
   var cw = LAB.corrW ? LAB.corrW(cor) : LAB.CORR_W;
-  parts.push(entering ? "Коридор, шириной в " + ({ 4: "четыре шага", 5: "пять шагов", 6: "шесть шагов", 7: "семь шагов", 8: "восемь шагов" }[cw] || cw + " шагов") + "." : "Коридор.");
+  var cn = LAB.deepCorrName ? LAB.deepCorrName(G.L, cor) : null; /* (после 4.1) в глубоких блоках — галереи и переходы */
+  parts.push(entering ? (cn || "Коридор") + ", шириной в " + ({ 4: "четыре шага", 5: "пять шагов", 6: "шесть шагов", 7: "семь шагов", 8: "восемь шагов" }[cw] || cw + " шагов") + "." : (cn || "Коридор") + ".");
   var cap = function (t) { return t.replace(/^./, function (c) { return c.toUpperCase(); }); };
   var doorDir = null;
   if (e.door && !(e.door.lock && e.door.lock.type === "secret" && !secretFound(e.door))) {
@@ -1930,6 +1940,7 @@ function objMenu(o) {
   var st = objState(o), name = objName(o), items = [];
   A("objUse", o);
   if (LAB.depths && LAB.depths.objMenu(o)) return; /* установки глубин под Ядром */
+  if (LAB.deepSys && LAB.deepSys.objMenu(o)) return; /* (после 4.1) глубокие блоки: стенды испытаний, срезы, теневой торговец */
   if (LAB.zones && LAB.zones.objMenu(o)) return; /* кабинеты у коридоров: полки, доски, компьютеры, щиты (1.5) */
   if (o.type === "fx" && LAB.fixtures && LAB.fixtures.menu(o)) return; /* обстановка: диваны, турникеты, плиты… (1.5) */
   if (o.type === "corpse" && LAB.fixtures) { LAB.fixtures.corpseMenu(o); return; } /* тело: осмотреть, карманы, одежда, жетон */
@@ -2895,7 +2906,7 @@ function openContainer(o) {
 function priceDepth() { return G.L <= 10 ? 1 + G.L * 0.12 : 1 + 0.15 * (LAB.wealth(G.L, G.F) - 1); }
 /* (3.7, нелогичность) «Сопротивление»: дешевле продают выжившие (tradeItems, целители-люди в medic.js),
    а не терминалы, автоматы и станции — прежде скидка стояла здесь и дешевило всё */
-function priceK() { var dk = LAB.dk(); return (dk.price || 1) * (1 + (priceDepth() - 1) * (dk.pgrow || 1)); }
+function priceK() { var dk = LAB.dk(); return (dk.price || 1) * (1 + (priceDepth() - 1) * (dk.pgrow || 1)) * (LAB.deepSys ? LAB.deepSys.priceF() : 1); } /* (после 4.1) ниже сотого — по статусу в списках */
 function resK() { return G.faction === "res" ? 0.8 : 1; }
 game.resK = resK;
 game.priceK = priceK;
@@ -3051,10 +3062,11 @@ function reactorMenu(o) {
   var st = objState(o);
   if (G.done) { say("Пульт молчит. «Исток» спит."); return; }
   if (!o.final && st.key) { say(G.L === 100 ? "Ключ повёрнут. Под пультом раскрылся Разлом: спуск ниже — туда, где он начался." : "Ключ повёрнут. Под пультом раскрылся Шов: спуск ниже — там, где гул."); seamMenu(o); return; }
+  var core = riftRoot() && LAB.DEEP_CORE_STEPS; /* (после 4.1) у Ядра Разлома — свои шаги: черта, перекличка, ключ */
   var steps = [
-    { k: "mag", label: "Шаг первый: выровнять магнетронное удержание", run: function (cb) { LAB.mini.tune(cb, { hard: true }); } },
-    { k: "pos", label: "Шаг второй: стабилизировать позитронную ловушку", run: function (cb) { LAB.mini.rhythm(4, cb); } },
-    { k: "key", label: "Шаг третий: ввести ключ «Эхо»", run: function (cb) { LAB.mini.hack(9, cb, { title: "Ключ «Эхо»" }); } }
+    { k: "mag", label: core ? core[0] : "Шаг первый: выровнять магнетронное удержание", run: function (cb) { LAB.mini.tune(cb, { hard: true }); } },
+    { k: "pos", label: core ? core[1] : "Шаг второй: стабилизировать позитронную ловушку", run: function (cb) { LAB.mini.rhythm(core ? 5 : 4, cb); } },
+    { k: "key", label: core ? core[2] : "Шаг третий: ввести ключ «Эхо»", run: function (cb) { LAB.mini.hack(core ? 10 : 9, cb, { title: "Ключ «Эхо»" }); } }
   ];
   var items = steps.map(function (s, i) {
     var done = !!st[s.k], allowed = i === 0 || st[steps[i - 1].k];
@@ -3068,7 +3080,7 @@ function reactorMenu(o) {
         st[s.k] = true;
         A("play", "term_ok");
         if (s.k === "key") { if (o.final) finale(o); else seamOpen(o); }
-        else { say(i === 0 ? "Удержание выровнено. Гул «Истока» стал ровнее." : "Ловушка замерла на вершине пульса. Остался ключ."); reactorMenu(o); }
+        else { say(core && LAB.DEEP_CORE_OK ? LAB.DEEP_CORE_OK[i] : i === 0 ? "Удержание выровнено. Гул «Истока» стал ровнее." : "Ловушка замерла на вершине пульса. Остался ключ."); reactorMenu(o); }
       });
     } };
   });
@@ -3083,7 +3095,8 @@ function seamOpen(o) {
   autosave();
   /* интерлюдия — у блока ниже (на десятом — блок I, на сотом — блок VI), прежде — только у блока I */
   var B = LAB.BLOCKS[LAB.blockOf(G.L + 1)], B0 = LAB.BLOCKS[LAB.blockOf(G.L)];
-  var pages = (B && B.interlude && B.interlude[G.L]) || (B0 && B0.interlude && B0.interlude[G.L]) || [
+  /* (после 4.1) на сотом — интерлюдия движка (deep_texts.js): граница не легла, ядро Разлома — на самом дне */
+  var pages = (G.L === 100 && LAB.DEEP_INTERLUDE) || (B && B.interlude && B.interlude[G.L]) || (B0 && B0.interlude && B0.interlude[G.L]) || [
     "Ключ поворачивается. «Эхо» замолкает — и вместо тишины приходит гул, но не сверху: снизу.",
     "«Исток» не глохнет. Он сшивает. Пол реакторного зала расходится, и под ним открывается колодец — старая скважина, раздвинутая складкой. Шов.",
     "Где-то наверху оживает скоростной лифт. Но Разлом не закрылся: его ядро — на самом дне, далеко внизу. Путь один — вниз."
@@ -3569,7 +3582,7 @@ function useItem(id) {
     say("Раскрыто: " + d.n.charAt(0).toLowerCase() + d.n.slice(1) + ", " + relDir(at.x, at.y) + ". Ищет цели на своей линии. Выстрелов — " + (d.fx.deploy || 30) + "." + (d.fx.dmgK > 1 ? " Бьёт сильнее обычной." : ""));
     UIx("refresh"); return true;
   }
-  if (d.fx && (d.fx.pick || d.fx.map || d.fx.jam || d.fx.antitox || d.fx.scan || d.fx.shield || d.fx.haste || d.fx.cloak || d.fx.heal || d.fx.en || d.fx.cure || d.fx.unslow || d.fx.food || d.fx.wake || d.fx.detox || d.fx.neuro || d.fx.stopBleed)) return useFx(id, d);
+  if (d.fx && (d.fx.pick || d.fx.map || d.fx.jam || d.fx.antitox || d.fx.scan || d.fx.shield || d.fx.haste || d.fx.cloak || d.fx.heal || d.fx.en || d.fx.cure || d.fx.unslow || d.fx.food || d.fx.wake || d.fx.detox || d.fx.neuro || d.fx.stopBleed || d.fx.regen || d.fx.stitch || d.fx.memory || d.fx.antimut)) return useFx(id, d);
   if (id === "plate") return installPlate();
   if (id === "decoder") { say("Декодер применяется у двери с картридером: " + LAB.K("двойное касание у двери.", "Enter у двери.")); return false; }
   if (id === "okokey") { say("Служебный ключ ОКО прикладывают к турели вплотную — подходите наискосок, вне её линии огня — или к терминалу безопасности, раздел «Оборонная сеть»: " + LAB.K("двойное касание рядом.", "Enter рядом.")); return false; }
@@ -3649,6 +3662,7 @@ function useFx(id, d) {
   if (fx.scan && LAB.combat && LAB.combat.useImplantFree) LAB.combat.useImplantFree("scan");
   if (fx.heal >= 30 && G.st.bleed) { G.st.bleed = 0; msg.push("Кровотечение остановлено."); }
   if (fx.cure) bodyApply({ detox: 25 }, msg);
+  if (LAB.deepSys && (fx.regen || fx.stitch || fx.memory || fx.antimut)) LAB.deepSys.itemFx(id, d, msg); /* (после 4.1) отложенная регенерация, шов, вспышка памяти, антимутаген */
   bodyApply(fx, msg);
   G.inv[id]--;
   if (d.leaves && LAB.ITEMS[d.leaves]) { G.inv[d.leaves] = (G.inv[d.leaves] || 0) + 1; msg.push(LAB.ITEMS[d.leaves].n + " — в рюкзаке."); } /* (3.7) выпитый термос остаётся пустым */
@@ -4310,6 +4324,7 @@ function characterText() {
   lines.push("Здоровье " + G.hp + " из " + G.hpMax + ".");
   lines.push("Оружие" + (G.drawn ? " в руках" : " убрано") + ": " + weaponLine(w) + "." + ammoTail(w));
   lines.push("Броня: " + (G.armor ? armorLine(G.armor) : "нет") + ". Общая защита " + armorValue() + ".");
+  if (LAB.deepSys && G.L > 100) lines.push(LAB.deepSys.statusLine()); /* (после 4.1) статус в списках, норма, прокат */
   lines.push("Батареи: энергобатареи " + (G.ammo.energy || 0) + ", магнетронные ячейки " + (G.ammo.magnetron || 0) + ", позитронные заряды " + (G.ammo.positron || 0) + ".");
   var bb = body();
   lines.push("Сытость " + Math.round(bb.food) + " из 100: " + bodyWord("food") + ". Бодрость " + Math.round(bb.wake) + ": " + bodyWord("wake") + ". Токсины " + Math.round(bb.tox) + ": " + bodyWord("tox") + ". Нейронагрузка " + Math.round(bb.neuro) + ": " + bodyWord("neuro") + ".");

@@ -87,6 +87,15 @@ LAB.addDeep = function (n, part) {
   var key = "b" + n, LORE = LAB.LORE = LAB.LORE || { mail: {}, notices: [], logs: {}, docs: {}, cams: {}, posts: {} };
   ["docs", "cams", "posts"].forEach(function (f) { if (part[f] && Array.isArray(part[f])) { LORE[f] = LORE[f] || {}; LORE[f][key] = (LORE[f][key] || []).concat(part[f]); delete common[f]; } });
   if (part.mail && Array.isArray(part.mail)) { LORE.mail = LORE.mail || {}; LORE.mail[key] = (LORE.mail[key] || []).concat(part.mail); common.mail = { g: part.mail }; }
+  /* глубина появления вещей: «at» — доля блока (0 — с начала, 1 — у дна) → номер уровня (depth),
+     у рецептов — minL; детали — ещё и происхождение (с машин, с тварей, вещество аномалий) */
+  var R0 = RANGE[n], atL = function (x) { return R0.from + Math.round(Math.max(0, Math.min(1, +x || 0)) * (R0.size - 1)); };
+  ["weapons", "ammo", "items", "parts", "armors"].forEach(function (f) {
+    var t = common[f]; if (!t) return;
+    for (var id in t) { var x = t[id]; if (x.at != null) x.depth = atL(x.at); else if (!x.depth || x.depth <= BASE) x.depth = R0.from; }
+  });
+  if (common.recipes) common.recipes.forEach(function (rc) { if (rc.at != null) rc.minL = atL(rc.at); else if (!rc.minL || rc.minL <= BASE) rc.minL = R0.from; });
+  if (common.parts) for (var pid in common.parts) { LAB.PART_FROM = LAB.PART_FROM || {}; if (!LAB.PART_FROM[pid]) LAB.PART_FROM[pid] = common.parts[pid].from || partFrom(common.parts[pid]); }
   var B = LAB.addBlock(n, common);
   if (part.deep) for (k in part.deep) D[k] = part.deep[k];
   if (part.sectors) part.sectors.forEach(function (s) { D.sectors.push(s); });
@@ -101,6 +110,13 @@ LAB.addDeep = function (n, part) {
   levelsN();
   return B;
 };
+/* Откуда деталь блока, если блок не сказал (from): живое — с тварей, вещество слоя — аномалии, прочее — с машин. */
+function partFrom(p) {
+  var t = (p.n || "") + " " + (p.desc || "");
+  if (/культур|мицели|фермент|закваск|ткан|кост|хитин|смол|кров|спор|желез|жил[аы]|мох|корен|семен|плоть|сухожил|чешу/i.test(t)) return "bio";
+  if (/эхо|песн|звучащ|слоя|трещин|разлом|складк|осколок звук|время|тишин/i.test(t)) return "anom";
+  return "mech";
+}
 /* Готов ли глубокий блок: есть секторы, и у каждого — помещения, враги и стражи из таблиц. */
 function deepReady(n) {
   var D = DEEP[n];
@@ -231,6 +247,8 @@ LAB.deepStory = function (L, F) {
   var s = ms["first+" + a + "-" + F] || ms["last-" + b + "-" + F];
   if (s) return s;
   var so = sectorOf(n, L);
+  /* у первого сектора его первый уровень занят вехами начала блока: его записки — на пятом уровне */
+  if (so.bi === 0) { var ss0 = D.sectorStory[so.s.id]; return a === 4 && ss0 ? ss0[F] || null : null; }
   if (so.k === 1 && D.sectorStory[so.s.id]) {
     var first = true;
     for (var bi = 0; bi < so.bi; bi++) { var sb = sectorOf(n, r.from + bi * so.bl); if (sb.s === so.s) { first = false; break; } }
@@ -262,6 +280,19 @@ LAB.deepClean = function (t, key) {
   var out = cleanDeep(t);
   cleanCache[key] = { src: t, out: out };
   return out;
+};
+/* Коридоры и лестницы глубоких блоков — своими словами блока: длинные — галереи, короткие — переходы;
+   лестница — как её зовут в этом комплексе («Аварийный трап»). */
+LAB.deepCorrName = function (L, cor) {
+  if (L <= BASE || !cor) return null;
+  var D = DEEP[LAB.blockOf(L)];
+  if (!D || !D.corr) return null;
+  return (cor.len || 0) >= 18 ? (D.corr.gallery || null) : (D.corr.passage || null);
+};
+LAB.deepStairName = function (L, down) {
+  if (L <= BASE) return null;
+  var D = DEEP[LAB.blockOf(L)];
+  return D && D.stairs && D.stairs.n ? D.stairs.n + (down ? " вниз" : " наверх") : null;
 };
 LAB.storyAt = function (L, F) { return (LAB.STORY && LAB.STORY[L + "-" + F]) || (L > BASE ? LAB.deepStory(L, F) : null); };
 })();

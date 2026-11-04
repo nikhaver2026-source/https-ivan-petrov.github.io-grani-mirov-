@@ -834,6 +834,12 @@ function okoChime(kind, t) {
       ch({ gain: 0.6, rate: 1.06, pan: 0.7, delay: 0.14, reverb: 0.1 });
       play("ev_glass", { gain: 0.22, delay: 0.05, rate: 1.3, bus: "fx", reverb: 0.2 });
       return;
+    case "roll": /* (после 4.1) Перекличка Нижних: три коротких счёта — раз, два, три — и треск старой громкой связи */
+      ch({ gain: 0.6, rate: 0.84, reverb: 0.55 });
+      ch({ gain: 0.55, rate: 0.94, delay: 0.16, reverb: 0.55 });
+      ch({ gain: 0.5, rate: 1.05, delay: 0.32, reverb: 0.6 });
+      play("radio", { gain: 0.12, rate: 0.7, lp: 2200, bus: "fx", reverb: 0.4 });
+      return;
     case "m_guard": /* «Механизм»: Сторож — низкий удар */
       ch({ gain: 0.95, rate: 0.7, reverb: 0.5 });
       return;

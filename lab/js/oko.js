@@ -95,6 +95,7 @@ function lines(kind) {
   var L = G().L, B = LAB.blockData(L);
   if (L > 10) {
     var own = B && B.oko && B.oko[kind] && B.oko[kind].length ? B.oko[kind] : [];
+    if (L > 100) return own; /* (после 4.1) ниже Истока — только слова Переклички этого блока: чего у неё нет, она не говорит */
     var more = extra("b" + LAB.blockOf(L), kind);
     if (own.length || more.length) return own.concat(more);
   }
@@ -149,7 +150,7 @@ function chimeSay(t, opts, chime, gap) {
 /* (голос ОКО) Слова ОКО — его записанным голосом (okovoice.js), если реплика записана;
    иначе — синтезатором, как прежде. */
 function okoSay(t, opts, chime) {
-  if (LAB.okoVoice && LAB.okoVoice.play(t, opts, chime)) return;
+  if (!(opts && opts.robot) && LAB.okoVoice && LAB.okoVoice.play(t, opts, chime)) return; /* (после 4.1) Перекличку не записывали: она — синтезатором машины */
   LAB.say(t, opts);
 }
 function release() {
@@ -208,7 +209,7 @@ function speak(kind, force, data) {
   o.lastSay = now;
   if (LAB.tutor && !hushed()) LAB.tutor.ev("oko");
   var fr = LAB.okoForms ? LAB.okoForms.frame(kind) : { lead: "ОКО по громкой связи", chime: true, gap: 450 };
-  voice(fr.lead + ": «" + t + "»", { prio: "event", keep: true, okoKind: kind }, fr.chime, fr.gap);
+  voice(fr.lead + ": «" + t + "»", { prio: "event", keep: true, okoKind: kind, robot: !!fr.robot }, fr.chime, fr.gap);
   if (LAB.game.journal && (kind === "turret_hack" || kind === "robots" || kind === "boss")) LAB.game.journal("ОКО: «" + t + "»");
   return true;
 }

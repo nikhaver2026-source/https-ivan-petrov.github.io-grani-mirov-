@@ -1636,6 +1636,11 @@ function genFloor(seed, L, F, attempt) {
     }
   }
 
+  /* 26а. (после 4.1) Глубокие блоки (deep_floor.js): срезы вниз в тайных комнатах и подсобках, стенды
+     испытательных камер, помещения вне надзора и теневые торговцы, двери с допуском. Только ниже сотого
+     уровня и последним шагом перед проводкой: этажи 1–100 не меняются. */
+  if (L > 100 && LAB.deepFloor) LAB.deepFloor({ fl: fl, L: L, F: F, seed: seed, U: U, D: D, secret: secret, addObj: addObj, addItem: addItem, rng: Rng(seed, "deepfl:" + L + ":" + F + ":" + attempt) });
+
   /* 27. (3.7, нелогичность) Помещение, куда шаги выше поставили электрическое (стенд испытаний,
      автомат, химический стол), — не «обесточено» (annex.js, unlit): уже при постройке этажа,
      а не только при входе на него (stash.js) — и проверки видят этаж таким, как игрок. */
@@ -1984,6 +1989,7 @@ LAB.solve = function (fl, have) {
     if (lk.type === "gate") return gatepass;
     if (lk.type === "riddle" || lk.type === "circuit" || lk.type === "logic") return true;
     if (lk.type === "melody") return !!melodies[d.id];
+    if (lk.type === "rank") return (have.rank || 0) >= lk.rank; /* (после 4.1) дверь с допуском — по статусу в списках */
     return false;
   }
   var guard = 0;

@@ -95,7 +95,7 @@ if (!LAB.FOES.g_listener) LAB.FOES.g_listener = { n: "Слухач", g: "m", kin
 /* ════════ РАЗМЕЩЕНИЕ (из генератора этажа, последним) ════════ */
 function place(api) {
   var d = depthOf(api.L);
-  if (!d) return;
+  if (!d || d > 5) return; /* (после 4.1) ниже Истока — свои установки и документы у каждого блока (deep_floor.js, LORE.docs «b6»…) */
   var r = LAB.Rng(api.seed, "depth:" + api.L + ":" + api.F + ":" + api.attempt);
   var fl = api.fl, rooms = api.svcRooms.length ? api.svcRooms : api.mainRooms;
   if (!rooms.length) return;

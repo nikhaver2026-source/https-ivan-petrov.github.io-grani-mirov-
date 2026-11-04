@@ -21,7 +21,8 @@ function load(f) {
   catch (e) { console.log(`ERR ${f}: не загружается: ${e.message}`); errs++; return false; }
   return true;
 }
-for (const f of ["js/data.js", "js/texts.js", "js/lore.js", "js/b1.js", "js/b2.js", "js/b3.js", "js/b4.js", "js/b5.js", "js/deep.js", "js/mutants.js"]) load(f);
+/* world.js — ради LAB.hash32: без него полосы секторов раскладываются не так, как в игре */
+for (const f of ["js/data.js", "js/texts.js", "js/lore.js", "js/b1.js", "js/b2.js", "js/b3.js", "js/b4.js", "js/b5.js", "js/deep.js", "js/world.js", "js/mutants.js"]) load(f);
 const LAB = ctx.LAB;
 /* Списки допустимых значений — из проверки прежних блоков (одни и те же) */
 const CB = fs.readFileSync(path.join(ROOT, "tools/check_blocks.js"), "utf8");

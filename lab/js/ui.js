@@ -772,6 +772,13 @@ function character() {
 function characterItems() {
   var lines = gm().characterText();
   var items = lines.map(function (t) { return { label: t, keep: true, fn: function () { say(t); } }; });
+  /* (после 4.1) прокатный комплект Полигона: модули можно сдать самому, чтобы не платить */
+  var gd = G() && G().deep, rent = gd && gd.rent && gd.rent.mods;
+  if (rent && rent.length) items.push({ label: "Прокатный комплект: " + rent.length + " " + gm().plural(rent.length, "модуль", "модуля", "модулей"), fn: function () {
+    var its = (gd.rent.mods || []).map(function (m, i) { return { label: "Сдать «" + m.n + "» — плата " + m.fee + " за смену. " + (m.desc || ""), fn: function () { LAB.deepSys.returnRent(i); } }; });
+    its.push({ label: "Назад", fn: function () {} });
+    menu("Прокатный комплект", its);
+  } });
   items.push({ label: "Сохранить игру", fn: saveMenu });
   items.push({ label: "Настройки", fn: settingsMenu });
   items.push({ label: "Руководство", fn: function () { if (LAB.guide) LAB.guide.open(); } });
@@ -1252,7 +1259,9 @@ function ending(win) {
   var stats = "Итоги. В игре " + Math.floor(mins / 60) + " ч " + (mins % 60) + " мин. Уровень героя " + g.lvl + ". Побеждено врагов " + g.stats.kills + ". Тайников " + g.stats.secrets + ". Записок " + g.stats.notes + ". Образцов " + Object.keys(g.samples).length + ". Гибелей " + g.stats.deaths + ". Режим сложности: " + LAB.dk().n.toLowerCase() + ".";
   /* как вы прошли пять глубин — страница перед итогами */
   var epi = LAB.depths && LAB.depths.epilogue ? LAB.depths.epilogue() : "";
-  var pages = LAB.ENDING.concat(epi ? [epi] : [], [stats, LAB.CREDITS_TEXT || "Конец. Спасибо, что слушали."]);
+  /* (после 4.1) финал у Ядра Разлома на самом дне — свой (deep_texts.js) */
+  var fin = g.L > 100 && LAB.ENDING_DEEP ? LAB.ENDING_DEEP : LAB.ENDING;
+  var pages = fin.concat(epi ? [epi] : [], [stats, LAB.CREDITS_TEXT || "Конец. Спасибо, что слушали."]);
   showPage(pages, 0, {
     title: "Финал", skip: false,
     hint: LAB.K("Свайп вправо — дальше, влево — назад.", "Стрелка вправо или Enter — дальше, влево — назад."),

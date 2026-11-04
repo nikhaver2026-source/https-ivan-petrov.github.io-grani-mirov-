@@ -47,7 +47,11 @@ function first(b) { return b === 0 ? 1 : b === 1 ? 11 : (b - 1) * 20 + 1; }
 function span(b) { return b <= 1 ? 10 : 20; }
 function form(L, F) {
   L = L || 1; F = F || 1;
-  var b = blockN(L), t = (L - first(b) + (F - 1) / 20) / span(b);
+  var b = blockN(L);
+  /* (после 4.1) ниже Истока ОКО не слышит: по громкой связи говорит Перекличка Нижних — в каждом
+     глубоком блоке своим обликом (deep.ai блока: Экзаменатор, Учёный совет…) */
+  if (L > 100) { var R = LAB.blockRange ? LAB.blockRange(b) : null; return { id: "roll", b: b, t: R ? Math.max(0, Math.min(1, (L - R.from) / R.size)) : 0, L: L, F: F }; }
+  var t = (L - first(b) + (F - 1) / 20) / span(b);
   return { id: IDS[b], b: b, t: Math.max(0, Math.min(1, t)), L: L, F: F };
 }
 function cur() { var g = G(); return form(g ? g.L : 1, g ? g.F : 1); }
@@ -92,17 +96,18 @@ function frame(kind, who) {
       var m = mind(kind, f.L);
       return { lead: m ? "ОКО, голосом города" : "ОКО, одним голосом", chime: m ? "m_" + m : "whole", gap: 500, t: f.t, mind: m };
     case "whisper": return { lead: "ОКО, шёпотом, прямо в ухо", chime: null, gap: 0, t: f.t, soft: true };
+    case "roll": var Dd = LAB.DEEP && LAB.DEEP[f.b]; return { lead: ((Dd && Dd.ai && Dd.ai.n) || "Перекличка") + " по громкой связи", chime: "roll", gap: 560, t: f.t, robot: true };
   }
   return { lead: "ОКО по громкой связи", chime: "oko", gap: 450, t: f.t };
 }
 /* Как часто ОКО заговаривает само: в Истоке — всё реже. */
 function chatty() { var f = cur(); return f.id === "whisper" ? 1 - 0.75 * f.t : 1; }
 /* На краю Истока, простившись, ОКО молчит. */
-function silent() { var g = G(); return !!g && (g.L >= 100 || (g.L === 99 && g.F >= 20)); }
+function silent() { var g = G(); return !!g && (g.L === 100 || (g.L === 99 && g.F >= 20)); } /* (после 4.1) ниже сотого говорит Перекличка */
 /* Звуки сигналов этой глубины — грузятся с уровнем (atmos.idsFor). */
 var SND = {
   far: ["oko_chime", "radio"], garden: ["ins_bell_72", "ins_bell_77"], twin: ["oko_chime", "ev_glass"],
-  city: ["oko_chime", "pc_click", "ins_bell_67", "ins_lullaby_86", "ins_lullaby_93", "ins_lullaby_98"], whisper: [], oko: ["oko_chime"]
+  city: ["oko_chime", "pc_click", "ins_bell_67", "ins_lullaby_86", "ins_lullaby_93", "ins_lullaby_98"], whisper: [], oko: ["oko_chime"], roll: ["oko_chime", "radio"]
 };
 function sounds(L) { return (SND[form(L, 1).id] || []).slice(); }
 
@@ -294,7 +299,16 @@ var STAGES = [
   { key: "whole", g: "С 79-го голоса сходятся в один — «ОКО, одним голосом»: сигнал ниже и шире.", at: function (L) { return L >= 79; }, t: "«Эхо»: голоса ОКО сходятся в один. Теперь говорит ОКО целиком — его сигнал ниже и шире." },
   { key: "whisper", g: "«Исток»: ОКО — «шёпотом, прямо в ухо», без громкой связи и сигнала. Машины его больше не слушают; о тех, что идут к вам из-за стены, оно предупреждает. Чем глубже, тем реже и тише.", at: function (L) { return L >= 81; }, t: "«Эхо»: ОКО больше не говорит по громкой связи — шёпотом, прямо в ухо, без сигнала. Машины его больше не слушают; о тех, что идут к вам из-за стены, оно предупреждает. Чем глубже, тем тише." }
 ];
-function stageOf(L) { var s = null; STAGES.forEach(function (q) { if (q.at(L)) s = q; }); return s; }
+function stageOf(L) {
+  /* (после 4.1) ниже Истока — Перекличка Нижних: «Эхо» называет её облик в каждом новом блоке */
+  if (L > 100) {
+    var n = LAB.blockOf(L), Dd = LAB.DEEP && LAB.DEEP[n], ai = (Dd && Dd.ai) || { n: "Перекличка" };
+    var first = n === LAB.DEEP_FIRST;
+    return { key: "roll" + n, g: rollGuide(), t: first ? "«Эхо»: это не ОКО — сюда оно не дотягивается. По громкой связи — Перекличка, разум Нижних; здесь она зовёт себя «" + ai.n + "». Сигнал — три коротких счёта. Она считает всех, кого слышит. Нас — тоже." : "«Эхо»: Перекличка здесь говорит другим голосом — «" + ai.n + "». " + (ai.desc || "") };
+  }
+  var s = null; STAGES.forEach(function (q) { if (q.at(L)) s = q; }); return s;
+}
+function rollGuide() { return "Ниже Истока ОКО не слышит. По громкой связи говорит Перекличка — разум Нижних: в каждом глубоком блоке своим обликом и голосом машины; её сигнал — три коротких счёта и треск старой связи. Она ведёт списки и раздаёт статусы, нормы и испытания."; }
 /* Вход на новый уровень (oko.js, event "enter"): после приветствия ОКО —
    слово «Эхо» о новом облике, если он сменился. */
 /* (3.5) отметка «сказано» ставится, когда фраза прозвучала: погибли, вышли или
@@ -308,8 +322,8 @@ function entered() {
     var g2 = G(), o2 = okoSt();
     if (!g2 || g2.dead || g2.L !== L0 || o2.formSaid === s.key) return;
     o2.formSaid = s.key;
-    LAB.say(s.t, { prio: "event", keep: true });
-    if (LAB.game.journal) LAB.game.journal("Облик ОКО: " + s.t.replace(/^«Эхо»: /, ""));
+    LAB.say(s.t, { prio: "event", keep: true, raw: true });
+    if (LAB.game.journal) LAB.game.journal((g2.L > 100 ? "Перекличка: " : "Облик ОКО: ") + s.t.replace(/^«Эхо»: /, ""));
   }, 11000);
 }
 /* Прощание на краю Истока — один раз, на двадцатом этаже предпоследнего уровня. */
@@ -329,6 +343,7 @@ function floorIn() {
 function guideLines(maxL) {
   var out = ["Чем глубже, тем меньше ОКО похоже на систему безопасности «Ковчега»: голос, сигнал и повадки меняются постепенно, от уровня к уровню, и при каждой перемене «Эхо» объясняет, что изменилось."];
   STAGES.forEach(function (s) { if (s.at(maxL)) out.push(s.g); });
+  if (maxL > 100) out.push(rollGuide());
   return out;
 }
 
