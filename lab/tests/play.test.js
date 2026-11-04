@@ -7466,6 +7466,26 @@ LAB.ui.closeAll();
     SPOKEN.length = 0; const ld = g.loadSlot(3);
     out.done = ld === false && !!(g.slotInfo(3) || {}).done && SPOKEN.some(t => /пройдена до конца/.test(t)) && /пройдена до конца/.test(g.slotText(3));
     localStorage.removeItem("lab_slot3"); localStorage.removeItem("lab_slot3_bak");
+    /* (4.5) запись, пройденная у «Истока», когда он был дном: загружается — страницы «Разлом», затем выбор спуска */
+    {
+      const L0 = G.L, F0 = G.F;
+      g.enterFloor(100, 20, "down", true); LAB.combat.stop(); LAB.ui.closeAll();
+      const rc = g.CUR.fl.objs.filter(o => o.type === "reactor" && o.final === false)[0];
+      if (rc) { G.x = rc.x; G.y = rc.y + 1; }
+      G.done = true; g.saveSlot(3); G.done = false;
+      const inf = g.slotInfo(3) || {};
+      const p0 = LAB.ui.pages; let pg = null; LAB.ui.pages = function (list, opts) { pg = { list: list, opts: opts || {} }; };
+      SPOKEN.length = 0; const okL = g.loadSlot(3); LAB.ui.pages = p0;
+      G = g.G;
+      out.riftBack = { rc: !!rc, info: g.riftResumable(inf), text: /гул не стих/.test(g.slotText(3)), load: okL === true, done: G.done === false,
+        title: !!pg && pg.opts.title === "Разлом", first: !!pg && /черта не удержалась/.test(pg.list[0] || "") && pg.list.length === (LAB.DEEP_INTERLUDE || []).length };
+      if (pg && pg.opts.done) pg.opts.done();
+      const top = LAB.ui.top && LAB.ui.top(), its = top && top.items ? top.items.map(lb) : [];
+      out.riftBack.menu = its.some(t => /^Спуститься в Разлом/.test(t)) && its.some(t => /^Остаться/.test(t));
+      out.riftBack.key = !!rc && g.objName(rc) === "Пульт «Истока» (ключ повёрнут)";
+      LAB.ui.closeAll(); localStorage.removeItem("lab_slot3"); localStorage.removeItem("lab_slot3_bak");
+      g.enterFloor(L0, F0, "down", true); LAB.combat.stop(); LAB.ui.closeAll(); G = g.G;
+    }
     /* запись прежнего мира: привязка — к капсуле этого этажа рядом с ней; записки — под пометкой, новые попадают в архив */
     const old = JSON.parse(JSON.stringify(G));
     old.worldV = 1; old.L = 1; old.F = 1; old.x = 0; old.y = 0;
@@ -7526,6 +7546,9 @@ LAB.ui.closeAll();
   ok(e1.talk, "«Поговорить» с выжившим начинается с первой строки рассказа");
   ok(e1.walk, "отошли от взлома, не ошибившись, — ни тревоги, ни шума");
   ok(e1.done, "пройденная игра: запись не продолжается («игра пройдена до конца»), её слот так и подписан");
+  { const rb = e1.riftBack || {};
+    ok(rb.rc && rb.info && rb.text && rb.load && rb.done && rb.title && rb.first && rb.menu && rb.key,
+      "(4.5) запись, пройденная у «Истока», когда он был дном: слот подписан «гул не стих», запись загружается, страницы «Разлом» начинаются с того, что черта не удержалась, затем выбор — спуститься в Разлом или остаться; пульт — «Пульт «Истока» (ключ повёрнут)» (" + JSON.stringify(rb) + ")"); }
   ok(e1.oldLoad && e1.cp, "запись прежнего мира: привязка к капсуле — к капсуле этого этажа, рядом с ней");
   ok(e1.notes, "запись прежнего мира: записки этажей — под пометкой (коды прежних этажей не действуют), общие документы — как были");
   ok(e1.ach, "скрытые вехи по уровню не видны заранее");

@@ -232,8 +232,14 @@ function objName0(o) {
   if ((o.type === "stairs_down" || o.type === "stairs_up") && LAB.deepStairName && G.L > 100) { var sn = LAB.deepStairName(G.L, o.type === "stairs_down"); if (sn) return sn + (stairBlocked(o) ? ", под завалом" : ""); } /* (после 4.1) лестница комплекса */
   if (o.type === "stairs_down" && stairBlocked(o)) return "Лестница вниз (завалена)";
   if (o.type === "stairs_up" && stairBlocked(o)) return "Лестница вверх (завалена)";
-  if (o.type === "reactor" && o.final) return G.done ? "Пульт «Истока» (ключ повёрнут)" : "Пульт «Истока»"; /* (3.7, нелогичность) не реактор */
-  if (o.type === "reactor" && (G.done || (!o.final && G.cores && G.cores["used" + G.L]))) return "Пульт реактора (ключ повёрнут)";
+  /* (3.7, нелогичность) настоящий Исток — не реактор; (4.5) на сотом пульт «Истока» уже не финал, а финал на
+     самом дне — у пульта Ядра Разлома: имя — как в заголовке окна пульта (reactorMenu) */
+  if (o.type === "reactor") {
+    var rUsed = G.done || !!(G.cores && G.cores["used" + G.L]);
+    var rName = riftRoot() ? "Пульт Ядра Разлома" : trueSource() ? "Пульт «Истока»" : "";
+    if (rName) return rName + (rUsed ? " (ключ повёрнут)" : "");
+    if (rUsed) return "Пульт реактора (ключ повёрнут)";
+  }
   if (o.type === "gate_sealed" && seamBottom()) return G.L === 101 ? "Сомкнувшийся край Разлома" : "Сомкнувшийся край Шва"; /* (3.7, нелогичность) пришли Швом, а не шлюзом */
   return LAB.OBJ[o.type] ? LAB.OBJ[o.type].n : o.type;
 }
@@ -3074,7 +3080,7 @@ function reactorMenu(o) {
   var st = objState(o);
   /* (после 4.1) запись, где финал у Истока уже прошли, — до глубоких блоков: ключ повёрнут, но гул не стих,
      и под пультом раскрывается Разлом — путь вниз, к его ядру */
-  if (G.done && G.L === 100 && LAB.LEVELS_N > 100 && o.final === false) { G.done = false; st.key = true; journal("Гул под Истоком не стих: Разлом уходит ниже."); seamOpen(o); return; }
+  if (G.done && G.L === 100 && LAB.LEVELS_N > 100 && o.final === false) { G.done = false; st.mag = st.pos = st.key = true; journal("Гул под Истоком не стих: Разлом уходит ниже."); seamOpen(o, true); return; }
   if (G.done) { say("Пульт молчит. «Исток» спит."); return; }
   if (!o.final && st.key) { say(G.L === 100 ? "Ключ повёрнут. Под пультом раскрылся Разлом: спуск ниже — туда, где он начался." : "Ключ повёрнут. Под пультом раскрылся Шов: спуск ниже — там, где гул."); seamMenu(o); return; }
   var core = riftRoot() && LAB.DEEP_CORE_STEPS; /* (после 4.1) у Ядра Разлома — свои шаги: черта, перекличка, ключ */
@@ -3104,14 +3110,14 @@ function reactorMenu(o) {
 }
 /* На 10-м уровне ключ не глушит «Исток», а сшивает: под пультом
    раскрывается Шов — путь глубже. Интерлюдия — из блока I. */
-function seamOpen(o) {
+function seamOpen(o, back) {
   journal(G.L === 100 ? "Ключ «Эхо» повёрнут у пульта настоящего «Истока». Граница не легла: Разлом уходит ниже — его ядро на самом дне." : "Ключ «Эхо» повёрнут у пульта «Истока». Реактор не заглох — под ним раскрылся Шов.");
   G.cores["used" + G.L] = true;
   autosave();
   /* интерлюдия — у блока ниже (на десятом — блок I, на сотом — блок VI), прежде — только у блока I */
   var B = LAB.BLOCKS[LAB.blockOf(G.L + 1)], B0 = LAB.BLOCKS[LAB.blockOf(G.L)];
   /* (после 4.1) на сотом — интерлюдия движка (deep_texts.js): граница не легла, ядро Разлома — на самом дне */
-  var pages = (G.L === 100 && LAB.DEEP_INTERLUDE) || (B && B.interlude && B.interlude[G.L]) || (B0 && B0.interlude && B0.interlude[G.L]) || [
+  var pages = (back && G.L === 100 && LAB.DEEP_RESUME) || (G.L === 100 && LAB.DEEP_INTERLUDE) || (B && B.interlude && B.interlude[G.L]) || (B0 && B0.interlude && B0.interlude[G.L]) || [
     "Ключ поворачивается. «Эхо» замолкает — и вместо тишины приходит гул, но не сверху: снизу.",
     "«Исток» не глохнет. Он сшивает. Пол реакторного зала расходится, и под ним открывается колодец — старая скважина, раздвинутая складкой. Шов.",
     "Где-то наверху оживает скоростной лифт. Но Разлом не закрылся: его ядро — на самом дне, далеко внизу. Путь один — вниз."
@@ -4077,6 +4083,11 @@ function slotInfo(n, bak) {
   try { var d = JSON.parse(raw); return d.meta; } catch (e) { return null; }
 }
 game.slotInfo = slotInfo;
+/* (4.5) Запись, пройденная у «Истока», когда он был дном (до глубин): теперь под ним Разлом и комплексы
+   Нижних. Такую запись загружают — черта не удержалась, гул не стих, и под пультом открывается спуск
+   (riftResume). Запись, пройденная у Ядра Разлома, — пройдена до конца, как прежде. */
+function riftResumable(m) { return !!(m && m.done && m.L === 100 && LAB.LEVELS_N > 100); }
+game.riftResumable = riftResumable;
 /* (3.8) Перестроятся ли этажи у сохранённых записей: true — хоть у одной другой выпуск мира (migrate
    поставит героя у входа на свой этаж), false — у всех нынешний, null — записей нет или их не прочесть.
    Главное меню (ui.js, freshNote) говорит по этому, а не по одному номеру версии: сборки одной версии
@@ -4099,7 +4110,7 @@ function slotText(n, bak) {
   var m = slotInfo(n, bak);
   var name = (n === "auto" ? "Автозапись" : "Слот " + n) + (bak ? ", резервная копия" : "");
   if (!m) return bak ? "" : name + ": пусто";
-  if (m.done) return name + ": игра пройдена до конца, уровень " + m.L + ", герой " + m.lvl + "-го уровня";
+  if (m.done) return name + (riftResumable(m) ? ": пройдена у «Истока», но гул не стих — Разлом уходит ниже; уровень " : ": игра пройдена до конца, уровень ") + m.L + ", герой " + m.lvl + "-го уровня";
   var mins = Math.round((m.ms || 0) / 60000), h = Math.floor(mins / 60), mm = mins % 60;
   var dt = new Date(m.date);
   var dd = dt.getDate() + "." + (dt.getMonth() + 1 < 10 ? "0" : "") + (dt.getMonth() + 1) + ", " + dt.getHours() + ":" + (dt.getMinutes() < 10 ? "0" : "") + dt.getMinutes();
@@ -4122,13 +4133,16 @@ function loadSlot(n, fromBak) {
   if (!raw) { LAB.UI.error(); say(fromBak ? "Резервной копии нет." : "Слот пуст."); return false; }
   var d = validSave(raw);
   if (!d) { LAB.UI.error(); say("Запись повреждена или не подходит этой версии игры." + (!fromBak && LAB.store.get(SLOT_KEYS[n] + "_bak") ? " Есть резервная копия: «Загрузить игру», пункт «Резервная копия»." : "")); return false; }
-  /* автозапись после финала: ключ повёрнут, мир стоит — продолжать нечего */
-  if (d.g.done) { LAB.UI.error(); say("Эта игра пройдена до конца: ключ «Эхо» повёрнут, «Исток» спит. Начните новую игру — слоты останутся."); return false; }
+  /* автозапись после финала: ключ повёрнут, мир стоит — продолжать нечего; (4.5) кроме финала у «Истока»,
+     под которым теперь глубины: такая запись идёт дальше — в Разлом (riftResumable, riftResume) */
+  var back = riftResumable({ done: d.g.done, L: d.g.L });
+  if (d.g.done && !back) { LAB.UI.error(); say("Эта игра пройдена до конца: ключ «Эхо» повёрнут, «Исток» спит. Начните новую игру — слоты останутся."); return false; }
   /* загрузка с откатом: если запись не поднимется, прежняя игра остаётся как была */
   var prevG = G, prevEntered = game.entered, prevCUR = { fl: CUR.fl, fs: CUR.fs, key: CUR.key, seen: CUR.seen }, prevDiff = S.difficulty, prevTB = S.turnBased;
   game.loading = true;
   try {
     G = migrate(d.g);
+    if (back) G.done = false; /* (4.5) идти можно сразу: спуск — под пультом «Истока» */
     applyDiff();
     if (Q()) Q().reset(); /* (3.5) задания записи объявляются заново */
     game.session++; game.paused = false; game.descending = false;
@@ -4161,11 +4175,22 @@ function loadSlot(n, fromBak) {
   if (G.upgNote) { sayq(G.upgNote); G.upgNote = null; }
   /* (3.7, нелогичность) помещения росли в шестом выпуске мира (3.6); в седьмом — только обстановка по
      назначению помещений: запись выпущенной 3.7 (шестой выпуск) просторнее не стала */
-  if (moved) sayq("Этажи комплекса перестроены: " + (movedFrom >= 6 ? "обстановка в помещениях расставлена заново, по их назначению." : "помещения стали просторнее, обстановки в них больше, и расставлена она по назначению помещений.") + " Вы у входа на свой этаж; уровень, оружие, броня, вещи, кредиты и пропуска — при вас, поручения выживших сняты.");
+  if (moved && !back) sayq("Этажи комплекса перестроены: " + (movedFrom >= 6 ? "обстановка в помещениях расставлена заново, по их назначению." : "помещения стали просторнее, обстановки в них больше, и расставлена она по назначению помещений.") + " Вы у входа на свой этаж; уровень, оружие, броня, вещи, кредиты и пропуска — при вас, поручения выживших сняты.");
   roomCheck(true);
+  if (back) riftResume();
   return true;
 }
 game.loadSlot = loadSlot;
+/* (4.5) Запись, пройденная у «Истока» до глубин: на сотом уровне пульт «Истока» уже не финал. Ключ
+   считается повёрнутым, и сразу — страницы «Разлом» (черта не удержалась, гул не стих) и выбор:
+   спуститься или остаться на этаже; к пульту можно вернуться и потом. */
+function riftResume() {
+  journal("Гул под Истоком не стих: Разлом уходит ниже.");
+  var o = CUR.fl && CUR.fl.objs.filter(function (q) { return q.type === "reactor" && q.final === false; })[0];
+  if (!o) { sayq("Гул под Истоком не стих: Разлом уходит ниже. Спуск — под пультом «Истока»."); return; }
+  var st = objState(o); st.mag = st.pos = st.key = true;
+  seamOpen(o, true);
+}
 function migrate(g) {
   /* (3.6) запись без стартового набора больше не встречается: переносятся только записи
      «Альфы 3.0» и новее (engine.js, validSave), а набор в них уже есть */

@@ -508,8 +508,9 @@ function bgDesc(v) {
   return (LAB.desktop ? "Ушли в другое окно — окно игры сворачивается и ждёт вас, звук выключен." : "Свернули игру или ушли в другое приложение — она ждёт вас, звук выключен.") + " Вернулись — звук снова звучит.";
 }
 function startGame() {
-  /* автозапись пройденной игры продолжать нечего — сразу новая игра */
-  var ai = gm().slotInfo("auto"), hasAuto = !!ai && !ai.done;
+  /* автозапись пройденной игры продолжать нечего — сразу новая игра; (4.5) кроме пройденной у «Истока»,
+     пока он был дном: под ним теперь глубины, и такая запись продолжается в Разлом (game.js, riftResume) */
+  var ai = gm().slotInfo("auto"), hasAuto = !!ai && (!ai.done || gm().riftResumable(ai)); /* (4.5) пройденная у «Истока» — продолжается в Разлом */
   if (hasAuto) {
     menu("Начать новую игру?", [
       { label: "Да, начать сначала. Автозапись заменится, слоты 1, 2 и 3 останутся", fn: function () { diffMenu(); } },
@@ -557,7 +558,7 @@ function loadMenu() {
   var keys = ["auto", 1, 2, 3];
   var items = keys.map(function (k) {
     var info = gm().slotInfo(k);
-    return { label: gm().slotText(k), disabled: !info || !!info.done, why: info ? "Игра пройдена до конца: начните новую." : "Слот пуст.", fn: function () { if (!gm().loadSlot(k)) reopenMain(); } };
+    return { label: gm().slotText(k), disabled: !info || (!!info.done && !gm().riftResumable(info)), why: info ? "Игра пройдена до конца: начните новую." : "Слот пуст.", fn: function () { if (!gm().loadSlot(k)) reopenMain(); } };
   });
   /* резервные копии: прежнее содержимое слота до последней записи */
   keys.forEach(function (k) {
