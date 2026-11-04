@@ -81,7 +81,9 @@ function corrShare(L) { return CORR[L] != null ? CORR[L] : DEEP[Math.min(5, LAB.
    общий пол блока для прочих помещений, иначе — как наверху. */
 function deepRoomSurf(fl, rm) {
   var t = rm.type, def = LAB.ROOMS[t] || {};
-  if (def.fl) return def.fl === "metal" ? null : def.fl;
+  /* «metal» у помещения глубин — настоящий металл (стальные плиты): пустое значение дало бы пол уровня,
+     а ниже Истока это пол сектора (камень, ковролин…) */
+  if (def.fl) return def.fl === "metal" ? "plate" : def.fl;
   var D = LAB.DEEP && LAB.DEEP[LAB.blockOf(fl.L)], rs = D && D.roomSurf;
   if (rs) {
     var cat = LAB.garrison && LAB.garrison.category ? LAB.garrison.category(rm) : null;
@@ -93,7 +95,7 @@ function deepRoomSurf(fl, rm) {
     if (cat && cat !== "office" && rs[cat]) return rs[cat];
   }
   var so = LAB.deepSector ? LAB.deepSector(fl.L) : null;
-  if (so && so.s && so.s.surf) return so.s.surf === "metal" ? null : so.s.surf;
+  if (so && so.s && so.s.surf) return so.s.surf === "metal" ? "plate" : so.s.surf;
   if (rs && rs.any) return rs.any;
   return WOOD[t] ? "wood" : CONC[t] ? "concrete" : null;
 }

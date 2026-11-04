@@ -89,6 +89,8 @@ ok(f100.rooms.some(r => r.type === "source") && f100.objs.some(o => o.type === "
 const fBot = LAB.getFloor(seed, LAB.LEVELS_N, 20);
 ok(fBot.rooms.some(r => r.type === "riftroot") && fBot.objs.some(o => o.type === "reactor" && o.final), "на самом дне — Ядро Разлома и финальный пульт");
 ok(LAB.ROOMS.riftroot && LAB.ROOMS.riftroot.n === "Ядро Разлома", "помещение на дне называется «Ядро Разлома»");
+/* пропуска глубин (LAB.TIERS[t] для t > 50, deep.js) — описания с именем: модули не перезаписывают LAB.deepTier */
+ok([51, 52, Math.ceil(LAB.LEVELS_N / 2)].every(t => LAB.TIERS[t] && typeof LAB.TIERS[t].n === "string" && typeof LAB.TIERS[t].short === "string"), "пропуска глубин названы своими именами (" + (LAB.TIERS[51] && LAB.TIERS[51].n) + ")");
 /* каждый готовый блок */
 const stat = { srez: 0, trial: 0, dark: 0, rank: 0, boxes: 0, trader: 0 };
 for (let n = LAB.DEEP_FIRST; n <= LAB.blockOf(LAB.LEVELS_N); n++) {
