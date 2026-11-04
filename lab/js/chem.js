@@ -35,6 +35,9 @@
    коррозионная колба против машин, нюхательная соль, антисептик,
    проявитель тайнописи, фотопроявитель и фиксаж. Стол — на каждом этаже,
    навигатор слышит вытяжку.
+   (после 4.1) ГЛУБИНЫ: шесть веществ Нижних, тринадцать составов (девять
+   инъекционных капсул), реакторный стол Нижних, ступени направлений до
+   десятой, общая до пятнадцатой, специализации до пятой — только ниже Истока.
    ════════════════════════════════════════════════════════════════════ */
 (function () {
 "use strict";
@@ -88,6 +91,21 @@ var FAM = {
   c_silver:     { n: ["Ляпис"], one: 1, icon: "✏️", depth: 1, price: 14, br: "energy", desc: "Нитрат серебра в карандаше: проба на соли и основа фотопроявителя. Пятнает пальцы чёрным.", src: "фотолаборатории, медпункты и шкафы с реактивами" },
   c_iodine:     { n: ["Кристаллический йод"], one: 1, icon: "🟣", depth: 1, price: 10, br: "tox", desc: "Тёмные кристаллы в притёртой склянке: при нагреве дают фиолетовые пары, на которых проступает тайнопись.", src: "лаборатории, медпункты и шкафы с реактивами" }
 };
+/* ════════ (после 4.1) СЫРЬЁ ГЛУБИН ════════
+   Шесть веществ Нижних — у каждого три сорта, как у прежнего сырья, и блок, с которого оно попадается
+   (blk). Выше сотого уровня их нет. Из них — капсулы и составы глубин (DEEP_PROD) и переработка в прежнее
+   сырьё высших сортов (DEEP_REF). */
+function blockFrom(n) { var R = LAB.blockRange && LAB.blockRange(n); return R && R.from ? R.from : 101 + 200 * (Math.pow(2, n - 6) - 1); }
+function blockAt(L) { if (L <= 100) return Math.max(1, Math.ceil(L / 20)); if (LAB.DEEP_FIRST && LAB.blockOf) return LAB.blockOf(L); var n = 6; while (n < 15 && L >= blockFrom(n + 1)) n++; return n; }
+var DEEP_FAM = {
+  c_sing:    { n: ["Звучащая вода", "Отстоянная звучащая вода", "Звучащая вода особой чистоты"], icon: "💧", blk: 6, price: 30, br: "energy", desc: "Вода из трещин слоя: в склянке тихо звенит. Растворяет то, что не берёт растворитель, — основа капсул глубин.", src: "протечки и трещины глубин, баки и фильтры Нижних, акустические лаборатории; машины Нижних с жидкостным контуром" },
+  c_lymph:   { n: ["Лимфа переделки", "Очищенная лимфа", "Лимфа особой чистоты"], icon: "🫗", blk: 8, price: 45, br: "pharm", org: 1, desc: "Прозрачная лимфа изменённых: то, что держит переделанное тело живым. Основа сывороток стойкости и капсул.", src: "изменённые твари глубин; лаборатории переделки и медблоки глубин" },
+  c_ferment: { n: ["Закваска Нижних", "Отборная закваска", "Чистая закваска"], icon: "🫙", blk: 9, price: 50, br: "bio", org: 1, desc: "Живая культура из ферментёров Лабораторий: на ней Нижние растили и лекарства, и пищу.", src: "ферментёры, чаны и биолаборатории глубин; твари Лабораторий" },
+  c_ash:     { n: ["Котельная окалина", "Чистая окалина", "Окалина особой чистоты"], icon: "⚫", blk: 13, price: 70, br: "pyro", desc: "Окалина с труб Котла: тёплая, пахнет железом. Горит без воздуха — основа жаровых составов.", src: "котельные, теплообменники и машины Котла; трубы и топки глубин" },
+  c_hush:    { n: ["Тихий осадок", "Отмытый тихий осадок", "Тихий осадок особой чистоты"], icon: "🌑", blk: 14, price: 80, br: "tox", desc: "Серый осадок из карантинных фильтров: глушит звук и жар. В тишине Карантина его соскребали со стен.", src: "фильтры, изоляторы и вентиляция Карантина; твари Карантина" },
+  c_rift:    { n: ["Пыль Разлома", "Отсеянная пыль Разлома", "Пыль Разлома особой чистоты"], icon: "✨", blk: 15, price: 120, br: "energy", desc: "Тонкая пыль с края Ядра: звенит, если её пересыпать. Чистейший катализатор и основа последних капсул.", src: "края трещин и выработки Основания; машины и стражи Основания" }
+};
+for (var dfk in DEEP_FAM) if (!FAM[dfk]) { DEEP_FAM[dfk].depth = blockFrom(DEEP_FAM[dfk].blk); DEEP_FAM[dfk].deep = DEEP_FAM[dfk].blk; FAM[dfk] = DEEP_FAM[dfk]; }
 var FAM_IDS = Object.keys(FAM);
 var GRADE_W = [null, "технический сорт", "очищенный сорт", "особая чистота"];
 function matId(f, g, sat) { return f + (g > 1 ? "_" + g : "") + (sat ? "_m" : ""); }
@@ -167,6 +185,30 @@ var PROD = {
   c_devel:     { n: "Фотопроявитель", icon: "🧴", kind: "use", br: "energy", ce: "devel", price: 30, depth: 1, mods: [], desc: "Проявитель на серебре: с ним и с фиксажем у химического стола проявляют найденные фотоплёнки." },
   c_fixer:     { n: "Фиксаж", icon: "🧴", kind: "use", br: "energy", ce: "fixer", price: 20, depth: 1, mods: [], desc: "Закрепитель для плёнки: без него проявленные кадры чернеют на свету." }
 };
+/* ════════ (после 4.1) КАПСУЛЫ И СОСТАВЫ ГЛУБИН ════════
+   Инъекционные капсулы Нижних (cat med, ce — действие в chem.use): стимулятор смены, кожух, антимутаген
+   глубин, капсула возврата (удары, полученные за десять секунд, потом возвращаются здоровьем), внимание,
+   промывка, жаростойкость, тишина, последний вдох; и ещё звенящая склянка, паровая бомба, мазь из лимфы,
+   смазка Трещины. Сила — от здоровья и запаса героя, а не от глубины: капсула с первого уровня блока
+   работает и на его дне. blk — блок, с которого состав находят, продают и синтезируют. */
+var DEEP_PROD = {
+  c_cap_shift:   { n: "Капсула смены", icon: "💊", kind: "use", cat: "med", br: "pharm", ce: "shift", price: 260, blk: 6, mods: ["long", "strong", "clean"], desc: "Стимулятор смены Нижних: {t:40} ускорение, бодрость плюс {m:30}, нейронагрузка минус {m:20}, а энергия имплантов — плюс треть запаса. Токсины плюс {x:10}." },
+  c_cap_guard:   { n: "Капсула кожуха", icon: "💊", kind: "use", cat: "med", br: "bio", ce: "cguard", price: 300, blk: 7, mods: ["long", "strong"], mut: 1, desc: "Хитин на звучащей воде схватывается под кожей кожухом: щит в треть здоровья, держится {t:120}." },
+  c_cap_anti:    { n: "Капсула антимутагена глубин", icon: "💊", kind: "use", cat: "med", br: "pharm", ce: "antideep", price: 360, blk: 8, mods: ["long", "strong"], desc: "Лимфа переделки на конденсате: мутация минус {m:45}, и {t:360} мутаген вас не берёт — ни туман, ни укусы, ни составы." },
+  c_lymphsalve:  { n: "Мазь из лимфы", icon: "🫗", kind: "use", br: "bio", ce: "lymphsalve", price: 320, blk: 8, mods: ["long", "strong"], mut: 1, desc: "Мазь схватывается на ранах: щит — пятая часть здоровья на {t:60}, и {t:30} раны затягиваются сами." },
+  c_cap_purge:   { n: "Капсула промывки", icon: "💊", kind: "use", cat: "med", br: "tox", ce: "purge2", price: 340, blk: 9, mods: ["strong"], desc: "Закваска Лабораторий чистит кровь: яд выходит, токсины минус {m:80}, облучение минус {m:30}, мутация минус {m:10}, нейронагрузка минус {m:15}." },
+  c_resogren:    { n: "Звенящая склянка", icon: "🔔", kind: "throw", br: "pyro", price: 240, blk: 7, mods: ["long", "strong", "clean"], desc: "Склянка звучащей воды под давлением: лопается нотой слоя — на два шага вокруг бьёт звуком, твари теряют голову, машины глохнут. Вас не задевает.",
+    gren: { dmg: 40, r: 2, dt: "sonic", confuse: 10, deaf: 20, self: false, range: 6, fuse: 800, loud: 8 } },
+  c_cap_focus:   { n: "Капсула внимания", icon: "💊", kind: "use", cat: "med", br: "energy", ce: "focus", price: 380, blk: 10, mods: ["long"], desc: "Нервный экстракт на звучащей воде: {t:180} руки не дрожат — точность плюс двенадцать процентов, нейронагрузка минус {m:10}." },
+  c_cap_payback: { n: "Капсула возврата", icon: "💊", kind: "use", cat: "med", br: "pharm", ce: "payback", price: 420, blk: 11, mods: ["long", "strong"], desc: "Капсула Лечебницы запоминает раны: всё, что вас ранит в ближайшие {t:20}, потом возвращается здоровьем — шесть десятых, понемногу, за десять секунд." },
+  c_steamgren:   { n: "Паровая бомба", icon: "♨️", kind: "throw", br: "pyro", price: 360, blk: 13, mods: ["long", "strong", "clean"], desc: "Окалина Котла на звучащей воде: вскипает паром на два шага вокруг — обваривает всех, машины слепнут, твари вязнут. Бросайте подальше.",
+    gren: { dmg: 60, r: 2, dt: "thermo", blind: 12, slow: 8, self: true, range: 5, fuse: 900, loud: 9 } },
+  c_cap_heat:    { n: "Капсула жаростойкости", icon: "💊", kind: "use", cat: "med", br: "pyro", ce: "heatres", price: 400, blk: 13, mods: ["long"], desc: "Окалина и хладагент под кожей: {t:240} жар и огонь берут на семь десятых меньше." },
+  c_cap_hush:    { n: "Капсула тишины", icon: "💊", kind: "use", cat: "med", br: "tox", ce: "hushcap", price: 440, blk: 14, mods: ["long"], desc: "Тихий осадок Карантина в крови: {t:240} ваших шагов не слышно, звон и визг не оглушают, а звуковые удары берут вдвое меньше." },
+  c_coat_rift:   { n: "Смазка Трещины", icon: "✨", kind: "use", br: "tox", ce: "coat", price: 480, blk: 15, mods: ["long", "strong"], desc: "Пыль Разлома на масле — для клинка, дубинки или стальных пуль: {n:15:попадание,попадания,попаданий} сквозь броню и {pc:30} сильнее по всем." },
+  c_cap_last:    { n: "Капсула последнего вдоха", icon: "💊", kind: "use", cat: "med", br: "pharm", ce: "laststand", price: 600, blk: 15, mods: ["long"], desc: "Пыль Разлома и гормоны тварей ждут под кожей {t:360}: если удар оказался бы смертельным, капсула вбросит адреналин — здоровье не упадёт ниже единицы и тут же вырастет на треть. Один раз." }
+};
+for (var dpk in DEEP_PROD) if (!PROD[dpk]) { var dp0 = DEEP_PROD[dpk]; dp0.depth = blockFrom(dp0.blk); dp0.deep = dp0.blk; PROD[dpk] = dp0; }
 /* (3.6) плёнка и отчёт анализа — просто вещи */
 if (!LAB.ITEMS.film) LAB.ITEMS.film = { n: "Фотоплёнка", icon: "🎞️", kind: "part", cat: "chem", price: 15, depth: 1, desc: "Катушка в светонепроницаемой кассете: отснятая, но не проявленная. Проявить её можно у химического стола — нужны фотопроявитель и фиксаж." };
 if (!LAB.ITEMS.c_report) LAB.ITEMS.c_report = { n: "Отчёт об анализе ткани", icon: "📋", kind: "part", cat: "chem", price: 40, depth: 1, desc: "Записи анализа ткани с химического стола: медики, генетики и лаборанты среди выживших платят за них хорошо — подойдите и отдайте." };
@@ -268,8 +310,10 @@ var BR = {
   bio:    { n: "биотехнология", t: "Биотехнология", d: "мази, приманки, культуры, сыворотки и управляемая мутация" }
 };
 var BR_IDS = ["pharm", "tox", "energy", "pyro", "bio"];
-var BR_XP = [0, 25, 70, 150, 270, 440];
-var ALL_XP = [0, 40, 110, 220, 380, 600, 880, 1250, 1700, 2300];
+/* (после 4.1) ступени глубин: направление — до десятой, общая — до пятнадцатой, по ступени на глубокий блок
+   (выше сотого уровня — прежние пределы пятая и десятая, и числа те же) */
+var BR_XP = [0, 25, 70, 150, 270, 440, 650, 900, 1200, 1550, 1950];
+var ALL_XP = [0, 40, 110, 220, 380, 600, 880, 1250, 1700, 2300, 2900, 3600, 4400, 5300, 6300];
 /* Специализация растёт вместе с направлением: первая ступень — при выборе,
    вторая — на четвёртой ступени направления, третья — на пятой. */
 var SPECS = {
@@ -279,18 +323,24 @@ var SPECS = {
   pyro:   { n: "пиротехник", r: ["гранаты и шашки выходят вдвое", "свои гранаты вас не задевают", "свои химические гранаты бьют на шаг шире"] },
   bio:    { n: "биотехнолог", r: ["с тварей ткани падают вдвое чаще", "мази, культуры и приманки — вдвое дольше, мутагенные составы и укусы дают вдвое меньше мутации", "ткани тварей падают на сорт чище, а мутация не ослабляет лекарства"] }
 };
+/* (после 4.1) специализации — ещё две ступени ниже Истока: на седьмой и девятой ступени направления */
+SPECS.pharm.r.push("лекарства лечат ещё на пятую часть сильнее", "после любого лечения ещё пять секунд затягиваются раны");
+SPECS.tox.r.push("ядовитая смазка травит вдвое сильнее", "яды на вас не действуют");
+SPECS.energy.r.push("перегрузочная капсула — ещё на треть сильнее", "энергия имплантов восстанавливается на четверть быстрее");
+SPECS.pyro.r.push("гранаты и шашки выходят втрое", "свои химические гранаты бьют на два шага шире");
+SPECS.bio.r.push("мази, культуры и капсулы на тканях — на треть сильнее", "мутация не переходит за половину");
 function ch() { var g = G(); if (!g.chem) g.chem = {}; var c = g.chem; if (!c.xp) c.xp = {}; if (!c.spec) c.spec = []; if (!c.known) c.known = {}; if (!c.seen) c.seen = {}; if (!c.opt) c.opt = { best: false, cat: false, mod: "" }; return c; }
 function brXp(b) { return ch().xp[b] || 0; }
-function brLv(b) { var x = brXp(b), n = 0; for (var i = 1; i < BR_XP.length; i++) if (x >= BR_XP[i]) n = i; return n; }
+function brLv(b) { var x = brXp(b), n = 0, top = brCap(); for (var i = 1; i < BR_XP.length && i <= top; i++) if (x >= BR_XP[i]) n = i; return n; }
 function totalXp() { var s = 0, x = ch().xp; for (var k in x) s += x[k] || 0; return s; }
-function level() { var x = totalXp(), n = 1; for (var i = 1; i < ALL_XP.length; i++) if (x >= ALL_XP[i]) n = i + 1; return n; }
+function level() { var x = totalXp(), n = 1, top = lvlCap(); for (var i = 1; i < ALL_XP.length && i < top; i++) if (x >= ALL_XP[i]) n = i + 1; return n; }
 function spec(b) { return ch().spec.indexOf(b) >= 0; }
-function rank(b) { return !spec(b) ? 0 : brLv(b) >= 5 ? 3 : brLv(b) >= 4 ? 2 : 1; }
+function rank(b) { return !spec(b) ? 0 : brLv(b) >= 9 ? 5 : brLv(b) >= 7 ? 4 : brLv(b) >= 5 ? 3 : brLv(b) >= 4 ? 2 : 1; } /* (после 4.1) четвёртая и пятая — ниже Истока */
 function specSlots() { var l = level(); return l >= 8 ? 2 : l >= 4 ? 1 : 0; }
 function gain(b, n) {
   if (!BR[b] || !n) return;
   var c = ch(), b0 = brLv(b), l0 = level(), r0 = rank(b);
-  c.xp[b] = brXp(b) + Math.max(1, Math.round(n * (dk().chemXp || 1))); /* режим сложности */
+  c.xp[b] = brXp(b) + Math.max(1, Math.round(n * (dk().chemXp || 1) * (G().L > 100 ? 1 + 0.25 * Math.max(1, blockAt(G().L) - 5) : 1))); /* режим сложности; (после 4.1) ниже Истока опыт весомее */
   var b1 = brLv(b), l1 = level(), r1 = rank(b);
   if (b1 > b0) gm().later(function () { A("play", "ui_levelup"); sayq("Химия, " + BR[b].n + ": ступень " + b1 + ". Составы направления сильнее, чаще выходят с запасом и реже срываются" + (b1 === 1 || b1 === 3 ? ", а сорт состава может быть выше" : "") + "." + (b1 >= 2 ? " Рецептуры до " + (b1 - 1) + "-й ступени вы теперь угадываете сами." : "")); }, 700);
   if (r1 > r0) gm().later(function () { A("play", "ui_levelup"); sayq("Специализация «" + SPECS[b].n + "», ступень " + r1 + ": " + SPECS[b].r[r1 - 1] + "."); }, 1100);
@@ -300,11 +350,14 @@ function levelPerk(n) {
   return ({ 2: "Переработка сырья иногда даёт лишнюю порцию.", 3: "Анализ состава через раз обходится без порчи образца.",
     4: "Можно выбрать специализацию — у химического стола, «Химия: ступени и специализация».", 5: "Синтез на столе ступенью проще нужного — можно, но срывается чаще.",
     6: "Походная химия: простые составы — без стола, в любом месте.", 7: "Срыв синтеза больше не обжигает и не травит.",
-    8: "Можно выбрать вторую специализацию.", 9: "Каждый синтез с запасом чаще.", 10: "Мастер химии: все составы сильнее на десятую часть." })[n] || "";
+    8: "Можно выбрать вторую специализацию.", 9: "Каждый синтез с запасом чаще.", 10: "Мастер химии: все составы сильнее на десятую часть.",
+    /* (после 4.1) общие ступени глубин */
+    11: "Капсулы глубин выходят по две.", 12: "Походная химия глубин: составы до третьей ступени и стола второй ступени — без стола.",
+    13: "Капсулы глубин действуют вдвое дольше.", 14: "Анализ состава больше не портит образец.", 15: "Химик Разлома: все составы сильнее ещё на пятую часть." })[n] || "";
 }
 /* Предел сорта по ступени направления: со второй ступени — очищенный, с третьей — особый. */
 function gradeCap(b) { var l = brLv(b); return l >= 3 ? 3 : l >= 1 ? 2 : 1; }
-function potK(b) { return 1 + 0.05 * brLv(b) + (level() >= 10 ? 0.1 : 0) + (b === "pharm" && rank("pharm") >= 1 ? 0.25 : 0); }
+function potK(b) { return 1 + 0.05 * brLv(b) + (level() >= 10 ? 0.1 : 0) + (b === "pharm" && rank("pharm") >= 1 ? 0.25 : 0) + (level() >= 15 ? 0.2 : 0) + (b === "pharm" && rank("pharm") >= 4 ? 0.2 : 0) + (b === "bio" && rank("bio") >= 4 ? 0.33 : 0); }
 /* Лекарства: фармакология сильнее, мутация слабее (game.js, useItem). */
 function healK(id, d) { if (!d || !(d.cat === "med" || /^medkit|^bandage|^herb_/.test(id))) return 1; return potK("pharm") * mutHealK(); }
 function noOverdose() { return rank("pharm") >= 2; }
@@ -380,6 +433,26 @@ var RC = [
   { id: "l_fixer", out: "c_fixer", br: "energy", lv: 0, st: 1, need: { c_salt: 2, c_soda: 1 } },
   { id: "l_devel", out: "c_devel", br: "energy", lv: 1, st: 1, need: { c_silver: 1, c_ammonia: 1 } } /* (3.7) ляпис в нашатыре — физический проявитель; со щёлочью выходил бурый осадок */
 ];
+/* (после 4.1) Рецептуры глубин: капсулы и составы на сырье Нижних. Ступень направления — шестая и выше
+   (её открывает спуск: ступени глубин), стол — не проще синтез-реактора; часть рецептур нужно узнать
+   (журналы глубин, анализ готового состава, опыт руками) или дорасти до ступени на две выше. Выше сотого
+   уровня их нет ни в одном списке (deep). */
+var DEEP_RC = [
+  { id: "d_shift", out: "c_cap_shift", br: "pharm", lv: 5, st: 3, need: { c_sing: 1, c_gland: 1, c_salt: 1 }, deep: 6 },
+  { id: "d_guard", out: "c_cap_guard", br: "bio", lv: 5, st: 3, need: { c_chitin: 2, c_sing: 1, gel: 1 }, deep: 7 },
+  { id: "d_resogren", out: "c_resogren", br: "pyro", lv: 5, st: 3, need: { c_sing: 2, c_salt: 1, scrap: 1 }, deep: 7 },
+  { id: "d_anti", out: "c_cap_anti", br: "pharm", lv: 6, st: 4, f: 1, need: { c_lymph: 1, c_cond: 1, c_alkali: 1 }, deep: 8 },
+  { id: "d_lymphsalve", out: "c_lymphsalve", br: "bio", lv: 6, st: 4, need: { c_lymph: 1, c_chitin: 1, gel: 1 }, deep: 8 },
+  { id: "d_purge", out: "c_cap_purge", br: "tox", lv: 6, st: 4, need: { c_ferment: 1, c_alkali: 1, c_salt: 2 }, deep: 9 },
+  { id: "d_focus", out: "c_cap_focus", br: "energy", lv: 7, st: 4, f: 1, need: { c_sing: 1, c_nerve: 1, c_electrolyte: 1 }, deep: 10 },
+  { id: "d_payback", out: "c_cap_payback", br: "pharm", lv: 7, st: 5, f: 1, need: { c_lymph: 1, c_blood: 2, c_stab: 1 }, deep: 11 },
+  { id: "d_steamgren", out: "c_steamgren", br: "pyro", lv: 8, st: 5, need: { c_ash: 2, c_sing: 1, scrap: 1 }, deep: 13 },
+  { id: "d_heat", out: "c_cap_heat", br: "pyro", lv: 8, st: 5, f: 1, need: { c_ash: 1, c_coolant: 2, gel: 1 }, deep: 13 },
+  { id: "d_hush", out: "c_cap_hush", br: "tox", lv: 9, st: 5, f: 1, need: { c_hush: 2, c_nerve: 1, c_salt: 1 }, deep: 14 },
+  { id: "d_coatrift", out: "c_coat_rift", br: "tox", lv: 9, st: 5, need: { c_rift: 1, c_oil: 1, c_acidc: 1 }, deep: 15 },
+  { id: "d_last", out: "c_cap_last", br: "pharm", lv: 10, st: 5, f: 1, minG: 2, need: { c_rift: 1, c_gland: 2, c_lymph: 1 }, deep: 15 }
+];
+DEEP_RC.forEach(function (rc) { if (!RC.some(function (q) { return q.id === rc.id; })) RC.push(rc); });
 var RCBY = {};
 RC.forEach(function (rc) { RCBY[rc.id] = rc; });
 /* Переработка: превращения, добавки, вещества глубин; need и give — точные вещи. */
@@ -404,6 +477,16 @@ var REF = [
   { id: "d_omega", n: "Развести клетки Омеги — чистый фермент, два", br: "bio", st: 3, need: { i_omegagel: 1, c_salt: 1 }, give: { c_enzyme_3: 2 } },
   { id: "d_fiber", n: "Разварить волокно первого дерева — хитозан, два", br: "bio", st: 3, need: { i_treefiber: 1, c_alkali: 1 }, give: { c_chitin_3: 2 } }
 ];
+/* (после 4.1) Переработка сырья глубин — в прежнее сырьё высших сортов (стол не проще вытяжного шкафа). */
+var DEEP_REF = [
+  { id: "dd_sing", n: "Отстоять звучащую воду — очищенный растворитель, два", br: "energy", st: 2, need: { c_sing: 1 }, give: { c_solvent_2: 2 }, deep: 1 },
+  { id: "dd_lymph", n: "Развести лимфу переделки — плазма гемолимфы, две порции", br: "pharm", st: 2, need: { c_lymph: 1, c_salt: 1 }, give: { c_blood_2: 2 }, deep: 1 },
+  { id: "dd_ferment", n: "Отжать закваску Нижних — активные ферменты, два", br: "bio", st: 2, need: { c_ferment: 1 }, give: { c_enzyme_2: 2 }, deep: 1 },
+  { id: "dd_ash", n: "Замешать окалину на масле — высокоэнергетическое топливо", br: "pyro", st: 3, need: { c_ash: 1, c_oil: 1 }, give: { c_fuel_3: 1 }, deep: 1 },
+  { id: "dd_hush", n: "Растворить тихий осадок щёлочью — стабилизатор, три порции", br: "tox", st: 2, need: { c_hush: 1, c_alkali: 1 }, give: { c_stab: 3 }, deep: 1 },
+  { id: "dd_rift", n: "Пересыпать пыль Разлома на сетку — наноструктурный катализатор, два", br: "energy", st: 4, need: { c_rift: 1 }, give: { c_catalyst_3: 2 }, deep: 1 }
+];
+DEEP_REF.forEach(function (rf) { if (!REF.some(function (q) { return q.id === rf.id; })) REF.push(rf); });
 /* Очистка: из двух порций сорта ниже — одна сорта выше (растворитель того же сорта).
    (3.7, нелогичность) растворитель и кислоту не промывают растворителем, а перегоняют: из трёх
    порций — одна (прежде концентрированную кислоту «очищали» спиртом с ацетоном до дымящей) */
@@ -414,10 +497,12 @@ FAM_IDS.forEach(function (f) {
   REF.push({ id: "p2_" + f, n: (DISTIL[f] ? "Перегнать: " : "Очистить: ") + low(nm[0]) + " — " + low(nm[1]), br: FAM[f].br, st: 2, pur: 2, need: DISTIL[f] ? (function () { var o = {}; o[f] = 3; return o; })() : (function () { var o = {}; o[f] = 2; o.c_solvent = 1; return o; })(), give: (function () { var o = {}; o[matId(f, 2)] = 1; return o; })() });
   REF.push({ id: "p3_" + f, n: (DISTIL[f] ? "Перегнать ещё раз: " : "Довести до особой чистоты: ") + low(nm[1]) + " — " + low(nm[2]), br: FAM[f].br, st: 3, pur: 3, need: DISTIL[f] ? (function () { var o = {}; o[matId(f, 2)] = 3; return o; })() : (function () { var o = {}; o[matId(f, 2)] = 2; o.c_solvent_2 = 1; return o; })(), give: (function () { var o = {}; o[matId(f, 3)] = 1; return o; })() });
 });
+/* (после 4.1) очистка сырья глубин — тоже только ниже Истока */
+REF.forEach(function (rf) { var f0 = /^p[23]_/.test(rf.id) ? rf.id.slice(3) : ""; if (f0 && FAM[f0] && FAM[f0].deep) rf.deep = 1; });
 function refOk(rf) { for (var k in rf.need) if (!LAB.ITEMS[k]) return false; for (var k2 in rf.give) if (!LAB.ITEMS[k2]) return false; return true; }
 function outOk(rc) { var o = String(rc.out); return o.indexOf("ammo:") === 0 ? !!LAB.AMMO[o.slice(5)] : !!LAB.ITEMS[o]; }
 function outName(rc) { if (rc.n) return rc.n; var o = String(rc.out); return o.indexOf("ammo:") === 0 ? LAB.AMMO[o.slice(5)].n : (PROD[o] ? PROD[o].n : LAB.ITEMS[o].n); }
-function known(rc) { return !rc.f || !!ch().known[rc.id] || brLv(rc.br) >= Math.min(5, rc.lv + 2); }
+function known(rc) { return !rc.f || !!ch().known[rc.id] || brLv(rc.br) >= Math.min(rc.deep ? 10 : 5, rc.lv + 2); }
 function learn(id, how) {
   var rc = RCBY[id];
   if (!rc || ch().known[id]) return false;
@@ -483,6 +568,8 @@ var ST = [null,
   { n: "вытяжной шкаф с реактором", d: "реактор с мешалкой, обратный холодильник и дозаторы; очищает сырьё до второго сорта" },
   { n: "синтез-реактор", d: "реактор высокого давления, хроматограф и термостат; доводит сырьё до особой чистоты" },
   { n: "биореактор", d: "культуральные чаны, ламинарный шкаф и секвенатор; всё, что умеет синтез-реактор, и живые культуры" }];
+/* (после 4.1) стол Нижних — только ниже Истока */
+ST.push({ n: "реакторный стол Нижних", d: "реактор на звучащей воде, ферментёры Лабораторий и запаянные ампулы: всё, что умеет биореактор, и капсулы глубин" });
 if (LAB.OBJ && !LAB.OBJ.chemlab) LAB.OBJ.chemlab = { n: "Химический стол", icon: "⚗️", desc: "Лабораторный стол химика: из сырья здесь синтезируют лекарства, яды, смазки, гранаты и сыворотки, очищают вещества и выводят мутаген." };
 function station(o) {
   var fs = CUR().fs, g = G();
@@ -491,8 +578,8 @@ function station(o) {
   var k = String(o.id);
   if (!fs.chemSt[k]) {
     var h = h32("chemst:" + g.L + "-" + g.F + "-" + k), p = h % 100, L = g.L, b = o.good ? 15 : 0;
-    var t = L <= 2 ? (p < 75 - b ? 1 : 2) : L <= 10 ? (p < 30 - b ? 1 : p < 85 - b ? 2 : 3) : L <= 30 ? (p < 35 - b ? 2 : p < 85 - b ? 3 : 4) : L <= 60 ? (p < 40 - b ? 3 : 4) : (p < 20 - b ? 3 : 4);
-    fs.chemSt[k] = { tier: Math.max(1, Math.min(4, t)), dirty: ((h >>> 9) % 100) < (dk().chemDirty || 25) }; /* режим: в сложных — чаще загрязнён */
+    var t = L <= 2 ? (p < 75 - b ? 1 : 2) : L <= 10 ? (p < 30 - b ? 1 : p < 85 - b ? 2 : 3) : L <= 30 ? (p < 35 - b ? 2 : p < 85 - b ? 3 : 4) : L <= 60 ? (p < 40 - b ? 3 : 4) : L <= 100 ? (p < 20 - b ? 3 : 4) : (p < 40 - b ? 4 : 5);
+    fs.chemSt[k] = { tier: Math.max(1, Math.min(L > 100 ? 5 : 4, t)), dirty: ((h >>> 9) % 100) < (dk().chemDirty || 25) }; /* режим: в сложных — чаще загрязнён */
   }
   return fs.chemSt[k];
 }
@@ -511,7 +598,7 @@ function rootItems(o) {
   /* (3.6) руками: пробирки, колбы, реактивы — реакции, пробы, открытия, тайнопись, плёнки, анализ ткани */
   if (LAB.chemlab) { var busy = LAB.chemlab.busy(o); items.push({ label: "Работа руками: пробирки, колбы, реактивы" + (busy ? ". В посуде: " + busy : ""), fn: function () { LAB.chemlab.bench(o); } }); }
   BR_IDS.forEach(function (b) {
-    var ready = RC.filter(function (rc) { return rc.br === b && outOk(rc) && !why(rc, s); }).length;
+    var ready = RC.filter(function (rc) { return rc.br === b && outOk(rc) && rcOn(rc) && !why(rc, s); }).length;
     items.push({ label: "Синтез: " + BR[b].n + ", ступень " + brLv(b) + (ready ? ". Можно сделать сейчас: " + ready : ""), fn: function () { brMenu(o, b); } });
   });
   items.push({ label: "Переработка, очистка и добавки", fn: function () { refMenu(o); } });
@@ -536,9 +623,9 @@ function stationCap(s) { return !s ? 1 : s.tier >= 3 ? 3 : s.tier; }
 /* Почему нельзя (пусто — можно). */
 function why(rc, s) {
   if (!outOk(rc)) return "нет в игре";
-  if (!known(rc)) return "рецептура неизвестна: найдите её в лабораторных журналах, разгадайте анализом готового состава или дорастите " + BR[rc.br].n + " до ступени " + Math.min(5, rc.lv + 2);
+  if (!known(rc)) return "рецептура неизвестна: найдите её в лабораторных журналах, разгадайте анализом готового состава или дорастите " + BR[rc.br].n + " до ступени " + Math.min(rc.deep ? 10 : 5, rc.lv + 2);
   if (brLv(rc.br) < rc.lv) return "нужна ступень " + rc.lv + " направления «" + BR[rc.br].n + "», у вас " + brLv(rc.br);
-  if (!s) { if (!(level() >= 6 && rc.st <= 1 && rc.lv <= 1)) return "нужен химический стол"; }
+  if (!s) { if (!(level() >= 6 && rc.st <= 1 && rc.lv <= 1) && !(level() >= 12 && rc.st <= 2 && rc.lv <= 3)) return "нужен химический стол"; }
   else {
     if (s.dirty) return "стол загрязнён — сначала отмойте его растворителем";
     if (s.tier < rc.st && !(level() >= 5 && s.tier === rc.st - 1)) return "нужен стол ступени " + rc.st + ": " + ST[rc.st].n;
@@ -552,6 +639,7 @@ function failP(rc, s, mod) {
   var lv = brLv(rc.br), t = s ? s.tier : 1;
   var p = 0.06 + 0.07 * rc.lv - 0.05 * lv - 0.03 * Math.max(0, t - rc.st) + (mod && mod !== "mut" ? 0.04 : 0);
   if (s && s.tier < rc.st) p *= 2;
+  if (lv >= 10) p *= 0.5; /* (после 4.1) десятая ступень направления — срывов вдвое меньше */
   if (!s) p += 0.05;
   p *= dk().chemFail || 1; /* режим сложности */
   return Math.max(0.02, Math.min(0.55, p));
@@ -585,7 +673,7 @@ function outLabel(fc) { var d = LAB.ITEMS[fc.id] || {}, o = String(fc.id); retur
 function brMenu(o, b) {
   var build = function () {
     var s = station(o), items = [{ label: BR[b].t + ": " + BR[b].d + ". Ступень " + brLv(b) + ", опыт " + brXp(b) + (brLv(b) < 5 ? " из " + BR_XP[brLv(b) + 1] : "") + ". Предел чистоты: " + GRADE_W[gradeCap(b)] + ".", info: true, keep: true, fn: function () { say(BR[b].t + ", ступень " + brLv(b) + "."); } }];
-    RC.filter(function (rc) { return rc.br === b && outOk(rc); }).forEach(function (rc) {
+    RC.filter(function (rc) { return rc.br === b && outOk(rc) && rcOn(rc); }).forEach(function (rc) {
       var w = why(rc, s), fc = !w ? forecast(rc, s) : null;
       items.push({ label: known(rc) ? outName(rc) + ". Нужно: " + needText(rc.need) + (rc.minG ? ", сырьё не ниже очищенного сорта" : "") + "." + (w ? " Нельзя: " + w + "." : " Выйдет: " + low(outLabel(fc)) + ".") : outName(rc) + " — рецептура неизвестна", fn: function () { brewMenu(rc, o); } });
     });
@@ -637,7 +725,8 @@ function brew(rc, o) {
     var n = fc.n, extra = 0;
     if (Math.random() < 0.08 * brLv(rc.br) + (level() >= 9 ? 0.2 : 0)) extra++;
     var dbl = (rc.br === "energy" && rank("energy") >= 1 && /^ammo:|^c_fuelamp/.test(rc.out)) || (rc.br === "pyro" && rank("pyro") >= 1 && PROD[rc.out] && PROD[rc.out].kind === "throw");
-    if (dbl) n *= 2;
+    if (dbl) n *= rc.br === "pyro" && rank("pyro") >= 4 ? 3 : 2;
+    if (level() >= 11 && capOf(fc.id)) n *= 2; /* (после 4.1) капсулы глубин — по две */
     n += extra;
     give(fc.id, n);
     var first = !ch().seen["b:" + rc.id];
@@ -655,7 +744,7 @@ function countOut(out) { var o = String(out); return o.indexOf("ammo:") === 0 ? 
 function refMenu(o) {
   var build = function () {
     var s = station(o), items = [];
-    REF.filter(function (rf) { return refOk(rf) && (!rf.pur || haveExact(rf.need) || s.tier >= rf.st); }).forEach(function (rf) {
+    REF.filter(function (rf) { return refOk(rf) && rcOn(rf) && (!rf.pur || haveExact(rf.need) || s.tier >= rf.st); }).forEach(function (rf) {
       var okT = s.tier >= rf.st, ok = okT && haveExact(rf.need) && !s.dirty;
       if (!ok && !rf.pur && /^d_/.test(rf.id) && !Object.keys(rf.need).some(function (k) { return (G().inv[k] || 0) > 0 && /^[gkomi]_/.test(k); })) return; /* вещества глубин — когда они есть */
       items.push({ label: rf.n + ". Нужно: " + needLine(rf.need) + (ok ? "." : !okT ? ". Нужен стол ступени " + rf.st + "." : s.dirty ? ". Стол загрязнён." : ". Не хватает: " + lackExact(rf.need) + "."), keep: true, fn: function () { refine(rf, o); } });
@@ -729,7 +818,7 @@ function anaMenu(o) {
 function analyze(k, rc, o) {
   var s = station(o);
   if (s.dirty) { say("Стол загрязнён — сначала отмойте его растворителем."); return; }
-  var keep = level() >= 3 && Math.random() < 0.5;
+  var keep = level() >= 14 || (level() >= 3 && Math.random() < 0.5);
   if (!keep) { G().inv[k]--; if (!G().inv[k]) delete G().inv[k]; }
   A("play", "ev_glass");
   gain(rc.br, 12);
@@ -737,7 +826,7 @@ function analyze(k, rc, o) {
   refresh();
 }
 function study(f) {
-  var F0 = FAM[f], uses = RC.filter(function (rc) { return outOk(rc) && rc.need[f]; }).map(function (rc) { return known(rc) ? low(outName(rc)) : "неизвестный состав (" + BR[rc.br].n + ")"; });
+  var F0 = FAM[f], uses = RC.filter(function (rc) { return outOk(rc) && rcOn(rc) && rc.need[f]; }).map(function (rc) { return known(rc) ? low(outName(rc)) : "неизвестный состав (" + BR[rc.br].n + ")"; });
   var refs = REF.filter(function (rf) { return refOk(rf) && !rf.pur && Object.keys(rf.need).some(function (k) { return MAT[k] && MAT[k].f === f; }); }).map(function (rf) { return low(rf.n.split(" — ")[0]); });
   if (!ch().seen["a:" + f]) { ch().seen["a:" + f] = 1; gain(F0.br || "pharm", 6); }
   say(F0.n[0] + ". " + F0.desc + (F0.one ? "" : " Сорта: " + F0.n.map(low).join(", ") + ".") + " Где взять: " + F0.src + "." + (uses.length ? " Идёт на: " + uses.join(", ") + "." : "") + (refs.length ? " Переработка: " + refs.join(", ") + "." : "") + (F0.org ? " В тумане мутагена насыщается им." : ""));
@@ -745,9 +834,9 @@ function study(f) {
 function skillMenu() {
   var build = function () {
     var c = ch(), items = [{ label: line(), info: true, keep: true, fn: function () { say(line()); } }];
-    items.push({ label: "Общая ступень " + level() + ", опыт " + totalXp() + (level() < 10 ? " из " + ALL_XP[level()] : "") + ". " + levelPerk(level()), info: true, keep: true, fn: function () { say("Общая ступень химика " + level() + ". Растёт от всего, что вы синтезируете, очищаете, перерабатываете и изучаете."); } });
-    BR_IDS.forEach(function (b) { items.push({ label: BR[b].t + ": ступень " + brLv(b) + ", опыт " + brXp(b) + (brLv(b) < 5 ? " из " + BR_XP[brLv(b) + 1] : "") + ". " + cap1(BR[b].d) + ". Предел чистоты: " + GRADE_W[gradeCap(b)] + ".", info: true, keep: true, fn: function () { say(BR[b].t + ": " + BR[b].d + "."); } }); });
-    c.spec.forEach(function (sp) { items.push({ label: "Специализация «" + SPECS[sp].n + "», ступень " + rank(sp) + ": " + SPECS[sp].r.slice(0, rank(sp)).join("; ") + "." + (rank(sp) < 3 ? " Дальше: " + SPECS[sp].r[rank(sp)] + " — на " + (rank(sp) + 3) + "-й ступени направления." : ""), info: true, keep: true, fn: function () { say(SPECS[sp].n + ": " + SPECS[sp].r.slice(0, rank(sp)).join("; ") + "."); } }); });
+    items.push({ label: "Общая ступень " + level() + ", опыт " + totalXp() + (level() < lvlCap() ? " из " + ALL_XP[level()] : "") + ". " + levelPerk(level()), info: true, keep: true, fn: function () { say("Общая ступень химика " + level() + ". Растёт от всего, что вы синтезируете, очищаете, перерабатываете и изучаете."); } });
+    BR_IDS.forEach(function (b) { items.push({ label: BR[b].t + ": ступень " + brLv(b) + ", опыт " + brXp(b) + (brLv(b) < brCap() ? " из " + BR_XP[brLv(b) + 1] : "") + ". " + cap1(BR[b].d) + ". Предел чистоты: " + GRADE_W[gradeCap(b)] + ".", info: true, keep: true, fn: function () { say(BR[b].t + ": " + BR[b].d + "."); } }); });
+    c.spec.forEach(function (sp) { items.push({ label: "Специализация «" + SPECS[sp].n + "», ступень " + rank(sp) + ": " + SPECS[sp].r.slice(0, rank(sp)).join("; ") + "." + (rank(sp) < 3 || (rank(sp) < 5 && deepStep() > 0) ? " Дальше: " + SPECS[sp].r[rank(sp)] + " — на " + RANK_AT[rank(sp) + 1] + "-й ступени направления." : ""), info: true, keep: true, fn: function () { say(SPECS[sp].n + ": " + SPECS[sp].r.slice(0, rank(sp)).join("; ") + "."); } }); });
     if (c.spec.length < specSlots()) BR_IDS.filter(function (b) { return !spec(b); }).forEach(function (b) {
       items.push({ label: "Стать: " + SPECS[b].n + " — " + SPECS[b].r[0] + "; позже: " + SPECS[b].r[1] + "; " + SPECS[b].r[2], fn: function () { c.spec.push(b); A("play", "ui_levelup"); say("Специализация: " + SPECS[b].n + ". " + cap1(SPECS[b].r[0]) + ". На четвёртой ступени направления — " + SPECS[b].r[1] + ", на пятой — " + SPECS[b].r[2] + "."); refresh(); } });
     });
@@ -772,7 +861,7 @@ function invMenu() {
 }
 function pocketMenu() {
   var build = function () {
-    var items = RC.filter(function (rc) { return outOk(rc) && rc.st <= 1 && rc.lv <= 1 && known(rc); }).map(function (rc) { var w = why(rc, null); return { label: outName(rc) + ". Нужно: " + needText(rc.need) + "." + (w ? " Нельзя: " + w + "." : ""), fn: function () { brewMenu(rc, null); } }; });
+    var items = RC.filter(function (rc) { return outOk(rc) && rcOn(rc) && ((rc.st <= 1 && rc.lv <= 1) || (level() >= 12 && rc.st <= 2 && rc.lv <= 3)) && known(rc); }).map(function (rc) { var w = why(rc, null); return { label: outName(rc) + ". Нужно: " + needText(rc.need) + "." + (w ? " Нельзя: " + w + "." : ""), fn: function () { brewMenu(rc, null); } }; });
     items.push({ label: "Назад", close: true, fn: function () {} });
     return items;
   };
@@ -788,8 +877,9 @@ var STAGE_N = ["нет", "первые признаки", "мутация идё
 function mutLine() { var m = Math.round(mut()); return "Мутация " + m + " из 100: " + STAGE_N[stage()] + (ctrl() ? ", управляемая мутация действует" : "") + "."; }
 function addMut(x, why0) {
   if (!(x > 0)) return;
+  if (G().st && G().st.mutImm > 0) return; /* (после 4.1) капсула антимутагена глубин */
   var b = body(), s0 = stage();
-  b.mut = Math.min(100, (b.mut || 0) + x);
+  b.mut = Math.min(rank("bio") >= 5 ? Math.max(49, b.mut || 0) : 100, (b.mut || 0) + x); /* (после 4.1) биотехнолог пятой ступени: не выше половины */
   var s1 = stage();
   if (s1 > s0) {
     A("play", "hurt_chem");
@@ -857,6 +947,7 @@ function tick() {
     if (!st.regen) sayq("Регенерация закончилась: здоровье " + g.hp + " из " + g.hpMax + ".");
   }
   if (st.repel > 0) { st.repel--; if (!st.repel) sayq("Репеллент выветрился: твари снова чуют вас."); }
+  deepTick(g, st);
   if (st.fogImm > 0) { st.fogImm--; if (!st.fogImm) sayq("Сыворотка адаптации отработала: туман снова опасен."); }
   if (st.ctrlMut > 0) { st.ctrlMut--; if (!st.ctrlMut) sayq("Управляемая мутация отступила."); }
   if (rank("tox") >= 2 && st.poison > 1 && tickN % 2 === 0) st.poison--;
@@ -910,7 +1001,9 @@ function use(id) {
   var g = G(), d = LAB.ITEMS[id], w = weapon(), msg = "";
   if (!d || !(g.inv[id] > 0)) { say("Нет: " + (d ? low(d.n) : id) + "."); return false; }
   var b0 = d.base || id, k = d.vk || { mag: 1, dur: 1, side: 1, mutAdd: 0 }, br = d.br || "pharm", pk = potK(br);
-  switch (PROD[b0] ? PROD[b0].ce : "") {
+  var dce = PROD[b0] ? PROD[b0].ce : "", dmsg = deepUse(dce, id, d, k, pk); /* (после 4.1) капсулы глубин */
+  if (dmsg != null) msg = dmsg;
+  else switch (dce) {
     case "antimut": var cut = Math.round(30 * k.mag * pk * (rank("pharm") >= 3 ? 1.5 : 1)); cutMut(cut); msg = "Мутация минус " + cut + ". " + mutLine(); break;
     case "adapt": g.st.fogImm = Math.max(g.st.fogImm || 0, Math.round(180 * k.dur * bioDur())); msg = "Туман мутагена вас пока не берёт."; break;
     case "ctrl": g.st.ctrlMut = Math.max(g.st.ctrlMut || 0, Math.round(600 * k.dur * bioDur())); msg = "Мутаген послушен: сила в руках, твари без разума принимают вас за своего, раны затягиваются."; break;
@@ -922,14 +1015,14 @@ function use(id) {
       if (!coatable(w)) { say("Смазку наносят на оружие ближнего боя или на стальные пули. Возьмите такое оружие в руки."); return false; }
       /* (3.5) та же смазка поверх — попадания складываются; другая — стирает прежнюю, и это
          говорится вслух (прежде остаток старой пропадал молча) */
-      var ck = b0 === "c_coat_tox" ? "tox" : "acid", cn = Math.round(15 * k.dur * (rank("tox") >= 1 ? 2 : 1)), cm = Math.round(k.mag * 100) / 100, old = w.coat && w.coat.n > 0 ? w.coat : null, wipe = "";
+      var ck = b0 === "c_coat_tox" ? "tox" : b0 === "c_coat_rift" ? "rift" : "acid", cn = Math.round(15 * k.dur * (rank("tox") >= 1 ? 2 : 1)), cm = Math.round(k.mag * 100) / 100, old = w.coat && w.coat.n > 0 ? w.coat : null, wipe = "";
       if (old && old.k === ck) { cn += old.n; cm = Math.max(cm, old.m || 0); }
-      else if (old) wipe = "Прежняя смазка — " + (old.k === "tox" ? "яд" : "кислота") + ", " + old.n + " " + pl(old.n, "попадание", "попадания", "попаданий") + " — стёрта. ";
+      else if (old) wipe = "Прежняя смазка — " + (old.k === "tox" ? "яд" : old.k === "rift" ? "пыль Разлома" : "кислота") + ", " + old.n + " " + pl(old.n, "попадание", "попадания", "попаданий") + " — стёрта. ";
       w.coat = { k: ck, n: cn, m: cm };
-      msg = wipe + (ck === "tox" ? "Яд" : "Кислота") + " на оружии: " + cn + " " + pl(cn, "попадание", "попадания", "попаданий") + "."; break;
+      msg = wipe + (ck === "tox" ? "Яд" : ck === "rift" ? "Пыль Разлома" : "Кислота") + " на оружии: " + cn + " " + pl(cn, "попадание", "попадания", "попаданий") + "."; break;
     case "over":
       if (!batteryGun(w)) { say("Перегрузочную капсулу вставляют в оружие на энергобатареях. Возьмите такое в руки."); return false; }
-      w.over = (w.over || 0) + Math.round(6 * k.dur) + (rank("energy") >= 2 ? 3 : 0); w.overK = Math.max(w.overK || 1.5, Math.round((1 + 0.5 * k.mag) * 100) / 100);
+      w.over = (w.over || 0) + Math.round(6 * k.dur) + (rank("energy") >= 2 ? 3 : 0); w.overK = Math.max(w.overK || 1.5, Math.round((1 + 0.5 * k.mag + (rank("energy") >= 4 ? 0.33 : 0)) * 100) / 100);
       msg = "Капсула в энергоблоке: следующие " + w.over + " " + pl(w.over, "выстрел", "выстрела", "выстрелов") + " — сильнее."; break;
     case "cool":
       if (!w || (w.rng0 != null ? w.rng0 : w.rng) <= 1) { say("Охлаждающий гель — для стреляющего оружия. Возьмите его в руки."); return false; }
@@ -980,6 +1073,8 @@ function afterUse(id) {
   if (d.vk && d.vk.mutAdd) { var x = d.vk.mutAdd * (rank("bio") >= 2 ? 0.5 : 1); addMut(x, "состав"); sayq("Мутация плюс " + Math.round(x) + "."); }
   if (d.mutCut) { cutMut(Math.round(d.mutCut * (d.vk ? d.vk.mag : 1))); }
   if (rank("pharm") >= 3 && (d.cat === "med" || /^medkit|^bandage/.test(id)) && (d.heal || (d.fx && d.fx.heal))) { G().st.poison = 0; G().st.bleed = 0; }
+  /* (после 4.1) фармаколог пятой ступени: после лечения ещё пять секунд затягиваются раны */
+  if (rank("pharm") >= 5 && (d.heal || (d.fx && d.fx.heal))) { var st5 = G().st; st5.regen = Math.max(st5.regen || 0, 10); st5.regenN = Math.max(st5.regenN || 1, Math.round(G().hpMax / 80)); st5.regenE = 2; }
 }
 /* Приманка: твари в шестнадцати шагах идут на запах к месту падения. */
 function throwBait(id, k) {
@@ -1018,21 +1113,25 @@ function onShot(w, f, melee) {
   if (w.coat && w.coat.n > 0) {
     if (w.coat.k === "tox" && f.kind === "bio") k *= 1 + 0.2 * (w.coat.m || 1);
     if (w.coat.k === "acid") { noarmor = true; if (f.kind === "mech") k *= 1 + 0.15 * (w.coat.m || 1); }
+    if (w.coat.k === "rift") { noarmor = true; k *= 1 + 0.3 * (w.coat.m || 1); } /* (после 4.1) смазка Трещины */
   }
   if (melee) k *= meleeK();
   return { k: k, noarmor: noarmor };
 }
 function afterHit(w, f, dmg) {
+  /* (после 4.1) модули глубин (мастерская) и чипы добивания (импланты) — после каждого попадания */
+  if (LAB.workshop && LAB.workshop.onHit) LAB.workshop.onHit(w, f, dmg);
+  if (LAB.implants && LAB.implants.onHit) LAB.implants.onHit(w, f, dmg);
   if (!w.coat || !(w.coat.n > 0)) return;
   w.coat.n--;
-  if (w.coat.k === "tox" && f.kind === "bio" && !f.dead) { f.bleedT = Math.max(f.bleedT || 0, 8); f.bleedD = Math.max(f.bleedD || 0, Math.max(1, Math.round(dmg * 0.2))); if (rank("tox") >= 3 && !f.boss) f.slowT = Math.max(f.slowT || 0, 4); }
+  if (w.coat.k === "tox" && f.kind === "bio" && !f.dead) { f.bleedT = Math.max(f.bleedT || 0, 8); f.bleedD = Math.max(f.bleedD || 0, Math.max(1, Math.round(dmg * (rank("tox") >= 4 ? 0.4 : 0.2)))); if (rank("tox") >= 3 && !f.boss) f.slowT = Math.max(f.slowT || 0, 4); }
   if (w.coat.k === "acid" && f.kind === "mech" && rank("tox") >= 3) f.shield = 0;
-  if (!w.coat.n) { sayq((w.coat.k === "tox" ? "Яд" : "Кислота") + " на оружии кончились."); w.coat = null; }
+  if (!w.coat.n) { sayq(w.coat.k === "tox" ? "Яд на оружии кончился." : w.coat.k === "rift" ? "Пыль Разлома на оружии кончилась." : "Кислота на оружии кончилась."); w.coat = null; }
 }
 function chilled(w) { return !!(w && w.chill && w.chill > Date.now()); }
 function heatK() { return rank("energy") >= 3 ? 0.75 : 1; }
 function safeGrenades() { return rank("pyro") >= 2; }
-function radiusBonus(id) { var d = LAB.ITEMS[id]; return d && d.base && PROD[d.base] && rank("pyro") >= 3 ? 1 : 0; }
+function radiusBonus(id) { var d = LAB.ITEMS[id]; return d && d.base && PROD[d.base] && rank("pyro") >= 3 ? (rank("pyro") >= 5 ? 2 : 1) : 0; }
 /* Граната задела врага (combat.throwGrenade): ингибитор гасит мутаген в твари. */
 function grenHit(q, f) {
   /* (3.6) коррозионная колба: машина ржавеет — броня вдвое слабее (один раз), ход вязнет (combat.js, q.slow) */
@@ -1146,6 +1245,13 @@ function drops(f, list, r, dk0) {
   } else if (f.kind === "anom") {
     if (famOk("c_ecto", L) && r() < 0.3 * dk0) list.push(mk("c_ecto", false));
   }
+  /* (после 4.1) ниже Истока — и сырьё Нижних: лимфа и закваска — с живых, звучащая вода и окалина — с машин;
+     с изменённых — нервная нить для мастерской */
+  if (L > 100) {
+    var dfam = (f.kind === "bio" ? ["c_lymph", "c_ferment", "c_hush"] : f.kind === "mech" ? ["c_sing", "c_ash", "c_rift"] : ["c_sing"]).filter(function (k) { return famOk(k, L); });
+    if (dfam.length && r() < 0.2 * dk0) list.push(mk(dfam[Math.floor(r() * dfam.length)], f.kind === "bio" && fogAt(f.x, f.y) > 0));
+    if (f.kind === "bio" && LAB.ITEMS.dp_nerve && (LAB.PART_DEPTH.dp_nerve || 701) <= L && r() < 0.08 * dk0) list.push({ kind: "item", item: "dp_nerve", n: 1 });
+  }
 }
 
 /* ════════ ГЕНЕРАЦИЯ: шаг 25 (world.js) ════════
@@ -1165,6 +1271,9 @@ var POOL = {
   home: ["c_bleach", "c_soda", "c_ammonia"],
   arms: ["c_fuel", "c_phosphor", "c_oil"]
 };
+/* (после 4.1) сырьё глубин — в конце списков: выше сотого уровня его нет (famOk), и выбор там прежний */
+POOL.chem.push("c_sing", "c_ferment", "c_ash", "c_rift"); POOL.med.push("c_lymph", "c_sing"); POOL.bio.push("c_lymph", "c_ferment", "c_hush");
+POOL.parts.push("c_ash", "c_sing"); POOL.tech.push("c_sing", "c_hush", "c_rift"); POOL.home.push("c_hush"); POOL.arms.push("c_ash");
 var CONT = { crate: 1, locker: 1, desk: 1, cabinet: 1, shelf: 1, fridge: 1, suitlocker: 1 };
 var COLD_FAM = { c_stab: 1, c_activ: 1 }; /* (3.0) в холодильнике лаборатории — ещё и это, кроме тканей (org) */
 function roomDef(rm) { return (LAB.ROOMS && LAB.ROOMS[rm.type]) || (LAB.ANNEX_ROOMS && LAB.ANNEX_ROOMS[rm.type]) || {}; }
@@ -1263,7 +1372,7 @@ function place(ctx) {
   good.slice(0, 3).forEach(function (rid) { var pool = poolAt(roomTag(fl, rid), L); if (pool.length && r.chance(0.5)) ctx.addItem(mat(r.pick(pool), rid), rid); });
   fogRooms.forEach(function (rid) { if (fogOf(rid) >= 2 || r.chance(0.35)) ctx.addItem({ kind: "item", item: matId("c_cond", Math.min(3, gradeAt(L, function () { return r.next(); }) + (fogOf(rid) >= 3 ? 1 : 0))), n: 1 }, rid); });
   /* журнал с рецептурой */
-  var fpool = RC.filter(function (rc) { return rc.f && rc.lv <= 1 + Math.floor(L / 3) && outOk(rc); });
+  var fpool = RC.filter(function (rc) { return rc.f && rc.lv <= 1 + Math.floor(L / 3) && outOk(rc) && (!rc.deep || L > 100); }); /* (после 4.1) журналы глубин — только ниже Истока */
   if (fpool.length && r.chance(0.35)) {
     var rids = good.length ? good : other;
     if (rids.length) ctx.addItem({ kind: "note", note: "formula", f: r.pick(fpool).id, n: r.int(0, 999) }, r.pick(rids));
@@ -1282,6 +1391,94 @@ function noteText(it, h) {
 }
 function fromNote(it) { if (it && it.note === "formula" && it.f) learn(it.f, "Её записал журнал — она в архиве документов."); }
 
+/* ════════ (после 4.1) ГЛУБИНЫ: ступени, капсулы, защита ════════ */
+/* самая большая глубина, где вы были (кэш в записи химии; прежние записи — по maxF) */
+function reachL() { var g = G(), c = ch(); if (c.deepL == null) { var m = 1; if (g.maxF) for (var k in g.maxF) if (+k > m) m = +k; c.deepL = m; } if ((g.L || 1) > c.deepL) c.deepL = g.L || 1; return c.deepL; }
+function deepStep() { if (!LAB.game || !G()) return 0; var L = reachL(); return L > 100 ? Math.max(1, Math.min(10, blockAt(L) - 5)) : 0; }
+function brCap() { return Math.min(10, 5 + deepStep()); }
+function lvlCap() { return Math.min(15, 10 + deepStep()); }
+/* рецептура и переработка глубин видны только ниже Истока (выше сотого уровня — прежние списки) */
+function rcOn(rc) { return !rc.deep || (G() && G().L > 100); }
+function capOf(id) { var d = LAB.ITEMS[id], b = d && (d.base || id); return !!(PROD[b] && PROD[b].deep && PROD[b].cat === "med"); }
+/* капсула глубин: длительность — вдвое на тринадцатой общей ступени */
+function capDur() { return level() >= 13 ? 2 : 1; }
+var RANK_AT = [0, 0, 4, 5, 7, 9]; /* ступень направления для ступени специализации */
+function deepUse(ce, id, d, k, pk) {
+  var g = G(), st = g.st, m = [], cd = capDur();
+  switch (ce) {
+    case "shift": {
+      st.haste = Math.max(st.haste || 0, Math.round(40 * k.dur * cd));
+      if (gm().bodyApply) gm().bodyApply({ wake: Math.round(30 * k.mag), neuro: -Math.round(20 * k.mag), tox: Math.round(10 * k.side) }, m);
+      var e0 = g.en; g.en = Math.min(g.enMax, g.en + Math.round(g.enMax / 3 * k.mag));
+      return "Сердце бьётся ровно и часто: ускорение, энергия " + g.en + (g.en > e0 ? "" : ", и так полная") + ". " + m.join(" ");
+    }
+    case "cguard": {
+      var sh = Math.round(g.hpMax / 3 * k.mag * potK("bio"));
+      st.shield = Math.max(st.shield || 0, sh); st.shieldT = Math.max(st.shieldT || 0, Math.round(120 * k.dur * cd));
+      return "Кожух схватывается под кожей: щит " + st.shield + ".";
+    }
+    case "antideep": {
+      var cut = Math.round(45 * k.mag * pk * (rank("pharm") >= 3 ? 1.5 : 1));
+      cutMut(cut); st.mutImm = Math.max(st.mutImm || 0, Math.round(360 * k.dur * cd));
+      return "Мутация минус " + cut + ", и какое-то время мутаген вас не берёт. " + mutLine();
+    }
+    case "lymphsalve": {
+      var sh2 = Math.round(g.hpMax / 5 * k.mag * potK("bio"));
+      st.shield = Math.max(st.shield || 0, sh2); st.shieldT = Math.max(st.shieldT || 0, Math.round(60 * k.dur * cd));
+      st.regen = Math.max(st.regen || 0, Math.round(30 * k.dur * cd)); st.regenN = Math.max(1, Math.round(g.hpMax / 60 * k.mag)); st.regenE = 2;
+      return "Мазь схватывается на ранах: щит " + st.shield + ", и раны затягиваются.";
+    }
+    case "purge2": {
+      var b = body();
+      if (st.poison) { st.poison = 0; m.push("Яд вышел."); }
+      if (gm().bodyApply) gm().bodyApply({ detox: Math.round(80 * k.mag), neuro: -Math.round(15 * k.mag), rad: (b.rad || 0) > 0 ? -Math.round(30 * k.mag) : 0 }, m);
+      if (mut() > 0) { cutMut(Math.round(10 * k.mag)); m.push(mutLine()); }
+      return m.length ? m.join(" ") : "Кровь и так чиста.";
+    }
+    case "focus":
+      st.chemAccT = Math.max(st.chemAccT || 0, Math.round(180 * k.dur * cd));
+      if (gm().bodyApply) gm().bodyApply({ neuro: -Math.round(10 * k.mag) }, m);
+      return "Мир становится резким: руки не дрожат, прицел точнее. " + m.join(" ");
+    case "payback":
+      st.payT = Math.round(20 * k.dur * cd); st.payPool = 0; st.payK = Math.round(60 * k.mag * pk) / 100;
+      return "Капсула запоминает удары: всё, что вас ранит в ближайшие секунды, она вернёт здоровьем.";
+    case "heatres": st.heatRes = Math.max(st.heatRes || 0, Math.round(240 * k.dur * cd)); return "Кожа холодеет и грубеет: жар и огонь берут куда меньше.";
+    case "hushcap": {
+      var ht = Math.round(240 * k.dur * cd);
+      st.muteT = Math.max(st.muteT || 0, ht); st.hushImm = Math.max(st.hushImm || 0, ht); st.deaf = 0;
+      return "Звук в вас глохнет: шагов не слышно, звон не оглушает.";
+    }
+    case "laststand": st.lastT = Math.max(st.lastT || 0, Math.round(360 * k.dur * cd)); return "Капсула ждёт под кожей: смертельный удар она не пропустит — один раз.";
+  }
+  return null;
+}
+/* такт капсул глубин */
+function deepTick(g, st) {
+  ["mutImm", "hushImm", "heatRes", "lastT", "chemAccT"].forEach(function (k) {
+    if (st[k] > 0) { st[k]--; if (!st[k]) { var t = { mutImm: "Капсула антимутагена отработала: мутаген снова опасен.", hushImm: "Тишина в крови рассеялась.", heatRes: "Жаростойкость прошла.", lastT: "Капсула последнего вдоха рассосалась.", chemAccT: "Внимание рассеялось." }[k]; if (t) sayq(t); } }
+  });
+  if (st.hushImm > 0 && st.deaf > 0) st.deaf = 0;
+  if (st.payT > 0) { st.payT--; if (!st.payT) { st.payHeal = Math.round((st.payPool || 0) * (st.payK || 0.6)); st.payStep = Math.max(1, Math.ceil(st.payHeal / 20)); st.payPool = 0; if (st.payHeal > 0) sayq("Капсула возврата отдаёт запомненное: плюс " + st.payHeal + " здоровья за десять секунд."); } }
+  if (st.payHeal > 0) { var h = Math.min(st.payStep || 1, st.payHeal); st.payHeal -= h; g.hp = Math.min(g.hpMax, g.hp + h); }
+  if (rank("tox") >= 5 && st.poison > 0) st.poison = 0; /* токсиколог пятой ступени: яды не действуют */
+}
+/* удар по герою (implants.onHurt): жаростойкость, тишина, капсула возврата */
+function hurtK(fin, adt) {
+  var st = G().st;
+  if (st.heatRes > 0 && /^(therm|thermo|fire|heat)$/.test(adt || "")) fin = Math.max(1, Math.round(fin * 0.3));
+  if (st.hushImm > 0 && adt === "sonic") fin = Math.max(1, Math.round(fin * 0.5));
+  if (st.payT > 0 && fin > 0) st.payPool = (st.payPool || 0) + fin;
+  return fin;
+}
+/* капсула последнего вдоха: смертельный удар оставляет единицу и прибавляет треть */
+function lastStand(fin) {
+  var g = G(), st = g.st;
+  if (!(fin >= g.hp && st.lastT > 0)) return fin;
+  st.lastT = 0;
+  var hv = Math.round(g.hpMax / 3);
+  gm().later(function () { var g2 = G(); if (!g2 || g2.dead) return; g2.hp = Math.min(g2.hpMax, g2.hp + hv); A("play", "heartbeat"); LAB.say("Капсула последнего вдоха: адреналин бьёт в сердце. Здоровье " + g2.hp + ".", { prio: "urgent" }); }, 50);
+  return Math.max(0, g.hp - 1);
+}
 LAB.chem = {
   FAM: FAM, MAT: MAT, PROD: PROD, PV: PV, RC: RC, REF: REF, BR: BR, SPECS: SPECS, ST: ST, MOD: MOD,
   open: open, place: place, drops: drops, use: use, afterUse: afterUse, tick: tick, repels: repels, onShot: onShot, afterHit: afterHit, chilled: chilled, heatK: heatK,
@@ -1295,6 +1492,8 @@ LAB.chem = {
   /* (3.6) для работы руками (chemlab.js) */
   units: units, useOne: useOne, gradeCap: gradeCap, stationCap: stationCap, outName: outName, outOk: outOk, give: give, RCBY: RCBY,
   armorChem: armorChem, fogK: fogK, ch: ch, haveAdd: haveAdd, useAdd: useAdd, countOut: countOut, ST_N: ST,
-  pasteOk: pasteOk, usePaste: usePaste, pasteDoor: pasteDoor, pasteSafe: pasteSafe
+  pasteOk: pasteOk, usePaste: usePaste, pasteDoor: pasteDoor, pasteSafe: pasteSafe,
+  /* (после 4.1) глубины */
+  hurtK: hurtK, lastStand: lastStand, deepStep: deepStep, brCap: brCap, lvlCap: lvlCap, rcOn: rcOn, DEEP_FAM: DEEP_FAM, DEEP_PROD: DEEP_PROD, DEEP_RC: DEEP_RC, DEEP_REF: DEEP_REF, BR_XP: BR_XP, ALL_XP: ALL_XP, levelPerk: levelPerk
 };
 })();

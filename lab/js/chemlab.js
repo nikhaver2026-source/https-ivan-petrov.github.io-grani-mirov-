@@ -88,7 +88,14 @@ var SUB = {
   gel:    { n: "биогель", a: "биогель", item: "gel" },
   metal:  { n: "стальная стружка", a: "стальную стружку", item: "scrap" },
   reag:   { n: "реагент", a: "реагент", item: "reagent" },
-  sorb:   { n: "сорбент", a: "сорбент", item: "sorbent" }
+  sorb:   { n: "сорбент", a: "сорбент", item: "sorbent" },
+  /* (после 4.1) сырьё глубин — для работы руками с рецептурами Нижних */
+  sing:   { n: "звучащая вода", a: "звучащую воду", fam: "c_sing", smell: "ничем — но склянка тихо звенит" },
+  lymph:  { n: "лимфа переделки", a: "лимфу переделки", fam: "c_lymph", smell: "солоноватый, как от свежей раны" },
+  ferm:   { n: "закваска", a: "закваску", fam: "c_ferment", ac: 0.5, smell: "кислый, хлебный" },
+  ash:    { n: "окалина", a: "окалину", fam: "c_ash", smell: "железный, горелый" },
+  hushd:  { n: "тихий осадок", a: "тихий осадок", fam: "c_hush", bs: 0.5, smell: "никакой: запах будто глохнет у самого носа" },
+  rift:   { n: "пыль Разлома", a: "пыль Разлома", fam: "c_rift", smell: "сухой, как камень после грозы" }
 };
 var ORDER = Object.keys(SUB);
 var FAM2SUB = {}, ITEM2SUB = {};
@@ -291,6 +298,8 @@ var OWN = { l_lockpaste: { lo: 0, hi: 1, top: 1, d: "мешать холодны
 /* (3.6) пиротехника на фосфоре: фосфор на воздухе вспыхивает, поэтому его кладут под воду
    или в горючее — и вода в таком составе не помеха (сухой нужна остальная пиротехника) */
 ["p_flash", "p_thermite", "p_napalm"].forEach(function (id) { OWN[id] = { lo: 0, hi: 1, top: 1, d: "держать холодным и без огня; фосфор — только под водой или в горючем" }; });
+/* (после 4.1) пиротехника глубин на звучащей воде: вода в ней — часть состава, но греть её нельзя — вскипит раньше времени */
+["d_resogren", "d_steamgren"].forEach(function (id) { OWN[id] = { lo: 0, hi: 1, top: 1, d: "держать холодным: звучащая вода в составе вскипает от тепла" }; });
 var WATER = { l_fogspray: [2, 4], l_antisept: [2, 3], l_smelling: [1, 2], l_devel: [1, 2], l_fixer: [1, 2] };
 function needOf(rc) {
   var m = {}, asm = {};
@@ -310,7 +319,7 @@ function procOf(rc) { return OWN[rc.id] || PROC[rc.br]; }
 function analyze(v) {
   var kh = [], uh = [], near = null;
   C().RC.forEach(function (rc) {
-    if (!C().outOk(rc)) return;
+    if (!C().outOk(rc) || (C().rcOn && !C().rcOn(rc))) return; /* (после 4.1) рецептуры глубин — только ниже Истока */
     var nd = needOf(rc); if (!nd) return;
     var ok = true, mods = [], cat = 0, k;
     for (k in nd.m) if ((v.m[k] || 0) !== nd.m[k]) ok = false;
@@ -653,7 +662,7 @@ function tissue(o, f) {
 function guesses() {
   var out = [];
   C().RC.forEach(function (rc) {
-    if (!rc.f || C().known(rc) || !C().outOk(rc) || C().brLv(rc.br) < rc.lv) return;
+    if (!rc.f || C().known(rc) || !C().outOk(rc) || C().brLv(rc.br) < rc.lv || (C().rcOn && !C().rcOn(rc))) return;
     var nd = needOf(rc); if (!nd) return;
     var ks = Object.keys(nd.m).sort(function (a, b) { return h32(rc.id + a) - h32(rc.id + b); });
     if (ks.length < 2) return;

@@ -17,6 +17,10 @@
    Чипы — вещи рюкзака: найти, собрать по схеме у верстака, вживить,
    извлечь, разобрать на детали (разбор раскрывает схему) и продать.
    Сканер и эхолокация — системные импланты «Эхо».
+   (после 4.1) Ниже Истока — кибернетика глубин: ступени направлений до
+   пятнадцатой и общая до двадцатой (по ступени на глубокий блок), калибровка
+   до пятой, двадцать четыре импланта и двадцать четыре чипа Нижних, одиннадцать
+   модификаций глубин; выше сотого уровня всё по-прежнему.
    ════════════════════════════════════════════════════════════════════ */
 (function () {
 "use strict";
@@ -180,7 +184,7 @@ var DEEP_NEW = [
   /* ремесло и торговля */
   { id: "d_peek", n: "Опись тайников", cat: "craft", blk: 7, cost: 9, price: 900, desc: "Шкафы, ящики и сейфы в десяти шагах: «Эхо» слышит, что в каждом лежит, — до того, как откроете.", fx: { k: "peek", r: 10 } },
   { id: "d_haggle", n: "Торг по спискам", cat: "craft", blk: 10, cost: 10, price: 1700, desc: "Две минуты скупщики платят на четверть больше: «Эхо» подсказывает цены по спискам Нижних.", fx: { k: "haggle", dur: 240 } },
-  { id: "d_mend", n: "Полевой ремонт", cat: "craft", blk: 12, cost: 16, price: 1900, desc: "Энергия имплантов — в наносварку: оружию в руках плюс двадцать пять к состоянию, надетой броне — плюс пятнадцать.", fx: { k: "mend", w: 25, a: 15 } }
+  { id: "d_mend", n: "Полевой ремонт", cat: "craft", blk: 12, cost: 16, price: 1900, desc: "Энергия имплантов — в наносварку: оружию в руках плюс двадцать пять к состоянию, надетой броне — плюс пятнадцать; откалиброванный чинит больше.", fx: { k: "mend", w: 25, a: 15 } }
 ];
 var DEEP_CHIPS = [
   { id: "dc_tally", n: "Чип счёта", cat: "combat", blk: 6, price: 900, st: { streak: 0.5 }, desc: "Третье попадание подряд по одной цели — на половину сильнее." },
@@ -511,15 +515,16 @@ function hit(id, f, dmg, p) {
   if (!f || f.dead) return;
   if (C.unhide) C.unhide("Удар импланта выдал вас: укрытия больше нет."); /* (3.5) нападение из укрытия — как выстрел */
   if (has(id, "execute") && f.maxhp && f.hp / f.maxhp < 0.4) dmg = Math.round(dmg * 1.5);
+  var hp0 = f.hp;
   C.damageFoe(f, dmg, p.dt, { noarmor: p.noarmor, quiet: true });
   hits++;
+  /* (после 4.1) пьющая: десятая часть урона по живому — здоровьем (за одно применение — не больше четверти) */
+  if (has(id, "vampiric") && f.kind === "bio" && hp0 > f.hp) vamp += (hp0 - Math.max(0, f.hp)) * 0.1;
   if (f.dead) return;
   if (has(id, "cryo")) f.frozen = Math.max(f.frozen || 0, 2);
   if (has(id, "stun")) f.frozen = Math.max(f.frozen || 0, 1);
   if (has(id, "bleed") && f.kind === "bio") f.bleedT = Math.max(f.bleedT || 0, 6);
   if (has(id, "marker")) f.markT = Math.max(f.markT || 0, 30);
-  /* (после 4.1) пьющая: десятая часть урона по живому — здоровьем (за одно применение — не больше четверти) */
-  if (has(id, "vampiric") && f.kind === "bio" && dmg > 0) vamp += dmg * 0.1;
 }
 var vamp = 0, echoK = 0;
 function near3(f0, done) {
@@ -655,7 +660,7 @@ function run(id) {
     case "turret": {
       list = C.foes().filter(function (f) { return !f.dead && !f.ally && C.isTurret && C.isTurret(f) && Math.max(Math.abs(f.x - g.x), Math.abs(f.y - g.y)) <= p.r; })
         .sort(function (a, b) { return Math.abs(a.x - g.x) + Math.abs(a.y - g.y) - Math.abs(b.x - g.x) - Math.abs(b.y - g.y); }).slice(0, has(id, "virus") ? 2 : 1);
-      list.forEach(function (f) { f.ally = true; f.allyT = Math.round(fx.ally * p.dur); f.hackT = 1; });
+      list.forEach(function (f) { f.ally = true; f.allyT = Math.round(fx.ally * p.dur * (1 + stat("allyk"))); f.hackT = 1; }); /* (после 4.1) чип чёрного хода — дольше */
       t = list.length ? d.n + ": турель " + dirOf(list[0]) + " — на вашей стороне" + (list.length > 1 ? ", и ещё одна" : "") + "." : d.n + ": турелей рядом нет.";
       break;
     }
@@ -706,7 +711,7 @@ function run(id) {
   t += deepAfter(id, d, p);
   if (has(id, "mapper") && fx.k !== "map") mapAround(p.r || 8);
   if (has(id, "resonant") && hits) { var back = Math.min(10, hits * 2); g.en = Math.min(g.enMax, g.en + back); t += " Энергия обратно: " + back + "."; }
-  if (t) say(t);
+  if (t) say(echoK ? "Отзвук. " + t : t); /* (после 4.1) отзвучная модификация повторяет вполсилы */
 }
 function mapAround(r) {
   var g = G(), seen = CUR().seen, W = LAB.W;
@@ -799,8 +804,8 @@ LAB.IMPLANTS.forEach(function (im) {
   for (var pk0 in need0) if (pk0 !== "proto") pd = Math.max(pd, LAB.PART_DEPTH[pk0] || 1);
   if (im.deep) { LAB.ITEMS[id].depth = im.minL; LAB.ITEMS[id].price = im.price; }
   if (!LAB.RECIPES.some(function (q) { return q.id === id; })) {
-    var rcI = { id: id, out: id, n: LAB.ITEMS[id].n, need: need0, cls: im.deep ? deepClsI(im.blk) : CLS_BY_T[im.t], bp: true, minL: pd, cyb: im.cat, cybN: im.deep ? im.t : Math.max(0, im.t - 1), desc: im.desc };
-    if (im.deep) rcI.deep = im.blk;
+    var rcI = { id: id, out: id, n: LAB.ITEMS[id].n, need: need0, cls: im.deep ? "syn" : CLS_BY_T[im.t], bp: true, minL: pd, cyb: im.cat, cybN: im.deep ? im.t : Math.max(0, im.t - 1), desc: im.desc };
+    if (im.deep) { rcI.deep = im.blk; rcI.deepT = deepTierI(im.blk); }
     LAB.RECIPES.push(rcI);
   }
 });
@@ -1065,7 +1070,7 @@ function station(o) {
 }
 
 /* ════════ (после 4.1) ДЕЙСТВИЯ ИМПЛАНТОВ ГЛУБИН ════════ */
-function deepClsI(blk) { return LAB.deepCls ? LAB.deepCls(blk) : blk >= 15 ? "d5" : blk >= 13 ? "d4" : blk >= 10 ? "d3" : blk >= 7 ? "d2" : "d1"; }
+function deepTierI(blk) { return LAB.deepTier ? LAB.deepTier(blk) : blk >= 15 ? 10 : blk >= 13 ? 9 : blk >= 10 ? 8 : blk >= 7 ? 7 : 6; }
 /* схема импланта или чипа глубин: детали направления и детали Нижних по классу (катушка, нервная нить,
    резонансная пластина, кристалл слоя; Цехам — паровой клапан) */
 function deepNeed(d, c) {
@@ -1251,7 +1256,7 @@ function deepRun(id, d, fx, p) {
       if (!w.cap || w.ammo === "none" || (LAB.physAmmo && LAB.physAmmo(w.ammo))) return d.n + ": " + w.name + " — без батарей и зарядов, подпитывать нечего.";
       w.charge = w.cap;
       var ov = "";
-      if (w.ammo === "energy") { w.over = (w.over || 0) + Math.round(fx.over * Math.max(1, p.k)); w.overK = Math.max(w.overK || 0, 1.33); ov = " Следующие " + w.over + " " + pl(w.over, "выстрел", "выстрела", "выстрелов") + " — сильнее."; }
+      if (w.ammo === "energy") { w.over = (w.over || 0) + (fx.over || 5); w.overK = Math.max(w.overK || 0, 1.33); ov = " Следующие " + w.over + " " + pl(w.over, "выстрел", "выстрела", "выстрелов") + " — сильнее."; }
       return d.n + ": " + w.name + " — заряд полон, " + w.charge + " из " + w.cap + "." + ov;
     }
     case "discharge": {

@@ -12,6 +12,9 @@
    бронебойность, подавление электроники, глушитель, стабилизатор),
    ёмкость у верстака до предела вида, износ и ремонт, перегрев ствола. У каждой детали —
    где её найти и для чего она нужна.
+   (после 4.1) Ниже Истока — шесть деталей Нижних, десять модулей глубин и
+   пять ступеней оснастки глубин (стапель, резонансный станок, поточная
+   линия, паровой пресс, наковальня Основания) со своей работой.
    ════════════════════════════════════════════════════════════════════ */
 (function () {
 "use strict";
@@ -233,8 +236,9 @@ LAB.RECIPES.forEach(function (rc) { if (rc.id === "wmod") { rc.out = "m_power"; 
    модули глубин. Класс — по кругу оснастки (блок VI — стапель Нижних, VII–IX — резонансный станок, X–XII —
    поточная линия, XIII–XIV — паровой пресс, XV — наковальня Основания); minL — не раньше своего блока и
    своих деталей: выше сотого уровня ни один из них не встаёт. */
-function deepCls(blk) { return blk >= 15 ? "d5" : blk >= 13 ? "d4" : blk >= 10 ? "d3" : blk >= 7 ? "d2" : "d1"; }
-LAB.deepCls = deepCls;
+/* схемы глубин — класса «схема синтеза» (как прежние высшие), а нужная оснастка — своя: deepT, ступень 6–10 */
+function deepTier(blk) { return blk >= 15 ? 10 : blk >= 13 ? 9 : blk >= 10 ? 8 : blk >= 7 ? 7 : 6; }
+LAB.deepTier = deepTier;
 var R_DEEP = [
   { id: "r_dcoil", out: "dp_coil", n: "Перемотать счётную катушку", need: { relay: 2, wire: 2, chip: 1 }, blk: 6, group: "restore", desc: "Два реле на одном сердечнике и микросхема счёта: катушка слышит шаги, как сфера Переклички." },
   { id: "r_dalloy", out: "dp_alloy", n: "Переплавить звонкий сплав", need: { scrap: 4, ceramic: 1 }, blk: 6, group: "restore", desc: "Металлолом с керамикой — в тигель стапеля: остывая, слиток начинает звенеть." },
@@ -263,7 +267,7 @@ function regDeep() {
     if (LAB.RECIPES.some(function (q) { return q.id === rc0.id; })) return;
     var k, mL = blockFrom(rc0.blk);
     for (k in rc0.need) { if (!LAB.ITEMS[k] || LAB.ITEMS[k].kind !== "part") return; mL = Math.max(mL, LAB.PART_DEPTH[k] || 1); }
-    var rc = { id: rc0.id, out: rc0.out, n: rc0.n, need: rc0.need, cls: deepCls(rc0.blk), minL: mL, deep: rc0.blk };
+    var rc = { id: rc0.id, out: rc0.out, n: rc0.n, need: rc0.need, cls: "syn", deepT: deepTier(rc0.blk), minL: mL, deep: rc0.blk };
     if (rc0.bp) rc.bp = true;
     if (rc0.group) rc.group = rc0.group;
     if (rc0.desc) rc.desc = rc0.desc;
@@ -285,9 +289,12 @@ function clsRule(rc) {
 }
 function clsOf(rc) { if (!rc.cls) rc.cls = clsRule(rc); return rc.cls; }
 LAB.RECIPES.forEach(clsOf);
-var CLS_T = { base: 1, spec: 2, exp: 3, cnc: 4, syn: 5, d1: 6, d2: 7, d3: 8, d4: 9, d5: 10 };
-var CLS_N = { base: "базовая схема", spec: "специализированная схема", exp: "экспериментальная схема", cnc: "программа для станка", syn: "схема синтеза",
-  d1: "схема глубин первого круга", d2: "схема глубин второго круга", d3: "схема глубин третьего круга", d4: "схема глубин четвёртого круга", d5: "схема глубин пятого круга" };
+var CLS_T = { base: 1, spec: 2, exp: 3, cnc: 4, syn: 5 };
+var CLS_N = { base: "базовая схема", spec: "специализированная схема", exp: "экспериментальная схема", cnc: "программа для станка", syn: "схема синтеза" };
+/* (после 4.1) какая оснастка нужна схеме и как она называется: у схем глубин — круг глубин (deepT) */
+var DEEP_CLS_N = [null, null, null, null, null, null, "схема глубин первого круга", "схема глубин второго круга", "схема глубин третьего круга", "схема глубин четвёртого круга", "схема глубин пятого круга"];
+function tierOf(rc) { return (rc && rc.deepT) || CLS_T[clsOf(rc)] || 1; }
+function clsName(rc) { return rc && rc.deepT ? DEEP_CLS_N[rc.deepT] : CLS_N[clsOf(rc)]; }
 
 /* ════════ ВЕРСТАК: уровень, состояние, питание ════════ */
 /* (2.0) Чем глубже, тем совершеннее оснастка: станок с программным
@@ -394,7 +401,7 @@ function learn(id, how, quiet) {
   if (!g.bp) g.bp = {};
   if (g.bp[id]) return "";
   g.bp[id] = 1;
-  var t = "Новая схема мастерской: «" + rc.n + "», " + CLS_N[clsOf(rc)] + "." + (how ? " " + how : "");
+  var t = "Новая схема мастерской: «" + rc.n + "», " + clsName(rc) + "." + (how ? " " + how : "");
   if (gm().journal) gm().journal("Схема: «" + rc.n + "»" + (how ? " — " + how.replace(/[.]$/, "") : "") + ".");
   if (!quiet) { A("play", "term_ok"); LAB.say(t, { prio: "event", keep: true }); }
   return t;
@@ -404,7 +411,7 @@ function learn(id, how, quiet) {
 function unknownPick(maxT, seed, only) {
   /* (после 4.1) схемы глубин (rc.deep) — только ниже Истока: выше сотого уровня выбор тот же, что прежде;
      only "deep" — любой круг глубин (исследование на верстаке глубин) */
-  var g = G(), pool = bpList().filter(function (rc) { return !known(rc) && CLS_T[clsOf(rc)] <= maxT && (!only || (only === "deep" ? CLS_T[clsOf(rc)] >= 6 : clsOf(rc) === only)) && (!rc.minL || rc.minL <= Math.max(g.L + 2, 3)) && !(rc.deep && g.L <= 100); });
+  var g = G(), pool = bpList().filter(function (rc) { return !known(rc) && tierOf(rc) <= maxT && (!only || (only === "deep" ? !!rc.deepT : clsOf(rc) === only && !rc.deepT)) && (!rc.minL || rc.minL <= Math.max(g.L + 2, 3)) && !(rc.deep && g.L <= 100); });
   if (!pool.length) return null;
   var i = seed != null ? h32(String(seed)) % pool.length : Math.floor(Math.random() * pool.length);
   return pool[i];
@@ -504,7 +511,7 @@ function check(rc, b) {
   var cw = LAB.implants ? LAB.implants.craftWhy(rc) : ""; if (cw) return cw; /* (2.0) сборка чипов — по ступени кибернетики */
   var tw = LAB.traps && LAB.traps.craftWhy ? LAB.traps.craftWhy(rc) : ""; if (tw) return tw; /* (после 4.1) ловушки глубин — по ступени ловушечного дела */
   b = b || nearBench();
-  if (b) { var t = CLS_T[clsOf(rc)] || 1; if (effTier(b) < t) return tierWhy(b, t); }
+  if (b) { var t = tierOf(rc); if (effTier(b) < t) return tierWhy(b, t); }
   var need = needOf(rc, b);
   for (var k in need) if ((g.inv[k] || 0) < need[k]) return "Не хватает: " + needText(rc) + ".";
   return "";
@@ -1097,13 +1104,13 @@ var ANALYZE = {
 function analyzeHint(key, b) {
   var id = ANALYZE[key], rc = id && recipe(id);
   if (!rc && b && LAB.WEAPON_DEPTH[key] > 100) rc = deepHint(key, b); /* (после 4.1) оружие Нижних — схема модуля глубин */
-  if (!rc || known(rc) || !b || effTier(b) < 2 || CLS_T[clsOf(rc)] > effTier(b)) return null;
+  if (!rc || known(rc) || !b || effTier(b) < 2 || tierOf(rc) > effTier(b)) return null;
   return rc;
 }
 /* (после 4.1) Разбирая оружие Нижних на верстаке глубин, понимаешь, как устроен их модуль: неизвестная схема
    модуля глубин — не глубже этого уровня и не сложнее оснастки; одна и та же для одного вида оружия. */
 function deepHint(key, b) {
-  var g = G(), pool = LAB.RECIPES.filter(function (rc) { return rc.deep && rc.bp && /^m_/.test(String(rc.out)) && !known(rc) && (rc.minL || 1) <= g.L && CLS_T[clsOf(rc)] <= effTier(b); });
+  var g = G(), pool = LAB.RECIPES.filter(function (rc) { return rc.deep && rc.bp && /^m_/.test(String(rc.out)) && !known(rc) && (rc.minL || 1) <= g.L && tierOf(rc) <= effTier(b); });
   return pool.length ? pool[h32("deephint:" + key) % pool.length] : null;
 }
 /* (3.5) Что вернёт разбор: у того, что собирают у верстака, — не больше половины рецепта
@@ -1397,9 +1404,9 @@ function recLabel(rc, b) {
   var cyb = rc.cyb && IM && IM.craftWhy(rc) ? "нужна кибернетика «" + (IM.CATS[rc.cyb] ? IM.CATS[rc.cyb].n : rc.cyb) + "», ступень " + (rc.cybN || 0) : "";
   /* (после 4.1) ловушке глубин не хватает ловушечного дела — так и сказать */
   var trp = rc.trapN && LAB.traps && LAB.traps.craftWhy && LAB.traps.craftWhy(rc) ? "нужно ловушечное дело, ступень " + rc.trapN : "";
-  var st = !why ? "можно собрать" : rc.minL && g.L < rc.minL ? "с уровня " + rc.minL : cyb ? cyb : trp ? trp : /^Не хватает:/.test(why) ? "нужно: " + (missText(rc) || needText(rc)) : CLS_T[clsOf(rc)] > effTier(b) ? (b.dmg || reserve() ? "станки не работают" : "нужен " + TIER[CLS_T[clsOf(rc)]].n) : "нельзя";
+  var st = !why ? "можно собрать" : rc.minL && g.L < rc.minL ? "с уровня " + rc.minL : cyb ? cyb : trp ? trp : /^Не хватает:/.test(why) ? "нужно: " + (missText(rc) || needText(rc)) : tierOf(rc) > effTier(b) ? (b.dmg || reserve() ? "станки не работают" : "нужен " + TIER[tierOf(rc)].n) : "нельзя";
   var ds = outDesc(rc);
-  return rc.n + " — " + st + ". " + cap1(CLS_N[clsOf(rc)]) + "." + (ds ? " " + ds : "");
+  return rc.n + " — " + st + ". " + cap1(clsName(rc)) + "." + (ds ? " " + ds : "");
 }
 function groupItems(nm) {
   var b = bench(cur.o), list = avail().filter(function (rc) { return known(rc) && groupOf(rc) === nm; });
@@ -1521,7 +1528,7 @@ function researchMenu() {
   ];
   /* (после 4.1) на верстаке Нижних — и схемы глубин: круг не сложнее оснастки, не глубже этого места */
   if (et >= 6) {
-    var ud = bpList().filter(function (rc) { return rc.deep && !known(rc) && near(rc) && CLS_T[clsOf(rc)] <= et; }).length;
+    var ud = bpList().filter(function (rc) { return rc.deep && rc.deepT && !known(rc) && near(rc) && tierOf(rc) <= et; }).length;
     items.push({ label: "Схема глубин: " + costText(researchCost("deep", b)) + ". Неизвестных на этой оснастке: " + ud, keep: true, fn: function () { research("deep", b); } });
   }
   items.push(back());
@@ -1565,7 +1572,7 @@ LAB.workshop = {
   analyzeProto: analyzeProto, research: research, fixBench: fixBench, throwDevice: throwDevice, drops: drops, partLine: partLine, partsGuide: partsGuide,
   srcOf: srcOf, uses: uses, heats: heats, hmax: hmax, MODS: MODS, MOD_ORDER: MOD_ORDER, TIER: TIER,
   /* (после 4.1) снаряжение глубин: детали Нижних, модули, оснастка и её работа */
-  DEEP_PARTS: DEEP_PARTS, DEEP_MODS: DEEP_MODS, DEEP_SVC: DEEP_SVC, CLS_T: CLS_T, deepTop: deepTop, blockFrom: blockFrom, blockAt: blockAt,
+  DEEP_PARTS: DEEP_PARTS, DEEP_MODS: DEEP_MODS, DEEP_SVC: DEEP_SVC, CLS_T: CLS_T, tierOf: tierOf, clsName: clsName, deepTop: deepTop, blockFrom: blockFrom, blockAt: blockAt,
   onHit: onHit, deepK: deepK, deepSvc: deepSvc, deepMenu: deepMenu, batch5: batch5, craftTimesAt: function (rc, b) { return batchOn(rc, b) ? (batch5(b) ? 5 : 3) : 1; },
   _at: function (o) { cur = o ? { o: o, key: CUR().key } : null; }
 };

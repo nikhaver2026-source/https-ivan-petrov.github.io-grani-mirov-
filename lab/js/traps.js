@@ -17,6 +17,8 @@
    их можно обезвредить и забрать. Умные машины иногда замечают ловушки и
    обходят их. Таблицы — без DOM: файл читают и игра, и проверки в Node.
    Синтаксис — не новее ES2018.
+   (после 4.1) Ниже Истока — десять ловушек Нижних со своими действиями и
+   ловушечное дело: десять ступеней, по одной на глубокий блок.
    ════════════════════════════════════════════════════════════════════ */
 (function () {
 "use strict";
@@ -226,7 +228,7 @@ DEEP_TO.forEach(function (k) {
   if (T[k]) return;
   var d = DEEP_T[k];
   d.depth = blockFrom(d.blk); d.minL = d.depth;
-  d.cls = LAB.deepCls ? LAB.deepCls(d.blk) : d.blk >= 15 ? "d5" : d.blk >= 13 ? "d4" : d.blk >= 10 ? "d3" : d.blk >= 7 ? "d2" : "d1";
+  d.cls = "syn"; d.deepT = d.blk >= 15 ? 10 : d.blk >= 13 ? 9 : d.blk >= 10 ? 8 : d.blk >= 7 ? 7 : 6; /* оснастка глубин своего круга (workshop.tierOf) */
   d.bp = d.blk >= 7; d.trapN = Math.max(1, d.blk - 6);
   T[k] = d;
 });
@@ -255,7 +257,7 @@ ORDER.forEach(function (k) {
     if (d.bp) rc.bp = true;
     /* (3.7, нелогичность) схема — не раньше самой ловушки (depth): растяжку с гранатой, мину и ЭМИ-мину прежде собирали на уровень раньше */
     if (d.minL || (d.depth || 1) > 1) rc.minL = Math.max(d.minL || 1, d.depth || 1);
-    if (d.blk) { rc.deep = d.blk; rc.trapN = d.trapN; } /* (после 4.1) ловушка глубин: ниже Истока и с ловушечным делом */
+    if (d.blk) { rc.deep = d.blk; rc.trapN = d.trapN; rc.deepT = d.deepT; } /* (после 4.1) ловушка глубин: ниже Истока и с ловушечным делом */
     LAB.RECIPES.push(rc);
   }
 });
@@ -572,16 +574,16 @@ function applyFoe(tp, d, f, k) {
   if (d.ally) {
     if (!mechF) return;
     if (boss) { f.frozen = Math.max(f.frozen || 0, 6); return; }
-    f.ally = true; f.allyT = d.ally; f.state = "idle"; f.aim = false; f.at = 0;
+    f.ally = true; f.allyT = tp.own && LAB.implants ? Math.round(d.ally * (1 + LAB.implants.stat("allyk"))) : d.ally; f.state = "idle"; f.aim = false; f.at = 0; /* (после 4.1) чип чёрного хода — своя перепрошивка дольше */
     return;
   }
   var dmg = d.dmg ? d.dmg * k * (mechF && d.mk ? d.mk : 1) : 0;
   if (tp.dmgAbs) dmg = tp.dmgAbs;
   if (dmg > 0 && cb()) cb().damageFoe(f, Math.round(dmg), d.dt || "kinetic", { noarmor: !!d.noarmor, quiet: true, by: tp.own ? "hero" : "trap" }); /* (3.7) своя ловушка — рука героя, ловушка этажа — нет (премия «без крови») */
-  if (f.dead) return;
-  /* (после 4.1) действия ловушек глубин: накопитель, донор, переделка */
+  /* (после 4.1) действия ловушек глубин: накопитель и донор — и с той, что не пережила ловушку; переделка */
   if (d.harvest && mechF && tp.own) { var g0 = G(), en0 = Math.max(1, Math.round(g0.enMax * d.harvest)); g0.en = Math.min(g0.enMax, (g0.en || 0) + en0); gotEn += en0; }
   if (d.donor && !mechF && tp.own) { var g1 = G(), hv0 = Math.max(1, Math.round(g1.hpMax * d.donor)); g1.hp = Math.min(g1.hpMax, g1.hp + hv0); gotHp += hv0; }
+  if (f.dead) return;
   if (d.remake && !mechF) { if (boss) f.slowT = Math.max(f.slowT || 0, 10); else if (!f.remade) { f.remade = 1; f.maxhp = Math.max(1, Math.round(f.maxhp * 0.7)); f.hp = Math.min(f.hp, f.maxhp); f.dmg = Math.max(1, Math.round((f.dmg || 1) * 0.8)); f.slowT = Math.max(f.slowT || 0, 20); } }
   if (d.emp && mechF && !hard) f.shield = 0;
   if (d.hold && (d.id !== "magnet" || mechF) && (d.id !== "gear" || mechF)) f.frozen = Math.max(f.frozen || 0, half(d.hold));
@@ -842,14 +844,13 @@ function place(k, where) {
   if (d.lureLife) tp.lureL = d.lureLife;
   if (tp.cells && tp.cells.some(function (q) { return trapOn(q[0], q[1]); })) { LAB.UI.error(); say("Здесь проволоку не натянуть: поперёк уже стоит другая ловушка."); return false; }
   g.inv[item]--;
-  gainTrap(3);
   list().push(tp);
   A("play", "mine_set");
   if (d.mine) A("play", "mine_arm", { delay: 0.35 }); /* (2.6) мина взведена: короткие писки взрывателя */
   if (cb()) cb().noise(2);
   /* (3.5) в счёт вехи — каждая ловушка один раз: снятая целой и поставленная снова не в счёт */
   var tb = g.trapBack = g.trapBack || {};
-  if (tb[k] > 0) tb[k]--; else ev("trap_set", 1);
+  if (tb[k] > 0) tb[k]--; else { ev("trap_set", 1); gainTrap(3); } /* (после 4.1) и опыт ловушечного дела — тоже раз на ловушку */
   var where2 = where === "front" ? LAB.DIRN[g.face] : "под ногами";
   var extra = d.trig === "wire" && tp.cells.length > 1 ? " Проволока натянута поперёк, на " + tp.cells.length + " " + pl(tp.cells.length, "шаг", "шага", "шагов") + "." : d.trig === "cone" ? " Веер смотрит " + LAB.DIRTO[g.face] + "." : "";
   var how = d.trig === "remote" ? " Подорвать — окно «Ловушки и мины», «Ваши ловушки на этаже»." : d.trig === "lure" ? " Запищит, когда отойдёте." : tp.st === "wait" ? " Взведётся, когда вы отойдёте." : " Взведётся через пару секунд.";
@@ -936,7 +937,7 @@ function disarm(tp) {
     if (keep) g.inv[d.item] = (g.inv[d.item] || 0) + 1;
     gm().gainXP(Math.round((6 + Math.floor(LAB.Le(g.L) / 4)) * k * (stg() >= 8 ? 2 : 1)));
     ev("disarm", 1);
-    if (k > 0) gainTrap(8);
+    if (k > 0) gainTrap(Math.round(8 * k));
     if (tp.by === "oko" && LAB.oko && LAB.oko.react) setTimeout(function () { LAB.oko.react("oko_trap_off"); }, 1500);
     say(cap1(nameOf(tp)) + " " + gv(d, "обезврежен", "обезврежена", "обезврежены") + ". " + (keep ? cap1(d.n) + " теперь ваш" + gv(d, "", "а", "и") + ": в рюкзаке, раздел «Ловушки и мины»." : "Взять с " + gv(d, "него", "неё", "них") + " нечего: сапёры ОКО ставят такие наспех, из лома." + (k <= 0 ? " Опыта за мины ОКО на этом этаже больше нет." : "")));
     UIx("refresh");
