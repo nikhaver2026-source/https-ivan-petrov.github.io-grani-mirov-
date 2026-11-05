@@ -117,3 +117,38 @@ if __name__ == "__main__":
         f0a = _f0_дорожка(a)[0]; f0b = _f0_дорожка(y)[0]
         va = f0a[f0a > 0]; vb = f0b[f0b > 0]
         print(st, "длина", len(a), len(y), "высота до %.1f после %.1f Гц (ожидалось %.1f)" % (np.median(va), np.median(vb), np.median(va) * 2 ** (st / 12)))
+
+
+def темп(x, k):
+    """Изменение темпа в k раз (k > 1 — быстрее) по периодам основного тона: в звонких местах выбрасываются (или
+    повторяются) целые периоды — высота и чёткость сохраняются; в глухих — окна по 5 мс. k — число или массив
+    по отсчётам входа (переменный темп: согласные — медленнее, гласные и паузы — быстрее)."""
+    x = np.asarray(x, np.float32)
+    if len(x) < SR // 20: return x
+    П = int(SR * 0.025)
+    xp = np.concatenate([np.zeros(П, np.float32), x, np.zeros(П, np.float32)])
+    kk = np.full(len(xp), float(k)) if np.isscalar(k) else np.concatenate([np.full(П, k[0]), np.asarray(k, np.float64), np.full(П, k[-1])])
+    м, зв = метки(xp)
+    if len(м) < 3: return x
+    T = np.diff(м, append=м[-1] + (м[-1] - м[-2]))
+    n_out = int(np.sum(1.0 / kk)) + SR // 10
+    out = np.zeros(n_out + SR // 10, np.float32); норм = np.zeros_like(out)
+    t_an, t_out, i = float(м[0]), float(м[0] / kk[0]), 0
+    while t_an < len(xp) - 1 and t_out < len(out) - 1:
+        while i + 1 < len(м) and abs(м[i + 1] - t_an) < abs(м[i] - t_an): i += 1
+        Ti = int(T[i]) if зв[i] else int(SR * 0.005)
+        Ti = max(40, min(Ti, int(SR / 60)))
+        L = Ti if зв[i] else int(SR * 0.005)
+        a0, a1 = м[i] - L, м[i] + L
+        s0 = int(round(t_out)) - L
+        if a0 >= 0 and a1 <= len(xp) and s0 >= 0 and s0 + 2 * L <= len(out):
+            w = np.hanning(2 * L).astype(np.float32)
+            out[s0:s0 + 2 * L] += xp[a0:a1] * w; норм[s0:s0 + 2 * L] += w
+        t_out += Ti; t_an += Ti * kk[min(len(kk) - 1, int(t_an))]
+    норм[норм < 0.1] = 1.0
+    y = out / норм
+    n_res = int(round(np.sum(1.0 / kk[П:П + len(x)])))
+    a = int(round(П / kk[0]))
+    y = y[a:a + n_res]
+    rx = np.sqrt(np.mean(x ** 2)) + 1e-9; ry = np.sqrt(np.mean(y ** 2)) + 1e-9
+    return (y * (rx / ry)).astype(np.float32)

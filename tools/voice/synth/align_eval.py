@@ -54,11 +54,12 @@ def main():
     for ri, j in random.sample(кандидаты, N):
         r = recs[ri]; ws = r["w"]; w = ws[j]
         s0, e0 = w[1], w[2]
-        if w[5]: s0 = max(s0, w[5][0] - E.Синтезатор._до(w[0][0])); e0 = min(e0, w[5][-1] + E.Синтезатор._после(w[0][-1]))
+        if w[5] and not (len(sys.argv) > 2 and sys.argv[2] == "база"):
+            s0 = max(s0, w[5][0] - E.Синтезатор._до(w[0][0])); e0 = min(e0, w[5][-1] + E.Синтезатор._после(w[0][-1]))
         a = разм[ri]["w"][j]; s1, e1 = a[1], a[2]
         items.append((r["f"], w[0], (s0, e0), (s1, e1)))
     with mp.Pool(4, initializer=init) as pool: res = pool.map(одно, items, chunksize=20)
-    for k, имя in enumerate(("прежние края", "разметка звуков")):
+    for k, имя in enumerate(("края в базе" if len(sys.argv) > 2 and sys.argv[2] == "база" else "прежние края", "новая разметка")):
         c = np.array([o[k][0] for _, o in res])
         print(f"{имя}: доля ошибочных букв {c.mean():.4f}, слов без ошибки {np.mean(c == 0):.1%}")
     хуже = [(w, o) for w, o in res if o[1][0] > o[0][0]][:12]; лучше = [(w, o) for w, o in res if o[1][0] < o[0][0]][:12]

@@ -353,13 +353,15 @@ class Синтезатор:
     def __init__(self, голос, веса=None):
         self.V = Голос(голос)
         self.в = dict(конец=3.0, середина_конец=1.2, начало=0.8, середина_начало=0.6, сосед=0.35, звук=0.3,
-                      длина=1.0, стык=1.0, знак=1.2, чистота=3.0, сгладить=2, мелодия=0.15, пауза_стык=0, края=3, запас_нач=0.005, запас_кон=0.025, звуки_цель=0.6, дифоны=1, гладкий_стык=0, плавный_стык=10, шов_уч=0.5, громкость_шов=1, ровный_темп=0, поток=0, стык_продлить=0, цепь_коротких=0, встык=1, сжать_тишину=1, тишина_нач=0.06, тишина_кон=0.03, короткие=1.0, умный_темп=0, учёный=2, плохие_в_части=0, по_звукам=1, f0_слух=0.08, пауза_внутри=0.5, f0=0.12, громк=0.08, спектр=0.02, K=60, часть=4.0)
+                      длина=1.0, стык=1.0, знак=1.2, чистота=3.0, сгладить=2, мелодия=0.15, пауза_стык=0, края=3, запас_нач=0.005, запас_кон=0.025, звуки_цель=0.6, дифоны=1, гладкий_стык=0, плавный_стык=10, шов_уч=0.5, громкость_шов=1, ровный_темп=0, поток=1, стык_продлить=0, цепь_коротких=0, шов_нн=0, темп_psola=0, быстрые=0, темп_звуки=0, д_край=0.9, д_сосед=0.3, д_класс=0.2, д_смычка=0.1, д_плохие=0.3, д_длина=0.0, п_чистота=5.0, п_край=1.5, п_шов=0.5, п_K=16, встык=1, сжать_тишину=1, тишина_нач=0.06, тишина_кон=0.03, короткие=1.0, умный_темп=0, учёный=2, плохие_в_части=0, по_звукам=1, f0_слух=0.08, пауза_внутри=0.5, f0=0.12, громк=0.08, спектр=0.02, K=60, часть=4.0)
         if веса: self.в.update(веса)
         self.скачки = []
         pj = f"{ТУТ}/join_{голос}.json"; self.шов = None
         if os.path.exists(pj):
             j_ = json.load(open(pj, encoding="utf-8"))
             self.шов = {k: (np.array(v["mu"]), np.array(v["sd"])) for k, v in j_["пары"].items()}; self.шов_мед = j_["медиана_живых"]
+        pn = f"{ТУТ}/joinnn_{голос}.npz"; self.нн = None
+        if os.path.exists(pn) and self.в.get("шов_нн"): self._загрузить_нн(pn)
         p = self.в.get("уч_файл") or f"{ТУТ}/learned_{голос}.json"
         self.уч = json.load(open(p, encoding="utf-8"))["w"] if os.path.exists(p) else None
         if self.уч:   # признаки, которые не могут «помогать» (иначе движок нарочно выберет грубый стык), — не ниже нуля
@@ -392,7 +394,34 @@ class Синтезатор:
             if a != b: c += 1.0 if k in (0, len(нужно) - 1) else 0.5
         return self.в["звуки_цель"] * c
 
+    def _темп_по_звукам(self, y, k):
+        """Переменный темп: паузы сжимаются сильнее всего, тянущиеся гласные — сильнее среднего, согласные и переходы —
+        слабее (их и так мало, а они несут разборчивость). Общая длина — ровно len/k. → темп на каждый отсчёт."""
+        import psola
+        hop = 240; n = max(1, len(y) // hop)
+        e = np.array([_db(y[i * hop:(i + 1) * hop]) for i in range(n)])
+        f0, _ = psola._f0_дорожка(y, hop=hop); f0 = f0[:n] if len(f0) >= n else np.r_[f0, np.zeros(n - len(f0))]
+        M = np.array([_mfcc(y[i * hop:i * hop + 2 * hop])[1:] for i in range(n)])
+        поток = np.r_[0, np.linalg.norm(np.diff(M, axis=0), axis=1)]; поток = np.convolve(поток, np.ones(3) / 3, "same")
+        порог = np.percentile(поток, 60)
+        в = self.в.get("темп_веса", (2.2, 1.3, 0.75))
+        w = np.where(e < e.max() - 40, в[0], np.where((f0 > 0) & (поток < порог), в[1], в[2]))
+        a = float(np.sum(1.0 / w)) * k / n          # сумма 1/(a·w) = n/k
+        кк = np.repeat(a * w, hop)
+        return np.r_[кк, np.full(max(0, len(y) - len(кк)), кк[-1] if len(кк) else k)][:len(y)]
+
+    def _цена_темпа(self, o):
+        """На быстрой речи — вхождения, которые диктор сам сказал быстрее обычного (естественная быстрая речь
+        разборчивее искусственно сжатой); медленные — дороже."""
+        k = getattr(self, "_скорость", 1.0)
+        if k <= 1.05 or not self.в.get("быстрые"): return 0.0
+        V = self.V; м = V.медиана.get(V.w(o)[0]) or V.dur[o]
+        return self.в["быстрые"] * min(1.0, k - 1.0) * math.log(max(1e-3, V.dur[o]) / max(1e-3, м))
+
     def цена_единицы(self, o, слова, i, end):
+        return self._цена_единицы(o, слова, i, end) + self._цена_темпа(o)
+
+    def _цена_единицы(self, o, слова, i, end):
         if self.в.get("учёный") and self.уч:
             c = self._уч_единица(o, слова, i, end)
             if self.в["учёный"] == 2: c += self._естественность(o, слова, i, end)
@@ -484,6 +513,29 @@ class Синтезатор:
         c += (W["спектр_л"] + W["спектр_п"]) * min(60.0, float(np.linalg.norm(V.mfe[o1] - V.mfs[o2]))) / 60
         return c
 
+    def _загрузить_нн(self, pn):
+        """Сеть стыка: первый слой — сумма вклада конца левого вхождения и начала правого (считается заранее для всех)."""
+        z = np.load(pn); V = self.V; n = len(V.occ); ВИДЫ = "гсзкп"
+        def стороны(конец):
+            X = np.zeros((n, 21), np.float32)
+            X[:, :13] = V.mfe if конец else V.mfs; X[:, 13] = V.ene if конец else V.ens
+            f = V.f0e if конец else V.f0s; X[:, 14] = np.where(f > 0, np.log(np.maximum(f, 1e-3)), 0.0); X[:, 15] = (f > 0)
+            кл = V.кл_к if конец else V.кл_н
+            for o in range(n): X[o, 16 + ВИДЫ.index(кл[o] if кл[o] in ВИДЫ else "п")] = 1.0
+            return X
+        mu, sd, W1 = z["mu"], z["sd"], z["W1"]
+        A = (стороны(True) - mu[:21]) / sd[:21]; B = (стороны(False) - mu[21:]) / sd[21:]
+        self.нн = {"Pa": (A @ W1[:21]).astype(np.float32), "Pb": (B @ W1[21:] + z["b1"]).astype(np.float32),
+                   "W2": z["W2"], "b2": z["b2"], "W3": z["W3"][:, 0], "b3": float(z["b3"][0]), "мед": float(z["мед"])}
+
+    def _шов_нн_мат(self, левые, правые):
+        """Матрица цены стыка сети для всех пар (левое вхождение, правое): лог-шансы «склейка» сверх обычного у живых."""
+        N = self.нн; a = N["Pa"][левые]; b = N["Pb"][правые]
+        h1 = np.maximum(a[:, None, :] + b[None, :, :], 0)
+        h2 = np.maximum(h1 @ N["W2"] + N["b2"], 0)
+        z = h2 @ N["W3"] + N["b3"]
+        return np.maximum(0.0, z - N["мед"])
+
     def _шов_живой(self, o1, o2):
         """Насколько перепад спектра, громкости и высоты на стыке не похож на живой переход у диктора (по паре видов звука)."""
         V = self.V; m = self.шов.get(V.кл_к[o1] + V.кл_н[o2]) if self.шов else None
@@ -549,9 +601,20 @@ class Синтезатор:
             best = [{o: (self.цена_единицы(o, слова, i, end), None) for o in канд[i]}]
             for k in range(i + 1, j):
                 cur = {}
-                for o in канд[k]:
+                пред = list(best[-1].keys())
+                Mн = None
+                if self.нн is not None:
+                    Mн = self.в["шов_нн"] * self._шов_нн_мат(np.array(пред), np.array(канд[k]))
+                    for a_, po in enumerate(пред):   # слова подряд из одной записи — живой стык, без платы
+                        r1, j1 = self.V.occ[po]
+                        for b_, o in enumerate(канд[k]):
+                            if self.V.occ[o] == (r1, j1 + 1): Mн[a_, b_] = 0.0
+                for b_, o in enumerate(канд[k]):
                     u = self.цена_единицы(o, слова, k, end)
-                    p, v = min(((po, pv[0] + self.цена_стыка(po, o)) for po, pv in best[-1].items()), key=lambda x: x[1])
+                    if Mн is None:
+                        p, v = min(((po, pv[0] + self.цена_стыка(po, o)) for po, pv in best[-1].items()), key=lambda x: x[1])
+                    else:
+                        p, v = min(((po, best[-1][po][0] + self.цена_стыка(po, o) + float(Mн[a_, b_])) for a_, po in enumerate(пред)), key=lambda x: x[1])
                     cur[o] = (v + u, p)
                 best.append(cur)
             o = min(best[-1], key=lambda x: best[-1][x][0]); путь = [o]
@@ -678,35 +741,47 @@ class Синтезатор:
         Sx = И["поток"]; пром = И["пром"]; wi = И["wi"]; wf = И["wf"]; mf = И["mf"]; f0 = И["f0"]; en = И["en"]
         кл = self._класс_звука; кэш = self._пи_кэш
 
+        искл = getattr(self, "_искл_слово", None); Ri = И["ri"]; Jj = И["j"]
         def вхождения(sub):
-            r = кэш.get(sub)
+            r = кэш.get((sub, искл))
             if r is None:
                 r = []; p = Sx.find(sub)
                 while p >= 0 and len(r) < 400:
-                    if len(sub) == 1 or float(пром[p:p + len(sub) - 1].max()) < 0.03: r.append(p)
+                    ok = len(sub) == 1 or float(пром[p:p + len(sub) - 1].max()) < 0.03
+                    if ok and искл:   # спрятанное слово (обучение на знакомых словах) — его записи не брать
+                        ok = all(self.V.recs[int(Ri[q])]["w"][int(Jj[q])][0] != искл for q in range(p, p + len(sub)))
+                    if ok: r.append(p)
                     p = Sx.find(sub, p + 1)
-                кэш[sub] = r
+                кэш[(sub, искл)] = r
             return r
 
+        if not hasattr(self, "_вх_по_рj"):
+            self._вх_по_рj = {(ri, j): o for o, (ri, j) in enumerate(self.V.occ)}
+        чист = self.V.чистота
         def цена_куска(p, L, m1, m2, a, b):
             c = 1.0
-            if m1 < 0: c += 0.0 if wi[p] else 0.6
+            if чист is not None and self.в.get("п_чистота"):   # чистота слов-источников куска (по отдельному распознаванию)
+                for q in {p, p + L - 1}:
+                    o = self._вх_по_рj.get((int(Ri[q]), int(Jj[q])))
+                    if o is not None: ч = float(чист[o]); c += self.в["п_чистота"] * (0.3 if ч < 0 else ч)
+            if m1 < 0: c += 0.0 if wi[p] else self.в["п_край"]
             else:
                 if a > 0 and p > 0:
                     c += -0.3 if Sx[p - 1] == P[a - 1] else (0.2 if кл(Sx[p - 1]) != кл(P[a - 1]) else 0.0)
             q = p + L - 1
-            if m2 >= n: c += 0.0 if wf[q] else 0.6
+            if m2 >= n: c += 0.0 if wf[q] else self.в["п_край"]
             else:
                 if b + 1 < n and q + 1 < len(Sx):
                     c += -0.3 if Sx[q + 1] == P[b + 1] else (0.2 if кл(Sx[q + 1]) != кл(P[b + 1]) else 0.0)
             return c
 
+        пш = self.в["п_шов"]
         def цена_стыка(q, p):
             c = 0.02 * float(np.linalg.norm(mf[q][1:] - mf[p][1:])) + 0.03 * abs(float(en[q] - en[p]))
             if f0[q] > 0 and f0[p] > 0: c += 0.1 * min(12.0, abs(12 * math.log2(f0[q] / f0[p])))
-            return c
+            return пш * c
 
-        K = 8
+        K = int(self.в["п_K"])
         # best[m] = {(p, L, первый_звук_части_в_потоке, последний): (цена, путь)}
         best = {-1: {None: (0.0, [])}}
         for m2 in list(range(0, n - 1)) + [n]:
@@ -754,8 +829,9 @@ class Синтезатор:
         P = "".join(k for k, _ in цель); n = len(P)
         if n < 2: return []
         кл = self._класс_звука
+        в = self.в; искл = getattr(self, "_искл_слово", None)
         def шов(z):   # насколько удобен звук для разреза посередине
-            return -0.1 if кл(z) == "к" else 0.3 if z in "jрР" else 0.0
+            return -в["д_смычка"] if кл(z) == "к" else в["д_плохие"] if z in "jрР" else 0.0
         # позиции: −1 — начало слова; m (0..n−2) — середина звука m; n — конец слова
         best = {-1: (0.0, [])}
         for m2 in list(range(0, n - 1)) + [n]:
@@ -771,20 +847,21 @@ class Синтезатор:
                 if r is None:
                     r = sorted((k for k in self._зв if sub in k), key=len)[:60]; self._зв_кэш[sub] = r
                 for ключ in r:
+                    if искл and self._зв[ключ][0] == искл: continue
                     p0 = ключ.find(sub)
                     while p0 >= 0:
                         q = p0 + L   # после последнего звука части
-                        c = 1.0
-                        if m1 < 0: c += 0 if p0 == 0 else 0.6
+                        c = 1.0 - в["д_длина"] * (L - 2)
+                        if m1 < 0: c += 0 if p0 == 0 else в["д_край"]
                         else:
                             c += шов(P[m1])
                             if p0 > 0 and m1 > 0:
-                                c += -0.3 if ключ[p0 - 1] == P[m1 - 1] else (0.2 if кл(ключ[p0 - 1]) != кл(P[m1 - 1]) else 0.0)
-                        if m2 >= n: c += 0 if q == len(ключ) else 0.6
+                                c += -в["д_сосед"] if ключ[p0 - 1] == P[m1 - 1] else (в["д_класс"] if кл(ключ[p0 - 1]) != кл(P[m1 - 1]) else 0.0)
+                        if m2 >= n: c += 0 if q == len(ключ) else в["д_край"]
                         else:
                             c += шов(P[m2])
                             if q < len(ключ) and m2 + 1 < n:
-                                c += -0.3 if ключ[q] == P[m2 + 1] else (0.2 if кл(ключ[q]) != кл(P[m2 + 1]) else 0.0)
+                                c += -в["д_сосед"] if ключ[q] == P[m2 + 1] else (в["д_класс"] if кл(ключ[q]) != кл(P[m2 + 1]) else 0.0)
                         v = best[m1][0] + c
                         if лучш is None or v < лучш[0]: лучш = (v, best[m1][1] + [(ключ, p0, L, m1 >= 0, m2 < n)])
                         p0 = ключ.find(sub, p0 + 1)
@@ -1265,8 +1342,12 @@ class Синтезатор:
 
     def сказать(self, текст, скорость=1.0):
         части, отчёт = [], []; self.стыки = []; поз = int(SR * 0.10)
+        self._скорость = скорость; факт = обычно = 0.0
         for от in текст_в_отрезки(текст):
             x, res, кс = self.отрезок(от["w"], от["end"])
+            for u in res:   # естественная длина выбранных слов против обычной у диктора
+                if u[0] == "o":
+                    o = u[1]; факт += self.V.dur[o]; обычно += self.V.медиана.get(self.V.w(o)[0]) or self.V.dur[o]
             self.стыки += [поз + p for p in getattr(self, "стыки_отрезка", [])]
             поз += len(x) + int(SR * ПАУЗА.get(от["end"], 0.2))
             части.append(x); части.append(np.zeros(int(SR * ПАУЗА.get(от["end"], 0.2))))
@@ -1279,7 +1360,15 @@ class Синтезатор:
         речь = y[np.abs(y) > 1e-4]
         if len(речь):
             g = -20.5 - _db(речь); y = y * 10 ** (g / 20)
-        if скорость != 1.0: y = (self.темп_умный if self.в["умный_темп"] else self.темп)(y.astype(np.float32), скорость)
+        if скорость != 1.0 and self.в.get("быстрые") and обычно > 0:
+            # выбранные вхождения уже быстрее обычного — сжать настолько меньше (заданная скорость сохраняется)
+            скорость = max(1.0, скорость * факт / обычно) if скорость > 1 else скорость
+        if скорость != 1.0:
+            if self.в.get("темп_звуки") and скорость > 1:
+                import psola; y = psola.темп(y.astype(np.float32), self._темп_по_звукам(y, скорость))
+            elif self.в.get("темп_psola"):
+                import psola; y = psola.темп(y.astype(np.float32), скорость)
+            else: y = (self.темп_умный if self.в["умный_темп"] else self.темп)(y.astype(np.float32), скорость)
         пик = np.max(np.abs(y)) + 1e-9
         if пик > 0.89: y = y * 0.89 / пик
         return y.astype(np.float32), отчёт
