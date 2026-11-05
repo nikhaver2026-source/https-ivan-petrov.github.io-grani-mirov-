@@ -24,13 +24,15 @@ def банк(голос):
 
 
 МУСОР = re.compile(r"undefined|null|NaN|\[object|function|=>|\{|\}|<|>|_", re.I)
+# фразы-заглушки из наборов проверок (нарочно незаписанный текст: проверка, что его говорит синтезатор) — не записывать
+ЗАГЛУШКИ = re.compile(r"зюйдвест|кракозяб|квазимодо|лопочет|проверочн|абракадабр", re.I)
 
 
 def годна(s):
     s = s.strip()
     k = ключ(s)
     return (2 <= len(s) <= 90 and len(k) >= 2 and not re.search(r"\d", s) and not re.search(r"[A-Za-z]", s)
-            and not МУСОР.search(s) and re.search(r"[а-яА-ЯёЁ]", s))
+            and not МУСОР.search(s) and not ЗАГЛУШКИ.search(s) and re.search(r"[а-яА-ЯёЁ]", s))
 
 
 def куски(текст, есть):
