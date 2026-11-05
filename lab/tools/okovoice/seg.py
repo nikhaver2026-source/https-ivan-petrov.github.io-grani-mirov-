@@ -319,17 +319,26 @@ def listen(x, sr):
     return " ".join(s.text.strip() for s in sg).strip()
 
 
-def same(heard, text, sim=0.8):
-    """Услышанное — это текст реплики: похоже, и длина та же (лишняя фраза соседа или
-    потерянное начало меняют длину, даже когда сходство ещё высокое)."""
+def gaps(heard, text):
+    """(сходство, разница в буквах, разница в словах) услышанного и текста."""
     a, b = norm(heard), norm(text)
-    return ratio(a, b) >= sim and abs(len(a) - len(b)) <= max(4, 0.15 * len(b))
+    return ratio(a, b), abs(len(a) - len(b)), abs(len(a.split()) - len(b.split()))
+
+
+def same(heard, text, sim=0.8):
+    """Услышанное — это текст реплики: похоже, длина та же и слов столько же (лишняя фраза
+    соседа, потерянное начало или конец меняют длину, даже когда сходство ещё высокое)."""
+    s, dc, dw = gaps(heard, text)
+    return s >= sim and dc <= max(4, 0.12 * len(norm(text))) and dw <= 1
 
 
 def flawed(heard, text):
-    """Брак записанной реплики: чужое (сходство ниже 0,7) или длина не та."""
-    a, b = norm(heard), norm(text)
-    return ratio(a, b) < 0.7 or abs(len(a) - len(b)) > max(5, 0.2 * len(b))
+    """Брак записанной реплики: чужое (сходство ниже 0,7), длина не та или нет двух слов и
+    больше (проба 5.11: «…носитель: оно слушает» без «оно слушает» — минус 10 букв из 54).
+    Мягче, чем same: одно недослышанное Whisper'ом слово — ещё не брак."""
+    s, dc, dw = gaps(heard, text)
+    n = len(norm(text))
+    return s < 0.7 or dc > max(5, 0.2 * n) or (dw >= 2 and dc >= 8)
 
 
 def split_words(x, sr, texts, ws=None, only=None):

@@ -69,6 +69,10 @@ def main():
         if n % 250 == 0:
             run.log(f"   прослушано {n} из {len(todo)} за {time.time() - t0:.0f} с, брак пока "
                     f"{sum(1 for v_, k_ in have if audit.get(v_ + k_, {}).get('bad'))}")
+    for v, k in have:      # брак — по услышанному и нынешним правилам (seg.flawed), не по прошлой отметке
+        e = audit.get(v + k)
+        if e:
+            e["bad"] = seg.flawed(e["h"], want[(v, k)])
     bad = {(v, k) for v, k in have if audit.get(v + k, {}).get("bad")}
     run.log(f"   брак: {len(bad)} из {len(have)} (м {sum(v == 'm' for v, _ in bad)}, ж {sum(v == 'f' for v, _ in bad)})")
     if a.audit_only:
