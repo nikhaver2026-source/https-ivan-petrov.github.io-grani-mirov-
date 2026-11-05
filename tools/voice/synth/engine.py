@@ -229,6 +229,18 @@ class Голос:
         if self.чистота is not None and len(self.чистота) < len(self.occ):   # новые записи (корпус) в конце — «не проверено»
             self.чистота = np.concatenate([self.чистота, -np.ones(len(self.occ) - len(self.чистота), dtype=np.float32)])
         if self.чистота is not None and len(self.чистота) != len(self.occ): self.чистота = None
+        # края вхождения по отдельному распознаванию: лишнее/потерянное в начале (край_л) и в конце (край_п)
+        n = len(self.occ); self.край_л = np.zeros(n, np.float32); self.край_п = np.zeros(n, np.float32)
+        p = f"{ТУТ}/occ_{голос}_heard.json"
+        if os.path.exists(p):
+            hs = json.load(open(p, encoding="utf-8"))
+            for o, h in enumerate(hs[:n]):
+                if h is None: continue
+                t = self.w(o)[0]
+                if h == t: continue
+                if t in h: i = h.find(t); self.край_л[o] = float(i > 0); self.край_п[o] = float(len(h) - i - len(t) > 0)
+                else: self.край_л[o] = float(h[:1] != t[:1]); self.край_п[o] = float(h[-1:] != t[-1:])
+        self.ll = np.array([float(self.recs[ri].get("ll", 0.0)) for ri, _ in self.occ], np.float32)
         self._мелодия()
         self.медиана = {}
         for w, os_ in self.по_слову.items():
@@ -319,21 +331,50 @@ class Синтезатор:
     def __init__(self, голос, веса=None):
         self.V = Голос(голос)
         self.в = dict(конец=3.0, середина_конец=1.2, начало=0.8, середина_начало=0.6, сосед=0.35, звук=0.3,
-                      длина=1.0, стык=1.0, знак=1.2, чистота=3.0, сгладить=1, мелодия=0.15, пауза_стык=0, края=1, встык=1, сжать_тишину=1, тишина_нач=0.06, тишина_кон=0.03, короткие=1.0, умный_темп=0, учёный=2, плохие_в_части=0, по_звукам=1, f0_слух=0.08, пауза_внутри=0.5, f0=0.12, громк=0.08, спектр=0.02, K=60, часть=4.0)
+                      длина=1.0, стык=1.0, знак=1.2, чистота=3.0, сгладить=1, мелодия=0.15, пауза_стык=0, края=3, запас_нач=0.005, запас_кон=0.025, звуки_цель=0.6, дифоны=1, встык=1, сжать_тишину=1, тишина_нач=0.06, тишина_кон=0.03, короткие=1.0, умный_темп=0, учёный=2, плохие_в_части=0, по_звукам=1, f0_слух=0.08, пауза_внутри=0.5, f0=0.12, громк=0.08, спектр=0.02, K=60, часть=4.0)
         if веса: self.в.update(веса)
         self.скачки = []
         p = f"{ТУТ}/learned_{голос}.json"
         self.уч = json.load(open(p, encoding="utf-8"))["w"] if os.path.exists(p) else None
         if self.уч:   # признаки, которые не могут «помогать» (иначе движок нарочно выберет грубый стык), — не ниже нуля
             for k in ("f0_л", "f0_п", "громк_л", "громк_п", "спектр_л", "спектр_п", "мелодия_откл", "класс_л", "класс_п",
-                      "знак_несовп", "длина_откл", "середина_как_конец", "чистота", "непроверено"):
-                self.уч[k] = max(0.0, self.уч[k])
+                      "знак_несовп", "длина_откл", "середина_как_конец", "чистота", "непроверено", "звуки_несовп", "край_л", "край_п", "разм_плохо"):
+                if k in self.уч: self.уч[k] = max(0.0, self.уч[k])
+
+    def _произношение(self, слова):
+        """Звуки слов отрезка с уподоблением на стыках (fon.фраза) — кэш по словам отрезка."""
+        к = tuple(слова)
+        if getattr(self, "_пр_ключ", None) != к:
+            import fon
+            try: self._пр = [[{"э": "и", "о": "а"}.get(z, z) for z, _ in x] for x in fon.фраза(list(слова))]
+            except Exception: self._пр = None
+            self._пр_ключ = к
+        return self._пр
+
+    def _цена_звуков(self, o, слова, i):
+        """Звуки вхождения (по разметке) против нужного произношения: оглушение/озвончение на стыке («без дела» [з],
+        «без тебя» [с]; «в» [в]/[ф]), ударение (качество гласных). Края слова — дороже, середина — дешевле."""
+        if not self.в.get("звуки_цель"): return 0.0
+        ri, j = self.V.occ[o]; r = self.V.recs[ri]
+        if "ph" not in r: return 0.0
+        пр = self._произношение(слова)
+        if not пр or i >= len(пр): return 0.0
+        нужно = пр[i]; есть = [z[0] for z in r["ph"][j]]
+        if len(нужно) != len(есть): return self.в["звуки_цель"] * 0.5
+        c = 0.0
+        for k, (a, b) in enumerate(zip(нужно, есть)):
+            if a != b: c += 1.0 if k in (0, len(нужно) - 1) else 0.5
+        return self.в["звуки_цель"] * c
 
     def цена_единицы(self, o, слова, i, end):
         if self.в.get("учёный") and self.уч:
             c = self._уч_единица(o, слова, i, end)
             if self.в["учёный"] == 2: c += self._естественность(o, слова, i, end)
-            return c
+            if "звуки_несовп" in self.уч:   # выученная плата за звуки — вместо ручной
+                в0 = self.в.get("звуки_цель", 0); self.в["звуки_цель"] = 1.0
+                c += self.уч["звуки_несовп"] * min(3.0, self._цена_звуков(o, слова, i)) / 3; self.в["звуки_цель"] = в0
+                return c
+            return c + self._цена_звуков(o, слова, i)
         V, в = self.V, self.в; n = len(слова); c = 0.0
         последнее, первое = i == n - 1, i == 0
         зн = V.знак(o); цель_зн = end if последнее else ""
@@ -396,6 +437,10 @@ class Синтезатор:
         if i == n - 1 and not V.конец_фразы(o): c += W["середина_как_конец"]
         if i > 0 and V.начало_фразы(o) and V.w(o)[3] > 0.15: c += W["начало_пауза"]
         м = V.медиана.get(w) or V.dur[o]; c += W["длина_откл"] * abs(math.log(max(1e-3, V.dur[o]) / max(1e-3, м)))
+        if "край_л" in W:
+            цепь_л = i > 0 and V.сосед(o, -1) == слова[i - 1]; цепь_п = i < n - 1 and V.сосед(o, 1) == слова[i + 1]
+            c += W["край_л"] * float(V.край_л[o]) * (0.3 if цепь_л else 1.0) + W["край_п"] * float(V.край_п[o]) * (0.3 if цепь_п else 1.0)
+            c += W.get("разм_плохо", 0.0) * float(V.ll[o] < -48.0)
         h = V.высота_пт(o)
         if h is not None:
             кл = "?" if end == "?" else "," if end in ",;—" else ":" if end == ":" else "."
@@ -475,6 +520,9 @@ class Синтезатор:
         return res
 
     def из_частей(self, слово, лев="", прав=""):
+        if self.в.get("дифоны"):
+            д = self._из_дифонов(слово)
+            if д: return д
         буквы = self._из_частей(слово, True) or self._из_частей(слово, False)
         if self.в["по_звукам"]:
             звуки = self._из_звуков(слово)
@@ -491,43 +539,46 @@ class Синтезатор:
         return "п"
 
     def _из_звуков(self, слово):
-        """Слово вне базы — из частей других слов по совпадению ЗВУКОВ (транскрипция g2p: редукция безударных,
-        мягкость, оглушение). Разрез — только между звуками разных букв; время разреза — по времени букв."""
-        import g2p
+        """Слово вне базы — из частей других слов по совпадению ЗВУКОВ (произношение fon: редукция, мягкость,
+        оглушение, -тся → [ца] ...). Разрез — между звуками разных букв, время — граница звуков по разметке."""
+        import fon
         V = self.V
         if not hasattr(self, "_зв"):
             self._зв = {}
+            чист = (lambda o: (0.3 if V.чистота[o] < 0 else float(V.чистота[o]))) if V.чистота is not None else (lambda o: 0.0)
             for u, os_ in V.по_слову.items():
-                good = [o for o in os_ if len(V.w(o)[5]) == len(u)]
-                if not good: continue
-                чист = (lambda o: (0.3 if V.чистота[o] < 0 else float(V.чистота[o]))) if V.чистота is not None else (lambda o: 0.0)
-                good.sort(key=lambda o: (чист(o) > 0.34, V.конец_фразы(o) or V.начало_фразы(o), abs(V.dur[o] - V.медиана[u])))
-                try: тр = g2p.транскрипция(u)
-                except Exception: continue
-                ключ = "".join(k for k, _ in тр)
-                if ключ and ключ not in self._зв: self._зв[ключ] = (u, тр, good[:6])
+                по_ключу = {}
+                for o in os_:
+                    ri, j = V.occ[o]; r = V.recs[ri]
+                    if "ph" not in r: continue
+                    ключ = "".join(z[0] for z in r["ph"][j])
+                    if ключ: по_ключу.setdefault(ключ, []).append(o)
+                for ключ, good in по_ключу.items():
+                    good.sort(key=lambda o: (чист(o) > 0.34, V.конец_фразы(o) or V.начало_фразы(o), abs(V.dur[o] - V.медиана[u])))
+                    if ключ not in self._зв or len(good) > len(self._зв[ключ][2]): self._зв[ключ] = (u, None, good[:6])
             self._зв_кэш = {}
-        try: цель = g2p.транскрипция(слово)
+        try: цель = [({"э": "и", "о": "а"}.get(z, z), b) for z, b in fon.слово(слово)]
         except Exception: return []
         P = "".join(k for k, _ in цель); n = len(P)
         if not n: return []
         кл = self._класс_звука
-        def можно_резать(тр, k): return 0 < k < len(тр) and тр[k][1] != тр[k - 1][1]
+        def можно_резать_ц(k): return 0 < k < n and цель[k][1] != цель[k - 1][1]
+        def можно_резать_и(ph, k): return 0 < k < len(ph) and ph[k][1] != ph[k - 1][1]
         best = [(0.0, [])] + [(1e9, None)] * n
         for j in range(1, n + 1):
             for i in range(max(0, j - 12), j):
-                if best[i][1] is None or (i > 0 and not можно_резать(цель, i)): continue
-                if j < n and not можно_резать(цель, j): continue
+                if best[i][1] is None or (i > 0 and not можно_резать_ц(i)): continue
+                if j < n and not можно_резать_ц(j): continue
                 sub = P[i:j]; L = j - i
                 r = self._зв_кэш.get(sub)
                 if r is None:
                     r = sorted((k for k in self._зв if sub in k), key=len)[:60]; self._зв_кэш[sub] = r
                 лучшая = None
                 for ключ in r:
-                    u, тр, os_ = self._зв[ключ]; p0 = ключ.find(sub)
+                    u, _, os_ = self._зв[ключ]; ri0, j0 = V.occ[os_[0]]; ph = V.recs[ri0]["ph"][j0]; p0 = ключ.find(sub)
                     while p0 >= 0:
                         q = p0 + L
-                        if (p0 == 0 or можно_резать(тр, p0)) and (q == len(ключ) or можно_резать(тр, q)):
+                        if (p0 == 0 or можно_резать_и(ph, p0)) and (q == len(ключ) or можно_резать_и(ph, q)):
                             c = 1.0 + (1.6 if L == 1 else 0.3 if L == 2 else 0.0)
                             if i == 0: c += 0 if p0 == 0 else 0.6
                             else:
@@ -548,10 +599,74 @@ class Синтезатор:
         if best[n][1] is None: return []
         части = []
         for (ключ, p0, L) in best[n][1]:
-            u, тр, os_ = self._зв[ключ]; o = os_[0]; ri, jj = V.occ[o]; ww = V.recs[ri]["w"][jj]; б = ww[5]
-            t0 = ww[1] if p0 == 0 else self._граница(ri, (б[тр[p0 - 1][1]] + б[тр[p0][1]]) / 2)
-            t1 = ww[2] if p0 + L == len(ключ) else self._граница(ri, (б[тр[p0 + L - 1][1]] + б[тр[p0 + L][1]]) / 2)
+            u, _, os_ = self._зв[ключ]; o = os_[0]; ri, jj = V.occ[o]; ww = V.recs[ri]["w"][jj]; ph = V.recs[ri]["ph"][jj]
+            t0 = ph[p0][2]; t1 = ph[p0 + L - 1][3]
+            if p0 == 0 and jj > 0: t0 -= min(ww[3], self.в["запас_нач"])
+            if p0 + L == len(ph) and jj < len(V.recs[ri]["w"]) - 1: t1 += min(ww[4], self.в["запас_кон"])
             if t1 - t0 > 0.02: части.append((ri, t0, t1))
+        return части
+
+    def _из_дифонов(self, слово):
+        """Слово вне базы — из частей с разрезом ПОСЕРЕДИНЕ общего звука (как в дифонном синтезе): соседние части
+        перекрываются на один звук, стык приходится на устойчивую середину звука, а не на переход между звуками
+        (переход несёт следы чужого соседа). Начало и конец слова — по возможности из начала и конца слова-источника.
+        → [(rec, t0, t1, середина_в_начале, середина_в_конце), ...]"""
+        import fon
+        V = self.V
+        if not hasattr(self, "_зв"): self._из_звуков("а")   # построить указатель звуков
+        try: цель = [({"э": "и", "о": "а"}.get(z, z), b) for z, b in fon.слово(слово)]
+        except Exception: return []
+        P = "".join(k for k, _ in цель); n = len(P)
+        if n < 2: return []
+        кл = self._класс_звука
+        def шов(z):   # насколько удобен звук для разреза посередине
+            return -0.1 if кл(z) == "к" else 0.3 if z in "jрР" else 0.0
+        # позиции: −1 — начало слова; m (0..n−2) — середина звука m; n — конец слова
+        best = {-1: (0.0, [])}
+        for m2 in list(range(0, n - 1)) + [n]:
+            лучш = None
+            for m1 in [-1] + list(range(0, n - 1)):
+                if m1 not in best or m1 >= m2: continue
+                a, b = max(m1, 0), min(m2, n - 1)
+                L = b - a + 1
+                if m1 >= 0 and m2 < n and L < 2: continue
+                if m2 - m1 > 14: continue
+                sub = P[a:b + 1]
+                r = self._зв_кэш.get(sub)
+                if r is None:
+                    r = sorted((k for k in self._зв if sub in k), key=len)[:60]; self._зв_кэш[sub] = r
+                for ключ in r:
+                    p0 = ключ.find(sub)
+                    while p0 >= 0:
+                        q = p0 + L   # после последнего звука части
+                        c = 1.0
+                        if m1 < 0: c += 0 if p0 == 0 else 0.6
+                        else:
+                            c += шов(P[m1])
+                            if p0 > 0 and m1 > 0:
+                                c += -0.3 if ключ[p0 - 1] == P[m1 - 1] else (0.2 if кл(ключ[p0 - 1]) != кл(P[m1 - 1]) else 0.0)
+                        if m2 >= n: c += 0 if q == len(ключ) else 0.6
+                        else:
+                            c += шов(P[m2])
+                            if q < len(ключ) and m2 + 1 < n:
+                                c += -0.3 if ключ[q] == P[m2 + 1] else (0.2 if кл(ключ[q]) != кл(P[m2 + 1]) else 0.0)
+                        v = best[m1][0] + c
+                        if лучш is None or v < лучш[0]: лучш = (v, best[m1][1] + [(ключ, p0, L, m1 >= 0, m2 < n)])
+                        p0 = ключ.find(sub, p0 + 1)
+            if лучш: best[m2] = лучш
+        if n not in best: return []
+        части = []
+        for (ключ, p0, L, сер_н, сер_к) in best[n][1]:
+            u, _, os_ = self._зв[ключ]; o = os_[0]; ri, jj = V.occ[o]; ww = V.recs[ri]["w"][jj]; ph = V.recs[ri]["ph"][jj]
+            if сер_н: t0 = (ph[p0][2] + ph[p0][3]) / 2 - 0.006
+            else:
+                t0 = ph[p0][2]
+                if p0 == 0 and jj > 0: t0 -= min(ww[3], self.в["запас_нач"])
+            if сер_к: t1 = (ph[p0 + L - 1][2] + ph[p0 + L - 1][3]) / 2 + 0.006
+            else:
+                t1 = ph[p0 + L - 1][3]
+                if p0 + L == len(ph) and jj < len(V.recs[ri]["w"]) - 1: t1 += min(ww[4], self.в["запас_кон"])
+            if t1 - t0 > 0.02: части.append((ri, t0, t1, сер_н, сер_к))
         return части
 
     def _из_частей(self, слово, уд):
@@ -604,8 +719,13 @@ class Синтезатор:
         части = []
         for (u, p0, L) in best[n][1]:
             o = слова[u][0]; ri, j = V.occ[o]; ww = V.recs[ri]["w"][j]; б = ww[5]
-            t0 = ww[1] if p0 == 0 else self._граница(ri, (б[p0 - 1] + б[p0]) / 2)
-            t1 = ww[2] if p0 + L == len(u) else self._граница(ri, (б[p0 + L - 1] + б[p0 + L]) / 2)
+            if "ph" in V.recs[ri] and self.в["края"] >= 3:
+                t0 = ww[1] if p0 == 0 else б[p0]; t1 = ww[2] if p0 + L == len(u) else б[p0 + L]
+                if p0 == 0 and j > 0: t0 -= min(ww[3], self.в["запас_нач"])
+                if p0 + L == len(u) and j < len(V.recs[ri]["w"]) - 1: t1 += min(ww[4], self.в["запас_кон"])
+            else:
+                t0 = ww[1] if p0 == 0 else self._граница(ri, (б[p0 - 1] + б[p0]) / 2)
+                t1 = ww[2] if p0 + L == len(u) else self._граница(ri, (б[p0 + L - 1] + б[p0 + L]) / 2)
             if t1 - t0 > 0.02: части.append((ri, t0, t1))
         return части
 
@@ -653,6 +773,11 @@ class Синтезатор:
         """Кусок из слов j0..j1 записи ri вне своего окружения: края не дальше типичной длины звука от своих букв
         (чужие хвосты соседних слов источника не попадают)."""
         ws = self.V.recs[ri]["w"]
+        if self.в["края"] >= 3 and "ph" in self.V.recs[ri]:
+            # точная разметка звуков: край — граница звука; в паузу источника — чуть-чуть (нарастание и затухание)
+            if j0 > 0: s = ws[j0][1] - min(ws[j0][3], self.в["запас_нач"])
+            if j1 < len(ws) - 1: e = ws[j1][2] + min(ws[j1][4], self.в["запас_кон"])
+            return s, e
         if self.в["края"] and j0 > 0 and ws[j0][5] and ws[j0][3] < 0.05:
             перв = ws[j0][5][0]; lo = max(s, перв - self._до(ws[j0][0][0])); hi = перв - 0.008
             s = self._переход(ri, lo, hi, к_концу=True) if self.в["края"] == 2 and hi - lo > 0.015 else lo
@@ -684,7 +809,8 @@ class Синтезатор:
                     out[-1] = (ri, out[-1][1], w[2], j, "o", u[1])
                 else: out.append((ri, w[1], w[2], j, "o", u[1]))
             else:
-                for (ri, s, e) in u[1]: out.append((ri, s, e, -1, "ч", None))
+                for ч in u[1]:
+                    ri, s, e = ч[:3]; out.append((ri, s, e, -1, "ч", (ч[3], ч[4]) if len(ч) > 3 else None))
         # края кусков из слов: без чужих хвостов
         итог = []
         for (ri, s, e, j, вид, o) in out:
@@ -749,7 +875,9 @@ class Синтезатор:
             # конец отрезка, взятый не из конца фразы-источника: хвост на 30 мс шире и с затуханием —
             # окончание не обрывается на полуслове
             хвост = 0
-            if последний and вид == "o" and not V.конец_фразы(o): хвост = int(SR * 0.03)
+            if последний and вид == "o" and not V.конец_фразы(o):
+                хвост = int(SR * 0.03)
+                if self.в["края"] >= 3 and "ph" in V.recs[ri]: хвост = int(SR * min(0.03, max(0.0, V.w(o)[4] - self.в["запас_кон"])))
             i0, i1 = int(s * SR), min(len(a), int(e * SR) + хвост)
             x = a[i0:i1].copy()
             if хвост and len(x) > хвост: x[-хвост:] *= np.linspace(1, 0, хвост)
@@ -778,6 +906,8 @@ class Синтезатор:
                 f = min(int(SR * 0.004), len(out) // 2, len(x) // 2)
                 if f > 0: out = out.copy(); out[-f:] *= np.linspace(1, 0, f); x = x.copy(); x[:f] *= np.linspace(0, 1, f)
                 out = np.concatenate([out, np.zeros(пз, dtype=np.float32), x])
+            elif кс[k - 1][4] == "ч" and кс[k][4] == "ч" and кс[k - 1][5] and кс[k][5] and кс[k - 1][5][1] and кс[k][5][0]:
+                out = self.стык(out, x)   # разрез посередине звука: волны похожи — плавное перекрытие
             elif self.в["встык"]: out = self.встык(out, x)
             else: out = self.стык(out, x)
         # края: короткое нарастание и затухание

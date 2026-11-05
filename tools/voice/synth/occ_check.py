@@ -35,16 +35,20 @@ def запись(item):
     f = r["f"]; a, sr = sf.read(f + ".flac" if f.startswith("/") else f"{R}/sounds/{f if '/' in f else D + '/' + f}.flac", dtype="float32")
     out = []; тиш = np.zeros(int(SR * 0.08), dtype=np.float32)
     for jj, w in enumerate(r["w"]):
-        if not нужно[jj]: out.append(-1.0); continue
-        # вырезать так, как движок берёт слово рядом с чужим соседом: края — со страховкой (Синтезатор._края)
+        if not нужно[jj]: out.append((-1.0, None)); continue
+        # вырезать так, как движок берёт слово рядом с чужим соседом
         s0, e0 = w[1], w[2]; ws = r["w"]
-        if jj > 0 and w[5] and w[3] < 0.05: s0 = max(s0, w[5][0] - E.Синтезатор._до(w[0][0]))
-        if jj < len(ws) - 1 and w[5] and w[4] < 0.05: e0 = min(e0, w[5][-1] + E.Синтезатор._после(w[0][-1]))
+        if "ph" in r:   # разметка звуков: край — граница звука, в паузу — чуть-чуть
+            if jj > 0: s0 = w[1] - min(w[3], 0.005)
+            if jj < len(ws) - 1: e0 = w[2] + min(w[4], 0.025)
+        else:
+            if jj > 0 and w[5] and w[3] < 0.05: s0 = max(s0, w[5][0] - E.Синтезатор._до(w[0][0]))
+            if jj < len(ws) - 1 and w[5] and w[4] < 0.05: e0 = min(e0, w[5][-1] + E.Синтезатор._после(w[0][-1]))
         x = np.concatenate([тиш, a[int(s0 * SR):int(e0 * SR)], тиш])
         a16 = np.interp(np.arange(0, len(x), SR / 16000), np.arange(len(x)), x).astype(np.float32)
         s = rec.create_stream(); s.accept_waveform(16000, a16); rec.decode_stream(s)
         h = норм(s.result.text); t = норм(w[0])
-        out.append(min(1.0, lev(t, h) / max(1, len(t))))
+        out.append((min(1.0, lev(t, h) / max(1, len(t))), h))
     return out
 
 
@@ -66,7 +70,7 @@ def main():
     items = [(r, [(ri, j) in отбор for j in range(len(r["w"]))]) for ri, r in enumerate(recs)]
     print("вхождений к проверке:", len(отбор), flush=True)
     # возобновление: готовые записи — из промежуточного сохранения (контейнер может перезапуститься)
-    чек = f"/root/S/us2/occ_{ГОЛОС}.part2.json"
+    чек = f"/root/S/us2/occ_{ГОЛОС}.part3.json"
     готово = json.load(open(чек)) if os.path.exists(чек) else []
     print(f"уже проверено записей: {len(готово)}", flush=True)
     res = [x for r in готово for x in r]; done = list(готово)
@@ -75,7 +79,8 @@ def main():
             res += r; done.append(r)
             if i % 2000 == 0:
                 json.dump(done, open(чек + ".tmp", "w")); os.replace(чек + ".tmp", чек); print(f"{i}/{len(recs)}", flush=True)
-    a = np.array(res, dtype=np.float32); np.save(f"/root/S/us2/occ_{ГОЛОС}.npy", a)
+    a = np.array([x[0] for x in res], dtype=np.float32); np.save(f"/root/S/us2/occ_{ГОЛОС}.npy", a)
+    json.dump([x[1] for x in res], open(f"/root/S/us2/occ_{ГОЛОС}_heard.json", "w", encoding="utf-8"), ensure_ascii=False)
     пр = a[a >= 0]
     print(f"готово: вхождений {len(a)}, проверено {len(пр)}, из них чисто {np.mean(пр == 0):.2%}, средняя доля ошибок {пр.mean():.3f}")
 
