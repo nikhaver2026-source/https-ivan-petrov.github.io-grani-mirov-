@@ -14,15 +14,20 @@ GEMINI_API_KEY; ни в журнал, ни в файлы они не попад�
      знаков; интонация — по виду реплики и глубине (STYLE ниже);
   2. запрос к Gemini TTS (gemini-3.8-flash-tts): каждая реплика — свой кусок со своей
      интонацией; ответ — одна запись WAV 24 кГц;
-  3. нарезка (seg.py): запись делится на куски по паузам, Gemini записывает, что
-     слышно в каждом куске, куски по порядку раскладываются по репликам; реплика,
-     услышанная не так (сходство текста меньше 0,8 — бывает, Gemini переиначивает
-     реплику) или слишком короткая или длинная для своих слов, — не принимается и
-     пойдёт в следующий пакет (после трёх неудач — остаётся синтезатору);
+  3. нарезка (seg.py): запись делится на куски по паузам; (5.11) Whisper на этой машине
+     (pip install --user faster-whisper; модель small, OKOVOICE_WHISPER — имя или папка)
+     слушает всю запись без подсказки, слова с метками времени ложатся в куски, куски по
+     порядку раскладываются по репликам по словам, и каждый отрезок Whisper слушает ещё
+     раз отдельно; реплика, услышанная не так (сходство меньше 0,8 или длина не та —
+     лишняя фраза соседа, потерянное начало) или слишком короткая или длинная для своих
+     слов, — не принимается и пойдёт в следующий пакет (после трёх неудач — остаётся
+     синтезатору). Без faster-whisper — прежняя нарезка по паузам с проверкой у Gemini
+     (с подсказкой; она пропускала брак — см. seg.py, раздел 5.11);
   4. обработка proc.py (механика, второй голос, эхо, −18 LUFS) → sounds/oko/<голос>/<отпечаток>.mp3;
   5. в конце — manifest.py (js/oko_voiced.js).
 Сырые записи (рядом — <запись>.json: состав пакета и что принято) и журнал — в --work
-(по умолчанию /tmp/okovoice_work), не в репозитории; recut.py нарезает их заново.
+(по умолчанию /tmp/okovoice_work), не в репозитории; recut.py нарезает их заново, а fix.py
+проверяет Whisper'ом всё записанное и меняет брак на отрезки по словам из этих записей.
 Квота кончилась у всех ключей (429) — круг останавливается: продолжить можно завтра.
 """
 import argparse, base64, json, os, re, subprocess, sys, time, urllib.request, urllib.error, wave
@@ -222,14 +227,27 @@ def cut_batch(raw, items, voice, ks, state):
     rows = [{"k": it["k"], "say": it["say"], "style": it["style"], "kind": it["kind"]} for it in items]
     json.dump({"voice": voice, "items": rows}, open(side, "w", encoding="utf-8"), ensure_ascii=False)
     sr, x = read(raw)
-    res = seg.split_dp(x, sr, [it["say"] for it in items], lambda c, lines=None: asr(c, ks, lines))
+    texts = [it["say"] for it in items]
+    if seg.have_whisper():
+        # (5.11) по словам Whisper и с его проверкой без подсказки (seg.split_words); слова — рядом с записью
+        wp = raw[:-4] + ".words.json"
+        ws = json.load(open(wp, encoding="utf-8")) if os.path.exists(wp) else None
+        if ws is None:
+            ws = seg.words(x, sr)
+            json.dump(ws, open(wp, "w", encoding="utf-8"), ensure_ascii=False)
+        res, how = seg.split_words(x, sr, texts, ws) or [(None, "", 0.0)] * len(texts), "w"
+        good = lambda say, heard, s, d: seg.same(heard, say) and fits(say, d)
+    else:
+        log("   faster-whisper не установлен — режу по паузам, проверка «что слышно» у Gemini")
+        res, how = seg.split_dp(x, sr, texts, lambda c, lines=None: asr(c, ks, lines)), "g"
+        good = lambda say, heard, s, d: s >= 0.8 and fits(say, d)
     if res is None:
         log("   «что слышно» не ответило — запись сохранена, нарежется позже")
         return -1
     ok = 0
     for it, row, (sx, heard, s) in zip(items, rows, res):
         d = len(sx) / sr if sx is not None else 0.0
-        row.update(heard=heard, sim=round(s, 3), dur=round(d, 2), ok=bool(sx is not None and s >= 0.8 and fits(it["say"], d)))
+        row.update(heard=heard, sim=round(s, 3), dur=round(d, 2), how=how, ok=bool(sx is not None and good(it["say"], heard, s, d)))
         if not row["ok"]:
             state[voice + it["k"]] = state.get(voice + it["k"], 0) + 1
             log(f"   ✗ {it['k']} (сходство {s:.2f}, {d:.1f} с): {it['say'][:60]}")

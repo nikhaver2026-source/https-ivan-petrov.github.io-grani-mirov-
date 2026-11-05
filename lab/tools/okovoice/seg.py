@@ -17,7 +17,7 @@ Gemini в длинной записи (полсотни реплик, четыр
      граница могла бы сдвинуться; поэтому сходство считается по тому, что
      слышно в самом отрезке, — run.py принимает реплику при сходстве не ниже 0,8.
 """
-import base64, difflib, io, json, re, wave
+import base64, difflib, io, json, os, re, wave
 import numpy as np
 
 GAP = 0.25        # пауза между кусками, с
@@ -262,4 +262,101 @@ def split_dp(x, sr, texts, asr, group=GROUP):
         for j, t in enumerate(part):
             h = heard[j] if j < len(heard) else ""
             out.append((segs[i + j], h, ratio(norm(h), norm(t))))
+    return out
+
+
+# ── (5.11) Нарезка по словам Whisper — на этой машине, без квоты ────────────────
+# В спокойных интонациях (сад) паузы внутри реплик не короче пауз между репликами
+# (около секунды и там и там), и раскладка по паузам (dp_cut) съезжала на реплику.
+# А проверка «что слышно» с подсказкой (текстами реплик) пропускала отрезок с чужой
+# фразой или без первого слова: модель писала подсказку, а не то, что звучит
+# (выборка 5.11: брак у 7 % записанных). Теперь, если стоит faster-whisper:
+#   1. Whisper слушает всю запись пакета без подсказки — слова с метками времени;
+#   2. куски по паузам (pieces) получают слова, что звучат в них;
+#   3. куски раскладываются по репликам по словам (group);
+#   4. проверка — каждый отрезок отдельно тем же Whisper без подсказки: сходство не
+#      ниже 0,8 и длина услышанного как у текста (same) — лишняя фраза соседа или
+#      потерянное начало не проходят.
+WHISPER = os.environ.get("OKOVOICE_WHISPER", "small")
+PIECES_W = 14     # кусков в одной реплике при раскладке по словам (в саду пауз много)
+_wm = None
+
+
+def have_whisper():
+    try:
+        import faster_whisper  # noqa: F401
+        return True
+    except Exception:
+        return False
+
+
+def _model():
+    global _wm
+    if _wm is None:
+        from faster_whisper import WhisperModel
+        _wm = WhisperModel(WHISPER, device="cpu", compute_type="int8", cpu_threads=os.cpu_count() or 4)
+    return _wm
+
+
+def to16k(x, sr):
+    if sr == 16000:
+        return x.astype(np.float32)
+    n = int(len(x) * 16000 / sr)
+    return np.interp(np.linspace(0, len(x) - 1, n), np.arange(len(x)), x).astype(np.float32)
+
+
+def words(x, sr):
+    """Слова записи [(начало, конец, слово)] в секундах — Whisper без подсказки."""
+    sg, _ = _model().transcribe(to16k(x, sr), language="ru", word_timestamps=True, beam_size=5,
+                                vad_filter=False, condition_on_previous_text=False)
+    return [(w.start, w.end, w.word) for s in sg for w in (s.words or [])]
+
+
+def listen(x, sr):
+    """Что слышно в отрезке — Whisper без подсказки."""
+    sg, _ = _model().transcribe(to16k(x, sr), language="ru", beam_size=5, vad_filter=False,
+                                condition_on_previous_text=False)
+    return " ".join(s.text.strip() for s in sg).strip()
+
+
+def same(heard, text, sim=0.8):
+    """Услышанное — это текст реплики: похоже, и длина та же (лишняя фраза соседа или
+    потерянное начало меняют длину, даже когда сходство ещё высокое)."""
+    a, b = norm(heard), norm(text)
+    return ratio(a, b) >= sim and abs(len(a) - len(b)) <= max(4, 0.15 * len(b))
+
+
+def flawed(heard, text):
+    """Брак записанной реплики: чужое (сходство ниже 0,7) или длина не та."""
+    a, b = norm(heard), norm(text)
+    return ratio(a, b) < 0.7 or abs(len(a) - len(b)) > max(5, 0.2 * len(b))
+
+
+def split_words(x, sr, texts, ws=None, only=None):
+    """Запись пакета → по реплике (отрезок, услышано, сходство); выпавшей — (None, "", 0.0).
+    ws — слова Whisper (words), если уже есть; only — номера реплик, которые проверять
+    (остальным — отрезок без проверки: услышано "", сходство 0). None — в записи нет речи."""
+    ps = pieces(x, sr)
+    if not ps:
+        return None
+    if ws is None:
+        ws = words(x, sr)
+    st = np.array([p[0] for p in ps]); en = np.array([p[1] for p in ps])
+    heard = [""] * len(ps)
+    for a, b, w in ws:
+        mid = (a + b) / 2 * sr
+        inside = np.where((st <= mid) & (en >= mid))[0]
+        i = int(inside[0]) if len(inside) else int(np.argmin(np.minimum(abs(st - mid), abs(en - mid))))
+        heard[i] = (heard[i] + w).strip()      # слова Whisper начинаются с пробела
+    out = []
+    for j, (t, r) in enumerate(zip(texts, group(heard, texts, kmax=PIECES_W))):
+        if r is None:
+            out.append((None, "", 0.0)); continue
+        a, b = r
+        lo = (ps[a - 1][1] + ps[a][0]) // 2 if a > 0 else max(0, ps[a][0] - int(sr * 0.2))
+        hi = (ps[b][1] + ps[b + 1][0]) // 2 if b + 1 < len(ps) else min(len(x), ps[b][1] + int(sr * 0.4))
+        if only is not None and j not in only:
+            out.append((x[lo:hi], "", 0.0)); continue
+        h = listen(x[lo:hi], sr)
+        out.append((x[lo:hi], h, ratio(norm(h), norm(t))))
     return out
