@@ -22,7 +22,7 @@ def граница(a, t0, t1):
 
 def исправить(line):
     r = json.loads(line); f = r["f"]
-    a, _ = sf.read(f"{R}/sounds/{f if '/' in f else D + '/' + f}.flac", dtype="float32")
+    a, _ = sf.read(f + ".flac" if f.startswith("/") else f"{R}/sounds/{f if '/' in f else D + '/' + f}.flac", dtype="float32")
     ws = r["w"]
     for i in range(len(ws) - 1):
         бA, бB = ws[i][5], ws[i + 1][5]

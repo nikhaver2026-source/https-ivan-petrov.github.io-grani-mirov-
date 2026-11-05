@@ -33,7 +33,7 @@ def энергия(a, sr):
 def обработать(item):
     k, f = item
     try:
-        a, sr = sf.read(f"{R}/sounds/{f if '/' in f else D + '/' + f}.flac", dtype="float32")
+        a, sr = sf.read(f + ".flac" if f.startswith("/") else f"{R}/sounds/{f if '/' in f else D + '/' + f}.flac", dtype="float32")
         a16 = np.interp(np.arange(0, len(a), sr / 16000), np.arange(len(a)), a).astype(np.float32)
         s = rec.create_stream(); s.accept_waveform(16000, a16); rec.decode_stream(s); r = s.result
         слышно = норм(r.text); слова = k.split()
@@ -75,7 +75,11 @@ def обработать(item):
 
 
 def main():
-    if len(sys.argv) > 2 and sys.argv[2] == "pack":  # голосовой пакет того же голоса
+    if len(sys.argv) > 2 and sys.argv[2] == "corpus":  # корпус синтезатора (us2/corpus): только для склейки, не для игры
+        и = json.load(open(f"/root/S/us2/corpus/cut/{ГОЛОС}/итог.json", encoding="utf-8"))["годные"]
+        def кл(t): return re.sub(r"[^а-яa-z0-9]+", " ", t.lower().replace("ё", "е")).strip()
+        items = [(кл(t), f"/root/S/us2/corpus/cut/{ГОЛОС}/{v['файл'][:-5]}") for t, v in и.items()]; out = f"/root/S/us2/db_{ГОЛОС}_corpus.jsonl"
+    elif len(sys.argv) > 2 and sys.argv[2] == "pack":  # голосовой пакет того же голоса
         t = open(f"{R}/sounds/gvoice_pack/{ГОЛОС}/bank.js", encoding="utf-8").read(); p = json.loads(t[t.index("{"):t.rindex("}") + 1])["p"]
         items = [(k, f"gvoice_pack/{ГОЛОС}/{v}") for k, v in p.items()]; out = f"/root/S/us2/db_{ГОЛОС}_pack.jsonl"
     else:

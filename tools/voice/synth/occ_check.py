@@ -5,6 +5,7 @@
 import sys, os, re, json, multiprocessing as mp
 import numpy as np, soundfile as sf
 sys.path.insert(0, "/root/S/us2")
+import engine as E
 ГОЛОС = sys.argv[1]
 R = "/home/user/https-ivan-petrov.github.io-grani-mirov-"; D = {"m": "gvoice", "f": "gvoice_f"}[ГОЛОС]
 М = "/root/S/asr/sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19"; SR = 24000
@@ -31,11 +32,15 @@ def lev(a, b):
 
 def запись(item):
     r, нужно = item
-    f = r["f"]; a, sr = sf.read(f"{R}/sounds/{f if '/' in f else D + '/' + f}.flac", dtype="float32")
+    f = r["f"]; a, sr = sf.read(f + ".flac" if f.startswith("/") else f"{R}/sounds/{f if '/' in f else D + '/' + f}.flac", dtype="float32")
     out = []; тиш = np.zeros(int(SR * 0.08), dtype=np.float32)
     for jj, w in enumerate(r["w"]):
         if not нужно[jj]: out.append(-1.0); continue
-        x = np.concatenate([тиш, a[int(w[1] * SR):int(w[2] * SR)], тиш])
+        # вырезать так, как движок берёт слово рядом с чужим соседом: края — со страховкой (Синтезатор._края)
+        s0, e0 = w[1], w[2]; ws = r["w"]
+        if jj > 0 and w[5] and w[3] < 0.05: s0 = max(s0, w[5][0] - E.Синтезатор._до(w[0][0]))
+        if jj < len(ws) - 1 and w[5] and w[4] < 0.05: e0 = min(e0, w[5][-1] + E.Синтезатор._после(w[0][-1]))
+        x = np.concatenate([тиш, a[int(s0 * SR):int(e0 * SR)], тиш])
         a16 = np.interp(np.arange(0, len(x), SR / 16000), np.arange(len(x)), x).astype(np.float32)
         s = rec.create_stream(); s.accept_waveform(16000, a16); rec.decode_stream(s)
         h = норм(s.result.text); t = норм(w[0])
@@ -45,7 +50,8 @@ def запись(item):
 
 def main():
     recs = [json.loads(l) for l in open(f"/root/S/us2/db_{ГОЛОС}.jsonl", encoding="utf-8")]
-    if os.path.exists(f"/root/S/us2/db_{ГОЛОС}_pack.jsonl"): recs += [json.loads(l) for l in open(f"/root/S/us2/db_{ГОЛОС}_pack.jsonl", encoding="utf-8")]
+    for доп in ("pack", "corpus"):
+        if os.path.exists(f"/root/S/us2/db_{ГОЛОС}_{доп}.jsonl"): recs += [json.loads(l) for l in open(f"/root/S/us2/db_{ГОЛОС}_{доп}.jsonl", encoding="utf-8")]
     # до 12 вхождений на слово: те, что вероятнее пойдут в дело (близкие по длине к медиане; середина, начало, конец)
     по_слову = {}
     for ri, r in enumerate(recs):
@@ -60,7 +66,7 @@ def main():
     items = [(r, [(ri, j) in отбор for j in range(len(r["w"]))]) for ri, r in enumerate(recs)]
     print("вхождений к проверке:", len(отбор), flush=True)
     # возобновление: готовые записи — из промежуточного сохранения (контейнер может перезапуститься)
-    чек = f"/root/S/us2/occ_{ГОЛОС}.part.json"
+    чек = f"/root/S/us2/occ_{ГОЛОС}.part2.json"
     готово = json.load(open(чек)) if os.path.exists(чек) else []
     print(f"уже проверено записей: {len(готово)}", flush=True)
     res = [x for r in готово for x in r]; done = list(готово)
