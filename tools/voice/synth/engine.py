@@ -227,6 +227,16 @@ class Голос:
             for ri, r in enumerate(self.recs):
                 k = " " + r["k"] + " "
                 if any(k.strip() == ф.strip() or (len(r["k"].split()) >= 3 and k in ф) for ф in фразы): искл_ri.add(ri)
+        # чужой голос: записи, где проверка голоса (voice_check.py) слышит не этого диктора, — в выбор не идут никогда
+        pv = f"{ТУТ}/voice_{голос}.json"; self.чужой_голос = 0
+        if os.path.exists(pv):
+            гол = json.load(open(pv, encoding="utf-8"))
+            for ri, r in enumerate(self.recs):
+                x = гол.get(r["f"])
+                if not x: continue
+                чужой = (x["p_жен"] > 0.3 if голос == "m" else x["p_жен"] < 0.7) or x["откл"] > 2.5 \
+                    or (голос == "m" and x["f0"] > 190)   # голос «съехал»: не тот тембр или не та высота для этого диктора
+                if чужой: искл_ri.add(ri); self.чужой_голос += 1
         self.исключено = len(искл_ri)
         self.occ = []  # (rec, j)
         self.по_слову = {}

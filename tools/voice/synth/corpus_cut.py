@@ -128,6 +128,12 @@ def main():
             темп = знаков / max(0.05, сек)
             if c > 0.12 or темп < 8:
                 итог["отказы"].append({"t": t, "почему": f"ошибок {c:.0%}, темп {темп:.1f}", "слышно": слышно, "пакет": os.path.basename(wav)}); continue
+            try:   # голос: кусок чужим голосом (Gemini «съехал») — не брать
+                import sys as _s; _s.path.insert(0, "/root/S/us2"); import voice_id
+                годится, пояснение = voice_id.голос_подходит(кусок, ГОЛОС)
+            except Exception as ex: годится, пояснение = True, f"проверка голоса не удалась: {ex}"
+            if not годится:
+                итог["отказы"].append({"t": t, "почему": пояснение, "пакет": os.path.basename(wav)}); continue
             номер += 1
             with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tf: tmp = tf.name
             sf.write(tmp, кусок, SR, subtype="PCM_16")
