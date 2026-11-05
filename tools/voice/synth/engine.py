@@ -241,6 +241,11 @@ class Голос:
                 if t in h: i = h.find(t); self.край_л[o] = float(i > 0); self.край_п[o] = float(len(h) - i - len(t) > 0)
                 else: self.край_л[o] = float(h[:1] != t[:1]); self.край_п[o] = float(h[-1:] != t[-1:])
         self.ll = np.array([float(self.recs[ri].get("ll", 0.0)) for ri, _ in self.occ], np.float32)
+        кз = Синтезатор._класс_звука
+        self.кл_н = ["п"] * n; self.кл_к = ["п"] * n
+        for o, (ri, j) in enumerate(self.occ):
+            r = self.recs[ri]
+            if "ph" in r and r["ph"][j]: self.кл_н[o] = кз(r["ph"][j][0][0]); self.кл_к[o] = кз(r["ph"][j][-1][0])
         self._мелодия()
         self.медиана = {}
         for w, os_ in self.по_слову.items():
@@ -331,10 +336,14 @@ class Синтезатор:
     def __init__(self, голос, веса=None):
         self.V = Голос(голос)
         self.в = dict(конец=3.0, середина_конец=1.2, начало=0.8, середина_начало=0.6, сосед=0.35, звук=0.3,
-                      длина=1.0, стык=1.0, знак=1.2, чистота=3.0, сгладить=1, мелодия=0.15, пауза_стык=0, края=3, запас_нач=0.005, запас_кон=0.025, звуки_цель=0.6, дифоны=1, встык=1, сжать_тишину=1, тишина_нач=0.06, тишина_кон=0.03, короткие=1.0, умный_темп=0, учёный=2, плохие_в_части=0, по_звукам=1, f0_слух=0.08, пауза_внутри=0.5, f0=0.12, громк=0.08, спектр=0.02, K=60, часть=4.0)
+                      длина=1.0, стык=1.0, знак=1.2, чистота=3.0, сгладить=2, мелодия=0.15, пауза_стык=0, края=3, запас_нач=0.005, запас_кон=0.025, звуки_цель=0.6, дифоны=1, гладкий_стык=0, плавный_стык=10, шов_уч=0.5, громкость_шов=1, ровный_темп=0, встык=1, сжать_тишину=1, тишина_нач=0.06, тишина_кон=0.03, короткие=1.0, умный_темп=0, учёный=2, плохие_в_части=0, по_звукам=1, f0_слух=0.08, пауза_внутри=0.5, f0=0.12, громк=0.08, спектр=0.02, K=60, часть=4.0)
         if веса: self.в.update(веса)
         self.скачки = []
-        p = f"{ТУТ}/learned_{голос}.json"
+        pj = f"{ТУТ}/join_{голос}.json"; self.шов = None
+        if os.path.exists(pj):
+            j_ = json.load(open(pj, encoding="utf-8"))
+            self.шов = {k: (np.array(v["mu"]), np.array(v["sd"])) for k, v in j_["пары"].items()}; self.шов_мед = j_["медиана_живых"]
+        p = self.в.get("уч_файл") or f"{ТУТ}/learned_{голос}.json"
         self.уч = json.load(open(p, encoding="utf-8"))["w"] if os.path.exists(p) else None
         if self.уч:   # признаки, которые не могут «помогать» (иначе движок нарочно выберет грубый стык), — не ниже нуля
             for k in ("f0_л", "f0_п", "громк_л", "громк_п", "спектр_л", "спектр_п", "мелодия_откл", "класс_л", "класс_п",
@@ -458,9 +467,24 @@ class Синтезатор:
         c += (W["спектр_л"] + W["спектр_п"]) * min(60.0, float(np.linalg.norm(V.mfe[o1] - V.mfs[o2]))) / 60
         return c
 
+    def _шов_живой(self, o1, o2):
+        """Насколько перепад спектра, громкости и высоты на стыке не похож на живой переход у диктора (по паре видов звука)."""
+        V = self.V; m = self.шов.get(V.кл_к[o1] + V.кл_н[o2]) if self.шов else None
+        if m is None: return 0.0
+        mu, sd = m
+        d = np.empty(14); d[:12] = V.mfs[o2][1:] - V.mfe[o1][1:]; d[12] = V.ens[o2] - V.ene[o1]
+        a, b = V.f0e[o1], V.f0s[o2]
+        if a > 0 and b > 0:
+            d[13] = 12 * math.log2(b / a); z = (d - mu) / sd
+        else: z = (d[:13] - mu[:13]) / sd[:13]
+        return max(0.0, float(np.mean(z * z)) - self.шов_мед)
+
     def цена_стыка(self, o1, o2):
         if self.в.get("учёный") and self.уч:
             c = self._уч_стык(o1, o2)
+            if self.в.get("шов_уч"):
+                r1, j1 = self.V.occ[o1]; r2, j2 = self.V.occ[o2]
+                if not (r1 == r2 and j2 == j1 + 1): c += self.в["шов_уч"] * self._шов_живой(o1, o2)
             if self.в["учёный"] == 2:   # скачок высоты слышит человек, а не распознаватель — ручная плата
                 r1, j1 = self.V.occ[o1]; r2, j2 = self.V.occ[o2]
                 if not (r1 == r2 and j2 == j1 + 1):
@@ -820,6 +844,19 @@ class Синтезатор:
             итог.append((ri, s, e, j, вид, o))
         return итог
 
+    def _звонкий_край(self, кусок, сторона):
+        """Звук на краю куска (сторона −1 — конец, 0 — начало) — гласный, сонорный или «й» (по разметке)."""
+        ri, s_, e_, j, вид, o = кусок
+        if вид != "o": return False
+        r = self.V.recs[ri]
+        if "ph" not in r: return False
+        if сторона == 0:
+            ws = r["w"]; j0 = next((k for k in range(j, -1, -1) if abs(ws[k][1] - s_) < 0.03), None)
+            if j0 is None: return False
+            z = r["ph"][j0][0][0]
+        else: z = r["ph"][j][-1][0]
+        return z.lower() in "аоуыэиjлмнр"
+
     @staticmethod
     def встык(a, b, f=int(SR * 0.002), ноль=int(SR * 0.002)):
         """Стык на переходе звуков: без перекрытия — короткий взрыв согласного не тонет в нарастании.
@@ -882,8 +919,13 @@ class Синтезатор:
             x = a[i0:i1].copy()
             if хвост and len(x) > хвост: x[-хвост:] *= np.linspace(1, 0, хвост)
             звуки.append(x)
+        # ровный темп: каждый кусок — к общему темпу отрезка (доля от обычной длины этих слов у диктора)
+        if self.в.get("ровный_темп") and len(звуки) > 1:
+            звуки = self._ровный_темп(звуки, кс)
         # высота голоса на стыках — без скачков: каждому куску небольшой сдвиг (не больше 1,5 полутона)
-        if self.в["сгладить"] and len(звуки) > 1:
+        if self.в["сгладить"] == 2 and len(звуки) > 1:
+            звуки = self._плавная_высота(звуки)
+        elif self.в["сгладить"] and len(звуки) > 1:
             звуки = self._сгладить_высоту(звуки)
         # мера плавности: скачки высоты на стыках (полутона)
         L = int(SR * 0.04)
@@ -896,24 +938,120 @@ class Синтезатор:
             ц = float(np.median(уровни))
             for k, x in enumerate(звуки):
                 if len(x): g = np.clip(ц - _db(x), -6, 6) * 0.6; звуки[k] = x * 10 ** (g / 20)
+        # громкость на каждом стыке — к перепаду, как на живом стыке у диктора между такими звуками (плавно, 100 мс)
+        if self.в.get("громкость_шов") and self.шов and len(звуки) > 1:
+            звуки = self._громкость_швов(звуки, кс)
         # тишина на стыках — не длиннее естественной: смычка перед согласным ≤ 50 мс, хвост слова ≤ 20 мс
         if self.в["сжать_тишину"]:
             звуки = [self._тишина_краёв(x, k > 0, k < len(звуки) - 1, self.в["тишина_нач"], self.в["тишина_кон"]) for k, x in enumerate(звуки)]
         out = звуки[0] if звуки else np.zeros(1)
-        пз = int(SR * self.в["пауза_стык"] / 1000)
+        пз = int(SR * self.в["пауза_стык"] / 1000); стыки = []
         for k, x in enumerate(звуки[1:], 1):
+            стыки.append(len(out))
             if пз > 0:   # короткая тишина между кусками из разных записей — слова не слипаются
                 f = min(int(SR * 0.004), len(out) // 2, len(x) // 2)
                 if f > 0: out = out.copy(); out[-f:] *= np.linspace(1, 0, f); x = x.copy(); x[:f] *= np.linspace(0, 1, f)
                 out = np.concatenate([out, np.zeros(пз, dtype=np.float32), x])
             elif кс[k - 1][4] == "ч" and кс[k][4] == "ч" and кс[k - 1][5] and кс[k][5] and кс[k - 1][5][1] and кс[k][5][0]:
                 out = self.стык(out, x)   # разрез посередине звука: волны похожи — плавное перекрытие
+            elif self.в.get("плавный_стык"):
+                # плавный стык везде: перекрытие с подбором совпадения волны (края — точно по звукам, так что
+                # перекрытие приходится на сам переход, а не на взрыв согласного)
+                L = int(SR * self.в["плавный_стык"] / 1000)
+                if len(out) > 3 * L and len(x) > 3 * L:
+                    стыки[-1] = len(out) - L // 2; out = self.стык(out, x, L=L, сдвиг=int(SR * 0.004))
+                else: out = self.встык(out, x)
+            elif self.в.get("гладкий_стык") and self._звонкий_край(кс[k - 1], -1) and self._звонкий_край(кс[k], 0):
+                # гласные и сонорные с обеих сторон: короткое перекрытие с подбором волны — без щелчка-«согласного»
+                L = int(SR * self.в["гладкий_стык"] / 1000); out = self.стык(out, x, L=L, сдвиг=int(SR * 0.004))
             elif self.в["встык"]: out = self.встык(out, x)
             else: out = self.стык(out, x)
         # края: короткое нарастание и затухание
         f = min(len(out) // 4, int(SR * 0.006))
         if f > 0: out[:f] *= np.linspace(0, 1, f); out[-f:] *= np.linspace(1, 0, f)
+        self.стыки_отрезка = стыки
         return out, res, кс
+
+    def _ровный_темп(self, звуки, кс, предел=0.15):
+        V = self.V; доли = []
+        for (ri, s_, e_, j, вид, o) in кс:
+            if вид != "o": доли.append(None); continue
+            ws = V.recs[ri]["w"]; j0 = next((k for k in range(j, -1, -1) if abs(ws[k][1] - s_) < 0.03), j)
+            факт = sum(ws[k][2] - ws[k][1] for k in range(j0, j + 1))
+            обычно = sum(V.медиана.get(ws[k][0], ws[k][2] - ws[k][1]) for k in range(j0, j + 1))
+            доли.append(факт / max(1e-3, обычно))
+        есть = [d for d in доли if d]
+        if len(есть) < 2: return звуки
+        цель = float(np.median(есть)); out = []
+        for x, d in zip(звуки, доли):
+            if not d: out.append(x); continue
+            k = float(np.clip(d / цель, 1 - предел, 1 + предел))   # k > 1 — кусок медленнее общего: ускорить
+            if abs(k - 1) <= 0.04: out.append(x); continue
+            # запас тишины в конце: WSOLA не дочитывает последние 40 мс — окончание не должно пропасть
+            xp = np.concatenate([x.astype(np.float32), np.zeros(int(SR * 0.06), np.float32)])
+            y = self.темп(xp, k); out.append(y[:int(round(len(x) / k))].astype(np.float32))
+        return out
+
+    def _край_вид(self, кусок, сторона):
+        """Вид звука на краю куска (по разметке): «г», «с», «з», «к»; None — неизвестно."""
+        ri, s_, e_, j, вид, o = кусок
+        if вид != "o": return None
+        r = self.V.recs[ri]
+        if "ph" not in r: return None
+        if сторона < 0: return self._класс_звука(r["ph"][j][-1][0])
+        ws = r["w"]; j0 = next((k for k in range(j, -1, -1) if abs(ws[k][1] - s_) < 0.03), None)
+        return None if j0 is None else self._класс_звука(r["ph"][j0][0][0])
+
+    def _громкость_швов(self, звуки, кс, предел=4.0):
+        L = int(SR * 0.02); R_ = int(SR * 0.10)
+        сдв = [[0.0, 0.0] for _ in звуки]   # дБ в начале и в конце куска
+        for k in range(len(звуки) - 1):
+            a, b = звуки[k], звуки[k + 1]
+            if len(a) < 2 * L or len(b) < 2 * L: continue
+            m = self.шов.get((self._край_вид(кс[k], -1) or "") + (self._край_вид(кс[k + 1], 0) or ""))
+            if m is None: continue
+            да, дб = _db(a[-L:]), _db(b[:L])
+            if да < -45 or дб < -45: continue
+            δ = float(np.clip((дб - да) - m[0][12], -2 * предел, 2 * предел))
+            сдв[k][1] += δ / 2; сдв[k + 1][0] -= δ / 2
+        out = []
+        for x, (gн, gк) in zip(звуки, сдв):
+            if abs(gн) < 0.3 and abs(gк) < 0.3: out.append(x); continue
+            n = len(x); g = np.zeros(n); r = min(R_, n // 2)
+            if r > 0:
+                g[:r] += gн * (1 - np.arange(r) / r); g[n - r:] += gк * (np.arange(r) / r)
+            out.append((x * 10 ** (g / 20)).astype(np.float32))
+        return out
+
+    def _плавная_высота(self, звуки, предел=4.0):
+        """Высота на стыках — без скачка: на каждом стыке края сводятся навстречу (по половине разницы), сдвиг плавно
+        спадает к нулю за 150 мс внутрь куска; сдвиг — PSOLA (без изменения тембра и длительности)."""
+        import psola
+        края = []
+        for x in звуки:   # высота краёв — по дорожке куска с поправкой октавы: медиана первых/последних 3 звонких кадров
+            f, _ = psola._f0_дорожка(x) if len(x) > SR // 20 else (np.zeros(1), 0)
+            v = np.where(f > 0)[0]
+            if len(v) < 2: края.append((0, 0)); continue
+            a = float(np.median(f[v[:3]])) if v[0] <= 4 else 0.0
+            b = float(np.median(f[v[-3:]])) if v[-1] >= len(f) - 5 else 0.0
+            края.append((a, b))
+        сдв = [[0.0, 0.0] for _ in звуки]
+        for k in range(len(звуки) - 1):
+            b, a = края[k][1], края[k + 1][0]
+            if b > 0 and a > 0:
+                d = float(np.clip(12 * math.log2(b / a), -2 * предел, 2 * предел))
+                if abs(d) > 7: d = 0.0   # вероятная ошибка октавы — не трогать
+                сдв[k][1] = -d / 2; сдв[k + 1][0] = d / 2
+        out = []
+        R_ = int(SR * 0.15)
+        for x, (sн, sк) in zip(звуки, сдв):
+            if abs(sн) < 0.15 and abs(sк) < 0.15: out.append(x); continue
+            n = len(x); c = np.zeros(n)
+            if n < 2 * R_: c = np.linspace(sн, sк, n)
+            else:
+                c[:R_] = sн * (1 - np.arange(R_) / R_); c[n - R_:] = sк * (np.arange(R_) / R_)
+            out.append(psola.сдвинуть(x, c))
+        return out
 
     @staticmethod
     def _сгладить_высоту(звуки, предел=2.5):
@@ -1011,9 +1149,11 @@ class Синтезатор:
         return (out / norm)[:pos_out + H]
 
     def сказать(self, текст, скорость=1.0):
-        части, отчёт = [], []
+        части, отчёт = [], []; self.стыки = []; поз = int(SR * 0.10)
         for от in текст_в_отрезки(текст):
             x, res, кс = self.отрезок(от["w"], от["end"])
+            self.стыки += [поз + p for p in getattr(self, "стыки_отрезка", [])]
+            поз += len(x) + int(SR * ПАУЗА.get(от["end"], 0.2))
             части.append(x); части.append(np.zeros(int(SR * ПАУЗА.get(от["end"], 0.2))))
             отчёт.append({"слова": от["w"], "кусков": len(кс), "вне базы": [w for w, u in zip(от["w"], res) if u[0] == "часть"]})
         if части: части = части[:-1]
