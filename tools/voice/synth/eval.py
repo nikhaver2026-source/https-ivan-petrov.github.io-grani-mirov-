@@ -49,13 +49,23 @@ def естественный_шов(V):
         rnd = random.Random(3); xs = []
         while len(xs) < 600:
             ri = rnd.randrange(len(V.recs)); r = V.recs[ri]
-            if "ph" not in r or len(r["w"]) < 2: continue
+            if "ph" not in r or len(r["w"]) < 2 or ri in V.искл_ri: continue
             j = rnd.randrange(len(r["w"]) - 1)
             if r["w"][j][4] > 0.005: continue
             y = V.звук(ri); m = шов(y, int(r["w"][j][2] * E.SR))
             if m: xs.append(m)
         _ЕСТ = (float(np.mean([x[0] for x in xs])), float(np.mean([x[1] for x in xs])))
     return _ЕСТ
+
+
+def живой_уровень(V):
+    """Скачок уровня высоты между соседними словами в живой речи диктора (медианы высоты слов, без паузы между ними)."""
+    import math
+    xs = []
+    for o in range(len(V.occ) - 1):
+        if V.occ[o][0] == V.occ[o + 1][0] and V.occ[o][0] not in V.искл_ri and V.f0m[o] > 0 and V.f0m[o + 1] > 0 and V.w(o)[4] < 0.05:
+            xs.append(abs(12 * math.log2(V.f0m[o + 1] / V.f0m[o])))
+    return float(np.mean(xs)) if xs else 0.0
 
 
 def тестовые(n):
@@ -101,7 +111,7 @@ def main():
     json.dump(итог, open(f"/root/S/us2/out/{МЕТКА}_{ГОЛОС}.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     cer = float(np.mean([x["cer"] for x in итог])); кс = sum(x["кусков"] for x in итог) / max(1, sum(x["слов"] for x in итог))
     вне = sum(x["вне"] for x in итог)
-    строка = f"{time.strftime('%d.%m %H:%M')} {МЕТКА} {ГОЛОС}: фраз {len(итог)}, CER {cer:.4f}, WER {np.mean([x['wer'] for x in итог]):.3f}, медиана {np.median([x['cer'] for x in итог]):.3f}, кусков на слово {кс:.2f}, слов вне базы {вне}, скачок высоты на стыке {np.mean(S.скачки) if S.скачки else 0:.2f} пт, шов: спектр {np.mean([x[0] for x in швы]) if швы else 0:.1f} (живая речь {естественный_шов(S.V)[0]:.1f}), громкость {np.mean([x[1] for x in швы]) if швы else 0:.1f} дБ ({естественный_шов(S.V)[1]:.1f}), {time.time() - t0:.0f} с"
+    строка = f"{time.strftime('%d.%m %H:%M')} {МЕТКА} {ГОЛОС}: фраз {len(итог)}, CER {cer:.4f}, WER {np.mean([x['wer'] for x in итог]):.3f}, медиана {np.median([x['cer'] for x in итог]):.3f}, кусков на слово {кс:.2f}, слов вне базы {вне}, скачок высоты на стыке {np.mean(S.скачки) if S.скачки else 0:.2f} пт, уровень кусков {np.mean(S.скачки_уровня) if S.скачки_уровня else 0:.2f} пт (живая речь {живой_уровень(S.V):.2f}), шов: спектр {np.mean([x[0] for x in швы]) if швы else 0:.1f} (живая речь {естественный_шов(S.V)[0]:.1f}), громкость {np.mean([x[1] for x in швы]) if швы else 0:.1f} дБ ({естественный_шов(S.V)[1]:.1f}), {time.time() - t0:.0f} с"
     print(строка); open("/root/S/us2/eval.log", "a", encoding="utf-8").write(строка + "\n")
     for x in sorted(итог, key=lambda x: -x["cer"])[:6]: print(f"  {x['cer']:.2f} | {x['t'][:60]} | {x['слышно'][:60]}")
 
