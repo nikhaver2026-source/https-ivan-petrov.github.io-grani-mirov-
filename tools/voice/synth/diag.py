@@ -6,6 +6,7 @@
 import sys, os, json, re, time
 import numpy as np
 sys.path.insert(0, "/root/S/us2")
+os.environ.setdefault("SYNTH_EXCLUDE", "/root/S/us2/test_set.json:/root/S/us2/test_set400.json")
 import engine as E
 import sherpa_onnx
 М = "/root/S/asr/sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19"
@@ -74,7 +75,7 @@ def разбор_слов(цель, слышно):
 
 def main():
     S = E.Синтезатор(ГОЛОС, веса); V = S.V
-    фразы = json.load(open("/root/S/us2/test_set.json", encoding="utf-8"))[a_:b_]
+    фразы = json.load(open(os.environ.get("EVAL_SET", "/root/S/us2/test_set.json"), encoding="utf-8"))[a_:b_]
     записи = []; t0 = time.time()
     стар = S.отрезок; журнал = []
     def отрезок(слова, end):

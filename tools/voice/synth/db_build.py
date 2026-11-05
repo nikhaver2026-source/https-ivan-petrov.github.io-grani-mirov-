@@ -86,8 +86,13 @@ def main():
         о = sorted(glob.glob(f"{R}/sounds/{D}/bank_*[0-9].js"), key=lambda x: int(re.search(r"(\d+)\.js$", x).group(1)))[-1]
         t = open(о, encoding="utf-8").read(); p = json.loads(t[t.index("{"):t.rindex("}") + 1])["p"]
         items = list(p.items()); out = f"/root/S/us2/db_{ГОЛОС}.jsonl"
+    режим = "w"
+    if len(sys.argv) > 2 and sys.argv[-1] == "add" and os.path.exists(out):   # дополнение: только новые записи
+        было = {json.loads(l)["f"] for l in open(out, encoding="utf-8")}
+        items = [(k, f) for k, f in items if f not in было]; режим = "a"
+        print(f"новых записей: {len(items)}", flush=True)
     ok = 0
-    with mp.Pool(4, initializer=init) as pool, open(out, "w", encoding="utf-8") as fo:
+    with mp.Pool(4, initializer=init) as pool, open(out, режим, encoding="utf-8") as fo:
         for i, r in enumerate(pool.imap_unordered(обработать, items, chunksize=32)):
             if r: fo.write(json.dumps(r, ensure_ascii=False) + "\n"); ok += 1
             if i % 2000 == 0: print(f"{i}/{len(items)} годных {ok}", flush=True)

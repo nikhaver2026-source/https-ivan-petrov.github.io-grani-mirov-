@@ -67,10 +67,16 @@ def main():
         м = float(np.median([x[2] for x in xs]))
         for место, сколько in (("с", 6), ("к", 3), ("н", 3)):
             for x in sorted((x for x in xs if x[3] == место), key=lambda x: abs(x[2] - м))[:сколько]: отбор.add((x[0], x[1]))
+    # дополнение (второй аргумент «inc»): уже проверенные вхождения — из карты по ключу «файл#номер слова»
+    карта_п = f"/root/S/us2/occ_{ГОЛОС}_map.json"
+    карта = json.load(open(карта_п, encoding="utf-8")) if os.path.exists(карта_п) else {}
+    ДОП = len(sys.argv) > 2 and sys.argv[2] == "inc"
+    if ДОП: отбор = {(ri, j) for ri, j in отбор if f"{recs[ri]['f']}#{j}" not in карта}
     items = [(r, [(ri, j) in отбор for j in range(len(r["w"]))]) for ri, r in enumerate(recs)]
+    if ДОП: items = [(r, m) for r, m in items if any(m)]
     print("вхождений к проверке:", len(отбор), flush=True)
     # возобновление: готовые записи — из промежуточного сохранения (контейнер может перезапуститься)
-    чек = f"/root/S/us2/occ_{ГОЛОС}.part3.json"
+    чек = f"/root/S/us2/occ_{ГОЛОС}.part3{'inc' if ДОП else ''}.json"
     готово = json.load(open(чек)) if os.path.exists(чек) else []
     print(f"уже проверено записей: {len(готово)}", flush=True)
     res = [x for r in готово for x in r]; done = list(готово)
@@ -79,8 +85,19 @@ def main():
             res += r; done.append(r)
             if i % 2000 == 0:
                 json.dump(done, open(чек + ".tmp", "w")); os.replace(чек + ".tmp", чек); print(f"{i}/{len(recs)}", flush=True)
+    # карта по ключу: прежняя + новая проверка
+    for (r, m), rr in zip(items, done):
+        for j, x in enumerate(rr):
+            if x[0] >= 0: карта[f"{r['f']}#{j}"] = [round(float(x[0]), 4), x[1]]
+    json.dump(карта, open(карта_п, "w", encoding="utf-8"), ensure_ascii=False)
+    # массивы в порядке движка (записи базы, пакета, корпуса) — из карты
+    res = []
+    for r in recs:
+        for j in range(len(r["w"])):
+            v = карта.get(f"{r['f']}#{j}"); res.append((v[0], v[1]) if v else (-1.0, None))
     a = np.array([x[0] for x in res], dtype=np.float32); np.save(f"/root/S/us2/occ_{ГОЛОС}.npy", a)
     json.dump([x[1] for x in res], open(f"/root/S/us2/occ_{ГОЛОС}_heard.json", "w", encoding="utf-8"), ensure_ascii=False)
+    if os.path.exists(чек): os.remove(чек)
     пр = a[a >= 0]
     print(f"готово: вхождений {len(a)}, проверено {len(пр)}, из них чисто {np.mean(пр == 0):.2%}, средняя доля ошибок {пр.mean():.3f}")
 

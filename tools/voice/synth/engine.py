@@ -218,22 +218,39 @@ class Голос:
         тексты = json.load(open(f"{ТУТ}/punct.json", encoding="utf-8")) if os.path.exists(f"{ТУТ}/punct.json") else {}
         for r in self.recs:
             r["pz"] = _знаки(тексты.get(r["k"]), [w[0] for w in r["w"]])
+        # честная проверка: записи, совпадающие с проверочными фразами (или их частью от трёх слов), не используются
+        # (список записей и порядок не меняются — признаки и чистота остаются в силе)
+        искл_ri = set(); искл = os.environ.get("SYNTH_EXCLUDE")
+        if искл:
+            кл = lambda t: re.sub(r"\s+", " ", re.sub(r"[^а-яa-z0-9]+", " ", str(t).lower().replace("ё", "е"))).strip()
+            фразы = [" " + кл(t) + " " for f in искл.split(":") if os.path.exists(f) for t in json.load(open(f, encoding="utf-8"))]
+            for ri, r in enumerate(self.recs):
+                k = " " + r["k"] + " "
+                if any(k.strip() == ф.strip() or (len(r["k"].split()) >= 3 and k in ф) for ф in фразы): искл_ri.add(ri)
+        self.исключено = len(искл_ri)
         self.occ = []  # (rec, j)
         self.по_слову = {}
         for ri, r in enumerate(self.recs):
             for j, w in enumerate(r["w"]):
-                self.по_слову.setdefault(w[0], []).append(len(self.occ)); self.occ.append((ri, j))
+                if ri not in искл_ri: self.по_слову.setdefault(w[0], []).append(len(self.occ))
+                self.occ.append((ri, j))
         self._признаки()
-        p = f"{ТУТ}/occ_{голос}.npy"
-        self.чистота = np.load(p) if os.path.exists(p) else None
+        p = f"{ТУТ}/occ_{голос}.npy"; pm = f"{ТУТ}/occ_{голос}_map.json"; self._слышно = None
+        if os.path.exists(pm):   # карта по ключу «файл#слово» — не зависит от порядка записей в базе
+            карта = json.load(open(pm, encoding="utf-8"))
+            self.чистота = np.full(len(self.occ), -1.0, np.float32); self._слышно = [None] * len(self.occ)
+            for o, (ri, j) in enumerate(self.occ):
+                v = карта.get(f"{self.recs[ri]['f']}#{j}")
+                if v: self.чистота[o] = v[0]; self._слышно[o] = v[1]
+        else: self.чистота = np.load(p) if os.path.exists(p) else None
         if self.чистота is not None and len(self.чистота) < len(self.occ):   # новые записи (корпус) в конце — «не проверено»
             self.чистота = np.concatenate([self.чистота, -np.ones(len(self.occ) - len(self.чистота), dtype=np.float32)])
         if self.чистота is not None and len(self.чистота) != len(self.occ): self.чистота = None
         # края вхождения по отдельному распознаванию: лишнее/потерянное в начале (край_л) и в конце (край_п)
         n = len(self.occ); self.край_л = np.zeros(n, np.float32); self.край_п = np.zeros(n, np.float32)
         p = f"{ТУТ}/occ_{голос}_heard.json"
-        if os.path.exists(p):
-            hs = json.load(open(p, encoding="utf-8"))
+        if self._слышно is not None or os.path.exists(p):
+            hs = self._слышно if self._слышно is not None else json.load(open(p, encoding="utf-8"))
             for o, h in enumerate(hs[:n]):
                 if h is None: continue
                 t = self.w(o)[0]
@@ -336,7 +353,7 @@ class Синтезатор:
     def __init__(self, голос, веса=None):
         self.V = Голос(голос)
         self.в = dict(конец=3.0, середина_конец=1.2, начало=0.8, середина_начало=0.6, сосед=0.35, звук=0.3,
-                      длина=1.0, стык=1.0, знак=1.2, чистота=3.0, сгладить=2, мелодия=0.15, пауза_стык=0, края=3, запас_нач=0.005, запас_кон=0.025, звуки_цель=0.6, дифоны=1, гладкий_стык=0, плавный_стык=10, шов_уч=0.5, громкость_шов=1, ровный_темп=0, встык=1, сжать_тишину=1, тишина_нач=0.06, тишина_кон=0.03, короткие=1.0, умный_темп=0, учёный=2, плохие_в_части=0, по_звукам=1, f0_слух=0.08, пауза_внутри=0.5, f0=0.12, громк=0.08, спектр=0.02, K=60, часть=4.0)
+                      длина=1.0, стык=1.0, знак=1.2, чистота=3.0, сгладить=2, мелодия=0.15, пауза_стык=0, края=3, запас_нач=0.005, запас_кон=0.025, звуки_цель=0.6, дифоны=1, гладкий_стык=0, плавный_стык=10, шов_уч=0.5, громкость_шов=1, ровный_темп=0, поток=0, стык_продлить=0, цепь_коротких=0, встык=1, сжать_тишину=1, тишина_нач=0.06, тишина_кон=0.03, короткие=1.0, умный_темп=0, учёный=2, плохие_в_части=0, по_звукам=1, f0_слух=0.08, пауза_внутри=0.5, f0=0.12, громк=0.08, спектр=0.02, K=60, часть=4.0)
         if веса: self.в.update(веса)
         self.скачки = []
         pj = f"{ТУТ}/join_{голос}.json"; self.шов = None
@@ -482,9 +499,10 @@ class Синтезатор:
     def цена_стыка(self, o1, o2):
         if self.в.get("учёный") and self.уч:
             c = self._уч_стык(o1, o2)
-            if self.в.get("шов_уч"):
-                r1, j1 = self.V.occ[o1]; r2, j2 = self.V.occ[o2]
-                if not (r1 == r2 and j2 == j1 + 1): c += self.в["шов_уч"] * self._шов_живой(o1, o2)
+            r1, j1 = self.V.occ[o1]; r2, j2 = self.V.occ[o2]
+            if self.в.get("шов_уч") and not (r1 == r2 and j2 == j1 + 1): c += self.в["шов_уч"] * self._шов_живой(o1, o2)
+            if self.в.get("цепь_коротких") and r1 == r2 and j2 == j1 + 1 and min(len(self.V.w(o1)[0]), len(self.V.w(o2)[0])) <= 2:
+                c -= self.в["цепь_коротких"]   # «в лесу», «и вот»: служебное слово — вместе с соседом из той же записи
             if self.в["учёный"] == 2:   # скачок высоты слышит человек, а не распознаватель — ручная плата
                 r1, j1 = self.V.occ[o1]; r2, j2 = self.V.occ[o2]
                 if not (r1 == r2 and j2 == j1 + 1):
@@ -544,6 +562,9 @@ class Синтезатор:
         return res
 
     def из_частей(self, слово, лев="", прав=""):
+        if self.в.get("поток"):
+            п = self._из_потока(слово, лев, прав)
+            if п: return п
         if self.в.get("дифоны"):
             д = self._из_дифонов(слово)
             if д: return д
@@ -628,6 +649,96 @@ class Синтезатор:
             if p0 == 0 and jj > 0: t0 -= min(ww[3], self.в["запас_нач"])
             if p0 + L == len(ph) and jj < len(V.recs[ri]["w"]) - 1: t1 += min(ww[4], self.в["запас_кон"])
             if t1 - t0 > 0.02: части.append((ri, t0, t1))
+        return части
+
+    def _указатель(self):
+        if not hasattr(self, "_пи"):
+            p = f"{ТУТ}/phidx_{self.V.г}.npz"
+            self._пи = None
+            if os.path.exists(p):
+                z = np.load(p); self._пи = {k: z[k] for k in z.files}; self._пи["поток"] = str(z["поток"][0])
+                self._пи_кэш = {}
+        return self._пи
+
+    def _из_потока(self, слово, лев="", прав=""):
+        """Незнакомое слово — дифонным отбором из всей речи диктора: куски — любые последовательности звуков подряд
+        (и через границу слов, если между ними нет паузы), разрез — посередине общего звука; выбор Витерби по цене
+        куска (совпадение соседних звуков, начало и конец слова — из начала и конца слова-источника) и цене стыка
+        (спектр, высота и громкость в середине общего звука). → [(rec, t0, t1, середина_в_начале, середина_в_конце)]"""
+        import fon
+        И = self._указатель()
+        if И is None: return []
+        try:
+            сл = [x for x in (лев, слово, прав) if x]; i = сл.index(слово) if лев == "" else 1
+            тр = fon.фраза(сл)[i if лев else 0]
+            цель = [({"э": "и", "о": "а"}.get(z, z), b) for z, b in тр]
+        except Exception: return []
+        P = "".join(k for k, _ in цель); n = len(P)
+        if n < 2: return []
+        Sx = И["поток"]; пром = И["пром"]; wi = И["wi"]; wf = И["wf"]; mf = И["mf"]; f0 = И["f0"]; en = И["en"]
+        кл = self._класс_звука; кэш = self._пи_кэш
+
+        def вхождения(sub):
+            r = кэш.get(sub)
+            if r is None:
+                r = []; p = Sx.find(sub)
+                while p >= 0 and len(r) < 400:
+                    if len(sub) == 1 or float(пром[p:p + len(sub) - 1].max()) < 0.03: r.append(p)
+                    p = Sx.find(sub, p + 1)
+                кэш[sub] = r
+            return r
+
+        def цена_куска(p, L, m1, m2, a, b):
+            c = 1.0
+            if m1 < 0: c += 0.0 if wi[p] else 0.6
+            else:
+                if a > 0 and p > 0:
+                    c += -0.3 if Sx[p - 1] == P[a - 1] else (0.2 if кл(Sx[p - 1]) != кл(P[a - 1]) else 0.0)
+            q = p + L - 1
+            if m2 >= n: c += 0.0 if wf[q] else 0.6
+            else:
+                if b + 1 < n and q + 1 < len(Sx):
+                    c += -0.3 if Sx[q + 1] == P[b + 1] else (0.2 if кл(Sx[q + 1]) != кл(P[b + 1]) else 0.0)
+            return c
+
+        def цена_стыка(q, p):
+            c = 0.02 * float(np.linalg.norm(mf[q][1:] - mf[p][1:])) + 0.03 * abs(float(en[q] - en[p]))
+            if f0[q] > 0 and f0[p] > 0: c += 0.1 * min(12.0, abs(12 * math.log2(f0[q] / f0[p])))
+            return c
+
+        K = 8
+        # best[m] = {(p, L, первый_звук_части_в_потоке, последний): (цена, путь)}
+        best = {-1: {None: (0.0, [])}}
+        for m2 in list(range(0, n - 1)) + [n]:
+            cur = {}
+            for m1 in [-1] + list(range(0, n - 1)):
+                if m1 not in best or m1 >= m2 or m2 - m1 > 14: continue
+                a, b = max(m1, 0), min(m2, n - 1); L = b - a + 1
+                if m1 >= 0 and m2 < n and L < 2: continue
+                кандидаты = sorted(((цена_куска(p, L, m1, m2, a, b), p) for p in вхождения(P[a:b + 1])))[:K]
+                for c_, p in кандидаты:
+                    лучш = None
+                    for ключ, (v, путь) in best[m1].items():
+                        st = 0.0 if ключ is None else цена_стыка(ключ, p)   # ключ — индекс общего звука в прошлом куске
+                        if лучш is None or v + st < лучш[0]: лучш = (v + st, путь)
+                    q = p + L - 1   # последний звук куска (общий со следующим, если m2 < n)
+                    val = лучш[0] + c_
+                    if q not in cur or val < cur[q][0]: cur[q] = (val, лучш[1] + [(p, L, m1 >= 0, m2 < n)])
+            if cur: best[m2] = dict(sorted(cur.items(), key=lambda kv: kv[1][0])[:K * 4])
+        if n not in best: return []
+        _, путь = min(best[n].values(), key=lambda x: x[0])
+        части = []
+        for (p, L, сер_н, сер_к) in путь:
+            ri = int(И["ri"][p]); q = p + L - 1
+            if сер_н: t0 = (float(И["t0"][p]) + float(И["t1"][p])) / 2 - 0.006
+            else:
+                t0 = float(И["t0"][p])
+                if wi[p] and int(И["j"][p]) > 0: t0 -= min(self.V.recs[ri]["w"][int(И["j"][p])][3], self.в["запас_нач"])
+            if сер_к: t1 = (float(И["t0"][q]) + float(И["t1"][q])) / 2 + 0.006
+            else:
+                t1 = float(И["t1"][q]); jq = int(И["j"][q])
+                if wf[q] and jq < len(self.V.recs[ri]["w"]) - 1: t1 += min(self.V.recs[ri]["w"][jq][4], self.в["запас_кон"])
+            if t1 - t0 > 0.015: части.append((ri, t0, t1, сер_н, сер_к))
         return части
 
     def _из_дифонов(self, слово):
@@ -912,6 +1023,10 @@ class Синтезатор:
             # конец отрезка, взятый не из конца фразы-источника: хвост на 30 мс шире и с затуханием —
             # окончание не обрывается на полуслове
             хвост = 0
+            пр = int(SR * self.в.get("плавный_стык", 0) / 1000 * self.в.get("стык_продлить", 0)) if len(кс) > 1 else 0
+            if пр:   # кусок чуть шире своих границ: перекрытие ложится на продолжение, а не на свой последний звук
+                if ki > 0: s = max(0.0, s - пр / SR)
+                if not последний: e = e + пр / SR
             if последний and вид == "o" and not V.конец_фразы(o):
                 хвост = int(SR * 0.03)
                 if self.в["края"] >= 3 and "ph" in V.recs[ri]: хвост = int(SR * min(0.03, max(0.0, V.w(o)[4] - self.в["запас_кон"])))

@@ -6,6 +6,7 @@
 import sys, os, json, re, time, random
 import numpy as np, soundfile as sf
 sys.path.insert(0, "/root/S/us2")
+os.environ.setdefault("SYNTH_EXCLUDE", "/root/S/us2/test_set.json:/root/S/us2/test_set400.json")
 import engine as E
 
 ГОЛОС = sys.argv[1]; _N = sys.argv[2] if len(sys.argv) > 2 else "60"
