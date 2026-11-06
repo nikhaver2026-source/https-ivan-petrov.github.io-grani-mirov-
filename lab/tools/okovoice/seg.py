@@ -363,26 +363,36 @@ def listen(x, sr):
     return re.sub(r"\s+", " ", spell(" ".join(s.text.strip() for s in sg))).strip()
 
 
+def variants(text):
+    """Как реплику могли прочесть: без ремарок в скобках и с ремаркой вслух — голос то
+    пропускает «(помехи)», то говорит «помехи», как и синтезатор в игре; верно и то и другое."""
+    a, b = speech(text), re.sub(r"[()]", " ", text)
+    return [a] if norm(a) == norm(b) else [a, b]
+
+
+def _gaps1(heard, text):
+    a, b = norm(heard), norm(text)
+    return ratio(a, b), abs(len(a) - len(b)), abs(len(a.split()) - len(b.split())), len(b)
+
+
 def gaps(heard, text):
-    """(сходство, разница в буквах, разница в словах) услышанного и текста."""
-    a, b = norm(heard), norm(speech(text))
-    return ratio(a, b), abs(len(a) - len(b)), abs(len(a.split()) - len(b.split()))
+    """(сходство, разница в буквах, разница в словах) услышанного и текста — по лучшему прочтению."""
+    return max((_gaps1(heard, t) for t in variants(text)), key=lambda g: (g[0], -g[1]))[:3]
 
 
 def same(heard, text, sim=0.8):
     """Услышанное — это текст реплики: похоже, длина та же и слов столько же (лишняя фраза
     соседа, потерянное начало или конец меняют длину, даже когда сходство ещё высокое)."""
-    s, dc, dw = gaps(heard, text)
-    return s >= sim and dc <= max(4, 0.12 * len(norm(speech(text)))) and dw <= 1
+    return any(s >= sim and dc <= max(4, 0.12 * n) and dw <= 1
+               for s, dc, dw, n in (_gaps1(heard, t) for t in variants(text)))
 
 
 def flawed(heard, text):
     """Брак записанной реплики: чужое (сходство ниже 0,7), длина не та или нет двух слов и
     больше (проба 5.11: «…носитель: оно слушает» без «оно слушает» — минус 10 букв из 54).
     Мягче, чем same: одно недослышанное Whisper'ом слово — ещё не брак."""
-    s, dc, dw = gaps(heard, text)
-    n = len(norm(speech(text)))
-    return s < 0.7 or dc > max(5, 0.2 * n) or (dw >= 2 and dc >= 8)
+    return all(s < 0.7 or dc > max(5, 0.2 * n) or (dw >= 2 and dc >= 8)
+               for s, dc, dw, n in (_gaps1(heard, t) for t in variants(text)))
 
 
 def split_words(x, sr, texts, ws=None, only=None):
@@ -420,5 +430,5 @@ def split_words(x, sr, texts, ws=None, only=None):
         if only is not None and j not in only:
             out.append((x[lo:hi], "", 0.0)); continue
         h = listen(x[lo:hi], sr)
-        out.append((x[lo:hi], h, ratio(norm(h), norm(speech(t)))))
+        out.append((x[lo:hi], h, gaps(h, t)[0]))
     return out
