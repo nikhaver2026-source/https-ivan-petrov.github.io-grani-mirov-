@@ -62,13 +62,17 @@ def одно(w):
 
 
 def main():
-    слова = json.load(open("/root/S/us2/oov_game_words.json", encoding="utf-8"))[:N]
+    слова = json.load(open(os.environ.get("OOV_WORDS", "/root/S/us2/oov_game_words.json"), encoding="utf-8"))[:N]
     итог = {}
     with mp.get_context("fork").Pool(4, initializer=init) as pool:
         for i, (w, r) in enumerate(pool.imap_unordered(одно, слова, chunksize=4)):
             if r: итог[w] = {"части": r[2], "ош": round(r[0], 3), "способ": r[1], "слышно": r[3]}
             if i % 200 == 0: print(f"{i}/{len(слова)}", flush=True)
-    json.dump(итог, open(f"/root/S/us2/oovlex_{ГОЛОС}.json", "w", encoding="utf-8"), ensure_ascii=False)
+    вых = os.environ.get("OOV_OUT", f"/root/S/us2/oovlex_{ГОЛОС}.json")
+    if os.environ.get("OOV_MERGE") and os.path.exists(вых):   # дополнить имеющийся словарь
+        старый = json.load(open(вых, encoding="utf-8")); старый.update(итог); итог_всё = старый
+    else: итог_всё = итог
+    json.dump(итог_всё, open(вых, "w", encoding="utf-8"), ensure_ascii=False)
     ош = np.array([x["ош"] for x in итог.values()])
     from collections import Counter
     print(f"готово: слов {len(итог)}, ошибочных звуков в среднем {ош.mean():.3f}, без ошибки {np.mean(ош == 0):.1%}; способы {dict(Counter(x['способ'] for x in итог.values()))}")

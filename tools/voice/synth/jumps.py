@@ -19,7 +19,7 @@ def высота_шва(y, p):
 
 N = int(sys.argv[1]); фразы = json.load(open("/root/S/us2/test_set400.json", encoding="utf-8"))[:N]
 for арг in sys.argv[2:]:
-    w = json.loads(арг); пз = w.pop("_пз", None); psola.ПРЕДЕЛ_ЗВ = tuple(пз) if пз else (0.7, 1.5)
+    w = json.loads(арг); psola.МЕТКИ = w.pop("_метки", "пик"); пз = w.pop("_пз", None); psola.ПРЕДЕЛ_ЗВ = tuple(пз) if пз else (0.7, 1.5)
     S = E.Синтезатор("m", w); вв = []
     for ф in фразы:
         y, _ = S.сказать(ф)

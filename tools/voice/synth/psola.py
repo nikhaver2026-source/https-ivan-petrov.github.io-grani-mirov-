@@ -5,6 +5,9 @@ import math
 import numpy as np
 
 SR = 24000
+ГРАНИЦА = 2   # периодов у краёв звонкого участка, которые темп не трогает
+ПРИВЯЗКА = True   # начало звонкого участка — на метку периода (иначе вся звонкая часть сдвигается на долю периода)
+МЕТКИ = "пик"   # "корр" — метки периодов по сходству с предыдущим периодом
 КОНЕЦ = True   # окно у конца звука — внутрь (False — как раньше)
 ПРЕДЕЛ_ЗВ = (0.7, 1.5)   # пределы растяжки звонких мест, когда глухие не трогаются
 
@@ -79,6 +82,16 @@ def метки(x):
             else:                      # дальше — пик около ожидаемого места
                 c = м[-1] + T; lo, hi = max(м[-1] + int(0.7 * T), 0), min(len(x), м[-1] + int(1.3 * T))
                 p = lo + int(np.argmax(lp[lo:hi])) if hi > lo else c
+                h = T // 2; q = м[-1]
+                if МЕТКИ == "корр" and q - h >= 0 and q + int(1.3 * T) + h <= len(x):
+                    # период — туда, где волна лучше всего повторяет предыдущий период (метки без дрожания между
+                    # двумя пиками одного периода)
+                    ref = x[q - h:q + h].astype(np.float64); L0, L1 = int(0.7 * T), int(1.3 * T)
+                    seg = x[q + L0 - h:q + L1 + h].astype(np.float64)
+                    r = np.correlate(seg, ref, "valid")
+                    e = np.cumsum(np.r_[0.0, seg ** 2]); en = e[2 * h:] - e[:-2 * h]
+                    n_ = min(len(r), len(en)); r = r[:n_] / np.sqrt(en[:n_] * np.dot(ref, ref) + 1e-12)
+                    if n_ and r.max() > 0.5: p = q + L0 + int(np.argmax(r))
             if м and p <= м[-1]: p = м[-1] + T
             м.append(p); зв.append(True)
             t = p + int(0.7 * T)
@@ -115,10 +128,12 @@ def _сдвиг(x, сдв):
     out = np.zeros(len(x) + SR // 10, np.float32); норм = np.zeros_like(out)
     # периоды анализа
     T = np.diff(м, append=м[-1] + (м[-1] - м[-2]))
-    t = float(м[0]); i = 0
+    t = float(м[0]); i = 0; был_зв = False
     while t < len(x):
         # ближайшая метка анализа
         while i + 1 < len(м) and abs(м[i + 1] - t) < abs(м[i] - t): i += 1
+        if ПРИВЯЗКА and зв[i] and not был_зв: t = float(м[i])   # начало звонкого участка — ровно на метку периода
+        был_зв = bool(зв[i])
         Ti = int(T[i]) if зв[i] else int(SR * 0.005)
         Ti = max(40, min(Ti, int(SR / 60)))
         L = Ti if зв[i] else int(SR * 0.005)
@@ -159,12 +174,23 @@ def темп(x, k, только_звонкие=False):
     м, зв = метки(xp)
     if len(м) < 3: return x
     T = np.diff(м, append=м[-1] + (м[-1] - м[-2]))
+    def _звонкая_середина():
+        """Звонкие периоды, кроме ГРАНИЦА первых и последних в каждом звонком участке: у переходов «гласная — глухой»
+        выброшенный или повторённый период ломает переход (призвук на конце гласной)."""
+        мз = np.zeros(len(xp), bool); n_ = len(м); q = 0
+        while q < n_:
+            if not зв[q]: q += 1; continue
+            r_ = q
+            while r_ + 1 < n_ and зв[r_ + 1]: r_ += 1
+            for u in range(q + ГРАНИЦА, r_ + 1 - ГРАНИЦА): мз[м[u]:м[u] + int(T[u])] = True
+            q = r_ + 1
+        return мз
+    if только_звонкие and not np.isscalar(k) and зв.any():   # переменный темп: глухие места — 1:1
+        kk = np.where(_звонкая_середина(), kk, 1.0)
     if только_звонкие and np.isscalar(k) and зв.any():
         # глухие места («с», «ш», «ф», «х», взрывы) — 1:1: при растяжке их окна по 5 мс складывают несвязанные
         # кусочки шума, и громкость шума дрожит с частотой 200 Гц (жужжание); весь сдвиг длины — на звонкие периоды
-        мз = np.zeros(len(xp), bool)
-        for p_, t_, z_ in zip(м, T, зв):
-            if z_: мз[p_:p_ + int(t_)] = True
+        мз = _звонкая_середина()
         h5 = int(SR * 0.005); n5 = len(xp) // h5   # тишину (ниже −30 дБ громких мест) тоже можно тянуть
         rms = np.sqrt(np.mean(xp[:n5 * h5].reshape(n5, h5) ** 2, axis=1)); порог = 0.03 * (np.percentile(rms, 95) + 1e-9)
         мз[:n5 * h5] |= np.repeat(rms < порог, h5)
@@ -175,8 +201,20 @@ def темп(x, k, только_звонкие=False):
     n_out = int(np.sum(1.0 / kk)) + SR // 10
     out = np.zeros(n_out + SR // 10, np.float32); норм = np.zeros_like(out)
     t_an, t_out, i = float(м[0]), float(м[0] / kk[0]), 0
+    был_зв = False; посл = None
     while t_an < len(xp) - 1 and t_out < len(out) - 1:
         while i + 1 < len(м) and abs(м[i + 1] - t_an) < abs(м[i] - t_an): i += 1
+        if ПРИВЯЗКА and зв[i] and not был_зв:   # начало звонкого участка: чтение — ровно с метки, вывод — туда же
+            d_ = float(м[i]) - t_an; t_an = float(м[i]); t_out += d_ / kk[min(len(kk) - 1, int(t_an))]
+        elif ПРИВЯЗКА and not зв[i] and был_зв and посл is not None:
+            # конец звонкого участка: глухое продолжение читается ровно с того места, где кончилось содержимое
+            # последнего периода (иначе на стыке «гласная — глухой» двоение или провал до полпериода)
+            t_an = посл[0] + (t_out - посл[1])
+            while i + 1 < len(м) and abs(м[i + 1] - t_an) < abs(м[i] - t_an): i += 1
+            while i > 0 and abs(м[i - 1] - t_an) < abs(м[i] - t_an): i -= 1
+            if зв[i]:   # снова звонкая метка ближе — остаёмся в звонком
+                t_an = float(м[i])
+        был_зв = bool(зв[i])
         Ti = int(T[i]) if зв[i] else int(SR * 0.005)
         Ti = max(40, min(Ti, int(SR / 60)))
         L = Ti if зв[i] else int(SR * 0.005)
@@ -186,6 +224,7 @@ def темп(x, k, только_звонкие=False):
         if a0 >= 0 and a1 <= len(xp) and s0 >= 0 and s0 + 2 * L <= len(out):
             w = np.hanning(2 * L).astype(np.float32)
             out[s0:s0 + 2 * L] += xp[a0:a1] * w; норм[s0:s0 + 2 * L] += w
+        if зв[i]: посл = (float(ц), float(round(t_out)))
         t_out += Ti; t_an += Ti * kk[min(len(kk) - 1, int(t_an))]
     норм[норм < 0.1] = 1.0
     y = out / норм
