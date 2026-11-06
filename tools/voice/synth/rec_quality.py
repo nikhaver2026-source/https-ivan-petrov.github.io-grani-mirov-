@@ -23,11 +23,16 @@ def одна(ri):
 
 if __name__ == "__main__":
     import engine as E
-    n = len(E.Синтезатор(ГОЛОС).V.recs); итог = {}
+    V0 = E.Синтезатор(ГОЛОС).V; n = len(V0.recs); вых = f"/root/S/us2/rq_{ГОЛОС}.json"
+    итог = json.load(open(вых + ".part", encoding="utf-8")) if os.path.exists(вых + ".part") else {}
+    нужно = [ri for ri in range(n) if V0.recs[ri]["f"] not in итог]
+    print(f"уже оценено {len(итог)}, осталось {len(нужно)}", flush=True)
     with mp.get_context("fork").Pool(3, initializer=init) as pool:
-        for i, r in enumerate(pool.imap_unordered(одна, range(n), chunksize=16)):
+        for i, r in enumerate(pool.imap_unordered(одна, нужно, chunksize=16)):
             if r: итог[r[0]] = r[1]
-            if i % 2000 == 0: print(f"{i}/{n}", flush=True)
-    json.dump(итог, open(f"/root/S/us2/rq_{ГОЛОС}.json", "w", encoding="utf-8"), ensure_ascii=False)
+            if i % 1000 == 0:
+                print(f"{i}/{len(нужно)}", flush=True)
+                json.dump(итог, open(вых + ".part", "w", encoding="utf-8"), ensure_ascii=False)   # перезапуск не теряет работу
+    json.dump(итог, open(вых, "w", encoding="utf-8"), ensure_ascii=False)
     s = np.array([v[0] for v in итог.values()])
     print(f"готово: записей {len(итог)}, SIG медиана {np.median(s):.3f}, 5 % {np.percentile(s, 5):.3f}, 1 % {np.percentile(s, 1):.3f}")
