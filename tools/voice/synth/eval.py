@@ -94,6 +94,20 @@ def живая_громкость(V):
     return float(np.mean(xs)) if xs else 0.0
 
 
+def живая_яркость(S):
+    """Перепад яркости (наклон спектра, дБ/окт) соседних слов живой речи диктора (одна запись, без паузы)."""
+    import random as _r
+    V = S.V; xs = []; rnd = _r.Random(6)
+    for ri in rnd.sample(range(len(V.recs)), 1200):
+        r = V.recs[ri]
+        if "ph" not in r or ri in V.искл_ri or len(r["w"]) < 2: continue
+        a = V.звук(ri); ws = r["w"]
+        я = [S._яркость(a[int(w[1] * E.SR):int(w[2] * E.SR)]) if w[2] - w[1] > 0.12 else None for w in ws]
+        for k in range(len(ws) - 1):
+            if я[k] is not None and я[k + 1] is not None and ws[k][4] < 0.05: xs.append(abs(я[k] - я[k + 1]))
+    return float(np.mean(xs)) if xs else 0.0
+
+
 def тестовые(n):
     """Постоянный набор: фразы очереди (их нет записью) длиной 3–12 слов, разнообразные; одинаковые для обоих голосов."""
     p = os.environ.get("EVAL_SET", "/root/S/us2/test_set.json")
@@ -137,7 +151,7 @@ def main():
     json.dump(итог, open(f"/root/S/us2/out/{МЕТКА}_{ГОЛОС}.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     cer = float(np.mean([x["cer"] for x in итог])); кс = sum(x["кусков"] for x in итог) / max(1, sum(x["слов"] for x in итог))
     вне = sum(x["вне"] for x in итог)
-    строка = f"{time.strftime('%d.%m %H:%M')} {МЕТКА} {ГОЛОС}: фраз {len(итог)}, CER {cer:.4f}, WER {np.mean([x['wer'] for x in итог]):.3f}, медиана {np.median([x['cer'] for x in итог]):.3f}, кусков на слово {кс:.2f}, слов вне базы {вне}, скачок высоты на стыке {np.mean(S.скачки) if S.скачки else 0:.2f} пт, уровень кусков {np.mean(S.скачки_уровня) if S.скачки_уровня else 0:.2f} пт (живая речь {живой_уровень(S.V):.2f}), темп кусков {np.mean(S.скачки_темпа) if S.скачки_темпа else 0:.3f} ({живой_темп(S.V):.3f}), громкость кусков {np.mean(S.скачки_громкости) if S.скачки_громкости else 0:.2f} дБ ({живая_громкость(S.V):.2f}), шов: спектр {np.mean([x[0] for x in швы]) if швы else 0:.1f} (живая речь {естественный_шов(S.V)[0]:.1f}), громкость {np.mean([x[1] for x in швы]) if швы else 0:.1f} дБ ({естественный_шов(S.V)[1]:.1f}), {time.time() - t0:.0f} с"
+    строка = f"{time.strftime('%d.%m %H:%M')} {МЕТКА} {ГОЛОС}: фраз {len(итог)}, CER {cer:.4f}, WER {np.mean([x['wer'] for x in итог]):.3f}, медиана {np.median([x['cer'] for x in итог]):.3f}, кусков на слово {кс:.2f}, слов вне базы {вне}, скачок высоты на стыке {np.mean(S.скачки) if S.скачки else 0:.2f} пт, уровень кусков {np.mean(S.скачки_уровня) if S.скачки_уровня else 0:.2f} пт (живая речь {живой_уровень(S.V):.2f}), темп кусков {np.mean(S.скачки_темпа) if S.скачки_темпа else 0:.3f} ({живой_темп(S.V):.3f}), громкость кусков {np.mean(S.скачки_громкости) if S.скачки_громкости else 0:.2f} дБ ({живая_громкость(S.V):.2f}), яркость кусков {np.mean(S.скачки_яркости) if S.скачки_яркости else 0:.2f} ({живая_яркость(S):.2f}), шов: спектр {np.mean([x[0] for x in швы]) if швы else 0:.1f} (живая речь {естественный_шов(S.V)[0]:.1f}), громкость {np.mean([x[1] for x in швы]) if швы else 0:.1f} дБ ({естественный_шов(S.V)[1]:.1f}), {time.time() - t0:.0f} с"
     print(строка); open("/root/S/us2/eval.log", "a", encoding="utf-8").write(строка + "\n")
     for x in sorted(итог, key=lambda x: -x["cer"])[:6]: print(f"  {x['cer']:.2f} | {x['t'][:60]} | {x['слышно'][:60]}")
 
