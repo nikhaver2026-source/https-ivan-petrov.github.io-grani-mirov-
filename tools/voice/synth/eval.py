@@ -41,12 +41,26 @@ def шов(y, p, L=int(E.SR * 0.02)):
     return float(np.linalg.norm(E._mfcc(a)[1:] - E._mfcc(b)[1:])), abs(E._db(a) - E._db(b))
 
 
+def высота_шва(y, p):
+    """Скачок высоты голоса на стыке (полутона): медианы высоты в 5–30 мс до и после точки p; нужно не меньше двух
+    звонких кадров с каждой стороны. Стыков с высотой с обеих сторон много больше, чем у прежней мерки по краям кусков."""
+    import psola, math
+    a0 = max(0, p - int(E.SR * 0.07)); seg = y[a0:p + int(E.SR * 0.07)]
+    if len(seg) < int(E.SR * 0.1): return None
+    f0, hop = psola._f0_дорожка(seg, hop=120); c = p - a0
+    t = np.arange(len(f0)) * hop
+    до = f0[(t >= c - int(E.SR * 0.03)) & (t <= c - int(E.SR * 0.005))]; по = f0[(t >= c + int(E.SR * 0.005)) & (t <= c + int(E.SR * 0.03))]
+    до, по = до[до > 0], по[по > 0]
+    if len(до) < 2 or len(по) < 2: return None
+    return abs(12 * math.log2(np.median(по) / np.median(до)))
+
+
 _ЕСТ = None
 def естественный_шов(V):
     """Тот же скачок на настоящих границах слов (без паузы) в записях диктора — мерка «как в живой речи»."""
     global _ЕСТ
     if _ЕСТ is None:
-        rnd = random.Random(3); xs = []
+        rnd = random.Random(3); xs = []; вв = []
         while len(xs) < 600:
             ri = rnd.randrange(len(V.recs)); r = V.recs[ri]
             if "ph" not in r or len(r["w"]) < 2 or ri in V.искл_ri: continue
@@ -54,7 +68,9 @@ def естественный_шов(V):
             if r["w"][j][4] > 0.005: continue
             y = V.звук(ri); m = шов(y, int(r["w"][j][2] * E.SR))
             if m: xs.append(m)
-        _ЕСТ = (float(np.mean([x[0] for x in xs])), float(np.mean([x[1] for x in xs])))
+            в_ = высота_шва(y, int(r["w"][j][2] * E.SR))
+            if в_ is not None: вв.append(в_)
+        _ЕСТ = (float(np.mean([x[0] for x in xs])), float(np.mean([x[1] for x in xs])), float(np.mean(вв)) if вв else 0.0)
     return _ЕСТ
 
 
@@ -128,12 +144,14 @@ def тестовые(n):
 def main():
     веса = json.loads(sys.argv[4]) if len(sys.argv) > 4 else None
     S = E.Синтезатор(ГОЛОС, веса)
-    фразы = тестовые(N)[N0:]; итог = []; пробы = []; t0 = time.time(); швы = []
+    фразы = тестовые(N)[N0:]; итог = []; пробы = []; t0 = time.time(); швы = []; швы_в = []
     for ф in фразы:
         y, отчёт = S.сказать(ф, (веса or {}).get("скорость", 1.0))
         for p in getattr(S, "стыки", []):
             m = шов(y, p)
             if m: швы.append(m)
+            в_ = высота_шва(y, p)
+            if в_ is not None: швы_в.append(в_)
         цель = норм(" ".join(" ".join(o["w"]) for o in E.текст_в_отрезки(ф)))
         слышно = норм(узнать(y))
         c = lev(цель.replace(" ", ""), слышно.replace(" ", "")) / max(1, len(цель.replace(" ", "")))
@@ -141,6 +159,11 @@ def main():
         слов = sum(len(o["слова"]) for o in отчёт); кусков = sum(o["кусков"] for o in отчёт)
         вне = sum(len(o["вне базы"]) for o in отчёт)
         итог.append({"t": ф, "cer": round(c, 3), "wer": round(wer, 3), "слышно": слышно, "слов": слов, "кусков": кусков, "вне": вне})
+        if os.environ.get("JUDGE2"):   # второй, независимый судья (Zipformer): не подстроились ли цены под GigaAM
+            import judge2
+            с2 = норм(judge2.узнать2(y)); итог[-1]["слышно2"] = с2
+            итог[-1]["cer2"] = round(lev(цель.replace(" ", ""), с2.replace(" ", "")) / max(1, len(цель.replace(" ", ""))), 3)
+            итог[-1]["wer2"] = round(lev(цель.split(), с2.split()) / max(1, len(цель.split())), 3)
         if len(пробы) < 24:
             пробы += [y, np.zeros(E.SR, dtype=np.float32)]
             os.makedirs(f"/root/S/us2/out/{МЕТКА}_phrases", exist_ok=True)
@@ -151,7 +174,8 @@ def main():
     json.dump(итог, open(f"/root/S/us2/out/{МЕТКА}_{ГОЛОС}.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     cer = float(np.mean([x["cer"] for x in итог])); кс = sum(x["кусков"] for x in итог) / max(1, sum(x["слов"] for x in итог))
     вне = sum(x["вне"] for x in итог)
-    строка = f"{time.strftime('%d.%m %H:%M')} {МЕТКА} {ГОЛОС}: фраз {len(итог)}, CER {cer:.4f}, WER {np.mean([x['wer'] for x in итог]):.3f}, медиана {np.median([x['cer'] for x in итог]):.3f}, кусков на слово {кс:.2f}, слов вне базы {вне}, скачок высоты на стыке {np.mean(S.скачки) if S.скачки else 0:.2f} пт, уровень кусков {np.mean(S.скачки_уровня) if S.скачки_уровня else 0:.2f} пт (живая речь {живой_уровень(S.V):.2f}), темп кусков {np.mean(S.скачки_темпа) if S.скачки_темпа else 0:.3f} ({живой_темп(S.V):.3f}), громкость кусков {np.mean(S.скачки_громкости) if S.скачки_громкости else 0:.2f} дБ ({живая_громкость(S.V):.2f}), яркость кусков {np.mean(S.скачки_яркости) if S.скачки_яркости else 0:.2f} ({живая_яркость(S):.2f}), шов: спектр {np.mean([x[0] for x in швы]) if швы else 0:.1f} (живая речь {естественный_шов(S.V)[0]:.1f}), громкость {np.mean([x[1] for x in швы]) if швы else 0:.1f} дБ ({естественный_шов(S.V)[1]:.1f}), {time.time() - t0:.0f} с"
+    строка = f"{time.strftime('%d.%m %H:%M')} {МЕТКА} {ГОЛОС}: фраз {len(итог)}, CER {cer:.4f}, WER {np.mean([x['wer'] for x in итог]):.3f}, медиана {np.median([x['cer'] for x in итог]):.3f}, кусков на слово {кс:.2f}, слов вне базы {вне}, скачок высоты на стыке {np.mean(S.скачки) if S.скачки else 0:.2f} пт, уровень кусков {np.mean(S.скачки_уровня) if S.скачки_уровня else 0:.2f} пт (живая речь {живой_уровень(S.V):.2f}), темп кусков {np.mean(S.скачки_темпа) if S.скачки_темпа else 0:.3f} ({живой_темп(S.V):.3f}), громкость кусков {np.mean(S.скачки_громкости) if S.скачки_громкости else 0:.2f} дБ ({живая_громкость(S.V):.2f}), яркость кусков {np.mean(S.скачки_яркости) if S.скачки_яркости else 0:.2f} ({живая_яркость(S):.2f}), шов: спектр {np.mean([x[0] for x in швы]) if швы else 0:.1f} (живая речь {естественный_шов(S.V)[0]:.1f}), громкость {np.mean([x[1] for x in швы]) if швы else 0:.1f} дБ ({естественный_шов(S.V)[1]:.1f}), высота {np.mean(швы_в) if швы_в else 0:.2f} пт на {len(швы_в)} швах ({естественный_шов(S.V)[2]:.2f}), {time.time() - t0:.0f} с"
+    if итог and "cer2" in итог[0]: строка += f"; судья 2 (Zipformer): CER {np.mean([x['cer2'] for x in итог]):.4f}, WER {np.mean([x['wer2'] for x in итог]):.3f}"
     print(строка); open("/root/S/us2/eval.log", "a", encoding="utf-8").write(строка + "\n")
     for x in sorted(итог, key=lambda x: -x["cer"])[:6]: print(f"  {x['cer']:.2f} | {x['t'][:60]} | {x['слышно'][:60]}")
 

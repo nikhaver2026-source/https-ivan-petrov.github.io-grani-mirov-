@@ -12,7 +12,7 @@ def ключ(t): return re.sub(r"[^а-яa-z0-9]+", " ", t.lower().replace("ё", 
 t = open(опись, encoding="utf-8").read(); есть = dict(json.loads(t[t.index("{"):t.rindex("}") + 1])["p"])
 # фразы голосового пакета (sounds/gvoice_pack/<голос>/bank.js) уже записаны — их не просить
 tp = open(f"{R}/sounds/gvoice_pack/{голос}/bank.js", encoding="utf-8").read(); есть.update(json.loads(tp[tp.index("{"):tp.rindex("}") + 1])["p"])
-out = f"/root/S/us2/corpus/raw/{голос}"; os.makedirs(out, exist_ok=True)
+out = f"{os.environ.get('CORPUS_DIR', '/root/S/us2/corpus')}/raw/{голос}"; os.makedirs(out, exist_ok=True)
 уже = set()
 for j in glob.glob(out + "/pack*.json"):
     for f in json.load(open(j, encoding="utf-8")): уже.add(ключ(f["t"]))

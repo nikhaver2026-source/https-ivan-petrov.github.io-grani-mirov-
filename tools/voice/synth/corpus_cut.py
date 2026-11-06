@@ -12,7 +12,7 @@ import sys, os, re, json, glob, subprocess, tempfile
 import numpy as np, soundfile as sf, sherpa_onnx
 
 ГОЛОС = sys.argv[1]
-ТУТ = "/root/S/us2/corpus"
+ТУТ = os.environ.get("CORPUS_DIR", "/root/S/us2/corpus")
 М = "/root/S/asr/sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19"
 SR = 24000
 rec = sherpa_onnx.OfflineRecognizer.from_nemo_ctc(model=f"{М}/model.int8.onnx", tokens=f"{М}/tokens.txt", num_threads=3)

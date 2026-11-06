@@ -21,6 +21,9 @@ c, w = [], []
 for k, f in items:
     a, sr = sf.read(f"{R}/sounds/gvoice/{f}.flac", dtype="float32")
     a16 = np.interp(np.arange(0, len(a), sr / 16000), np.arange(len(a)), a).astype(np.float32)
-    s = rec.create_stream(); s.accept_waveform(16000, a16); rec.decode_stream(s); h = норм(s.result.text)
+    if len(sys.argv) > 2 and sys.argv[2] == "2":   # второй судья
+        sys.path.insert(0, "/root/S/us2"); import judge2; h = норм(judge2.узнать2(a, sr))
+    else:
+        s = rec.create_stream(); s.accept_waveform(16000, a16); rec.decode_stream(s); h = норм(s.result.text)
     c.append(lev(k.replace(" ", ""), h.replace(" ", "")) / max(1, len(k.replace(" ", "")))); w.append(lev(k.split(), h.split()) / max(1, len(k.split())))
 print(f"настоящие записи ({len(items)} фраз от трёх слов): ошибочных букв {np.mean(c):.4f}, ошибочных слов {np.mean(w):.3f}")

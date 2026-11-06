@@ -76,9 +76,10 @@ def обработать(item):
 
 def main():
     if len(sys.argv) > 2 and sys.argv[2] == "corpus":  # корпус синтезатора (us2/corpus): только для склейки, не для игры
-        и = json.load(open(f"/root/S/us2/corpus/cut/{ГОЛОС}/итог.json", encoding="utf-8"))["годные"]
+        КД = os.environ.get("CORPUS_DIR", "/root/S/us2/corpus")
+        и = json.load(open(f"{КД}/cut/{ГОЛОС}/итог.json", encoding="utf-8"))["годные"]
         def кл(t): return re.sub(r"[^а-яa-z0-9]+", " ", t.lower().replace("ё", "е")).strip()
-        items = [(кл(t), f"/root/S/us2/corpus/cut/{ГОЛОС}/{v['файл'][:-5]}") for t, v in и.items()]; out = f"/root/S/us2/db_{ГОЛОС}_corpus.jsonl"
+        items = [(кл(t), f"{КД}/cut/{ГОЛОС}/{v['файл'][:-5]}") for t, v in и.items()]; out = f"/root/S/us2/db_{ГОЛОС}_corpus.jsonl"
     elif len(sys.argv) > 2 and sys.argv[2] == "pack":  # голосовой пакет того же голоса
         t = open(f"{R}/sounds/gvoice_pack/{ГОЛОС}/bank.js", encoding="utf-8").read(); p = json.loads(t[t.index("{"):t.rindex("}") + 1])["p"]
         items = [(k, f"gvoice_pack/{ГОЛОС}/{v}") for k, v in p.items()]; out = f"/root/S/us2/db_{ГОЛОС}_pack.jsonl"

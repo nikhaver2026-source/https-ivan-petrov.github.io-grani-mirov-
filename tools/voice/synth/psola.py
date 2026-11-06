@@ -5,6 +5,8 @@ import math
 import numpy as np
 
 SR = 24000
+КОНЕЦ = True   # окно у конца звука — внутрь (False — как раньше)
+ПРЕДЕЛ_ЗВ = (0.7, 1.5)   # пределы растяжки звонких мест, когда глухие не трогаются
 
 
 def _f0_дорожка(x, hop=240, fmin=70, fmax=400):
@@ -12,7 +14,10 @@ def _f0_дорожка(x, hop=240, fmin=70, fmax=400):
     W = int(SR * 0.03); tmin, tmax = int(SR / fmax), int(SR / fmin)
     out = []
     for c in range(0, len(x), hop):
-        a = x[max(0, c - W // 2):max(0, c - W // 2) + W + tmax]
+        # у конца звука окно сдвигается внутрь (иначе последним ~30 мс не хватает окна и они всегда «глухие» — и сдвиг
+        # высоты не доходил до самого стыка)
+        a0 = max(0, min(c - W // 2, len(x) - W - tmax)) if КОНЕЦ else max(0, c - W // 2)
+        a = x[a0:a0 + W + tmax]
         if len(a) < W + tmax or np.sqrt(np.mean(a ** 2)) < 2e-3: out.append(0.0); continue
         a = a - a.mean(); w = a[:W]
         r = np.correlate(a, w, mode="valid")[:tmax + 1]
@@ -142,7 +147,7 @@ if __name__ == "__main__":
         print(st, "длина", len(a), len(y), "высота до %.1f после %.1f Гц (ожидалось %.1f)" % (np.median(va), np.median(vb), np.median(va) * 2 ** (st / 12)))
 
 
-def темп(x, k):
+def темп(x, k, только_звонкие=False):
     """Изменение темпа в k раз (k > 1 — быстрее) по периодам основного тона: в звонких местах выбрасываются (или
     повторяются) целые периоды — высота и чёткость сохраняются; в глухих — окна по 5 мс. k — число или массив
     по отсчётам входа (переменный темп: согласные — медленнее, гласные и паузы — быстрее)."""
@@ -154,6 +159,19 @@ def темп(x, k):
     м, зв = метки(xp)
     if len(м) < 3: return x
     T = np.diff(м, append=м[-1] + (м[-1] - м[-2]))
+    if только_звонкие and np.isscalar(k) and зв.any():
+        # глухие места («с», «ш», «ф», «х», взрывы) — 1:1: при растяжке их окна по 5 мс складывают несвязанные
+        # кусочки шума, и громкость шума дрожит с частотой 200 Гц (жужжание); весь сдвиг длины — на звонкие периоды
+        мз = np.zeros(len(xp), bool)
+        for p_, t_, z_ in zip(м, T, зв):
+            if z_: мз[p_:p_ + int(t_)] = True
+        h5 = int(SR * 0.005); n5 = len(xp) // h5   # тишину (ниже −30 дБ громких мест) тоже можно тянуть
+        rms = np.sqrt(np.mean(xp[:n5 * h5].reshape(n5, h5) ** 2, axis=1)); порог = 0.03 * (np.percentile(rms, 95) + 1e-9)
+        мз[:n5 * h5] |= np.repeat(rms < порог, h5)
+        Vx = float(мз[П:П + len(x)].sum()); Ux = len(x) - Vx; нужно = len(x) / float(k) - Ux
+        if Vx > 0.15 * len(x) and нужно > 0.3 * Vx:
+            kv = float(np.clip(Vx / нужно, *ПРЕДЕЛ_ЗВ))
+            kk = np.where(мз, kv, 1.0)
     n_out = int(np.sum(1.0 / kk)) + SR // 10
     out = np.zeros(n_out + SR // 10, np.float32); норм = np.zeros_like(out)
     t_an, t_out, i = float(м[0]), float(м[0] / kk[0]), 0
