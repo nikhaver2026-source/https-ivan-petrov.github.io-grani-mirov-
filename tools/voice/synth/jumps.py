@@ -17,13 +17,14 @@ def высота_шва(y, p):
     return abs(12 * math.log2(np.median(по) / np.median(до)))
 
 
-N = int(sys.argv[1]); фразы = json.load(open("/root/S/us2/test_set400.json", encoding="utf-8"))[:N]
-for арг in sys.argv[2:]:
-    w = json.loads(арг); psola.МЕТКИ = w.pop("_метки", "пик"); пз = w.pop("_пз", None); psola.ПРЕДЕЛ_ЗВ = tuple(пз) if пз else (0.7, 1.5)
-    S = E.Синтезатор("m", w); вв = []
-    for ф in фразы:
-        y, _ = S.сказать(ф)
-        for p in getattr(S, "стыки", []):
-            в_ = высота_шва(y, p)
-            if в_ is not None: вв.append(в_)
-    print(f"{арг}: высота на швах {np.mean(вв):.3f} пт (n={len(вв)}, >3 пт {np.mean(np.array(вв) > 3):.1%}), скачок по краям кусков {np.mean(S.скачки):.3f} пт (n={len(S.скачки)}), уровень {np.mean(S.скачки_уровня):.2f}, темп {np.mean(S.скачки_темпа):.3f}, громкость {np.mean(S.скачки_громкости):.2f}", flush=True)
+if __name__ == "__main__":
+    N = int(sys.argv[1]); фразы = json.load(open("/root/S/us2/test_set400.json", encoding="utf-8"))[:N]
+    for арг in sys.argv[2:]:
+        w = json.loads(арг); psola.МЕТКИ = w.pop("_метки", "пик"); пз = w.pop("_пз", None); psola.ПРЕДЕЛ_ЗВ = tuple(пз) if пз else (0.7, 1.5)
+        S = E.Синтезатор("m", w); вв = []
+        for ф in фразы:
+            y, _ = S.сказать(ф)
+            for p in getattr(S, "стыки", []):
+                в_ = высота_шва(y, p)
+                if в_ is not None: вв.append(в_)
+        print(f"{арг}: высота на швах {np.mean(вв):.3f} пт (n={len(вв)}, >3 пт {np.mean(np.array(вв) > 3):.1%}), скачок по краям кусков {np.mean(S.скачки):.3f} пт (n={len(S.скачки)}), уровень {np.mean(S.скачки_уровня):.2f}, темп {np.mean(S.скачки_темпа):.3f}, громкость {np.mean(S.скачки_громкости):.2f}", flush=True)

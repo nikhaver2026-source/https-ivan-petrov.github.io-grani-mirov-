@@ -9,7 +9,7 @@ P_SIG = np.poly1d([-0.08397278, 1.22083953, 0.0052439]); P_BAK = np.poly1d([-0.1
 P_OVR = np.poly1d([-0.06766283, 1.11546468, 0.04602535])
 
 
-def оценка(y, sr=24000):
+def оценка(y, sr=24000, окон=None):
     global _s
     if _s is None:
         o = ort.SessionOptions(); o.intra_op_num_threads = 1; o.inter_op_num_threads = 1
@@ -18,7 +18,8 @@ def оценка(y, sr=24000):
     n = int(ДЛ * SR16)
     while len(a) < n: a = np.append(a, a)
     шаг = SR16; рез = []
-    for i in range(0, max(1, int((len(a) - n) / шаг) + 1)):
+    всего = max(1, int((len(a) - n) / шаг) + 1)
+    for i in range(0, всего if окон is None else min(всего, окон)):
         seg = a[i * шаг:i * шаг + n]
         if len(seg) < n: break
         sig, bak, ovr = _s.run(None, {_s.get_inputs()[0].name: seg[None, :]})[0][0]
