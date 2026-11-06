@@ -298,6 +298,50 @@ def _model():
     return _wm
 
 
+# Whisper пишет числа цифрами («40 лет», «41 секунда»), а в репликах они словами — для сверки
+# цифры произносятся словами (род и падеж не важны: сходство и так высокое). Запрет цифр в самом
+# Whisper (suppress_tokens) пробовали 6.11: он начинал путать соседние слова и ронять куски.
+_U = "ноль один два три четыре пять шесть семь восемь девять".split()
+_T = ("десять одиннадцать двенадцать тринадцать четырнадцать пятнадцать шестнадцать семнадцать "
+      "восемнадцать девятнадцать").split()
+_D = ["", "", "двадцать", "тридцать", "сорок", "пятьдесят", "шестьдесят", "семьдесят", "восемьдесят", "девяносто"]
+_H = ["", "сто", "двести", "триста", "четыреста", "пятьсот", "шестьсот", "семьсот", "восемьсот", "девятьсот"]
+
+
+def _say3(n):
+    h, r = divmod(n, 100)
+    out = [_H[h]] if h else []
+    if 10 <= r < 20:
+        out.append(_T[r - 10])
+    else:
+        if r >= 20:
+            out.append(_D[r // 10])
+        if r % 10 or not out:
+            out.append(_U[r % 10])
+    return " ".join(out)
+
+
+def _say(n):
+    if n >= 10 ** 6:
+        return str(n)
+    th, r = divmod(n, 1000)
+    if not th:
+        return _say3(r)
+    t = th % 10
+    word = "тысяч" if 11 <= th % 100 <= 14 or t in (0, 5, 6, 7, 8, 9) else "тысяча" if t == 1 else "тысячи"
+    return " ".join(w for w in (_say3(th), word, _say3(r) if r else "") if w)
+
+
+def spell(text):
+    """Цифры — словами: «41 секунда» → «сорок один секунда»."""
+    return re.sub(r"\d+", lambda m: " " + _say(int(m.group())) + " ", text)
+
+
+def speech(text):
+    """То, что голос произносит: без ремарок в скобках — «…опасно… (помехи) …» читается без «помех»."""
+    return re.sub(r"\([^)]*\)", " ", text)
+
+
 def to16k(x, sr):
     if sr == 16000:
         return x.astype(np.float32)
@@ -316,12 +360,12 @@ def listen(x, sr):
     """Что слышно в отрезке — Whisper без подсказки."""
     sg, _ = _model().transcribe(to16k(x, sr), language="ru", beam_size=5, vad_filter=False,
                                 condition_on_previous_text=False)
-    return " ".join(s.text.strip() for s in sg).strip()
+    return re.sub(r"\s+", " ", spell(" ".join(s.text.strip() for s in sg))).strip()
 
 
 def gaps(heard, text):
     """(сходство, разница в буквах, разница в словах) услышанного и текста."""
-    a, b = norm(heard), norm(text)
+    a, b = norm(heard), norm(speech(text))
     return ratio(a, b), abs(len(a) - len(b)), abs(len(a.split()) - len(b.split()))
 
 
@@ -329,7 +373,7 @@ def same(heard, text, sim=0.8):
     """Услышанное — это текст реплики: похоже, длина та же и слов столько же (лишняя фраза
     соседа, потерянное начало или конец меняют длину, даже когда сходство ещё высокое)."""
     s, dc, dw = gaps(heard, text)
-    return s >= sim and dc <= max(4, 0.12 * len(norm(text))) and dw <= 1
+    return s >= sim and dc <= max(4, 0.12 * len(norm(speech(text)))) and dw <= 1
 
 
 def flawed(heard, text):
@@ -337,7 +381,7 @@ def flawed(heard, text):
     больше (проба 5.11: «…носитель: оно слушает» без «оно слушает» — минус 10 букв из 54).
     Мягче, чем same: одно недослышанное Whisper'ом слово — ещё не брак."""
     s, dc, dw = gaps(heard, text)
-    n = len(norm(text))
+    n = len(norm(speech(text)))
     return s < 0.7 or dc > max(5, 0.2 * n) or (dw >= 2 and dc >= 8)
 
 
@@ -351,14 +395,23 @@ def split_words(x, sr, texts, ws=None, only=None):
     if ws is None:
         ws = words(x, sr)
     st = np.array([p[0] for p in ps]); en = np.array([p[1] for p in ps])
-    heard = [""] * len(ps)
+    heard = [""] * len(ps); nw = [0] * len(ps)
     for a, b, w in ws:
         mid = (a + b) / 2 * sr
         inside = np.where((st <= mid) & (en >= mid))[0]
         i = int(inside[0]) if len(inside) else int(np.argmin(np.minimum(abs(st - mid), abs(en - mid))))
-        heard[i] = (heard[i] + w).strip()      # слова Whisper начинаются с пробела
+        heard[i] = (heard[i] + spell(w)).strip()      # слова Whisper начинаются с пробела; цифры — словами
+        nw[i] += 1
+    # (6.11) в длинной записи Whisper иногда роняет целые куски («Замок поддался.» — и сразу через
+    # семь секунд «Сорок…»): кусок, где слов явно меньше, чем успел бы сказать голос, слушаем отдельно
+    for i, (a, b) in enumerate(ps):
+        d = (b - a) / sr
+        if d >= 0.3 and nw[i] < 0.8 * d:
+            h = spell(listen(x[a:b], sr))
+            if len(norm(h)) > len(norm(heard[i])):
+                heard[i] = h
     out = []
-    for j, (t, r) in enumerate(zip(texts, group(heard, texts, kmax=PIECES_W))):
+    for j, (t, r) in enumerate(zip(texts, group(heard, [speech(t) for t in texts], kmax=PIECES_W))):
         if r is None:
             out.append((None, "", 0.0)); continue
         a, b = r
@@ -367,5 +420,5 @@ def split_words(x, sr, texts, ws=None, only=None):
         if only is not None and j not in only:
             out.append((x[lo:hi], "", 0.0)); continue
         h = listen(x[lo:hi], sr)
-        out.append((x[lo:hi], h, ratio(norm(h), norm(t))))
+        out.append((x[lo:hi], h, ratio(norm(h), norm(speech(t)))))
     return out
