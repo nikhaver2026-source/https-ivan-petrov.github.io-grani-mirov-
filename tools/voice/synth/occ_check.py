@@ -32,7 +32,9 @@ def lev(a, b):
 
 def запись(item):
     r, нужно = item
-    f = r["f"]; a, sr = sf.read(f + ".flac" if f.startswith("/") else f"{R}/sounds/{f if '/' in f else D + '/' + f}.flac", dtype="float32")
+    f = r["f"]; pth = f + ".flac" if f.startswith("/") else f"{R}/sounds/{f if '/' in f else D + '/' + f}.flac"
+    if not os.path.exists(pth): return [(-1.0, None)] * len(r["w"])   # запись убрана из описи
+    a, sr = sf.read(pth, dtype="float32")
     out = []; тиш = np.zeros(int(SR * 0.08), dtype=np.float32)
     for jj, w in enumerate(r["w"]):
         if not нужно[jj]: out.append((-1.0, None)); continue
