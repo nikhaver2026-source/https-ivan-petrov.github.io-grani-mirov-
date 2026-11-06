@@ -37,6 +37,27 @@ def _f0_дорожка(x, hop=240, fmin=70, fmax=400):
     return f, hop
 
 
+def звонкость(x, hop=240):
+    """Надёжно звонкие кадры (10 мс): период найден И энергия ниже 1 кГц — больше 60 % всей (у «с», «ш», «ф», «х» и
+    взрывов смычных она мала). Только такие места можно резать на периоды без призвуков."""
+    f0, _ = _f0_дорожка(x, hop=hop); n = len(f0); out = np.zeros(n, bool)
+    W = 512; окно = np.hanning(W); f = np.fft.rfftfreq(W, 1 / SR); низ = f < 1000
+    for i in range(n):
+        if f0[i] <= 0: continue
+        c = i * hop; seg = x[max(0, c - W // 2):max(0, c - W // 2) + W]
+        if len(seg) < W: seg = np.pad(seg, (0, W - len(seg)))
+        P = np.abs(np.fft.rfft(seg * окно)) ** 2; out[i] = P[низ].sum() > 0.6 * (P.sum() + 1e-12)
+    return out
+
+
+def _смесь(обр, исх, зв, hop=240, переход=120):
+    """Обработанное — только в звонких кадрах, в прочих — исходный звук; переходы — 5 мс."""
+    m = np.repeat(зв.astype(np.float32), hop)[:len(исх)]
+    if len(m) < len(исх): m = np.r_[m, np.zeros(len(исх) - len(m), np.float32)]
+    k = np.ones(переход, np.float32) / переход; m = np.convolve(m, k, "same")
+    return (m * обр + (1 - m) * исх).astype(np.float32)
+
+
 def метки(x):
     """Метки периодов: в звонких местах — пики волны через период, в глухих — каждые 5 мс. → (метки, звонкость)."""
     f0, hop = _f0_дорожка(x)
@@ -78,7 +99,9 @@ def сдвинуть(x, сдвиг_пт):
     x = np.concatenate([np.zeros(П, np.float32), x, np.zeros(П, np.float32)])
     сдв = np.concatenate([np.full(П, сдв[0]), сдв, np.full(П, сдв[-1])])
     y = _сдвиг(x, сдв)
-    return y[П:П + n0] if y is not None else x[П:П + n0]
+    if y is None: return x[П:П + n0]
+    y = y[П:П + n0]; исх = x[П:П + n0]
+    return _смесь(y, исх, звонкость(исх))   # шумные согласные и взрывы — нетронуты
 
 
 def _сдвиг(x, сдв):
@@ -139,7 +162,8 @@ def темп(x, k):
         Ti = int(T[i]) if зв[i] else int(SR * 0.005)
         Ti = max(40, min(Ti, int(SR / 60)))
         L = Ti if зв[i] else int(SR * 0.005)
-        a0, a1 = м[i] - L, м[i] + L
+        ц = м[i] if зв[i] else int(round(t_an))   # глухо: окно — ровно с места чтения, а не с ближайшей метки
+        a0, a1 = ц - L, ц + L
         s0 = int(round(t_out)) - L
         if a0 >= 0 and a1 <= len(xp) and s0 >= 0 and s0 + 2 * L <= len(out):
             w = np.hanning(2 * L).astype(np.float32)
