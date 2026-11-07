@@ -6,7 +6,7 @@ import engine as E
 SR = 24000; L = int(SR * 0.012)
 фразы = json.load(open("/root/S/us2/test_set400.json", encoding="utf-8"))[:200]
 for арг in sys.argv[1:]:
-    S = E.Синтезатор("m", json.loads(арг)); r = []
+    w_ = json.loads(арг); E.КФ_ПОРОГ = float(w_.pop("_кфп", 0.0)); E.КФ_РЕЖИМ = w_.pop("_кфр", "корр"); S = E.Синтезатор("m", w_); r = []
     for ф in фразы:
         for от in E.текст_в_отрезки(ф):
             x, res, кс = S.отрезок(от["w"], от["end"])
