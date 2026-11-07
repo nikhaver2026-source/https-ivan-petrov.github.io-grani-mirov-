@@ -371,8 +371,11 @@ def variants(text):
 
 
 def _gaps1(heard, text):
+    """(сходство, разница в буквах, разница в словах, букв в тексте). Буквы — без пробелов:
+    Whisper склеивает и рвёт слова («подколыбельную», «по газ»), а букв от этого не меньше."""
     a, b = norm(heard), norm(text)
-    return ratio(a, b), abs(len(a) - len(b)), abs(len(a.split()) - len(b.split())), len(b)
+    la, lb = len(a.replace(" ", "")), len(b.replace(" ", ""))
+    return ratio(a, b), abs(la - lb), abs(len(a.split()) - len(b.split())), lb
 
 
 def gaps(heard, text):
@@ -381,10 +384,56 @@ def gaps(heard, text):
 
 
 def same(heard, text, sim=0.8):
-    """Услышанное — это текст реплики: похоже, длина та же и слов столько же (лишняя фраза
-    соседа, потерянное начало или конец меняют длину, даже когда сходство ещё высокое)."""
-    return any(s >= sim and dc <= max(4, 0.12 * n) and dw <= 1
+    """Услышанное — это текст реплики: похоже и длина та же (лишняя фраза соседа, потерянное
+    начало или конец меняют длину, даже когда сходство ещё высокое). Разница в словах важна,
+    только когда разнятся и буквы: склеенные или разорванные Whisper'ом слова — не брак."""
+    return any(s >= sim and dc <= max(4, 0.12 * n) and (dw <= 1 or dc < 3)
                for s, dc, dw, n in (_gaps1(heard, t) for t in variants(text)))
+
+
+def collapses(text):
+    """Прочтения без нарочных повторов подряд («Где носитель? Где носитель?», «погас, погас»):
+    Whisper такие повторы часто слышит один раз. Убирается по одному повтору и их сочетания
+    (не больше трёх) — соседние одинаковые слова на стыке фраз («…отражение. Отражение…»)
+    так не пропадут сами собой. Годится только вместе с проверкой длины записи (accept):
+    иначе пропустили бы повтор, которого голос не сказал."""
+    w = norm(speech(text)).split()
+    reps = []                                   # (начало повтора, длина)
+    i = 0
+    while i < len(w):
+        for n in range(4, 0, -1):
+            if i >= n and w[i:i + n] == w[i - n:i]:
+                reps.append((i, n)); i += n - 1
+                break
+        i += 1
+    reps = reps[:3]
+    out = []
+    for mask in range(1, 1 << len(reps)):
+        drop = set()
+        for b, (st, n) in enumerate(reps):
+            if mask >> b & 1:
+                drop.update(range(st, st + n))
+        out.append(" ".join(x for k, x in enumerate(w) if k not in drop))
+    return out
+
+
+def letters(text):
+    return len(norm(speech(text)).replace(" ", ""))
+
+
+def rate_of(rows):
+    """Скорость голоса в пакете — секунд на букву (медиана по принятым репликам);
+    rows — [(услышано, текст, длина отрезка)]. Меньше трёх принятых — None."""
+    r = sorted(d / max(1, letters(t)) for h, t, d in rows if d and same(h, t))
+    return r[len(r) // 2] if len(r) >= 3 else None
+
+
+def accept(heard, text, dur, rate=None):
+    """Реплика принята: услышано то, что написано; или Whisper схлопнул нарочный повтор, а
+    длина записи — как у полного текста (повтор в записи есть, просто услышан один раз)."""
+    if same(heard, text):
+        return True
+    return bool(rate) and dur >= 0.85 * rate * letters(text) and any(same(heard, t) for t in collapses(text))
 
 
 def flawed(heard, text):

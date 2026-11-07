@@ -236,7 +236,8 @@ def cut_batch(raw, items, voice, ks, state):
             ws = seg.words(x, sr)
             json.dump(ws, open(wp, "w", encoding="utf-8"), ensure_ascii=False)
         res, how = seg.split_words(x, sr, texts, ws) or [(None, "", 0.0)] * len(texts), "w"
-        good = lambda say, heard, s, d: seg.same(heard, say) and fits(say, d)
+        rate = seg.rate_of([(h, t, len(sx) / sr if sx is not None else 0) for t, (sx, h, s) in zip(texts, res)])
+        good = lambda say, heard, s, d: seg.accept(heard, say, d, rate) and fits(say, d)
     else:
         log("   faster-whisper не установлен — режу по паузам, проверка «что слышно» у Gemini")
         res, how = seg.split_dp(x, sr, texts, lambda c, lines=None: asr(c, ks, lines)), "g"

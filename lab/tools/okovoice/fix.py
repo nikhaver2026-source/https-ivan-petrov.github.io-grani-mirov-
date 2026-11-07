@@ -93,13 +93,14 @@ def main():
             ws = seg.words(x, sr)
             json.dump(ws, open(wp, "w", encoding="utf-8"), ensure_ascii=False)
         res = seg.split_words(x, sr, [r["say"] for r in rows], ws, only=idx) or []
+        rate = seg.rate_of([(r.get("heard", ""), r["say"], r.get("dur", 0)) for r in rows if r.get("ok")])
         got = 0
         for i in sorted(idx):
             if i >= len(res):
                 break
             sx, h, s = res[i]
             r = rows[i]; dur = len(sx) / sr if sx is not None else 0.0
-            if sx is None or not (seg.same(h, r["say"]) and run.fits(r["say"], dur)):
+            if sx is None or not (seg.accept(h, r["say"], dur, rate) and run.fits(r["say"], dur)):
                 continue
             mp3 = os.path.join(OKO, v, r["k"] + ".mp3")
             was = os.path.exists(mp3)
