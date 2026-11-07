@@ -37,7 +37,7 @@ if __name__ == "__main__":   # judge_q.py N варианты… — синтез
         if арг == "живые":
             V = E.Синтезатор("m").V; random.seed(5); р = [оценка(V.звук(ri)) for ri in random.sample([i for i in range(len(V.recs)) if i not in V.искл_ri], N)]
         else:
-            w = json.loads(арг); psola.КОНЕЦ = bool(w.pop("_конец", 1)); psola.МЕТКИ = w.pop("_метки", "пик"); psola.ГРАНИЦА = int(w.pop("_граница", 2)); psola.ПРИВЯЗКА = bool(w.pop("_привязка", 1)); S = E.Синтезатор("m", w)
+            w = json.loads(арг); psola.КОНЕЦ = bool(w.pop("_конец", 1)); psola.МЕТКИ = w.pop("_метки", "пик"); psola.ГРАНИЦА = int(w.pop("_граница", 2)); psola.ПРИВЯЗКА = bool(w.pop("_привязка", 1)); psola.БЕЗ_МИГАНИЯ = bool(w.pop("_мигание_выкл", 1)); S = E.Синтезатор("m", w)
             р = [оценка(S.сказать(ф)[0]) for ф in фразы]
         р = np.array(р); os.makedirs("/root/S/us2/out/jq", exist_ok=True)
         np.save(f"/root/S/us2/out/jq/{abs(hash(арг)) % 10**8}.npy", р); open("/root/S/us2/out/jq/index.txt", "a", encoding="utf-8").write(f"{abs(hash(арг)) % 10**8}\t{N}\t{арг}\n")
