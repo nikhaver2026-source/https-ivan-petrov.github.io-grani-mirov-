@@ -29,23 +29,33 @@ def признаки(y, p):
 ИМЕНА = [f"mfcc_разн{k}" for k in range(1, 13)] + [f"mfcc_модуль{k}" for k in range(1, 13)] + ["поток", "поток_сверх_фона", "громкость_разн", "громкость_скачок", "вч_у_точки", "скачок_высоты", "звонко_до", "звонко_после", "звонко_оба", "уровень_до", "уровень_после"]
 
 if __name__ == "__main__":
-    N = int(sys.argv[1]); S = E.Синтезатор("m"); V = S.V
+    N = int(sys.argv[1]); S = E.Синтезатор("m", json.loads(sys.argv[2]) if len(sys.argv) > 2 else None); V = S.V
     q = [x["t"] for x in json.load(open("/root/S/gvrec/queue_m.json", encoding="utf-8"))]
     тест = set(json.load(open("/root/S/us2/test_set400.json", encoding="utf-8"))) | set(json.load(open("/root/S/us2/test_set.json", encoding="utf-8")))
     random.seed(77); фразы = [t for t in q if t not in тест and 3 <= len(t.split()) <= 12]; random.shuffle(фразы)
-    Xs, Xl = [], []
+    Xs, Xl = [], []; пары = []
     for ф in фразы[:N]:
-        y, _ = S.сказать(ф)
-        for p in S.стыки:
-            x = признаки(y, p)
-            if x is not None: Xs.append(x)
-    while len(Xl) < len(Xs):
-        ri = random.randrange(len(V.recs)); r = V.recs[ri]
+        for от in E.текст_в_отрезки(ф):
+            x_, res, кс = S.отрезок(от["w"], от["end"])
+            for k, p in enumerate(S.стыки_отрезка):
+                x = признаки(x_, p)
+                if x is not None:
+                    Xs.append(x); пары.append((S._край_вид(кс[k], -1) or "?") + (S._край_вид(кс[k + 1], 0) or "?"))
+    # живые границы — с теми же парами звуков по краям (иначе различитель учит набор звуков, а не призвук)
+    import collections
+    нужно = collections.Counter(пары); тр = 0
+    while sum(нужно.values()) > 0 and тр < 400000:
+        тр += 1; ri = random.randrange(len(V.recs)); r = V.recs[ri]
         if "ph" not in r or len(r["w"]) < 2 or ri in V.искл_ri: continue
         j = random.randrange(len(r["w"]) - 1)
         if r["w"][j][4] > 0.005: continue
+        пара = (S._класс_звука(r["ph"][j][-1][0]) or "?") + (S._класс_звука(r["ph"][j + 1][0][0]) or "?")
+        if нужно.get(пара, 0) <= 0: continue
         x = признаки(V.звук(ri), int(r["w"][j][2] * SR))
-        if x is not None: Xl.append(x)
+        if x is not None: Xl.append(x); нужно[пара] -= 1
+    if len(Xl) < len(Xs):   # редкие пары — не нашлись: убрать лишние швы синтеза случайно
+        random.shuffle(Xs); Xs = Xs[:len(Xl)]
+    print("пары краёв (синтез):", collections.Counter(пары).most_common(8))
     X = np.array(Xs + Xl); y = np.r_[np.ones(len(Xs)), np.zeros(len(Xl))]
     idx = np.random.RandomState(1).permutation(len(y)); X, y = X[idx], y[idx]; n = len(y) * 2 // 3
     mu, sd = X[:n].mean(0), X[:n].std(0) + 1e-6; Z = (X - mu) / sd; w = np.zeros(Z.shape[1]); b = 0.0
