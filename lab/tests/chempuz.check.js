@@ -128,6 +128,9 @@ for (const kind of CP.KINDS) for (let d = 0; d < 3; d++) for (let s = 1; s <= SE
     if (kind === "protocol" && L.bad.length !== [1, 2, 3][d]) err(at + ": опасных шагов " + L.bad.length);
     if (kind === "spectr") { const target = union(L.mix.map(i => L.ref[i])), same = combos(L.ref, L.k).filter(c => union(c) === target).length; if (same !== 1) err(at + ": хроматограмма раскладывается " + same + " способами"); if (L.mix.length !== L.k) err(at + ": веществ " + L.mix.length); }
     if (kind === "chain") { if (!L.path.length || L.path.length < [2, 3, 4][d]) err(at + ": путь " + L.path.length); if (L.path.length > L.limit) err(at + ": путь длиннее запаса"); }
+    /* (после 4.5) кислота без щёлочи не добавляется: счёт капель не уходит в минус, и решение по разгадке
+       после такой «поправки» по-прежнему верно */
+    if (kind === "titr" && s % 7 === 0) click(/^Поправка/, at);
     /* на части зёрен — сначала неверный ответ: окно не закрывается */
     if (WRONG[kind] && s % 5 === 0) {
       if (kind === "protocol") clickAt(L.bad[0], at); /* отметить один из опасных — и всё равно мало, кроме простой */
@@ -159,6 +162,32 @@ for (const kind of CP.KINDS) for (let d = 0; d < 3; d++) for (let s = 1; s <= SE
       const r4 = []; stack.length = 0; LAB.puzzles.open(kind, 7 + d, (ok, away, fresh) => r4.push([ok, !!away, !!fresh]), { diff: d }); click(/^К решению/, at); clickAt(0, at); LAB.ui.closeAll(); flush();
       if (r4.length !== 1 || r4[0][0] !== false || !r4[0][1] || !r4[0][2] || top()) err(at + ": начатая задача, закрытое окно — не «отошёл, начата» (" + JSON.stringify(r4) + ")");
     }
+  } catch (e) { err(at + ": " + e.message); }
+}
+/* (после 4.5) склянки различают опытом, а не словами: «ничего не происходит» — одними словами для всех пар
+   (прежде у кислоты с ляписом — «ничего не видно», и только по этому склянки и различались) */
+{
+  const nothing = new Set();
+  CP._VS.forEach(a => CP._VS.forEach(b => { if (a !== b) { const r = CP._pair(a.id, b.id); if (/ничего/.test(r)) nothing.add(r); } }));
+  if (nothing.size !== 1) err("склянки: «ничего не происходит» разными словами: " + [...nothing].join(" / "));
+}
+/* (после 4.5) цепочка: запас каждой пробы — как в условии, узнанное в прошлых пробах можно переслушать,
+   «Условие ещё раз» называет нынешний запас */
+for (let d = 0; d < 3; d++) for (let s = 1; s <= 20; s++) {
+  const at = "chain/" + d + "/" + s + " новая проба", res = [];
+  try {
+    stack.length = 0; timers.length = 0;
+    LAB.puzzles.open("chain", s * 31 + d, ok => res.push(ok), { diff: d }); click(/^К решению/, at);
+    const L = CP._last(), ops = top().items.map(labelOf).filter(l => !/^(Сейчас|Условие|Отойти)/.test(l));
+    let n = 0, out = "";
+    for (let k = 0; k < 40 && !res.length && !/Новая проба/.test(out); k++) { const s0 = said.length; click(new RegExp("^" + esc(ops[(k * 3) % ops.length]) + "$"), at); out = said.slice(s0).join(" "); n++; }
+    if (res.length) continue; /* дошли до цели наугад — проверять нечего */
+    if (n !== L.limit) err(at + ": проба кончилась за " + n + " операций, а запас " + L.limit);
+    const s1 = said.length; click(/^Сейчас в колбе/, at);
+    if (!/Узнано в прошлых пробах: /.test(said.slice(s1).join(" "))) err(at + ": узнанное в прошлой пробе не переслушать: " + said.slice(s1).join(" "));
+    const s2 = said.length; click(/^Условие ещё раз/, at);
+    if (said.slice(s2).join(" ").indexOf("Операций в запасе — " + L.limit + ".") < 0) err(at + ": «Условие ещё раз» не о нынешнем запасе");
+    stat.chainRetry = (stat.chainRetry || 0) + 1;
   } catch (e) { err(at + ": " + e.message); }
 }
 console.log("решено задач по видам: " + Object.keys(stat).map(k => k + " " + stat[k]).join(", "));
