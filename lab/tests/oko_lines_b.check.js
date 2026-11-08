@@ -4,10 +4,12 @@
    Файл загружается в песочнице Node (globalThis.LAB = {}); проверяется:
    • синтаксис не новее ES2018 (acorn, если он есть рядом; иначе — Node);
    • есть блоки b3, b4, b5 и только они; нет неизвестных видов событий;
-   • сколько реплик у каждого вида: для видов из BASE (js/oko.js) — 3–4,
-     если блок уже говорит этот вид своим голосом, иначе 4–5; для тревоги,
-     подозрения, потери цели, двери, проверки на шум и реплик «просто так»
-     — 8–10; для новых видов (реакции на действия игрока) — 5–6;
+   • сколько реплик у каждого вида (после 4.5 — примерно вдвое больше, чем было):
+     для видов из BASE (js/oko.js) — 7–9, если блок уже говорит этот вид
+     своим голосом, иначе 9–10; для тревоги, подозрения, потери цели,
+     двери, проверки на шум и реплик «просто так» — 13–15; для новых видов
+     (реакции на действия игрока) — 10–12; редкие виды (RARE) — 5–6 или
+     6–7, редкие из новых — 7–8;
    • нет повторов внутри вида, во всём файле и с уже написанными репликами
      (BASE из oko.js, oko-разделы b1–b5.js, а если есть — oko_lines_a.js);
      сравнение — без учёта регистра, «ё» и знаков препинания;
@@ -108,10 +110,17 @@ const NEW = ["kill_mech", "kill_bio", "kill_many", "hurt", "low_hp", "heal", "ea
   "note", "mail", "safe", "pick", "hack_ok", "puzzle_ok", "puzzle_fail", "music", "craft", "buy", "sell", "trap_set", "trap_kill",
   "oko_trap", "oko_trap_off", "mines_order", "grenade", "quiet", "idle", "secret", "zone", "vault", "floor", "weapon", "implant",
   "survivor", "turret_kill", "patrol_slip", "mutate"]; /* (3.0) mutate — носитель мутирует */
+/* (после 4.5, просьба автора: «расширь список реплик ОКО, чтобы они не были однотипными») вариантов
+   примерно вдвое больше; редкие виды — понемногу: их и слышно редко */
+const RARE = ["backup", "isolate", "iso_bypass", "key_revoked", "cam_flash", "cam_flash_found", "cam_loop_found", "cam_fixed", "cam_down",
+  "repaired", "repair_lost", "drone_lost", "lift", "mutate", "grinder_more", "strike_recall", "oko_trap_off"];
 function range(b, k) {
-  if (NEW.indexOf(k) >= 0) return [5, 6];
-  if (BIG.indexOf(k) >= 0) return [8, 10];
-  return OWN[b][k] && OWN[b][k].length ? [3, 4] : [4, 5];
+  const rare = RARE.indexOf(k) >= 0;
+  if (NEW.indexOf(k) >= 0) return rare ? [7, 8] : [10, 12];
+  if (BIG.indexOf(k) >= 0) return [13, 15];
+  const own = OWN[b][k] && OWN[b][k].length;
+  if (rare) return own ? [5, 6] : [6, 7];
+  return own ? [7, 9] : [9, 10];
 }
 
 /* ── нормализация для сравнения ── */
