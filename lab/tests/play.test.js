@@ -131,6 +131,9 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   await page.evaluate(() => { while (LAB.ui.top() && !LAB.ui.top().root) LAB.ui.closeTop(true); LAB.ui.top().i = 0; SPOKEN.length = 0; });
   await gest({ kind: "dtap", n: 1 });
   await page.waitForTimeout(100);
+  /* (голос ОКО) голос записан целиком — новая игра сперва спрашивает голос ОКО (проверка — в разделе
+     «Голос ОКО в начале новой игры и в сохранениях»): здесь берём голос из настроек, дальше — режим */
+  if (await page.evaluate(() => LAB.ui.top() && LAB.ui.top().title) === "Новая игра: голос ОКО") { await gest({ kind: "dtap", n: 1 }); await page.waitForTimeout(100); }
   const dm = await page.evaluate(() => { const w = LAB.ui.top(); return w ? { t: w.title, i: w.i, l: w.items.map(i => typeof i.label === "function" ? i.label() : i.label) } : null; });
   t = await said();
   ok(dm && dm.t === "Новая игра: режим сложности" && dm.l.length === 5 && /^Лёгкий: /.test(dm.l[0]) && /^Обычный: /.test(dm.l[1]) && /^Сложный: /.test(dm.l[2]) && /^Очень сложный: /.test(dm.l[3]) && dm.i === 1, "«Начать игру» — сперва режим сложности: четыре режима, курсор на прежнем (" + JSON.stringify(dm) + ")");
@@ -7674,6 +7677,87 @@ LAB.ui.closeAll();
     ok(dp.core, "на самом дне — Ядро Разлома с финальным пультом");
     ok(/Ядр/.test(dp.interlude) && /Гранью Миров/.test(dp.ending) && !/Гран[ьи] Мир/.test(dp.interlude), "интерлюдия на сотом ведёт к Ядру Разлома; «Грань Миров» — только в финале");
   } else console.log("  (глубоких блоков нет — проверка пропущена)");
+
+  /* (голос ОКО, просьба автора: «когда игрок будет начинать игру, игра будет спрашивать, каким голосом
+     ОКО будет говорить; когда игрок будет загружать сохранение, голос будет выбираться автоматически;
+     если что, игрок сможет изменить его в настройках») Голос записан целиком (ready): новая игра
+     начинается с вопроса о голосе ОКО, на каждом голосе — его образец; запись помнит голос своей игры,
+     загрузка ставит его сама; смена в настройках во время игры — и в запись. Пока голос записан не
+     весь — вопроса нет, и загрузка настроек голоса не трогает. */
+  console.log("Голос ОКО в начале новой игры и в сохранениях");
+  const ova = await page.evaluate(async () => {
+    const out = {}, sleep = ms => new Promise(r => setTimeout(r, ms)), S = LAB.settings, V = LAB.okoVoice, g = LAB.game;
+    const lb = i => typeof i.label === "function" ? i.label() : i.label, title = () => LAB.ui.top() && LAB.ui.top().title;
+    const was = { v: S.okoVoice, ready: LAB.OKO_VOICED.ready, diff: S.difficulty, tb: S.turnBased };
+    const K = out.K = V.key("Я слушаю ваш пульс по вентиляции, носитель. Он учащается.");
+    const plays = [], orig = LAB.Sound.play;
+    LAB.Sound.play = function (id, o) { plays.push(String(id)); return orig.apply(this, arguments); };
+    const samples = () => plays.filter(id => /^oko_(m|f)_/.test(id));
+    const pick = re => { const w = LAB.ui.top(); w.i = w.items.findIndex(i => re.test(lb(i))); LAB.ui.activate(); };
+    const newGame = () => { LAB.ui.startGame(); if (title() === "Начать новую игру?") pick(/^Да, начать сначала/); };
+    const load = async n => { SPOKEN.length = 0; g.loadSlot(n); LAB.combat.stop(); LAB.ui.closeAll(); await sleep(50); return { s: S.okoVoice, g: g.G.okoVoice, said: SPOKEN.join(" | ") }; };
+    try {
+      /* пока голос записан не весь — новая игра сразу с режима сложности */
+      LAB.OKO_VOICED.ready = false; V._reset();
+      LAB.ui.closeAll(); LAB.ui.mainMenu(true); newGame();
+      out.offTitle = title();
+      /* голос записан целиком: сперва — голос ОКО, курсор на голосе из настроек */
+      LAB.OKO_VOICED.ready = true; V._reset(); S.okoVoice = "m";
+      LAB.ui.closeAll(); LAB.ui.mainMenu(true); SPOKEN.length = 0; newGame();
+      const w = LAB.ui.top();
+      out.ask = { t: w.title, i: w.i, l: w.items.map(lb), said: SPOKEN.join(" | ") };
+      /* образец мужского — как только окно договорит; свайп вправо — женский; дальше синтезатор — без образца */
+      for (let i = 0; i < 30 && !samples().length; i++) await sleep(100);
+      out.sampleM = samples()[0];
+      plays.length = 0; LAB.input.dispatch({ kind: "swipe", n: 1, dir: "R" });
+      for (let i = 0; i < 30 && !samples().length; i++) await sleep(100);
+      out.sampleF = samples()[0]; out.focusF = LAB.ui.top().i;
+      plays.length = 0; LAB.input.dispatch({ kind: "swipe", n: 1, dir: "R" }); await sleep(900);
+      out.sampleT = samples().length;
+      /* выбран женский — он в настройках, дальше режим сложности; «Назад» из режима — снова вопрос о голосе */
+      LAB.ui.top().i = 1; LAB.ui.activate();
+      out.afterF = { t: title(), v: S.okoVoice, saved: JSON.parse(LAB.store.get("lab_settings") || "{}").okoVoice };
+      pick(/^Назад$/); out.back = title();
+      LAB.ui.top().i = 1; LAB.ui.activate();
+      pick(/^Обычный: /); pick(/^Начать игру: обычный бой/);
+      out.prologue = LAB.ui.screen();
+      LAB.input.dispatch({ kind: "swipe", n: 1, dir: "U" }); await sleep(300);
+      LAB.combat.stop(); LAB.ui.closeAll();
+      out.newG = { v: g.G.okoVoice, s: S.okoVoice, screen: LAB.ui.screen() };
+      g.saveSlot(3);
+      out.slot3 = (JSON.parse(LAB.store.get(g.slotKey(3)) || "{}").g || {}).okoVoice;
+      /* во время игры: «Настройки», «Голос ОКО» — мужской; запись этой игры его запоминает */
+      LAB.ui.settings(); LAB.ui.top().items.find(i => lb(i) === "Голос ОКО").set("m"); LAB.ui.closeAll();
+      out.setInGame = { g: g.G.okoVoice, s: S.okoVoice };
+      g.saveSlot(2);
+      /* загрузка — голос своей игры, сам; о нём — только если он сменился */
+      out.load3 = await load(3);
+      out.load2 = await load(2);
+      out.load2b = await load(2);
+      /* запись без голоса (сделана, пока голоса ОКО в игре не было): голос из настроек, и запись его запоминает */
+      const k2 = g.slotKey(2), d2 = JSON.parse(LAB.store.get(k2)); delete d2.g.okoVoice; LAB.store.set(k2, JSON.stringify(d2));
+      S.okoVoice = "f"; out.old = await load(2);
+      /* пока голос записан не весь — загрузка настроек голоса не трогает, а голос записи бережёт */
+      LAB.OKO_VOICED.ready = false; V._reset(); S.okoVoice = "m";
+      out.offLoad = await load(3);
+    } catch (e) { out.err = String(e && e.stack || e); }
+    LAB.Sound.play = orig; V.stop();
+    LAB.OKO_VOICED.ready = was.ready; V._reset(); S.okoVoice = was.v; S.difficulty = was.diff; S.turnBased = was.tb; LAB.saveSettings();
+    LAB.ui.closeAll();
+    return out;
+  });
+  if (ova.err) console.log("  ! " + ova.err);
+  ok(ova.offTitle === "Новая игра: режим сложности", "пока голос ОКО записан не весь — новая игра сразу с режима сложности, о голосе не спрашивает (" + ova.offTitle + ")");
+  ok(ova.ask && ova.ask.t === "Новая игра: голос ОКО" && ova.ask.i === 0 && ova.ask.l.length === 4 && ova.ask.l[0] === "Мужской голос" && /^Женский голос: о себе ОКО говорит в женском роде/.test(ova.ask.l[1]) && /^Синтезатор игры/.test(ova.ask.l[2]) && ova.ask.l[3] === "Назад" && /Каким голосом будет говорить ОКО/.test(ova.ask.said) && /в настройках/.test(ova.ask.said),
+    "голос записан целиком — новая игра начинается с вопроса о голосе ОКО: мужской, женский, синтезатор игры; курсор на голосе из настроек (" + JSON.stringify(ova.ask && { t: ova.ask.t, i: ova.ask.i, l: ova.ask.l }) + ")");
+  ok(ova.sampleM === "oko_m_" + ova.K && ova.sampleF === "oko_f_" + ova.K && ova.focusF === 1 && ova.sampleT === 0, "на каждом голосе звучит его образец: мужской, женский; у синтезатора образца нет (" + [ova.sampleM, ova.sampleF, ova.sampleT].join(", ") + ")");
+  ok(ova.afterF && ova.afterF.t === "Новая игра: режим сложности" && ova.afterF.v === "f" && ova.afterF.saved === "f" && ova.back === "Новая игра: голос ОКО", "выбран женский — он в настройках, дальше режим сложности; «Назад» из режима — снова вопрос о голосе");
+  ok(ova.prologue === "prologue" && ova.newG && ova.newG.v === "f" && ova.newG.s === "f" && ova.newG.screen === "game" && ova.slot3 === "f", "после режима — пролог, игра началась с выбранным голосом, запись его помнит (" + JSON.stringify(ova.newG) + ")");
+  ok(ova.setInGame && ova.setInGame.g === "m" && ova.setInGame.s === "m", "сменили голос в настройках во время игры — сменился и голос этой игры");
+  ok(ova.load3 && ova.load3.s === "f" && ova.load3.g === "f" && /Игра загружена.*ОКО в этой игре говорит женским голосом/.test(ova.load3.said) && ova.load2.s === "m" && /ОКО в этой игре говорит мужским голосом/.test(ova.load2.said) && /Игра загружена/.test(ova.load2b.said) && !/голосом/.test(ova.load2b.said),
+    "загрузка ставит голос своей игры сама и называет его, только если он сменился (" + JSON.stringify({ l3: ova.load3 && ova.load3.s, l2: ova.load2 && ova.load2.s }) + ")");
+  ok(ova.old && ova.old.s === "f" && ova.old.g === "f" && !/голосом/.test(ova.old.said), "запись без голоса ОКО (сделана, пока его не было в игре) — голос из настроек, и запись его запоминает");
+  ok(ova.offLoad && ova.offLoad.s === "m" && ova.offLoad.g === "f", "пока голос ОКО записан не весь — загрузка настроек голоса не трогает, голос записи сохраняется");
 
   const real = errors.filter(e => !/favicon|sounds\/|Failed to load resource/.test(e));
   ok(!real.length, "ошибок страницы нет" + (real.length ? ": " + real.slice(0, 5).join(" || ") : ""));

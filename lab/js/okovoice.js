@@ -1,8 +1,10 @@
 /* ════════════════════════════════════════════════════════════════════
    «Подземная лаборатория» — свой голос ОКО.
    ОКО говорит записанным голосом, а не синтезатором игры: мужским или
-   женским — на выбор в настройках («Голос ОКО»); можно вернуть и прежний
-   синтезатор. Записи — sounds/oko/m и sounds/oko/f, имя файла — отпечаток
+   женским — на выбор в начале новой игры (ui.js, okoAsk) и в настройках
+   («Голос ОКО»); можно вернуть и прежний синтезатор. Запись помнит голос
+   своей игры, загрузка ставит его сама (game.js, applyVoice). Записи —
+   sounds/oko/m и sounds/oko/f, имя файла — отпечаток
    текста реплики (FNV-1a, восемь знаков); что записано — oko_voiced.js,
    его собирает конвейер tools/okovoice. Реплику без записи (с номером этажа
    или названием помещения, или ещё не озвученную) говорит синтезатор, как
@@ -26,7 +28,8 @@ var R = Math.random;
 /* ── какой голос и что записано ──
    (3.7) Записанный голос — только когда записаны все реплики обоими голосами
    (oko_voiced.js, ready): до тех пор ОКО говорит синтезатором, настроек голоса нет,
-   а сборки не берут записи — голос ОКО входит в игру только целиком. */
+   новая игра о голосе не спрашивает, а сборки не берут записи — голос ОКО входит
+   в игру только целиком. */
 function ready() { return !!(LAB.OKO_VOICED && LAB.OKO_VOICED.ready); }
 function voice() { if (!ready()) return "tts"; var v = S().okoVoice; return v === "f" || v === "tts" ? v : "m"; }
 function norm(t) { return String(t == null ? "" : t).replace(/\s+/g, " ").trim(); }
@@ -200,7 +203,7 @@ function heartBuf(sec) {
    всю очередь и ту, что ещё грузится. */
 var cur = [];          /* звучащие части реплики */
 var queue = [];        /* ждут своей очереди: { v, k, q, opts, chime, ses } */
-var busyTill = 0, nextT = null, loading = false, gen = 0;
+var busyTill = 0, nextT = null, loading = false, gen = 0, previewN = 0;
 function playPart(id, o) {
   var h = LAB.Sound.play(id, o);
   if (h) cur.push(h);
@@ -208,6 +211,7 @@ function playPart(id, o) {
 }
 function stop() {
   gen++; queue = []; busyTill = 0; loading = false;
+  previewN++; /* и образец голоса, что ещё ждёт конца речи меню, — не прозвучит */
   clearTimeout(nextT); nextT = null;
   cur.forEach(function (h) { try { h.stop(0.08); } catch (e) { /* */ } }); cur = [];
 }
@@ -319,10 +323,11 @@ function play(text, opts, chime) {
   return true;
 }
 
-/* Образец голоса — в настройках, когда его выбирают: одна из записанных реплик, ровно,
-   как только меню договорит название и описание голоса. */
-var PREVIEW = "Я слушаю ваш пульс по вентиляции, носитель. Он учащается.", previewN = 0;
-function preview(v) {
+/* Образец голоса — в настройках, когда его выбирают, и в начале новой игры, когда на нём
+   курсор (ui.js, okoAsk): одна из записанных реплик, ровно, как только меню договорит название
+   и описание голоса; дольше maxWait (по умолчанию 12 секунд) не ждёт. */
+var PREVIEW = "Я слушаю ваш пульс по вентиляции, носитель. Он учащается.";
+function preview(v, maxWait) {
   stop();
   var n = ++previewN;
   if (v === "tts" || !ready()) return false;
@@ -334,7 +339,7 @@ function preview(v) {
   var go = function () {
     if (n !== previewN) return;
     var Sp = LAB.Speech;
-    if (Sp && Sp.busy && Sp.busy() && Date.now() - t0 < 12000) { setTimeout(go, 250); return; }
+    if (Sp && Sp.busy && Sp.busy() && Date.now() - t0 < (maxWait || 12000)) { setTimeout(go, 250); return; }
     cur = [];
     var h = playPart(id, { bus: "voice", vary: 0, prio: 3, gain: okoGain(), reverb: 0.18, wait: 4000 });
     busyTill = Date.now() + Math.round((h && h.dur ? h.dur : 4) * 1000) + 250; /* реплика игры подождёт конца образца */

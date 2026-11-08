@@ -513,13 +513,38 @@ function startGame() {
   var ai = gm().slotInfo("auto"), hasAuto = !!ai && (!ai.done || gm().riftResumable(ai)); /* (4.5) пройденная у «Истока» — продолжается в Разлом */
   if (hasAuto) {
     menu("Начать новую игру?", [
-      { label: "Да, начать сначала. Автозапись заменится, слоты 1, 2 и 3 останутся", fn: function () { diffMenu(); } },
+      { label: "Да, начать сначала. Автозапись заменится, слоты 1, 2 и 3 останутся", fn: function () { okoAsk(); } },
       { label: "Продолжить с автозаписи: " + gm().slotText("auto").replace("Автозапись: ", ""), fn: function () { if (!gm().loadSlot("auto")) reopenMain(); } },
       { label: "Отмена", fn: function () { reopenMain(); } }
     ]);
     return;
   }
-  diffMenu();
+  okoAsk();
+}
+/* (голос ОКО, просьба автора: «когда игрок будет начинать игру, игра будет спрашивать, каким
+   голосом ОКО будет говорить; при загрузке сохранения голос будет выбираться автоматически; если
+   что, игрок сможет изменить его в настройках») Новая игра начинается с голоса ОКО — когда он
+   записан целиком (okoOn): мужской, женский или синтезатор игры. Курсор — на голосе из настроек;
+   на каждом голосе звучит его образец (okovoice.js, preview), как только меню договорит. Выбор —
+   в настройки (S.okoVoice), оттуда — в запись новой игры (game.js, applyVoice); дальше — режим
+   сложности. «Назад» из режима сложности возвращает сюда. Пока голос записан не весь, вопроса нет. */
+var OKO_ASK = [
+  { v: "m", label: "Мужской голос" },
+  { v: "f", label: "Женский голос: о себе ОКО говорит в женском роде" },
+  { v: "tts", label: "Синтезатор игры: слова ОКО читает тот же голос, что и всё остальное" }
+];
+function okoAsk() {
+  if (!okoOn()) { diffMenu(); return; }
+  var V = LAB.okoVoice, cur = V.voice();
+  menu("Новая игра: голос ОКО", OKO_ASK.map(function (o) {
+    return { label: o.label, fn: function () { S.okoVoice = o.v; LAB.saveSettings(); V.stop(); diffMenu(); } };
+  }).concat([{ label: "Назад", fn: function () {} }]), {
+    focus: Math.max(0, OKO_ASK.map(function (o) { return o.v; }).indexOf(cur)),
+    intro: "Каким голосом будет говорить ОКО? На каждом голосе звучит его образец. Сменить голос можно и потом, в настройках.",
+    /* образец ждёт, пока меню договорит, — и долгое вступление окна тоже */
+    onFocus: function (i) { V.preview(OKO_ASK[i] ? OKO_ASK[i].v : "tts", 40000); },
+    onClose: function () { V.stop(); }
+  });
 }
 /* (2.6) Режим сложности выбирают только здесь — в начале новой игры, один раз
    на всю игру: во время игры его не сменить. Сохранение помнит свой режим;
@@ -620,7 +645,12 @@ function settingsMenu() {
     /* (голос ОКО) okovoice.js: выбранный голос сразу звучит образцом; (3.7) пока записаны не все
        реплики, голоса ОКО в игре нет — и его настроек тоже (menu отбрасывает пустые пункты) */
     okoOn() && { kind: "choice", label: "Голос ОКО", options: [{ v: "m", label: "мужской" }, { v: "f", label: "женский" }, { v: "tts", label: "синтезатор игры, как прежде" }],
-      get: function () { return S.okoVoice || "m"; }, set: function (v) { S.okoVoice = v; LAB.saveSettings(); if (LAB.okoVoice) LAB.okoVoice.preview(v); }, descOf: okoVoiceDesc },
+      get: function () { return S.okoVoice || "m"; }, set: function (v) {
+        S.okoVoice = v; LAB.saveSettings();
+        /* сменили во время игры — запомнит и запись этой игры (game.js, applyVoice) */
+        if (gm() && gm().entered && G()) { G().okoVoice = v; if (gm().autosaveSoon) gm().autosaveSoon(); }
+        if (LAB.okoVoice) LAB.okoVoice.preview(v);
+      }, descOf: okoVoiceDesc },
     okoOn() && { kind: "toggle", label: "Сбои и шёпот в голосе ОКО", get: function () { return !!S.okoFx; }, set: function (v) { S.okoFx = v ? 1 : 0; LAB.saveSettings(); },
       descOf: function (v) { return v ? "Изредка ОКО заикается, теряет звук, заговаривает обрывком старой программы; перед зловещими словами — обратное эхо, после — ответный шёпот." : "ОКО говорит ровно, без сбоев и шёпота."; } },
     { kind: "slider", label: "Скорость речи", min: 0, max: 100, step: 5, get: function () { return S.ratePct == null ? 50 : +S.ratePct; }, set: function (v) { S.ratePct = v; S.rate = LAB.rateFromPct(v); LAB.saveSettings(); }, fmt: function (v) { return Math.round(v) + " процентов" + (v === 50 ? ", обычная" : ""); } },
@@ -1367,7 +1397,7 @@ LAB.ui = {
   note: note, craft: craft, ending: ending, levelBanner: levelBanner, showGame: showGame, mainMenu: mainMenu, prologue: prologue, pages: pages,
   character: character, inventory: inventory, quests: quests, implants: implants, settings: settingsMenu, loadMenu: loadMenu, saveMenu: saveMenu,
   navMenu: navMenu, screen: function () { return screen; }, setScreen: setScreen, top: top, activate: activate, move: move,
-  startGame: startGame, diffMenu: diffMenu, rebuildTop: rebuildTop,
+  startGame: startGame, okoAsk: okoAsk, diffMenu: diffMenu, rebuildTop: rebuildTop,
   /* (3.0) открыта ли головоломка (её окно или окно внутри неё): ОКО тогда молчит */
   puzzleOpen: function () { return stack.some(function (w) { return w.puzzle; }); }
 };

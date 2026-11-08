@@ -4127,6 +4127,24 @@ function applyDiff() {
   G.tb = G.tb ? 1 : 0;
   if (S.difficulty !== G.diff || (S.turnBased ? 1 : 0) !== G.tb) { S.difficulty = G.diff; S.turnBased = G.tb; LAB.saveSettings(); }
 }
+/* (голос ОКО) Голос ОКО — свой у каждой игры: его выбирают в начале новой игры (ui.js, okoAsk) и
+   меняют в настройках (тогда и в этой игре); запись его помнит, и загрузка ставит его сама. В записи,
+   сделанной, пока голоса ОКО в игре не было, голоса нет: он берётся из настроек и с этой поры
+   запоминается. Пока голос записан не весь (okovoice.js, ready), помнить нечего. true — голос в
+   настройках сменился: загрузка скажет, каким голосом ОКО говорит в этой игре. */
+function applyVoice() {
+  var V = LAB.okoVoice;
+  if (!V || !V.ready || !V.ready()) return false;
+  var v = G.okoVoice;
+  if (v !== "m" && v !== "f" && v !== "tts") { G.okoVoice = V.voice(); return false; }
+  if (S.okoVoice === v) return false;
+  S.okoVoice = v; LAB.saveSettings();
+  return true;
+}
+function voiceLine() {
+  var v = S.okoVoice;
+  return v === "f" ? "ОКО в этой игре говорит женским голосом." : v === "tts" ? "Слова ОКО в этой игре читает синтезатор." : "ОКО в этой игре говорит мужским голосом.";
+}
 function loadSlot(n, fromBak) {
   var key = SLOT_KEYS[n] + (fromBak ? "_bak" : "");
   var raw = LAB.store.get(key);
@@ -4138,12 +4156,13 @@ function loadSlot(n, fromBak) {
   var back = riftResumable({ done: d.g.done, L: d.g.L });
   if (d.g.done && !back) { LAB.UI.error(); say("Эта игра пройдена до конца: ключ «Эхо» повёрнут, «Исток» спит. Начните новую игру — слоты останутся."); return false; }
   /* загрузка с откатом: если запись не поднимется, прежняя игра остаётся как была */
-  var prevG = G, prevEntered = game.entered, prevCUR = { fl: CUR.fl, fs: CUR.fs, key: CUR.key, seen: CUR.seen }, prevDiff = S.difficulty, prevTB = S.turnBased;
+  var prevG = G, prevEntered = game.entered, prevCUR = { fl: CUR.fl, fs: CUR.fs, key: CUR.key, seen: CUR.seen }, prevDiff = S.difficulty, prevTB = S.turnBased, prevVoice = S.okoVoice, voiceSet = false;
   game.loading = true;
   try {
     G = migrate(d.g);
     if (back) G.done = false; /* (4.5) идти можно сразу: спуск — под пультом «Истока» */
     applyDiff();
+    voiceSet = applyVoice(); /* (голос ОКО) голос этой игры — сам */
     if (Q()) Q().reset(); /* (3.5) задания записи объявляются заново */
     game.session++; game.paused = false; game.descending = false;
     if (LAB.office && LAB.office.clear) LAB.office.clear();
@@ -4162,6 +4181,7 @@ function loadSlot(n, fromBak) {
     game.loading = false;
     G = prevG; game.entered = prevEntered; CUR.fl = prevCUR.fl; CUR.fs = prevCUR.fs; CUR.key = prevCUR.key; CUR.seen = prevCUR.seen;
     if (S.difficulty !== prevDiff || S.turnBased !== prevTB) { S.difficulty = prevDiff; S.turnBased = prevTB; LAB.saveSettings(); } /* режим прежней игры — тоже прежний */
+    if (S.okoVoice !== prevVoice) { S.okoVoice = prevVoice; LAB.saveSettings(); } /* и голос ОКО */
     LAB.clearFloorCache();
     if (prevEntered && CUR.fl && LAB.combat) { try { LAB.combat.loadFoes(); } catch (e2) { /* */ } }
     if (!prevEntered) UIx("mainMenu");
@@ -4171,7 +4191,7 @@ function loadSlot(n, fromBak) {
   game.loading = false;
   autosave();
   var lev = LAB.LEVELS[G.L];
-  say("Игра загружена. Уровень " + G.L + ", " + lev.name + ", этаж " + G.F + ". Здоровье " + G.hp + " из " + G.hpMax + ". " + weaponLine(curWeapon()) + ".");
+  say("Игра загружена. Уровень " + G.L + ", " + lev.name + ", этаж " + G.F + ". Здоровье " + G.hp + " из " + G.hpMax + ". " + weaponLine(curWeapon()) + "." + (voiceSet ? " " + voiceLine() : ""));
   if (G.upgNote) { sayq(G.upgNote); G.upgNote = null; }
   /* (3.7, нелогичность) помещения росли в шестом выпуске мира (3.6); в седьмом — только обстановка по
      назначению помещений: запись выпущенной 3.7 (шестой выпуск) просторнее не стала */
@@ -4335,6 +4355,7 @@ function newGame() {
   var seed = "lab-" + Date.now().toString(36) + "-" + Math.floor(Math.random() * 1e6).toString(36);
   G = newState(seed);
   applyDiff();
+  applyVoice(); /* (голос ОКО) голос, выбранный в начале игры (ui.js, okoAsk), — в её запись */
   if (Q()) Q().reset();
   G.wakeSafe = 1; /* (2.1) безопасное пробуждение: в капсульном отсеке никто не тронет (combat.js) */
   game.session++; game.paused = false; game.descending = false;
