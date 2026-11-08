@@ -603,6 +603,8 @@ LAB.OKO_VOICED = {
     "fea129b3 feab9f15 feb43cfa fec22cec fec8462d fec8a02d fedf4703 fee36759 fef9dcad ff2a3a9c ff3300e9 ff41f33c " +
     "ff42c247 ff4ba84a ff5f0779 ff7be3d9 ff9176eb ff9625e3 ffa1850a ffbf6cf3 ffe4f2fd fff6f604 fffae1fd",
   w: { m: "dveri nositel posle zabyvat", f: "dveri nositel posle zabyvat" },
-  /* записаны ли все реплики обоими голосами: нет — голос ОКО в игре и в сборках не участвует */
+  /* записаны ли все реплики обоими голосами */
+  recorded: false,
+  /* записаны все И автор одобрил (approved.json): нет — голос ОКО в игре и в сборках не участвует */
   ready: false
 };

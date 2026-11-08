@@ -7,10 +7,12 @@
 шёпот для эха. Игра (js/okovoice.js) говорит записью только то, что есть в
 этом списке; остальное — синтезатором.
 
-ready — записаны все реплики (lines.json) обоими голосами. Пока нет, игра
-говорит синтезатором, настроек голоса ОКО не показывает, в начале новой игры
-о голосе не спрашивает, а сборки (Android, Windows) не берут sounds/oko: голос
-ОКО входит в игру только целиком.
+ready — записаны все реплики (lines.json) обоими голосами И автор одобрил голос
+(approved.json рядом, "approved": true). Пока нет, игра говорит синтезатором,
+настроек голоса ОКО не показывает, в начале новой игры о голосе не спрашивает,
+а сборки (Android, Windows) не берут sounds/oko: голос ОКО входит в игру только
+целиком и только с одобрения автора. recorded — записаны ли все реплики (для
+сведения: «записано всё, ждёт одобрения»).
 """
 import json, os, re
 
@@ -18,6 +20,8 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
 SND = os.path.join(ROOT, "sounds", "oko")
 OUT = os.path.join(ROOT, "js", "oko_voiced.js")
 LINES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lines.json")
+# (после 4.5, просьба автора) голос ОКО — в игру и в сборки только с одобрения автора
+APPROVED = os.path.join(os.path.dirname(os.path.abspath(__file__)), "approved.json")
 
 
 def key(t):
@@ -60,7 +64,12 @@ def main():
     m, wm = scan("m")
     f, wf = scan("f")
     lm, lf = missing(m, f)
-    ready = not lm and not lf
+    recorded = not lm and not lf
+    try:
+        approved = bool(json.load(open(APPROVED, encoding="utf-8")).get("approved"))
+    except (OSError, ValueError):
+        approved = False
+    ready = recorded and approved
     def chunk(keys):
         lines = [" ".join(keys[i:i + 12]) for i in range(0, len(keys), 12)]
         return '"' + ' " +\n    "'.join(lines) + '"' if lines else '""'
@@ -76,13 +85,17 @@ def main():
         f"  /* женский голос: {len(f)} реплик */\n"
         f"  f: {chunk(f)},\n"
         f"  w: {{ m: \"{' '.join(wm)}\", f: \"{' '.join(wf)}\" }},\n"
-        "  /* записаны ли все реплики обоими голосами: нет — голос ОКО в игре и в сборках не участвует */\n"
+        "  /* записаны ли все реплики обоими голосами */\n"
+        f"  recorded: {'true' if recorded else 'false'},\n"
+        "  /* записаны все И автор одобрил (approved.json): нет — голос ОКО в игре и в сборках не участвует */\n"
         f"  ready: {'true' if ready else 'false'}\n"
         "};\n"
     )
     open(OUT, "w", encoding="utf-8").write(js)
     print(f"oko_voiced.js: мужской — {len(m)}, женский — {len(f)}, шёпот — {len(wm)}/{len(wf)}; "
-          + ("записаны все реплики" if ready else f"без записи: мужской — {lm}, женский — {lf}"))
+          + ("записаны все реплики, голос одобрен — входит в игру и сборки" if ready
+             else "записаны все реплики — ждёт одобрения автора (approved.json), в игру и сборки не входит" if recorded
+             else f"без записи: мужской — {lm}, женский — {lf}"))
 
 
 if __name__ == "__main__":
