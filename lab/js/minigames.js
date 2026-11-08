@@ -366,7 +366,10 @@ function bullsGesture(g) {
     return;
   }
   if (g.kind === "digit") { if (g.d >= 1 && g.d <= 6) { c.d[c.i] = g.d; tone(500 + g.d * 80, 0.05, 0, "square", 0.05); if (c.i < c.len - 1) { c.i++; say(String(g.d)); } else say(g.d + ". Набрано: " + c.d.join(" ") + "."); } return; }
-  if (g.kind === "tap" && g.n === 1) { say("Набрано: " + c.d.join(" ") + ". " + (c.hist.length ? "Было: " + c.hist.slice(-4).join("; ") + "." : "Попыток ещё не было.") + " Осталось попыток: " + (c.limit - c.tries) + "."); return; }
+  /* (после 4.5, просьба автора: «проверь, чтобы эта головоломка выполнялась логично») ключ выводят из
+     всех прошлых попыток, а не из последних: касание называет каждую, по номерам (прежде — только
+     четыре последние, а попыток бывает до тринадцати) */
+  if (g.kind === "tap" && g.n === 1) { say("Набрано: " + c.d.join(" ") + ". " + (c.hist.length ? "Было: " + c.hist.map(function (h, i) { return "попытка " + (i + 1) + ": " + h; }).join("; ") + "." : "Попыток ещё не было.") + " Осталось попыток: " + (c.limit - c.tries) + "."); return; }
   if (g.kind === "dtap" && g.n === 1) {
     var uniq = c.d.filter(function (v, i, a) { return a.indexOf(v) === i; });
     if (uniq.length < c.len) { say("Цифры ключа не повторяются. Наберите разные."); return; }

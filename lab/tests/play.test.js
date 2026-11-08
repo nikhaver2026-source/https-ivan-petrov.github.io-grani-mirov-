@@ -280,6 +280,56 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   }));
   ok(code === "1290", "код набирается дисками: " + code);
 
+  /* (после 4.5, просьба автора: «подставить цифры в нужном порядке… на месте 1, не на месте 0 — проверь,
+     чтобы эта головоломка выполнялась логично») «Подбор ключа»: отклик «на месте / не на месте» верен
+     для любых ключа и попытки, касание называет все прошлые попытки по номерам, ключ угадывается */
+  console.log("Мини-игра: подбор ключа — на месте и не на месте");
+  const bk = await page.evaluate(async () => {
+    const out = { bad: [] }, wait = ms => new Promise(r => setTimeout(r, ms)), g = d => LAB.mini.gesture(d);
+    const ref = (key, d) => { let e = 0, m = 0; d.forEach((v, i) => { if (key[i] === v) e++; else if (key.indexOf(v) >= 0) m++; }); return "на месте " + e + ", не на месте " + m; };
+    const perm = (n) => { const p = [1, 2, 3, 4, 5, 6]; for (let i = 5; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [p[i], p[j]] = [p[j], p[i]]; } return p.slice(0, n); };
+    for (const len of [3, 4, 5]) {
+      let res = null;
+      SPOKEN.length = 0; LAB.mini.bulls(len, ok => { res = ok; }, { title: "Проверка ключа" });
+      const c = LAB.mini._cur(), shots = [];
+      out["len" + len] = c && c.type === "bulls" && c.key.length === len && new Set(c.key).size === len && c.key.every(v => v >= 1 && v <= 6);
+      /* шесть неверных попыток с проверкой отклика */
+      for (let t = 0; t < 6; t++) {
+        let d; do { d = perm(len); } while (d.join("") === c.key.join(""));
+        d.forEach((v, i) => { c.d[i] = v; });
+        g({ kind: "dtap", n: 1 }); shots.push(d.join(" ") + ": " + ref(c.key, d));
+        if (c.hist[c.hist.length - 1] !== shots[shots.length - 1]) out.bad.push(len + ": " + c.hist[c.hist.length - 1] + " ≠ " + shots[shots.length - 1]);
+      }
+      await wait(1600);
+      SPOKEN.length = 0; g({ kind: "tap", n: 1 });
+      const heard = SPOKEN.join(" ");
+      out["hist" + len] = shots.every((h, i) => heard.indexOf("попытка " + (i + 1) + ": " + h) >= 0);
+      /* повтор цифр — не попытка */
+      c.d.forEach((v, i) => { c.d[i] = 1; }); const tries0 = c.tries; SPOKEN.length = 0; g({ kind: "dtap", n: 1 });
+      out["rep" + len] = c.tries === tries0 && /не повторяются/.test(SPOKEN.join(" "));
+      /* верный ключ — открыто */
+      c.key.forEach((v, i) => { c.d[i] = v; }); g({ kind: "dtap", n: 1 });
+      for (let i = 0; i < 40 && res === null; i++) await wait(100);
+      out["win" + len] = res === true;
+    }
+    /* отклики на множестве случайных пар ключ — попытка */
+    for (let n = 0; n < 400; n++) {
+      const len = 3 + (n % 3); let res = null;
+      LAB.mini.bulls(len, ok => { res = ok; }, { title: "Проверка ключа" });
+      const c = LAB.mini._cur(), d = perm(len);
+      d.forEach((v, i) => { c.d[i] = v; }); g({ kind: "dtap", n: 1 });
+      const want = d.join(" ") + ": " + ref(c.key, d);
+      if (d.join("") !== c.key.join("") && c.hist[0] !== want) out.bad.push(c.hist[0] + " ≠ " + want);
+      LAB.mini.cancel(true);
+    }
+    return out;
+  });
+  ok(bk.len3 && bk.len4 && bk.len5, "подбор ключа: ключ — разные цифры от одной до шести, длиной 3, 4 и 5");
+  ok(!bk.bad.length, "отклик «на месте / не на месте» верен на 400 случайных парах и в каждой попытке" + (bk.bad.length ? ": " + bk.bad.slice(0, 3).join("; ") : ""));
+  ok(bk.hist3 && bk.hist4 && bk.hist5, "касание называет все прошлые попытки по номерам, с откликами");
+  ok(bk.rep3 && bk.rep4 && bk.rep5, "повтор цифр — не попытка: «цифры ключа не повторяются»");
+  ok(bk.win3 && bk.win4 && bk.win5, "верный ключ подбирается — замок открыт");
+
   console.log("Звуки: металлический пол у каждого уровня, одна запись удара о стену");
   const snd = await page.evaluate(() => {
     const surf = LAB.LEVELS.slice(1).filter(Boolean).map(l => (LAB.SURF[l.surf] && LAB.SURF[l.surf].base) || l.surf);
