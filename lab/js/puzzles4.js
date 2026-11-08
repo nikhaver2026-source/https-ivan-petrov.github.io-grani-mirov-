@@ -213,15 +213,18 @@ function tsMake(r, n, s, types, c, L) {
 }
 function tsSay(st, ps) {
   var s = ps[st.s], a = st.a >= 0 ? ps[st.a] : null, b = st.b >= 0 ? ps[st.b] : null;
+  /* (после 4.5, нелогичность) о двух женщинах звучало «Брагина и Лапина — оба лгут», «из двоих … лжёт ровно
+     один» — теперь «обе», «одна», «из двух» (примерно каждое пятое высказывание о двоих) */
+  var fem2 = !!(a && b && a.f && b.f), both = fem2 ? "обе" : "оба";
   switch (st.t) {
     case "G": return st.a === st.s ? "Это " + gv(s, "сделал", "сделала") + " я" : "Это " + gv(a, "сделал", "сделала") + " " + a.n;
     case "NG": return st.a === st.s ? "Я этого не " + gv(s, "делал", "делала") : a.n + " этого не " + gv(a, "делал", "делала");
     case "L": return a.n + " лжёт";
     case "T": return a.n + " говорит правду";
-    case "OR": return "Это сделал кто-то из двоих: " + a.n + " или " + b.n;
-    case "BL": return a.n + " и " + b.n + " — оба лгут";
-    case "SM": return a.n + " и " + b.n + " — одного поля ягоды: или оба говорят правду, или оба лгут";
-    case "DF": return "Из двоих, " + a.n + " и " + b.n + ", лжёт ровно один";
+    case "OR": return (fem2 ? "Это сделала одна из двух: " : "Это сделал кто-то из двоих: ") + a.n + " или " + b.n;
+    case "BL": return a.n + " и " + b.n + " — " + both + " лгут";
+    case "SM": return a.n + " и " + b.n + " — одного поля ягоды: или " + both + " говорят правду, или " + both + " лгут";
+    case "DF": return (fem2 ? "Из двух, " : "Из двоих, ") + a.n + " и " + b.n + ", лжёт ровно " + (fem2 ? "одна" : "один");
     case "CN": return st.k === 0 ? "Среди нас нет ни одного лжеца" : "Среди нас ровно " + cnt(st.k, "лжец", "лжеца", "лжецов");
     case "LC": return "Кто это сделал, тот и лжёт";
   }
@@ -1496,7 +1499,16 @@ function rings(seed, cb, opts) {
     for (var j = 0; j < k; j++) if (j !== i && R.eff[i][j]) parts.push("диск " + (j + 1) + " — на " + rgStepWords(R.eff[i][j]));
     return "кнопка " + (i + 1) + " поворачивает диск " + (i + 1) + " на одно деление вперёд" + (parts.length ? ", а заодно " + andList(parts) : "");
   };
-  var rules = intList(k).map(effText).join("; ") + "." + (R.cl ? " Муфта: пока диск " + (R.cl.c + 1) + " стоит на делении " + R.cl.z + ", кнопка " + (R.cl.i + 1) + " цепляет ещё и диск " + (R.cl.j + 1) + " и поворачивает его на " + rgStepWords(R.cl.dl) + "." : "");
+  /* (после 4.5, нелогичность) в половине сложных задач муфта цепляет диск, который кнопка и так поворачивает:
+     «цепляет ещё и диск 2» звучало, будто кнопка его прежде не трогала, и не было ясно, складываются ли
+     повороты (а нередко они взаимно гасли). Теперь тогда сказано, как кнопка повернёт этот диск при муфте */
+  var clutch = function (cl) {
+    var pre = " Муфта: пока диск " + (cl.c + 1) + " стоит на делении " + cl.z + ", кнопка " + (cl.i + 1), e0 = R.eff[cl.i][cl.j], sum = e0 + cl.dl;
+    var turn = function (v) { return cnt(Math.abs(v), "деление", "деления", "делений", "n") + (v > 0 ? " вперёд" : " назад"); };
+    if (!e0) return pre + " цепляет ещё и диск " + (cl.j + 1) + " и поворачивает его на " + rgStepWords(cl.dl) + ".";
+    return pre + (sum ? " поворачивает диск " + (cl.j + 1) + " не на " + turn(e0) + ", а на " + turn(sum) : " не поворачивает диск " + (cl.j + 1) + ", хотя без муфты повернула бы его на " + turn(e0)) + ".";
+  };
+  var rules = intList(k).map(effText).join("; ") + "." + (R.cl ? clutch(R.cl) : "");
   var code = function (a) { return a.join(", "); };
   var discs = function () { return s.map(function (v, i) { return "диск " + (i + 1) + " — " + v; }).join(", "); };
   var cond = head(opts, d) + "Сейф с дисками. На дверце " + cnt(k, "диск", "диска", "дисков") + " с делениями от 0 до " + (R.m - 1) + "; после деления " + (R.m - 1) + " снова идёт 0. Под каждым диском — кнопка. " + cap(rules) +
@@ -1655,7 +1667,9 @@ function genGears(seed, d) {
   var bad = [];
   grPerms(G.box, G.nslots).forEach(function (p) { if (bad.length < 3) { var f = p.map(function (bi) { return G.box[bi]; }); var ev = grEval(G, f, G.sock.map(function () { return false; })); if (ev.num !== G.X * ev.den) bad.push(f); } });
   var wrong = [0, 1, 2].map(function (k) { return mk(bad[k % bad.length], G.sock.map(function () { return false; })); });
-  var nvar = d > 0 ? V2.list.length * (G.sock.length > 1 && V2.needOdd ? 2 : 1) : 1;
+  /* (после 4.5) счёт решений для _last.sol: при двух местах для паразитной верных расстановок две и тогда, когда
+     паразитная не нужна (ни одной или обе), — прежде такие задачи насчитывали решений вдвое меньше */
+  var nvar = d > 0 ? V2.list.length * (G.sock.length > 1 ? 2 : 1) : 1;
   return { G: G, plan: plan, wrong: wrong, alts: alts, variable: d > 0, sol: nvar, ans: { fill: bestL[0].fill.slice(), idl: idlBest.slice() },
     data: { S: G.S, sh: G.sh, sock: G.sock, box: G.box, X: G.X, D: G.D, vmax: G.vmax, vshaft: G.vshaft, valid: V2.list.map(function (v) { return v.fill; }), minSum: V2.minSum, needOdd: V2.needOdd },
     sig: "gears|" + d + "|" + JSON.stringify([G.S, G.sh, G.sock, G.box.slice().sort(function (a, b) { return a - b; }), G.X, G.D, G.vmax]) };
@@ -1711,7 +1725,9 @@ function gears(seed, cb, opts) {
     out.push(act("Запустить привод", function () {
       if (fill.some(function (t) { return !t; })) { nope("Сначала поставьте шестерни во все гнёзда."); return; }
       var ev = grEval(G, fill, idl);
-      if (G.vmax && ev.sp[G.vshaft].num > G.vmax * ev.sp[G.vshaft].den) { A("play", "term_err"); fail("Подшипник третьего вала взвыл: вал разогнался до " + grSpeed(ev.sp[G.vshaft].num, ev.sp[G.vshaft].den).replace(/^примерно /, "").replace(/тысячу/, "тысячи") + ", а выдерживает самое большее " + grSpeed(G.vmax, 1) + ". Привод остановлен."); return; }
+      /* (после 4.5, нелогичность) было «разогнался до восемьсот оборотов» (падеж), а нецелую скорость называло без
+         «примерно», как точную */
+      if (G.vmax && ev.sp[G.vshaft].num > G.vmax * ev.sp[G.vshaft].den) { A("play", "term_err"); fail("Подшипник третьего вала взвыл: вал делает " + grSpeed(ev.sp[G.vshaft].num, ev.sp[G.vshaft].den) + ", а выдерживает самое большее " + grSpeed(G.vmax, 1) + ". Привод остановлен."); return; }
       if (ev.num === G.X * ev.den && ev.dir === G.D) {
         var sum = fill.reduce(function (a, b) { return a + b; }, 0), ni = idl.filter(Boolean).length;
         A("play", "power_on");
@@ -1750,7 +1766,10 @@ function genPendulums(seed, d) {
       var q = r.pick(["first", "count", "within"]), who = r.int(0, m - 1), T = 0, ans;
       if (q === "first") ans = L;
       else if (q === "count") ans = L / ps[who];
-      else { T = r.pick([60, 90, 120, 180, 240, 300, 360, 600]); ans = Math.floor(T / L); if (ans < 1 || ans > 20) continue; }
+      /* (после 4.5, нелогичность) встреча ровно на последней секунде (60 при встречах каждые 12): считать ли её
+         «за шестьдесят секунд», можно понять двояко — такие задачи (почти треть вопросов «сколько раз за…»)
+         больше не выпадают, и ответ один при любом прочтении */
+      else { T = r.pick([60, 90, 120, 180, 240, 300, 360, 600]); ans = Math.floor(T / L); if (ans < 1 || ans > 20 || T % L === 0) continue; }
       G = { ps: ps, ss: ps.map(function () { return 0; }), q: q, who: who, T: T, ans: ans, L: L };
     } else {
       var m2 = d === 2 ? 3 : (r.chance(0.5) ? 2 : 3), pp = shuffled(r, intList(13).map(function (x) { return x + 3; })).slice(0, m2), ss = pp.map(function (p) { return r.int(1, p); });
@@ -1759,7 +1778,9 @@ function genPendulums(seed, d) {
       var q2 = d === 2 ? "first" : r.pick(["first", "first", "second", "count"]), ans2;
       if (q2 === "first") ans2 = com[0];
       else if (q2 === "second") { if (com.length < 2 || com[1] > 1000) continue; ans2 = com[1]; }
-      else { ans2 = com.filter(function (t) { return t <= 480; }).length; if (ans2 < 2) continue; }
+      /* (после 4.5, нелогичность) совпадение ровно на 480-й минуте — в миг конца смены: входит ли оно «за смену»,
+         можно понять двояко; такие задачи больше не выпадают */
+      else { ans2 = com.filter(function (t) { return t <= 480; }).length; if (ans2 < 2 || com.indexOf(480) >= 0) continue; }
       var sigs = shuffled(r, intList(PD_SIG.length)).slice(0, m2);
       var g2 = { ps: pp, ss: ss, q: q2, ans: ans2, sigs: sigs, T: com[0] };
       if (d === 2) {
@@ -1849,7 +1870,8 @@ function pendulums(seed, cb, opts) {
         A("play", "term_err"); fail(why2(v));
       }),
       act("Послушать удары", listen),
-      act("Что сейчас", function () { say((stage === 2 ? stageHead(2, 2) + " " + ask2 : (d === 2 ? stageHead(1, 2) + " " : "") + desc + " " + ask) + " Набрано: " + (cur || "ничего") + "."); })
+      /* (после 4.5) на втором этапе — и найденная минута: задание ссылается на «ту минуту, что вы нашли» */
+      act("Что сейчас", function () { say((stage === 2 ? stageHead(2, 2) + " Все три сходятся через " + unit(G.T) + " после начала смены. " + ask2 : (d === 2 ? stageHead(1, 2) + " " : "") + desc + " " + ask) + " Набрано: " + (cur || "ничего") + "."); })
     ];
   }, cb);
 }
@@ -1970,7 +1992,11 @@ function shunting(seed, cb, opts) {
   };
   var cond = head(opts, d) + "Сортировочная горка. " + cap(cnt(n, "вагонетка", "вагонетки", "вагонеток", "f")) + " стоят на подъездном пути; первой к горке стоит вагонетка 1: " + list(intList(n)) + ". На выход их надо отдать по грузам: сначала все вагонетки " + groups[0] + ", потом " + groups.slice(1).join(", потом ") +
     "; внутри одного груза — в любом порядке. Пути: с подъездного прямо на выход; в тупик, где последняя зашедшая выходит первой" + (T.cap < n ? ", а помещаются только две" : "") +
-    (T.capQ ? "; на разъезд, где первая зашедшая первой и выходит, тоже на две" : "") + ". Отдать на выход вагонетку раньше её очереди нельзя: сцепщик остановит горку. На всё — " + cnt(P.limit, "ход", "хода", "ходов") + ", не больше.";
+    (T.capQ ? "; на разъезд, где первая зашедшая первой и выходит, тоже на две" : "") +
+    /* (после 4.5, нелогичность) условие не говорило, куда можно увести вагонетку из тупика (и с разъезда), а от этого
+       зависит кратчайшее число ходов и предел: из тупика в разъезд или назад на подъездной путь хода нет */
+    (T.capQ ? "; из тупика и с разъезда — только на выход" : "; из тупика — только на выход") +
+    ". Отдать на выход вагонетку раньше её очереди нельзя: сцепщик остановит горку. На всё — " + cnt(P.limit, "ход", "хода", "ходов") + ", не больше.";
   var reset = function () { s = { i: 0, st: [], qu: [], out: 0 }; used = 0; };
   var last = start("shunting", d, P, "Сортировочная горка", cond, function (st, finish, fail) {
     var out = [];
@@ -2199,7 +2225,12 @@ function genBunker(seed, d) {
     st1.sols.forEach(function (rf) { var ss = all.filter(function (p) { return conds2.every(function (c) { return bkTrue(c, p, n, true, rf); }); }); if (!ss.length) okAll = false; per.push(ss); });
     if (!okAll) continue;
     var wish2 = bkWish(r, BK_W2, n, true, per[0], ref0);
-    if (!wish2) continue;
+    /* (после 4.5, нелогичность) пожелание за столом подбиралось по одной рассадке нар, а при другой, тоже верной,
+       его порой нельзя было выполнить вовсе (каждая шестая задача): образцовое решение зависело от выбора нар,
+       сделанного вслепую — пожелание объявляют только на втором этапе. Теперь оно выполнимо при любой верной */
+    var wishAll = function (wc) { return st1.sols.every(function (rf, i) { return per[i].some(function (p) { return bkTrue(wc, p, n, true, rf); }); }); };
+    for (var gw = 0; gw < 12 && wish2 && !wishAll(wish2); gw++) wish2 = bkWish(r, BK_W2, n, true, per[0], ref0);
+    if (!wish2 || !wishAll(wish2)) continue;
     G = { st1: st1, conds2: conds2, per: per, wish: wish2 };
   }
   if (!G) return null;
@@ -2227,7 +2258,7 @@ function genBunker(seed, d) {
     sig: "bunker|" + d + "|" + JSON.stringify([n, G.st1.conds.map(bkArr), G.conds2 ? G.conds2.map(bkArr) : 0, bkArr(G.wish)]) };
 }
 function bunker(seed, cb, opts) {
-  var d = diffOf(opts), P = GEN.bunker(seed, d), ps = P.ps, n = P.n, stage = 1, rowRef = null;
+  var d = diffOf(opts), P = GEN.bunker(seed, d), ps = P.ps, n = P.n, stage = 1, rowRef = null, rowLine = "";
   var seat = intList(n).map(function () { return -1; }); /* seat[место] — человек */
   var lines = P.conds.map(function (c) { return bkSay(c, ps, n); }), lines2 = P.conds2 ? P.conds2.map(function (c) { return bkSay(c, ps, n); }) : [];
   var wishText = bkSay(P.wish, ps, n);
@@ -2254,14 +2285,15 @@ function bunker(seed, cb, opts) {
         UIx("menu", lbl() + " " + (s0 + 1), items);
       }));
     })(s0);
-    out.push(info("Условия", function () { return stage === 1 ? "Условия: " + lines.join("; ") + "." + (d < 2 ? " Пожелание: " + wishText + "." : "") : stage2Text(); }));
+    /* (после 4.5) за столом пункт «Условия» называет и расселение по нарам: условия стола — о соседях по нарам */
+    out.push(info("Условия", function () { return stage === 1 ? "Условия: " + lines.join("; ") + "." + (d < 2 ? " Пожелание: " + wishText + "." : "") : "Расселение по нарам: " + rowLine + ". " + stage2Text(); }));
     out.push(act(stage === 1 ? "Рассадить" : "Рассадить за столом", function () {
       if (seat.some(function (x) { return x < 0; })) { nope("Сначала займите все " + (stage === 1 ? "нары." : "места.")); return; }
       var p = pos(), conds = stage === 1 ? P.conds : P.conds2, txt = stage === 1 ? lines : lines2, circ = stage === 2;
       for (var i = 0; i < conds.length; i++) if (!bkTrue(conds[i], p, n, circ, rowRef)) { A("play", "term_err"); fail("Не выходит: нарушено условие «" + txt[i] + "»."); return; }
       if (stage === 1 && d === 2) {
         var rowTxt = seatText();
-        rowRef = p; stage = 2; seat = intList(n).map(function () { return -1; }); A("play", "paper_turn");
+        rowRef = p; rowLine = rowTxt; stage = 2; seat = intList(n).map(function () { return -1; }); A("play", "paper_turn");
         st.cond = cond + " Первый этап пройден, расселение по нарам: " + rowTxt + ". " + stage2Text();
         say("Нары распределены. " + stage2Text()); return;
       }
@@ -2366,7 +2398,8 @@ function league(seed, cb, opts) {
     var X = c.a >= 0 ? ps[c.a] : null;
     switch (c.t) {
       case "PTS": return X.n + " — " + cnt(c.k, "очко", "очка", "очков", "n");
-      case "DRAWS": return c.k === 0 ? "ничьих в турнире не было" : "ничьих в турнире было ровно " + nw(c.k, "f");
+      /* (после 4.5, нелогичность) было «ничьих в турнире было ровно одна» — теперь «была ровно одна ничья», «ровно две ничьи» */
+      case "DRAWS": return c.k === 0 ? "ничьих в турнире не было" : "в турнире " + (c.k === 1 ? "была" : "было") + " ровно " + cnt(c.k, "ничья", "ничьи", "ничьих", "f");
       case "NOLOSS": return X.n + " не " + gv(X, "проиграл", "проиграла") + " ни разу";
       case "WINS": return c.k === 0 ? X.n + " не " + gv(X, "выиграл", "выиграла") + " ни одного испытания" : X.n + " " + gv(X, "выиграл", "выиграла") + " ровно " + cnt(c.k, "испытание", "испытания", "испытаний", "n");
     }
@@ -2485,6 +2518,9 @@ function genSwitchorder(seed, d) {
     var s = intList(n).map(function () { return r.int(4, 16); }), w = intList(n).map(function () { return r.int(1, 6); });
     var T = { n: n, deps: deps, nadj: nadj, s: s, w: w, lim: 0 };
     for (i = 0; i < [0, 1, r.int(1, 2)][d]; i++) { var x = r.int(0, n - 1), y = r.int(0, n - 2); if (y >= x) y++; nadj.push([x, y]); }
+    /* (после 4.5, нелогичность) один и тот же запрет мог выпасть дважды и звучал в правилах щита два раза подряд;
+       второй ничего не меняет — убираем (поток случайностей тот же, остальная задача прежняя) */
+    if (nadj.length === 2 && nadj[0].join() === nadj[1].join()) nadj.pop();
     var all = bkAll(n).filter(function (o) { return swOk(T, o); });
     if (d === 2) {
       var pk = all.map(function (o) { return swPeak(T, o); }).sort(function (a, b) { return a - b; }), lim = -1;

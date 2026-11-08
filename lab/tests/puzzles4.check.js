@@ -331,7 +331,7 @@ function grEvalC(D, fill, idl) {
   for (let j = 1; j < D.sh.length; j++) { num *= t(D.sh[j - 1].o); den *= t(D.sh[j].i); dir = -dir; D.sock.forEach((sk, k) => { if (sk === j && idl[k]) dir = -dir; }); const g = gcd(num, den); num /= g; den /= g; sp.push([num, den]); }
   return { num, den, dir, sp };
 }
-function chkGears(D, d, at) {
+function chkGears(D, d, at, P) {
   const ns = D.sh.reduce((a, s) => a + [s.i, s.o].filter(g => g && g.s != null && (s.i !== s.o || g === s.i)).length, 0);
   const slotsN = Math.max(...D.sh.map(s => Math.max(s.i && s.i.s != null ? s.i.s : -1, s.o && s.o.s != null ? s.o.s : -1))) + 1;
   const valid = [];
@@ -349,6 +349,12 @@ function chkGears(D, d, at) {
   if (key(valid) !== key(D.valid)) err(at + ": шестерни: верных наборов " + valid.length + ", в задаче " + D.valid.length);
   if (d === 0 && valid.length !== 1) err(at + ": шестерни: в простой наборов " + valid.length);
   if (d > 0 && valid.length < 2) err(at + ": шестерни: вариативная с одним набором");
+  /* (после 4.5) _last.sol — все верные расстановки: набор шестерён и паразитные, дающие нужное направление */
+  if (d > 0) {
+    let full = 0;
+    valid.forEach(f => { for (let mk = 0; mk < (1 << D.sock.length); mk++) if (grEvalC(D, f, D.sock.map((s, k) => !!(mk >> k & 1))).dir === D.D) full++; });
+    if (P.sol !== full) err(at + ": шестерни: верных расстановок " + full + ", а насчитано " + P.sol);
+  }
   if (d === 2) {
     const free = []; const rec2 = (cur, used) => { if (cur.length === slotsN) { const ev = grEvalC(D, cur, [false, false]); if (ev.num === D.X * ev.den) free.push(cur); return; } D.box.forEach((t, i) => { if (!used[i]) { used[i] = true; cur.push(t); rec2(cur, used); cur.pop(); used[i] = false; } }); };
     rec2([], D.box.map(() => false));
@@ -369,6 +375,10 @@ function chkPendulums(D, d, at) {
     for (let p = 2; p <= 30; p++) { if ((T - D.r0) % p) continue; let bad = false; for (let t = D.r0; t < T; t += p) if (fires(0, t)) bad = true; if (!bad) ok.push(p); }
     if (ok.join() !== D.valid.join() || ok.length < 2) err(at + ": маятники: периоды отбоя " + ok.join() + ", в задаче " + D.valid.join());
   }
+  /* (после 4.5) встреча ровно на конце отрезка («за шестьдесят секунд» при встречах каждые 12, совпадение на 480-й
+     минуте смены) читается двояко — таких задач нет */
+  if (d === 0 && D.q === "within" && D.T % D.ps.reduce(lcm, 1) === 0) err(at + ": маятники: встреча ровно на последней секунде");
+  if (d > 0 && D.q === "count" && D.ps.every((p, i) => fires(i, 480))) err(at + ": маятники: совпадение ровно на 480-й минуте");
   addMetric("pendulums", d, D.ps.length);
 }
 function chkShunting(D, d, at, P) {
@@ -426,7 +436,9 @@ function chkBunker(D, d, at) {
     if (s1.length !== D.nsol) err(at + ": рассадка: верных " + s1.length + ", в задаче " + D.nsol);
   } else {
     let tot = 0;
-    s1.forEach((rf, i) => { const s2 = all.filter(p => D.conds2.every(c => bkTrueC(c, p, n, true, rf))); if (!s2.length) err(at + ": рассадка: после рассадки нар " + i + " стол не решается"); tot += s2.length; });
+    s1.forEach((rf, i) => { const s2 = all.filter(p => D.conds2.every(c => bkTrueC(c, p, n, true, rf))); if (!s2.length) err(at + ": рассадка: после рассадки нар " + i + " стол не решается"); tot += s2.length;
+      /* (после 4.5) пожелание за столом выполнимо при любой верной рассадке нар: его объявляют только на втором этапе */
+      if (s2.length && !s2.some(p => bkTrueC(D.wish, p, n, true, rf))) err(at + ": рассадка: при нарах " + i + " пожелание за столом невыполнимо"); });
     if (tot !== D.nsol) err(at + ": рассадка: всего путей " + tot + ", в задаче " + D.nsol);
   }
   addMetric("bunker", d, s1.length);
@@ -456,6 +468,7 @@ function chkSwitch(D, d, at) {
   const ok = o => { const at2 = []; o.forEach((v, i) => at2[v] = i); return D.deps.every(([a, b]) => at2[a] < at2[b]) && D.nadj.every(([a, b]) => at2[a] !== at2[b] + 1) && (!D.lim || peak(o) <= D.lim); };
   const v = all.filter(ok);
   if (v.length !== D.nvalid || v.length < 2) err(at + ": рубильники: верных порядков " + v.length + ", в задаче " + D.nvalid);
+  if (new Set(D.nadj.map(String)).size !== D.nadj.length) err(at + ": рубильники: запрет повторён дважды"); /* (после 4.5) */
   const mp = Math.min(...v.map(peak));
   if (mp !== D.minP) err(at + ": рубильники: лучший бросок " + mp + ", в задаче " + D.minP);
   if (!v.some(o => peak(o) > mp)) err(at + ": рубильники: все порядки одинаково хороши");
@@ -474,7 +487,7 @@ function independent(kind, d, P, seed) {
     case "punchtape": return chkPunchtape(D, d, at);
     case "lockers": return chkLockers(D, d, at, d < 2 || seed % 4 === 1);
     case "rings": return chkRings(D, d, at, P);
-    case "gears": return chkGears(D, d, at);
+    case "gears": return chkGears(D, d, at, P);
     case "pendulums": return chkPendulums(D, d, at);
     case "shunting": return chkShunting(D, d, at, P);
     case "slider": return chkSlider(D, d, at, d === 0 || seed % 10 === 1);
@@ -548,6 +561,15 @@ for (const kind of KINDS) {
           const st2 = said.slice(sp).findIndex(t => /Этап второй из двух/.test(t));
           if (st2 < 0) err(at + ": составная: второй этап не объявлен"); else counts.staged++;
         }
+        /* (после 4.5) тексты, в которых были нелогичности: род и число, муфта сейфа, пути горки */
+        const heard = o.cond + " " + said.slice(sp).join(" ");
+        if (kind === "testimony") {
+          const fem = P.ps.filter(p => p.f).map(p => p.n);
+          fem.forEach(a => fem.forEach(b => { if (a !== b && [a + " и " + b + " — оба", a + " и " + b + " — одного поля ягоды: или оба", "Из двоих, " + a + " и " + b, "из двоих: " + a + " или " + b].some(x => heard.indexOf(x) >= 0)) err(at + ": показания: о двух женщинах — мужской род (" + a + ", " + b + ")"); }));
+        }
+        if (kind === "league" && /ничьих в турнире было ровно/.test(heard)) err(at + ": таблица: «ничьих было ровно …» — не согласовано");
+        if (kind === "rings" && P.data.cl && P.data.eff[P.data.cl.i][P.data.cl.j] && o.cond.indexOf("цепляет ещё и диск " + (P.data.cl.j + 1)) >= 0) err(at + ": сейф: муфта «цепляет ещё» диск, который кнопка и так поворачивает");
+        if (kind === "shunting" && o.cond.indexOf("только на выход") < 0) err(at + ": горка: условие не говорит, куда можно из тупика");
         /* другие решения */
         o.last.alts.forEach((al, ai) => {
           const a2 = openPuzzle(kind, seed, d);
@@ -573,6 +595,9 @@ for (const kind of KINDS) {
               const tc = said[said.length - 1], rest = tc.slice(c2.cond.length);
               if (tc.indexOf(c2.cond) !== 0 || !/^ Первый этап пройден/.test(rest) || !/Этап второй из двух/.test(rest)) err(at + ": после смены этапа «Условие ещё раз» не о втором этапе: «" + tc.slice(-160) + "»");
               else counts.condStage++;
+              /* (после 4.5) задание второго этапа ссылается на итог первого — его называют и короткие пункты */
+              if (kind === "pendulums") { markMain(); clickPrefix("Что сейчас", at + " что сейчас на втором этапе"); if (!/Все три сходятся через [а-яё ]+ (минуту|минуты|минут) после начала смены/.test(said[said.length - 1])) err(at + ": маятники: «Что сейчас» на втором этапе не называет найденную минуту"); }
+              if (kind === "bunker") { markMain(); clickPrefix("Условия", at + " условия стола"); if (said[said.length - 1].indexOf("Расселение по нарам: нары 1 — ") !== 0) err(at + ": рассадка: «Условия» стола не называют расселения по нарам"); }
               follow(c2, pl.slice(i + 1), at + " после повтора условия второго этапа");
               if (c2.res.length !== 1 || c2.res[0] !== true) err(at + ": после повтора условия второй этап не решён планом");
             }

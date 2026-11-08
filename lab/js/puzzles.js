@@ -173,7 +173,9 @@ function decon(seed, cb, opts) {
    Три контейнера, ярлыки — все до одного не на своём месте. Одна проверка
    показывает, что в одном контейнере на самом деле. Дальше — рассуждение. */
 var SUBST = [
-  { n: "дистиллят", t: "ничего: не горит, не пахнет, не шипит" }, { n: "спирт", t: "вспыхивает от искры" }, { n: "раствор хлорки", t: "резко пахнет" },
+  /* (после 4.5, нелогичность) «содержимое контейнера 1 ничем себя не выдаёт: …» — прежде «содержимое
+     контейнера 1 ничего: не горит…», фраза без сказуемого */
+  { n: "дистиллят", t: "ничем себя не выдаёт: не горит, не пахнет, не шипит" }, { n: "спирт", t: "вспыхивает от искры" }, { n: "раствор хлорки", t: "резко пахнет" },
   { n: "кислота", t: "шипит на стальной стружке" }, { n: "щёлочь", t: "мылит пальцы" }, { n: "масло", t: "не смешивается с водой" }
 ];
 function labels(seed, cb, opts) {
@@ -246,6 +248,9 @@ function dosim(seed, cb, opts) {
    на посту, который спрашивает замок. Решение единственное. */
 var STAFF = ["Ильин", "Петрова", "Коваль", "Серова", "Нагиев", "Брагина", "Тихонов", "Лапина"];
 var POSTS = ["на проходной", "на складе", "в серверной", "в виварии", "у реактора", "в медблоке"];
+/* (после 4.5, нелогичность) «смена Ильина», «смена Петровой», «смена Коваля» — родительный падеж (прежде
+   «смена Ильин кончилась», «смена Петрова кончилась» — почти в каждой задаче) */
+function staffGen(p) { return /а$/.test(p) ? p.slice(0, -1) + "ой" : /ь$/.test(p) ? p.slice(0, -1) + "я" : p + "а"; }
 function shifts(seed, cb, opts) {
   var r = rng(seed, "shifts"), h = hard();
   var n = 3 + (h >= 2 ? 1 : 0), people = STAFF.slice(), posts = POSTS.slice(); r.shuffle(people); r.shuffle(posts);
@@ -259,7 +264,7 @@ function shifts(seed, cb, opts) {
      («Тихонов раньше Брагиной» и «Брагина раньше Тихонова»), почти в каждой четвёртой задаче. */
   var endOrd = people.slice(), endAt = {}; rng(seed, "shifts-end").shuffle(endOrd);
   endOrd.forEach(function (p, i) { endAt[p] = i; });
-  for (var j2 = 0; j2 < n; j2++) for (var j3 = 0; j3 < n; j3++) if (j2 !== j3 && endAt[truth[j2]] < endAt[truth[j3]]) cand.push({ t: "смена " + truth[j2] + " кончилась раньше смены того, кто дежурил " + posts[j3], ok: function (o) { return o[this.j] !== this.who; }, j: j3, who: truth[j2] });
+  for (var j2 = 0; j2 < n; j2++) for (var j3 = 0; j3 < n; j3++) if (j2 !== j3 && endAt[truth[j2]] < endAt[truth[j3]]) cand.push({ t: "смена " + staffGen(truth[j2]) + " кончилась раньше смены того, кто дежурил " + posts[j3], ok: function (o) { return o[this.j] !== this.who; }, j: j3, who: truth[j2] });
   r.shuffle(cand);
   var rules = [], fits = function (o) { return rules.every(function (ru) { return ru.ok(o); }); };
   for (var ci = 0; ci < cand.length; ci++) {
@@ -289,6 +294,9 @@ function tally(seed, cb, opts) {
   var what = r.pick(GOODS), start = r.int(12, 40), cur = start, lines = [], n = 4 + h;
   for (var i = 0; i < n; i++) {
     var kind = r.int(0, 3), q = r.int(2, 9);
+    /* (после 4.5, нелогичность) выдать или списать можно только то, что есть: при одной штуке на складе
+       запись выходила «выдано в смену 0» или «списано 0» (в 6 % задач) — тогда это приход */
+    if ((kind === 1 || kind === 2) && cur <= 1) kind = 0;
     if (kind === 0) { cur += q; lines.push("получено со склада " + q); }
     else if (kind === 1) { q = Math.min(q, cur - 1); cur -= q; lines.push("выдано в смену " + q); }
     else if (kind === 2) { q = Math.min(q, cur - 1); cur -= q; lines.push("списано " + q); }
@@ -404,7 +412,11 @@ function chess(cb, opts) {
             var b2 = apply(board, m.from, m.to);
             if (isMate(b2, "b")) { A("play", "code_ok"); finish(true, PIECE_RU[board[s].t] + " " + saySq(m.from) + " — " + saySq(m.to) + ". Мат! Чёрный король не уходит. Партия за вами."); return; }
             tries++;
-            var why = inCheck(b2, "b") ? "Шах, но не мат: у чёрного короля есть выход." : "Это не шах: чёрные спокойно продолжают.";
+            /* (после 4.5, нелогичность) отклик правдив: пат — не «чёрные спокойно продолжают» (ходить им
+               некуда: ферзь эф 6 во второй позиции, дэ 5 и бэ 3 в седьмой), а шах, от которого король не
+               уходит, а закрываются или бьют, — не «у короля есть выход» */
+            var bl = legal(b2, "b"), why = inCheck(b2, "b") ? (bl.some(function (mv) { return b2[mv.from].t === "K"; }) ? "Шах, но не мат: у чёрного короля есть выход." : "Шах, но не мат: чёрные закрываются от шаха или бьют шахующую фигуру.") :
+              !bl.length ? "Пат: шаха нет, а ходить чёрным некуда — это ничья, не мат." : "Это не шах: чёрные спокойно продолжают.";
             if (tries >= limit) { finish(false, why + " Партия снова отложена."); return; }
             LAB.UI.error(); say(why + " Осталась попытка. Подумайте ещё.");
             UIx("closeTop", true);

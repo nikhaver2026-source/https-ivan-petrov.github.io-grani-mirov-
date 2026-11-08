@@ -13,6 +13,8 @@
 var LAB = window.LAB, S = LAB.settings;
 function say(t, o) { LAB.say(t, o); }
 function sayq(t) { LAB.say(t, { interrupt: false }); }
+/* (после 4.5, нелогичность) число и слово — со склонением: «четыре ноты», «три точных касания», «22 биения» */
+function pl(n, a, b, c) { n = Math.abs(n) % 100; if (n >= 11 && n <= 14) return c; var m = n % 10; return m === 1 ? a : (m >= 2 && m <= 4 ? b : c); }
 var cur = null;
 
 /* Короткий тон: частота, длительность, панорама, тембр. */
@@ -155,7 +157,7 @@ function tune(cb, opts) {
   var AE = LAB.AE; AE.ensure();
   var f0 = 220, sign = Math.random() < 0.5 ? -1 : 1;
   var delta = sign * (opts.hard ? 9 + Math.random() * 7 : 5 + Math.random() * 6);
-  var c = { type: "tune", name: "Настройка резонатора", cb: cb, f0: f0, delta: delta, step: opts.hard ? 0.5 : 1, tries: 0 };
+  var c = { type: "tune", name: "Настройка резонатора", cb: cb, f0: f0, delta: delta, step: opts.hard ? 0.5 : 1, tries: 0, limit: 6 };
   cur = c; puzzleDuck();
   /* два тона с биениями — особый звук единого обработчика */
   var hv = LAB.Sound && LAB.Sound.custom("tune", "puzzle", function (x, bus) {
@@ -169,7 +171,9 @@ function tune(cb, opts) {
     return function () { try { g.gain.setTargetAtTime(0, x.currentTime, 0.1); o1.stop(x.currentTime + 0.5); o2.stop(x.currentTime + 0.5); } catch (e) { /* */ } };
   });
   if (hv) c.cleanup = function () { hv.stop(); };
-  say("Настройка резонатора. Слышите, как звук дрожит? Это биения двух тонов. " + LAB.K("Свайп вверх или вниз — подстроить второй тон, влево или вправо — грубо. Когда дрожь исчезнет, коснитесь дважды. Касание — подсказка.", "Стрелки вверх и вниз — подстроить второй тон, влево и вправо — грубо. Когда дрожь исчезнет, нажмите Enter. Пробел — подсказка."), { interrupt: true });
+  /* (после 4.5, нелогичность) сколько раз можно зафиксировать мимо — сказано (прежде шестая неудача
+     перегревала резонатор без предупреждения, и попытки не назывались) */
+  say("Настройка резонатора. Слышите, как звук дрожит? Это биения двух тонов. " + LAB.K("Свайп вверх или вниз — подстроить второй тон, влево или вправо — грубо. Когда дрожь исчезнет, коснитесь дважды. Касание — подсказка.", "Стрелки вверх и вниз — подстроить второй тон, влево и вправо — грубо. Когда дрожь исчезнет, нажмите Enter. Пробел — подсказка.") + " Попыток зафиксировать: " + c.limit + ".", { interrupt: true });
 }
 function tuneSet() {
   var c = cur;
@@ -190,31 +194,32 @@ function tuneGesture(g) {
   }
   if (g.kind === "tap" && g.n === 1) {
     var b = Math.abs(c.delta);
-    say(b < 0.8 ? LAB.K("Дрожи почти нет. Фиксируйте двойным касанием.", "Дрожи почти нет. Фиксируйте: Enter.") : b < 2.5 ? "Биения редкие — " + b.toFixed(0) + " в секунду. Совсем рядом." : b < 6 ? "Биения частые: около " + Math.round(b) + " в секунду." : "Звук дрожит сильно: " + Math.round(b) + " биений в секунду.");
+    say(b < 0.8 ? LAB.K("Дрожи почти нет. Фиксируйте двойным касанием.", "Дрожи почти нет. Фиксируйте: Enter.") : b < 2.5 ? "Биения редкие — " + b.toFixed(0) + " в секунду. Совсем рядом." : b < 6 ? "Биения частые: около " + Math.round(b) + " в секунду." : "Звук дрожит сильно: " + Math.round(b) + " " + pl(Math.round(b), "биение", "биения", "биений") + " в секунду.");
     return;
   }
   if (g.kind === "dtap" && g.n === 1) {
     if (Math.abs(c.delta) < 0.8) { say("Резонатор настроен."); finish(true); return; }
     c.tries++;
-    say("Ещё дрожит. " + (c.delta > 0 ? "Второй тон выше нужного — " + LAB.K("свайп вниз.", "стрелка вниз.") : "Второй тон ниже нужного — " + LAB.K("свайп вверх.", "стрелка вверх.")));
-    if (c.tries >= 6) { say("Резонатор перегрелся. Попробуйте позже."); finish(false); }
+    if (c.tries >= c.limit) { say("Ещё дрожит. Попытки кончились: резонатор перегрелся. Попробуйте позже."); finish(false); return; }
+    say("Ещё дрожит. " + (c.delta > 0 ? "Второй тон выше нужного — " + LAB.K("свайп вниз.", "стрелка вниз.") : "Второй тон ниже нужного — " + LAB.K("свайп вверх.", "стрелка вверх.")) + " Осталось попыток: " + (c.limit - c.tries) + ".");
   }
 }
 
 /* ════════ ПОЗИТРОННАЯ ЛОВУШКА: в такт пульсу ════════ */
 function rhythm(n, cb) {
-  var c = { type: "rhythm", name: "Стабилизация ловушки", cb: cb, need: Math.max(3, n || 3), streak: 0, misses: 0, period: 950, next: 0, raw: true, timer: null, ready: false };
+  var c = { type: "rhythm", name: "Стабилизация ловушки", cb: cb, need: Math.max(3, n || 3), streak: 0, misses: 0, period: 950, gap: 950, beatN: 0, hitN: -1, next: 0, raw: true, timer: null, ready: false };
   cur = c; puzzleDuck();
-  say("Стабилизация ловушки. Слушайте пульс поля и " + LAB.K("касайтесь экрана одним пальцем точно в такт. Нужно " + c.need + " точных касаний подряд.", "нажимайте пробел точно в такт. Нужно " + c.need + " точных нажатий подряд.") + " Три промаха — выброс.", { interrupt: true });
+  say("Стабилизация ловушки. Слушайте пульс поля и " + LAB.K("касайтесь экрана одним пальцем точно в такт. Нужно " + c.need + " " + pl(c.need, "точное касание", "точных касания", "точных касаний") + " подряд.", "нажимайте пробел точно в такт. Нужно " + c.need + " " + pl(c.need, "точное нажатие", "точных нажатия", "точных нажатий") + " подряд.") + " Три промаха — выброс.", { interrupt: true });
   waitSpeech(function () {
     if (cur !== c) return;
     c.ready = true;
     var AE = LAB.AE; AE.ensure();
     var beat = function () {
       if (cur !== c) return;
-      c.last = performance.now();
+      c.last = performance.now(); c.beatN++;
+      c.gap = c.period; /* через сколько прозвучит следующий удар: укороченный такт — со следующего */
       tone(70, 0.22, 0, "sine", 0.24); tone(140, 0.12, 0, "triangle", 0.09);
-      c.timer = setTimeout(beat, c.period);
+      c.timer = setTimeout(beat, c.gap);
     };
     c.cleanup = function () { clearTimeout(c.timer); };
     beat();
@@ -231,9 +236,15 @@ function rhythmDown(t) {
   var c = cur;
   if (!c.ready) return;
   var now = t || performance.now(), lat = outLatency();
-  var since = now - (c.last + lat), to = c.period - since;
-  var off = Math.min(Math.abs(since), Math.abs(to));
-  if (off <= 140 + Math.min(60, lat * 0.25)) {
+  /* (после 4.5, нелогичность) касание относится к ближайшему удару, и за удар засчитывается одно: прежде
+     три быстрых касания на одном ударе давали «три точных касания подряд», и ловушка решалась без
+     ритма; второе касание того же удара — промах. И до следующего удара — тот такт, что уже идёт
+     (прежде — укороченный после попадания, и окно касания сдвигалось на 40 мс раньше удара) */
+  var since = now - (c.last + lat), to = c.gap - since;
+  var off = Math.min(Math.abs(since), Math.abs(to)), beatI = Math.abs(since) <= Math.abs(to) ? c.beatN : c.beatN + 1;
+  var inWin = off <= 140 + Math.min(60, lat * 0.25);
+  if (inWin && beatI !== c.hitN) {
+    c.hitN = beatI;
     c.streak++;
     tone(1320 + c.streak * 80, 0.07, 0, "sine", 0.14);
     if (c.streak >= c.need) { clearTimeout(c.timer); c.done = true; setTimeout(function () { if (cur !== c) return; say("Ловушка стабильна."); finish(true); }, 250); return; } /* итог решён: лишнее касание его не перебьёт */
@@ -242,7 +253,7 @@ function rhythmDown(t) {
     c.streak = 0; c.misses++;
     tone(180, 0.18, 0, "sawtooth", 0.1);
     if (c.misses >= 3) { clearTimeout(c.timer); finish(false); return; }
-    sayq(since >= 0 && since < c.period / 2 ? "Поздно." : "Рано.");
+    sayq(inWin ? LAB.K("Лишнее касание: на удар — одно.", "Лишнее нажатие: на удар — одно.") : since >= 0 && since < c.gap / 2 ? "Поздно." : "Рано.");
   }
 }
 
@@ -356,16 +367,19 @@ function bulls(len, cb, opts) {
   for (var k = 0; k < len; k++) c.d.push(k + 1);
   cur = c; puzzleDuck();
   say(LAB.dot(opts.title || "Подбор ключа") + " Ключ — " + keyDigits(len) + " от одной до шести. После каждой попытки высокий сигнал — цифра на своём месте, низкий — цифра есть, но не там. " +
-    LAB.K("Свайп вверх и вниз — цифра, влево и вправо — позиция, двойное касание — проверить, касание — что набрано и прошлые попытки.", "Стрелки вверх и вниз — цифра, влево и вправо — позиция, цифры от 1 до 6 — набрать сразу, Enter — проверить, пробел — что набрано, Escape — отойти.") + " Попыток: " + c.limit + ".", { interrupt: true });
+    LAB.K("Свайп вверх и вниз — цифра, влево и вправо — позиция, двойное касание — проверить, касание — что набрано и прошлые попытки.", "Стрелки вверх и вниз — цифра, влево и вправо — позиция, цифры от 1 до 6 — набрать сразу, Enter — проверить, пробел — что набрано и прошлые попытки, Escape — отойти.") + " Попыток: " + c.limit + ".", { interrupt: true });
 }
 function bullsGesture(g) {
   var c = cur;
   if (g.kind === "swipe" && g.n === 1) {
+    c.fresh = false; /* позицию выбрали сами — цифра встанет туда */
     if (g.dir === "U" || g.dir === "D") { c.d[c.i] = ((c.d[c.i] - 1 + (g.dir === "U" ? 1 : 5)) % 6) + 1; tone(500 + c.d[c.i] * 80, 0.05, 0, "square", 0.05); say(String(c.d[c.i])); }
     else { c.i = (c.i + (g.dir === "R" ? 1 : c.len - 1)) % c.len; tone(900, 0.04, 0, "sine", 0.08); say("Позиция " + (c.i + 1) + ": " + c.d[c.i]); }
     return;
   }
-  if (g.kind === "digit") { if (g.d >= 1 && g.d <= 6) { c.d[c.i] = g.d; tone(500 + g.d * 80, 0.05, 0, "square", 0.05); if (c.i < c.len - 1) { c.i++; say(String(g.d)); } else say(g.d + ". Набрано: " + c.d.join(" ") + "."); } return; }
+  /* (после 4.5, нелогичность) после проверки новая попытка цифрами набирается с первой позиции: прежде
+     курсор оставался на последней, и набранные «4 5 6» превращались в «1 2 6» */
+  if (g.kind === "digit") { if (g.d >= 1 && g.d <= 6) { if (c.fresh) { c.fresh = false; c.i = 0; } c.d[c.i] = g.d; tone(500 + g.d * 80, 0.05, 0, "square", 0.05); if (c.i < c.len - 1) { c.i++; say(String(g.d)); } else say(g.d + ". Набрано: " + c.d.join(" ") + "."); } return; }
   /* (после 4.5, просьба автора: «проверь, чтобы эта головоломка выполнялась логично») ключ выводят из
      всех прошлых попыток, а не из последних: касание называет каждую, по номерам (прежде — только
      четыре последние, а попыток бывает до тринадцати) */
@@ -380,6 +394,7 @@ function bullsGesture(g) {
     for (var b = 0; b < near; b++) tone(330, 0.14, 0, "triangle", 0.14, (exact + b) * 0.18);
     if (!exact && !near) tone(150, 0.25, 0, "sawtooth", 0.08);
     c.hist.push(c.d.join(" ") + ": на месте " + exact + ", не на месте " + near);
+    c.fresh = true;
     if (exact === c.len) { c.done = true; setTimeout(function () { if (cur !== c) return; say("Ключ подобран: " + c.d.join(" ") + "."); finish(true); }, 300 + c.len * 180); return; }
     var left = c.limit - c.tries;
     if (left <= 0) c.done = true;
@@ -431,16 +446,21 @@ function sorted(c) { for (var i = 1; i < c.n; i++) if (c.arr[i] < c.arr[i - 1]) 
 function melody(seq, cb, opts) {
   opts = opts || {};
   var c = { type: "melody", name: opts.title || "Звуковой замок", cb: cb, seq: seq.split(""), pos: 0, replays: opts.replays == null ? 1 : opts.replays, busy: true, mirror: !!opts.mirror };
+  c.remind = c.replays > 0;
   cur = c; puzzleDuck();
-  say((opts.title || "Звуковой замок") + ". Сыграйте мелодию: " + c.seq.length + " нот. " + (c.mirror ? "Замок зеркальный: левое и правое поменяны местами. " : "") + "У каждого звука своя цифра: " + sigHelp() + ". " +
-    LAB.K("Играйте свайпами. Касание — «Эхо» напомнит мелодию.", "Играйте стрелками или цифрами от 1 до 4. Пробел — «Эхо» напомнит мелодию, Escape — отойти."), { interrupt: true });
+  /* (после 4.5, нелогичность) «четыре ноты», а не «4 нот»; что одна фальшивая нота сбрасывает мелодию —
+     сказано; и если напомнить мелодию «Эхо» не может (древний узел без подсказок), касание этого не
+     обещает (прежде обещало, а на касание отвечало «больше не напомнит») */
+  var mem = "Напомнить её «Эхо» не сможет: играйте по памяти.";
+  say((opts.title || "Звуковой замок") + ". Сыграйте мелодию: " + c.seq.length + " " + pl(c.seq.length, "нота", "ноты", "нот") + ". Одна фальшивая нота сбрасывает всю мелодию. " + (c.mirror ? "Замок зеркальный: левое и правое поменяны местами. " : "") + "У каждого звука своя цифра: " + sigHelp() + ". " +
+    (c.remind ? LAB.K("Играйте свайпами. Касание — «Эхо» напомнит мелодию.", "Играйте стрелками или цифрами от 1 до 4. Пробел — «Эхо» напомнит мелодию, Escape — отойти.") : LAB.K("Играйте свайпами. " + mem, "Играйте стрелками или цифрами от 1 до 4. " + mem + " Escape — отойти.")), { interrupt: true });
   waitSpeech(function () { if (cur === c) { c.busy = false; tone(1500, 0.06, 0, "sine", 0.1); } });
 }
 function melodyGesture(g) {
   var c = cur;
   if (g.kind === "tap" && g.n === 1) {
     if (c.busy) return;
-    if (c.replays <= 0) { say("«Эхо» больше не напомнит. Вспоминайте."); return; }
+    if (c.replays <= 0) { say(c.remind ? "«Эхо» больше не напомнит. Вспоминайте." : "Напомнить мелодию «Эхо» не может: играйте по памяти."); return; }
     c.replays--; c.busy = true; c.pos = 0;
     playSeq(c.seq, 0.2, function () { if (cur === c) { c.busy = false; tone(1500, 0.06, 0, "sine", 0.1); } });
     return;
@@ -467,7 +487,9 @@ function sync(cb, opts) {
   var pA = 900, off = (Math.random() < 0.5 ? -1 : 1) * (120 + Math.floor(Math.random() * 4) * 40);
   var c = { type: "sync", name: opts.title || "Синхронизация", cb: cb, pA: pA, pB: pA + off, step: 40, tries: 0, limit: opts.limit || 3, hints: 2, ready: false, aligned: false, tA: 0 };
   cur = c; puzzleDuck();
-  say((opts.title || "Синхронизация") + ". Слева — ведущий механизм, справа — ведомый. " + LAB.K("Свайп вверх — ведомый быстрее, вниз — медленнее. Когда удары сольются в один, двойное касание — сцепить. Касание — подсказка.", "Стрелка вверх — ведомый быстрее, вниз — медленнее. Когда удары сольются в один, Enter — сцепить. Пробел — подсказка, Escape — отойти."), { interrupt: true });
+  /* (после 4.5, нелогичность) сколько попыток сцепить и подсказок — сказано сразу (прежде узнавалось после
+     первого скрежета, а о двух подсказках — когда они кончались) */
+  say((opts.title || "Синхронизация") + ". Слева — ведущий механизм, справа — ведомый. " + LAB.K("Свайп вверх — ведомый быстрее, вниз — медленнее. Когда удары сольются в один, двойное касание — сцепить. Касание — подсказка.", "Стрелка вверх — ведомый быстрее, вниз — медленнее. Когда удары сольются в один, Enter — сцепить. Пробел — подсказка, Escape — отойти.") + " Попыток сцепить: " + c.limit + ", подсказок: " + c.hints + ".", { interrupt: true });
   waitSpeech(function () {
     if (cur !== c) return;
     c.ready = true;
