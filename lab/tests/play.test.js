@@ -1943,12 +1943,13 @@ LAB.ui.closeAll();
     const DV = { N: [0, -1], S: [0, 1], W: [-1, 0], E: [1, 0] };
     let face = "E", land = [G.x, G.y], best = -1;
     for (const k of ["E", "W", "N", "S"]) { let x = G.x, y = G.y, n = 0; while (n < 6 && g.passable(x + DV[k][0], y + DV[k][1])) { x += DV[k][0]; y += DV[k][1]; n++; } if (n > best) { best = n; face = k; land = [x, y]; } }
-    let cRob = null;
-    for (let y = 0; y < LAB.H && !cRob; y++) for (let x = 0; x < LAB.W && !cRob; x++) {
+    /* (после 4.5) в убежище и в безопасную зону у капсулы игра машин не выводит (spawnFoe — null): тогда
+       берём следующую клетку; прежде проверка брала первую подходящую и иногда оставалась без робота */
+    let bot = null;
+    for (let y = 0; y < LAB.H && !bot; y++) for (let x = 0; x < LAB.W && !bot; x++) {
       const dl = Math.abs(x - land[0]) + Math.abs(y - land[1]);
-      if (dl >= 3 && dl <= 12 && g.passable(x, y) && !LAB.los(g.CUR.fl, g.CUR.fs, x, y, G.x, G.y)) cRob = [x, y];
+      if (dl >= 3 && dl <= 12 && g.passable(x, y) && !LAB.los(g.CUR.fl, g.CUR.fs, x, y, G.x, G.y)) bot = C.spawnFoe("patrolbot", x, y, {});
     }
-    const bot = cRob ? C.spawnFoe("patrolbot", cRob[0], cRob[1], {}) : null;
     if (bot) { bot.ally = false; bot.calm = false; bot.state = "idle"; bot.lastKnown = null; }
     G.face = face; G.inv.decoy_e = 1; g.useItem("decoy_e"); await wait(800);
     out.decoy = !!bot && bot.state === "alert" && !!bot.lastKnown && /электронной приманки/.test(LAB.oko.logText(10));
@@ -5442,7 +5443,7 @@ LAB.ui.closeAll();
       out.fakeOk = fast(() => F.pupilFake("test"));
       Math.random = rnd0;
       await sleep(2600); /* поправка настоящего ОКО: слова доходят поздно */
-      out.fake = SPOKEN.find(t => /^Зрачок, вплотную: «/.test(t)) || ""; out.fix = SPOKEN.find(t => /^ОКО издалека: «[^»]*(не я|Не верьте|Зрачок|пусто|поздно)/.test(t)) || SPOKEN.filter(t => /^ОКО издалека: «/.test(t)).join(" | "); /* прочие слова ОКО в эти секунды — не поправка */ out.fakeChime = chimes.join(",");
+      out.fake = SPOKEN.find(t => /^Зрачок, вплотную: «/.test(t)) || ""; out.fix = SPOKEN.find(t => /^ОКО издалека: «[^»]*(не я|Не верьте|Зрачок|пусто|поздно|опоздал|никого|ни одн|не его|его слова)/.test(t)) || SPOKEN.filter(t => /^ОКО издалека: «/.test(t)).join(" | "); /* прочие слова ОКО в эти секунды — не поправка */ out.fakeChime = chimes.join(",");
       out.fakeFoes = C.foes().filter(f => !f.dead).length - n0; out.fakeLog = (g.CUR.fs.slog || []).length - lg0;
       /* настоящий выход — в журнале безопасности; носитель в коридоре, чтобы ОКО не выжидало */
       const fl = g.CUR.fl, fs = g.CUR.fs, W = LAB.W, corr = [];
@@ -5531,11 +5532,11 @@ LAB.ui.closeAll();
     ok(okf.chatty[0] === 1 && okf.chatty[1] === 1 && okf.chatty[2] < 1 && okf.chatty[3] < okf.chatty[2] && okf.chatty[3] >= 0.25, "в Истоке ОКО заговаривает всё реже (" + okf.chatty.join(" ") + ")");
     ok(okf.snd === "1 2 2 2 6 0", "звуки сигналов грузятся с уровнем: свои на каждой глубине (" + okf.snd + ")");
     ok(okf.fakeOk && /^Зрачок, вплотную: «/.test(okf.fake) && okf.fakeChime.split(",").indexOf("pupil") >= 0 && okf.fakeFoes === 0 && okf.fakeLog === 0, "Зрачок объявляет отряд, которого нет: машин не прибавилось, журнал безопасности молчит (" + okf.fake.slice(0, 90) + ")");
-    ok(/^ОКО издалека: «[^»]*(не я|Не верьте|Зрачок|пусто|поздно)/.test(okf.fix), "настоящее ОКО поправляет Зрачка издалека" + (okf.fix ? "" : " (поправки не было)") + (/^ОКО издалека: «[^»]*(не я|Не верьте|Зрачок|пусто|поздно)/.test(okf.fix) ? "" : " (" + okf.fix.slice(0, 120) + ")"));
+    ok(/^ОКО издалека: «[^»]*(не я|Не верьте|Зрачок|пусто|поздно|опоздал|никого|ни одн|не его|его слова)/.test(okf.fix), "настоящее ОКО поправляет Зрачка издалека" + (okf.fix ? "" : " (поправки не было)") + (/^ОКО издалека: «[^»]*(не я|Не верьте|Зрачок|пусто|поздно|опоздал|никого|ни одн|не его|его слова)/.test(okf.fix) ? "" : " (" + okf.fix.slice(0, 120) + ")"));
     ok(/^Выход единиц: \d+/.test(okf.realLog) && okf.term, "настоящий выход машин — в журнале безопасности терминала (" + okf.realLog.slice(0, 80) + ")");
     ok(okf.deals === "011100", "Счетовод торгуется с 66-го по 78-й уровень (" + okf.deals + ")");
     ok(okf.dealItems.length === 3 && /^Передышка: Сторож подождёт три минуты — \d+ кредит(а|ов)?$/.test(okf.dealItems[0]) && /^Забыть подозрение/.test(okf.dealItems[1]), "сделка со Счетоводом: передышка, забытое подозрение, отказ (" + okf.dealItems.join(" / ").slice(0, 120) + ")");
-    ok(okf.deal.paid === okf.deal.pr && okf.deal.ready >= 360 && okf.deal.n === 1 && okf.deal.log && /Счетовод ОКО: «(Сделка|Оплачено|Договорились)/.test(okf.deal.said), "передышка куплена: кредиты списаны, Сторож ждёт три минуты, в журнале — договор (" + okf.deal.paid + " кр., " + okf.deal.ready + " тактов)");
+    ok(okf.deal.paid === okf.deal.pr && okf.deal.ready >= 360 && okf.deal.n === 1 && okf.deal.log && /Счетовод ОКО: «[^»]*[Тт]ри минуты/.test(okf.deal.said) /* (после 4.5) у сделки теперь несколько вариантов — в каждом «три минуты» */, "передышка куплена: кредиты списаны, Сторож ждёт три минуты, в журнале — договор (" + okf.deal.paid + " кр., " + okf.deal.ready + " тактов)");
     ok(okf.pr2 > okf.deal.pr, "вторая передышка на этаже дороже (" + okf.deal.pr + " → " + okf.pr2 + ")");
     ok(/^ОКО, шёпотом, прямо в ухо: «/.test(okf.warn) && okf.warn.indexOf(okf.warnName) >= 0 && okf.warnChime === 0, "Исток: ОКО шёпотом предупреждает о машине из-за стены (" + okf.warn.slice(0, 100) + ")");
     ok(/^«Эхо»: голос ОКО двоится/.test(okf.stage) && okf.stageJ && okf.stageOnce, "при входе в «Отражение» «Эхо» один раз объясняет, что ОКО изменилось");
@@ -5689,7 +5690,7 @@ LAB.ui.closeAll();
         const ch = fxRest(g.CUR.fl); near(ch);
         out.restWhy = g.restBlock ? g.restBlock() : null;
         const nowM = () => (G.day || 0) * 1440 + (G.min || 0), pr = LAB.FIX.T[ch.fx].a.find(q => q[0] === "rest")[2] || {};
-        const mR = pr.m || 10, full = Math.max(5, Math.round(G.hpMax * pr.hp)), share = k => Math.max(1, Math.round(full * Math.min(1, k)));
+        const mR = pr.m || 10, full = Math.max(5, Math.round(G.hpMax * pr.hp)), share = k => Math.min(G.hpMax - 10, Math.max(1, Math.round(Math.max(5, G.hpMax * pr.hp) * Math.min(1, k)))); /* (после 4.5) как в игре: доля от неокруглённого полного, здоровье не выше предела (прежде двойное округление давало расхождение на единицу) */
         G.restAt = -1e9; G.hp = 10;
         out.restFresh = itemOf(ch, "rest");
         act(ch, "rest"); out.rest1 = G.hp > 10;
