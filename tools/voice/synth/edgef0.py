@@ -30,10 +30,11 @@ def одна(ri):
             if len(все) >= 3:
                 мед = float(np.median(все))
                 fs = float(np.median(нач)) if len(нач) >= 2 else 0.0; fe = float(np.median(кон)) if len(кон) >= 2 else 0.0
-                # сбой оценки (дальше 6 пт от средней высоты слова) — не верить
+                fs_raw, fe_raw = fs, fe   # как есть — для платы за скачок на стыке (хриплый или неустойчивый край дорог)
+                # сбой оценки (дальше 6 пт от средней высоты слова) — не верить (для сглаживания)
                 if fs and abs(12 * np.log2(fs / мед)) > 6: fs = 0.0
                 if fe and abs(12 * np.log2(fe / мед)) > 6: fe = 0.0
-                out[f"{r['f']}#{j}"] = [round(fs, 1), round(fe, 1), round(мед, 1)]
+                out[f"{r['f']}#{j}"] = [round(fs, 1), round(fe, 1), round(мед, 1), round(fs_raw, 1), round(fe_raw, 1)]
         return out
     except Exception:
         return None
