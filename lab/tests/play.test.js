@@ -44,6 +44,16 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   await page.evaluate(() => {
     window.SPOKEN = [];
     LAB.say = function (t) { SPOKEN.push(String(t)); var c = document.getElementById("caption"); if (c) c.textContent = t; };
+    /* (голос ОКО) записанную реплику ОКО говорит запись, а не синтезатор: её слова идут в Speech.say
+       с пометкой recorded — в историю объявлений и субтитры (okovoice.js). Для проверок они тоже
+       сказаны: идут и в LAB.say — в эту заглушку и в обёртки разделов, с той же пометкой, — как прежде
+       у синтезатора. Проверки слов ОКО так не зависят от того, записан ли голос целиком; что прочёл
+       именно синтезатор, раздел «(Голос ОКО)» отличает по пометке recorded. */
+    const sp0 = LAB.Speech.say; let rec = false;
+    LAB.Speech.say = function (t, o) {
+      if (o && o.recorded && !rec) { rec = true; try { LAB.say(t, o); } finally { rec = false; } }
+      return sp0.apply(this, arguments);
+    };
     localStorage.clear();
   });
   const said = async () => page.evaluate(() => { const s = SPOKEN.slice(); SPOKEN.length = 0; return s.join(" | "); });
@@ -6546,10 +6556,13 @@ LAB.ui.closeAll();
     LAB.OKO_VOICED.ready = true;
     const plays = [], orig = LAB.Sound.play;
     LAB.Sound.play = function (id, o) { plays.push({ id: id, o: o || {} }); return orig.apply(this, arguments); };
+    /* что прочёл синтезатор (SPOKEN — всё сказанное, и записью тоже: её слова — с пометкой recorded) */
+    const synth = [], say0 = LAB.say;
+    LAB.say = function (t, o) { if (!(o && o.recorded)) synth.push(String(t)); return say0.apply(this, arguments); };
     LAB.ui.closeAll();
     const REC = "Я слушаю ваш пульс по вентиляции, носитель. Он учащается.", K = V.key(REC);
     /* реплики ОКО идут по очереди (okovoice.js): каждая проверка — с чистого листа, будто прежняя давно отзвучала */
-    const say = (t, o) => { V.stop(); SPOKEN.length = 0; plays.length = 0; LAB.oko.voice(t, Object.assign({ prio: "event", keep: true }, o || {}), true, 0); };
+    const say = (t, o) => { V.stop(); SPOKEN.length = 0; synth.length = 0; plays.length = 0; LAB.oko.voice(t, Object.assign({ prio: "event", keep: true }, o || {}), true, 0); };
     const okoIds = () => plays.map(p => p.id).filter(id => /^oko_(m|f|fx)_/.test(id));
     /* записи — заранее в памяти: незагруженную реплику очередь ждёт сама, проверка ждала бы тоже */
     ["m", "f"].forEach(v => { const id = "oko_" + v + "_" + K; if (!LAB.Bank.has(id)) LAB.Bank.def(id, ["oko/" + v + "/" + K + ".mp3"], { bus: "voice", vary: 0 }); LAB.Bank.preload([id]); });
@@ -6558,10 +6571,10 @@ LAB.ui.closeAll();
     out.listed = V.has(REC, "m") && V.has(REC, "f") && !V.has("Тестовая реплика без записи.", "m");
     V._rng(() => 0.99);
     S.okoVoice = "m"; say("ОКО по громкой связи: «" + REC + "»"); await sleep(250);
-    out.rec = okoIds()[0] === "oko_m_" + K && !SPOKEN.some(t => t.indexOf(REC) >= 0);
+    out.rec = okoIds()[0] === "oko_m_" + K && !synth.some(t => t.indexOf(REC) >= 0) && SPOKEN.some(t => t.indexOf(REC) >= 0);
     out.hist = LAB.history.list.some(h => h.text === "ОКО по громкой связи: «" + REC + "»");
     say("ОКО по громкой связи: «Тестовая реплика без записи.»"); await sleep(250);
-    out.tts = SPOKEN.some(t => /Тестовая реплика без записи/.test(t)) && !okoIds().length;
+    out.tts = synth.some(t => /Тестовая реплика без записи/.test(t)) && !okoIds().length;
     S.okoVoice = "f"; say("ОКО по громкой связи: «" + REC + "»"); await sleep(250);
     out.f = okoIds()[0] === "oko_f_" + K;
     out.fem = V.fem("Я стал тише. Это не слабость. Ну… немного слабость.") === "Я стала тише. Это не слабость. Ну… немного слабость." &&
@@ -6575,7 +6588,7 @@ LAB.ui.closeAll();
     out.speakFem = SPOKEN.some(t => /: «ЖЕН /.test(t));
     V.fem = fem0;
     S.okoVoice = "tts"; say("ОКО по громкой связи: «" + REC + "»"); await sleep(250);
-    out.ttsMode = SPOKEN.some(t => t.indexOf(REC) >= 0) && !okoIds().length;
+    out.ttsMode = synth.some(t => t.indexOf(REC) >= 0) && !okoIds().length;
     S.okoVoice = "m";
     /* сбои: запись в памяти — обратное эхо, сбой, сердце под словами о пульсе; выключены — ровно */
     for (let i = 0; i < 50 && !LAB.Bank.ready("oko_m_" + K); i++) await sleep(100);
@@ -6607,12 +6620,12 @@ LAB.ui.closeAll();
     out.menu = !!vi && vi.options.map(o => o.v).join(",") === "m,f,tts" && items.some(i => lb(i) === "Сбои и шёпот в голосе ОКО");
     if (vi) { SPOKEN.length = 0; vi.set("f"); out.menuSet = S.okoVoice === "f" && /женским голосом/.test(vi.descOf("f")); vi.set("m"); }
     LAB.ui.closeAll();
-    LAB.Sound.play = orig; S.okoVoice = was.v; S.okoFx = was.fx; LAB.OKO_VOICED.ready = was.ready;
+    LAB.Sound.play = orig; LAB.say = say0; S.okoVoice = was.v; S.okoFx = was.fx; LAB.OKO_VOICED.ready = was.ready;
     return out;
   });
   ok(ov.off, "пока записаны не все реплики — голоса ОКО нет: синтезатор, в настройках и микшере о нём ни слова");
   ok(ov.def && ov.listed, "голос ОКО по умолчанию — мужской, сбои и шёпот включены; список записей знает реплику обоих голосов");
-  ok(ov.rec && ov.hist, "записанная реплика звучит записью ОКО, синтезатор её не читает, текст — в истории объявлений");
+  ok(ov.rec && ov.hist, "записанная реплика звучит записью ОКО, синтезатор её не читает, слова — в субтитрах и в истории объявлений");
   ok(ov.tts, "реплика без записи — синтезатором, как прежде");
   ok(ov.f && ov.fem && ov.speakFem, "женский голос: своя запись; о себе — в женском роде («я стала тише», «Это была не я»), «Я поставлю новый» (о посте) не тронут; реплики speak() проходят через женский род");
   ok(ov.pupil, "Зрачок — голосом другого пола, вплотную сбоку");
