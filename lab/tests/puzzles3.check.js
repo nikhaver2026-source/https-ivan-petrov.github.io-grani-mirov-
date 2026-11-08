@@ -97,6 +97,10 @@ function checkText(t, where) {
   if (t.indexOf('"') >= 0) err(where + ": прямые кавычки «" + t.slice(0, 140) + "»");
   if (/[A-Za-z]/.test(t)) err(where + ": латиница «" + t.slice(0, 140) + "»");
   if (/ {2}| [,.;:!?]|\.\.|,,|^\s|\s$/.test(t)) err(where + ": неряшливая склейка «" + t.slice(0, 140) + "»");
+  /* (после 4.5) склонения и род, на которых уже ошибались: «не открывал серверная», «Кто открыл
+     щитовая», «Полка 4 выбран», «Пропуск 1: не выбрана» */
+  if (/(открыл|открыла|открывал|открывала) (серверная|лаборатория|щитовая)/.test(t) || /(Серверная|Лаборатория|Щитовая) открыла?(?![а-яё])/.test(t) || /Полка \d+ выбран\./.test(t) || /Пропуск \d+: не выбрана/.test(t))
+    err(where + ": склонение или род «" + t.slice(0, 140) + "»");
 }
 function checkWindow(w, where) {
   const labels = w.items.map(labelOf);
@@ -201,6 +205,8 @@ function independent(kind, d, last, seed) {
     if (got !== D.pass || D.pass.length !== D.L || D.L !== [4, 5, 6][d]) err(at + ": из записки по правилу выходит «" + got + "», а пароль «" + D.pass + "»");
     D.opts.forEach((set, i) => { if (set.indexOf(D.pass.charAt(i)) < 0) err(at + ": в меню буквы " + (i + 1) + " нет верной"); if (new Set(set).size !== set.length || set.length < 2) err(at + ": варианты буквы " + (i + 1) + " плохие"); });
     if (D.rule === 1 && D.words.length !== D.L * 2) err(at + ": слов в записке не столько");
+    /* (после 4.5) сдвиг по алфавиту: в условии сказано, что «ё» считается (иначе «д» на три — то «ж», то «з») */
+    if (D.rule === 2 && last.cond.indexOf("«ё» — на своём месте") < 0) err(at + ": в условии сдвига не сказано про «ё»");
     addMetric(kind, d, D.L);
   } else if (kind === "accesslog") {
     const N = D.names.length, all = permsN(D.names.map((_, k) => k));
@@ -212,6 +218,8 @@ function independent(kind, d, last, seed) {
     const ok = all.filter(fit);
     if (ok.length !== 1 || ok[0].join() !== D.truth.join() || D.answer !== D.truth[D.ask] || N !== [3, 4, 5][d]) err(at + ": журнал: подходящих раскладов " + ok.length);
     if (new Set(D.names).size !== N || new Set(D.rooms).size !== N) err(at + ": имена или двери повторяются");
+    /* (после 4.5) все сведения верны — условие не должно намекать на ложное («картой воспользовался не её владелец») */
+    if (/картой воспользовал/.test(last.cond)) err(at + ": в условии намёк на ложные сведения");
     addMetric(kind, d, N);
   } else if (kind === "checksum") {
     const digs = D.digits.slice(), gaps = D.gaps, rulesOk = full => D.rules.every(ru => { let s = 0; for (let i = 0; i < full.length; i++) s += ru.weights[i] * full[i]; return s % 10 === 0; });

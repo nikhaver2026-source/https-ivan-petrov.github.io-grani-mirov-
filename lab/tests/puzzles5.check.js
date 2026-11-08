@@ -112,6 +112,11 @@ function checkText(t, where) {
   if (t.indexOf('"') >= 0) err(where + ": прямые кавычки «" + t.slice(0, 140) + "»");
   if (/[A-Za-z]/.test(t)) err(where + ": латиница «" + t.slice(0, 140) + "»");
   if (/ {2}| [,.;:!?]|\.\.|,,|^\s|\s$|[,;:]\.|\.,/.test(t)) err(where + ": неряшливая склейка «" + t.slice(0, 140) + "»");
+  /* (после 4.5) падежи и согласование, которые уже ломались: «в ноля клетках», «в одном клетке»,
+     «0 из 3 часа», «около 3 процента», «Не назначены работа 4», «только после «склад»», «занять ни разу» */
+  const GRAM = [/(^|[^а-яё])ноля(?![а-яё])/, /одном клетк/, /из (?:\d*[02-9])?[234] (?:часа|литра|процента|кредита|минуты)(?![а-яё])/,
+    /около (?:\d*[02-9])?[234] процента(?![а-яё])/, /около (?:\d*[02-9])?1 процент(?![а-яё])/, /Не назначены работа /, /после «/, /занять ни разу/];
+  for (const g of GRAM) { const m = t.match(g); if (m) { err(where + ": падеж или согласование «…" + t.slice(Math.max(0, m.index - 50), m.index + 50) + "…»"); break; } }
 }
 function checkWindow(w, where) {
   const labels = w.items.map(labelOf);
@@ -668,6 +673,19 @@ for (const kind of P5.kinds) {
           const sc = said.length; clickPrefix("Условие ещё раз", at + " условие второго этапа");
           const ct = said.slice(sc).join(" ");
           if (ct.indexOf("Первый этап пройден") < 0 || ct.indexOf("Этап второй из двух") < 0 || ct.indexOf(HEADS[d]) < 0) err(at + ": «Условие ещё раз» на втором этапе читает не его: " + ct.slice(-120));
+          /* (после 4.5) условие второго этапа полное: у резисторов — какие остались (и только они), у смеси — запас */
+          const tail = ct.slice(ct.indexOf("Первый этап пройден"));
+          if (kind === "mixture" && tail.indexOf("В запасе: ") < 0) err(at + ": в условии второго этапа нет запаса: " + tail.slice(0, 160));
+          if (kind === "resistors") {
+            const a0 = G.answers[0].stages[0], mk = {}; let kk = 0;
+            G.data.vals.forEach((v, i) => { mk["r" + i] = 1 << i; });
+            a0.steps.forEach(s => { mk["c" + kk++] = mk[s[0]] | mk[s[2]]; });
+            const used = mk[a0.submit];
+            G.data.vals.forEach((v, i) => {
+              const has = tail.indexOf("резистор " + (i + 1) + " — ") >= 0;
+              if (has === !!(used >> i & 1)) err(at + ": условие второго этапа " + (has ? "называет впаянный" : "не называет оставшийся") + " резистор " + (i + 1) + ": " + tail.slice(0, 200));
+            });
+          }
           clickPrefix("Отойти от задачи", at + " уход между этапами"); flush();
           const e = m.ends[0];
           if (!e || e.ok !== false || !e.away || !e.fresh || stack.length) err(at + ": уход между этапами: " + JSON.stringify(m.ends));

@@ -429,8 +429,9 @@ function hanoi(seed, cb, opts) {
     return !arr.length ? "пусто" : arr.length === 1 ? "контейнер " + arr[0] : "снизу вверх " + arr.join(", ");
   };
   var stacks = function (p) { return PAL.map(function (nmP, g) { return "поддон " + nmP + " — " + stackOf(p, g); }).join("; "); };
+  /* (после 4.5, нелогичность) «Четыре контейнеров» — после «четыре» нужен родительный единственного */
   var cond = head(opts, d) + "Перекладка контейнеров. Три поддона — А, Б и В. " +
-    (P.tower ? "На поддоне " + PAL[P.src] + " стопка из " + n + " контейнеров: снизу самый тяжёлый, сверху самый лёгкий. " : (n === 4 ? "Четыре" : "Пять") + " контейнеров уже расставлены: " + stacks(P.start) + ". ") +
+    (P.tower ? "На поддоне " + PAL[P.src] + " стопка из " + n + " контейнеров: снизу самый тяжёлый, сверху самый лёгкий. " : (n === 4 ? "Четыре контейнера" : "Пять контейнеров") + " уже расставлены: " + stacks(P.start) + ". ") +
     "Контейнеры пронумерованы по весу: первый — самый лёгкий, " + ORDM[n] + " — самый тяжёлый. Погрузчик берёт только верхний контейнер и ставит его на другой поддон. Тяжёлый контейнер нельзя ставить на более лёгкий — раздавит. " +
     (P.tower ? "Переставьте всю стопку на поддон " : "Соберите все контейнеры одной стопкой на поддоне ") + PAL[P.target] + ". Погрузчик на смене ненадолго: не больше " + P.limit + " " + pl(P.limit, "перестановки", "перестановок", "перестановок") + ".";
   start("hanoi", d, P, "Перекладка контейнеров", cond, function (st, finish, fail) {
@@ -665,12 +666,14 @@ function cipher(seed, cb, opts) {
   var d = diffOf(opts), P = genCipher(seed, d);
   var abcNote = "После Я счёт идёт снова с А; алфавит — все 33 буквы, Ё стоит на своём месте, между «е» и «жэ».";
   var keyShifts = function () { var a = []; for (var i = 0; i < P.key.length; i++) { var v = ABC.indexOf(P.key.charAt(i)) + 1; a.push("«" + ABC_SAY[v - 1] + "» — на " + v + " " + pl(v, "место", "места", "мест")); } return a.join(", "); };
-  var encText = d === 1 ? "Подпись дежурного — " + cap(P.sig.toLowerCase()) + ", в шифровке она выглядит так: " + spell(P.encSig) + ". Шифровка пароля: " + spell(P.enc) + "." :
+  /* (после 4.5, нелогичность) «дежурный — Брагина»: у женской фамилии и дежурная — женского рода */
+  var she = /А$/.test(P.sig);
+  var encText = d === 1 ? "Подпись " + (she ? "дежурной" : "дежурного") + " — " + cap(P.sig.toLowerCase()) + ", в шифровке она выглядит так: " + spell(P.encSig) + ". Шифровка пароля: " + spell(P.enc) + "." :
     d === 2 ? "Ключ — «" + P.key.toLowerCase() + "»: " + keyShifts() + ". Шифровка пароля: " + spell(P.enc) + "." : "Сдвиг — на " + P.k + " " + pl(P.k, "место", "места", "мест") + ". Шифровка пароля: " + spell(P.enc) + ".";
   var cond = head(opts, d) + "Шифр смены. " + (d === 0 ?
     "В журнале охраны пароль на сегодня записан шифром сдвига: каждая буква заменена той, что стоит в алфавите на " + P.k + " " + pl(P.k, "место", "места", "мест") + " дальше. " + abcNote + " Шифровка по буквам: " + spell(P.enc) + "." :
     d === 1 ? "В журнале охраны пароль записан шифром сдвига: каждая буква заменена той, что стоит в алфавите на одно и то же число мест дальше, но на сколько — не сказано. " + abcNote +
-      " Зато запись подписана той же рукой и тем же шифром: дежурный — " + cap(P.sig.toLowerCase()) + ", а в шифровке подпись выглядит так: " + spell(P.encSig) + ". Шифровка пароля по буквам: " + spell(P.enc) + "." :
+      " Зато запись подписана той же рукой и тем же шифром: " + (she ? "дежурная" : "дежурный") + " — " + cap(P.sig.toLowerCase()) + ", а в шифровке подпись выглядит так: " + spell(P.encSig) + ". Шифровка пароля по буквам: " + spell(P.enc) + "." :
     "Пароль записан шифром Виженера с ключом «" + P.key.toLowerCase() + "». У каждой буквы ключа свой сдвиг — на столько мест, каков её номер в алфавите: " + keyShifts() +
       ". Первая буква пароля сдвинута вперёд по алфавиту на первую букву ключа, вторая — на вторую, третья — на третью, а дальше ключ повторяется с начала. " + abcNote + " Шифровка по буквам: " + spell(P.enc) + ".") +
     " Расшифруйте пароль и выберите его из списка.";
@@ -1005,7 +1008,8 @@ function crossBridge(d, P, cb, opts) {
         sel.push(i); A("play", "term_beep"); say(names[i] + " идёт.");
       }));
     })(i);
-    out.push(act(function () { return "Отправить с фонарём: " + (sel.length ? "идут " + andList(sel.map(function (j) { return names[j]; })) : "никто не выбран"); }, function () {
+    /* (после 4.5) «идут Брагина» — один идёт, двое идут */
+    out.push(act(function () { return "Отправить с фонарём: " + (sel.length ? (sel.length === 1 ? "идёт " : "идут ") + andList(sel.map(function (j) { return names[j]; })) : "никто не выбран"); }, function () {
       if (!sel.length) { nope("Никто не выбран: отметьте одного или двоих у фонаря."); return; }
       var t = 0; sel.forEach(function (j) { t = Math.max(t, times[j]); side[j] = 1 - lamp; });
       lamp = 1 - lamp; sel = []; time += t;
@@ -1291,12 +1295,25 @@ function genClues(seed, d) {
     if (cands.length !== 1) continue;
     if (d >= 1) for (var i = clues.length - 1; i >= 0; i--) { var c2 = clues.slice(0, i).concat(clues.slice(i + 1)); if (cluesCount(c2, codes) === 1) clues = c2; }
     if (d === 0 && !clues.some(function (c) { return c.s === 0; })) {
-      var none = []; for (dg = 0; dg < 10 && none.length < L; dg++) if (secret.indexOf(dg) < 0) none.push(dg);
-      r.shuffle(none); clues.splice(r.int(0, clues.length), 0, { g: none, s: 0 });
+      /* (после 4.5, нелогичность) цифры подсказки «ни одна не верна» — любые из тех, которых нет в коде;
+         прежде брались самые маленькие из них, и пропуск в ряду выдавал цифру кода («1 3 2» — значит, 0 в коде) */
+      var none = []; for (dg = 0; dg < 10; dg++) if (secret.indexOf(dg) < 0) none.push(dg);
+      r.shuffle(none); none = none.slice(0, L); clues.splice(r.int(0, clues.length), 0, { g: none, s: 0 });
     }
     if (clues.length < minC || clues.length > maxC) continue;
     if (cluesCount(clues, codes) !== 1) continue;
     break;
+  }
+  /* (после 4.5, нелогичность) за 400 попыток набор не сложился — прежде уходил последний, никем не
+     проверенный (кодов могло подходить несколько). На деле так не бывает (удача — с первой-второй
+     попытки), но и тогда: запасная задача, проверенная перебором, с переназванными цифрами — от
+     переназывания подсказки не лгут, а код остаётся единственным */
+  if (guard >= 400) {
+    var FB = [["042", [["682", 10], ["614", 1], ["206", 2], ["738", 0], ["780", 1]]], ["129", [["721", 11], ["769", 10], ["612", 2]]],
+      ["5124", [["8541", 3], ["5471", 12], ["7294", 11], ["0412", 3]]]][d], map = intList(10);
+    r.shuffle(map);
+    var remap = function (t) { return t.split("").map(function (ch) { return map[+ch]; }); };
+    secret = remap(FB[0]); clues = FB[1].map(function (c) { return { g: remap(c[0]), s: c[1] }; });
   }
   var plan = [], w = [];
   secret.forEach(function (v, i2) { plan.push("Цифра " + (i2 + 1)); plan.push(String(v)); });

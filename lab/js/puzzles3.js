@@ -114,7 +114,10 @@ function genTermhack(seed, d) {
     }
     if (set.length === N) { words = set; break; }
   }
-  if (!words) { words = HACK[len].slice(0, N); } /* страховка: длины/буквы всё равно верны */
+  /* страховка. (после 4.5, нелогичность) прежде — первые N слов списка без проверки: таким наборам
+     нужно и четыре попытки, а условие обещает, что хватит трёх; теперь — слова списка по порядку,
+     и только те, с которыми набор по-прежнему снимается за три (так набирается полный набор) */
+  if (!words) { words = []; for (i = 0; i < HACK[len].length && words.length < N; i++) if (hackOk(words.concat([HACK[len][i]]), 3)) words.push(HACK[len][i]); }
   var secret = r.int(0, N - 1);
   var plan = hackSolve(words, secret).map(function (ix) { return "Слово «" + words[ix] + "»"; });
   var wrong = [];
@@ -206,7 +209,8 @@ function archive(seed, cb, opts) {
     "; номер полки — номер месяца; папка — по первой букве фамилии: " + P.folderOpts.join(", ") + ". Выберите шкаф, полку и папку и достаньте дело.";
   var cab = null, shelf = null, folder = null;
   var pickMenu = function (title, label, optsArr, set) {
-    var items = optsArr.map(function (v) { return { label: label + " " + v, fn: function () { set(v); A("play", "keypad"); say(label + " " + v + " выбран" + (/Папка/.test(label) ? "а" : "") + "."); } }; });
+    /* (после 4.5, нелогичность) «Полка 4 выбран» — полка, как и папка, женского рода */
+    var items = optsArr.map(function (v) { return { label: label + " " + v, fn: function () { set(v); A("play", "keypad"); say(label + " " + v + " выбран" + (/Папка|Полка/.test(label) ? "а" : "") + "."); } }; });
     items.push({ label: "Назад", close: true, fn: function () {} });
     UIx("menu", title, items);
   };
@@ -295,7 +299,8 @@ function acrostic(seed, cb, opts) {
   var note = d === 1 ? P.words.join(", ") : P.lines.map(function (l) { return "«" + l + "»"; }).join("; ");
   var ruleTxt = d === 0 ? "его буквы — первые буквы строк, сверху вниз" :
     d === 1 ? "его буквы — первые буквы каждого второго слова" :
-    "его буквы — первые буквы строк, сверху вниз, но каждую сдвиньте вперёд по алфавиту на " + P.K + ". После «я» счёт идёт снова с «а»";
+    /* (после 4.5, нелогичность) не было сказано, считать ли «ё»: «д» на три вперёд — «ж» с ней и «з» без неё */
+    "его буквы — первые буквы строк, сверху вниз, но каждую сдвиньте вперёд по алфавиту на " + P.K + ". После «я» счёт идёт снова с «а»; в алфавите все 33 буквы, «ё» — на своём месте, между «е» и «ж»";
   var cond = head(opts, d) + "Пароль в записке. В записке лаборанта спрятан пароль из " + P.L + " " + pl(P.L, "буквы", "букв", "букв") +
     ": " + ruleTxt + ". Записка: " + note + ". Соберите пароль по буквам и введите его.";
   var set = []; for (var z = 0; z < P.L; z++) set.push(null);
@@ -329,6 +334,10 @@ function acrostic(seed, cb, opts) {
    ════════════════════════════════════════════════════════════════════ */
 var STAFF3 = ["Ильин", "Петрова", "Коваль", "Серова", "Нагиев", "Брагина", "Тихонов", "Лапина"];
 var ROOMS3 = ["серверная", "архив", "склад", "виварий", "реактор", "лаборатория", "медблок", "щитовая"];
+/* (после 4.5, нелогичность) «не открывал серверная», «Кто открыл щитовая?» — дверь после «открыть»
+   стоит в винительном падеже */
+var ROOMS3_ACC = { "серверная": "серверную", "лаборатория": "лабораторию", "щитовая": "щитовую" };
+function roomAcc(rm) { return ROOMS3_ACC[rm] || rm; }
 function alFits(perm, clues, times, truth) {
   for (var c = 0; c < clues.length; c++) {
     var cl = clues[c];
@@ -378,26 +387,29 @@ function hhmm(m) { var h = Math.floor(m / 60), mm = m % 60; return h + ":" + (mm
 function genAccesslogText(P, d) {
   var names = P.names, rooms = P.rooms, times = P.times;
   var clueTxt = P.clues.map(function (c) {
-    if (c.t === "not") return names[c.p] + " не открывал" + fem(names[c.p]) + " " + rooms[c.j];
-    if (c.t === "is") return names[c.p] + " открывал" + fem(names[c.p]) + " " + rooms[c.j];
+    if (c.t === "not") return names[c.p] + " не открывал" + fem(names[c.p]) + " " + roomAcc(rooms[c.j]);
+    if (c.t === "is") return names[c.p] + " открывал" + fem(names[c.p]) + " " + roomAcc(rooms[c.j]);
     return names[c.p] + " прош" + (fem(names[c.p]) ? "ла" : "ёл") + " раньше, чем " + names[c.q];
   });
-  var intro = d === 2 ? "Одной картой воспользовался не её владелец, но журнал всё равно можно распутать. " : "";
+  /* (после 4.5, нелогичность) прежде: «Одной картой воспользовался не её владелец» — в задаче этого нет:
+     имён по картам в журнале нет, а все сведения верны; фраза наводила на мысль, что одно из них ложно */
+  var intro = d === 2 ? "Сведения отрывочные, но журнал всё равно можно распутать. " : "";
   return { clueTxt: clueTxt, intro: intro };
 }
 function accesslog(seed, cb, opts) {
   var d = diffOf(opts), P = genAccesslog(seed, d), T = genAccesslogText(P, d);
   var cond = head(opts, d) + "Журнал доступа. За смену " + P.names.length + " " + pl(P.names.length, "человек", "человека", "человек") + " — " + P.names.join(", ") +
     " — открыли по одной двери: " + P.rooms.join(", ") + ". Отметки времени: " + P.rooms.map(function (rm, j) { return rm + " в " + hhmm(P.times[j]); }).join(", ") +
-    ". Известно: " + T.clueTxt.join("; ") + ". " + T.intro + "Кто открыл " + P.rooms[P.ask] + " в " + hhmm(P.times[P.ask]) + "?";
+    ". Известно: " + T.clueTxt.join("; ") + ". " + T.intro + "Кто открыл " + roomAcc(P.rooms[P.ask]) + " в " + hhmm(P.times[P.ask]) + "?";
   start("accesslog", d, P, "Журнал доступа", cond, function (st, finish, fail) {
     var out = P.names.map(function (nm, i) {
       return act(nm, function () {
-        if (i === P.answer) { A("play", "code_ok"); finish(true, nm + " — верно. " + cap(P.rooms[P.ask]) + " открыл" + fem(nm) + " " + nm + ". Замок признал."); return; }
+        if (i === P.answer) { A("play", "code_ok"); finish(true, nm + " — верно. " + cap(roomAcc(P.rooms[P.ask])) + " открыл" + fem(nm) + " " + nm + ". Замок признал."); return; }
         A("play", "term_err"); fail("Не сходится с журналом.");
       });
     });
-    out.push(act("Журнал ещё раз", function () { A("play", "paper_turn"); say("Известно: " + T.clueTxt.join("; ") + ". Вопрос: кто открыл " + P.rooms[P.ask] + "?"); }));
+    /* (после 4.5) «Журнал ещё раз» читает и сам журнал — двери и время: без них «прошёл раньше» не сопоставить */
+    out.push(act("Журнал ещё раз", function () { A("play", "paper_turn"); say("Журнал: " + P.rooms.map(function (rm, j) { return rm + " в " + hhmm(P.times[j]); }).join(", ") + ". Известно: " + T.clueTxt.join("; ") + ". Вопрос: кто открыл " + roomAcc(P.rooms[P.ask]) + " в " + hhmm(P.times[P.ask]) + "?"); }));
     return out;
   }, cb);
 }
@@ -477,7 +489,8 @@ function checksum(seed, cb, opts) {
   start("checksum", d, P, "Контрольная сумма", cond, function (st, finish, fail) {
     var out = [];
     for (var u = 0; u < P.gaps.length; u++) (function (u) {
-      out.push(act(function () { return "Пропуск " + (u + 1) + ": " + (vals[u] == null ? "не выбрана" : vals[u]); }, function () { digitMenu(u); }));
+      /* (после 4.5) «Пропуск 1: не выбрана» — род не сходился: не выбрана цифра */
+      out.push(act(function () { return "Пропуск " + (u + 1) + ": " + (vals[u] == null ? "цифра не выбрана" : "цифра " + vals[u]); }, function () { digitMenu(u); }));
     })(u);
     out.push(act("Проверить номер", function () {
       if (vals.some(function (v) { return v == null; })) { nope("Выберите цифру для каждого пропуска."); return; }
