@@ -40,13 +40,16 @@ function restBlock() { return gm().restBlock ? gm().restBlock() : (danger() ? "�
    — из часа. Отдохнули час назад и раньше — в полную силу; через двадцать минут присели
    на десять — наполовину; сидеть подряд без конца можно, но за час это даст не больше
    одного полного отдыха. Так — всё, что даёт отдых: здоровье, бодрость, нейронагрузка, токсины,
-   радиация и напиток в покое. Растяжка на матах — тоже отдых, счёт у них общий; сон в
-   капсуле — тоже (capsule.js). */
+   радиация и напиток в покое. Растяжка на матах — тоже отдых.
+   (после 4.5, просьба автора) Счёт у каждой вещи свой (restAt — в состоянии вещи на этаже, objState):
+   отдохнули на диване — диван снова даст полный отдых через час, а стул, на котором ещё не сидели,
+   даёт его сразу; счёт стула начнётся, когда на нём посидят. Капсула считает полчаса лёжа так же —
+   своим счётом (capsule.js). Прежний общий счёт (G.restAt) больше не нужен. */
 var REST_GAP = 60;
-/* доля полного отдыха, если отдыхать m минут, начиная сейчас */
-function restK(m) { var t = G().restAt; return t == null ? 1 : Math.max(0, Math.min(1, (nowMin() + (m || 0) - t) / REST_GAP)); }
-/* через сколько минут отдых этой длины пойдёт в полную силу */
-function restLeft(m) { var t = G().restAt; return t == null ? 0 : Math.max(0, Math.ceil(REST_GAP - (m || 0) - (nowMin() - t))); }
+/* доля полного отдыха, если отдыхать m минут на вещи с состоянием s, начиная сейчас */
+function restK(m, s) { var t = s && s.restAt; return t == null ? 1 : Math.max(0, Math.min(1, (nowMin() + (m || 0) - t) / REST_GAP)); }
+/* через сколько минут отдых этой длины на этой вещи пойдёт в полную силу */
+function restLeft(m, s) { var t = s && s.restAt; return t == null ? 0 : Math.max(0, Math.ceil(REST_GAP - (m || 0) - (nowMin() - t))); }
 /* (3.5) Тренировки: тренажёры поднимают силу не больше чем на пять единиц за всю игру,
    и каждая следующая единица — дольше (3, 6, 9, 12, 15 тренировок); мышцам нужен
    перерыв — три часа. Тир так же: меткость — не больше пяти ступеней, перерыв — час.
@@ -383,7 +386,7 @@ function actionItem(o, def, a, s) {
     case "respect": return s.resp ? { label: "Вы уже почтили память", info: true, keep: true, fn: function () { say("Вы уже стояли здесь молча."); } } : { label: label, fn: function () { doRespect(o, s); } };
     case "strip": return s.strip ? null : { label: label, fn: function () { doStrip(o, def, s); } };
   }
-  var base = { label: label + fxNote(kind, p), fn: function () { run(o, def, kind, p, label); } };
+  var base = { label: label + fxNote(kind, p, s), fn: function () { run(o, def, kind, p, label); } };
   if (kind === "rest" && REST_DRINK[o.fx]) { var combos = drinkCombos(o, def, p, label); if (combos.length) return [base].concat(combos); }
   return base;
 }
@@ -391,12 +394,13 @@ function actionItem(o, def, a, s) {
    тренажёр и тир — сколько прибавок из пяти уже взято и не рано ли снова. Чтобы не гадать,
    упёрлись ли в предел и не тратятся ли зря время и еда. */
 var FX_NOTE = { rest: 1, train: 1, aim: 1 };
-function fxNote(kind, p) {
+function fxNote(kind, p, s) {
   var t;
   if (kind === "rest") {
-    var mR = (p && p.m) || 10, kR = restK(mR);
+    /* (после 4.5) счёт отдыха — у этой вещи (s — её состояние): на другой вещи он свой */
+    var mR = (p && p.m) || 10, kR = restK(mR, s);
     var pcR = Math.max(1, Math.round(kR * 100)); /* (3.7) «на 21 процент», а не «процентов» */
-    return kR >= 1 ? "" : " — вы недавно отдыхали: поможет на " + pcR + " " + pl(pcR, "процент", "процента", "процентов") + ", в полную силу — через " + minW(restLeft(mR));
+    return kR >= 1 ? "" : " — здесь вы недавно отдыхали: поможет на " + pcR + " " + pl(pcR, "процент", "процента", "процентов") + ", в полную силу — через " + minW(restLeft(mR, s));
   }
   if (kind === "train") {
     t = trainSt();
@@ -419,7 +423,7 @@ function drinkCombos(o, def, p, label) {
   Object.keys(LAB.ITEMS).forEach(function (k) {
     var d = LAB.ITEMS[k];
     if (out.length >= 4 || !(g.inv[k] > 0) || d.kind !== "food" || !d.acc) return;
-    out.push({ label: base + " и выпить " + d.acc + fxNote("rest", p), fn: function () { run(o, def, "rest", p, label, k); } });
+    out.push({ label: base + " и выпить " + d.acc + fxNote("rest", p, st(o)), fn: function () { run(o, def, "rest", p, label, k); } });
   });
   return out;
 }
@@ -440,10 +444,12 @@ function run(o, def, kind, p, label, withId) {
       var whyR = restBlock();
       if (whyR) { LAB.UI.error && LAB.UI.error(); say(whyR); return; }
       UIx("closeAll");
-      var mR = p.m || 10, rk = restK(mR);
+      /* (после 4.5, просьба автора) счёт отдыха — у этой вещи: диван помнит, когда на нём лежали, а стул,
+         на котором ещё не сидели, даст полный отдых; его счёт начнётся с этой минуты */
+      var mR = p.m || 10, rk = restK(mR, s);
       spend(mR);
-      G().restAt = nowMin();
-      var leftR = restLeft(mR); /* когда такой же отдых снова пойдёт в полную силу — считая с этого */
+      s.restAt = nowMin();
+      var leftR = restLeft(mR, s); /* когда такой же отдых здесь снова пойдёт в полную силу — считая с этого */
       /* (3.6) доля отдыха — по времени с прошлого (restK): польза меньше, вред — нет */
       var rs = function (v) { return v ? Math.round(v * rk) : 0; };
       gm().bodyApply({ wake: rs(p.wake), neuro: rs(p.neuro), detox: p.tox < 0 ? rs(-p.tox) : 0, tox: p.tox > 0 ? p.tox : 0, rad: p.rad < 0 ? rs(p.rad) : (p.rad || 0), stopBleed: !!p.stopBleed }, m);
@@ -451,7 +457,7 @@ function run(o, def, kind, p, label, withId) {
          отдыхали недавно — и здоровья та же доля, но хоть единица */
       if (p.hp) { var hv = Math.max(1, Math.round(Math.max(5, G().hpMax * p.hp) * rk)); G().hp = Math.min(G().hpMax, G().hp + hv); m.push("Здоровье " + G().hp + "."); }
       var pcK = Math.max(1, Math.round(rk * 100)); /* (3.7) со склонением */
-      if (rk < 1) m.push("Вы отдыхали недавно, и тело восстановилось лишь на " + pcK + " " + pl(pcK, "процент", "процента", "процентов") + ": в полную силу отдых поможет через " + minW(leftR) + ".");
+      if (rk < 1) m.push("Здесь вы отдыхали недавно, и тело восстановилось лишь на " + pcK + " " + pl(pcK, "процент", "процента", "процентов") + ": в полную силу отдых поможет через " + minW(leftR) + ".");
       if (p.unslow && G().st.slow) { G().st.slow = 0; m.push("Ноги снова слушаются."); }
       snd("chair_sit", null);
       if (withId && LAB.ITEMS[withId] && G().inv[withId] > 0) {

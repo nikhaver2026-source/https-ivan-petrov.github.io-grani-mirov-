@@ -89,13 +89,16 @@ function recover(min, asleep) {
 }
 /* (3.7, нелогичность) Полчаса с закрытыми глазами в капсуле — не меньше, чем на железной койке
    (fixtures_data.js, bunk: здоровье 0,18, бодрость 20, нервы −14): мягкая капсула — 0,2, 22, −16;
-   прежде полчаса в капсуле давали меньше койки. Счёт отдыха общий с обстановкой (fixtures.js,
+   прежде полчаса в капсуле давали меньше койки. Счёт отдыха — как у обстановки (fixtures.js,
    restK, раз в час — в полную силу): прилегли недавно — к тому, что капсула даёт сама (recover,
-   как при чтении), прибавляется лишь доля. Вернёт эту долю в процентах (0 — в полную силу). */
+   как при чтении), прибавляется лишь доля. Вернёт эту долю в процентах (0 — в полную силу).
+   (после 4.5, просьба автора) Счёт — у этой капсулы (её состояние на этаже): стул или диван рядом
+   считают свой. */
 var LIE = { m: 30, hp: 0.2, wake: 22, neuro: -16 };
-function lie() {
+function lie(o) {
   var g = G(), b = g.body, t0 = (g.day || 0) * 1440 + (g.min || 0);
-  var rk = g.restAt == null ? 1 : Math.max(0, Math.min(1, (t0 + LIE.m - g.restAt) / 60));
+  var s = o && gm().objState ? gm().objState(o) : g;
+  var rk = s.restAt == null ? 1 : Math.max(0, Math.min(1, (t0 + LIE.m - s.restAt) / 60));
   var hp0 = g.hp, w0 = b ? b.wake : 0, n0 = b ? b.neuro : 0;
   recover(LIE.m, false);
   if (!b) return 0;
@@ -103,7 +106,7 @@ function lie() {
   if (g.hp - hp0 < hpW) g.hp = Math.min(g.hpMax, hp0 + hpW);
   if (b.wake - w0 < LIE.wake * rk) b.wake = Math.min(100, w0 + LIE.wake * rk);
   if (n0 - b.neuro < -LIE.neuro * rk) b.neuro = Math.max(0, n0 + LIE.neuro * rk);
-  g.restAt = (g.day || 0) * 1440 + (g.min || 0);
+  s.restAt = (g.day || 0) * 1440 + (g.min || 0);
   UIx("refresh");
   return rk < 1 ? Math.max(1, Math.round(rk * 100)) : 0;
 }
@@ -177,7 +180,7 @@ function menuItems() {
   items.push({ label: "Полежать с закрытыми глазами: полчаса", keep: true, fn: function () {
     var why = gm().restBlock ? gm().restBlock() : null; /* (3.5) как и сон: в тревогу — не до покоя */
     if (why) { LAB.UI.error(); say(why); return; }
-    var part = lie(); A("play", "capsule_hum", { gain: 0.5 }); say("Вы лежите, слушая ровный гул капсулы. Прошло полчаса. " + (part ? "Вы отдыхали недавно: полежать помогло лишь на " + part + " процентов. " : "") + statusLine()); } });
+    var part = lie(o); A("play", "capsule_hum", { gain: 0.5 }); say("Вы лежите, слушая ровный гул капсулы. Прошло полчаса. " + (part ? "Вы отдыхали недавно: полежать помогло лишь на " + part + " процентов. " : "") + statusLine()); } });
   items.push({ label: "Состояние тела", keep: true, fn: function () { gm().bodyStatus(); } });
   if (o && boundHere(o)) items.push({ label: "Вы привязаны к этой капсуле: если погибнете, вернётесь сюда", info: true, keep: true, fn: function () { say("Вы привязаны к этой капсуле. Погибнете на этом уровне — «Эхо» вернёт вас сюда. Привязка к другой капсуле снимет эту."); } });
   items.push({ label: "Откинуть крышку и выйти", fn: function () { leave(false); } });
@@ -280,7 +283,9 @@ function sleep(s) {
   var g = G(), b = g.body;
   var dream = pickDream();
   recover(s.min, true);
-  g.restAt = (g.day || 0) * 1440 + (g.min || 0); /* (3.6) только что выспались — стул сразу после капсулы даст лишь долю отдыха (fixtures.js, restK) */
+  /* (3.6) только что выспались — полежать в этой же капсуле сразу даст лишь долю отдыха; (после 4.5, просьба
+     автора) счёт у каждой вещи свой: стул и диван, на которых ещё не сидели, сон в капсуле не трогает */
+  if (inCap.o && gm().objState) gm().objState(inCap.o).restAt = (g.day || 0) * 1440 + (g.min || 0);
   if (s.min >= 240) { g.hp = g.hpMax; g.en = g.enMax; b.wake = 100; b.neuro = 0; }
   if (s.min >= 480) g.st.restedMin = 360;
   /* (3.7, нелогичность) отравление и кровотечение снимает лечебный сон, как и обещано в пункте:

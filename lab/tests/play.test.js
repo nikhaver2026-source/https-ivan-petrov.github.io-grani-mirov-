@@ -5688,32 +5688,40 @@ LAB.ui.closeAll();
         /* тревога этажа — в тактах самого этажа: от прежних проверок на нём она могла остаться */
         LAB.oko.setLevel(0, "проверка");
         const ch = fxRest(g.CUR.fl); near(ch);
+        const RS = () => g.objState(ch); /* (после 4.5) счёт отдыха — у этой вещи */
         out.restWhy = g.restBlock ? g.restBlock() : null;
         const nowM = () => (G.day || 0) * 1440 + (G.min || 0), pr = LAB.FIX.T[ch.fx].a.find(q => q[0] === "rest")[2] || {};
         const mR = pr.m || 10, full = Math.max(5, Math.round(G.hpMax * pr.hp)), share = k => Math.min(G.hpMax - 10, Math.max(1, Math.round(Math.max(5, G.hpMax * pr.hp) * Math.min(1, k)))); /* (после 4.5) как в игре: доля от неокруглённого полного, здоровье не выше предела (прежде двойное округление давало расхождение на единицу) */
-        G.restAt = -1e9; G.hp = 10;
+        RS().restAt = -1e9; G.hp = 10;
         out.restFresh = itemOf(ch, "rest");
         act(ch, "rest"); out.rest1 = G.hp > 10;
         out.restNote = itemOf(ch, "rest");
         /* сразу же снова — можно: время идёт, а здоровья — доля (минуты отдыха из часа) */
         G.hp = 10; let t0 = nowM(); act(ch, "rest");
         out.rest2 = { gain: G.hp - 10, want: share(mR / 60), time: nowM() - t0 === mR, said: /восстановилось лишь на \d+ процент/.test(last()) };
-        G.restAt = -1e9; LAB.oko.setLevel(3, "проверка"); act(ch, "rest"); out.restAlarm = /тревога/.test(last()); LAB.oko.setLevel(0, "проверка");
+        RS().restAt = -1e9; LAB.oko.setLevel(3, "проверка"); act(ch, "rest"); out.restAlarm = /тревога/.test(last()); LAB.oko.setLevel(0, "проверка");
         /* через двадцать минут — на долю «двадцать минут и сам отдых из часа», через час — в полную силу */
-        G.restAt = nowM() - 20; G.hp = 10; t0 = nowM(); act(ch, "rest");
+        RS().restAt = nowM() - 20; G.hp = 10; t0 = nowM(); act(ch, "rest");
         out.rest20 = { gain: G.hp - 10, want: share((20 + mR) / 60), time: nowM() - t0 === mR, said: /в полную силу отдых поможет через/.test(last()) };
-        G.restAt = nowM() - 61; G.hp = 10; act(ch, "rest");
+        RS().restAt = nowM() - 61; G.hp = 10; act(ch, "rest");
         out.rest61 = { gain: G.hp - 10, need: Math.min(G.hpMax - 10, full), part: /лишь на/.test(last()) };
         /* сидеть подряд без конца: за час — не больше одного полного отдыха */
-        G.restAt = nowM(); G.hp = 10; let n = 0; const tc = nowM();
+        RS().restAt = nowM(); G.hp = 10; let n = 0; const tc = nowM();
         while (nowM() - tc < 60 && n < 30) { act(ch, "rest"); n++; }
         out.restChain = { gain: G.hp - 10, full: full, n: n };
-        G.restAt = -1e9; G.hp = 10; LAB.oko.setLevel(6, "проверка"); act(ch, "rest"); out.restSearch = G.hp === 10 && /прочёсывает/.test(last());
-        LAB.oko.setLevel(1, "проверка"); G.restAt = -1e9; G.hp = 10; act(ch, "rest"); out.restSuspect = G.hp > 10; LAB.oko.setLevel(0, "проверка");
+        /* (после 4.5, просьба автора) у каждой вещи свой счёт: на этой только что отдыхали — доля, а такая же вещь рядом,
+           на которой ещё не сидели, даёт полный отдых; её счёт начинается, когда на ней посидят */
+        RS().restAt = nowM(); G.hp = 10; act(ch, "rest"); const gSame = G.hp - 10;
+        const other = { id: "t_rest_other", type: "fx", fx: ch.fx, x: ch.x, y: ch.y, room: ch.room }; delete g.objState(other).restAt;
+        G.hp = 10; act(other, "rest"); const gOther = G.hp - 10, otherAt = g.objState(other).restAt;
+        G.hp = 10; act(other, "rest"); const gOther2 = G.hp - 10;
+        out.restPerObj = { same: gSame, other: gOther, other2: gOther2, full: share(1), started: otherAt === nowM() - mR };
+        RS().restAt = -1e9; G.hp = 10; LAB.oko.setLevel(6, "проверка"); act(ch, "rest"); out.restSearch = G.hp === 10 && /прочёсывает/.test(last());
+        LAB.oko.setLevel(1, "проверка"); RS().restAt = -1e9; G.hp = 10; act(ch, "rest"); out.restSuspect = G.hp > 10; LAB.oko.setLevel(0, "проверка");
         const sk0 = C.strikers;
         try {
-          C.strikers = () => [{ ambush: false }]; G.restAt = -1e9; G.hp = 10; act(ch, "rest"); out.restPun = G.hp === 10 && /каратели/.test(last());
-          C.strikers = () => [{ ambush: true }]; G.restAt = -1e9; G.hp = 10; act(ch, "rest"); out.restAmbush = G.hp > 10;
+          C.strikers = () => [{ ambush: false }]; RS().restAt = -1e9; G.hp = 10; act(ch, "rest"); out.restPun = G.hp === 10 && /каратели/.test(last());
+          C.strikers = () => [{ ambush: true }]; RS().restAt = -1e9; G.hp = 10; act(ch, "rest"); out.restAmbush = G.hp > 10;
         } finally { C.strikers = sk0; }
       }
       /* 3. тренажёр: предел и перерыв */
@@ -5841,11 +5849,12 @@ LAB.ui.closeAll();
   ok(holes.rest1 && holes.rest2 && holes.rest2.gain === holes.rest2.want && holes.rest2.time && holes.rest2.said, "отдых: сразу снова — можно, но здоровья лишь доля, время идёт (" + JSON.stringify(holes.rest2) + (holes.restWhy ? "; " + holes.restWhy : "") + ")");
   ok(holes.restAlarm, "отдых при тревоге — отказ");
   ok(holes.rest20 && holes.rest20.gain === holes.rest20.want && holes.rest20.time && holes.rest20.said, "отдых через двадцать минут — на долю с точным сроком полной силы (" + JSON.stringify(holes.rest20) + ")");
+  ok(holes.restPerObj && holes.restPerObj.other === holes.restPerObj.full && holes.restPerObj.same < holes.restPerObj.other && holes.restPerObj.other2 < holes.restPerObj.other && holes.restPerObj.started, "у каждой вещи свой счёт отдыха: на этой только что отдыхали — доля, на такой же рядом — полный отдых, и её счёт начался, когда на ней посидели (" + JSON.stringify(holes.restPerObj) + ")");
   ok(holes.rest61 && holes.rest61.need > 0 && holes.rest61.gain >= holes.rest61.need && !holes.rest61.part, "отдых через час — в полную силу (" + JSON.stringify(holes.rest61) + ")");
   ok(holes.restChain && holes.restChain.n >= 2 && holes.restChain.gain <= holes.restChain.full + holes.restChain.n && holes.restChain.gain >= holes.restChain.full - holes.restChain.n, "сидеть подряд целый час — вместе не больше одного полного отдыха (" + JSON.stringify(holes.restChain) + ")");
   ok(holes.restSearch && holes.restSuspect, "пока ОКО прочёсывает этаж — отдыха нет; тревога снята (подозрение) — отдыхать можно (" + JSON.stringify({ s: holes.restSearch, u: holes.restSuspect }) + ")");
   ok(holes.restPun && holes.restAmbush, "каратели идут по следу — отдыха нет; в засаде — можно (" + JSON.stringify({ p: holes.restPun, a: holes.restAmbush }) + ")");
-  ok(holes.restFresh && !/ — /.test(holes.restFresh) && / — вы недавно отдыхали: поможет на \d+ процент(а|ов)?, в полную силу — через (1 час|\d+ мину)/.test(holes.restNote || ""), "пункт отдыха сам говорит, на сколько поможет и когда в полную силу (" + holes.restNote + ")");
+  ok(holes.restFresh && !/ — /.test(holes.restFresh) && / — здесь вы недавно отдыхали: поможет на \d+ процент(а|ов)?, в полную силу — через (1 час|\d+ мину)/.test(holes.restNote || ""), "пункт отдыха сам говорит, на сколько поможет и когда в полную силу (" + holes.restNote + ")");
   ok(/ — накачано 2 из 5 единиц$/.test(holes.gymNote || "") && / — больше ничего не даст$/.test(holes.gymCapNote || ""), "пункт тренажёра: сколько прибавок из пяти взято, на пределе — «больше ничего не даст» (" + holes.gymNote + " / " + holes.gymCapNote + ")");
   ok(holes.gymCap && holes.gymCap.same && holes.gymCap.said && holes.gymGap, "тренажёр: предел в пять единиц и перерыв три часа");
   ok(holes.invBack === "Инвентарь" && holes.invFood === "Еда и напитки", "инвентарь: после аптечки — снова инвентарь, «Еда» открывается (" + holes.invBack + " → " + holes.invFood + ")");
