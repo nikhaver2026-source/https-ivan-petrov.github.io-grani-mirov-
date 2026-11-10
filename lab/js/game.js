@@ -557,7 +557,8 @@ game.weaponLine = weaponLine;
 
 /* Защита: надетая броня (с пластинами) и опыт героя. */
 function armorValue() {
-  var a = LAB.armorDef(G.armor) + Math.floor(G.lvl / 3);
+  var a = Math.round(LAB.armorDef(G.armor) * (LAB.mastery && G.armor ? LAB.mastery.defK(G.armor) : 1)) + Math.floor(G.lvl / 3); /* (после 4.6) брак сборки: слабый шов */
+  if (LAB.exo) a += LAB.exo.defBonus(); /* (после 4.6) экзокаркас: накладки и рама */
   /* (2.0) чип кожного панциря и наноброня */
   if (LAB.implants) a += Math.round(LAB.implants.stat("armor")) + (G.st.nanoT > 0 ? G.st.nano || 0 : 0);
   if (G.faction === "sec") a = Math.round(a * 1.15);
@@ -566,7 +567,10 @@ function armorValue() {
 }
 game.armorValue = armorValue;
 /* Какую долю урона этого вида гасит броня. */
-function armorRes(t) { if (!G.armor) return 0; var r = LAB.ARMORS[G.armor.base].res; return (r && r[t]) || 0; }
+function armorRes(t) {
+  var r = G.armor ? LAB.ARMORS[G.armor.base].res : null, b = (r && r[t]) || 0, ex = LAB.exo ? LAB.exo.res(t) : 0;
+  return ex ? Math.max(b, Math.min(0.9, b + ex)) : b; /* (после 4.6) накладки каркаса — сверх брони, не выше 0,9 */
+}
 game.armorRes = armorRes;
 function armorSpecial(k) { return !!(G.armor && LAB.ARMORS[G.armor.base].special === k); }
 game.armorSpecial = armorSpecial;
@@ -949,6 +953,7 @@ function rollEvent() {
 function gainXP(n, why) {
   if (!n) return;
   G.xp += n;
+  if (LAB.drone && n > 0) LAB.drone.onXP(n); /* (после 4.6) дрон-спутник растёт вместе с героем */
   var lv = false;
   while (G.xp >= LAB.xpNeed(G.lvl)) {
     G.xp -= LAB.xpNeed(G.lvl); G.lvl++; lv = true;
@@ -1073,7 +1078,7 @@ function tryMove(dir, run) {
   if (!game.entered || game.paused || G.done) return false;
   if (LAB.ui && LAB.ui.layer()) return false;
   var now = Date.now();
-  var minGap = run ? 180 : 0;
+  var minGap = run ? Math.round(180 * (LAB.exo ? LAB.exo.runGapK() : 1)) : 0; /* (после 4.6) приводы ног каркаса */
   if (G.st.slow > 0) minGap = Math.max(minGap, 420);
   if (now - lastMove < minGap) return false;
   if (G.st.web > 0) { A("play", "web_stuck"); sayq("Вы в паутине. Рвёте её..."); G.st.web = Math.max(0, G.st.web - 1); return false; }
@@ -1145,8 +1150,9 @@ function tryMove(dir, run) {
   var from = [G.x, G.y];
   G.x = nx; G.y = ny;
   G.stats.steps++;
-  var loud = armorSpecial("strength") ? 2 : 0, quiet = armorSpecial("stealth");
+  var loud = (armorSpecial("strength") ? 2 : 0) + (LAB.exo ? LAB.exo.stepNoise(run) : 0), quiet = armorSpecial("stealth"); /* (после 4.6) тяжёлый каркас громче, лёгкий на беге тише */
   G.noise = Math.max(G.noise, Math.round(((run ? 6 : 3) + loud) * (quiet ? 0.5 : 1)));
+  if (LAB.exo) LAB.exo.onStep(run); /* (после 4.6) приводы едят заряд аккумулятора */
   advanceTime(run ? 0.6 : 1);
   CUR.focus = null;
   A("step", surfaceAt(nx, ny), run, tt === T.DOOR);
@@ -3940,8 +3946,10 @@ function craft(rc) {
   var why = LAB.workshop ? LAB.workshop.check(rc) : "";
   if (!why && rc.minL && G.L < rc.minL) why = "Это здесь не собрать: чертежей и оснастки на этой глубине нет.";
   if (!why && !canCraft(rc)) why = "Не хватает деталей: " + needText(rc) + ".";
+  if (!why && LAB.mastery) why = LAB.mastery.before(rc); /* (после 4.6) тщательная работа — не под огнём */
   if (why) { LAB.UI.error(); say(why); return false; }
   var out = rc.out === "wmod" ? "m_power" : rc.out; /* прежний модуль усиления */
+  var MS = LAB.mastery, ms = MS ? MS.begin(rc) : null, wb0 = LAB.workshop && LAB.workshop.near ? LAB.workshop.near() : null; /* (после 4.6) мастерство: качество и брак собранного */
   var need = needOf(rc), W = LAB.workshop;
   for (var k in need) G.inv[k] -= need[k];
   G.crafted++;
@@ -3961,13 +3969,14 @@ function craft(rc) {
   pv = Math.round(pv * priceK());
   for (var i = 0; i < times; i++) {
     if (out.indexOf("ammo:") === 0) { G.ammo[out.slice(5)] = (G.ammo[out.slice(5)] || 0) + 1; G.craftN = G.craftN || {}; G.craftN[out] = (G.craftN[out] || 0) + 1; }
-    else if (out.indexOf("armor:") === 0) { var na = LAB.makeArmor(out.slice(6), LAB.foeLevel(G.L, G.F), qual); na.rcNeed = rn; na.crafted = pv; armorMsg = giveItem({ kind: "armor", a: na }, true); }
-    else if (out.indexOf("weapon:") === 0) { var nw = LAB.makeWeapon(out.slice(7), LAB.foeLevel(G.L, G.F), 1, qual); nw.rcNeed = rn; nw.crafted = pv; if (nw.ammo !== "none" && nw.cap) { nw.charge = 0; emptyMag = true; } armorMsg = giveItem({ kind: "weapon", w: nw }, true); }
+    else if (out.indexOf("armor:") === 0) { var na = LAB.makeArmor(out.slice(6), LAB.foeLevel(G.L, G.F), qual); na.rcNeed = rn; na.crafted = pv; if (MS) MS.item(rc, na, true, wb0, ms); armorMsg = giveItem({ kind: "armor", a: na }, true); }
+    else if (out.indexOf("weapon:") === 0) { var nw = LAB.makeWeapon(out.slice(7), LAB.foeLevel(G.L, G.F), 1, qual); nw.rcNeed = rn; nw.crafted = pv; if (MS) MS.item(rc, nw, false, wb0, ms); if (nw.ammo !== "none" && nw.cap) { nw.charge = 0; emptyMag = true; } armorMsg = giveItem({ kind: "weapon", w: nw }, true); }
     else { G.inv[out] = (G.inv[out] || 0) + 1; G.craftN = G.craftN || {}; G.craftN[out] = (G.craftN[out] || 0) + 1; } /* (3.5) сколько собрано своими руками — скупка (supply.js) */
   }
   if (emptyMag) armorMsg += " Магазин пуст: батарея в сборку не входит — перезарядите.";
   A("play", out.indexOf("armor:") === 0 || out.indexOf("weapon:") === 0 ? "craft_armor" : "craft");
   var msg = "Собрано: " + rc.n + (batchN > 1 ? " — партия из " + batchN : "") + (bonus ? " — и ещё одно, инженерная смекалка!" : "") + "." + (extra ? " " + W.specName() + ": вышло с запасом — плюс одно." : "") + (qual > 2 && (out.indexOf("armor:") === 0 || out.indexOf("weapon:") === 0) ? " Оружейный верстак: качество на ступень лучше." : "") + (armorMsg ? " " + armorMsg : "");
+  if (MS) msg += MS.finish(rc, wb0, ms); /* (после 4.6) время тщательной работы, опыт мастерства, рачительность */
   if (LAB.workshop) LAB.workshop.afterCraft(rc, msg); else say(msg);
   gainXP(3);
   UIx("refresh");
@@ -4397,6 +4406,9 @@ function characterText() {
   lines.push("Энергия имплантов " + G.en + " из " + G.enMax + ". Уровень героя " + G.lvl + ", опыт " + G.xp + " из " + LAB.xpNeed(G.lvl) + ". Сила " + statTxt("str") + ", ловкость " + statTxt("agi") + ", интеллект " + statTxt("mind") + ", харизма " + statTxt("cha") + ". Кредиты " + G.credits + ".");
   if (LAB.chem) lines.push(LAB.chem.line()); /* (3.0) ступени химии */
   if (LAB.traps && LAB.traps.stageCap && LAB.traps.stageCap() > 0 && LAB.traps.skillText) lines.push(LAB.traps.skillText()); /* (после 4.1) ловушечное дело — ниже Истока */
+  if (LAB.mastery) { var mln = LAB.mastery.charLine(); if (mln) lines.push(mln); } /* (после 4.6) мастерство */
+  if (LAB.exo) { var xln = LAB.exo.charLine(); if (xln) lines.push(xln); } /* (после 4.6) экзокаркас */
+  if (LAB.drone) { var dln = LAB.drone.charLine(); if (dln) lines.push(dln); } /* (после 4.6) дрон-спутник */
   lines.push("Комплекс: уровень " + G.L + " «" + LAB.LEVELS[G.L].name + "», этаж " + G.F + ". Пропуск: " + (G.tier ? LAB.TIERS[G.tier].n.toLowerCase() : "нет") + ". Лифт этажей: " + (G.elev[G.L] ? "есть пропуск" : "нет пропуска") + ". " + (!LAB.isReactorLevel(G.L) ? "Шлюзовая ключ-карта уровня " + G.L + ": " + (G.gate[G.L] ? "есть" : "нет") : (riftRoot() ? "Ключ Ядра Разлома: " : "Ключ доступа к «Истоку»: ") + (hasCore(G.L) ? "есть" : "нет")) + "."); /* (после 4.1) на дне — Ядро Разлома, не Исток */
   lines.push("Образцов " + Object.keys(G.samples).length + ", тайников " + G.stats.secrets + ", записок " + G.stats.notes + ", побеждено врагов " + G.stats.kills + ". Режим сложности: " + LAB.dk().n.toLowerCase() + (S.turnBased ? ", бой пошаговый" : "") + ".");
   if (G.faction) lines.push("Фракция: " + LAB.FACTIONS[G.faction].n + ".");

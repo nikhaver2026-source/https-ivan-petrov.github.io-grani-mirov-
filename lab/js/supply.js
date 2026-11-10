@@ -219,6 +219,8 @@ function sellWeapons(ctx, back) {
     var g = G(), items = [];
     g.weapons.forEach(function (w, i) {
       var p = weaponSellPrice(w, ctx), inHand = i === g.wi;
+      /* (после 4.6) оружие с живым ядром скупщики не берут: ядро держится за владельца */
+      if (w.core) { items.push({ label: w.name + ": не купят — в нём живое ядро, оно держится за вас", info: true, keep: true, fn: function () { say("Оружие с ядром скупщики не берут: ядро держится за владельца. Разобрать его можно у верстака — ядро погибнет."); } }); return; }
       items.push({ label: "Продать: " + w.name + (inHand ? ", в руках" : "") + ", состояние " + Math.round(condOf(w)) + " — " + cr(p), fn: function () {
         if (G().weapons.length < 2) { LAB.UI.error(); say("Это последнее оружие: без него не продают."); return; }
         var go = function () { removeWeapon(w); G().credits += p; soldSay(w.name, p); sellWeapons(ctx, back); };

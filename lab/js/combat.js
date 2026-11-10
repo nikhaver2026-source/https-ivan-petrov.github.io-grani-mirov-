@@ -2255,6 +2255,9 @@ function hurtPlayer(dmg, adt, src, opts) {
     if (g.st.shield <= 0) { g.st.shield = 0; sayOnce("shieldgone", "Щит пробит."); }
     if (raw <= 0) return 0;
   }
+  /* (после 4.6) щит каркаса на спине гасит удары сзади; экран дрона берёт часть урона на себя */
+  if (LAB.exo) { raw = LAB.exo.onHurt(raw, adt, src); if (raw <= 0) { UIx("refresh"); return 0; } }
+  if (LAB.drone) { raw = LAB.drone.onHurt(raw, adt, src); if (raw <= 0) { UIx("refresh"); return 0; } }
   var res = gm().armorRes(adt || "phys");
   var cut = gm().armorValue() * 0.35;
   var fin = Math.max(1, Math.round(raw * (1 - res) - cut));
@@ -2330,6 +2333,8 @@ function statusTick(onlyTimers) {
   if (LAB.implants) LAB.implants.tick(); /* (2.0) действие имплантов во времени, чип регенерации */
   if (LAB.chem) LAB.chem.tick(); /* (3.0) химия: регенерация, репеллент, токсиколог */
   if (LAB.deepSys) LAB.safe(LAB.deepSys.tick); /* (после 4.1) глубокие блоки: статус, нормы, прокат, испытания */
+  if (LAB.exo) LAB.safe(LAB.exo.tick); /* (после 4.6) экзокаркас: наплечная турель, заряд */
+  if (LAB.drone) LAB.safe(LAB.drone.tick); /* (после 4.6) дрон-спутник: огонь, разведка, ремонт */
   if (st.haste > 0) { st.haste--; if (!st.haste) sayq("Ускорение закончилось."); }
   if (st.cloak > 0) { st.cloak--; if (!st.cloak) { sayq("Маскировка спала."); A("play", "cloak_off"); } }
   if (st.hide && !hidden()) unhide("Вы выбрались из укрытия: теперь вас видно.");
@@ -2392,15 +2397,18 @@ function fire(dir, burst) {
   /* мастерская: ствол перегрет — ждём; изношенное оружие даёт осечки */
   var wk = LAB.workshop ? LAB.workshop.beforeShot(w, now) : null;
   if (wk === "hot") { stopFire(); return false; }
+  var dry = false;
   if (w.ammo !== "none" || w.cap) {
-    if (w.charge <= 0) {
+    if (w.charge <= 0 && LAB.forge && LAB.forge.dryOk(w)) dry = true; /* (после 4.6) энергоклинок без заряда бьёт тупой полосой */
+    else if (w.charge <= 0) {
       A("play", "w_empty");
       if (now - lastEmpty > 2500) { lastEmpty = now; say("Заряд пуст. Перезарядка — " + LAB.K("касание двумя пальцами", "Alt+R или F") + "." + (g.ammo[w.ammo] > 0 ? "" : " Запаса нет: " + LAB.AMMO[w.ammo].n.toLowerCase() + " кончились.")); }
       stopFire();
       return false;
     }
-    w.charge--;
+    else w.charge--;
   }
+  if (LAB.forge) LAB.forge.setDry(w, dry);
   lastShot = now;
   if (wk === "misfire") { A("play", "w_empty"); if (S.turnBased) tick(); UIx("refresh"); return true; }
   g.stats.shots++;
@@ -2476,7 +2484,7 @@ function shoot(w, f, perp, along, burst, melee) {
   }
   var dt = w.dt;
   var dmg = w.dmg * LAB.wGrowK(w); /* (2.2) рост оружия — по режиму сложности */
-  if (melee) { dmg *= 1 + (LAB.heroStat("str") - 10) * 0.03; if (gm().armorSpecial("strength")) dmg *= 1.6; }
+  if (melee) { dmg *= 1 + (LAB.heroStat("str") - 10) * 0.03; if (gm().armorSpecial("strength")) dmg *= 1.6; if (LAB.exo) dmg *= LAB.exo.meleeK(); } /* (после 4.6) приводы рук каркаса */
   var crit = Math.random() < 0.05 + (LAB.heroStat("agi") - 10) * 0.008 + (wf(w, "crit") || 0);
   if (crit) dmg *= 1.75;
   if (LAB.workshop) dmg *= LAB.workshop.dmgK(w, f);
@@ -2484,7 +2492,7 @@ function shoot(w, f, perp, along, burst, melee) {
   if (chx) dmg *= chx.k;
   var wb = LAB.WEAPONS[w.base] || {};
   /* direct — прямой удар героя по цели: его и только его отражают зеркальные (3.7) */
-  damageFoe(f, dmg, dt, { noarmor: !!wf(w, "noarmor") || !!(chx && chx.noarmor), crit: crit, melee: melee, burst: burst, freeze: wf(w, "freeze"), apierce: LAB.workshop ? LAB.workshop.pierce(w) : 0, stunMech: wb.stunMech || 0, direct: true });
+  damageFoe(f, dmg, dt, { noarmor: !!wf(w, "noarmor") || !!(chx && chx.noarmor), crit: crit, melee: melee, burst: burst, freeze: wf(w, "freeze"), apierce: LAB.workshop ? LAB.workshop.pierce(w) : 0, stunMech: wf(w, "stunMech") || 0, direct: true }); /* (после 4.6) у своей конструкции — свои свойства */
   if (wf(w, "area")) foes.forEach(function (o) { if (o !== f && !o.dead && !o.calm && cheb(o, f) <= 1) damageFoe(o, dmg * 0.6, dt, { noarmor: true, quiet: true }); });
   afterHit(w, f, dmg, dt);
   if (LAB.chem) LAB.chem.afterHit(w, f, dmg);
@@ -2635,6 +2643,8 @@ function kill(f, quiet) {
   /* (3.7, нелогичность) убитые самим героем — для премии поручений «без крови» (quests.js, condTick):
      прежде её снимали и гибель союзника, и ловушка этажа, и лопнувший вплотную трутень */
   if ((f.hitBy || "hero") === "hero") g.stats.hkills = (g.stats.hkills || 0) + 1;
+  /* (после 4.6) победа своей самоделкой — опыт мастерства; оружие с ядром растёт */
+  if ((f.hitBy || "hero") === "hero" && !f.ally && !f.calm) { var hw = gm().curWeapon ? gm().curWeapon() : null; if (LAB.mastery) LAB.safe(function () { LAB.mastery.onKill(hw, f); }); if (LAB.forge) LAB.safe(function () { LAB.forge.onKill(hw, f); }); }
   if (!f.ally) markCleared(f); /* (2.2) помещение зачищено — в нём можно укрыться */
   if (LAB.ach) { LAB.ach.ev("kill", 1); if (f.kind === "mech") LAB.ach.ev("kill_mech", 1); if (f.boss) LAB.ach.ev("boss", 1); }
   /* (3.7, нелогичность) ОКО помнит, кто пал только что — машина или тварь: реплики о серии потерь
@@ -2722,6 +2732,7 @@ function kill(f, quiet) {
     }
     if (LAB.workshop) LAB.workshop.drops(f, drops, r, dk);
     if (LAB.chem) LAB.chem.drops(f, drops, r, dk); /* (3.0) сырьё химии: ткани тварей, жидкости машин */
+    if (LAB.forge) LAB.forge.drops(f, drops, r, dk); /* (после 4.6) блок управления машины, нейроядро и биоядро — с сильных */
     if (carrier(f) && r() < crP() * sk) drops.push({ kind: "credits", n: LAB.credits(4 + r() * 12, L, g.F) }); /* (3.7) кредиты — у машин и людей */
     /* служебный ключ ОКО: у начальника смены, изредка — у стража поста */
     if (f.kind === "mech" && (has(f, "commander") ? r() < 0.45 * dk : f.guard && LAB.depth(L, g.F) >= 6 && r() < 0.08 * dk)) drops.push({ kind: "item", item: "okokey", n: 1 });

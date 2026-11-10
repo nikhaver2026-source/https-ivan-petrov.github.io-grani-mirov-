@@ -322,6 +322,17 @@ function key(e) {
     LAB.AE.ensure(); LAB.Speech.userAct(); gr.reload();
     return;
   }
+  /* (после 4.6) Alt+D — команды дрону и каркасу (и в русской раскладке: Alt+В) */
+  if (e.altKey && (e.code === "KeyD" || k === "d")) {
+    e.preventDefault();
+    if (e.repeat || route() !== "game") return;
+    var gd = LAB.game;
+    if (!gd.entered || gd.G.dead) return;
+    if (gd.paused) { pausedHint(); return; }
+    LAB.AE.ensure(); LAB.Speech.userAct();
+    if (LAB.drone) LAB.drone.quick();
+    return;
+  }
   /* одиночные служебные клавиши (Shift, Alt, Insert чтеца экрана, Caps Lock) речь не обрывают */
   if (/^(Shift|Alt|AltGraph|Meta|OS|CapsLock|NumLock|ScrollLock|Insert|ContextMenu|Unidentified|Dead)$/.test(e.key) || e.altKey) return;
   if (e.repeat) { if (ARROW[e.key] || WASD[k] || k === "Tab" || k === " ") e.preventDefault(); return; }

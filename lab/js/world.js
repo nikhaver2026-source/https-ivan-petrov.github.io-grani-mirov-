@@ -339,7 +339,7 @@ LAB.makeWeapon = function (base, lvl, rank, qual, idHint) {
 /* (2.1) Пауза между выстрелами и ударами — из таблицы оружия, а не из
    записанного экземпляра: так новая скорость (монтировка — 0,3 с вместо 0,5)
    доходит и до оружия в прежних сохранениях. */
-LAB.weaponCd = function (w) { var b = w && LAB.WEAPONS[w.base]; return (b && b.cd) || (w && w.cd) || 500; };
+LAB.weaponCd = function (w) { if (w && w.cdOwn) return w.cdOwn; var b = w && LAB.WEAPONS[w.base]; return (b && b.cd) || (w && w.cd) || 500; }; /* (после 4.6) своя конструкция — своя пауза по узлам */
 /* Что встречается на этой глубине: чаще — вещи своего блока. */
 function recentPool(table, depthOf, L, skip) {
   var pool = [], recent = [], k;

@@ -582,6 +582,9 @@ function beforeShot(w, now) {
     var ch = (30 - c) / 30 * 0.18 * Math.pow(0.4, md(w, "stab"));
     if (Math.random() < ch) { sayOnce("misfire", "Осечка: оружие изношено. Почините его у верстака или ремнабором.", 5000); return "misfire"; }
   }
+  /* (после 4.6) брак сборки: люфт спуска — осечки и у исправного; своя конструкция — ресурс ствола, своенравное ядро */
+  if (LAB.mastery && LAB.mastery.misfire(w)) return "misfire";
+  if (LAB.forge) { var fz = LAB.forge.beforeShot(w, now); if (fz) return fz; }
   return null;
 }
 /* После выстрела: нагрев и износ; вслух — когда пора остановиться или чинить. */
@@ -590,7 +593,7 @@ function afterShot(w, burst, now) {
   now = now || Date.now();
   if (heats(w) && !(LAB.chem && LAB.chem.chilled(w))) { /* (3.0) охлаждающий гель: не греется */
     cooled(w, now);
-    w.heat = (w.heat || 0) + (HEAVY[wcls(w)] ? 1.4 : 1) * (burst ? 0.7 : 1) * (1 - (LAB.implants ? Math.min(0.6, LAB.implants.stat("cool")) : 0)) * (LAB.chem ? LAB.chem.heatK(w) : 1) * (md(w, "chill") ? 0.5 : 1); /* (3.0) энергохимик; (после 4.1) криоконтур */
+    w.heat = (w.heat || 0) + (HEAVY[wcls(w)] ? 1.4 : 1) * (burst ? 0.7 : 1) * (1 - (LAB.implants ? Math.min(0.6, LAB.implants.stat("cool")) : 0)) * (LAB.chem ? LAB.chem.heatK(w) : 1) * (md(w, "chill") ? 0.5 : 1) * (LAB.forge ? LAB.forge.heatK(w) : 1); /* (3.0) энергохимик; (после 4.1) криоконтур; (после 4.6) мощность, энергетик */
     w.heatT = now;
     var mx = hmax(w);
     if (w.heat >= mx) {
@@ -606,17 +609,22 @@ function afterShot(w, burst, now) {
   /* (после 4.1) закалка звуком (резонансный станок) и чип мастера Цехов — износ медленнее */
   if (w.tempered) wear *= 0.5;
   if (LAB.implants) wear *= 1 - Math.min(0.6, LAB.implants.stat("wwear"));
+  if (LAB.mastery) wear *= LAB.mastery.wearK(w); /* (после 4.6) брак сборки: трещина — износ вдвое */
+  if (LAB.forge) wear *= LAB.forge.wearK(w); /* (после 4.6) форсаж и экономный режим */
   w.cond = Math.max(0, Math.round((c0 - wear) * 100) / 100);
+  if (LAB.forge) LAB.forge.afterShot(w, burst, now); /* (после 4.6) ресурс ствола, расход заряда по мощности */
   /* (после 4.1) экономайзер: каждый четвёртый выстрел на батареях и зарядах возвращает заряд в отсек */
   if (md(w, "econ") && battery(w) && !melee(w) && w.cap && Math.random() < 0.25) w.charge = Math.min(w.cap, (w.charge || 0) + 1);
   [50, 25, 10].forEach(function (lv) {
     if (c0 >= lv && w.cond < lv) sayq(lv === 50 ? "Оружие изнашивается: состояние " + lv + " из 100. Почините его у верстака." : lv === 25 ? "Оружие сильно изношено: состояние " + lv + " из 100, начнутся осечки." : "Оружие на пределе: почти каждый пятый выстрел — осечка.");
   });
 }
-function accBonus(w, burst) { return 0.07 * md(w, "acc") + (md(w, "stab") ? 0.03 + (burst ? 0.1 : 0) : 0) + (md(w, "recoil") && burst ? 0.1 : 0) + (LAB.implants ? LAB.implants.stat("acc") : 0); }
+function accBonus(w, burst) { return 0.07 * md(w, "acc") + (md(w, "stab") ? 0.03 + (burst ? 0.1 : 0) : 0) + (md(w, "recoil") && burst ? 0.1 : 0) + (LAB.implants ? LAB.implants.stat("acc") : 0) +
+  (LAB.mastery ? LAB.mastery.accK(w) : 0) + (LAB.forge ? LAB.forge.accK(w) : 0) + (LAB.exo ? LAB.exo.accK(w) : 0); } /* (после 4.6) брак прицела, свой прицел и ядро, отдачу гасит каркас */
 function condK(w) { var c = cond(w); return c >= 50 ? 1 : 0.75 + 0.5 * c / 100; }
 /* (2.0) чипы и импланты (implants.js): ярость, добивание, разгон, бронебойность, быстрая рука */
-function dmgK(w, f) { return condK(w) * (f && f.kind === "mech" && md(w, "emp") ? 1 + 0.25 * md(w, "emp") : 1) * (LAB.implants ? LAB.implants.dmgK(f) : 1) * deepK(w, f); }
+function dmgK(w, f) { return condK(w) * (f && f.kind === "mech" && md(w, "emp") ? 1 + 0.25 * md(w, "emp") : 1) * (LAB.implants ? LAB.implants.dmgK(f) : 1) * deepK(w, f) *
+  (LAB.mastery ? LAB.mastery.dmgK(w) : 1) * (LAB.forge ? LAB.forge.dmgK(w, f) : 1); } /* (после 4.6) брак сборки; своя конструкция, мощность, ядро */
 /* (после 4.1) модули глубин в силе удара: счётный — каждое третье попадание подряд по одной цели в полтора раза
    сильнее; модуль Трещины — по стражам на треть сильнее. Без модулей глубин — единица. */
 var tally = { w: null, f: null, n: 0 };
@@ -630,12 +638,13 @@ function deepK(w, f) {
   if (md(w, "rift") && f.boss) k *= 1.33;
   return k;
 }
-function pierce(w) { return Math.min(0.9, ((LAB.WEAPONS[w.base] || {}).apierce || 0) + 0.35 * md(w, "pierce") + 0.25 * md(w, "rift") + (LAB.implants ? LAB.implants.stat("pierce") : 0)); }
+function pierce(w) { return Math.min(0.9, (w.apierce != null ? w.apierce : (LAB.WEAPONS[w.base] || {}).apierce || 0) + 0.35 * md(w, "pierce") + 0.25 * md(w, "rift") + (LAB.implants ? LAB.implants.stat("pierce") : 0) + (LAB.forge ? LAB.forge.pierceK(w) : 0)); } /* (после 4.6) своя конструкция — своя бронебойность */
 function reloadK(w) { return Math.max(0.3, (1 - 0.3 * md(w, "reload")) * (1 - (LAB.implants ? LAB.implants.stat("reload") : 0))); }
 function gapK(w) { return (1 - 0.08 * md(w, "reload")) * (md(w, "recoil") ? 0.9 : 1); }
 /* (после 4.1) После попадания оружием (combat.shoot → chem.afterHit): модули глубин — метка, кровь, отзвук,
    холод, отбор тока и паровой боёк. */
 function onHit(w, f, dmg) {
+  if (LAB.forge && w && f) LAB.forge.onHit(w, f, dmg); /* (после 4.6) ядро, СВЧ, кумулятивный заряд */
   if (!w || !f || !w.mod) return;
   var C = LAB.combat, g = G();
   if (md(w, "mark") && !f.dead) { if (!(f.markT > 0)) sayOnce("dmark" + f.id, String(f.name || "").split(",")[0] + " помечен: по нему бьют сильнее.", 6000); f.markT = Math.max(f.markT || 0, 6); f.mark = Date.now() + 15000; }
@@ -657,6 +666,7 @@ function onHit(w, f, dmg) {
 }
 function loud(w, l) {
   if (wcls(w) === "kinetic") l = 7;
+  if (LAB.forge) l = LAB.forge.loud(w, l); /* (после 4.6) зарядка конденсаторов слышна, клинок гудит */
   var q = md(w, "quiet");
   return q ? Math.max(1, Math.round(l * (1 - 0.35 * q))) : l;
 }
@@ -709,6 +719,7 @@ function install(w, mk) {
   if (!w.mod) w.mod = {};
   w.mod[mk] = (w.mod[mk] || 0) + 1;
   recalc(w);
+  if (LAB.mastery) LAB.mastery.ev("module", w); /* (после 4.6) мастерство: электрика */
   return "";
 }
 function uninstall(w, mk) {
@@ -773,7 +784,7 @@ function repairCost(w, cap, b) {
 function costText(need) { var s = []; for (var k in need) s.push((LAB.ITEMS[k] ? LAB.ITEMS[k].n.toLowerCase() : k) + " " + need[k]); return s.join(", "); }
 function haveAll(need) { var g = G(); for (var k in need) if ((g.inv[k] || 0) < need[k]) return false; return true; }
 function take(need) { var g = G(); for (var k in need) g.inv[k] -= need[k]; }
-function repairCap(b) { return effTier(b) >= 2 ? 100 : hasP(b, "repair") ? 90 : 80; }
+function repairCap(b) { return effTier(b) >= 2 ? 100 : (hasP(b, "repair") ? 90 : 80) + (LAB.mastery && LAB.mastery.has("arms") ? 5 : 0); } /* (после 4.6) оружейник */
 function repairWeapon(i, b) {
   var g = G(), w = g.weapons[i];
   if (!w) return false;
@@ -783,6 +794,7 @@ function repairWeapon(i, b) {
   if (!haveAll(need)) { LAB.UI.error(); say("Для ремонта не хватает: " + costLack(need) + "."); return false; }
   take(need);
   w.cond = capC; w.heat = 0; w.hotUntil = 0;
+  if (LAB.mastery) LAB.mastery.ev("repair", w); /* (после 4.6) мастерство */
   seq([
     { t: "Ремонт, этап 1 из 3: разбираю кожух.", snd: "pry" },
     { t: "Этап 2 из 3: меняю изношенные контакты и пружины.", snd: "craft" },
@@ -811,6 +823,7 @@ function repairArmor(a, b) {
   if (!haveAll(need)) { LAB.UI.error(); say("Для ремонта брони не хватает: " + costLack(need) + "."); return false; }
   take(need);
   a.cond = capC;
+  if (LAB.mastery) LAB.mastery.ev("repairArmor", a); /* (после 4.6) мастерство */
   seq([
     { t: "Ремонт брони, этап 1 из 3: снимаю разбитые накладки и крепления.", snd: "pry" },
     { t: "Этап 2 из 3: правлю вмятины, клею и проклёпываю швы.", snd: "craft" },
@@ -859,7 +872,7 @@ function lvlNow() { return LAB.foeLevel(G().L, G().F); }
 function wGen(w, q, mark) { var b = LAB.WEAPONS[w.base] || {}; return LAB.QUAL[b.g] ? LAB.QUAL[b.g][q] + " " + b.n + (b.cls === "melee" && w.base !== "cutter" ? "" : " " + LAB.MODEL[w.base] + "-" + mark) : w.name; }
 function aGen(a, q) { var d = LAB.ARMORS[a.base] || {}; return LAB.QUAL[d.g] ? LAB.QUAL[d.g][q] + " " + d.n : a.name; }
 /* имя меняется, только если оно обычное (у именного оружия — своё) */
-function wRename(w, q0, m0) { if (w.name === wGen(w, q0, m0)) w.name = wGen(w, w.qual, LAB.weaponMark(w.rank, w.lvl)); }
+function wRename(w, q0, m0) { if (w.own && LAB.forge) { LAB.forge.rename(w); return; } if (w.name === wGen(w, q0, m0)) w.name = wGen(w, w.qual, LAB.weaponMark(w.rank, w.lvl)); }
 function aRename(a, q0) { if (a.name === aGen(a, q0)) a.name = aGen(a, a.qual); }
 function modCost(gap, kind) {
   var n = { scrap: 2 + Math.min(4, Math.ceil(gap / 15)) };
@@ -883,8 +896,10 @@ function modernize(kind, x, b) {
     x.dmg0 = x.dmg0 * k; x.lvl = nl;
     /* (2.2) ёмкость — по новой ступени, как у нового оружия этой глубины */
     if (x.cap0) x.cap0 = LAB.weaponCap(x.base, x.rank, nl, x.qual);
+    if (x.own && LAB.forge) x.cap0 = LAB.forge.capFix(x, x.cap0); /* (после 4.6) своя конструкция: ёмкость по узлам */
     recalc(x); wRename(x, q0, m0);
   } else { x.def = Math.max(1, Math.round(x.def * k)); x.lvl = nl; }
+  if (LAB.mastery) LAB.mastery.ev("modernize", x); /* (после 4.6) мастерство: конструирование */
   seq([
     { t: "Модернизация, этап 1 из 3: станок снимает старые узлы.", snd: "pry" },
     { t: "Этап 2 из 3: фрезер по программе вытачивает новые, под эту глубину.", snd: "craft" },
@@ -903,8 +918,9 @@ function reforge(kind, x, b) {
   if (!haveAll(need)) { LAB.UI.error(); say("Для перековки не хватает: " + costLack(need) + "."); return false; }
   take(need);
   var k = LAB.QUAL_MULT[q + 1] / LAB.QUAL_MULT[q];
-  if (kind === "w") { var m0 = LAB.weaponMark(x.rank, x.lvl); base(x); x.dmg0 = x.dmg0 * k; x.qual = q + 1; if (x.cap0) x.cap0 = LAB.weaponCap(x.base, x.rank, x.lvl, x.qual); recalc(x); wRename(x, q, m0); }
+  if (kind === "w") { var m0 = LAB.weaponMark(x.rank, x.lvl); base(x); x.dmg0 = x.dmg0 * k; x.qual = q + 1; if (x.cap0) x.cap0 = LAB.weaponCap(x.base, x.rank, x.lvl, x.qual); if (x.own && LAB.forge) x.cap0 = LAB.forge.capFix(x, x.cap0); recalc(x); wRename(x, q, m0); }
   else { x.def = Math.max(1, Math.round(x.def * k)); x.qual = q + 1; aRename(x, q); }
+  if (LAB.mastery) LAB.mastery.ev("reforge", x); /* (после 4.6) мастерство: конструирование */
   seq([
     { t: "Перековка, этап 1 из 3: синтезатор разбирает изделие до структуры.", snd: "pry" },
     { t: "Этап 2 из 3: слой за слоем — плотнее и чище прежнего.", snd: "craft" },
@@ -1019,6 +1035,7 @@ function bayBore(w, b) {
   if (!haveAll(need)) { LAB.UI.error(); say(cap1(F.job) + ": не хватает " + costLack(need) + "."); return false; }
   take(need);
   base(w);
+  if (LAB.mastery) LAB.mastery.ev("bay", w); /* (после 4.6) мастерство: энергетика */
   var c0 = w.cap, full = w.charge >= c0;
   w.bay = n; recalc(w);
   if (full) w.charge = w.cap;
@@ -1151,6 +1168,9 @@ function salvage(id, b) {
   if (sp) { parts = {}; var k; for (k in sp.sure) parts[k] = sp.sure[k]; for (k in sp.maybe) if (Math.random() < 0.5) parts[k] = (parts[k] || 0) + 1; }
   if (!parts) { say("Это не разобрать с пользой."); return false; }
   g.inv[id]--;
+  /* (после 4.6) рачительный мастер: при разборе выходит больше */
+  if (LAB.mastery && LAB.mastery.has("thrift") && Math.random() < 0.25) { var tk = Object.keys(parts); if (tk.length) { var tp = tk[Math.floor(Math.random() * tk.length)]; parts[tp] = (parts[tp] || 0) + 1; } }
+  if (LAB.mastery) LAB.mastery.ev("salvage", d);
   var got = give(parts), hint = analyzeHint(id, b), t = "Разобрано: " + d.n.toLowerCase() + ". Получено: " + (got || "ничего ценного") + ".";
   A("play", "pry");
   if (hint) t += " " + learn(hint.id, "Поняли, разбирая устройство.", true);
@@ -1226,6 +1246,7 @@ function research(cls, b) {
     { t: "Этап 2 из 3: прозваниваю цепи тестером.", snd: "term_beep" },
     { t: "Этап 3 из 3: " + learn(rc.id, "Её вы вывели сами, на верстаке.", true), snd: "term_ok" }
   ]);
+  if (LAB.mastery) LAB.mastery.ev("research", rc); /* (после 4.6) мастерство: опознание */
   return true;
 }
 
@@ -1384,6 +1405,9 @@ function rootItems(b) {
     var ready = gl.filter(function (rc) { return !check(rc, b); }).length;
     return { label: nm + ": можно собрать " + ready + " из " + gl.length + (gu ? ", неизвестных схем " + gu : ""), fn: function () { groupMenu(nm); } };
   }).filter(Boolean);
+  /* (после 4.6) мастерство: режим работы, ступени, испытание и изучение; инженерное дело — своё оружие, ядра, каркас, дрон */
+  if (LAB.mastery) items = items.concat(LAB.mastery.benchItems(b, et));
+  if (LAB.forge) items = items.concat(LAB.forge.benchItems(b, et));
   if (spareMods().length) items.push({ label: "Установить модуль в оружие: в запасе " + spareMods().reduce(function (a, k) { return a + g.inv[MODS[k].item]; }, 0), fn: pickModule });
   if (g.weapons.some(function (w) { return used(w) > 0; })) items.push({ label: "Снять модуль с оружия", fn: unModMenu });
   items.push({ label: "Ремонт оружия" + (g.weapons.some(function (w) { return cond(w) < 100; }) ? ": есть изношенное" : ""), fn: repairMenu });
@@ -1419,7 +1443,7 @@ function recLabel(rc, b) {
   var trp = rc.trapN && LAB.traps && LAB.traps.craftWhy && LAB.traps.craftWhy(rc) ? "нужно ловушечное дело, ступень " + rc.trapN : "";
   var st = !why ? "можно собрать" : rc.minL && g.L < rc.minL ? "с уровня " + rc.minL : cyb ? cyb : trp ? trp : /^Не хватает:/.test(why) ? "нужно: " + (missText(rc) || needText(rc)) : tierOf(rc) > effTier(b) ? (b.dmg || reserve() ? "станки не работают" : "нужен " + TIER[tierOf(rc)].n) : "нельзя";
   var ds = outDesc(rc);
-  return rc.n + " — " + st + ". " + cap1(clsName(rc)) + "." + (ds ? " " + ds : "");
+  return rc.n + " — " + st + ". " + cap1(clsName(rc)) + "." + (ds ? " " + ds : "") + (LAB.mastery ? LAB.mastery.forecast(rc, b) : ""); /* (после 4.6) прогноз мастера */
 }
 function groupItems(nm) {
   var b = bench(cur.o), list = avail().filter(function (rc) { return known(rc) && groupOf(rc) === nm; });
@@ -1587,6 +1611,8 @@ LAB.workshop = {
   /* (после 4.1) снаряжение глубин: детали Нижних, модули, оснастка и её работа */
   DEEP_PARTS: DEEP_PARTS, DEEP_MODS: DEEP_MODS, DEEP_SVC: DEEP_SVC, CLS_T: CLS_T, tierOf: tierOf, clsName: clsName, deepTop: deepTop, blockFrom: blockFrom, blockAt: blockAt,
   onHit: onHit, deepK: deepK, deepSvc: deepSvc, deepMenu: deepMenu, batch5: batch5, craftTimesAt: function (rc, b) { return batchOn(rc, b) ? (batch5(b) ? 5 : 3) : 1; },
-  _at: function (o) { cur = o ? { o: o, key: CUR().key } : null; }
+  _at: function (o) { cur = o ? { o: o, key: CUR().key } : null; },
+  /* (после 4.6) мастерство и инженерное дело: верстак рядом, возврат в окно мастерской, разделы рецептов */
+  near: nearBench, toRoot: toRoot, groupOf: groupOf, haveAll: haveAll, take: take, costText: costText, costLack: costLack, seq: seq, base: base, md: md, melee: melee, battery: battery, wcls: wcls
 };
 })();

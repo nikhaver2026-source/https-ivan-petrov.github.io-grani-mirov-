@@ -861,6 +861,7 @@ function invItems() {
     { label: "Детали: " + cnt(LAB.PARTS), fn: partsMenu },
     { label: "Химия: сырьё: " + (LAB.chem ? LAB.chem.matCount() : 0), fn: function () { if (LAB.chem) LAB.chem.invMenu(); } }, /* (3.0) */
     { label: "Модули оружия в запасе: " + cnt(modIds()), fn: modsMenu },
+    LAB.forge ? LAB.forge.invLine() : null, /* (после 4.6) инженерное: каркас, дрон, ядра и заряды */
     { label: "Выбросить вещь из рюкзака", fn: dropMenu }, /* (3.7, нелогичность) прежде вещь можно было только продать */
     { label: "Пропуска и ключи", fn: passesMenu },
     { label: "Архив документов: " + g.noteList.length, fn: notesMenu },
@@ -872,7 +873,7 @@ function invItems() {
     { label: "Импланты: " + (LAB.implants && LAB.implants.countText ? LAB.implants.countText() : g.implants.length) + ", образцы: " + Object.keys(g.samples).length, fn: implants },
     { label: "Кредиты: " + g.credits, info: true, keep: true, fn: function () { say("Кредиты: " + g.credits + ". Тратятся в торговых терминалах и у выживших."); } }
   ];
-  return items;
+  return items.filter(Boolean);
 }
 function back(fn) { return { label: "Назад", fn: fn || function () { inventory(); } }; }
 /* (3.7, нелогичность) Выбросить вещь: список всего, что лежит в рюкзаке (game.dropItem кладёт её на пол у героя);
@@ -948,9 +949,10 @@ function weaponItems(id) {
       var pf = Wk ? Wk.profile(w) : "";
       say(w.name + ". " + d.desc + " Урон " + LAB.weaponDmg(w) + " (" + LAB.DTYPE_N[w.dt] + ")" + (w.cap ? ", заряд " + w.charge + " из " + w.cap : "") + ". " + (Wk ? pf.charAt(0).toUpperCase() + pf.slice(1) + " Состояние " + Math.round(Wk.cond(w)) + " из 100. " + (ml ? "Модули: " + ml + ". " : "") + "Гнёзд для модулей: " + Wk.slots(w) + ", занято " + Wk.used(w) + ". " : "Дальность " + w.rng + ". ") + LAB.RANKS[w.rank] + ".");
       weaponMenu(i); } },
-    { label: "Разобрать на детали" + (i === g.wi ? " (оно в руках)" : "") + ": " + (gm().scrapWeaponText ? gm().scrapWeaponText(w) : "детали"), fn: function () { gm().scrapWeapon(i); weaponsMenu(); } },
+  ].concat(LAB.forge ? LAB.forge.weaponExtra(w) : [], [ /* (после 4.6) мощность, сердечник, ресурс ствола, ядро, брак, конструкция */
+    { label: "Разобрать на детали" + (i === g.wi ? " (оно в руках)" : "") + ": " + (gm().scrapWeaponText ? gm().scrapWeaponText(w) : "детали") + (w.core ? ". Ядро погибнет" : ""), fn: function () { gm().scrapWeapon(i); weaponsMenu(); } },
     back(weaponsMenu)
-  ];
+  ]);
 }
 function ammoMenu() {
   var w = gm().curWeapon();
