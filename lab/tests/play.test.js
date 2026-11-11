@@ -5704,6 +5704,8 @@ LAB.ui.closeAll();
         out.restWhy = g.restBlock ? g.restBlock() : null;
         const nowM = () => (G.day || 0) * 1440 + (G.min || 0), pr = LAB.FIX.T[ch.fx].a.find(q => q[0] === "rest")[2] || {};
         const mR = pr.m || 10, full = Math.max(5, Math.round(G.hpMax * pr.hp)), share = k => Math.min(G.hpMax - 10, Math.max(1, Math.round(Math.max(5, G.hpMax * pr.hp) * Math.min(1, k)))); /* (после 4.5) как в игре: доля от неокруглённого полного, здоровье не выше предела (прежде двойное округление давало расхождение на единицу) */
+        /* (после 4.6) регенерация героя за минуты отдыха прибавляет своё — здесь проверяется сам отдых */
+        const rg0 = G.chs && G.chs.sec ? G.chs.sec.regen : 0; if (G.chs && G.chs.sec) G.chs.sec.regen = 0;
         RS().restAt = -1e9; G.hp = 10;
         out.restFresh = itemOf(ch, "rest");
         act(ch, "rest"); out.rest1 = G.hp > 10;
@@ -5717,6 +5719,7 @@ LAB.ui.closeAll();
         out.rest20 = { gain: G.hp - 10, want: share((20 + mR) / 60), time: nowM() - t0 === mR, said: /в полную силу отдых поможет через/.test(last()) };
         RS().restAt = nowM() - 61; G.hp = 10; act(ch, "rest");
         out.rest61 = { gain: G.hp - 10, need: Math.min(G.hpMax - 10, full), part: /лишь на/.test(last()) };
+        if (G.chs && G.chs.sec) G.chs.sec.regen = rg0;
         /* сидеть подряд без конца: за час — не больше одного полного отдыха */
         RS().restAt = nowM(); G.hp = 10; let n = 0; const tc = nowM();
         while (nowM() - tc < 60 && n < 30) { act(ch, "rest"); n++; }
