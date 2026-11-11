@@ -108,6 +108,7 @@ kanon/probe_kraya.js
 hron/rost180_late.js
 hron/proverka_late.js
 hron/dozor_late.js
+hron/selo180_late.js
 hron/patch_guide_r180.py
 rost/probe_rost.js
 rost/probe_grind.js
@@ -124,3 +125,4 @@ kanon/sec13_geo.js
 kanon/apply_tests_k2.py
 hron/patch_guide_k2.py
 hron/patch_guide_dozor.py
+hron/patch_guide_s180.py

@@ -1,0 +1,247 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   НАБОР 352: ЖИВЫЕ ПОСЕЛЕНИЯ — ДОМ КАЖДОМУ ЖИТЕЛЮ, ОГОРОДЫ, ДЕЛА РУКАМИ
+
+   Просьбы игрока: «Сделай все деревни, города логичными. У каждого жителя
+   свой дом с кучей интерактивных объектов; в деревне за домиками огороды,
+   которые игрок помогает вскопать по заданию жителя; в домиках живут и по
+   несколько человек, и по одному; город расширить, дома больше. Задание —
+   физически: взял, купил или скрафтил инструмент, пошёл и вскопал»;
+   «расширь список жителей, у каждого — уникальные задания».
+
+   1. Деревня выросла: восточный и южный концы, ворота на краях, вход на
+      месте, всё (дома, дворы, жители, вещи) достижимо от входа.
+   2. Дома: дверь на улицу, задняя дверь во двор и огород, комнаты; в деревне
+      дворов не меньше десяти, жителей не меньше двадцати пяти.
+   3. У каждого жителя на клетке своё лицо (двойников нет); у каждого
+      жителя дома — дом; прежние лица поселения остались собой.
+   4. Пол и возраст по роли в семье; семья одного народа.
+   5. Дела: у жителей деревни свои, почти без повторов, родов дел много.
+   6. Вещи дома и двора отвечают своим делом и звуком, без ошибок.
+   7. «Вскопать огород» руками: без мотыги — отказ и маяк к лавке; с мотыгой —
+      гряда за грядой, со временем; сдача — золото, опыт, отношение деревни.
+   8. «Натаскать воды»: ходки от колодца к кадке.
+   9. Доставка: отдать адресату, затем сдать.
+  10. «Помочь по хозяйству» не делает работу мгновенно: список жителей и
+      их дел, выбор открывает просьбу.
+  11. Город и порт: слобода с большими домами (зала, кухня, спальня);
+      название места — дом и комната; дверь называет хозяев.
+  12. Уровень строится одинаково; дела в списке заданий с маяком.
+   ═══════════════════════════════════════════════════════════════════════ */
+const {chromium}=require('playwright');
+const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :: '+JSON.stringify(e).slice(0,900):''));
+(async()=>{
+ const browser=await chromium.launch();
+ const errors=[];
+ const p=await (await browser.newContext()).newPage();p.on('pageerror',e=>errors.push(String(e)));
+ await p.goto(process.argv[2]);await p.waitForTimeout(900);
+ await p.evaluate(()=>{try{enterGame();}catch(_){}while(activeLayer())closeTopUI();window.maybeEvent=()=>{};
+  window.SAID=[];const s0=Speech.say.bind(Speech);Speech.say=function(t,o){SAID.push(String(t));return s0(t,o);};
+  window.__найти=вид=>{const C=OLD_WORLD>>1;for(let rr=1;rr<400;rr++)for(let dy=-rr;dy<=rr;dy++)for(let dx=-rr;dx<=rr;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==rr)continue;
+   const c=safeFn(()=>cellContent(C+dx,C+dy),null);if(c&&c.structure&&c.structure.type===вид&&(вид==="castle"||!safeFn(()=>cityAt(C+dx,C+dy),null)))return {x:C+dx,y:C+dy,c};}return null;};
+  window.__войти=(в)=>{G.place=null;enterPlace({x:в.x,y:в.y,structure:в.c.structure});while(activeLayer())closeTopUI();return curLevel();};
+  window.__на=(x,y)=>{G.place.x=x;G.place.y=y;};
+  window.__достижимо=(lvl,from)=>{const стоп=new Set(["#","%"]);const был=new Set();const q=[[from.x,from.y]];
+   while(q.length){const [x,y]=q.pop();const k=x+","+y;if(был.has(k))continue;if(x<0||y<0||x>=lvl.w||y>=lvl.h)continue;if(стоп.has(lvl.g[y][x]))continue;был.add(k);q.push([x+1,y],[x-1,y],[x,y+1],[x,y-1]);}
+   return был;};});
+
+ /* ── 1, 2 ── */
+ const п1=await p.evaluate(()=>{const В=__найти("village");if(!В)return {нет:true};window.__В=В;const lvl=__войти(В);
+  const r={w:lvl.w,h:lvl.h,дворов:(lvl.дома180||[]).length,жителей:(lvl.люди180||[]).length};
+  const ворота=[];for(let y=0;y<lvl.h;y++)for(let x=0;x<lvl.w;x++)if(lvl.g[y][x]==="G")ворота.push([x,y]);
+  r.ворота=ворота;r.наКраях=ворота.every(([x,y])=>x===1||y===1||x===lvl.w-2||y===lvl.h-2);
+  r.вход=lvl.g[lvl.entry.y][lvl.entry.x];
+  const дост=__достижимо(lvl,lvl.entry);
+  const важные=[];for(let y=0;y<lvl.h;y++)for(let x=0;x<lvl.w;x++)if(/[NXWSFAVGK+C]/.test(lvl.g[y][x]))важные.push(x+","+y);
+  r.недостижимо=важные.filter(k=>!дост.has(k)).slice(0,8);
+  r.двери=lvl.дома180.every(д=>lvl.g[д.дверь.y][д.дверь.x]==="+"&&lvl.g[д.задняя.y][д.задняя.x]==="+");
+  r.наУлицу=lvl.дома180.every(д=>{const y=д.дверь.y-д.s;return lvl.g[y]&&lvl.g[y][д.дверь.x]===".";});
+  r.комнаты=[...new Set(lvl.дома180.flatMap(д=>д.комнаты.map(z=>z.n)))];
+  r.гряд=lvl.дома180.reduce((a,д)=>a+((д.где.s_gryadka||[]).length),0);
+  r.огородов=lvl.дома180.filter(д=>(д.где.s_gryadka||[]).length>=3).length;
+  r.вещейВДомах=lvl.дома180.reduce((a,д)=>a+Object.values(д.где).reduce((b,v)=>b+v.length,0),0);
+  r.семьи=lvl.дома180.map(д=>д.люди.length);
+  return r;});
+ check('1. деревня выросла: оба новых конца, четверо ворот на краях, вход на месте, всё достижимо от входа',
+  !п1.нет&&п1.w>=40&&п1.h>=36&&п1.ворота.length===4&&п1.наКраях&&п1.вход==="."&&п1.недостижимо.length===0,п1);
+ check('2. дома: дверь на улицу и во двор, сени и горница; дворов не меньше десяти, жителей не меньше двадцати пяти, огороды с грядами, в семьях от одного человека до многих',
+  п1.дворов>=10&&п1.жителей>=25&&п1.двери&&п1.наУлицу&&п1.комнаты.includes("сени")&&п1.комнаты.includes("горница")&&п1.огородов>=6&&п1.вещейВДомах>=п1.дворов*10
+   &&п1.семьи.some(n=>n===1)&&п1.семьи.some(n=>n>=3),п1);
+
+ /* ── 3, 4 ── */
+ const п3=await p.evaluate(()=>{const lvl=curLevel();const r={};const ключи={};let N=0,безЛица=0;
+  for(let y=0;y<lvl.h;y++)for(let x=0;x<lvl.w;x++)if(lvl.g[y][x]==="N"){N++;const ж=Селение180.житель(lvl,x,y);
+   if(!ж){if(!safeFn(()=>cityTeacherAt(x,y,lvl),null)&&!((lvl.жители165||{})[x+","+y]))безЛица++;continue;}(ключи[ж.key]=ключи[ж.key]||[]).push(x+","+y);}
+  r.N=N;r.безЛица=безЛица;r.двойники=Object.entries(ключи).filter(([k,v])=>v.length>1).slice(0,3);
+  r.безДома=lvl.люди180.filter(q=>q.дом<0&&!q.здание).length;
+  r.свои=lvl.люди180.filter(q=>q.свой).map(q=>q.key);
+  const В=__В;r.своиВерны=r.свои.every(k=>/^\d+,\d+,[012]$/.test(k));
+  /* пол и возраст по роли */
+  const чужие=lvl.люди180.filter(q=>!q.свой&&q.дом>=0);
+  r.полыВерны=чужие.every(q=>{const d=npcSoul(getNPCByKey(q.key));return d&&d.пол===(РОЛЬ180[q.роль]||{пол:d.пол}).пол;});
+  r.дети=чужие.filter(q=>q.роль==="сын"||q.роль==="дочь").map(q=>npcSoul(getNPCByKey(q.key)).лет);
+  r.старики=чужие.filter(q=>q.роль==="дед"||q.роль==="бабка").map(q=>npcSoul(getNPCByKey(q.key)).лет);
+  /* семья одного народа: дети — того же народа, что глава */
+  r.народ=lvl.дома180.filter(д=>д.люди.length>1).slice(0,6).map(д=>{const гл=lvl.люди180[д.глава];const раса=getNPCByKey(гл.key).race;
+   return д.люди.map(k=>lvl.люди180[k]).filter(q=>q.роль==="сын"||q.роль==="дочь").every(q=>getNPCByKey(q.key).race===раса);});
+  return r;});
+ check('3. у каждого жителя на клетке своё лицо, двойников нет; у жителей — дома; прежние лица поселения остались собой',
+  п3.N>=20&&п3.безЛица===0&&п3.двойники.length===0&&п3.безДома===0&&п3.своиВерны&&п3.свои.length>=1,п3);
+ check('4. пол и возраст — по роли в семье, дети одного народа с главой семьи',
+  п3.полыВерны&&п3.дети.every(a=>a<20)&&п3.старики.every(a=>a>=60)&&п3.народ.every(Boolean),п3);
+
+ /* ── 5 ── */
+ const п5=await p.evaluate(()=>{const lvl=curLevel();const m=Дела180.назначить(lvl);
+  const первые=lvl.люди180.filter(q=>q.где).map(q=>(m[q.k]||[])[0]).filter(Boolean);
+  return {жителей:lvl.люди180.filter(q=>q.где).length,сДелом:первые.length,родов:new Set(первые).size,
+   родыВсего:ДЕЛА180.length,повторы:первые.length-new Set(первые).size};});
+ check('5. у жителей деревни свои дела: почти у каждого есть, родов много, повторов мало',
+  п5.сДелом>=п5.жителей*0.8&&п5.родов>=18&&п5.родыВсего>=40&&п5.повторы<=Math.max(4,п5.сДелом-п5.родыВсего+2),п5);
+
+ /* ── 6 ── */
+ const п6=await p.evaluate(()=>{const lvl=curLevel();const r={вещей:0,молчат:[],ошибки:[]};const видов=new Set();
+  for(const xy in lvl.пропы180){const id=lvl.пропы180[xy];if(видов.has(id))continue;видов.add(id);const [x,y]=xy.split(",").map(Number);
+   __на(x,y);SAID.length=0;try{useHere();}catch(e){r.ошибки.push(id+":"+e);}while(activeLayer())closeTopUI();r.вещей++;
+   if(!SAID.join(" ").trim())r.молчат.push(id);}
+  r.видов=[...видов];r.звуки=r.видов.every(id=>!!PROP_SND[id]&&Bank.has(PROP_SND[id]));
+  /* пожива раз в сутки: кадка */
+  const к=Object.entries(lvl.пропы180).find(([k,v])=>v==="s_kadka");
+  if(к){const [x,y]=к[0].split(",").map(Number);__на(x,y);G.day=(Number(G.day)||1)+3;G.water=0;useHere();const w1=G.water;useHere();r.кадка=[w1,G.water];}
+  return r;});
+ check('6. вещи дома и двора отвечают своим делом и звуком, без ошибок; пожива — раз в сутки',
+  п6.вещей>=20&&п6.молчат.length===0&&п6.ошибки.length===0&&п6.звуки&&(!п6.кадка||(п6.кадка[0]>0&&п6.кадка[1]===п6.кадка[0])),п6);
+
+ /* ── 7 ── */
+ const п7=await p.evaluate(()=>{const lvl=curLevel();const r={};
+  /* житель, чей дом с огородом: даём ему дело «Вскопать огород» */
+  const д=lvl.дома180.find(z=>(z.где.s_gryadka||[]).length>=3&&z.люди.some(k=>lvl.люди180[k].где));const жит=д.люди.map(k=>lvl.люди180[k]).find(q=>q.где);
+  G.items=(G.items||[]).filter(x=>x!=="Мотыга"&&x!=="Лопата");G.gold=100;const g0=G.gold;
+  Дела180.ст().список=[];delete Дела180.ст().люди[жит.key];
+  const t=Дела180.создать(жит,lvl,Дела180.шаблон("kopat"));Дела180._ждёт=t;Дела180.взять();r.взято=Дела180.активные().length;
+  /* без мотыги */
+  const г=t.стадии[0].цели;__на(г[0].x,г[0].y);SAID.length=0;useHere();r.отказ=SAID.slice(-1)[0];r.ходБез=Object.keys(t.ход).length;
+  Дела180.маяк(t.id);r.кЛавке=TargetBeacon.t?lvl.g[TargetBeacon.t.y][TargetBeacon.t.x]:null;TargetBeacon.stop(true);
+  /* с мотыгой */
+  G.items.push("Мотыга");const ч0=(Number(G.day)||1)*24+(Number(G.hour)||0);
+  for(const c of г){__на(c.x,c.y);useHere();}
+  r.часов=Math.round(((Number(G.day)||1)*24+(Number(G.hour)||0)-ч0)*10)/10;r.вскопано=г.every(c=>placeMark(c.x,c.y)==="вскопано");
+  r.готово=Дела180.готово(t)&&!t.стадии[t.i];
+  /* маяк — к жителю */
+  Дела180.маяк(t.id);r.кЖителю=TargetBeacon.t?[TargetBeacon.t.x,TargetBeacon.t.y]:null;r.гдеЖит=[жит.где.x,жит.где.y];TargetBeacon.stop(true);
+  /* сдать */
+  const имя=Хозяйство170.имяДеревни(__В.c);const v0=Хозяйство170.отношение(имя);
+  __на(жит.где.x,жит.где.y);SAID.length=0;talkInside("N",жит.где.x,жит.где.y);while(activeLayer())closeTopUI();
+  r.сдано=!!t.сдано;r.золото=G.gold-g0;r.отношение=Хозяйство170.отношение(имя)-v0;r.речь=SAID.join(" | ").slice(0,300);
+  /* снова у того же — не сразу */
+  const н=Дела180.следующее(жит,lvl);r.кд=н&&н.кд;
+  return r;});
+ check('7. «Вскопать огород»: без мотыги — отказ и маяк к лавке; с мотыгой — гряда за грядой со временем; сдача — золото, опыт и отношение деревни; новое дело — не сразу',
+  п7.взято===1&&/мотыга/i.test(п7.отказ||"")&&п7.ходБез===0&&п7.кЛавке==="S"&&п7.вскопано&&п7.часов>=1&&п7.готово&&
+  п7.кЖителю&&п7.кЖителю[0]===п7.гдеЖит[0]&&п7.кЖителю[1]===п7.гдеЖит[1]&&п7.сдано&&п7.золото>0&&п7.отношение>0&&п7.кд>0,п7);
+
+ /* ── 8 ── */
+ const п8=await p.evaluate(()=>{const lvl=curLevel();const r={};
+  const д=lvl.дома180.find(z=>z.где.s_kadka&&z.люди.some(k=>lvl.люди180[k].где&&!Дела180.мой(lvl.люди180[k])));const жит=д.люди.map(k=>lvl.люди180[k]).find(q=>q.где&&!Дела180.мой(q));
+  if(!G.items.includes("Ведро"))G.items.push("Ведро");delete Дела180.ст().люди[жит.key];
+  const t=Дела180.создать(жит,lvl,Дела180.шаблон("voda"));Дела180._ждёт=t;Дела180.взять();
+  const z=t.стадии[0];const кадка=z.куда[0];
+  __на(кадка.x,кадка.y);useHere();r.безВоды=Object.keys(t.ход).length;
+  const к=Дела180.ближний(z.откуда,кадка.x,кадка.y);
+  for(let i=0;i<3;i++){__на(к.x,к.y);useHere();r["ноша"+i]=t.ноша;__на(кадка.x,кадка.y);useHere();}
+  r.ходок=Дела180.сколько(t,z);r.дальше=!t.стадии[t.i];
+  __на(жит.где.x,жит.где.y);talkInside("N",жит.где.x,жит.где.y);while(activeLayer())closeTopUI();r.сдано=!!t.сдано;return r;});
+ check('8. «Натаскать воды»: зачерпнуть у колодца — донести до кадки, три ходки; потом сдать',
+  п8.безВоды===0&&п8.ноша0==="полное ведро"&&п8.ходок===3&&п8.дальше&&п8.сдано,п8);
+
+ /* ── 9 ── */
+ const п9=await p.evaluate(()=>{const lvl=curLevel();const r={};
+  const жит=lvl.люди180.find(q=>q.где&&q.дом>=0&&ВЗР180.includes(q.роль)&&!Дела180.мой(q));delete Дела180.ст().люди[жит.key];
+  const t=Дела180.создать(жит,lvl,Дела180.шаблон("vest"));Дела180._ждёт=t;Дела180.взять();r.кому=t.кому;
+  const z=t.стадии[0];__на(z.кому.x,z.кому.y);SAID.length=0;talkInside("N",z.кому.x,z.кому.y);while(activeLayer())closeTopUI();
+  r.передано=!t.стадии[t.i];r.речь=SAID.slice(-1)[0];
+  __на(жит.где.x,жит.где.y);talkInside("N",жит.где.x,жит.где.y);while(activeLayer())closeTopUI();r.сдано=!!t.сдано;return r;});
+ check('9. весть: поговорить с адресатом — передано; вернуться к жителю — сдано',п9.передано&&п9.сдано&&!!п9.кому,п9);
+
+ /* ── 10 ── */
+ const п10=await p.evaluate(()=>{const r={};const В=__В;
+  G.place=null;G.x=В.x;G.y=В.y;const имя=Хозяйство170.имяДеревни(В.c);const v0=Хозяйство170.отношение(имя);
+  CMD.hoz170();const кн=[...document.querySelectorAll('.modal:not([hidden]) button')].map(b=>b.textContent.trim());r.пунктов=кн.length;r.пример=кн.slice(0,4);
+  r.безМгновенного=Хозяйство170.отношение(имя)===v0;
+  const первый=[...document.querySelectorAll('.modal:not([hidden]) button')].find(b=>/«/.test(b.textContent)&&!/Ваше дело/.test(b.textContent));
+  if(первый)первый.click();r.просьба=document.querySelector('.modal:not([hidden])')?document.querySelector('.modal:not([hidden])').textContent.slice(0,200):"";
+  while(activeLayer())closeTopUI();r.отношениеПосле=Хозяйство170.отношение(имя)-v0;return r;});
+ check('10. «Помочь по хозяйству»: список жителей и их дел, выбор открывает просьбу; мгновенной работы нет',
+  п10.пунктов>=10&&п10.безМгновенного&&/Взяться|Дело/.test(п10.просьба)&&п10.отношениеПосле===0,п10);
+
+ /* ── 11 ── */
+ const п11=await p.evaluate(()=>{const r={};
+  for(const вид of ["castle","port"]){const В=__найти(вид);if(!В){r[вид]=null;continue;}const lvl=__войти(В);
+   const д=lvl.дома180[0];const комн=д?д.комнаты.map(z=>z.n):[];
+   const гостиная=д.комнаты.find(z=>z.n==="зала"||z.n==="горница");const c=гостиная.клетки.find(c=>lvl.g[c.y][c.x]!=="#");
+   const где=whereInCity(c.x,c.y);
+   /* дверь с улицы */
+   __на(д.дверь.x,д.дверь.y-д.s);const dir=д.s===1?"S":"N";const дом=Двери147.дом({x:д.дверь.x,y:д.дверь.y,dir});
+   const дост=__достижимо(lvl,lvl.entry);const важные=[];for(let y=0;y<lvl.h;y++)for(let x=0;x<lvl.w;x++)if(/[NXW+G]/.test(lvl.g[y][x]))важные.push(x+","+y);
+   r[вид]={w:lvl.w,h:lvl.h,дворов:lvl.дома180.length,жителей:lvl.люди180.length,комн,где,дом:дом&&дом.имя,
+    недостижимо:важные.filter(k=>!дост.has(k)).length,имяДома:д.n};}
+  return r;});
+ const гор=п11.castle,порт=п11.port;
+ check('11. город и порт: слобода с большими домами (в городе — зала, кухня, спальня), место называет дом и комнату, дверь называет хозяев, всё достижимо',
+  гор&&гор.дворов>=6&&гор.комн.includes("зала")&&(гор.комн.includes("кухня")||гор.комн.includes("спальня"))&&гор.где.startsWith(гор.имяДома)&&гор.дом===гор.имяДома&&гор.недостижимо===0&&гор.жителей>=40&&
+  (!порт||(порт.дворов>=6&&порт.недостижимо===0&&порт.дом===порт.имяДома)),п11);
+
+ /* ── 12 ── */
+ const п12=await p.evaluate(()=>{const r={};const В=__В;
+  const a=JSON.stringify(genLevel(В.x,В.y,0,"village").g);levelCache.clear();Селение180.реестр.clear();const b=JSON.stringify(genLevel(В.x,В.y,0,"village").g);r.одинаково=a===b;
+  __войти(В);const lvl=curLevel();const жит=lvl.люди180.find(q=>q.где&&q.дом>=0&&!Дела180.мой(q)&&Дела180.следующее(q,lvl)&&Дела180.следующее(q,lvl).t);
+  CMD.selo180("ask~"+жит.key);const кн=[...document.querySelectorAll('.modal:not([hidden]) button')].find(b=>/Взяться/.test(b.textContent));if(кн)кн.click();while(activeLayer())closeTopUI();
+  r.взято=!!Дела180.мой(жит);
+  safeFn(()=>CMD.quests());const ql=document.getElementById("questList");r.раздел=ql?/Дела по хозяйству/.test(ql.textContent):null;
+  r.маяк=ql?!!ql.querySelector('[data-cmd^="selo180:beacon"]'):null;while(activeLayer())closeTopUI();
+  /* карточка жителя: строка о доме и кнопки */
+  __на(жит.где.x,жит.где.y);talkInside("N",жит.где.x,жит.где.y);const nb=document.getElementById("npcBody");r.карточка=nb?/живёт|дома/.test(nb.textContent):false;r.кнопкаДома=nb?!!nb.querySelector('[data-cmd^="selo180:home"]'):false;
+  while(activeLayer())closeTopUI();
+  /* запись и загрузка: дело переживает */
+  safeFn(()=>saveGame(true));r.вЗаписи=JSON.stringify(G.дела180||{}).includes(жит.key);
+  return r;});
+ check('12. поселение строится всегда одинаково; дело взято из карточки, в окне заданий раздел «Дела по хозяйству» с маяком; карточка называет дом; дело в записи',
+  п12.одинаково&&п12.взято&&п12.раздел!==false&&п12.маяк!==false&&п12.карточка&&п12.кнопкаДома&&п12.вЗаписи,п12);
+
+ /* ── 13–16 ── */
+ const п13=await p.evaluate(async()=>{const w=ms=>new Promise(z=>setTimeout(z,ms));const r={};const lvl=__войти(__В);Дела180.ст().список=[];
+  /* 13. стук: открывает тот, кто дома; в пустом доме — тишина */
+  const сЛюдьми=lvl.дома180.find(д=>д.люди.some(k=>lvl.люди180[k].дома));const пустой=lvl.дома180.find(д=>!д.люди.some(k=>lvl.люди180[k].дома));
+  G.hour=12;let вошли=0;SAID.length=0;Стук147.стук(сЛюдьми.n,false,()=>{вошли++;},{});await w(1600);r.стук=SAID.join(" | ").slice(0,200);r.вошли=вошли;
+  if(пустой){let в2=0;SAID.length=0;Стук147.стук(пустой.n,false,()=>{в2++;},{});await w(1600);r.пусто=SAID.join(" | ").slice(0,120);r.вошлиВПустой=в2;}
+  /* 14. окно вещи: пункт дела */
+  const д=lvl.дома180.find(z=>(z.где.s_gryadka||[]).length>=3&&z.люди.some(k=>lvl.люди180[k].где));const жит=д.люди.map(k=>lvl.люди180[k]).find(q=>q.где);
+  delete Дела180.ст().люди[жит.key];const t=Дела180.создать(жит,lvl,Дела180.шаблон("polot"));Дела180._ждёт=t;Дела180.взять();
+  const г=t.стадии[0].цели[0];__на(г.x,г.y);const o=objectsHere(true).find(z=>z.x===г.x&&z.y===г.y);const акты=o?actionsFor(o):[];r.пункт=(акты.find(a=>a.id==="delo180")||{}).n||"";
+  /* рядом с грядой, с пола: двойное касание тоже работает */
+  if(!G.items.includes("Грабли"))G.items.push("Грабли");const сосед=[[0,1],[0,-1],[1,0],[-1,0]].map(([dx,dy])=>({x:г.x+dx,y:г.y+dy})).find(c=>lvl.g[c.y][c.x]===".");
+  if(сосед){__на(сосед.x,сосед.y);useHere();r.сПола=Number(t.ход[г.x+","+г.y])||0;}
+  /* 15. план города */
+  __на(lvl.entry.x,lvl.entry.y);SAID.length=0;cityPlan();await w(700);r.план=SAID.join(" | ");
+  /* 16. коза */
+  const хоз=lvl.дома180.find(z=>z.где.s_hlev&&z.люди.some(k=>lvl.люди180[k].где&&!Дела180.мой(lvl.люди180[k])));const жк=хоз.люди.map(k=>lvl.люди180[k]).find(q=>q.где&&!Дела180.мой(q));
+  delete Дела180.ст().люди[жк.key];const tk=Дела180.создать(жк,lvl,Дела180.шаблон("koza"));r.козаЕсть=!!tk&&!!lvl.коза180;
+  if(tk){Дела180._ждёт=tk;Дела180.взять();const z=tk.стадии[0];__на(z.откуда.x,z.откуда.y);useHere();r.ведёт=tk.ведёт;
+   __на(z.куда.x,z.куда.y);useHere();r.привели=!tk.стадии[tk.i];r.козыНет=lvl.g[z.откуда.y][z.откуда.x]==="."&&!lvl.коза180;
+   __на(жк.где.x,жк.где.y);talkInside("N",жк.где.x,жк.где.y);while(activeLayer())closeTopUI();r.сданоКозу=!!tk.сдано;}
+  /* ушли с полным ведром — ведро остаётся */
+  const дк=lvl.дома180.find(z=>z.где.s_kadka&&z.люди.some(k=>lvl.люди180[k].где&&!Дела180.мой(lvl.люди180[k])));const жв=дк.люди.map(k=>lvl.люди180[k]).find(q=>q.где&&!Дела180.мой(q));
+  delete Дела180.ст().люди[жв.key];if(!G.items.includes("Ведро"))G.items.push("Ведро");const tv=Дела180.создать(жв,lvl,Дела180.шаблон("voda"));Дела180._ждёт=tv;Дела180.взять();
+  const кол=tv.стадии[0].откуда[0];__на(кол.x,кол.y);useHere();r.ношаДо=tv.ноша;safeFn(()=>leavePlace());while(activeLayer())closeTopUI();r.ношаПосле=tv.ноша;
+  return r;});
+ check('13. стук в дверь избы: открывает тот, кто дома, по имени — и впускает; в пустом доме тишина и не впускают',
+  /Дверь открывает/.test(п13.стук)&&п13.вошли===1&&(п13.пусто===undefined||(/дома никого/.test(п13.пусто)&&п13.вошлиВПустой===0)),п13);
+ check('14. окно вещи: у гряды с делом — пункт дела; двойное касание рядом с грядой тоже делает работу',
+  /Прополоть гряду — дело для/.test(п13.пункт)&&(п13.сПола===undefined||п13.сПола===1),п13);
+ check('15. «План города» называет дворы слободы, жителей и улицы',/Жилые дворы: \d+, жителей \d+/.test(п13.план)&&/улица|конец|Заполье|Выселки/i.test(п13.план),п13.план.slice(-260));
+ check('16. коза: взять за верёвку на улице, привести во двор — коза с улицы исчезает; дело сдаётся; ушли с полным ведром — ведро не уносится',
+  п13.козаЕсть&&п13.ведёт===true&&п13.привели&&п13.козыНет&&п13.сданоКозу&&п13.ношаДо==="полное ведро"&&п13.ношаПосле===null,п13);
+
+ check('нет ошибок страницы',errors.length===0,errors.slice(0,5));
+ results.forEach(r=>console.log(r));
+ await browser.close();
+ process.exit(results.some(r=>r.startsWith('FAIL'))?1:0);
+})();

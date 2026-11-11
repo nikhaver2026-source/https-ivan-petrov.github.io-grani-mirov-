@@ -53,7 +53,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   // ширина коридора по вертикали в центре главной улицы
   let vertBands=0;
   for(let x=1;x<l.w-1;x++){
-   let all=true;for(let y=2;y<l.h-2;y++)if(l.g[y][x]==="#"){all=false;break;}
+   /* (Альфа 1.0) к городу пристроена слобода: сквозные улицы считаются по старой части города */
+   const H0=(l.старое180||{h:l.h}).h;
+   let all=true;for(let y=2;y<H0-2;y++)if(l.g[y][x]==="#"){all=false;break;}
    if(all)vertBands++;}
   const flat=rows.join("");
   const cnt=ch=>(flat.split(ch).length-1);
