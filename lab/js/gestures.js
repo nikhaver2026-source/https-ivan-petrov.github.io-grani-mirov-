@@ -222,7 +222,8 @@ function choose(gid, a) {
   var g = BY[gid], old = actionOf(gid);
   if (a === old) { ui().closeTop(true); say(g.name + " — и так " + lowerFirst(actName(a)) + "."); return; }
   setAction(gid, a);
-  LAB.UI.ok();
+  /* своё «щёлк» переназначения; пока записи нет — обычное подтверждение окна */
+  if (LAB.SND && LAB.SND.rebind_ok && LAB.atmos && LAB.atmos.play) LAB.atmos.play("rebind_ok"); else LAB.UI.ok();
   var msg = g.name + " — теперь " + lowerFirst(actName(a)) + ".";
   if (old && old !== "none" && !gestsWith(old).length) msg += " Действие «" + lowerFirst(actName(old)) + "» больше ни на каком жесте: его можно назначить на другой.";
   /* двойное или тройное касание заняли или освободили — короткое касание того же числа

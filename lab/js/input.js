@@ -377,7 +377,8 @@ function key(e) {
   LAB.AE.ensure();
   var r = route();
   var done = true;
-  if (k === "x") { dispatch({ kind: "swipe", n: 4, dir: "D" }); }
+  /* X — тишина всегда: жест «четыре пальца вниз» в игре можно переназначить, клавишу — нет */
+  if (k === "x") { LAB.Speech.hush(); LAB.vib(20); }
   else if (r === "game") done = gameKey(e, k);
   else if (r === "ui") done = uiKey(e, k);
   else if (r === "mini") done = miniKey(e, k);
