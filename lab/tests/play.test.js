@@ -4102,16 +4102,22 @@ LAB.ui.closeAll();
       LAB.fixtures.menu(ns); const si = LAB.ui.top().items.findIndex(i => /ящик тумбочки/.test(label(i))); if (si >= 0) LAB.ui.top().items[si].fn();
       out.fxTrap = si >= 0 && SPOKEN.some(t => /банок|банки/.test(t)) && fs.ctrap[ns.id].st === "sprung";
       LAB.ui.closeAll();
-      /* 11. тумбочки почти никогда не пустые */
+      /* 11. тумбочки почти никогда не пустые. (после 4.6) 200 ящиков, а не 60: на 60 доля пустых
+         гуляла около средних 12 % на ±4 % и за сотню прогонов раз перешла порог (27 %); на 200
+         разброс вдвое меньше, порог тот же. Обыск стоит двух минут — 200 обысков промотали бы
+         почти семь часов игры с её событиями, поэтому время на этих обысках стоит. */
       Math.random = rnd;
       let empty = 0, n = 0;
-      for (let i = 0; i < 60; i++) {
-        const o = { id: "t_nsx" + i, type: "fx", fx: "nightstand", x: G.x, y: G.y, room: g.CUR.room, seed: 100 + i };
-        fs.ctrap[o.id] = { k: null };
-        SPOKEN.length = 0; LAB.fixtures.menu(o); const k2 = LAB.ui.top().items.findIndex(it => /ящик тумбочки/.test(label(it))); if (k2 < 0) continue;
-        LAB.ui.top().items[k2].fn(); n++; if (SPOKEN.some(t => /^Пусто|Ничего, кроме|только паутину/.test(t))) empty++;
-        LAB.ui.closeAll();
-      }
+      const adv0 = LAB.game.advanceTime; LAB.game.advanceTime = () => {};
+      try {
+        for (let i = 0; i < 200; i++) {
+          const o = { id: "t_nsx" + i, type: "fx", fx: "nightstand", x: G.x, y: G.y, room: g.CUR.room, seed: 100 + i };
+          fs.ctrap[o.id] = { k: null };
+          SPOKEN.length = 0; LAB.fixtures.menu(o); const k2 = LAB.ui.top().items.findIndex(it => /ящик тумбочки/.test(label(it))); if (k2 < 0) continue;
+          LAB.ui.top().items[k2].fn(); n++; if (SPOKEN.some(t => /^Пусто|Ничего, кроме|только паутину/.test(t))) empty++;
+          LAB.ui.closeAll();
+        }
+      } finally { LAB.game.advanceTime = adv0; }
       out.nsEmpty = n ? Math.round(100 * empty / n) : 100;
     } catch (e) { out.err = String(e && e.stack || e).slice(0, 300); }
     Math.random = rnd;
@@ -6252,7 +6258,12 @@ LAB.ui.closeAll();
       const H = q => Q.handOf(q);
       out.hand = [H({ id: "h1", giver: "x", steps: [{ type: "fetch", item: "tape", need: 1 }, { type: "map" }] }), H({ id: "h2", giver: "x", type: "visit", tL: 1, tF: 5 }), H({ id: "h3", giver: "x", steps: [{ type: "deliver", reply: true }, { type: "map" }] }), H({ id: "h4", giver: "x", steps: [{ type: "deliver", reply: false }, { type: "data" }] }), H({ id: "h5", type: "deep", remote: true }), H({ id: "h6", type: "courier" }), H({ id: "h7", giver: "x", steps: [{ type: "keep" }, { type: "kill" }] })].join(" ");
       /* лично: настоящий выживший этажа — помещение с номером в тексте, строке окна, при готовности и в навигаторе */
-      const real = g.CUR.fl.npcs.find(m => !m.robot && m.key && m.room >= 0 && g.CUR.fl.rooms[m.room] && g.CUR.fl.rooms[m.room].num);
+      /* (после 4.6) выживших раздаёт случай: в части миров (около 3 %) на этаже 1-4 нет ни одного —
+         тогда берём ближайший этаж первого уровня, где выживший есть, а не теряем проверку */
+      const realOn = () => g.CUR.fl.npcs.find(m => !m.robot && m.key && m.room >= 0 && g.CUR.fl.rooms[m.room] && g.CUR.fl.rooms[m.room].num);
+      let real = realOn();
+      for (const F of [5, 3, 6, 2, 7, 8, 9, 10]) { if (real) break; g.enterFloor(1, F, "down", true); C.stop(); real = realOn(); }
+      out.selfFloor = g.G.F;
       if (real) {
         const rr = Q.giver(real); let qs = null;
         for (let k = 0; k < 40 && !qs; k++) { rr.done = 0; rr.cool = 0; rr.trust = 60; rr.seq = 300 + k; qs = Q.offers(real).find(q => Q.handOf(q) === "self") || null; }
@@ -6322,7 +6333,7 @@ LAB.ui.closeAll();
   ok(qv.term && /поручение: научный терминал/.test(qv.term.nav) && qv.term.dataStep && qv.term.ready && qv.term.said, "настоящий терминал: навигатор знает цель, данные и карта — шаги сделаны, «Эхо» само передаёт доклад (" + JSON.stringify(qv.term) + ")");
   ok(qv.save && qv.save.quest && qv.save.trust && qv.save.tier && qv.save.paid, "запись и загрузка: многошаговое поручение, доверие и ступень на месте, сдаётся (" + JSON.stringify(qv.save) + ")");
   ok(qv.hand === "self echo self echo echo courier self", "как сдавать: вещи в руки и ответ на посылку — лично; разведка, данные, посылка без ответа, доклад снизу — по связи (" + qv.hand + ")");
-  ok(qv.self && qv.self.text && qv.self.line && qv.self.ready && qv.self.nav && qv.self.lineReady, "лично: номер помещения заказчика — при выдаче, в окне заданий и когда можно сдать; навигатор ведёт к нему (" + JSON.stringify(qv.self) + ")");
+  ok(qv.self && qv.self.text && qv.self.line && qv.self.ready && qv.self.nav && qv.self.lineReady, "лично: номер помещения заказчика — при выдаче, в окне заданий и когда можно сдать; навигатор ведёт к нему (" + JSON.stringify(qv.self || { floor: qv.selfFloor }) + ")");
   ok(qv.ask && qv.ask.hand === "echo" && qv.ask.text && qv.ask.line && qv.ask.nav && qv.ask.answer && qv.ask.done && qv.ask.pick && qv.ask.navPick && qv.ask.took, "узнать у выжившего: расспросили — «Эхо» доложило, кредиты сразу, подарок у выжившего здесь; навигатор и окно заданий знают где (" + JSON.stringify(qv.ask) + ")");
   ok(qv.old && qv.old.done && qv.old.gain === 33 && qv.old.stage === 1, "поручение прежней версии выполняется и идёт в счёт; разведку «Эхо» передаёт по связи само (" + JSON.stringify(qv.old) + ")");
 
@@ -7392,7 +7403,11 @@ LAB.ui.closeAll();
           if (harvestOf(d)) by[E].fruit++;
           if (sp.label) by[E].label++;
           const rm = o.room >= 0 ? g.CUR.fl.rooms[o.room] : null;
-          if (o.fx === "plants" && E !== "C" && E !== "I" && P.ctxOf(rm, L, E, {}) === "hall" && harvestOf(d)) out.hallFruit++;
+          if (o.fx === "plants" && E !== "C" && E !== "I" && P.ctxOf(rm, L, E, {}) === "hall" && harvestOf(d)) {
+            out.hallFruit++;
+            /* (после 4.6) редкий провал (раз за ~40 прогонов) — пусть назовёт растение, помещение и его текст */
+            if ((out.hallHits = out.hallHits || []).length < 3) out.hallHits.push({ at: L + "-" + F, id: o.id, room: rm ? rm.type + " «" + (rm.name || "") + "»" : "коридор", plant: d.plant, cut: harvestOf(d)[1], text: rm ? String(rm.desc || "").slice(0, 200) : "" });
+          }
         });
       }); }); });
       out.by = Object.keys(by).map(E => E + ":" + by[E].n + "/" + by[E].fruit + "/" + by[E].label).join(" ");
@@ -7475,7 +7490,7 @@ LAB.ui.closeAll();
   });
   ok(!pl.err && pl.noSpecies === 0, "у каждого растения — вид из таблицы (по глубине и назначению помещения), проверка без ошибок" + (pl.err ? " (" + pl.err + ")" : " (" + pl.by + ")"));
   ok(pl.allEras && pl.classes >= 6, "плоды и опытные растения с бирками — на всех глубинах, классы разные (" + pl.by + ", классов " + pl.classes + ")");
-  ok(pl.hallFruit === 0, "растения в холлах и на лестницах — для глаз, без плодов");
+  ok(pl.hallFruit === 0, "растения в холлах и на лестницах — для глаз, без плодов" + (pl.hallHits ? " " + JSON.stringify(pl.hallHits) : ""));
   ok(pl.atlant && pl.got && /Собрано: Томат «Атлант»/.test(pl.harvest || ""), "«Атлант» в «Гидропонике»: томат сорван (" + String(pl.harvest).slice(0, 120) + ")");
   ok(/созреет быстрее/.test(pl.water || "") && /уже поливали/.test(pl.water2 || ""), "полив ускоряет созревание раз за круг (" + String(pl.water).slice(0, 140) + ")");
   ok(/Флора-Х, линия Х-17/.test(pl.label || "") && /Курс по протоколу/.test(pl.label || ""), "бирка опыта читается: протокол и курс");
