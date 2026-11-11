@@ -872,7 +872,12 @@ function lvlNow() { return LAB.foeLevel(G().L, G().F); }
 function wGen(w, q, mark) { var b = LAB.WEAPONS[w.base] || {}; return LAB.QUAL[b.g] ? LAB.QUAL[b.g][q] + " " + b.n + (b.cls === "melee" && w.base !== "cutter" ? "" : " " + LAB.MODEL[w.base] + "-" + mark) : w.name; }
 function aGen(a, q) { var d = LAB.ARMORS[a.base] || {}; return LAB.QUAL[d.g] ? LAB.QUAL[d.g][q] + " " + d.n : a.name; }
 /* имя меняется, только если оно обычное (у именного оружия — своё) */
-function wRename(w, q0, m0) { if (w.own && LAB.forge) { LAB.forge.rename(w); return; } if (w.name === wGen(w, q0, m0)) w.name = wGen(w, w.qual, LAB.weaponMark(w.rank, w.lvl)); }
+function wRename(w, q0, m0) {
+  if (w.own && LAB.forge) { LAB.forge.rename(w); return; }
+  /* (после 4.6) у оружия с ядром в имени — ступень ядра: сравнить без неё и вернуть на место */
+  var tail = / — ядро, ступень \d+$|, ядро — ступень \d+$/.exec(w.name || ""), nm = tail ? w.name.slice(0, tail.index) : w.name;
+  if (nm === wGen(w, q0, m0)) w.name = wGen(w, w.qual, LAB.weaponMark(w.rank, w.lvl)) + (tail ? tail[0] : "");
+}
 function aRename(a, q0) { if (a.name === aGen(a, q0)) a.name = aGen(a, a.qual); }
 function modCost(gap, kind) {
   var n = { scrap: 2 + Math.min(4, Math.ceil(gap / 15)) };

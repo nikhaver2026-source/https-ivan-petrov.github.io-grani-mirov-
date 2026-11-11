@@ -84,6 +84,7 @@ function build(opts) {
   var m = MS() ? MS().M() : null, xp = 15;
   if (m && !m.first.drone) { m.first.drone = 1; xp *= 3; }
   if (MS()) MS().gain("elec", xp);
+  if (LAB.ach) LAB.ach.ev("craft", 1); /* ОКО слышит работу у верстака — как любую сборку */
   snd("drone_up", "power_on");
   var msg = "Дрон собран за " + mins + " минут. Блок управления ожил, винты раскрутились — дрон принял управление от вас и висит рядом. Гнёзд для модулей: " + slots(d) + "; модули ставят здесь же, у верстака.";
   if (opts.name != null) { say(msg); return d; }
@@ -184,15 +185,17 @@ function stun(auto) {
   t.dStun = 1;
   t.frozen = Math.max(t.frozen || 0, t.boss ? 2 : t.kind === "mech" ? 9 : 6);
   snd("drone_zap", "w_shock_crack");
-  (auto ? sayq : say)(cap1(name()) + " бьёт разрядом: " + String(t.name || "").split(",")[0] + " оглушён на пару секунд.");
+  (auto ? sayq : say)(cap1(name()) + " бьёт разрядом: " + String(t.name || "").split(",")[0] + " — оглушение на пару секунд.");
   hitBack(t, 0.25);
   return true;
 }
 /* Цель может ответить дрону. */
 function hitBack(f, p) {
   var d = D(); if (!d || !f || f.dead || !(f.dmg > 0) || Math.random() >= p) return;
-  hurt(Math.max(1, Math.round(f.dmg * 0.5)));
+  hurt(Math.max(1, Math.round(f.dmg * 0.5 / depthK())));
 }
+/* Корпус дрона держит удары своей глубины: урон по нему делится на рост врагов с глубиной. */
+function depthK() { var g = G(); return 1 + 0.14 * (LAB.foeLevel(g.L, g.F) - 1); }
 function hurt(n) {
   var d = D(); if (!d || d.wreck) return;
   d.hp = Math.max(0, d.hp - n);
@@ -204,9 +207,9 @@ function hurt(n) {
 function onHurt(raw, adt, src) {
   var d = D();
   if (!active() || !hasMod("screen") || !(raw > 0)) return raw;
-  var take = Math.min(d.hp, Math.round(raw * 0.25 * 10) / 10);
+  var dk = depthK(), take = Math.min(d.hp * dk, Math.round(raw * 0.25 * 10) / 10);
   if (take <= 0) return raw;
-  hurt(take);
+  hurt(Math.max(0.1, Math.round(take / dk * 10) / 10));
   return raw - take;
 }
 var tN = 0, lastKey = "", warned = {};

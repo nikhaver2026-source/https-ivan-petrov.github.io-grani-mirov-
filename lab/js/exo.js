@@ -243,10 +243,12 @@ function build(cls, opts) {
   var rc = { id: "exo_" + cls, n: c.n, out: "armor:exo", forge: "mech", cls: "own" };
   if (MS()) { f.qual = MS().rollQual(rc, 2, "x", W().near(), { dir: "mech", key: "exo:" + cls }); MS().maybeFlaw(f, MS().flawChance(rc, { cls: "own", base: 0.08, dir: "mech", key: "exo:" + cls }), true); }
   f.rcNeed = JSON.parse(JSON.stringify(c.need));
+  f.name = frameName(f);
   X().push(f);
   var m = MS() ? MS().M() : null, xp = 12;
   if (m && !m.first["exo:" + cls]) { m.first["exo:" + cls] = 1; xp *= 3; }
   if (MS()) MS().gain("mech", xp);
+  if (LAB.ach) LAB.ach.ev("craft", 1); /* ОКО слышит работу у верстака — как любую сборку */
   snd("work_weld", "craft"); if (gm().later) gm().later(function () { snd("work_ratchet", "craft_armor"); }, 900);
   say(cap1(c.n) + " собран за " + mins + " минут: " + frameName(f) + ". Аккумулятор заряжен. Узлы — приводы, накладки, подвес — ставятся здесь же, у верстака. Надеть — в инвентаре, раздел «Инженерное».");
   return f;

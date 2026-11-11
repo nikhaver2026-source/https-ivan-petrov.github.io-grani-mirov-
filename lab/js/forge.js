@@ -315,7 +315,7 @@ function famItems(fam) {
     items.push({ label: nd.n + ": " + o.n + " — " + o.d + (nd.mode ? ". Переключается и после сборки" : ""), fn: function () { optMenu(fam, nd); } });
   });
   var lack = W() ? lackText(need) : "";
-  items.push({ label: "Итог: " + statText(fam, d) + ".", info: true, keep: true, fn: function () {} });
+  items.push({ label: "Итог: " + statText(fam, d) + "." + forecastOwn(fam), info: true, keep: true, fn: function () {} });
   items.push({ label: "Собрать: " + W().costText(need) + (lack ? ". Не хватает: " + lack : "") + (t < FAM[fam].tier ? ". Нужен верстак ступени " + FAM[fam].tier : ""), keep: true, fn: function () { build(fam); } });
   items.push({ label: "Назад", close: true, fn: function () {} });
   return items;
@@ -331,6 +331,13 @@ function optMenu(fam, nd) {
   });
   items.push({ label: "Назад", close: true, fn: function () {} });
   menu(nd.n, items);
+}
+/* Прогноз своей конструкции — с третьей ступени конструирования. */
+function forecastOwn(fam) {
+  if (!MS() || step("design") < 3) return "";
+  var rc = { id: "own_" + fam, n: FAM[fam].n, out: "weapon:" + FAM[fam].base, forge: "design", cls: "own" }, o = { dir: "design", key: "own:" + fam, cls: "own" };
+  var p = MS().upChance(rc, "w", W().near(), o), fp = MS().flawChance(rc, o), g = BASES[FAM[fam].base].g;
+  return " Прогноз: " + LAB.QUAL[g][2].toLowerCase() + (p > 0.05 ? (p >= 0.5 ? ", скорее " : ", бывает и ") + LAB.QUAL[g][3].toLowerCase() : "") + (fp < 0.03 ? ", брак редок." : fp < 0.08 ? ", брак возможен." : ", брак вероятен.");
 }
 function lackText(need) { var g = G(), s = []; for (var k in need) { var h = g.inv[k] || 0; if (h < need[k]) s.push((LAB.ITEMS[k] ? LAB.ITEMS[k].n.toLowerCase() : k) + " " + h + " из " + need[k]); } return s.join(", "); }
 /* Собрать свою конструкцию. */

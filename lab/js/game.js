@@ -985,6 +985,9 @@ function giveItem(it, quiet) {
          «собрать — бросить — поднять» снимало потолок скупки собранного (supply.js, craftN) */
       if (it.crafted) { G.craftN = G.craftN || {}; G.craftN[it.item] = (G.craftN[it.item] || 0) + Math.min(it.crafted, it.n || 1); }
       if (it.item === "plate" && !G.tut.plate && hintsOn()) { G.tut.plate = 1; extra = " Пластину вставляют в надетую броню: инвентарь, раздел «Броня»."; }
+      /* (после 4.6) инженерные находки: подсказка один раз */
+      if (it.item === "kv_ctrl" && !G.tut.kvCtrl && hintsOn()) { G.tut.kvCtrl = 1; extra = " Из блока управления у верстака собирают дрона-спутника: «Инженерное дело»."; }
+      if ((it.item === "kv_ncore" || it.item === "kv_bcore") && !G.tut.kvCore && hintsOn()) { G.tut.kvCore = 1; extra = " Ядро вживляют в оружие у стенда опытной серии: «Инженерное дело» у верстака."; }
       break;
     case "armor":
       G.armors.push(it.a);

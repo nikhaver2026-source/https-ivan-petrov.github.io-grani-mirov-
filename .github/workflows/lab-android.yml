@@ -185,6 +185,8 @@ jobs:
           (cd "$RUNNER_TEMP/pw" && npx playwright install --with-deps chromium > /dev/null)
           NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/play.test.js
           NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/sound.test.js
+          # (после 4.6) инженерное дело: мастерство, своё оружие, ядра, каркас, дрон
+          NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/engineer.test.js
 
       - name: Gradle
         uses: gradle/actions/setup-gradle@v4

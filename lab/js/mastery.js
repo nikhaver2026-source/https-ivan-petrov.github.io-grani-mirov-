@@ -186,7 +186,7 @@ function reveal(x, how) {
   sayq(how + " " + cap1(x.name || "") + ": похоже, брак сборки — " + FLAWS[f.k].n + " (" + FLAWS[f.k].d + "). Устранить можно у верстака.");
 }
 /* Влияние брака: на износ, осечки, урон, точность, защиту. */
-function wearK(x) { var f = flawOf(x); if (!f) return 1; if (f.k === "crack" || f.k === "blade") { if ((x.cond || 100) < 70) reveal(x, "Износ идёт вдвое быстрее."); return 2; } if (f.k === "play") return 1.5; return 1; }
+function wearK(x) { var f = flawOf(x); if (!f) return 1; if (f.k === "crack" || f.k === "blade") { if ((x.cond != null ? x.cond : 100) < 70) reveal(x, "Износ идёт вдвое быстрее."); return 2; } if (f.k === "play") return 1.5; return 1; }
 function misfire(x) { var f = flawOf(x); if (!f || f.k !== "trigger") return false; if (Math.random() < 0.06) { reveal(x, "Осечка, хотя оружие исправно."); return true; } return false; }
 function dmgK(x) {
   var f = flawOf(x); if (!f) return 1;
@@ -307,7 +307,7 @@ function onKill(w, f) {
   var n = w.own ? 2 : 1;
   m.kxp += n;
   var wb = LAB.WEAPONS[w.base] || {};
-  gain(w.own ? "design" : (wb.rng <= 1 || LAB.physAmmo(w.ammo) ? "mech" : "enrg"), n, true);
+  gain(w.own ? "design" : (wb.rng <= 1 || LAB.physAmmo(w.ammo) ? "mech" : "enrg"), n);
 }
 
 /* ════════ ИСПЫТАНИЕ НА СТЕНДЕ И УСТРАНЕНИЕ БРАКА ════════ */
@@ -402,7 +402,7 @@ function line() {
   return s;
 }
 function next(k) { var x = M().xp[k] || 0, s = stepAt(x); return s + 1 < STEP_XP.length ? Math.ceil(STEP_XP[s + 1] - x) : 0; }
-function infoMenu() {
+function infoList() {
   var items = ORDER.map(function (k) {
     var s = step(k), cap = below() ? 8 : 5, nx = next(k);
     return { label: cap1(DIRS[k].n) + ": ступень " + s + " из " + cap + (s < cap && nx ? ", до следующей — " + nx + " опыта" : "") + ". " + cap1(DIRS[k].d) + ".", info: true, keep: true, fn: function () {} };
@@ -411,9 +411,9 @@ function infoMenu() {
   items.push({ label: "Как растёт: от сборки (новое — втрое больше, повтор за сутки — всё меньше), ремонта, разбора, изучения, испытаний и побед своей самоделкой.", info: true, keep: true, fn: function () {} });
   if (specFree() > 0) items.push({ label: "Выбрать специализацию мастера", fn: specMenu });
   items.push({ label: "Назад", close: true, fn: function () {} });
-  menu("Мастерство", items, { rebuild: function () { return infoItems(); } });
+  return items;
 }
-function infoItems() { var t = LAB.ui.top(); infoMenu(); return t ? LAB.ui.top().items : []; }
+function infoMenu() { menu("Мастерство", infoList(), { rebuild: infoList }); }
 function specMenu() {
   if (specFree() <= 0) { say("Специализацию можно выбрать на третьей и шестой общей ступени мастерства."); return; }
   var items = SPEC_ORDER.filter(function (k) { return !has(k); }).map(function (k) {
@@ -428,23 +428,14 @@ function specMenu() {
   items.push({ label: "Назад", close: true, fn: function () {} });
   menu("Специализация мастера", items);
 }
-function testMenu() {
-  var list = made();
-  var items = list.map(function (o) {
-    var x = o.x, f = flawOf(x);
-    return { label: cap1(x.name) + (f && f.seen ? ": брак — " + FLAWS[f.k].n + ". Устранить: " + costText(FLAWS[f.k].fix) : x.tested ? ": испытано, брака нет" : ": не испытано"), keep: true, fn: function () {
-      if (f && f.seen) fixFlaw(x); else testItem(x, o.k);
-    } };
-  });
-  if (!items.length) items.push({ label: "Испытывать нечего: брак бывает только у собранного своими руками — оружия, брони, каркасов и своих конструкций.", info: true, keep: true, fn: function () {} });
-  items.push({ label: "Назад", close: true, fn: function () {} });
-  menu("Испытание изделий", items, { keep: true, rebuild: function () { return testItemsList(); } });
-}
+function testMenu() { menu("Испытание изделий", testItemsList(), { keep: true, rebuild: testItemsList }); }
 function testItemsList() {
-  return made().map(function (o) {
+  var items = made().map(function (o) {
     var x = o.x, f = flawOf(x);
     return { label: cap1(x.name) + (f && f.seen ? ": брак — " + FLAWS[f.k].n + ". Устранить: " + costText(FLAWS[f.k].fix) : x.tested ? ": испытано, брака нет" : ": не испытано"), keep: true, fn: function () { if (f && f.seen) fixFlaw(x); else testItem(x, o.k); } };
-  }).concat([{ label: "Назад", close: true, fn: function () {} }]);
+  });
+  if (!items.length) items.push({ label: "Испытывать нечего: брак бывает только у собранного своими руками — оружия, брони, каркасов и своих конструкций.", info: true, keep: true, fn: function () {} });
+  return items.concat([{ label: "Назад", close: true, fn: function () {} }]);
 }
 function studyMenu() {
   var build = function () {

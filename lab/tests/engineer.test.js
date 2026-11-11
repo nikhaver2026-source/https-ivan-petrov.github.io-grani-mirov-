@@ -257,6 +257,36 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(r3.dfire === true, "дрон со стволом бьёт врага в бою" + (r3.dfire !== true ? ": " + r3.dfire : ""));
   ok(r3.saved && r3.ownCd, "мастерство, своё оружие, каркас и дрон переживают запись и загрузку");
 
+  console.log("Окна инженерного дела открываются и читаются");
+  const r4 = await page.evaluate(async () => {
+    const g = LAB.game, out = {}, seen = [];
+    const label = i => typeof i.label === "function" ? i.label() : i.label;
+    const look = (nm, fn) => { try { LAB.ui.closeAll(); const wb = g.CUR.fl.objs.find(o => o.type === "workbench"); LAB.workshop._at(wb); g.G.x = wb.x; g.G.y = wb.y; fn(); const t = LAB.ui.top(); const ok = !!t && t.items.length > 0 && t.items.every(i => typeof label(i) === "string" && label(i).length > 0 && !/undefined|NaN|null/.test(label(i))); if (!ok) seen.push(nm + ": " + (t ? t.items.map(label).join(" / ") : "нет окна")); } catch (e) { seen.push(nm + ": " + e.message); } };
+    const F = LAB.forge, M = LAB.mastery, X = LAB.exo, D = LAB.drone;
+    look("мастерство", () => M.infoMenu());
+    look("испытание", () => M.testMenu());
+    look("изучение", () => M.studyMenu());
+    look("специализация", () => { M.M().xp.design = 2000; M.specMenu(); });
+    look("инженерное дело", () => F.engMenu(3));
+    look("конструктор", () => F.constructMenu());
+    ["pike", "rail", "mw", "blade", "plasma"].forEach(k => look("узлы " + k, () => { F.F().unl[k] = 1; LAB.ui.menu("x", [{ label: "x", fn: () => {} }]); F.draft(k); LAB.ui.closeAll(); const t0 = LAB.ui.top; F.constructMenu(); const it = LAB.ui.top().items.find(i => new RegExp(F.FAM[k].n, "i").test(label(i))); LAB.ui.top().i = LAB.ui.top().items.indexOf(it); LAB.ui.activate(); }));
+    look("перебор", () => F.rebuildMenu());
+    look("ядро", () => { g.G.inv.kv_ncore = 1; F.coreMenu(); });
+    look("каркас у верстака", () => X.benchMenu(4));
+    look("инженерное в инвентаре", () => F.invMenu());
+    look("команды дрону", () => D.cmdMenu());
+    look("дрон у верстака", () => D.benchMenu(3));
+    look("Alt+D", () => D.quick());
+    look("персонаж", () => LAB.ui.character && LAB.ui.character());
+    look("инвентарь", () => LAB.ui.inventory && LAB.ui.inventory());
+    const own = g.G.weapons.findIndex(w => w.own);
+    look("окно своего оружия", () => LAB.ui.weaponMenu ? LAB.ui.weaponMenu(own) : LAB.ui.inventory());
+    LAB.ui.closeAll();
+    out.bad = seen;
+    return out;
+  });
+  ok(!r4.bad.length, "все окна инженерного дела собираются без пустых строк и ошибок" + (r4.bad.length ? ": " + r4.bad.slice(0, 4).join(" | ") : ""));
+
   const errs = errors.filter(e => !/favicon|ERR_FILE_NOT_FOUND|net::/.test(e));
   ok(!errs.length, "ошибок страницы нет" + (errs.length ? ": " + errs.slice(0, 5).join("; ") : ""));
   await browser.close(); server.close();
