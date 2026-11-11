@@ -536,9 +536,9 @@ function courseDose(d, msg) {
   c.n++; c.last = now;
   if (c.n < COURSE_N) { msg.push("Курс линии " + LINE_N[k] + ": приём " + c.n + " из " + COURSE_N + ". Следующий засчитается не раньше чем через шесть часов."); return; }
   c.done = 1;
-  var base = g[k] == null ? 10 : g[k];
-  if (base >= 40) { msg.push("Курс линии " + LINE_N[k] + " пройден, но " + STAT_N[k] + " и так на пределе — прибавки не будет."); return; }
-  g[k] = base + 1;
+  var base = g[k] == null ? 10 : g[k], top = LAB.stats ? LAB.stats.capOf(k) : 40; /* (после 4.6) предел — как у очков: ниже Истока выше */
+  if (base >= top) { msg.push("Курс линии " + LINE_N[k] + " пройден, но " + STAT_N[k] + " и так на пределе — прибавки не будет."); return; }
+  if (LAB.stats) LAB.stats.raise(k, 1); else g[k] = base + 1;
   msg.push("Курс линии " + LINE_N[k] + " пройден: " + STAT_N[k] + " навсегда плюс один, теперь " + g[k] + " без плодов.");
   if (LAB.ach) LAB.ach.ev("plant_course", 1);
 }

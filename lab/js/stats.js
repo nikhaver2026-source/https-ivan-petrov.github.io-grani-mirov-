@@ -76,7 +76,7 @@ var K = {
   heal: function () { return 1 + Math.min(0.45, sec("regen") * 0.015); },    /* лечение */
   regen: function () { return sec("regen") * 0.02; },                         /* здоровья в минуту само */
   xp: function () { return 1 + Math.min(0.6, Math.max(0, d10("mind")) * 0.02); },    /* опыт мастерства */
-  quest: function () { return 1 + Math.min(0.3, Math.max(0, d10("cha")) * 0.01); },  /* награды за поручения */
+  quest: function () { return 1 + Math.min(0.3, Math.max(0, d10("cha")) * 0.01) + (val("cha") >= 15 ? 0.05 : 0); },  /* награды за поручения; порог 15 */
   buy: function () { return Math.max(0, Math.min(30, d10("cha"))) * 0.004 + (val("cha") >= 25 ? 0.03 : 0); },   /* game.js, chaK; порог 25 */
   sell: function () { return Math.max(0, Math.min(30, d10("cha"))) * 0.003 + (val("cha") >= 25 ? 0.02 : 0); }
 };

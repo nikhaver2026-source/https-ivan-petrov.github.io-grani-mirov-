@@ -94,7 +94,7 @@ var FAM = {
       { id: "sight", n: "Прицел", opts: [
         { id: "open", n: "открытый", d: "без прибавок", need: {}, k: {} },
         { id: "laser", n: "целеуказатель", d: "точность выше", need: { lens: 1, chip: 1 }, k: { acc: 0.06 } },
-        { id: "psi", n: "упреждающий нейроприцел", d: "точность намного выше и чаще критический удар; нужен разум 15", need: { optic: 1, chip: 2 }, req: { mind: 15 }, k: { acc: 0.12, crit: 0.05 } }
+        { id: "psi", n: "упреждающий нейроприцел", d: "точность намного выше и чаще критический удар; нужен интеллект 15", need: { optic: 1, chip: 2 }, req: { mind: 15 }, k: { acc: 0.12, crit: 0.05 } }
       ] },
       { id: "slug", n: "Сердечник", mode: true, opts: [
         { id: "ap", n: "бронебойный", d: "пробивает броню машин, по живым слабее", need: {}, k: { ap: 0.45, bio: 0.85 } },
@@ -198,7 +198,7 @@ function optWhy(o, t) {
   var r = o.req || {};
   if (r.tier && (t == null ? benchTier() : t) < r.tier) return "нужна оснастка Нижних";
   if (r.step) for (var k in r.step) if (step(k) < r.step[k]) return "нужно мастерство: " + MS().DIRS[k].n + ", ступень " + r.step[k];
-  if (r.mind && stat("mind") < r.mind) return "нужен разум " + r.mind;
+  if (r.mind && stat("mind") < r.mind) return "нужен интеллект " + r.mind;
   if (r.study && !F().node[r.study]) return "откроет изучение похожей находки";
   return "";
 }
@@ -367,12 +367,12 @@ function build(fam, opts) {
   if (w.cap) w.charge = 0;
   if (fam === "rail") w.barrel = w.own.res;
   var f = F(); f.n = (f.n || 0) + 1;
-  /* опыт: новое семейство — втрое; первая своя конструкция — плюс один к разуму */
+  /* опыт: новое семейство — втрое; первая своя конструкция — плюс один к интеллекту (предел — как у очков, stats.js) */
   var m = MS() ? MS().M() : null, xp = 15;
   if (m && !m.first["own:" + fam]) { m.first["own:" + fam] = 1; xp *= 3; }
   if (MS()) MS().gain("design", xp);
   var firstAll = m && !m.first.own;
-  if (firstAll) { m.first.own = 1; if (g.mind < 40) g.mind++; }
+  if (firstAll) { m.first.own = 1; if (LAB.stats) LAB.stats.raise("mind", 1); else if (g.mind < 40) g.mind++; }
   if (LAB.ach) LAB.ach.ev("craft", 1);
   snd("work_weld", "craft"); if (gm().later) gm().later(function () { snd("work_ratchet", "craft_armor"); }, 900);
   var msg = "Своя конструкция собрана за " + mins + " " + plural(mins, "минуту", "минуты", "минут") + ": " + statText(fam, d, w) + "." + (q > 2 ? " Вышло лучше обычного: " + LAB.QUAL[BASES[fm.base].g][q].toLowerCase() + " качество." : "") + (firstAll ? " Первая своя конструкция: разум плюс один." : "") + (w.cap ? " Магазин пуст — перезарядите." : "");
