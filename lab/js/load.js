@@ -128,7 +128,10 @@ function capOf(src) {
   return 0;
 }
 var SRC = ["base", "str", "con", "stam", "exo", "armor", "drone"];
-function capacity() { var c = 0; SRC.forEach(function (s) { c += capOf(s); }); return Math.round(c * 10) / 10; }
+/* LAB.load.off и window.LAB_TEST_NOLOAD — только для старых наборов проверок (play.test.js и другие):
+   их герой носит сотни деталей сразу; груз проверяет hero.test.js. В игре выключатель не используется. */
+function offNow() { return !!(LAB.load && LAB.load.off) || !!window.LAB_TEST_NOLOAD; }
+function capacity() { if (offNow()) return 1e9; var c = 0; SRC.forEach(function (s) { c += capOf(s); }); return Math.round(c * 10) / 10; }
 function ratio() { var c = capacity(); return c > 0 ? total() / c : 9; }
 /* 0 налегке, 1 обычно, 2 перегруз, 3 тяжёлый перегруз, 4 неподъёмно */
 function tierOf(r) { return r <= 0.5 ? 0 : r <= 1 ? 1 : r <= 1.25 ? 2 : r <= 1.5 ? 3 : 4; }
@@ -150,7 +153,7 @@ function handStr() {
   if (gm().armorSpecial && gm().armorSpecial("strength")) add += 4;
   return hs("str") + add;
 }
-function handPen(w) { return w ? Math.min(0.2, Math.max(0, needStr(w) - handStr()) * 0.02) : 0; }
+function handPen(w) { return w && !offNow() ? Math.min(0.2, Math.max(0, needStr(w) - handStr()) * 0.02) : 0; }
 function accPen(w) { var t = tier(); return (t === 2 ? 0.05 : t === 3 ? 0.1 : 0) + handPen(w); }
 
 /* С места не сдвинуться: предупреждение не чаще раза в три секунды. */

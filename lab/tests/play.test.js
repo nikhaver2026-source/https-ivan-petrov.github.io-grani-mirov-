@@ -32,6 +32,12 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   if (fs.existsSync("/opt/pw-browsers/chromium")) opts.executablePath = "/opt/pw-browsers/chromium";
   let browser;
   try { browser = await pw.chromium.launch(opts); } catch (e) { delete opts.executablePath; browser = await pw.chromium.launch(opts); }
+  /* (после 4.6) груз героя этим проверкам не мешает: их рюкзак набит сотнями деталей сразу,
+     и с весом герой не сдвинулся бы с места; груз и ячейку проверяет hero.test.js */
+  const NOLOAD = () => { window.LAB_TEST_NOLOAD = true; };
+  const _newCtx = browser.newContext.bind(browser), _newPage = browser.newPage.bind(browser);
+  browser.newContext = async (o) => { const c = await _newCtx(o); await c.addInitScript(NOLOAD); return c; };
+  browser.newPage = async (o) => { const p = await _newPage(o); await p.addInitScript(NOLOAD); return p; };
   const page = await browser.newPage({ viewport: { width: 412, height: 860 } });
   const errors = [];
   page.on("pageerror", e => errors.push("pageerror: " + e.message));
