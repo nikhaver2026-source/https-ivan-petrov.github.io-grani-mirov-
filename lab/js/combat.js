@@ -2402,7 +2402,7 @@ function fire(dir, burst) {
     if (w.charge <= 0 && LAB.forge && LAB.forge.dryOk(w)) dry = true; /* (после 4.6) энергоклинок без заряда бьёт тупой полосой */
     else if (w.charge <= 0) {
       A("play", "w_empty");
-      if (now - lastEmpty > 2500) { lastEmpty = now; say("Заряд пуст. Перезарядка — " + LAB.K("касание двумя пальцами", "Alt+R или F") + "." + (g.ammo[w.ammo] > 0 ? "" : " Запаса нет: " + LAB.AMMO[w.ammo].n.toLowerCase() + " кончились.")); }
+      if (now - lastEmpty > 2500) { lastEmpty = now; say("Заряд пуст. Перезарядка — " + LAB.K(LAB.gw("reload", "касание двумя пальцами"), "Alt+R или F") + "." + (g.ammo[w.ammo] > 0 ? "" : " Запаса нет: " + LAB.AMMO[w.ammo].n.toLowerCase() + " кончились.")); }
       stopFire();
       return false;
     }
@@ -3432,7 +3432,7 @@ function announceSpotted(list) {
   lastSpot = now;
   say(names.join(", ") + more + " — " + verb + "!", { interrupt: false });
   if (LAB.tutor && list.some(function (f) { return f.kind === "mech"; })) LAB.tutor.ev("robot");
-  if (!G().drawn && !G().tut.drawHint && (!LAB.tutor || LAB.tutor.hintsOn())) { G().tut.drawHint = 1; sayq(LAB.K("Выньте оружие: одно касание тремя пальцами. Затем свайп в сторону врага — выстрел.", "Достаньте оружие: R. Затем стрелка в сторону врага — выстрел.")); }
+  if (!G().drawn && !G().tut.drawHint && (!LAB.tutor || LAB.tutor.hintsOn())) { G().tut.drawHint = 1; sayq(LAB.K("Выньте оружие: " + LAB.gw("draw", "одно касание тремя пальцами") + ". Затем свайп в сторону врага — выстрел.", "Достаньте оружие: R. Затем стрелка в сторону врага — выстрел.")); }
 }
 
 /* ════════ ГРАНАТЫ (2.0) ════════
@@ -3463,7 +3463,7 @@ function pickGrenade(thenThrow) {
     return { label: d.n + ", " + g.inv[id] + " шт." + (g.gren === id ? " Выбрана." : ""), fn: function () {
       g.gren = id;
       if (thenThrow) { UIx("closeAll"); gm().useItem(id); return; }
-      say("Выбрано: " + d.n + ". Бросок — " + LAB.K("влево и сразу вправо одним пальцем", "Y") + ".");
+      say("Выбрано: " + d.n + ". Бросок — " + LAB.K(LAB.gw("throw", "влево и сразу вправо одним пальцем"), "Y") + ".");
     } };
   }), { intro: thenThrow ? "Выбранная граната запомнится." : "" });
 }

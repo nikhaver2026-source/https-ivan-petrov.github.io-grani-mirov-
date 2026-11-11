@@ -43,6 +43,8 @@ LAB.desktop = typeof window !== "undefined" && !!window.LabDesktop;
 LAB.keysMode = LAB.desktop || (typeof window !== "undefined" && typeof navigator !== "undefined" && !("ontouchstart" in window) && !(navigator.maxTouchPoints > 0));
 LAB.kb = function () { return !!(LAB.desktop || LAB.keysMode); };
 LAB.K = function (touch, keys) { return LAB.kb() ? keys : touch; };
+/* (после 4.6) жест действия для подсказки — gestures.js; пока он не загружен — исходные слова */
+LAB.gw = function (a, def) { return def; };
 LAB.LEVELS_N = 10;
 LAB.FLOORS_N = 20;
 

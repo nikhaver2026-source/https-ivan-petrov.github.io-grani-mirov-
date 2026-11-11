@@ -1,18 +1,24 @@
 /* ════════════════════════════════════════════════════════════════════
    «Подземная лаборатория» — жесты и клавиши.
-   Один палец: свайп — шаг (оружие убрано) или выстрел в ту сторону
-   (оружие в руках); свайп с удержанием — идти дальше или стрелять
-   очередью; влево-вправо одним движением — бросить гранату, вправо-влево —
-   выбрать гранату; вверх-вниз — поставить ловушку, вниз-вверх — мину (2.0);
-   касание — что рядом; долгое касание — повторить фразу; двойное касание —
-   действия у двери, терминала, установки.
-   Два пальца: вверх — осмотреться, влево — аптечка, вправо — навигатор,
-   вниз — сканер; касание — перезарядить, двойное — сменить оружие (2.0).
-   Три пальца: касание — вынуть или убрать оружие, вверх — персонаж,
-   вниз — инвентарь, влево — кредиты, вправо — здоровье и всё тело.
-   Четыре пальца: касание — здоровье и заряд, двойное касание — импланты,
-   вверх — список целей навигатора, влево и вправо — объявления ОКО,
-   свайп вниз — замолчать (везде: в игре, в окнах, в прологе).
+   (после 4.6) Что делает каждый жест в игре — таблица gestures.js: игрок
+   переназначает жесты сам («Настройки» → «Управление» → «Жесты»). Здесь —
+   распознавание жестов и куда они идут: в игру, в окно, в мини-игру.
+   Распознаются: свайпы одним–четырьмя пальцами; свайп одним пальцем с
+   удержанием (идти, очередь); зигзаги одним пальцем (влево-вправо и
+   прочие — составные); касание одним пальцем, двойное и долгое; касания
+   двумя, тремя и четырьмя пальцами — одно, двойное, тройное, а ещё каждое
+   из них с удержанием (последнее касание серии не отпускают).
+   Как задано изначально — прежние жесты на прежних местах:
+   один палец: свайп — шаг или выстрел, с удержанием — идти или очередь,
+   касание — что рядом, двойное — действия, долгое — повторить фразу,
+   влево-вправо — граната, вправо-влево — выбрать гранату, вверх-вниз —
+   ловушка, вниз-вверх — мина; два пальца: вверх — осмотреться, вниз —
+   сканер, влево — аптечка, вправо — навигатор, касание — перезарядить,
+   двойное — следующее оружие; три пальца: касание — оружие, вверх —
+   персонаж, вниз — инвентарь, влево — кредиты, вправо — тело; четыре
+   пальца: касание — здоровье и заряд, двойное — импланты, вверх — цели
+   навигатора, влево и вправо — объявления ОКО, вниз — тишина (в окнах,
+   прологе и мини-играх — всегда).
    ════════════════════════════════════════════════════════════════════ */
 (function () {
 "use strict";
@@ -20,13 +26,20 @@ var LAB = window.LAB;
 var pad = null;
 var pts = {};          /* активные касания */
 var gest = null;       /* текущий жест */
-var lastTap = null;    /* для двойного касания */
-var tapTimer = null;
+var chain = null;      /* серия касаний: { n, taps, timer } — ждём следующего касания */
 var walk = null;       /* удержание: идти или стрелять очередью */
 var swallowN = 0;     /* первое касание будит звук — его не толкуем */
 var SCR2GAME = { U: "N", D: "S", L: "W", R: "E" };
+var TAPID = ["", "t", "d", "r"], HOLDID = ["", "p", "dp", "rp"];
 
-function thr() { var m = Math.min(window.innerWidth || 360, window.innerHeight || 640); return Math.max(24, Math.min(60, m * 0.07)); }
+/* (после 4.6) чувствительность касаний — «Настройки» → «Управление» */
+function S() { return LAB.settings || {}; }
+function GAP() { var v = +S().gTapGap; return v >= 150 && v <= 1000 ? v : 380; }
+function HOLD() { var v = +S().gHold; return v >= 250 && v <= 2000 ? v : 600; }
+function swK() { var v = +S().gSwipe; return v >= 0.5 && v <= 2 ? v : 1; }
+function thr() { var m = Math.min(window.innerWidth || 360, window.innerHeight || 640); return Math.max(24, Math.min(60, m * 0.07)) * swK(); }
+/* долгое касание одним пальцем — по отпусканию, как прежде, не раньше 0,9 секунды */
+function pressMs() { return Math.max(900, HOLD() + 200); }
 
 /* ── КАСАНИЯ ── */
 /* (2.0) Инструмент на весь экран (instruments.js): касания — прямо ему, без жестов. */
@@ -48,6 +61,8 @@ function down(e) {
   var now = performance.now();
   if (!gest) {
     gest = { t0: now, max: 0, ids: {}, ended: false, fin: [], held: false, dirAt: 0, firstDir: null, maxDisp: 0 };
+    /* серия касаний: пока пальцы на экране, ждать не перестаём — решит отпускание */
+    if (chain) clearTimeout(chain.timer);
     /* сырое касание — мини-игре на ритм */
     if (LAB.mini && LAB.mini.raw && LAB.mini.raw()) { gest.rawMini = true; dispatch({ kind: "down", n: 1, t: now }); }
   }
@@ -55,6 +70,7 @@ function down(e) {
   gest.ids[e.pointerId] = 1;
   var n = Object.keys(pts).length;
   if (n > gest.max) gest.max = n;
+  armTapHold(gest);
 }
 function moveEv(e) {
   if (surf(e)) return;
@@ -65,7 +81,7 @@ function moveEv(e) {
   if (Math.abs(dx) + Math.abs(dy) > 3) p.lastMove = performance.now();
   p.x = e.clientX; p.y = e.clientY;
   var T = thr();
-  if (gest.max === 1) {
+  if (gest.max === 1 && !gest.tapHeld) {
     var d0x = p.x - p.x0, d0y = p.y - p.y0;
     var disp = Math.max(Math.abs(d0x), Math.abs(d0y));
     if (disp > gest.maxDisp) gest.maxDisp = disp;
@@ -87,6 +103,7 @@ function moveEv(e) {
     }
   }
 }
+/* Свайп одним пальцем с удержанием: палец ушёл в сторону и замер. */
 function armHold(p) {
   var g = gest;
   clearTimeout(g.holdT);
@@ -95,10 +112,35 @@ function armHold(p) {
     var now = performance.now();
     if (now - p.lastMove >= 260) {
       g.held = true;
+      flushChain();
       startHold(g.firstDir);
     } else g.holdT = setTimeout(check, 60);
   };
   g.holdT = setTimeout(check, 300);
+}
+/* (после 4.6) Касание с удержанием: пальцы на месте дольше, чем «Удержание срабатывает через».
+   Срабатывает, пока пальцы ещё на экране: короткая вибрация — можно отпускать. Последнее касание
+   серии тоже можно задержать: двойное и тройное касание с удержанием. Одним пальцем — долгое
+   касание по отпусканию, как прежде. Если на это удержание ничего не назначено — касание
+   остаётся касанием, сколько бы его ни держали. */
+function armTapHold(g) {
+  clearTimeout(g.tapHoldT);
+  if (g.rawMini) return;
+  g.tapHoldT = setTimeout(function () { tapHoldCheck(g); }, HOLD());
+}
+function tapHoldCheck(g) {
+  if (gest !== g || g.ended || g.held || g.tapHeld || g.zig || g.firstDir) return;
+  var n = Math.min(4, g.max);
+  if (n < 2 || Object.keys(pts).length < g.max) return;
+  var T = thr();
+  for (var id in pts) { var p = pts[id]; if (Math.max(Math.abs(p.x - p.x0), Math.abs(p.y - p.y0)) > T * 0.6) return; }
+  var taps = chain && chain.n === n ? Math.min(3, chain.taps + 1) : 1;
+  if (!wantHold(n, taps)) return;
+  if (chain && chain.n !== n) flushChain();
+  else if (chain) { clearTimeout(chain.timer); chain = null; }
+  g.tapHeld = true;
+  LAB.vib(30);
+  dispatch({ kind: "thold", n: n, taps: taps });
 }
 function up(e) {
   if (surf(e)) return;
@@ -109,14 +151,15 @@ function up(e) {
   delete pts[e.pointerId];
   if (Object.keys(pts).length) return; /* ждём остальные пальцы */
   var g = gest; gest = null; g.ended = true;
-  clearTimeout(g.holdT);
+  clearTimeout(g.holdT); clearTimeout(g.tapHoldT);
   if (g.held) { stopHold(); return; }
+  if (g.tapHeld) return; /* удержание уже сработало */
   finishGesture(g, p);
 }
 function cancelEv(e) {
   if (surf(e)) return;
   delete pts[e.pointerId];
-  if (!Object.keys(pts).length && gest) { clearTimeout(gest.holdT); if (gest.held) stopHold(); gest = null; }
+  if (!Object.keys(pts).length && gest) { clearTimeout(gest.holdT); clearTimeout(gest.tapHoldT); if (gest.held) stopHold(); gest = null; flushChain(); }
 }
 function finishGesture(g, last) {
   var T = thr();
@@ -124,50 +167,65 @@ function finishGesture(g, last) {
   var dx = 0, dy = 0;
   g.fin.forEach(function (f) { dx += f.dx; dy += f.dy; });
   if (g.fin.length) { dx /= g.fin.length; dy /= g.fin.length; }
-  var n = g.max;
+  var n = Math.min(4, g.max);
   if (n === 1 && g.zig && g.firstDir) {
     var second = { U: "D", D: "U", L: "R", R: "L" }[g.firstDir];
+    flushChain();
     dispatch({ kind: "zig", n: 1, dir: g.firstDir, dir2: second });
     return;
   }
   var disp = Math.max(Math.abs(dx), Math.abs(dy));
   if (disp >= T * (n > 1 ? 0.8 : 1)) {
     var dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "R" : "L") : (dy > 0 ? "D" : "U");
+    flushChain();
     dispatch({ kind: "swipe", n: n, dir: dir });
     return;
   }
   /* касание уже ушло ритм-головоломке как «down»: касания и удержания из него не делаем —
      иначе оно дойдёт до игры и оборвёт итог головоломки */
-  if (g.rawMini) return;
-  if (performance.now() - g.t0 > 900 && n === 1) { dispatch({ kind: "press", n: 1 }); return; }
+  if (g.rawMini) { flushChain(); return; }
+  if (performance.now() - g.t0 > pressMs() && n === 1) { flushChain(); dispatch({ kind: "press", n: 1 }); return; }
   tap(n);
 }
-/* Касание: ждём второе — вдруг двойное. */
+/* Касание: серия одним числом пальцев — двойное, тройное. Ждём следующего касания, только если
+   более длинной серии есть что делать (wantMore); нет — срабатывает сразу. */
 function tap(n) {
-  var now = performance.now();
-  var dbl = hasDouble(n);
-  if (lastTap && lastTap.n === n && now - lastTap.t < 380) {
-    clearTimeout(tapTimer); lastTap = null;
-    dispatch({ kind: "dtap", n: n });
-    return;
+  var taps = 1;
+  if (chain) {
+    if (chain.n === n) { taps = chain.taps + 1; clearTimeout(chain.timer); chain = null; }
+    else flushChain();
   }
-  if (!dbl) { dispatch({ kind: "tap", n: n }); return; }
-  lastTap = { n: n, t: now };
-  clearTimeout(tapTimer);
-  tapTimer = setTimeout(function () { var lt = lastTap; lastTap = null; if (lt) dispatch({ kind: "tap", n: lt.n }); }, 380);
+  if (taps >= 3 || !wantMore(n, taps)) { dispatchTaps(n, taps); return; }
+  var c = chain = { n: n, taps: taps };
+  c.timer = setTimeout(function () { if (chain === c) flushChain(); }, GAP());
 }
-function hasDouble(n) {
-  if (n === 1 || n === 2 || n === 4) return true;
-  return false; /* три пальца: касание — оружие, сразу */
+function flushChain() {
+  var c = chain;
+  if (!c) return;
+  chain = null; clearTimeout(c.timer);
+  dispatchTaps(c.n, c.taps);
 }
+function dispatchTaps(n, taps) { dispatch({ kind: taps === 1 ? "tap" : taps === 2 ? "dtap" : "ttap", n: n, taps: taps }); }
+/* В игре ждём продолжения, если на более длинную серию того же числа пальцев что-то назначено;
+   в окнах и мини-играх — как прежде: двойное касание одним, двумя и четырьмя пальцами. */
+function wantMore(n, taps) {
+  if (taps >= 3) return false;
+  var GS = LAB.gestures;
+  if (GS && route() === "game") { for (var k = taps + 1; k <= 3; k++) if (GS.bound(TAPID[k] + n)) return true; return false; }
+  return taps < 2 && (n === 1 || n === 2 || n === 4);
+}
+function wantHold(n, taps) { var GS = LAB.gestures; return !!GS && route() === "game" && GS.bound(HOLDID[taps] + n); }
 
 /* ── УДЕРЖАНИЕ: идти дальше или стрелять очередью ── */
 function startHold(dir) {
   stopHold();
-  var target = route();
-  if (target !== "game") { dispatch({ kind: "swipe", n: 1, dir: dir }); return; }
-  var game = LAB.game, G = game.G, gdir = SCR2GAME[dir];
-  if (G.drawn) { LAB.combat.startFire(gdir); walk = { fire: true }; return; }
+  if (route() !== "game") { dispatch({ kind: "swipe", n: 1, dir: dir }); return; }
+  dispatch({ kind: "hswipe", n: 1, dir: dir });
+}
+/* Идти, пока держат: первый шаг через delay (касание — сразу, клавиша — после своего шага). */
+function walkLoop(gdir, delay) {
+  stopHold();
+  var game = LAB.game, G = game.G;
   walk = { dir: gdir };
   var w = walk;
   var stepFn = function () {
@@ -177,8 +235,9 @@ function startHold(dir) {
     if (!ok) { stopHold(); return; }
     w.t = setTimeout(stepFn, stepGap(G));
   };
-  stepFn();
+  if (delay) w.t = setTimeout(stepFn, delay); else stepFn();
 }
+function fireLoop(gdir) { stopHold(); LAB.combat.startFire(gdir); walk = { fire: true }; }
 /* Шаг удержания: под замедлением — реже (иначе шаг «рано» обрывал ходьбу). */
 function stepGap(G) { return G.st.slow > 0 ? 440 : G.st.haste > 0 ? 200 : 300; }
 function stopHold() {
@@ -199,14 +258,31 @@ function route() {
   if (ui.layer()) return "ui";
   return "game";
 }
+/* Имя жеста в таблице gestures.js. */
+function gestId(g) {
+  var n = Math.min(4, g.n || 1);
+  switch (g.kind) {
+    case "swipe": return "s" + n + g.dir;
+    case "hswipe": return "w1" + g.dir;
+    case "zig": return "z1" + g.dir;
+    case "tap": return "t" + n;
+    case "dtap": return "d" + n;
+    case "ttap": return "r" + n;
+    case "press": return "p1";
+    case "thold": return HOLDID[g.taps || 1] + n;
+  }
+  return "";
+}
+function actOf(g) { var GS = LAB.gestures; return GS ? GS.actionOf(gestId(g)) || "none" : "none"; }
 function dispatch(g) {
   LAB.AE.ensure();
   if (swallowN > 0 && g.kind !== "down") { swallowN--; return; }
-  /* Четыре пальца вниз — прервать речь, где бы ни был игрок. */
-  if (g.kind === "swipe" && g.n >= 4 && g.dir === "D") { LAB.Speech.hush(); LAB.vib(20); return; }
+  var r = route();
+  /* Тишина: в окнах, прологе и мини-играх — четыре пальца вниз; в игре — жест, на котором она
+     стоит (изначально тот же). Тишина работает и пока мир ждёт (лифт, шлюз). */
+  if (g.kind !== "down" && (r === "game" ? actOf(g) === "hush" : g.kind === "swipe" && g.n >= 4 && g.dir === "D")) { LAB.Speech.hush(); LAB.vib(20); return; }
   /* любое действие игрока сразу обрывает речь (записку — нет: она дочитывается) */
   if (g.kind !== "down") LAB.Speech.userAct();
-  var r = route();
   if (g.kind === "down") { if (r === "mini") LAB.mini.gesture(g); return; }
   if (r === "mini") { LAB.mini.gesture(g); return; }
   if (r === "ui") { LAB.ui.gesture(g); return; }
@@ -217,59 +293,20 @@ var pauseSaid = 0;
 function pausedHint() { var t = Date.now(); if (t - pauseSaid > 2500) { pauseSaid = t; LAB.say("Подождите.", { prio: "info" }); } }
 function gameGesture(g) {
   var game = LAB.game, G = game.G;
+  var a = actOf(g);
+  if (a === "none") return;
   if (!game.entered || G.dead) return;
   if (game.paused) { pausedHint(); return; }
-  if (g.n === 1) {
-    if (g.kind === "swipe") {
-      var gd = SCR2GAME[g.dir];
-      if (G.drawn) LAB.combat.fire(gd, false);
-      else game.tryMove(gd, false);
-      return;
-    }
-    if (g.kind === "zig") {
-      /* (2.0) влево-вправо — бросить гранату, вправо-влево — выбрать гранату;
-         вверх-вниз — поставить ловушку, вниз-вверх — мину (и с оружием в руках) */
-      if (g.dir === "L") { if (LAB.combat && LAB.combat.throwQuick) LAB.combat.throwQuick(); return; }
-      if (g.dir === "R") { if (LAB.combat && LAB.combat.pickGrenade) LAB.combat.pickGrenade(false); return; }
-      if (LAB.traps && LAB.traps.quick) LAB.traps.quick(g.dir === "U" ? "trap" : "mine");
-      return;
-    }
-    if (g.kind === "tap") { game.nearbyInfo(); return; }
-    if (g.kind === "dtap") { game.interact(); return; }
-    /* долгое касание одним пальцем — повторить последнюю фразу (2.0) */
-    if (g.kind === "press") { repeatLast(); return; }
+  /* свайп с удержанием: идти или очередь, пока палец на экране */
+  if (a === "autoHold" || a === "walk" || a === "burst") {
+    var gd = SCR2GAME[g.dir];
+    if (!gd) return;
+    if (a === "walk" || (a === "autoHold" && !G.drawn)) { walkLoop(gd, 0); return; }
+    if (!G.drawn) { LAB.UI.error(); LAB.say("Оружие убрано. Достать — " + LAB.gw("draw", "касание тремя пальцами") + "."); return; }
+    fireLoop(gd);
+    return;
   }
-  if (g.n === 2) {
-    if (g.kind === "swipe") {
-      if (g.dir === "U") game.lookAround();
-      else if (g.dir === "L") game.useMedkit();
-      else if (g.dir === "R") game.navigate(true);
-      else if (g.dir === "D") { if (G.implants.indexOf("scan") >= 0) LAB.combat.useImplant("scan"); else game.lookAround(); }
-      return;
-    }
-    /* (2.0) касание двумя пальцами — перезарядить, двойное — сменить оружие */
-    if (g.kind === "tap") { game.reload(); return; }
-    if (g.kind === "dtap") { game.switchWeapon(1); return; }
-  }
-  if (g.n === 3) {
-    if (g.kind === "tap" || g.kind === "dtap") { game.toggleDraw(); return; }
-    if (g.kind === "swipe") {
-      if (g.dir === "U") LAB.ui.character();
-      else if (g.dir === "D") LAB.ui.inventory();
-      /* (1.5) влево — кредиты, вправо — здоровье, бодрость, сытость и всё тело */
-      else if (g.dir === "L") game.creditsStatus();
-      else if (g.dir === "R") game.bodyStatus();
-      return;
-    }
-  }
-  if (g.n >= 4) {
-    if (g.kind === "dtap") { LAB.ui.implants(); return; }
-    if (g.kind === "tap") { game.quickStatus(); return; }
-    /* четыре пальца влево и вправо — история объявлений ОКО, вверх — список целей навигатора */
-    if (g.kind === "swipe" && g.dir === "L") { LAB.history.show(-1); return; }
-    if (g.kind === "swipe" && g.dir === "R") { LAB.history.show(1); return; }
-    if (g.kind === "swipe" && g.dir === "U") { if (game.navMenu) game.navMenu(); else game.navigate(true); return; }
-  }
+  LAB.gestures.exec(a, g);
 }
 /* Повторить последнюю фразу. */
 function repeatLast() {
@@ -366,13 +403,13 @@ function gameKey(e, k) {
   LAB.Speech.userAct();
   if (WASD[k]) {
     var gd = WASD[k];
-    holdKey(e.code || k, function () { game.tryMove(gd, false); }, function () { startWalk(gd); });
+    holdKey(e.code || k, function () { game.tryMove(gd, false); }, function () { walkLoop(gd, 300); });
     return true;
   }
   if (ARROW[e.key]) {
     var fd = ARROW[e.key];
     if (!G.drawn) { LAB.UI.error(); LAB.say("Оружие убрано. R — достать оружие."); return true; }
-    holdKey(e.code || e.key, function () { LAB.combat.fire(fd, false); }, function () { LAB.combat.startFire(fd); walk = { fire: true }; });
+    holdKey(e.code || e.key, function () { LAB.combat.fire(fd, false); }, function () { fireLoop(fd); });
     return true;
   }
   if (/^[1-9]$/.test(k)) { var wi = +k - 1; if (G.weapons[wi]) game.equipWeapon(wi); else LAB.say("Оружия под номером " + k + " нет. Всего — " + G.weapons.length + "."); return true; }
@@ -409,21 +446,6 @@ function gameKey(e, k) {
     case "F1": if (LAB.guide) LAB.guide.open(); return true;
   }
   return false;
-}
-/* Идти, пока держат клавишу (как свайп с удержанием). */
-function startWalk(gdir) {
-  stopHold();
-  var game = LAB.game, G = game.G;
-  walk = { dir: gdir };
-  var w = walk;
-  var stepFn = function () {
-    if (walk !== w) return;
-    if (route() !== "game") { stopHold(); return; }
-    var ok = game.tryMove(gdir, true);
-    if (!ok) { stopHold(); return; }
-    w.t = setTimeout(stepFn, stepGap(G));
-  };
-  w.t = setTimeout(stepFn, 300);
 }
 function uiKey(e, k) {
   var ui = LAB.ui;
@@ -501,5 +523,5 @@ function init() {
   };
 }
 
-LAB.input = { init: init, stopAll: stopAll, dispatch: dispatch, swallow: function () { swallowN = 1; } };
+LAB.input = { init: init, stopAll: stopAll, dispatch: dispatch, repeat: repeatLast, gestId: gestId, swallow: function () { swallowN = 1; } };
 })();

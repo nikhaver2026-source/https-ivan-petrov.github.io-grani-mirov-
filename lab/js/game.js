@@ -1003,7 +1003,7 @@ function giveItem(it, quiet) {
       var upgFix = LAB.workshop && LAB.workshop.fixUpg ? LAB.workshop.fixUpg(it.w, G.inv) : ""; /* (3.7) батареи с него — в рюкзак */
       G.weapons.push(it.w);
       if (LAB.oko && LAB.oko.react) later(function () { LAB.oko.react("weapon"); }, 2500);
-      if (!G.tut.weapon && hintsOn()) { G.tut.weapon = 1; extra = LAB.K(" Сменить оружие — двойное касание двумя пальцами. Вынуть — касание тремя пальцами."," Выбрать оружие — Q и E или цифры от 1 до 9. Достать — R."); }
+      if (!G.tut.weapon && hintsOn()) { G.tut.weapon = 1; extra = LAB.K(" Сменить оружие — " + LAB.gw("nextW", "двойное касание двумя пальцами") + ". Вынуть — " + LAB.gw("draw", "касание тремя пальцами") + "."," Выбрать оружие — Q и E или цифры от 1 до 9. Достать — R."); }
       if (upgFix) extra += " " + upgFix;
       break;
     case "pass":
@@ -1099,7 +1099,7 @@ function tryMove(dir, run) {
   if (f && f.disguised && LAB.combat.unmask) { LAB.combat.unmask(f); return false; }
   /* спокойная машина (перепрошитая, ваша, уборщик) уступает дорогу: меняетесь местами */
   if (f && (f.calm || f.ally || f.neutral) && !(f.beh && f.beh.indexOf("stationary") >= 0)) { f.x = G.x; f.y = G.y; f.room = CUR.fl.room[idx(G.x, G.y)]; f = null; }
-  if (f) { bumpFocus({ type: "foe", ref: f, dir: dir }); A("bump"); sayOnce("foe" + f.id, f.name + " вплотную! " + LAB.K("Выньте оружие — касание тремя пальцами.", "Достаньте оружие — R, бейте стрелками.")); return false; }
+  if (f) { bumpFocus({ type: "foe", ref: f, dir: dir }); A("bump"); sayOnce("foe" + f.id, f.name + " вплотную! " + LAB.K("Выньте оружие — " + LAB.gw("draw", "касание тремя пальцами") + ".", "Достаньте оружие — R, бейте стрелками.")); return false; }
   if (tt === T.WALL) {
     var sd = hiddenSecretAt(nx, ny);
     A("bumpWall", dir); LAB.vib(25);
@@ -1129,7 +1129,7 @@ function tryMove(dir, run) {
         else txt = "Дверь: " + lockText(door) + "." + sg + (why ? " " + why + LAB.K(" Двойное касание — действия.", " Enter — действия.") : LAB.K(" " + openNote(door) + ": двойное касание — открыть.", " " + openNote(door) + ": Enter — открыть."));
         sayOnce("door" + door.id, txt);
         tutor("door");
-        if (!G.tut.door && door.lock && hintsOn()) { G.tut.door = 1; sayq(LAB.K("У запертой двери коснитесь экрана одним пальцем дважды: появятся действия.", "У запертой двери нажмите Enter: появятся действия.")); }
+        if (!G.tut.door && door.lock && hintsOn()) { G.tut.door = 1; sayq(LAB.K(LAB.gw("interact", "У запертой двери коснитесь экрана одним пальцем дважды: появятся действия.", "У запертой двери — %: появятся действия."), "У запертой двери нажмите Enter: появятся действия.")); }
         return false;
       }
     }
@@ -1139,7 +1139,7 @@ function tryMove(dir, run) {
     bumpFocus({ type: "obj", ref: o, dir: dir });
     A("bumpSoft", o);
     sayOnce("obj" + o.id, objName(o) + LAB.K(". Двойное касание — действия.", ". Enter — действия."));
-    if (!G.tut.obj && hintsOn()) { G.tut.obj = 1; sayq("К предметам подходят вплотную. " + LAB.K("Двойное касание одним пальцем — список действий.", "Enter — список действий.")); }
+    if (!G.tut.obj && hintsOn()) { G.tut.obj = 1; sayq("К предметам подходят вплотную. " + LAB.K(LAB.gw("interact", "Двойное касание одним пальцем — список действий.", "Список действий — %."), "Enter — список действий.")); }
     return false;
   }
   if (n) {
@@ -1378,7 +1378,7 @@ function roomStuff(r, brief, itemsFirst, capN) {
   var s = [], floor = items.length ? "На полу: " + items.slice(0, 5).join(", ") + (items.length > 5 ? " и ещё " + (items.length - 5) : "") + "." : "";
   /* «Осмотреться»: сначала что лежит на полу, потом что стоит в помещении */
   if (itemsFirst && floor) s.push(floor);
-  if (objs.length) s.push("Здесь: " + objs.join(", ") + (more ? " и ещё " + more + " " + plural(more, "вещь", "вещи", "вещей") + " — " + LAB.K("осмотритесь: два пальца вверх", "осмотритесь: Tab") : "") + ".");
+  if (objs.length) s.push("Здесь: " + objs.join(", ") + (more ? " и ещё " + more + " " + plural(more, "вещь", "вещи", "вещей") + " — " + LAB.K("осмотритесь: " + LAB.gw("look", "два пальца вверх"), "осмотритесь: Tab") : "") + ".");
   var trapsL = LAB.traps ? LAB.traps.lookList(function (x, y) { var rr = roomAt(x, y); return rr && rr.id === r.id; }) : "";
   if (trapsL) s.push(trapsL);
   if (npcs.length) s.push("Живые: " + npcs.join(", ") + ".");
@@ -1622,7 +1622,7 @@ function nearbyInfo() {
   var t = adjacentTargets();
   if (!t.length) {
     var r = roomAt(G.x, G.y);
-    say((r ? r.name : "Коридор") + ". Рядом пусто. Осмотреться — " + LAB.K("два пальца вверх.", "Tab."));
+    say((r ? r.name : "Коридор") + ". Рядом пусто. Осмотреться — " + LAB.K(LAB.gw("look", "два пальца вверх") + ".", "Tab."));
     return;
   }
   say(t.map(function (q) { return targetName(q) + ", " + (q.dir ? LAB.DIRN[q.dir] : "под ногами"); }).join(". ") + LAB.K(". Двойное касание — действия.", ". Enter — действия."));
@@ -2165,7 +2165,7 @@ function stairStep(dir, run) {
     var down = s.down;
     G.stair = null;
     enterFloor(G.L, down ? G.F + 1 : G.F - 1, down ? "down" : "up");
-    if (down && G.F > 1 && !G.tut.stairs && hintsOn()) { G.tut.stairs = 1; sayq("Лестницы на каждом этаже — в разных концах. Навигатор — " + LAB.K("два пальца вправо", "клавиша N") + " — подскажет путь."); }
+    if (down && G.F > 1 && !G.tut.stairs && hintsOn()) { G.tut.stairs = 1; sayq("Лестницы на каждом этаже — в разных концах. Навигатор — " + LAB.K(LAB.gw("nav", "два пальца вправо"), "клавиша N") + " — подскажет путь."); }
     return false;
   }
   return true;
@@ -3412,7 +3412,7 @@ function navigate(cycle, fromNpc) {
     tgt = { n: (rn && rn.sign ? rn.sign : "дверь кабинета") + (nd > 1 ? ", ближайшая из " + nd + " " + plural(nd, "двери", "дверей", "дверей") + " коридора" : ", единственная дверь коридора"), cell: doorFront(dn) };
   }
   var path = routeTo(tgt.cell, tgt.o);
-  var more = list.length > 1 && !fromNpc ? LAB.K(" Ещё раз два пальца вправо — следующая цель.", " Ещё раз N — следующая цель.") : "";
+  var more = list.length > 1 && !fromNpc ? LAB.K(" Ещё раз " + LAB.gw("nav", "два пальца вправо") + " — следующая цель.", " Ещё раз N — следующая цель.") : "";
   if (!path) {
     /* закрыто: путь до ближайшей запертой двери на пути */
     var p2 = LAB.route(CUR.fl, CUR.fs, G.x, G.y, function (x, y) { return tgt.o ? (Math.abs(x - tgt.o.x) + Math.abs(y - tgt.o.y) === 1) : (x === tgt.cell[0] && y === tgt.cell[1]); }, { passDoor: function (d) { return !(d.lock && d.lock.type === "secret" && !secretFound(d)); } });
@@ -4381,7 +4381,7 @@ function newGame() {
   enterFloor(1, 1, "start", true);
   say("Вы просыпаетесь в криокапсуле. Холод отпускает. «Эхо» включается: «Носитель номер семь, слышите меня? Зрение не восстановлено. Я буду вашими глазами. " + LAB.K("Шагайте свайпами. Осмотреться — два пальца вверх. Двойное касание у предмета — действия", "Шагайте клавишами W A S D. Осмотреться — Tab. Enter у предмета — действия. Все клавиши — в руководстве, F1") + "»." );
   /* (2.1) стартовый набор: что при себе и что лежит у капсулы */
-  var kitHint = hintsOn() ? LAB.K(" Достать оружие — касание тремя пальцами, сменить — двойное касание двумя пальцами.", " Достать оружие — R, сменить — Q и E.") : "";
+  var kitHint = hintsOn() ? LAB.K(" Достать оружие — " + LAB.gw("draw", "касание тремя пальцами") + ", сменить — " + LAB.gw("nextW", "двойное касание двумя пальцами") + ".", " Достать оружие — R, сменить — Q и E.") : "";
   if (kitHint) G.tut.weapon = 1;
   sayq("При вас монтировка и бластер «Искра» с полным зарядом, на вас защитный комбинезон «Ковчег». В рюкзаке бинт, походный ремнабор и сухпаёк. У капсулы лежат десять аптечек и десять энергобатарей, четыре стопки по пять, — заберите их." + kitHint + " Пока вы в капсульном отсеке, машины вас не тронут: соберитесь, прежде чем выходить.");
   tutor("start");

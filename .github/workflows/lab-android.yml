@@ -187,6 +187,8 @@ jobs:
           NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/sound.test.js
           # (после 4.6) инженерное дело: мастерство, своё оружие, ядра, каркас, дрон
           NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/engineer.test.js
+          # (после 4.6) жесты: тройные касания, удержания, переназначение в настройках
+          NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/gestures.test.js
 
       - name: Gradle
         uses: gradle/actions/setup-gradle@v4

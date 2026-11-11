@@ -654,6 +654,8 @@ function settingsMenu() {
     okoOn() && { kind: "toggle", label: "Сбои и шёпот в голосе ОКО", get: function () { return !!S.okoFx; }, set: function (v) { S.okoFx = v ? 1 : 0; LAB.saveSettings(); },
       descOf: function (v) { return v ? "Изредка ОКО заикается, теряет звук, заговаривает обрывком старой программы; перед зловещими словами — обратное эхо, после — ответный шёпот." : "ОКО говорит ровно, без сбоев и шёпота."; } },
     { kind: "slider", label: "Скорость речи", min: 0, max: 100, step: 5, get: function () { return S.ratePct == null ? 50 : +S.ratePct; }, set: function (v) { S.ratePct = v; S.rate = LAB.rateFromPct(v); LAB.saveSettings(); }, fmt: function (v) { return Math.round(v) + " процентов" + (v === 50 ? ", обычная" : ""); } },
+    /* (после 4.6) жесты: какое действие на каком жесте, пауза двойного касания, удержание, длина свайпа (gestures.js) */
+    LAB.gestures && { label: "Управление: жесты и чувствительность касаний", fn: function () { LAB.gestures.controlsMenu(); } },
     /* (2.6) режим сложности выбирают только в начале новой игры (diffMenu); здесь — какой он у этой игры;
        (3.7, нелогичность) строка-сведение окна не закрывает (keep) */
     { label: function () { return gm() && gm().entered ? "Режим сложности этой игры: " + LAB.dk().n.toLowerCase() + ". Он выбран в начале игры и не меняется" : "Режим сложности выбирают в начале новой игры: «Начать игру» в главном меню"; }, info: true, keep: true, fn: function () {
