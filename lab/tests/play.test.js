@@ -4828,7 +4828,21 @@ LAB.ui.closeAll();
     const g = LAB.game, out = {}, label = i => typeof i.label === "function" ? i.label() : i.label;
     LAB.ui.closeAll(); g.enterFloor(1, 2, "down", true); LAB.combat.stop();
     LAB.guide.open(); out.root = LAB.ui.top().items.map(label);
-    const sec = LAB.guide.sections.find(s => s.t === "Комплекс и исследование");
+    const sec = LAB.guide.sections.find(s => (s.ch || []).some(c => c.t === "Глубины под Ядром"));
+    /* (после 4.6, просьба автора: систематизировать) разделы — от простого к сложному, каждый об одном;
+       каждый абзац — в одной главе; управление — только жесты и клавиши; длинные главы разбиты */
+    const txt = p => typeof p === "string" ? p : p.desk ? p.x : p.join(" ‖ ");
+    out.order = LAB.guide.sections.map(s => s.t).join(" | ");
+    const paras = [];
+    LAB.guide.sections.forEach(s => (s.ch || []).forEach(c => (c.x || []).forEach(p => paras.push(txt(p)))));
+    LAB.guide.touch.concat(LAB.guide.keys).forEach(c => (c.x || []).forEach(p => paras.push(txt(p))));
+    const seen = {}; out.dups = paras.filter(p => (seen[p] = (seen[p] || 0) + 1) === 2).map(p => p.slice(0, 60));
+    out.ctlClean = !LAB.guide.touch.concat(LAB.guide.keys).some(c => (c.x || []).some(p => /^(Шаги звучат по полу|Враги звучат там, где стоят)/.test(txt(p))));
+    const sound = LAB.guide.chapters.find(c => c.t === "Как звучит комплекс");
+    out.soundCh = !!sound && /Шаги звучат по полу/.test(sound.x.map(txt).join(" ")) && /Враги звучат там, где стоят/.test(sound.x.map(txt).join(" "));
+    out.longCh = LAB.guide.chapters.filter(c => c.x && c.x.map(txt).join(" ").length > 2400).map(c => c.t);
+    out.emptyCh = LAB.guide.chapters.filter(c => !c.when && !c.xf && !(c.x && c.x.length)).map(c => c.t);
+    const titles = LAB.guide.chapters.filter(c => !c.touch).map(c => c.t); out.dupTitles = titles.filter((t, i) => titles.indexOf(t) !== i);
     out.depth1 = sec.ch.filter(c => !c.when || c.when()).some(c => c.t === "Глубины под Ядром");
     /* главы, которые собираются по глубине (xf), — только когда видны: «Облики ОКО» на первом уровне закрыта */
     const all = LAB.guide.chapters.filter(c => c.t !== "Глубины под Ядром").map(c => (c.x || (c.when && !c.when() ? [] : c.xf())).map(p => typeof p === "string" ? p : p.join(" ")).join(" ")).join(" ");
@@ -4845,6 +4859,10 @@ LAB.ui.closeAll();
   });
   ok(gd.root && gd.root[0] === "Первые шаги" && gd.root.indexOf("Справочники: бестиарий, гербарий, оружие, броня") >= 0 && gd.root.indexOf("Что нового?") >= 0 && gd.first.indexOf("С чего начать") === 0, "руководство разложено по разделам (" + (gd.root || []).join(", ") + ")");
   ok(!gd.depth1 && gd.depth25 && gd.d25, "глава о глубинах — только когда вы до них дошли, и в ней лишь пройденные глубины");
+  ok(gd.order === "Первые шаги | Управление | Комплекс и путь вниз | Помещения и находки | Тело и выживание | Развитие героя | Выжившие, торговля и груз | Бой | ОКО | Ремесло | Головоломки и взлом | Настройки и сохранения",
+    "руководство: разделы от простого к сложному, каждый об одном (" + gd.order + ")");
+  ok(gd.dups && !gd.dups.length && gd.ctlClean && gd.soundCh && !gd.dupTitles.length, "руководство: каждый абзац — в одной главе, «Управление» — только жесты и клавиши, звук шагов и врагов — в главе «Как звучит комплекс»" + (gd.dups && gd.dups.length ? "; повторы: " + gd.dups.join(" / ") : "") + (gd.dupTitles && gd.dupTitles.length ? "; одинаковые главы: " + gd.dupTitles.join(", ") : ""));
+  ok(gd.longCh && !gd.longCh.length && gd.emptyCh && !gd.emptyCh.length, "руководство: главы короткие (до 2400 знаков) и не пустые" + (gd.longCh && gd.longCh.length ? "; длинные: " + gd.longCh.join(", ") : "") + (gd.emptyCh && gd.emptyCh.length ? "; пустые: " + gd.emptyCh.join(", ") : ""));
   /* (после 4.6) глав прибавилось: жесты, характеристики, груз и ячейка, мастерство, своё оружие, каркас и дрон — предел поднят с 45 до 56 тысяч знаков */
   ok(gd.spoil && !gd.spoil.length && gd.len < 56000, "в остальных главах нет названий глубин — без спойлеров; руководство короткое (" + gd.len + " знаков" + (gd.spoil && gd.spoil.length ? "; спойлеры: " + gd.spoil.join(", ") : "") + ")");
 
