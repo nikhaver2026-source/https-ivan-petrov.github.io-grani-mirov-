@@ -14,8 +14,8 @@ SR = 48000
 B1 = [1.53512485958697, -2.69169618940638, 1.19839281085285]; A1 = [1.0, -1.69065929318241, 0.73248077421585]
 B2 = [1.0, -2.0, 1.0]; A2 = [1.0, -1.99004745483398, 0.99007225036621]
 # запись → (копия, громкость, LUFS)
-СПИСОК = [("oc/oc_door_open_01.ogg", "oc/oc_door_open_01_y.flac", -11.5),
-          ("oc/oc_door_open_02.ogg", "oc/oc_door_open_02_y.flac", -11.5),
+СПИСОК = [("oc/oc_door_open_01.ogg", "oc/oc_door_open_01_y.flac", -10.5),
+          ("oc/oc_door_open_02.ogg", "oc/oc_door_open_02_y.flac", -10.5),
           ("oc/oc_door_close_01.ogg", "oc/oc_door_close_01_y.flac", -14.0),
           ("oc/oc_door_close_02.ogg", "oc/oc_door_close_02_y.flac", -14.0),
           ("oc/oc_door_unlock_01.ogg", "oc/oc_door_unlock_01_y.flac", -16.0),
