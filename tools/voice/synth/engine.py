@@ -834,6 +834,7 @@ class Синтезатор:
             ч = list(self._лекс[слово])
             # слово в конце отрезка, а сохранённая сборка кончается куском из середины фразы (обрыв на полном голосе,
             # высота идёт вверх): пересобрать с хвостом из слова перед паузой; не вышло — прежняя сборка
+            if self.в.get("хвост_конец") and not прав: ч = self._хвост_из_конца(ч)
             if not (self.в.get("п_финал") and not прав and self.в.get("поток")): return ч
             было = self._цена_хвоста_части(ч[-1])
             if было <= 0.35 * self.в["п_финал"]: return ч
@@ -841,7 +842,7 @@ class Синтезатор:
             return п if п and self._цена_хвоста_части(п[-1]) < было - 0.3 * self.в["п_финал"] else ч
         if self.в.get("поток"):
             п = self._из_потока(слово, лев, прав)
-            if п: return п
+            if п: return self._хвост_из_конца(п) if self.в.get("хвост_конец") and not прав else п
         if self.в.get("дифоны"):
             д = self._из_дифонов(слово)
             if д: return д
@@ -851,6 +852,41 @@ class Синтезатор:
             # меньше частей — меньше стыков; при равенстве — буквенная сборка (проверена дольше)
             if звуки and (not буквы or len(звуки) < len(буквы)): return звуки
         return буквы or (self._из_звуков(слово) if self.в["по_звукам"] else [])
+
+    def _хвост_из_конца(self, части):
+        """Последний гласный слова в конце отрезка. Если кусок-хвост взят из середины фразы и кончается на «глухой
+        согласный + гласный», гласный берётся из такого же конца слова перед точкой, где голос чист и падает (в середине
+        фразы он короткий и идёт вверх — игрок слышит это как призвук на последнем слоге). Шов — в середине глухого
+        согласного: шум к шуму, его не слышно. Остальные куски слова не трогаются."""
+        И = self._указатель()
+        if И is None or not части or getattr(self, "_знак_отрезка", ".") not in _ТОЧКА: return части
+        ri, t0, t1, сн, ск = части[-1][:5]
+        if ск or self._пауза_после(ri, t1, "ч", None): return части
+        Ri, Jj, T0, T1, Sx, wf, f0, mf = И["ri"], И["j"], И["t0"], И["t1"], И["поток"], И["wf"], И["f0"], И["mf"]
+        свои = np.where(Ri == ri)[0]
+        if not len(свои): return части
+        q = next((int(k) for k in свои[::-1] if float(T0[k]) < t1 - 0.01), None)
+        if q is None or not wf[q] or q - 1 < int(свои[0]) or int(Jj[q - 1]) != int(Jj[q]): return части
+        if Sx[q].lower() not in "аиуыэо" or Sx[q - 1].lower() not in "пфктшсхцчщ" or float(T0[q - 1]) <= t0 + 0.02: return части
+        пред = next((float(f0[k]) for k in range(q - 2, max(int(свои[0]) - 1, q - 7), -1) if f0[k] > 0), 0.0)
+        if not hasattr(self, "_вх_по_рj"): self._вх_по_рj = {(r_, j_): o for o, (r_, j_) in enumerate(self.V.occ)}
+        sub = Sx[q - 1] + Sx[q]; p = Sx.find(sub); лучш = None
+        while p >= 0:
+            qq = p + 1; r2 = int(Ri[qq]); j2 = int(Jj[qq])
+            if wf[qq] and r2 != ri and r2 not in self.V.искл_ri and int(Jj[p]) == j2 and int(Ri[p]) == r2 and f0[qq] > 0 and float(T1[qq] - T0[qq]) >= 0.05:
+                ws = self.V.recs[r2]["w"]; o2 = self._вх_по_рj.get((r2, j2)); зн = self.V.знак(o2) if o2 is not None else None
+                конец = j2 == len(ws) - 1 or (зн in _ТОЧКА if зн else ws[j2][4] >= 0.25)
+                if конец and (o2 is None or (self._скрип(o2) < 0.1 and self._слабость(o2) < 0.5)):
+                    c = 0.02 * float(np.linalg.norm(mf[q - 1][1:] - mf[p][1:]))
+                    if пред > 0:
+                        d = 12 * math.log2(float(f0[qq]) / пред); c += 0.15 * abs(d + 4.0) + (3.0 if d > 0.5 else 0.0)   # падение на 2–6 пт; подъём не годится
+                    if лучш is None or c < лучш[0]: лучш = (c, p, qq, r2, j2)
+            p = Sx.find(sub, p + 1)
+        if лучш is None or лучш[0] > float(self.в.get("хвост_конец_порог", 2.5)): return части
+        _, p, qq, r2, j2 = лучш; ws = self.V.recs[r2]["w"]
+        кон = float(T1[qq]) + (min(ws[j2][4], self.в["запас_кон"]) if j2 < len(ws) - 1 else 0.06)
+        return list(части[:-1]) + [(ri, t0, (float(T0[q - 1]) + float(T1[q - 1])) / 2 + 0.006, сн, True),
+                                    (r2, (float(T0[p]) + float(T1[p])) / 2 - 0.006, кон, True, False)]
 
     def _цена_хвоста(self, ri, j):
         """Хвост слова в конце отрезка: подходит ли слово-источник по знаку после него (интонация конца: после точки
