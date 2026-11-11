@@ -201,7 +201,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     X.upNode(f, "arms"); X.upNode(f, "arms"); X.upNode(f, "legs"); X.addPlate(f, "steel"); X.addPlate(f, "ceramic"); X.setMount(f, "turret"); X.setShield(f);
     out.nodes = f.arms === 2 && f.legs === 1 && f.plates.length === 2 && f.sh === "turret" && f.back === "shield";
     out.plateMax = !X.addPlate(f, "steel");
-    G.str = 20;
+    G.str = 20; G.con = 14; /* (после 4.6) каркасу нужны и сила, и телосложение */
     const def0 = g.armorValue();
     X.equip(f);
     out.worn = X.worn() === f && g.armorValue() > def0 && g.armorRes("energy") >= 0.05;

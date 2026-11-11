@@ -362,6 +362,8 @@ function postMenu(o) {
     var way = (g.orders || []).filter(function (q) { return q.st === "way"; });
     if (way.length) items.push({ label: "Заказы в пути: " + way.length, keep: true, fn: function () { say(way.map(function (q) { var m = Math.max(0, q.due - now()); return q.name + " — примерно через " + m + " " + pl(m, "минуту", "минуты", "минут"); }).join(". ") + "."); } });
     items.push({ label: "Продать: сдать в возвратную капсулу", fn: function () { sellMenu({ who: "supply", prof: prof, name: "Скупка пункта снабжения" }, function () { postMenu(o); }); } });
+    /* (после 4.6) своя ячейка хранения в сети снабжения: здесь её и расширяют (load.js) */
+    if (LAB.load) items.push(LAB.load.benchItems("post")[0]);
     items.push({ label: "Как сюда приходят товары", keep: true, fn: function () { var e = era(); say(e.n + ". Профиль этажа — " + P.n + ": " + P.desc + ". " + e.how); } });
     items.push({ label: "Отойти", fn: function () {} });
     return items;

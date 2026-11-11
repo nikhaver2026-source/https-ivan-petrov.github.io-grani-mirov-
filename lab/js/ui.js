@@ -875,7 +875,9 @@ function invItems() {
     /* (3.7, нелогичность) счёт — как в «Кибернетике» (implants.countText): вживлённые, встроенные в «Эхо» сканер
        и эхолокация, чипы — порознь; прежде здесь «Импланты: 2», а там «Имплантов вживлено: 0» */
     { label: "Импланты: " + (LAB.implants && LAB.implants.countText ? LAB.implants.countText() : g.implants.length) + ", образцы: " + Object.keys(g.samples).length, fn: implants },
-    { label: "Кредиты: " + g.credits, info: true, keep: true, fn: function () { say("Кредиты: " + g.credits + ". Тратятся в торговых терминалах и у выживших."); } }
+    { label: "Кредиты: " + g.credits, info: true, keep: true, fn: function () { say("Кредиты: " + g.credits + ". Тратятся в торговых терминалах и у выживших."); } },
+    /* (после 4.6) груз: сколько несёте, предел, что тяжелее всего (load.js) */
+    LAB.load && { label: LAB.load.line() + " Подробнее", info: true, keep: true, fn: function () { LAB.load.status(); } }
   ];
   return items.filter(Boolean);
 }

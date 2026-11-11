@@ -2124,7 +2124,7 @@ function attack(f, seen) {
   /* только что вошли на этаж: враг наводится, но не бьёт */
   if (tickN < graceT) { A("foeSound", f, ranged ? "aim" : "alert"); return; }
   A("foeSound", f, ranged ? "shoot" : "attack");
-  var acc = 0.72 + 0.025 * iqOf(f) + (aff(f, "sniper") ? 0.12 : 0) - (LAB.heroStat("agi") - 10) * 0.01 - (g.st.haste > 0 ? 0.12 : 0) - (ranged ? 0.015 * d : 0) + (diff().acc || 0);
+  var acc = 0.72 + 0.025 * iqOf(f) + (aff(f, "sniper") ? 0.12 : 0) - (LAB.heroStat("agi") - 10) * 0.01 - (g.st.haste > 0 ? 0.12 : 0) - (ranged ? 0.015 * d : 0) + (diff().acc || 0) + (LAB.load ? LAB.load.dodgePen() : 0); /* (после 4.6) с перегрузом не увернуться */
   /* (3.7, нелогичность) залп по площади (splash): «Экран» отводит снаряд, но не разрыв рядом, и промах
      тоже задевает (splashNear) */
   var spl = has(f, "splash");
@@ -2472,7 +2472,7 @@ function wf(w, k) { if (w && w[k] != null) return w[k]; var b = w && LAB.WEAPONS
 function foeAtCell(x, y) { for (var i = 0; i < foes.length; i++) if (!foes[i].dead && !foes[i].burrowed && foes[i].x === x && foes[i].y === y) return foes[i]; return null; }
 function shoot(w, f, perp, along, burst, melee) {
   var g = G();
-  var acc = (melee ? 0.92 : 0.9) - 0.13 * perp - 0.012 * along + (LAB.heroStat("agi") - 10) * 0.01 + (w.spread ? 0.08 * perp : 0) - (burst ? 0.1 : 0) - (gm().aimPenalty ? gm().aimPenalty() : 0) + (LAB.workshop ? LAB.workshop.accBonus(w, burst) : 0);
+  var acc = (melee ? 0.92 : 0.9) - 0.13 * perp - 0.012 * along + (LAB.heroStat("agi") - 10) * 0.01 + (w.spread ? 0.08 * perp : 0) - (burst ? 0.1 : 0) - (gm().aimPenalty ? gm().aimPenalty() : 0) + (LAB.workshop ? LAB.workshop.accBonus(w, burst) : 0) - (LAB.load ? LAB.load.accPen(w) : 0); /* (после 4.6) перегруз и тяжёлое для рук оружие */
   /* умный робот уходит с линии огня */
   var iq = iqOf(f);
   if (!melee && f.kind === "mech" && iq >= 5 && !has(f, "stationary") && f.frozen <= 0) {
@@ -2735,6 +2735,7 @@ function kill(f, quiet) {
     if (LAB.workshop) LAB.workshop.drops(f, drops, r, dk);
     if (LAB.chem) LAB.chem.drops(f, drops, r, dk); /* (3.0) сырьё химии: ткани тварей, жидкости машин */
     if (LAB.forge) LAB.forge.drops(f, drops, r, dk); /* (после 4.6) блок управления машины, нейроядро и биоядро — с сильных */
+    if (LAB.load) LAB.load.drops(f, drops, r, dk); /* (после 4.6) ключ-карта складской ячейки — с машин ОКО */
     if (carrier(f) && r() < crP() * sk) drops.push({ kind: "credits", n: LAB.credits(4 + r() * 12, L, g.F) }); /* (3.7) кредиты — у машин и людей */
     /* служебный ключ ОКО: у начальника смены, изредка — у стража поста */
     if (f.kind === "mech" && (has(f, "commander") ? r() < 0.45 * dk : f.guard && LAB.depth(L, g.F) >= 6 && r() < 0.08 * dk)) drops.push({ kind: "item", item: "okokey", n: 1 });

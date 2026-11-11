@@ -41,9 +41,11 @@ var MODS = {
   gun: { n: "ствол", need: { scrap: 2, magnet: 1, cap: 1 }, d: "сам стреляет по врагам рядом: бьёт слабо, но отвлекает" },
   arm: { n: "манипулятор", need: { servo: 1, scrap: 2 }, d: "вне боя понемногу чинит оружие, броню и каркас" },
   screen: { n: "экран", need: { panel: 2, ceramic: 1 }, d: "принимает на себя четверть урона по вам" },
+  /* (после 4.6) груз: load.js, capOf("drone") */
+  cargo: { n: "грузовой захват", need: { servo: 1, magnet: 1, scrap: 2 }, d: "несёт часть груза: предел плюс двенадцать килограммов, пока дрон в воздухе" },
   nerve: { n: "нервный узел Нижних", need: { dp_nerve: 1 }, tier: 6, d: "лишнее гнездо для модуля" }
 };
-var MOD_ORDER = ["sensor", "zapper", "gun", "arm", "screen", "nerve"];
+var MOD_ORDER = ["sensor", "zapper", "gun", "arm", "screen", "cargo", "nerve"];
 var NAMES = ["Жук", "Шмель", "Сверчок", "Стриж", "Светлячок", "Комар", "Овод", "Чиж"];
 
 function D() { var g = G(); return g.drone || null; }
@@ -267,6 +269,7 @@ function pack(v) {
   var d = D(); if (!d) { say("Дрона нет."); return false; }
   if (d.wreck) { say("Дрон сбит."); return false; }
   d.out = v ? 1 : 0;
+  if (LAB.load) setTimeout(function () { LAB.safe(function () { LAB.load.after(); }); }, 0); /* (после 4.6) свёрнутый дрон — в рюкзаке, захват не держит груз */
   snd(v ? "drone_up" : "drone_ok", v ? "power_on" : "ui_close");
   say(v ? cap1(name()) + " снова в воздухе." : cap1(name()) + " свёрнут: молчит и ничего не тратит.");
   return true;

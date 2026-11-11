@@ -1413,6 +1413,7 @@ function rootItems(b) {
   /* (после 4.6) мастерство: режим работы, ступени, испытание и изучение; инженерное дело — своё оружие, ядра, каркас, дрон */
   if (LAB.mastery) items = items.concat(LAB.mastery.benchItems(b, et));
   if (LAB.forge) items = items.concat(LAB.forge.benchItems(b, et));
+  if (LAB.load) items = items.concat(LAB.load.benchItems("bench")); /* (после 4.6) ячейка хранения */
   if (spareMods().length) items.push({ label: "Установить модуль в оружие: в запасе " + spareMods().reduce(function (a, k) { return a + g.inv[MODS[k].item]; }, 0), fn: pickModule });
   if (g.weapons.some(function (w) { return used(w) > 0; })) items.push({ label: "Снять модуль с оружия", fn: unModMenu });
   items.push({ label: "Ремонт оружия" + (g.weapons.some(function (w) { return cond(w) < 100; }) ? ": есть изношенное" : ""), fn: repairMenu });

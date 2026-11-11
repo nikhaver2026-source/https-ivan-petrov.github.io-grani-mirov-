@@ -780,8 +780,9 @@ function bodyMinutes(min, asleep) {
   var mk = (1 - (LAB.implants ? LAB.implants.stat("metab") : 0)) * (LAB.dk().body || 1); /* (2.0) чип метаболизма; (2.2) режим сложности */
   b.food -= min / HUNGER_MIN * mk;
   /* выспались в капсуле (восемь часов и больше) — бодрость какое-то время падает вдвое медленнее */
-  b.wake -= min / 12 * (G.st.restedMin > 0 ? 0.5 : 1) * mk * (LAB.stats ? LAB.stats.K.wake() : 1); /* (после 4.6) телосложение и выносливость */
+  b.wake -= min / 12 * (G.st.restedMin > 0 ? 0.5 : 1) * mk * (LAB.stats ? LAB.stats.K.wake() : 1) * (LAB.load ? LAB.load.wakeK() : 1); /* (после 4.6) телосложение и выносливость; перегруз утомляет */
   if (LAB.stats) LAB.stats.minutes(min); /* (после 4.6) регенерация: вне боя здоровье возвращается само */
+  if (LAB.load) LAB.load.minutes(); /* (после 4.6) кончилась аренда соседней ячейки — сказать */
   if (G.st.restedMin > 0) G.st.restedMin = Math.max(0, G.st.restedMin - min);
   if (b.tox > 0) b.tox -= min / (b.food >= 50 ? 4 : 6);
   if (b.rad > 0) b.rad -= min / 180; /* радионуклиды выводятся сами очень медленно */
@@ -1045,6 +1046,8 @@ function giveItem(it, quiet) {
       break;
   }
   if (!quiet) { A("pickup", itemKind(it)); if (it.kind !== "note") tutor("pickup"); }
+  /* (после 4.6) груз: ступень сменилась — сказать после слов о находке (load.js) */
+  if (LAB.load) setTimeout(function () { LAB.safe(function () { LAB.load.after(); }); }, 0);
   return phrase + (/[.!?…]$/.test(phrase) ? "" : ".") + extra;
 }
 game.giveItem = giveItem;
@@ -1053,13 +1056,18 @@ game.giveItem = giveItem;
 function autoPickup() {
   var here = itemsAt(G.x, G.y);
   if (!here.length) return;
-  var parts = [], notes = [];
+  var parts = [], notes = [], refused = [];
   here.forEach(function (it) {
+    /* (после 4.6) груз: то, с чем не сдвинуться, остаётся на полу (load.js) */
+    var wt = LAB.load ? LAB.load.floorWt(it) : 0;
+    if (wt > 0.05 && !LAB.load.canTake(wt)) { refused.push({ it: it, w: wt }); return; }
     CUR.fs.taken[it.id] = 1;
     parts.push(giveItem(it));
     if (it.kind === "note") notes.push(it);
     if (it.kind === "weapon" && !G.tut.wpnPick) G.tut.wpnPick = 1;
   });
+  if (refused.length) { A("play", LAB.SND && LAB.SND.pack_heavy ? "pack_heavy" : "ui_error"); say(LAB.load.refuseText(refused[0].it, refused[0].w) + (refused.length > 1 ? " Тяжёлого на полу ещё: " + (refused.length - 1) + "." : "") + " Сбросьте лишнее или оставьте его в ячейке хранения у капсулы и верстака.", { interrupt: false }); }
+  if (!parts.length) return;
   say("Подобрано: " + parts.join(" "), { interrupt: false });
   LAB.vib(15);
   /* Записка открывается окном: мир ждёт, текст дочитывается до конца. */
@@ -1083,7 +1091,9 @@ function tryMove(dir, run) {
   if (!game.entered || game.paused || G.done) return false;
   if (LAB.ui && LAB.ui.layer()) return false;
   var now = Date.now();
-  var minGap = run ? Math.round(180 * (LAB.exo ? LAB.exo.runGapK() : 1)) : 0; /* (после 4.6) приводы ног каркаса */
+  /* (после 4.6) груз: неподъёмный — ни шагу; перегруз — шаг реже (load.js) */
+  if (LAB.load && !LAB.load.canMove()) return false;
+  var minGap = run ? Math.round(180 * (LAB.exo ? LAB.exo.runGapK() : 1) * (LAB.load ? LAB.load.gapK() : 1)) : (LAB.load ? LAB.load.stepGap() : 0); /* (после 4.6) приводы ног каркаса */
   if (G.st.slow > 0) minGap = Math.max(minGap, 420);
   if (now - lastMove < minGap) return false;
   if (G.st.web > 0) { A("play", "web_stuck"); sayq("Вы в паутине. Рвёте её..."); G.st.web = Math.max(0, G.st.web - 1); return false; }
@@ -1156,7 +1166,7 @@ function tryMove(dir, run) {
   G.x = nx; G.y = ny;
   G.stats.steps++;
   if (LAB.stats) LAB.stats.step(); /* (после 4.6) выносливость; с тяжёлым грузом — сила и телосложение */
-  var loud = (armorSpecial("strength") ? 2 : 0) + (LAB.exo ? LAB.exo.stepNoise(run) : 0), quiet = armorSpecial("stealth"); /* (после 4.6) тяжёлый каркас громче, лёгкий на беге тише */
+  var loud = (armorSpecial("strength") ? 2 : 0) + (LAB.exo ? LAB.exo.stepNoise(run) : 0) + (LAB.load ? LAB.load.noise() : 0), quiet = armorSpecial("stealth"); /* (после 4.6) перегруз громче */ /* (после 4.6) тяжёлый каркас громче, лёгкий на беге тише */
   G.noise = Math.max(G.noise, Math.round(((run ? 6 : 3) + loud) * (quiet ? 0.5 : 1)));
   if (LAB.exo) LAB.exo.onStep(run); /* (после 4.6) приводы едят заряд аккумулятора */
   advanceTime(run ? 0.6 : 1);
@@ -3600,6 +3610,7 @@ function useItem(id) {
   if (!d || !(G.inv[id] > 0)) { say("Нет: " + (d ? d.n : id) + "."); return false; }
   if (LAB.deepSys && LAB.deepSys.useSpecial(id, d)) return false; /* (после 4.1) страховочная сбруя — у ствола среза */
   if (LAB.repair && LAB.repair.isKit(id)) return LAB.repair.use(id); /* (2.0) походные ремкомплекты */
+  if (id === "lockcard" && LAB.load) return LAB.load.useCard(); /* (после 4.6) ключ-карта складской ячейки */
   if (d.kind === "implant" && LAB.implants) return LAB.implants.useChip(id); /* (2.0) чип импланта — вживить */
   if (d.kind === "trap" && LAB.traps) return LAB.traps.use(id);
   if (d.chem && LAB.chem) return LAB.chem.use(id); /* (3.0) составы химии: смазки, капсулы, мази, культуры, приманка */
@@ -3756,6 +3767,7 @@ function dropItem(id, cnt) {
   fs.drops.push(it);
   A("dropLoot", c[0], c[1]);
   say("На полу" + (c[0] === G.x && c[1] === G.y ? " у ваших ног" : " " + relDir(c[0], c[1])) + ": " + d.n.charAt(0).toLowerCase() + d.n.slice(1) + (n > 1 ? ", " + n + " шт." : ".") + " Поднять — отойти и снова наступить." + (G.inv[id] ? " В рюкзаке ещё " + G.inv[id] + "." : ""));
+  if (LAB.load) LAB.load.after(); /* (после 4.6) груз легче — ступень сказать */
   turns(1, "");
   UIx("refresh");
   autosaveSoon();
@@ -3847,7 +3859,7 @@ function toggleDraw() {
   G.drawn = !G.drawn;
   A("play", G.drawn ? "w_draw" : "w_holster");
   LAB.vib(G.drawn ? [20, 30, 20] : 15);
-  if (G.drawn) say("Оружие наготове: " + weaponLine(w) + "." + ammoTail(w) + (G.tut.draw || !hintsOn() ? "" : LAB.K((w.rng <= 1 ? " Свайп одним пальцем — удар в ту сторону, свайп с удержанием — серия ударов." : " Свайп одним пальцем — выстрел в ту сторону, свайп с удержанием — очередь.") + " Ходить — уберите оружие тем же касанием тремя пальцами.",
+  if (G.drawn) say("Оружие наготове: " + weaponLine(w) + "." + ammoTail(w) + (LAB.load ? LAB.load.handNote(w) : "") + (G.tut.draw || !hintsOn() ? "" : LAB.K((w.rng <= 1 ? " Свайп одним пальцем — удар в ту сторону, свайп с удержанием — серия ударов." : " Свайп одним пальцем — выстрел в ту сторону, свайп с удержанием — очередь.") + " Ходить — уберите оружие тем же касанием тремя пальцами.",
     (w.rng <= 1 ? " Стрелки — удар в ту сторону, удержание стрелки — серия ударов." : " Стрелки — выстрел в ту сторону, удержание стрелки — очередь.") + " Ходить можно и с оружием: W A S D. Убрать оружие — снова R.")));
   else say("Оружие убрано. " + LAB.K("Свайп — шаг.", "W A S D — шаг, R — достать оружие."));
   G.tut.draw = 1;
@@ -3910,7 +3922,7 @@ function equipWeapon(i) {
   var was = G.wi;
   G.wi = i;
   A("play", "w_switch");
-  say("В руках: " + weaponLine(curWeapon()) + "." + ammoTail(curWeapon()));
+  say("В руках: " + weaponLine(curWeapon()) + "." + ammoTail(curWeapon()) + (LAB.load ? LAB.load.handNote(curWeapon()) : ""));
   UIx("refresh");
   if (was !== i) turns(1, "switch"); /* (2.6) пошаговый режим: ход */
 }
@@ -4195,6 +4207,8 @@ function loadSlot(n, fromBak) {
     var movedFrom = G.relocFrom || 0; /* (3.7) с какого выпуска мира: что именно изменилось */
     G.relocate = false; delete G.relocFrom;
     enterFloor(G.L, G.F, how, true);
+    /* (после 4.6) у вещей появился вес: запись прежней версии не должна встать как вкопанная (load.js, init) */
+    if (LAB.load) LAB.load.init(true);
   } catch (e) {
     console.warn(e);
     game.loading = false;
@@ -4377,6 +4391,7 @@ function newGame() {
   applyVoice(); /* (голос ОКО) голос, выбранный в начале игры (ui.js, okoAsk), — в её запись */
   if (Q()) Q().reset();
   G.wakeSafe = 1; /* (2.1) безопасное пробуждение: в капсульном отсеке никто не тронет (combat.js) */
+  G.loadInit = 1; if (LAB.load) LAB.load.reset(); /* (после 4.6) груз считается с начала игры */
   game.session++; game.paused = false; game.descending = false;
   if (LAB.office && LAB.office.clear) LAB.office.clear();
   freshSession();
@@ -4416,6 +4431,7 @@ function characterText() {
   lines.push("Энергия имплантов " + G.en + " из " + G.enMax + ". Уровень героя " + G.lvl + ", опыт " + G.xp + " из " + LAB.xpNeed(G.lvl) + ". " + (LAB.stats ? LAB.stats.charLine() : "Сила " + statTxt("str") + ", ловкость " + statTxt("agi") + ", интеллект " + statTxt("mind") + ", харизма " + statTxt("cha") + ".") + " Кредиты " + G.credits + ".");
   if (LAB.chem) lines.push(LAB.chem.line()); /* (3.0) ступени химии */
   if (LAB.traps && LAB.traps.stageCap && LAB.traps.stageCap() > 0 && LAB.traps.skillText) lines.push(LAB.traps.skillText()); /* (после 4.1) ловушечное дело — ниже Истока */
+  if (LAB.load) lines.push(LAB.load.line()); /* (после 4.6) груз */
   if (LAB.mastery) { var mln = LAB.mastery.charLine(); if (mln) lines.push(mln); } /* (после 4.6) мастерство */
   if (LAB.exo) { var xln = LAB.exo.charLine(); if (xln) lines.push(xln); } /* (после 4.6) экзокаркас */
   if (LAB.drone) { var dln = LAB.drone.charLine(); if (dln) lines.push(dln); } /* (после 4.6) дрон-спутник */

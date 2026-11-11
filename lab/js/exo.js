@@ -86,7 +86,7 @@ function drain(n, test) {
 function lowWarn(f, e0) {
   var cp = capOf(f);
   if (e0 > cp * 0.15 && f.en <= cp * 0.15 && f.en > 0) { snd("exo_low", "w_power_low"); sayq("Аккумулятор каркаса почти пуст."); }
-  if (e0 > 0 && f.en <= 0) { snd("exo_low", "w_power_low"); sayq("Аккумулятор каркаса сел: приводы встали, каркас теперь просто груз. Подзарядите энергобатареей или у капсулы."); }
+  if (e0 > 0 && f.en <= 0) { snd("exo_low", "w_power_low"); sayq("Аккумулятор каркаса сел: приводы встали, каркас теперь просто груз. Подзарядите энергобатареей или у капсулы."); if (LAB.load) LAB.load.after(); }
 }
 /* шаг: приводы едят заряд; шум и темп бега */
 function onStep(run) {
@@ -198,14 +198,16 @@ function equip(f) {
   snd("exo_on", "armor_on");
   var c = clsOf(f), warn = strOk(f) ? "" : " " + lackText(f).charAt(0).toUpperCase() + lackText(f).slice(1) + " — аккумулятор садится быстрее, прибавки вдвое меньше.";
   say("Каркас надет: " + line(f) + "." + warn);
+  if (LAB.load) LAB.load.after(); /* (после 4.6) заряженный каркас несёт себя и часть груза */
   if (gm().UIx) gm().UIx("refresh");
   return true;
 }
 function unequip() {
-  var g = G();
+  var g = G(), f0 = worn();
   if (!g.exoOn) { say("Каркаса на вас нет."); return false; }
   if (LAB.combat && LAB.combat.danger && LAB.combat.danger()) { say("Вылезать из каркаса в бою нельзя."); return false; }
-  g.exoOn = null; snd("exo_off", "armor_off"); say("Каркас снят.");
+  g.exoOn = null; snd("exo_off", "armor_off"); say("Каркас снят." + (LAB.load ? " Теперь он — груз: " + LAB.load.kg(LAB.load.frameWt(f0)) + "." : ""));
+  if (LAB.load) LAB.load.after();
   return true;
 }
 function chargeBat(f) {

@@ -189,6 +189,8 @@ jobs:
           NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/engineer.test.js
           # (после 4.6) жесты: тройные касания, удержания, переназначение в настройках
           NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/gestures.test.js
+          # (после 4.6) характеристики героя, груз и ячейка хранения
+          NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/hero.test.js
 
       - name: Gradle
         uses: gradle/actions/setup-gradle@v4

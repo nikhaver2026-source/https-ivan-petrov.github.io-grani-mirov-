@@ -138,6 +138,7 @@ function raise(k, n) {
   var v0 = base(k), v1 = Math.min(capOf(k), v0 + n);
   g[k] = v1;
   if (k === "con" && v1 > v0) { g.hpMax += 5 * (v1 - v0); g.hp = Math.min(g.hpMax, g.hp + 5 * (v1 - v0)); }
+  if (LAB.load && (k === "str" || k === "con" || k === "stam")) setTimeout(function () { LAB.safe(function () { LAB.load.after(); }); }, 0); /* предел груза вырос */
   UIx("refresh");
 }
 /* Дела героя (ach.ev и прочие): что они тренируют. */

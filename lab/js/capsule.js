@@ -182,6 +182,8 @@ function menuItems() {
     if (why) { LAB.UI.error(); say(why); return; }
     var part = lie(o); A("play", "capsule_hum", { gain: 0.5 }); say("Вы лежите, слушая ровный гул капсулы. Прошло полчаса. " + (part ? "Вы отдыхали недавно: полежать помогло лишь на " + part + " процентов. " : "") + statusLine()); } });
   items.push({ label: "Состояние тела", keep: true, fn: function () { gm().bodyStatus(); } });
+  /* (после 4.6) своя ячейка хранения — у любой капсулы и верстака (load.js) */
+  if (LAB.load) items.push(LAB.load.benchItems("capsule")[0]);
   if (o && boundHere(o)) items.push({ label: "Вы привязаны к этой капсуле: если погибнете, вернётесь сюда", info: true, keep: true, fn: function () { say("Вы привязаны к этой капсуле. Погибнете на этом уровне — «Эхо» вернёт вас сюда. Привязка к другой капсуле снимет эту."); } });
   items.push({ label: "Откинуть крышку и выйти", fn: function () { leave(false); } });
   return items;
