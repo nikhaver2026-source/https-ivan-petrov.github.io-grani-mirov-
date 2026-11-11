@@ -203,7 +203,7 @@ function hurt(n) {
   var d = D(); if (!d || d.wreck) return;
   d.hp = Math.max(0, d.hp - n);
   snd("drone_hit", "shield_hit_foe", { gain: 0.5 });
-  if (d.hp <= 0) { d.wreck = 1; snd("drone_down", "drone_death"); sayq(cap1(name()) + " сбит. Блок управления цел — дрона можно починить у верстака."); }
+  if (d.hp <= 0) { d.wreck = 1; snd("drone_down", "drone_death"); sayq(cap1(name()) + " сбит. Блок управления цел — дрона можно починить у верстака."); if (LAB.load) setTimeout(function () { LAB.safe(function () { LAB.load.after(); }); }, 0); /* (после 4.6) сбитый — в рюкзаке, и грузовой захват больше не держит */ }
   else if (d.hp <= d.hpMax * 0.3) sayOnce("dronelow", cap1(name()) + " повреждён: " + d.hp + " из " + d.hpMax + ".", 15000);
 }
 /* Удар по герою: экран берёт четверть на себя. */

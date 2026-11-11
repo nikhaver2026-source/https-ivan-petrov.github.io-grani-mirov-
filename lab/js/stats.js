@@ -57,7 +57,7 @@ var TH = {
   agi: [[15, "в тщательной работе брак — заметно реже"], [20, "энергоклинок как влитой: урон им плюс пятнадцать процентов"]],
   con: [[11, "средний экзокаркас — по костям"], [13, "тяжёлый экзокаркас — по костям: кости держат его вес и рывки приводов"], [20, "яды и токсины берут заметно слабее"]],
   mind: [[15, "нейроприцел для своего оружия"], [16, "взлом короче на один сигнал"], [24, "взлом короче ещё на один сигнал"], [25, "дрон держит ещё один модуль"]],
-  cha: [[15, "выжившие доверяют: награды за поручения больше"], [25, "торговцы уступают охотнее: цены лучше"]]
+  cha: [[15, "выжившие доверяют: награды за поручения больше"], [20, "кладовщики снабжения находят в ячейке хранения два лишних места"], [25, "торговцы уступают охотнее: цены лучше"], [30, "в ячейке хранения ещё два места — всего четыре лишних"]]
 };
 function thNext(k) { var v = base(k); var t = (TH[k] || []).filter(function (x) { return x[0] > v; })[0]; return t ? cap1(NAME[k]) + " " + t[0] + ": " + t[1] + "." : ""; }
 function thCross(k, v0, v1) { return (TH[k] || []).filter(function (x) { return x[0] > v0 && x[0] <= v1; }).map(function (x) { return cap1(NAME[k]) + " " + x[0] + ": " + x[1] + "."; }).join(" "); }
@@ -97,7 +97,7 @@ function effects(k) {
     if (L) out.push("груз плюс " + L.kg(L.capOf("con")));
   }
   if (k === "mind") out.push(K.xp() > 1 ? "опыт мастерства плюс " + pw(pct(K.xp() - 1)) : "опыт мастерства обычный", "нейроприцел — с 15", "взлом короче с 16 и с 24", "лишнее гнездо дрона — с 25");
-  if (k === "cha") out.push(K.buy() ? "покупка дешевле на " + pw(K.buy() * 100) + ", продажа дороже на " + pw(K.sell() * 100) : "цены без уступок", K.quest() > 1 ? "награды за поручения больше на " + pw(pct(K.quest() - 1)) : "награды за поручения — как обещано");
+  if (k === "cha") out.push(K.buy() ? "у людей покупка дешевле на " + pw(K.buy() * 100) + ", продажа дороже на " + pw(K.sell() * 100) : "цены без уступок", K.quest() > 1 ? "награды за поручения больше на " + pw(pct(K.quest() - 1)) : "награды за поручения — как обещано", base("cha") >= 30 ? "в ячейке хранения четыре лишних места" : base("cha") >= 20 ? "в ячейке хранения два лишних места" : "");
   if (k === "stam") { out.push(sec("stam") ? "усталость медленнее на " + pw(Math.min(30, sec("stam"))) : "пока ничего: растёт от шагов"); if (L && sec("stam")) out.push("груз плюс " + L.kg(L.capOf("stam")) + ", перегруз меньше замедляет"); }
   if (k === "ment") out.push(sec("ment") ? "нейронагрузка копится медленнее на " + pw(pct(1 - K.neuro())) : "пока ничего: растёт от пережитой нейронагрузки");
   if (k === "regen") out.push(sec("regen") ? "лечение сильнее на " + pw(pct(K.heal() - 1)) + "; вне боя здоровье возвращается само: " + Math.round(K.regen() * 60) + " в час" : "пока ничего: растёт от лечения и отдыха");
@@ -143,7 +143,6 @@ function raise(k, n) {
 }
 /* Дела героя (ach.ev и прочие): что они тренируют. */
 var DEEDS = {
-  kill_mech: [["mind", 0.5]], boss: [["con", 4], ["str", 2], ["agi", 2]],
   grenade: [["agi", 1]], trap_set: [["agi", 1]], trap_kill: [["mind", 1]], trap_mech: [["mind", 1]], disarm: [["agi", 3]], self_trap: [["con", 2]], ctrap: [["con", 1]],
   craft: [["agi", 1], ["mind", 1]], handmade: [["agi", 1], ["mind", 1]], discover: [["mind", 3]], research: [["mind", 3]], reveal: [["mind", 1]],
   repair: [["agi", 1], ["mind", 1]], salvage: [["str", 1]], film_dev: [["mind", 1]], tissue: [["mind", 1]],
@@ -160,16 +159,24 @@ var DEEDS = {
   mini_hack: [["mind", 3]], mini_code: [["mind", 1]], mini_bulls: [["mind", 2]], mini_sort: [["mind", 2]], mini_relays: [["mind", 2]],
   mini_rhythm: [["agi", 2]], mini_sync: [["agi", 2]], mini_tune: [["agi", 1], ["mind", 1]], mini_melody: [["cha", 1], ["mind", 1]]
 };
-function deed(name) {
+/* (после 4.6, нелогичность) убийство — практика только тому, кто убил сам: ach.ev("kill") приходит и за
+   добычу дрона, турели, ловушки и союзника; герою засчитывает combat.js (deed "herokill" с самой целью).
+   Торговля — по сумме сделки: полсотни кредитов — полединицы; мелочь из автомата почти ничего не даёт */
+function deed(name, n) {
   if (!LAB.game || !gm().entered || !S()) return;
-  if (name === "kill") {
-    var w = gm().curWeapon ? gm().curWeapon() : null, W = LAB.workshop;
+  if (name === "kill" || name === "kill_mech" || name === "boss") return;
+  if (name === "herokill") {
+    var f = n || {}, w = gm().curWeapon ? gm().curWeapon() : null, W = LAB.workshop;
     var melee = w && (W && W.melee ? W.melee(w) : w.rng <= 1);
     practice(melee ? "str" : "agi", melee ? 2 : 1.5);
+    if (f.kind === "mech") practice("mind", 0.5);
+    if (f.boss) { practice("con", 4); practice("str", 2); practice("agi", 2); }
     return;
   }
   var d = DEEDS[name];
-  if (d) d.forEach(function (p) { practice(p[0], p[1]); });
+  if (!d) return;
+  var k = (name === "bought" || name === "sold") ? Math.max(0.05, Math.min(3, (+n || 0) / 50)) : 1;
+  d.forEach(function (p) { practice(p[0], p[1] * k); });
 }
 /* шаг: выносливость; с тяжёлым грузом — ещё сила и телосложение */
 function step() {

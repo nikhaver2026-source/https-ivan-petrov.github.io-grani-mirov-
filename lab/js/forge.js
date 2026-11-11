@@ -372,10 +372,12 @@ function build(fam, opts) {
   if (m && !m.first["own:" + fam]) { m.first["own:" + fam] = 1; xp *= 3; }
   if (MS()) MS().gain("design", xp);
   var firstAll = m && !m.first.own;
+  var mind0 = LAB.stats ? LAB.stats.base("mind") : (g.mind || 10);
   if (firstAll) { m.first.own = 1; if (LAB.stats) LAB.stats.raise("mind", 1); else if (g.mind < 40) g.mind++; }
+  var mindUp = firstAll && (LAB.stats ? LAB.stats.base("mind") : (g.mind || 10)) > mind0; /* на пределе — без слов о прибавке */
   if (LAB.ach) LAB.ach.ev("craft", 1);
   snd("work_weld", "craft"); if (gm().later) gm().later(function () { snd("work_ratchet", "craft_armor"); }, 900);
-  var msg = "Своя конструкция собрана за " + mins + " " + plural(mins, "минуту", "минуты", "минут") + ": " + statText(fam, d, w) + "." + (q > 2 ? " Вышло лучше обычного: " + LAB.QUAL[BASES[fm.base].g][q].toLowerCase() + " качество." : "") + (firstAll ? " Первая своя конструкция: разум плюс один." : "") + (w.cap ? " Магазин пуст — перезарядите." : "");
+  var msg = "Своя конструкция собрана за " + mins + " " + plural(mins, "минуту", "минуты", "минут") + ": " + statText(fam, d, w) + "." + (q > 2 ? " Вышло лучше обычного: " + LAB.QUAL[BASES[fm.base].g][q].toLowerCase() + " качество." : "") + (mindUp ? " Первая своя конструкция: интеллект плюс один." : "") + (w.cap ? " Магазин пуст — перезарядите." : "");
   if (opts.name != null) { w.own.nm = opts.name; rename(w); give(w); say(msg); return w; }
   nameMenu(w, msg);
   return w;
@@ -739,7 +741,7 @@ function engMenu(et) {
 }
 /* Строка и окно в инвентаре: инженерные вещи, каркас, дрон. */
 function invLine() {
-  var g = G(), n = 0; for (var k in ITEMS) n += g.inv[k] || 0;
+  var g = G(), n = (g.inv.lockcard || 0); for (var k in ITEMS) n += g.inv[k] || 0; /* (после 4.6) и ключ-карта ячейки */
   var parts = [];
   if (LAB.exo && LAB.exo.worn()) parts.push("каркас надет"); else if (LAB.exo && LAB.exo.frames().length) parts.push("каркасов " + LAB.exo.frames().length);
   if (LAB.drone && LAB.drone.has()) parts.push(LAB.drone.short());
@@ -751,6 +753,8 @@ function invItems() {
   if (LAB.exo) items = items.concat(LAB.exo.invItems());
   if (LAB.drone) items = items.concat(LAB.drone.invItems());
   for (var k in ITEMS) if ((g.inv[k] || 0) > 0) (function (id) { items.push({ label: ITEMS[id].n + ": " + g.inv[id] + ". " + ITEMS[id].desc, info: true, keep: true, fn: function () {} }); })(k);
+  /* (после 4.6) ключ-карта складской ячейки (load.js): применяется отсюда и из окна ячейки хранения */
+  if ((g.inv.lockcard || 0) > 0 && LAB.load && LAB.load.useCard) items.push({ label: "Ключ-карта складской ячейки: " + g.inv.lockcard + ". Присоединить ячейку выбывшего сотрудника к вашей", keep: true, fn: function () { LAB.load.useCard(); } });
   if (!items.length) items.push({ label: "Пусто. Каркас и дрон собирают у верстака; блок управления, ядра — добыча с сильных машин и тварей.", info: true, keep: true, fn: function () {} });
   items.push({ label: "Назад", fn: function () { if (LAB.ui.inventory) LAB.ui.inventory(); } });
   return items;

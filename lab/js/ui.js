@@ -912,12 +912,13 @@ function dropItems() {
   var groups = gm().dropGroups ? gm().dropGroups() : [];
   groups = groups.filter(function (gr) { return gr.max > 0; }).concat(groups.filter(function (gr) { return !gr.max; }));
   var items = groups.map(function (gr) {
-    var id = "drop:" + gr.kind + ":" + gr.key, item = gr.kind === "item", name = cap1(gr.label);
-    if (!gr.max) return { id: id, label: name + (item || gr.n > 1 ? ": " + gr.n : "") + ". Нельзя: " + gr.why, keep: true, fn: function () { LAB.UI.error(); say(item ? gr.why : cap1(gr.why) + "."); } };
+    /* (после 4.6) вес — в конце строки: «сбросьте три кило» должно быть из чего выбрать */
+    var id = "drop:" + gr.kind + ":" + gr.key, item = gr.kind === "item", name = cap1(gr.label), wt = gr.wt && LAB.load ? ", " + (gr.n > 1 ? "по " + LAB.load.kg(gr.wt) + " за штуку" : LAB.load.kg(gr.wt)) : "";
+    if (!gr.max) return { id: id, label: name + (item || gr.n > 1 ? ": " + gr.n : "") + wt + ". Нельзя: " + gr.why, keep: true, fn: function () { LAB.UI.error(); say(item ? gr.why : cap1(gr.why) + "."); } };
     var rest = gr.n > gr.max ? (item ? " (в рюкзаке " + gr.n + ", начатый остаётся)" : " (всего " + gr.n + ")") : "";
-    if (gr.max === 1) return { id: id, label: name + (item ? ": " + gr.n : "") + rest, keep: true, fn: function () { gm().dropGroup(gr.kind, gr.key, 1); } };
+    if (gr.max === 1) return { id: id, label: name + (item ? ": " + gr.n : "") + rest + wt, keep: true, fn: function () { gm().dropGroup(gr.kind, gr.key, 1); } };
     return {
-      id: id, kind: "slider", label: name + rest, min: 1, max: gr.max, step: 1, steps: dropSteps(gr.max), keep: true,
+      id: id, kind: "slider", label: name + rest + wt, min: 1, max: gr.max, step: 1, steps: dropSteps(gr.max), keep: true,
       get: function () { return Math.max(1, Math.min(gr.max, dropPick[id] || 1)); },
       set: function (v) { dropPick[id] = v; },
       fmt: function (v) { return "выбросить " + v + " из " + gr.max; },
@@ -950,6 +951,8 @@ function weaponItems(id) {
   var d = LAB.WEAPONS[w.base];
   return [
     { label: i === g.wi ? "Уже в руках" : "Взять в руки", fn: function () { gm().equipWeapon(i); } },
+    /* (после 4.6) вес и нужная сила — до того, как взять в руки */
+    LAB.load ? { label: LAB.load.weaponLine(w), info: true, keep: true, fn: function () { say(LAB.load.weaponLine(w)); } } : null,
     { label: "Осмотреть", fn: function () {
       var Wk = LAB.workshop, ml = Wk ? Wk.modsLine(w) : "";
       var pf = Wk ? Wk.profile(w) : "";
@@ -958,7 +961,7 @@ function weaponItems(id) {
   ].concat(LAB.forge ? LAB.forge.weaponExtra(w) : [], [ /* (после 4.6) мощность, сердечник, ресурс ствола, ядро, брак, конструкция */
     { label: "Разобрать на детали" + (i === g.wi ? " (оно в руках)" : "") + ": " + (gm().scrapWeaponText ? gm().scrapWeaponText(w) : "детали") + (w.core ? ". Ядро погибнет" : ""), fn: function () { gm().scrapWeapon(i); weaponsMenu(); } },
     back(weaponsMenu)
-  ]);
+  ]).filter(Boolean);
 }
 function ammoMenu() {
   var w = gm().curWeapon();

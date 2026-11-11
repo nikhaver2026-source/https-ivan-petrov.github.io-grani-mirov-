@@ -513,7 +513,8 @@ function heroStat(k, g0) {
   var g = g0 || (LAB.game && LAB.game.G);
   if (!g) return 10;
   var base = g[k] == null ? 10 : g[k], P = g.plants, f = P && P.fx && P.fx[k];
-  return f && f.until > nowOf(g) ? Math.min(50, base + f.v) : base;
+  /* (после 4.6) с плодом — выше предела очков на десять, но не ниже основы: ниже Истока предел шестьдесят */
+  return f && f.until > nowOf(g) ? Math.max(base, Math.min((LAB.stats ? LAB.stats.capOf(k) : 40) + 10, base + f.v)) : base;
 }
 function boostOf(k) { var P = st(), f = P.fx[k]; return f && f.until > nowMin() ? f : null; }
 function applyBoost(d, msg) {

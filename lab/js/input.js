@@ -213,7 +213,9 @@ function dispatchTaps(n, taps) { dispatch({ kind: taps === 1 ? "tap" : taps === 
 function wantMore(n, taps) {
   if (taps >= 3) return false;
   var GS = LAB.gestures;
-  if (GS && route() === "game") { for (var k = taps + 1; k <= 3; k++) if (GS.bound(TAPID[k] + n)) return true; return false; }
+  /* (после 4.6) и если назначено двойное или тройное касание с удержанием: иначе первое касание
+     уходило одиночным, а удержание считалось одиночным удержанием */
+  if (GS && route() === "game") { for (var k = taps + 1; k <= 3; k++) if (GS.bound(TAPID[k] + n) || GS.bound(HOLDID[k] + n)) return true; return false; }
   return taps < 2 && (n === 1 || n === 2 || n === 4);
 }
 function wantHold(n, taps) { var GS = LAB.gestures; return !!GS && route() === "game" && GS.bound(HOLDID[taps] + n); }

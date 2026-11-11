@@ -72,7 +72,12 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     const sx = ST.S().px.stam || 0; ST.step(); out.stamPx = (ST.S().px.stam || 0) > sx;
     const rx = ST.S().px.regen || 0; ST.healed(30); out.regenPx = (ST.S().px.regen || 0) > rx;
     /* запись прежней версии: телосложение — как при ровном росте */
-    delete G.con; delete G.chs; G.lvl = 9; ST.S(); out.migrate = G.con === 18 && ST.S().pts === 0;
+    /* — через настоящую запись и загрузку: migrate раньше подставлял телосложение 10 по умолчанию */
+    g.saveSlot(3);
+    { const raw = JSON.parse(localStorage.getItem("lab_slot3")); delete raw.g.con; delete raw.g.chs; raw.g.lvl = 9; localStorage.setItem("lab_slot3", JSON.stringify(raw)); }
+    g.loadSlot(3); LAB.combat.stop(); LAB.ui.closeAll();
+    out.migrate = g.G.con === 18 && ST.S().pts === 0;
+    if (!out.migrate) out.migrateDiag = "con " + g.G.con + ", очков " + ST.S().pts;
     return out;
   });
   ok(r1.start, "новый герой: все характеристики 10, очков нет");
@@ -83,7 +88,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(r1.frameNeedsCon && r1.frameOk, "тяжёлому каркасу нужны сила 14 и телосложение 13");
   ok(r1.flawAgi && r1.cha25, "пороги: ловкость 15 — меньше брака, харизма 25 — уступки торговцев");
   ok(r1.stamPx && r1.regenPx, "вторичные растут практикой: шаги — выносливость, лечение — регенерация");
-  ok(r1.migrate, "запись прежней версии: телосложение по уровню, очков нет");
+  ok(r1.migrate, "запись прежней версии: телосложение по уровню, очков нет" + (r1.migrateDiag ? " (" + r1.migrateDiag + ")" : ""));
 
   console.log("Груз: вес, предел, перегруз, неподъёмно, тяжёлое оружие");
   const r2 = await page.evaluate(async () => {
@@ -189,6 +194,71 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(r3.cards && r3.drops && r3.dropsCap, "ключ-карты: с машин ОКО, до пяти, лишние не падают");
   ok(r3.cha, "харизма 30 — четыре лишних места");
   ok(r3.relief, "запись прежней версии: лишнее уходит в ячейку, герой может идти");
+  /* ── (после 4.6) находки проверки нелогичностей ── */
+  console.log("Нелогичности: ключ-карта, выбросить батареи и каркас, аренда, практика, цены, плоды");
+  const r4 = await page.evaluate(async () => {
+    const g = LAB.game, C = LAB.combat, L = LAB.load, ST = LAB.stats, out = {}, wait = ms => new Promise(r => setTimeout(r, ms));
+    const lbl = it => typeof it.label === "function" ? it.label() : it.label;
+    const said = () => { const s = SPOKEN.join(" | "); SPOKEN.length = 0; return s; };
+    C.stop(); LAB.ui.closeAll(); g.newGame(); C.stop(); LAB.ui.closeAll();
+    g.enterFloor(2, 3, "down", true); C.stop(); C.foes().forEach(f => { f.dead = true; });
+    const G = g.G; said();
+    /* ключ-карта: видна в окне ячейки и применяется оттуда; лишнюю можно выбросить */
+    G.inv.lockcard = 2; L.lockerMenu("capsule");
+    const it = LAB.ui.top().items.find(i => /ключ-карте/.test(lbl(i)));
+    out.cardItem = !!it; if (it) it.fn(); out.cardUsed = L.locker().cards === 1 && G.inv.lockcard === 1;
+    LAB.ui.closeAll();
+    out.cardDrop = g.dropWhy("lockcard") === "" && g.dropItem("lockcard", 1) && !(G.inv.lockcard > 0);
+    /* батареи и каркас — в окне «Выбросить вещь», с весом; выброшенный каркас поднимается обратно */
+    G.ammo.energy = 6;
+    const grs = g.dropGroups(), ga = grs.find(q => q.kind === "ammo" && q.key === "energy");
+    out.ammoRow = !!ga && ga.max === 6 && ga.wt > 0;
+    out.ammoDrop = g.dropGroup("ammo", "energy", 4) && G.ammo.energy === 2;
+    const fr = { id: "frT", cls: "mid", qual: 2, en: 0, plates: [] }; G.frames = G.frames || []; G.frames.push(fr);
+    const gf = g.dropGroups().find(q => q.kind === "frame" && q.ids[0] === "frT");
+    out.frameRow = !!gf && gf.max === 1;
+    g.dropGroup("frame", gf.key, 1); out.frameGone = !G.frames.some(f => f.id === "frT");
+    const fs = g.CUR.fs, d = (fs.drops || []).find(q => q.kind === "frame" && q.f.id === "frT");
+    if (d) { G.x = d.x; G.y = d.y; g.autoPickup(); }
+    out.frameBack = G.frames.some(f => f.id === "frT");
+    /* надетый разряженный каркас — вполовину; заряженный — ничего */
+    G.str = 20; G.con = 20; G.exoOn = "frT"; fr.en = 0;
+    out.frameHalf = Math.abs(L.parts().frames - L.frameWt(fr) * 0.5) < 0.01;
+    fr.en = 50; out.frameLive = L.parts().frames === 0;
+    G.exoOn = null; G.frames = G.frames.filter(f => f.id !== "frT");
+    /* аренда кончилась, ячейка переполнена: плата за хранение копится и списывается у ячейки */
+    const lk = L.locker(); G.credits = 100000; L.rent(); G.inv.scrap = 200; L.putParts(); out.over0 = L.lockerWt();
+    lk.rentUntil = 1; lk.feeAt = null; L.minutes(); said();
+    G.day = (G.day || 1) + 2; L.minutes();
+    out.debt = (lk.debt || 0) > 0;
+    const c0 = G.credits; L.lockerMenu("capsule"); out.paid = G.credits < c0 && !(lk.debt > 0) && /За хранение сверх предела списано/.test(said()); LAB.ui.closeAll();
+    lk.rentSaid = 0; L.minutes(); out.rentSaidOnce = /Аренда соседней ячейки кончилась/.test(said());
+    lk.rentSaid = lk.rentUntil; L.minutes(); out.rentQuiet = !/Аренда соседней ячейки кончилась/.test(said());
+    /* практика: убийство дроном героя не тренирует; своё — тренирует; торговля — по сумме */
+    const S = ST.S(); S.day = {}; S.px = {};
+    ST.deed("kill"); out.killAch = !(S.px.str > 0) && !(S.px.agi > 0);
+    ST.deed("herokill", { kind: "mech" }); out.killHero = (S.px.str > 0 || S.px.agi > 0) && S.px.mind > 0;
+    S.px.cha = 0; ST.deed("bought", 5); const small = S.px.cha; S.px.cha = 0; ST.deed("bought", 200); out.trade = small < S.px.cha;
+    /* цена ячейки: на «Лёгком» дешевле, чем на «Очень сложном»; харизма на неё не влияет */
+    const d0 = LAB.settings.difficulty; LAB.settings.difficulty = 4; const pEasy = L.upPrice(); LAB.settings.difficulty = 3; const pHard = L.upPrice(); /* 4 — «Лёгкий», 3 — «Очень сложный» */ LAB.settings.difficulty = d0;
+    out.priceDiff = pEasy < pHard;
+    G.cha = 10; const pc10 = L.upPrice(); G.cha = 35; out.priceCha = L.upPrice() === pc10; G.cha = 10;
+    /* плод поднимает выше сорока, если предел выше: ниже Истока — до шестидесяти */
+    G.str = 55; const maxF0 = G.maxF; G.maxF = Object.assign({}, G.maxF || {}, { 120: 1 });
+    const P = LAB.plants && LAB.plants.st ? LAB.plants.st() : null;
+    if (P) { P.fx = P.fx || {}; P.fx.str = { v: 3, until: 1e12 }; out.fruit = LAB.heroStat("str") === 58; delete P.fx.str; } else out.fruit = "нет";
+    G.maxF = maxF0; G.str = 10;
+    return out;
+  });
+  ok(r4.cardItem && r4.cardUsed && r4.cardDrop, "ключ-карта: применяется из окна ячейки, лишнюю можно выбросить");
+  ok(r4.ammoRow && r4.ammoDrop, "батареи — в «Выбросить вещь», с весом; выбрасываются сколько нужно");
+  ok(r4.frameRow && r4.frameGone && r4.frameBack, "каркас выбрасывается и поднимается обратно");
+  ok(r4.frameHalf && r4.frameLive, "надетый разряженный каркас весит вполовину, заряженный — ничего");
+  ok(r4.debt && r4.paid, "после аренды переполненная ячейка платная: долг копится и списывается у ячейки (в ячейке " + r4.over0 + ")");
+  ok(r4.rentSaidOnce && r4.rentQuiet, "«аренда кончилась» — один раз, запись это помнит");
+  ok(r4.killAch && r4.killHero && r4.trade, "практика — только за свои победы; торговля — по сумме сделки");
+  ok(r4.priceDiff && r4.priceCha, "цена ячейки: на лёгком режиме дешевле; харизме безразлична");
+  ok(r4.fruit === true, "плод поднимает характеристику и выше сорока, если предел выше (" + r4.fruit + ")");
   ok(!errors.length, "ошибок страницы нет" + (errors.length ? ": " + errors.slice(0, 3).join(" ; ") : ""));
   await browser.close(); server.close();
   console.log(fails ? "ОШИБОК: " + fails : "ВСЁ ХОРОШО");

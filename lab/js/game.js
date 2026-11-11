@@ -344,6 +344,7 @@ function itemName(it) {
     case "elevpass": return "Пропуск лифта уровня " + it.L;
     case "gatepass": return it.core ? (riftRoot(it.L || G.L) ? "Ключ Ядра Разлома" : trueSource(it.L || G.L) ? "Ключ настоящего «Истока»" : "Ключ доступа к реактору «Исток»") : "Шлюзовая ключ-карта уровня " + it.L;
     case "armor": return it.a.name + ", защита " + LAB.armorDef(it.a);
+    case "frame": return LAB.exo ? LAB.exo.frameName(it.f) : "Экзокаркас";
     case "key": return it.n;
     case "trialtoken": return "Жетон испытания";
     case "note": return "Записка «" + noteText(it).t + "»";
@@ -590,6 +591,7 @@ function equipArmor(i) {
   G.armor = a;
   A("play", "armor_on");
   say("Надето: " + armorLine(a) + ".");
+  if (LAB.load) LAB.load.after(); /* (после 4.6) надетая весит вполовину, силовая — держит груз */
   UIx("refresh");
   autosaveSoon();
 }
@@ -599,6 +601,7 @@ function removeArmor() {
   G.armor = null;
   A("play", "armor_off");
   say("Броня снята.");
+  if (LAB.load) LAB.load.after();
   UIx("refresh");
 }
 game.removeArmor = removeArmor;
@@ -982,6 +985,7 @@ function giveItem(it, quiet) {
   switch (it.kind) {
     case "trialtoken": break; /* жетон испытания: сдаётся стенду сразу */
     case "ammo": G.ammo[it.ammo] = (G.ammo[it.ammo] || 0) + (it.n || 1); break;
+    case "frame": G.frames = G.frames || []; G.frames.push(it.f); break; /* (после 4.6) выброшенный каркас — обратно */
     case "item":
       G.inv[it.item] = (G.inv[it.item] || 0) + (it.n || 1);
       /* (3.7, нелогичность) выброшенное своё собранное (dropItem) и подобранное — снова собранное: иначе
@@ -1085,7 +1089,9 @@ game.autoPickup = autoPickup;
    Шаг — без слов: куда идёте, вы и так знаете. Слышно шаги по полу уровня,
    удар о стену (металл), скрип двери. Речь — только когда есть что сказать:
    дверь заперта, впереди враг, рядом предмет. */
-var lastMove = 0;
+/* (после 4.6) подсказки «Двойное касание — …» называют жест, на котором действие сейчас (gestures.js) */
+function dtapW() { return ucf(LAB.gw("interact", "двойное касание")); }
+var lastMove = 0, pendingStep = null;
 game.lastMoveAt = function () { return lastMove; };
 function tryMove(dir, run) {
   if (!game.entered || game.paused || G.done) return false;
@@ -1095,7 +1101,12 @@ function tryMove(dir, run) {
   if (LAB.load && !LAB.load.canMove()) return false;
   var minGap = run ? Math.round(180 * (LAB.exo ? LAB.exo.runGapK() : 1) * (LAB.load ? LAB.load.gapK() : 1)) : (LAB.load ? LAB.load.stepGap() : 0); /* (после 4.6) приводы ног каркаса */
   if (G.st.slow > 0) minGap = Math.max(minGap, 420);
-  if (now - lastMove < minGap) return false;
+  if (now - lastMove < minGap) {
+    /* (после 4.6) перегруз: шаг реже, но свайп не пропадает молча — один шаг ждёт своей очереди
+       (иначе незрячий игрок сбивается со счёта шагов) */
+    if (!run && !pendingStep && LAB.load && LAB.load.stepGap() > 0) pendingStep = setTimeout(function () { pendingStep = null; tryMove(dir, false); }, minGap - (now - lastMove) + 5);
+    return false;
+  }
   if (G.st.web > 0) { A("play", "web_stuck"); sayq("Вы в паутине. Рвёте её..."); G.st.web = Math.max(0, G.st.web - 1); return false; }
   /* (1.5) ловушка держит: каждый рывок ослабляет её хватку */
   if (G.st.trapHeld > 0) { A("play", "web_stuck"); G.st.trapHeld = Math.max(0, G.st.trapHeld - 2); if (G.st.trapHeld) sayOnce("trapheld", "Ловушка держит. Вырываетесь...", 1500); else sayq("Вы вырвались."); return false; }
@@ -1115,7 +1126,7 @@ function tryMove(dir, run) {
   if (tt === T.WALL) {
     var sd = hiddenSecretAt(nx, ny);
     A("bumpWall", dir); LAB.vib(25);
-    if (sd) { bumpFocus({ type: "secret", ref: sd, dir: dir }); sayOnce("wall" + nx + "," + ny, "Из щели у пола тянет сквозняком. " + LAB.K("Двойное касание — простучать стену.", "Enter — простучать стену.")); }
+    if (sd) { bumpFocus({ type: "secret", ref: sd, dir: dir }); sayOnce("wall" + nx + "," + ny, "Из щели у пола тянет сквозняком. " + LAB.K(dtapW() + " — простучать стену.", "Enter — простучать стену.")); }
     else wallDoorHint(dir, nx, ny);
     return false;
   }
@@ -1125,10 +1136,10 @@ function tryMove(dir, run) {
       /* изнутри тайного хода потайная дверь видна: это выход */
       if (cellType(G.x, G.y) === T.CORR && LAB.corrOf(CUR.fl, G.x, G.y) && LAB.corrOf(CUR.fl, G.x, G.y).id === door.corr) {
         CUR.fs.secrets[door.id] = 1; A("play", "secret_open"); bumpFocus({ type: "door", ref: door, dir: dir });
-        sayOnce("inner" + door.id, "Изнутри видна потайная дверь — выход из тайного хода. " + LAB.K("Двойное касание — открыть.", "Enter — открыть."));
+        sayOnce("inner" + door.id, "Изнутри видна потайная дверь — выход из тайного хода. " + LAB.K(dtapW() + " — открыть.", "Enter — открыть."));
         return false;
       }
-      A("bumpWall", dir); LAB.vib(25); bumpFocus({ type: "secret", ref: door, dir: dir }); sayOnce("wall" + nx + "," + ny, "Из щели у пола тянет сквозняком. " + LAB.K("Двойное касание — простучать стену.", "Enter — простучать стену.")); return false;
+      A("bumpWall", dir); LAB.vib(25); bumpFocus({ type: "secret", ref: door, dir: dir }); sayOnce("wall" + nx + "," + ny, "Из щели у пола тянет сквозняком. " + LAB.K(dtapW() + " — простучать стену.", "Enter — простучать стену.")); return false;
     }
     if (!doorOpen(door)) {
       var why = doorBlock(door);
@@ -1137,8 +1148,8 @@ function tryMove(dir, run) {
       else {
         A("play", door.lock ? "door_locked" : "door_knock");
         var txt, sg = doorSign(door);
-        if (!door.lock) txt = "Закрытая дверь." + sg + " " + LAB.K("Двойное касание — открыть.", "Enter — открыть.");
-        else txt = "Дверь: " + lockText(door) + "." + sg + (why ? " " + why + LAB.K(" Двойное касание — действия.", " Enter — действия.") : LAB.K(" " + openNote(door) + ": двойное касание — открыть.", " " + openNote(door) + ": Enter — открыть."));
+        if (!door.lock) txt = "Закрытая дверь." + sg + " " + LAB.K(dtapW() + " — открыть.", "Enter — открыть.");
+        else txt = "Дверь: " + lockText(door) + "." + sg + (why ? " " + why + LAB.K(" " + dtapW() + " — действия.", " Enter — действия.") : LAB.K(" " + openNote(door) + ": двойное касание — открыть.", " " + openNote(door) + ": Enter — открыть."));
         sayOnce("door" + door.id, txt);
         tutor("door");
         if (!G.tut.door && door.lock && hintsOn()) { G.tut.door = 1; sayq(LAB.K(LAB.gw("interact", "У запертой двери коснитесь экрана одним пальцем дважды: появятся действия.", "У запертой двери — %: появятся действия."), "У запертой двери нажмите Enter: появятся действия.")); }
@@ -1150,14 +1161,14 @@ function tryMove(dir, run) {
   if (o) {
     bumpFocus({ type: "obj", ref: o, dir: dir });
     A("bumpSoft", o);
-    sayOnce("obj" + o.id, objName(o) + LAB.K(". Двойное касание — действия.", ". Enter — действия."));
+    sayOnce("obj" + o.id, objName(o) + LAB.K(". " + dtapW() + " — действия.", ". Enter — действия."));
     if (!G.tut.obj && hintsOn()) { G.tut.obj = 1; sayq("К предметам подходят вплотную. " + LAB.K(LAB.gw("interact", "Двойное касание одним пальцем — список действий.", "Список действий — %."), "Enter — список действий.")); }
     return false;
   }
   if (n) {
     bumpFocus({ type: "npc", ref: n, dir: dir });
     A("npcHello", n);
-    sayOnce("npc" + n.id, npcName(n) + LAB.K(". Двойное касание — поговорить.", ". Enter — поговорить."));
+    sayOnce("npc" + n.id, npcName(n) + LAB.K(". " + dtapW() + " — поговорить.", ". Enter — поговорить."));
     return false;
   }
   /* шаг */
@@ -1300,7 +1311,7 @@ function announceNear() {
   });
   if (!out.length) return;
   A("near");
-  sayq(out.join(". ") + "." + (G.tut.near || !hintsOn() ? "" : LAB.K(" Двойное касание — действия.", " Enter — действия.")));
+  sayq(out.join(". ") + "." + (G.tut.near || !hintsOn() ? "" : LAB.K(" " + dtapW() + " — действия.", " Enter — действия.")));
   G.tut.near = 1;
   tutor("object");
 }
@@ -1638,7 +1649,7 @@ function nearbyInfo() {
     say((r ? r.name : "Коридор") + ". Рядом пусто. Осмотреться — " + LAB.K(LAB.gw("look", "два пальца вверх") + ".", "Tab."));
     return;
   }
-  say(t.map(function (q) { return targetName(q) + ", " + (q.dir ? LAB.DIRN[q.dir] : "под ногами"); }).join(". ") + LAB.K(". Двойное касание — действия.", ". Enter — действия."));
+  say(t.map(function (q) { return targetName(q) + ", " + (q.dir ? LAB.DIRN[q.dir] : "под ногами"); }).join(". ") + LAB.K(". " + dtapW() + " — действия.", ". Enter — действия."));
 }
 game.nearbyInfo = nearbyInfo;
 
@@ -3633,8 +3644,8 @@ function useItem(id) {
   }
   if (d.fx && (d.fx.pick || d.fx.map || d.fx.jam || d.fx.antitox || d.fx.scan || d.fx.shield || d.fx.haste || d.fx.cloak || d.fx.heal || d.fx.en || d.fx.cure || d.fx.unslow || d.fx.food || d.fx.wake || d.fx.detox || d.fx.neuro || d.fx.stopBleed || d.fx.regen || d.fx.stitch || d.fx.memory || d.fx.antimut)) return useFx(id, d);
   if (id === "plate") return installPlate();
-  if (id === "decoder") { say("Декодер применяется у двери с картридером: " + LAB.K("двойное касание у двери.", "Enter у двери.")); return false; }
-  if (id === "okokey") { say("Служебный ключ ОКО прикладывают к турели вплотную — подходите наискосок, вне её линии огня — или к терминалу безопасности, раздел «Оборонная сеть»: " + LAB.K("двойное касание рядом.", "Enter рядом.")); return false; }
+  if (id === "decoder") { say("Декодер применяется у двери с картридером: " + LAB.K(LAB.gw("interact", "двойное касание") + " у двери.", "Enter у двери.")); return false; }
+  if (id === "okokey") { say("Служебный ключ ОКО прикладывают к турели вплотную — подходите наискосок, вне её линии огня — или к терминалу безопасности, раздел «Оборонная сеть»: " + LAB.K(LAB.gw("interact", "двойное касание") + " рядом.", "Enter рядом.")); return false; }
   if (d.kind === "part") { say("Это деталь для мастерской."); return false; }
   /* (1.5) инструменты не тратятся, ценности — на продажу, изолента — на камеру ОКО */
   /* (3.7, нелогичность) и всё, что лежит в «Ценностях» (cat valuable): жетон погибшего (kind misc) прежде
@@ -3688,7 +3699,7 @@ function coldCup(d) { var c = {}; for (var k in d) c[k] = d[k]; ["wake", "food",
 /* Предметы с действием fx (мастерская и блоки). */
 function useFx(id, d) {
   var fx = d.fx, msg = [];
-  if (fx.pick) { say("Отмычку применяют у двери под ключ: " + LAB.K("двойное касание у двери.", "Enter у двери.")); return false; }
+  if (fx.pick) { say("Отмычку применяют у двери под ключ: " + LAB.K(LAB.gw("interact", "двойное касание") + " у двери.", "Enter у двери.")); return false; }
   if (fx.map) { mapFloor(); msg.push("Карта этажа загружена в «Эхо»: навигатор ведёт до целей целиком."); }
   /* (3.7, нелогичность) фраза — по самой вещи и с её временем (такт — полсекунды): прежде петля с песней, чужой
      жетон и бусина тишины тоже «включали глушилку», и не говорилось, надолго ли */
@@ -3738,7 +3749,9 @@ function throwItem(id, kind) {
 function dropWhy(id) {
   var d = LAB.ITEMS[id];
   if (!d || !(G.inv[id] > 0)) return "Этого в рюкзаке нет.";
-  if (d.nosell) return d.n + " не выбрасывается: " + (d.cat === "valuable" ? "его ждут выжившие." : "это не на выброс.");
+  /* (после 4.6) инженерные вещи и ключ-карта ячейки (cat eng) — выбрасываются и кладутся в ячейку: nosell у них
+     только затем, чтобы их не было на прилавках снабжения */
+  if (d.nosell && d.cat !== "eng") return d.n + " не выбрасывается: " + (d.cat === "valuable" ? "его ждут выжившие." : "это не на выброс.");
   if (LAB.repair && LAB.repair.isKit(id) && LAB.repair.opened && LAB.repair.opened(id) > 0 && G.inv[id] <= 1) return d.n + " начат: сначала доиспользуйте его.";
   return "";
 }
@@ -3810,26 +3823,37 @@ function dropGroups() {
     p[1].forEach(function (o) {
       var line = gearLine(p[0], o), why = gearWhy(p[0], o), key = p[0] + ":" + (why ? "id:" + o.id : line);
       var gr = by[key];
-      if (!gr) { gr = by[key] = { kind: p[0], key: key, label: line, n: 0, max: 0, why: why, ids: [] }; out.push(gr); }
+      if (!gr) { gr = by[key] = { kind: p[0], key: key, label: line, n: 0, max: 0, why: why, ids: [], wt: LAB.load ? (p[0] === "armor" ? LAB.load.armorWt(o) : LAB.load.weaponWt(o)) : 0 }; out.push(gr); }
       gr.n++; gr.ids.push(o.id);
       if (!why) gr.max++;
     });
+  });
+  /* (после 4.6) каркасы и батареи — тоже: с перегрузом без них не сдвинуться, а выхода не было */
+  var on = LAB.exo && LAB.exo.worn ? LAB.exo.worn() : null;
+  (G.frames || []).forEach(function (f) {
+    var why = on && on.id === f.id ? "надет — сначала снимите" : "";
+    out.push({ kind: "frame", key: "id:" + f.id, label: LAB.exo ? LAB.exo.frameName(f) : "Экзокаркас", n: 1, max: why ? 0 : 1, why: why, ids: [f.id], wt: LAB.load ? LAB.load.frameWt(f) : 0 });
+  });
+  Object.keys(G.ammo || {}).forEach(function (k) {
+    var c = G.ammo[k] || 0;
+    if (c > 0 && LAB.AMMO[k]) out.push({ kind: "ammo", key: k, label: LAB.AMMO[k].n, n: c, max: c, why: "", wt: LAB.load ? LAB.load.ammoWt(k) : 0 });
   });
   var ids = Object.keys(G.inv || {}).filter(function (k) { return G.inv[k] > 0 && LAB.ITEMS[k]; });
   ids.sort(function (a, b) { return LAB.ITEMS[a].n < LAB.ITEMS[b].n ? -1 : 1; });
   ids.forEach(function (k) {
     var why = dropWhy(k);
-    out.push({ kind: "item", key: k, label: LAB.ITEMS[k].n, n: G.inv[k], max: why ? 0 : dropMax(k), why: why });
+    out.push({ kind: "item", key: k, label: LAB.ITEMS[k].n, n: G.inv[k], max: why ? 0 : dropMax(k), why: why, wt: LAB.load ? LAB.load.itemWt(k) : 0 });
   });
   return out;
 }
 function dropGroup(kind, key, cnt) {
   if (!game.entered) return false;
   if (kind === "item") return dropItem(key, cnt);
+  if (kind === "ammo") return dropAmmo(key, cnt);
   var gr = dropGroups().filter(function (q) { return q.kind === kind && q.key === key; })[0];
   if (!gr || !gr.max) { LAB.UI.error(); say(gr ? ucf(gr.label) + ": " + gr.why + "." : "Этого в рюкзаке уже нет."); return false; }
   var n = cnt === true ? gr.max : typeof cnt === "number" && cnt > 0 ? Math.min(gr.max, Math.floor(cnt)) : 1;
-  var list = kind === "armor" ? G.armors : G.weapons, gone = gr.ids.slice(gr.ids.length - n);
+  var list = kind === "armor" ? G.armors : kind === "frame" ? G.frames : G.weapons, gone = gr.ids.slice(gr.ids.length - n);
   var c = LAB.combat && LAB.combat.lootCell ? LAB.combat.lootCell(G.x, G.y) : [G.x, G.y], fs = CUR.fs;
   if (!fs.drops) fs.drops = [];
   gone.forEach(function (oid) {
@@ -3838,12 +3862,30 @@ function dropGroup(kind, key, cnt) {
     var o = list.splice(i, 1)[0];
     if (kind === "weapon") { if (i < G.wi) G.wi--; if (G.wi >= G.weapons.length) G.wi = Math.max(0, G.weapons.length - 1); }
     var it = { kind: kind, id: "d" + (fs.dseq = (fs.dseq || 0) + 1), x: c[0], y: c[1] };
-    it[kind === "armor" ? "a" : "w"] = o;
+    it[kind === "armor" ? "a" : kind === "frame" ? "f" : "w"] = o;
     fs.drops.push(it);
   });
   A("dropLoot", c[0], c[1]);
   var left = gr.n - n;
   say("На полу" + (c[0] === G.x && c[1] === G.y ? " у ваших ног" : " " + relDir(c[0], c[1])) + ": " + lcf(gr.label) + (n > 1 ? "; " + n + " шт." : ".") + " Поднять — отойти и снова наступить." + (left > 0 ? " Таких в рюкзаке ещё " + left + "." : ""));
+  if (LAB.load) LAB.load.after(); /* (после 4.6) груз легче — ступень сказать */
+  turns(1, "");
+  UIx("refresh");
+  autosaveSoon();
+  return true;
+}
+/* (после 4.6) батареи и заряды: на пол стопкой, поднимаются обратно, как добыча */
+function dropAmmo(k, cnt) {
+  var have = (G.ammo || {})[k] || 0;
+  if (!have || !LAB.AMMO[k]) { LAB.UI.error(); say("Этого в рюкзаке уже нет."); return false; }
+  var n = cnt === true ? have : typeof cnt === "number" && cnt > 0 ? Math.min(have, Math.floor(cnt)) : 1;
+  G.ammo[k] = have - n;
+  var c = LAB.combat && LAB.combat.lootCell ? LAB.combat.lootCell(G.x, G.y) : [G.x, G.y], fs = CUR.fs;
+  if (!fs.drops) fs.drops = [];
+  fs.drops.push({ kind: "ammo", ammo: k, n: n, id: "d" + (fs.dseq = (fs.dseq || 0) + 1), x: c[0], y: c[1] });
+  A("dropLoot", c[0], c[1]);
+  say("На полу" + (c[0] === G.x && c[1] === G.y ? " у ваших ног" : " " + relDir(c[0], c[1])) + ": " + lcf(LAB.AMMO[k].n) + (n > 1 ? ", " + n + " шт." : ".") + " Поднять — отойти и снова наступить." + (G.ammo[k] > 0 ? " Осталось " + G.ammo[k] + "." : ""));
+  if (LAB.load) LAB.load.after();
   turns(1, "");
   UIx("refresh");
   autosaveSoon();
@@ -4248,6 +4290,9 @@ function migrate(g) {
   /* (3.6) запись без стартового набора больше не встречается: переносятся только записи
      «Альфы 3.0» и новее (engine.js, validSave), а набор в них уже есть */
   var base = newState(g.seed || "lab");
+  /* (после 4.6) телосложения в прежних записях не было — до заполнения полей по умолчанию: рост
+     ровный, как у прежних характеристик (прежние +10 здоровья за уровень его уже включают) */
+  if (g.con === undefined) g.con = Math.min(40, 10 + Math.max(0, (g.lvl || 1) - 1));
   for (var k in base) if (g[k] === undefined) g[k] = base[k];
   if (!g.st) g.st = base.st;
   for (var k2 in base.st) if (g.st[k2] === undefined) g.st[k2] = 0;
@@ -4401,7 +4446,7 @@ function newGame() {
   game.entered = true;
   UIx("showGame");
   enterFloor(1, 1, "start", true);
-  say("Вы просыпаетесь в криокапсуле. Холод отпускает. «Эхо» включается: «Носитель номер семь, слышите меня? Зрение не восстановлено. Я буду вашими глазами. " + LAB.K("Шагайте свайпами. Осмотреться — два пальца вверх. Двойное касание у предмета — действия", "Шагайте клавишами W A S D. Осмотреться — Tab. Enter у предмета — действия. Все клавиши — в руководстве, F1") + "»." );
+  say("Вы просыпаетесь в криокапсуле. Холод отпускает. «Эхо» включается: «Носитель номер семь, слышите меня? Зрение не восстановлено. Я буду вашими глазами. " + LAB.K("Шагайте свайпами. Осмотреться — два пальца вверх. " + dtapW() + " у предмета — действия", "Шагайте клавишами W A S D. Осмотреться — Tab. Enter у предмета — действия. Все клавиши — в руководстве, F1") + "»." );
   /* (2.1) стартовый набор: что при себе и что лежит у капсулы */
   var kitHint = hintsOn() ? LAB.K(" Достать оружие — " + LAB.gw("draw", "касание тремя пальцами") + ", сменить — " + LAB.gw("nextW", "двойное касание двумя пальцами") + ".", " Достать оружие — R, сменить — Q и E.") : "";
   if (kitHint) G.tut.weapon = 1;

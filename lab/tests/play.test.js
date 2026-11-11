@@ -7493,7 +7493,7 @@ LAB.ui.closeAll();
       const wornLine = focus(/Нельзя: надета/); out.wornLine = !!wornLine;
       const nA0 = G.armors.length; dtap(); out.wornKept = G.armors.length === nA0 && G.armor === worn && G.armors.indexOf(worn) >= 0;
       const suitName = G.armors[1].name;
-      const sl = focus(new RegExp("^" + esc(suitName.charAt(0).toUpperCase() + suitName.slice(1)) + ", защита \\d+$"));
+      const sl = focus(new RegExp("^" + esc(suitName.charAt(0).toUpperCase() + suitName.slice(1)) + ", защита \\d+(, по [\\d,]+ килограмм\\S* за штуку)?$")); /* (после 4.6) в конце строки — вес */
       out.suitSlider = !!sl && sl.kind === "slider" && val() === "выбросить 1 из 5";
       sw("U"); sw("U"); const dropIds = G.armors.slice(-3).map(a => a.id); dtap();
       out.suitLeft = G.armors.length; out.suitFloor = (fs.drops || []).filter(d => d.kind === "armor" && !(fs.taken || {})[d.id]).map(d => d.a.id).sort().join(",") === dropIds.sort().join(",");

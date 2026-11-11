@@ -151,9 +151,16 @@ function word(a, def, tmpl) {
   if (LAB.kb && LAB.kb()) return def;
   var home = LIST.filter(function (g) { return DEF[g.id] === a; });
   if (home.length && home.every(function (g) { return actionOf(g.id) === a; })) return def;
+  /* (после 4.6) действие по стороне (шаг, выстрел, ходьба, очередь): часть сторон переназначили —
+     прежние слова и какие стороны больше не годятся; иначе «выстрел — свайп вниз» сбивал бы с толку */
+  if (ACT[a] && (ACT[a].dir || ACT[a].hold) && home.length > 1) {
+    var lost = home.filter(function (g) { return actionOf(g.id) !== a; });
+    if (lost.length < home.length) return def + " (кроме: " + lost.map(function (g) { return DIRW[g.id.slice(-1)] || ""; }).filter(Boolean).join(", ") + ")";
+  }
   var cur = gestsWith(a)[0], nm = cur ? lowerFirst(cur.name) : "жест не назначен: «Настройки», «Управление», «Жесты»";
   return tmpl ? tmpl.replace("%", nm) : nm;
 }
+var DIRW = { U: "вверх", D: "вниз", L: "влево", R: "вправо" };
 
 /* Где вы: уровень, этаж, помещение или коридор, время. */
 function whereAmI() {
@@ -174,7 +181,7 @@ function controlsMenu() {
       descOf: function () { return "Столько игра ждёт следующего касания, прежде чем решить, что касание одно. Короче — одиночные касания срабатывают быстрее, но двойное и тройное касание нужно делать быстрее."; } },
     { kind: "choice", label: "Удержание срабатывает через", options: HOLDS.map(function (v) { return { v: v, label: msW(v) + (v === 600 ? ", обычно" : "") }; }),
       get: function () { return +s.gHold || 600; }, set: function (v) { s.gHold = v; LAB.saveSettings(); },
-      descOf: function () { return "Столько держать пальцы на экране, чтобы касание стало касанием с удержанием. Сработало — короткая вибрация, пальцы можно отпускать."; } },
+      descOf: function () { return "Столько держать пальцы на экране, чтобы касание двумя, тремя или четырьмя пальцами стало касанием с удержанием. Сработало — короткая вибрация и тик, пальцы можно отпускать. Одним пальцем долгое касание считается по отпусканию, когда палец продержали около секунды."; } },
     { kind: "choice", label: "Длина свайпа", options: [{ v: 0.7, label: "короткая: свайп засчитывается раньше" }, { v: 1, label: "обычная" }, { v: 1.35, label: "длинная: случайное движение пальца не станет свайпом" }],
       get: function () { var v = +s.gSwipe || 1; return SWK.indexOf(v) >= 0 ? v : 1; }, set: function (v) { s.gSwipe = v; LAB.saveSettings(); } },
     { label: "Вернуть все жесты, как было задано", fn: function () {
@@ -226,15 +233,18 @@ function choose(gid, a) {
   if (LAB.SND && LAB.SND.rebind_ok && LAB.atmos && LAB.atmos.play) LAB.atmos.play("rebind_ok"); else LAB.UI.ok();
   var msg = g.name + " — теперь " + lowerFirst(actName(a)) + ".";
   if (old && old !== "none" && !gestsWith(old).length) msg += " Действие «" + lowerFirst(actName(old)) + "» больше ни на каком жесте: его можно назначить на другой.";
-  /* двойное или тройное касание заняли или освободили — короткое касание того же числа
-     пальцев ждёт продолжения или срабатывает сразу (input.js, wantMore) */
-  var m = /^([dr])([1-4])$/.exec(gid);
-  if (m) {
-    var nn = +m[2], f = FING[nn];
-    if (old === "none" && a !== "none") {
-      if (m[1] === "d" && !bound("r" + nn) && bound("t" + nn)) msg += " Касание " + f + " теперь срабатывает чуть позже: игра ждёт, не будет ли второго касания.";
-      if (m[1] === "r") { if (bound("d" + nn)) msg += " Двойное касание " + f + " теперь срабатывает чуть позже: игра ждёт, не будет ли третьего."; else if (bound("t" + nn)) msg += " Касание " + f + " теперь срабатывает чуть позже."; }
-    } else if (a === "none" && old !== "none" && !bound("d" + nn) && !bound("r" + nn) && bound("t" + nn)) msg += " Касание " + f + " теперь срабатывает сразу.";
+  /* двойное или тройное касание (и они же с удержанием) заняли или освободили — касание и двойное
+     касание того же числа пальцев ждут продолжения или срабатывают сразу (input.js, wantMore) */
+  var m = /^(d|r|dp|rp)([1-4])$/.exec(gid);
+  if (m && (old === "none" || !old) !== (a === "none")) {
+    var nn = +m[2], f = FING[nn], TAP = ["", "t", "d", "r"], HLD = ["", "p", "dp", "rp"];
+    var waits = function (taps, on) { for (var k = taps + 1; k <= 3; k++) { var ids = [TAP[k] + nn, HLD[k] + nn]; for (var q = 0; q < 2; q++) if (ids[q] === gid ? on : bound(ids[q])) return true; } return false; };
+    [[1, "Касание "], [2, "Двойное касание "]].forEach(function (p) {
+      if (TAP[p[0]] + nn === gid || !bound(TAP[p[0]] + nn)) return;
+      var w0 = waits(p[0], old && old !== "none"), w1 = waits(p[0], a !== "none");
+      if (!w0 && w1) msg += " " + p[1] + f + " теперь срабатывает чуть позже: игра ждёт, не будет ли ещё касания.";
+      else if (w0 && !w1) msg += " " + p[1] + f + " теперь срабатывает сразу.";
+    });
   }
   ui().closeTop(true);
   say(msg);

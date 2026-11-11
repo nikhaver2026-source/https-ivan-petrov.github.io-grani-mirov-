@@ -342,6 +342,8 @@ function stockOf(o) {
   return st.stock;
 }
 function lineName(e) { return e.ammo ? LAB.AMMO[e.ammo].n : LAB.ITEMS[e.id].n; }
+/* (после 4.6) вес на прилавке: «сбросьте три кило» и «не поднять» должны быть предсказуемы */
+function wtTail(w) { return w >= 0.05 && LAB.load ? ", вес " + LAB.load.kg(w) : ""; }
 function linePrice(e, prof) {
   var base = e.ammo ? ammoBuyPrice(e.ammo) : itemBuyPrice(e.id);
   var cat = e.ammo ? "ammo" : catOf(e.id);
@@ -377,7 +379,7 @@ function counterMenu(o) {
     st.lines.forEach(function (e) {
       if (!(e.n > 0)) return;
       var p = linePrice(e, prof);
-      items.push({ label: lineName(e) + " — " + cr(p) + ", осталось " + e.n, fn: function () {
+      items.push({ label: lineName(e) + " — " + cr(p) + ", осталось " + e.n + wtTail(e.ammo ? LAB.load && LAB.load.ammoWt(e.ammo) : LAB.load && LAB.load.itemWt(e.id)), fn: function () {
         if (!(e.n > 0)) { say("Это уже раскупили."); return; }
         if (G().credits < p) { LAB.UI.error(); say("Не хватает кредитов: нужно " + p + ", у вас " + G().credits + "."); return; }
         G().credits -= p; e.n--;
@@ -390,7 +392,7 @@ function counterMenu(o) {
     st.arm.forEach(function (a, i) {
       if (!a) return;
       var p = armorBuyPrice(a);
-      items.push({ label: "Броня: " + gm().armorLine(a) + " — " + cr(p), fn: function () {
+      items.push({ label: "Броня: " + gm().armorLine(a) + " — " + cr(p) + wtTail(LAB.load && LAB.load.armorWt(a)), fn: function () {
         if (!st.arm[i]) { say("Уже продано."); return; }
         if (G().credits < p) { LAB.UI.error(); say("Не хватает кредитов: нужно " + p + ", у вас " + G().credits + "."); return; }
         G().credits -= p; var got = st.arm[i]; st.arm[i] = null;
@@ -402,7 +404,7 @@ function counterMenu(o) {
     st.wpn.forEach(function (w, i) {
       if (!w) return;
       var p = weaponBuyPrice(w);
-      items.push({ label: "Оружие: " + gm().weaponLine(w) + " — " + cr(p), fn: function () {
+      items.push({ label: "Оружие: " + gm().weaponLine(w) + " — " + cr(p) + wtTail(LAB.load && LAB.load.weaponWt(w)), fn: function () {
         if (!st.wpn[i]) { say("Уже продано."); return; }
         if (G().credits < p) { LAB.UI.error(); say("Не хватает кредитов: нужно " + p + ", у вас " + G().credits + "."); return; }
         G().credits -= p; var got = st.wpn[i]; st.wpn[i] = null;

@@ -835,7 +835,7 @@ function install(id, how, quiet) {
   A("play", "implant");
   applyStatic();
   gain(d.cat, "install", id);
-  var msg = (how || "Вживлено") + ": «" + d.n + "»" + (tagText(id) ? ", " + tagText(id) : "") + ". " + (d.passive ? "Пассивный чип: работает сам. Гнёзд занято " + chipsIn() + " из " + slots() + "." : "Панель имплантов — " + LAB.K("двойное касание четырьмя пальцами.", "клавиша U.") + " Имплантов вживлено: " + actIn() + ", ёмкость: " + usedCap() + " из " + capacity() + ".");
+  var msg = (how || "Вживлено") + ": «" + d.n + "»" + (tagText(id) ? ", " + tagText(id) : "") + ". " + (d.passive ? "Пассивный чип: работает сам. Гнёзд занято " + chipsIn() + " из " + slots() + "." : "Панель имплантов — " + LAB.K(LAB.gw("implants", "двойное касание четырьмя пальцами") + ".", "клавиша U.") + " Имплантов вживлено: " + actIn() + ", ёмкость: " + usedCap() + " из " + capacity() + ".");
   if (!quiet) say(msg);
   if (LAB.oko && LAB.oko.react) gm().later(function () { LAB.oko.react("implant"); }, 3000);
   if (LAB.ui && LAB.ui.refresh) LAB.ui.refresh();

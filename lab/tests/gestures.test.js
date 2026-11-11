@@ -170,6 +170,8 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     const ev = (type, id, x, y) => pad.dispatchEvent(new PointerEvent(type, { pointerId: id, clientX: x, clientY: y, pointerType: "touch", bubbles: true, cancelable: true }));
     let pid = 500;
     const tapN = async (n, hold) => { const ids = []; for (let k = 0; k < n; k++) ids.push(pid++); ids.forEach((id, k) => ev("pointerdown", id, 80 + 60 * k, 400)); await wait(hold || 50); ids.forEach((id, k) => ev("pointerup", id, 80 + 60 * k, 400)); };
+    const GAP = 380, HOLD = 600;
+    const taps = async (n, count, lastHold) => { for (let i = 0; i < count; i++) { await tapN(n, i === count - 1 && lastHold ? lastHold : 50); if (i < count - 1) await wait(90); } };
     const log = [], ex0 = GS.exec; GS.exec = function (a) { log.push(a); return true; };
     const take = () => { const l = log.slice(); log.length = 0; return l.join(","); };
     /* в окне жесты прежние: касание двумя пальцами — тишина, не перезарядка */
@@ -182,8 +184,13 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     GS.set("p2", "none");
     await tapN(2, 800); await wait(450); out.noHoldTap = take();
     /* «ничего» на двойное и тройное — касание срабатывает сразу */
-    GS.set("d3", "none"); GS.set("r3", "none");
+    GS.set("d3", "none"); GS.set("r3", "none"); GS.set("dp3", "none"); GS.set("rp3", "none");
     await tapN(3); out.t3now = take();
+    /* (после 4.6) двойного касания нет, а двойное с удержанием есть — первое касание ждёт, удержание — своё */
+    GS.set("d2", "none"); GS.set("r2", "none");
+    await taps(2, 2, HOLD + 150); await wait(GAP + 80); out.dpNoD = take();
+    await tapN(2); await wait(GAP + 80); out.t2wait = take();
+    GS.set("d2", "nextW"); GS.set("r2", "prevW");
     /* пауза двойного касания короче — касание раньше */
     LAB.settings.gTapGap = 250;
     await tapN(2); await wait(300); out.gap250 = take();
@@ -202,6 +209,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(r3.winHush, "в окне касание двумя пальцами — тишина, как прежде (окна не переназначаются)");
   ok(r3.noHoldTap === "reload", "долгое касание без назначенного удержания — обычное касание (" + r3.noHoldTap + ")");
   ok(r3.t3now === "draw", "без двойного и тройного касания тремя пальцами касание срабатывает сразу (" + r3.t3now + ")");
+  ok(r3.dpNoD === "traps" && r3.t2wait === "reload", "двойное касание с удержанием срабатывает, даже если на двойное касание ничего не назначено (" + r3.dpNoD + "; " + r3.t2wait + ")");
   ok(r3.gap250 === "reload", "пауза двойного касания 0,25 секунды — касание раньше");
   ok(r3.hold1000early === "" && r3.hold1000 === "drone" && r3.hold1000after === "", "удержание через секунду: раньше не срабатывает, потом — один раз");
   ok(/Уровень 1, этаж 2\. День \d+, \d\d:\d\d/.test(r3.where), "«Где вы и который час» (" + r3.where.slice(0, 80) + ")");

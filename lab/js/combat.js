@@ -2645,6 +2645,7 @@ function kill(f, quiet) {
   /* (3.7, нелогичность) убитые самим героем — для премии поручений «без крови» (quests.js, condTick):
      прежде её снимали и гибель союзника, и ловушка этажа, и лопнувший вплотную трутень */
   if ((f.hitBy || "hero") === "hero") g.stats.hkills = (g.stats.hkills || 0) + 1;
+  if ((f.hitBy || "hero") === "hero" && !f.ally && !f.calm && LAB.stats) LAB.safe(function () { LAB.stats.deed("herokill", f); }); /* (после 4.6) практика — за своё */
   /* (после 4.6) победа своей самоделкой — опыт мастерства; оружие с ядром растёт */
   if ((f.hitBy || "hero") === "hero" && !f.ally && !f.calm) { var hw = gm().curWeapon ? gm().curWeapon() : null; if (LAB.mastery) LAB.safe(function () { LAB.mastery.onKill(hw, f); }); if (LAB.forge) LAB.safe(function () { LAB.forge.onKill(hw, f); }); }
   if (!f.ally) markCleared(f); /* (2.2) помещение зачищено — в нём можно укрыться */
@@ -3268,8 +3269,12 @@ function afterPlayerMove(from) {
     if (from && !G().dead) partingBlows(from);
     if (G().dead) return;
     tick();
+    /* (после 4.6) перегруз: шаг стоит дороже — полтора хода, тяжёлый перегруз — два */
+    var lt = LAB.load ? LAB.load.tier() : 0;
+    if (lt >= 2 && lt <= 3) { tbLoad += lt === 2 ? 0.5 : 1; while (tbLoad >= 1 && !G().dead) { tbLoad -= 1; tick(); } }
   }
 }
+var tbLoad = 0;
 /* Описание врага для сканера и окна персонажа. */
 function describe(f) {
   var d = dist(f, heroPos());
@@ -3290,7 +3295,7 @@ function useImplant(id, free) {
   if (!free && g.implants.indexOf(id) < 0) { say("Такого импланта нет."); return; }
   /* (2.0) пассивный чип работает сам */
   if (IM && IM.isChip(id)) { say(IM.line(id)); return; }
-  if (id === "hack") { say("Дистанционный взлом применяется у запертой двери: " + LAB.K("двойное касание у двери.", "Enter у двери.")); return; }
+  if (id === "hack") { say("Дистанционный взлом применяется у запертой двери: " + LAB.K(LAB.gw("interact", "двойное касание") + " у двери.", "Enter у двери.")); return; }
   if ((id === "scan" || id === "echo") && jammed()) { A("play", "jam"); say("Помехи: глушилка робота рядом забивает сканер."); return; }
   var cost = gm().implantCost(id);
   if (!free && !gm().spendEnergy(id)) return;
