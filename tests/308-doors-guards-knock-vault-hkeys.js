@@ -90,7 +90,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
     /* стук: в городе вас уважают — хозяин откроет */
     const имя=(isCityAt(G.place.bx,G.place.by)||{}).name||G.place.name;G.standing=G.standing||{};G.standing["city:"+имя]=40;
     G.place.door147=null;moveInside(dir);fieldInteract();__said=[];resolveEvent(0);
-    await new Promise(r=>setTimeout(r,2000));o.стук=__said.join(" | ").slice(0,200);o.открылиНаСтук=placeMark(x,y)==="open";o.вошёл=G.place.x!==sx||G.place.y!==sy;
+    await new Promise(r=>setTimeout(r,2000));
+    /* постороннее объявление (предложение выбрать ремесло приходит по своим часам) не должно вытеснять слова о стуке */
+    o.стук=__said.filter(t=>!/^Шесть ремёсел/.test(t)).join(" | ").slice(0,200);o.открылиНаСтук=placeMark(x,y)==="open";o.вошёл=G.place.x!==sx||G.place.y!==sy;
     G.hour=12;return o;}}
   return {нет:true};});
  check('7. ночью жилой дом заперт изнутри — «Открыть дверь» не открывает; на стук хозяин открывает тому, кого уважают',

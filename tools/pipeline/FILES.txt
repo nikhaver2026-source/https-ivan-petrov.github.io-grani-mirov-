@@ -81,6 +81,7 @@ hron/fonstrazh175_late.js
 hron/lestboy175_late.js
 hron/tihboy175_late.js
 hron/zvuk_lufs.py
+hron/dver_yarche.py
 hron/lufs175.json
 hron/patch_guide_put165.py
 hron/patch_guide_r170.py
@@ -109,6 +110,7 @@ hron/rost180_late.js
 hron/proverka_late.js
 hron/dozor_late.js
 hron/selo180_late.js
+hron/dver180_late.js
 hron/patch_guide_r180.py
 rost/probe_rost.js
 rost/probe_grind.js
