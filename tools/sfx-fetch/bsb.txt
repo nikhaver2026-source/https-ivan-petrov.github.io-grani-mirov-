@@ -2,10 +2,11 @@
 # имя номер заметка
 # (14.6) Прежние наборы сведены в игру; этот заход — звери и верховая езда (bsb_q.txt).
 # (после 4.6) заход 11: инженерное дело — сварка, гайковёрт, напильник, щелчки, гул СВЧ, сервоприводы, разряд, зарядка.
-bsb_kv 1992 work_pass
-bsb_kv 1989 rail_barrel
-bsb_kv 1985 pike_load
-bsb_kv 2437 mw_hum
-bsb_kv 1491 exo_on
-bsb_kv 2905 exo_servo
-bsb_kv 1030 exo_low
+# (после 4.6) записи захода 11 скачаны напрямую (FLAC с сайта), bsb.py их не берёт — строки закомментированы.
+# bsb_kv 1992 work_pass
+# bsb_kv 1989 rail_barrel
+# bsb_kv 1985 pike_load
+# bsb_kv 2437 mw_hum
+# bsb_kv 1491 exo_on
+# bsb_kv 2905 exo_servo
+# bsb_kv 1030 exo_low
