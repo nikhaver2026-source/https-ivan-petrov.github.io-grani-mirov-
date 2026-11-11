@@ -935,16 +935,108 @@
 # «Подземная лаборатория», заход 10 (3.0): полы — шаги в обуви по бетону (коридоры, лестничные
 # клетки, склады), по деревянному полу (кабинеты, библиотеки, каюты) и скрип половиц
 # (Freesound, только CC0).
-lab_fsO https://cdn.freesound.org/previews/813/813622_16752880-hq.ogg
-lab_fsO https://cdn.freesound.org/previews/459/459964_6253486-hq.ogg
-lab_fsO https://cdn.freesound.org/previews/546/546827_2247456-hq.ogg
-lab_fsO https://cdn.freesound.org/previews/554/554380_12197305-hq.ogg
-lab_fsO https://cdn.freesound.org/previews/727/727367_15517073-hq.ogg
-lab_fsO https://cdn.freesound.org/previews/119/119914_1990698-hq.ogg
-lab_fsO https://cdn.freesound.org/previews/164/164315_2407533-hq.ogg
-lab_fsO https://cdn.freesound.org/previews/766/766000_15681096-hq.ogg
-lab_fsO https://cdn.freesound.org/previews/546/546362_12222745-hq.ogg
-lab_fsO https://cdn.freesound.org/previews/575/575898_3283195-hq.ogg
-lab_fsO https://cdn.freesound.org/previews/822/822745_9250976-hq.ogg
-lab_fsO https://cdn.freesound.org/previews/124/124289_296888-hq.ogg
-lab_fsO https://cdn.freesound.org/previews/406/406620_6068748-hq.ogg
+# (заход 10 скачан) lab_fsO https://cdn.freesound.org/previews/813/813622_16752880-hq.ogg
+# (заход 10 скачан) lab_fsO https://cdn.freesound.org/previews/459/459964_6253486-hq.ogg
+# (заход 10 скачан) lab_fsO https://cdn.freesound.org/previews/546/546827_2247456-hq.ogg
+# (заход 10 скачан) lab_fsO https://cdn.freesound.org/previews/554/554380_12197305-hq.ogg
+# (заход 10 скачан) lab_fsO https://cdn.freesound.org/previews/727/727367_15517073-hq.ogg
+# (заход 10 скачан) lab_fsO https://cdn.freesound.org/previews/119/119914_1990698-hq.ogg
+# (заход 10 скачан) lab_fsO https://cdn.freesound.org/previews/164/164315_2407533-hq.ogg
+# (заход 10 скачан) lab_fsO https://cdn.freesound.org/previews/766/766000_15681096-hq.ogg
+# (заход 10 скачан) lab_fsO https://cdn.freesound.org/previews/546/546362_12222745-hq.ogg
+# (заход 10 скачан) lab_fsO https://cdn.freesound.org/previews/575/575898_3283195-hq.ogg
+# (заход 10 скачан) lab_fsO https://cdn.freesound.org/previews/822/822745_9250976-hq.ogg
+# (заход 10 скачан) lab_fsO https://cdn.freesound.org/previews/124/124289_296888-hq.ogg
+# (заход 10 скачан) lab_fsO https://cdn.freesound.org/previews/406/406620_6068748-hq.ogg
+# «Подземная лаборатория», заход 11 (после 4.6): инженерное дело из «Квази-эпсилона» —
+# работа у верстака (сварка, пайка, трещотка, гайковёрт, напильник, молоток, брак, испытание,
+# изучение), своё оружие (рельсовое ружьё, кумулятивная пика, СВЧ-излучатель, энергоклинок,
+# плазмомёт, регулятор мощности), ядра, экзокаркас (сервоприводы, турель, щит, разряд, зарядка),
+# дрон-спутник, а ещё характеристики (очко вложено), груз (тяжёлый рюкзак) и подтверждение
+# переназначения жеста (Freesound, только CC0; авторы и названия — в fs_lab.tsv).
+lab_fsP https://cdn.freesound.org/previews/396/396240_453602-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/256/256915_1149179-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/237/237407_1502374-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/133/133449_880637-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/436/436791_3206727-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/551/551497_1282865-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/147/147018_2188235-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/466/466716_9835095-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/349/349398_6242013-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/532/532136_367313-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/223/223051_3646900-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/244/244985_4487520-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/434/434339_6599148-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/497/497427_3518208-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/119/119468_1819253-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/706/706404_8398659-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/496/496286_10773661-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/755/755026_3366726-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/193/193610_1274078-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/316/316743_4745081-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/730/730564_8026845-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/440/440654_2742396-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/517/517058_8176613-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/379/379977_5937039-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/587/587887_5487341-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/186/186930_545448-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/204/204204_3310361-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/125/125168_296888-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/396/396470_5415774-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/341/341612_5939807-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/426/426058_2836758-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/540/540214_12029332-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/517/517746_9996727-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/650/650564_9534185-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/546/546278_4937681-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/471/471095_9856191-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/326/326868_4077311-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/733/733483_8956746-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/539/539972_12029332-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/637/637533_612689-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/256/256840_4772965-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/423/423957_6164481-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/367/367454_6750383-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/728/728157_2760781-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/221/221089_1282865-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/536/536765_1415754-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/434/434657_3491501-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/426/426191_2866779-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/688/688735_10403690-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/164/164648_2104797-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/140/140578_861061-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/131/131302_2394357-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/416/416080_7175960-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/740/740240_16085440-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/557/557594_9159316-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/212/212941_3910980-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/641/641416_11537497-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/512/512474_7372230-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/375/375925_3294528-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/819/819269_17707799-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/369/369781_5937039-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/329/329515_424694-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/614/614063_11537497-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/383/383904_2278166-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/683/683300_5287430-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/383/383852_2278166-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/677/677833_5287430-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/328/328120_5668811-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/658/658267_6142149-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/334/334224_3454378-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/204/204456_3430035-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/530/530356_10106687-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/540/540012_11920129-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/653/653896_14374430-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/808/808185_11548422-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/364/364706_2531187-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/140/140722_367313-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/589/589621_12393343-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/504/504585_1035118-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/266/266106_4997689-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/442/442943_71257-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/523/523753_6142149-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/822/822568_71257-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/584/584184_1038806-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/438/438988_4807538-hq.ogg
+lab_fsP https://cdn.freesound.org/previews/95/95560_367313-hq.ogg
