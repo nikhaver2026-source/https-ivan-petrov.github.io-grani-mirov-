@@ -163,7 +163,7 @@ function canMove() {
   var t = Date.now();
   if (t - stuckSaid > 3000) {
     stuckSaid = t;
-    snd("pack_heavy", "ui_error");
+    snd("strain_stuck", "ui_error"); /* ремни трещат под грузом */
     say("Груз неподъёмный: " + kg(total()) + " при пределе " + kg(capacity()) + ". С места не сдвинуться — сбросьте хотя бы " + kg(total() - capacity() * 1.5) + ": инвентарь, «Выбросить вещь».");
   }
   return false;
@@ -183,9 +183,10 @@ function after(quiet) {
   var t = tier();
   if (lastTier < 0) { lastTier = t; return; }
   if (t === lastTier) return;
-  var up = t > lastTier; lastTier = t;
+  var prev = lastTier, up = t > prev; lastTier = t;
   if (quiet) return;
   if (up && t >= 2) snd("pack_heavy", "loot_drop");
+  else if (!up && prev >= 2 && t <= 1) snd("pack_light", "pick_part"); /* перегруз прошёл — лямки ослабли */
   var why = t === 4 ? "с места не сдвинуться, сбросьте лишнее" : t === 3 ? "шаг вдвое тяжелее и громче, усталость вдвое быстрее, точность и уклонение ниже" : t === 2 ? "шаг тяжелее и громче, усталость быстрее, точность чуть ниже" : t === 1 ? (up ? "обычный ход" : "перегруз позади, шаг снова лёгкий") : "налегке";
   sayq("Груз " + kg(total()) + " из " + kg(capacity()) + ": " + TIER_N[t] + (t >= 2 || t === 1 ? " — " + why : "") + ".");
 }
@@ -343,7 +344,8 @@ function lockOk(kind, o) {
   if (kind === "frame") return !(g.exoOn && g.exoOn === o.id);
   return true;
 }
-function moved(msg) { snd("pack_heavy", "pick_part", { gain: 0.6 }); say(msg); after(); UIx("refresh"); if (gm().autosaveSoon) gm().autosaveSoon(); }
+/* (после 4.6) положили — лязг и капсула ушла по трубе; забрали — капсула пришла, шорох и звяк вещей */
+function moved(msg) { snd(/^В ячейк/.test(msg) ? "locker_put" : "locker_take", "pick_part", { gain: 0.8 }); say(msg); after(); UIx("refresh"); if (gm().autosaveSoon) gm().autosaveSoon(); }
 /* «Сдать все детали»: детали из рюкзака — в ячейку, сколько влезет: сначала тяжёлые (они больше всего мешают идти) */
 function putParts() {
   var g = G(), n = 0, w = 0, left = 0;
@@ -441,7 +443,7 @@ function rent() {
   if (g.credits < p) { LAB.UI.error(); say("Не хватает кредитов: аренда стоит " + p + ", у вас " + g.credits + "."); return false; }
   g.credits -= p; l.rentN = (l.rentN || 0) + 1;
   l.rentUntil = Math.max(l.rentUntil || 0, nowAbs()) + RENT_MIN;
-  snd("pack_heavy", "vend"); LAB.UI.ok();
+  snd("rent_ok", "vend"); LAB.UI.ok(); /* оттиск печати: договор аренды */
   say("Соседняя ячейка ваша до " + untilText(l.rentUntil) + ": плюс " + kg(RENT_KG) + " и " + RENT_SLOTS + " мест. Теперь " + capLine() + ". Списано " + crW(p) + ", осталось " + g.credits + ". Кончится аренда — вещи останутся целы, но класть будет нельзя, пока не заберёте лишнее.");
   if (gm().autosaveSoon) gm().autosaveSoon();
   return true;
@@ -460,6 +462,7 @@ function craftCell(kind) {
   if (gm().advanceTime) gm().advanceTime(25);
   if (LAB.mastery && LAB.mastery.gain) LAB.mastery.gain("mech", 6);
   snd("work_ratchet", "craft"); LAB.UI.ok();
+  if (gm().later) gm().later(function () { snd("locker_expand", "craft"); }, 900); /* ушли по сети снабжения — ячейка выросла */
   say(nm + " собраны и ушли в вашу ячейку по сети снабжения: " + (kind === "shelf" ? "мест плюс " + SHELF_SLOTS : "вес плюс " + kg(FLOOR_KG)) + ". Теперь " + capLine() + ".");
   if (gm().autosaveSoon) gm().autosaveSoon();
   return true;
@@ -471,7 +474,8 @@ function useCard() {
   if ((l.cards || 0) >= CARD_MAX) { say("К вашей ячейке и так присоединены " + CARD_MAX + " соседних — больше сеть снабжения не даёт. Лишняя карта не нужна: её можно выбросить."); return false; }
   g.inv.lockcard--; if (!(g.inv.lockcard > 0)) delete g.inv.lockcard;
   l.cards = (l.cards || 0) + 1;
-  snd("pack_heavy", "card_ok"); LAB.UI.ok();
+  snd("card_ok", "ui_ok"); LAB.UI.ok();
+  if (gm().later) gm().later(function () { snd("locker_expand", "card_ok"); }, 700); /* присоединена соседняя ячейка */
   say("Карта считана: ячейка выбывшего сотрудника присоединена к вашей — плюс " + kg(CARD_KG) + " и " + CARD_SLOTS + " места. Присоединено " + l.cards + " из " + CARD_MAX + ". Теперь " + capLine() + ".");
   if (gm().autosaveSoon) gm().autosaveSoon();
   return true;
@@ -499,7 +503,7 @@ function upgrade() {
   var p = upPrice();
   if (g.credits < p) { LAB.UI.error(); say("Не хватает кредитов: расширение стоит " + p + ", у вас " + g.credits + "."); return false; }
   g.credits -= p; l.lv = (l.lv || 0) + 1;
-  snd("pack_heavy", "vend"); LAB.UI.ok();
+  snd("locker_expand", "vend"); LAB.UI.ok();
   say("Ячейка расширена: ступень " + l.lv + " из " + LOCK_MAX_LV + ". Теперь " + capLine() + ". Списано " + p + " " + plural(p, "кредит", "кредита", "кредитов") + ", осталось " + g.credits + ".");
   if (gm().journal) gm().journal("Ячейка хранения расширена до ступени " + l.lv + ".");
   if (gm().autosaveSoon) gm().autosaveSoon();
@@ -543,7 +547,8 @@ function HOW_GROW() {
     "И харизма: с 20 кладовщики снабжения находят вам два лишних места, с 30 — четыре; харизма же снижает цену ступеней и аренды.";
 }
 function lockerMenu(where) {
-  UIx("menu", "Ячейка хранения", lockerItems(where), { rebuild: function () { return lockerItems(where); },
+  snd("locker_open", "ui_open"); /* (после 4.6) окошко выдачи ячейки: открыть и закрыть */
+  UIx("menu", "Ячейка хранения", lockerItems(where), { rebuild: function () { return lockerItems(where); }, onClose: function () { snd("locker_close", "ui_close"); },
     intro: "Ячейка одна: у капсулы, у верстака и у пункта снабжения — та же самая. В ячейке вещи ничего не весят, но у неё свой предел: " + capLine() + "." });
 }
 function benchItems(where) { var n = lockerN(); return [{ label: "Ячейка хранения" + (n ? ": " + n + " " + plural(n, "вещь", "вещи", "вещей") + ", " + kg(lockerWt()) + " из " + kg(lockCap().kg) : ": пуста"), fn: function () { lockerMenu(where || "bench"); } }]; }

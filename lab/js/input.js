@@ -140,6 +140,8 @@ function tapHoldCheck(g) {
   else if (chain) { clearTimeout(chain.timer); chain = null; }
   g.tapHeld = true;
   LAB.vib(30);
+  /* (после 4.6) и тик: без вибрации (или с выключенной) удержание слышно */
+  if (LAB.SND && LAB.SND.hold_tick && LAB.atmos && LAB.atmos.play) LAB.atmos.play("hold_tick");
   dispatch({ kind: "thold", n: n, taps: taps });
 }
 function up(e) {
