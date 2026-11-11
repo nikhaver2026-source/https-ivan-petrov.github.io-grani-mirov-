@@ -186,7 +186,7 @@ function bookEffect(q) {
   gm().gainXP(4 + Math.min(8, Math.round(bodyOf(q).length / 450)) + (c === "history" ? 6 : 0) + (c === "manual" ? 3 : 0));
   if (CALM[c]) { var m = []; gm().bodyApply({ neuro: -CALM[c] }, m); msg.push("Книга успокаивает" + (m.length ? ": " + m.join(" ") : ".")); }
   if (c === "science") {
-    if (R.cnt.science % 3 === 0 && R.mind < 4) { R.mind++; g.mind = Math.min(40, (g.mind || 10) + 1); msg.push("Прочитанное складывается в голове: интеллект " + g.mind + "."); }
+    if (R.cnt.science % 3 === 0 && R.mind < 4) { R.mind++; g.mind = Math.max(g.mind || 10, Math.min(LAB.stats ? LAB.stats.capOf("mind") : 40, (g.mind || 10) + 1)); /* (после 4.6) ниже Истока предел — шестьдесят */ msg.push("Прочитанное складывается в голове: интеллект " + g.mind + "."); }
     else if (R.mind < 4) { var leftS = 3 - R.cnt.science % 3; msg.push("Ещё " + leftS + " " + pl(leftS, "книга", "книги", "книг") + " о науке — и интеллект вырастет."); }
   }
   if (c === "tech" && LAB.workshop && LAB.workshop.unknownPick) {

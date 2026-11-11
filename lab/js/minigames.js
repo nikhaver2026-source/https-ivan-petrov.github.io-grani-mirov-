@@ -45,6 +45,7 @@ function finish(ok, val) {
   LAB.UI[ok ? "ok" : "error"]();
   if (c.cb) setTimeout(function () { c.cb(val !== undefined ? val : ok); }, 30);
   if (ok && LAB.tutor) LAB.tutor.ev("puzzle");
+  if (ok && LAB.stats && c.type) LAB.stats.deed("mini_" + c.type); /* (после 4.6) практика: взлом — интеллект, ритм — ловкость */
 }
 var lastCancel = 0;
 function cancel(silent) {

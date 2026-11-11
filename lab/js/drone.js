@@ -48,7 +48,8 @@ var NAMES = ["Жук", "Шмель", "Сверчок", "Стриж", "Светл
 
 function D() { var g = G(); return g.drone || null; }
 function has() { return !!D(); }
-function slots(d) { d = d || D(); if (!d) return 0; return 2 + ((d.lvl || 1) >= 5 ? 1 : 0) + (MS() && MS().has("drones") ? 1 : 0) + (d.mods.indexOf("nerve") >= 0 ? 1 : 0); }
+/* (после 4.6) интеллект 25 (основа, без плодов — гнёзда не мигают) — ещё одно гнездо: stats.js */
+function slots(d) { d = d || D(); if (!d) return 0; return 2 + ((d.lvl || 1) >= 5 ? 1 : 0) + (MS() && MS().has("drones") ? 1 : 0) + (d.mods.indexOf("nerve") >= 0 ? 1 : 0) + ((G().mind || 10) >= 25 ? 1 : 0); }
 function usedSlots(d) { return d.mods.filter(function (m) { return m !== "nerve"; }).length; }
 function hasMod(k) { var d = D(); return !!(d && !d.wreck && d.mods.indexOf(k) >= 0); }
 function active() { var d = D(); return !!(d && !d.wreck && d.out); }

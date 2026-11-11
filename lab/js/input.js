@@ -425,8 +425,9 @@ function gameKey(e, k) {
     case "m": if (game.navMenu) game.navMenu(); else game.navigate(true); return true;
     case "v": if (G.implants.indexOf("scan") >= 0) LAB.combat.useImplant("scan"); else game.lookAround(); return true;
     case "h": game.useMedkit(); return true;
-    case "c": LAB.ui.character(); return true;
-    case "i": LAB.ui.inventory(); return true;
+    /* (после 4.6) Shift+C — характеристики, Shift+I — груз */
+    case "c": if (e.shiftKey && LAB.stats) LAB.stats.menu(); else LAB.ui.character(); return true;
+    case "i": if (e.shiftKey && LAB.load) LAB.load.status(); else LAB.ui.inventory(); return true;
     case "j": if (LAB.ui.quests) LAB.ui.quests(); else LAB.ui.inventory("Задания"); return true; /* (3.7, нелогичность) сразу задания */
     case "u": LAB.ui.implants(); return true;
     case "t": game.quickStatus(); return true;

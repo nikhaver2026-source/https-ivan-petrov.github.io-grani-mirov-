@@ -39,6 +39,7 @@ function run(name, cond, build, cb) {
     LAB.UI[ok ? "ok" : "error"]();
     say(text);
     if (ok && LAB.tutor) LAB.tutor.ev("puzzle");
+    if (ok && LAB.stats) LAB.stats.deed("puzzle"); /* (после 4.6) практика интеллекта */
     setTimeout(function () { if (cb) cb(ok); }, 30);
   };
   var fail = function (why) {
@@ -396,7 +397,7 @@ function chess(cb, opts) {
   var cond = "Отложенная партия, ход белых. " + describePos(board) + " По записи на листке — белые ставят мат в один ход. Найдите его: сначала фигура, потом поле.";
   var name = opts.title || "Отложенная партия";
   var tries = 0, limit = 2, done = false;
-  var finish = function (ok, text) { if (done) return; done = true; UIx("closeAll"); LAB.UI[ok ? "ok" : "error"](); say(text); if (ok && LAB.tutor) LAB.tutor.ev("puzzle"); setTimeout(function () { if (cb) cb(ok); }, 30); };
+  var finish = function (ok, text) { if (done) return; done = true; UIx("closeAll"); LAB.UI[ok ? "ok" : "error"](); say(text); if (ok && LAB.tutor) LAB.tutor.ev("puzzle"); if (ok && LAB.stats) LAB.stats.deed("puzzle"); setTimeout(function () { if (cb) cb(ok); }, 30); };
   var open = function () {
     /* белые фигуры, у которых есть ход; король — в конце списка */
     var lm0 = legal(board, "w"), pieces = [];

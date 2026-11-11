@@ -33,10 +33,10 @@ function step(k) { return MS() ? MS().step(k) : 0; }
 var CLS = {
   light: { n: "лёгкий каркас", def: 1, arms: 1, legs: 2, plates: 1, drain: 0.8, str: 0, loud: -1, sh: false, tier: 2,
     need: { scrap: 6, servo: 2, wire: 2, cell: 1 }, d: "быстрый и тихий, почти без защиты; на плечо ничего не встаёт" },
-  mid: { n: "средний каркас", def: 3, arms: 2, legs: 2, plates: 2, drain: 1, str: 11, loud: 0, sh: true, tier: 3,
-    need: { scrap: 8, servo: 4, panel: 2, magnet: 1, cell: 1, wire: 2 }, d: "ровный во всём; нужна сила 11" },
-  heavy: { n: "тяжёлый каркас", def: 6, arms: 3, legs: 3, plates: 4, drain: 1.3, str: 14, loud: 2, sh: true, tier: 4,
-    need: { scrap: 10, servo: 6, panel: 4, powercell: 1, magnet: 2, supercond: 1 }, d: "сильный и шумный, держит удары; нужна сила 14" }
+  mid: { n: "средний каркас", def: 3, arms: 2, legs: 2, plates: 2, drain: 1, str: 11, con: 11, loud: 0, sh: true, tier: 3,
+    need: { scrap: 8, servo: 4, panel: 2, magnet: 1, cell: 1, wire: 2 }, d: "ровный во всём; нужны сила 11 и телосложение 11" },
+  heavy: { n: "тяжёлый каркас", def: 6, arms: 3, legs: 3, plates: 4, drain: 1.3, str: 14, con: 13, loud: 2, sh: true, tier: 4,
+    need: { scrap: 10, servo: 6, panel: 4, powercell: 1, magnet: 2, supercond: 1 }, d: "сильный и шумный, держит удары; нужны сила 14 и телосложение 13" }
 };
 var CLS_ORDER = ["light", "mid", "heavy"];
 var CAP = [0, 100, 160, 240];
@@ -58,7 +58,15 @@ function frames() { return X(); }
 function worn() { var g = G(); if (!g.exoOn) return null; var f = X().filter(function (x) { return x.id === g.exoOn; })[0]; if (!f) g.exoOn = null; return f || null; }
 function clsOf(f) { return CLS[f && f.cls] || CLS.light; }
 function capOf(f) { return CAP[Math.max(1, Math.min(3, f.cell || 1))]; }
-function strOk(f) { var c = clsOf(f); return !c.str || (LAB.heroStat ? LAB.heroStat("str") : G().str) >= c.str; }
+/* (после 4.6) каркасу нужны сила (приводы тянут суставы) и телосложение (кости держат вес и рывки), stats.js */
+function hs(k) { return LAB.heroStat ? LAB.heroStat(k) : (G()[k] == null ? 10 : G()[k]); }
+function strOk(f) { var c = clsOf(f); return (!c.str || hs("str") >= c.str) && (!c.con || hs("con") >= c.con); }
+function lackText(f) {
+  var c = clsOf(f), out = [];
+  if (c.str && hs("str") < c.str) out.push("сила меньше нужных " + c.str + ": суставы перегружены");
+  if (c.con && hs("con") < c.con) out.push("телосложение меньше нужных " + c.con + ": кости не держат вес и рывки приводов");
+  return out.join("; ");
+}
 function live(f) { return !!f && (f.en || 0) > 0; }
 function bonusK(f) { return strOk(f) ? 1 : 0.5; }
 function condK(f) { var c = f.cond != null ? f.cond : 100; return c >= 50 ? 1 : 0.6 + 0.8 * c / 100; }
@@ -188,7 +196,7 @@ function equip(f) {
   if (LAB.combat && LAB.combat.danger && LAB.combat.danger()) { say("Влезать в каркас в бою нельзя."); return false; }
   g.exoOn = f.id;
   snd("exo_on", "armor_on");
-  var c = clsOf(f), warn = strOk(f) ? "" : " Сила меньше нужных " + c.str + ": суставы перегружены — аккумулятор садится быстрее, прибавки вдвое меньше.";
+  var c = clsOf(f), warn = strOk(f) ? "" : " " + lackText(f).charAt(0).toUpperCase() + lackText(f).slice(1) + " — аккумулятор садится быстрее, прибавки вдвое меньше.";
   say("Каркас надет: " + line(f) + "." + warn);
   if (gm().UIx) gm().UIx("refresh");
   return true;
@@ -364,7 +372,7 @@ function line(f) {
   if (MS()) { var fl = MS().flawOf(f); if (fl && fl.seen) parts.push("брак: " + MS().FLAWS[fl.k].n); }
   return parts.join(", ");
 }
-function charLine() { var f = worn(); return f ? "Каркас: " + line(f) + (strOk(f) ? "." : ". Силы мало: суставы перегружены.") : ""; }
+function charLine() { var f = worn(); return f ? "Каркас: " + line(f) + (strOk(f) ? "." : ". " + lackText(f).charAt(0).toUpperCase() + lackText(f).slice(1) + ".") : ""; }
 
 /* ════════ ОКНА ════════ */
 function benchLabel(et) { var n = X().length; return "Каркас: сборка, узлы, накладки, ремонт" + (n ? " — каркасов " + n : ""); }

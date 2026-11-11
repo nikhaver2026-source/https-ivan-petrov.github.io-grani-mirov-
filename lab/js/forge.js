@@ -517,6 +517,8 @@ function dmgK(w, f) {
     var st = statsOf(w.own.fam, w.own.nodes);
     if (f && f.kind === "bio" && st.bio) k *= st.bio;
     if (dryW === w) k *= 0.35;
+    /* (после 4.6) ловкость 20: энергоклинок как влитой (stats.js) */
+    else if (w.own.fam === "blade" && (LAB.heroStat ? LAB.heroStat("agi") : G().agi) >= 20) k *= 1.15;
     if (st.cum) {
       var g = G();
       if ((g.inv.kv_hcharge || 0) > 0) {

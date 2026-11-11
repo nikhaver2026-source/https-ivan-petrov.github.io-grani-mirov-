@@ -273,6 +273,7 @@ function finish(o, how, b) {
   s.done = 1; s.p = 100; s.how = how; s.jack = 0; s.armed = 0;
   A("rubbleClear", o.x, o.y, how);
   if (gm().gainXP) gm().gainXP(how === "blast" ? 10 : how === "jack" ? 12 : how === "bar" ? 15 : 18);
+  if (how !== "blast" && LAB.stats) LAB.stats.deed("rubble"); /* (после 4.6) разбор руками — практика силы и выносливости */
   var to = o.type === "stairs_down" ? g.F + 1 : g.F - 1;
   if (gm().journal) gm().journal("Разобран завал на лестнице между этажами " + Math.min(g.F, to) + " и " + Math.max(g.F, to) + ".");
   if (gm().checkQuests) gm().checkQuests(); /* (3.6) завал на лестнице — шаг поручения */

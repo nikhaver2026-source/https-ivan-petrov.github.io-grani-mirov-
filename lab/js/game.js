@@ -32,7 +32,7 @@ function newState(seed) {
   var suit = LAB.makeArmor("suit", 1, 1, "a_start_suit");
   return {
     v: 1, worldV: WORLD_V, seed: seed, diff: LAB.DIFF[S.difficulty] ? S.difficulty : 1, tb: S.turnBased ? 1 : 0, L: 1, F: 1, x: 0, y: 0, face: "N",
-    hp: 100, hpMax: 100, str: 10, agi: 10, mind: 10, cha: 10,
+    hp: 100, hpMax: 100, str: 10, agi: 10, con: 10, mind: 10, cha: 10, /* (после 4.6) телосложение — stats.js */
     en: 30, enMax: 30, lvl: 1, xp: 0, credits: 40,
     weapons: [LAB.makeWeapon("crowbar", 1, 0, 1, "w_start_crowbar"), LAB.makeWeapon("spark", 1, 0, 1, "w_start_spark")], wi: 1, drawn: false,
     armor: suit, armors: [suit],
@@ -780,7 +780,8 @@ function bodyMinutes(min, asleep) {
   var mk = (1 - (LAB.implants ? LAB.implants.stat("metab") : 0)) * (LAB.dk().body || 1); /* (2.0) чип метаболизма; (2.2) режим сложности */
   b.food -= min / HUNGER_MIN * mk;
   /* выспались в капсуле (восемь часов и больше) — бодрость какое-то время падает вдвое медленнее */
-  b.wake -= min / 12 * (G.st.restedMin > 0 ? 0.5 : 1) * mk;
+  b.wake -= min / 12 * (G.st.restedMin > 0 ? 0.5 : 1) * mk * (LAB.stats ? LAB.stats.K.wake() : 1); /* (после 4.6) телосложение и выносливость */
+  if (LAB.stats) LAB.stats.minutes(min); /* (после 4.6) регенерация: вне боя здоровье возвращается само */
   if (G.st.restedMin > 0) G.st.restedMin = Math.max(0, G.st.restedMin - min);
   if (b.tox > 0) b.tox -= min / (b.food >= 50 ? 4 : 6);
   if (b.rad > 0) b.rad -= min / 180; /* радионуклиды выводятся сами очень медленно */
@@ -857,9 +858,9 @@ function bodyApply(d, msg) {
   if (d.tox) {
     /* (3.7) вдохнутое (air) держит фильтр, съеденное и яд в крови — только антитоксин */
     if ((d.air ? G.st.antitox > 0 : G.st.atoxIn > 0) && !d.overdose) msg.push(d.air ? "Фильтр не пропустил пары." : "Антитоксин не дал отраве подействовать.");
-    else { b.tox += d.tox * (pharm ? 0.5 : 1) * (1 - (LAB.implants ? LAB.implants.stat("antitox") : 0)); clampBody(b); msg.push("Токсины " + Math.round(b.tox) + "."); }
+    else { b.tox += d.tox * (pharm ? 0.5 : 1) * (1 - (LAB.implants ? LAB.implants.stat("antitox") : 0)) * (LAB.stats ? LAB.stats.K.tox() : 1); clampBody(b); msg.push("Токсины " + Math.round(b.tox) + "."); }
   }
-  if (d.neuro) { v = b.neuro; b.neuro += d.neuro; clampBody(b); if (Math.round(b.neuro) !== Math.round(v)) msg.push("Нейронагрузка " + Math.round(b.neuro) + "."); }
+  if (d.neuro) { v = b.neuro; b.neuro += d.neuro > 0 && LAB.stats ? d.neuro * LAB.stats.K.neuro() : d.neuro; clampBody(b); if (d.neuro > 0 && LAB.stats) LAB.stats.neuro(b.neuro - v); if (Math.round(b.neuro) !== Math.round(v)) msg.push("Нейронагрузка " + Math.round(b.neuro) + "."); }
   if (d.stopBleed && G.st.bleed) { G.st.bleed = 0; msg.push("Кровотечение остановлено."); }
   if (d.halfPoison && G.st.poison) { G.st.poison = Math.floor(G.st.poison / 2); msg.push("Яд слабеет."); }
   if (d.undeaf && G.st.deaf) { G.st.deaf = 0; msg.push("Звон в ушах стих."); }
@@ -954,18 +955,19 @@ function gainXP(n, why) {
   if (!n) return;
   G.xp += n;
   if (LAB.drone && n > 0) LAB.drone.onXP(n); /* (после 4.6) дрон-спутник растёт вместе с героем */
-  var lv = false;
+  var lv = false, lvTail = "";
   while (G.xp >= LAB.xpNeed(G.lvl)) {
     G.xp -= LAB.xpNeed(G.lvl); G.lvl++; lv = true;
-    G.hpMax += 10; G.hp = G.hpMax; G.enMax += G.enMax < 240 ? 3 : 1; G.en = G.enMax;
-    /* характеристики растут до сорока: дальше сила героя — в оружии и броне */
-    if (G.str < 40) G.str++; if (G.agi < 40) G.agi++; if (G.mind < 40) G.mind++; if (G.cha < 40) G.cha++;
+    /* (после 4.6) здоровья с уровнем — пять, ещё по пять даёт каждая единица телосложения (stats.js);
+       характеристики не растут сами — уровень даёт очки, игрок вкладывает их в окне «Характеристики» */
+    G.hpMax += 5; G.hp = G.hpMax; G.enMax += G.enMax < 240 ? 3 : 1; G.en = G.enMax;
+    lvTail = LAB.stats ? LAB.stats.onLevel() : "";
   }
   if (lv) {
     LAB.UI.fanfare(); LAB.vib([60, 80, 60]);
     /* (3.7) keep: следующий жест игрока очищает очередь речи (engine.js, userAct) — важное
        сообщение не теряется, а звучит, когда игрок замрёт */
-    say("Новый уровень героя: " + G.lvl + ". Здоровье, энергия и характеристики выросли.", { interrupt: false, keep: true });
+    say("Новый уровень героя: " + G.lvl + ". Здоровье и энергия выросли." + lvTail, { interrupt: false, keep: true });
     journal("Уровень героя " + G.lvl + ".");
   }
   UIx("refresh");
@@ -1153,6 +1155,7 @@ function tryMove(dir, run) {
   var from = [G.x, G.y];
   G.x = nx; G.y = ny;
   G.stats.steps++;
+  if (LAB.stats) LAB.stats.step(); /* (после 4.6) выносливость; с тяжёлым грузом — сила и телосложение */
   var loud = (armorSpecial("strength") ? 2 : 0) + (LAB.exo ? LAB.exo.stepNoise(run) : 0), quiet = armorSpecial("stealth"); /* (после 4.6) тяжёлый каркас громче, лёгкий на беге тише */
   G.noise = Math.max(G.noise, Math.round(((run ? 6 : 3) + loud) * (quiet ? 0.5 : 1)));
   if (LAB.exo) LAB.exo.onStep(run); /* (после 4.6) приводы едят заряд аккумулятора */
@@ -2160,6 +2163,7 @@ function stairStep(dir, run) {
   }
   A("stairStep", s.down, s.k, s.n);
   G.stats.steps++;
+  if (LAB.stats) LAB.stats.step();
   if (s.k === s.land && dir === "N") sayOnce("landing", "Площадка. Лестница поворачивает.", 4000);
   if (s.k >= s.n) {
     var down = s.down;
@@ -2940,8 +2944,9 @@ game.priceK = priceK;
 game.priceDepth = priceDepth;
 /* (3.5) Харизма: люди — выжившие и медики — уступают в цене, до двенадцати процентов при
    сорока, а скупая, платят чуть больше; автоматам, дроидам и терминалам она безразлична. */
-function chaK() { return 1 - Math.max(0, Math.min(30, LAB.heroStat("cha") - 10)) * 0.004; } /* (после 4.0) с прибавкой от плода */
-function chaSellK() { return 1 + Math.max(0, Math.min(30, LAB.heroStat("cha") - 10)) * 0.003; }
+/* (после 4.6) порог харизмы 25 — торговцы уступают охотнее (stats.js, K.buy и K.sell) */
+function chaK() { return LAB.stats ? 1 - LAB.stats.K.buy() : 1 - Math.max(0, Math.min(30, LAB.heroStat("cha") - 10)) * 0.004; } /* (после 4.0) с прибавкой от плода */
+function chaSellK() { return LAB.stats ? 1 + LAB.stats.K.sell() : 1 + Math.max(0, Math.min(30, LAB.heroStat("cha") - 10)) * 0.003; }
 game.chaK = chaK;
 game.chaSellK = chaSellK;
 /* Торговый терминал: расходники, броня своей глубины, скупка деталей. */
@@ -3066,7 +3071,9 @@ function spendEnergy(id) {
   if (G.en < c) { LAB.UI.error(); say("Не хватает энергии: нужно " + c + ", есть " + G.en + "." + (b.neuro >= 60 ? " При нейроперегрузке импланты тратят больше." : "")); return false; }
   G.en -= c;
   /* каждый имплант нагружает нервы */
-  b.neuro = Math.min(100, b.neuro + Math.max(1, Math.round(implantDef(id).cost / 2 * (LAB.implants ? LAB.implants.neuroK(id) : 1))));
+  var nv0 = b.neuro;
+  b.neuro = Math.min(100, b.neuro + Math.max(1, Math.round(implantDef(id).cost / 2 * (LAB.implants ? LAB.implants.neuroK(id) : 1) * (LAB.stats ? LAB.stats.K.neuro() : 1)))); /* (после 4.6) ментал */
+  if (LAB.stats) LAB.stats.neuro(b.neuro - nv0);
   bodyWarn();
   UIx("refresh"); return true;
 }
@@ -3643,7 +3650,7 @@ function useItem(id) {
   var hv = d.cup ? Math.round(d.heal * (1 + (LAB.Le(Math.min(cupL, G.L)) - 1) * 0.15) * (cold ? 0.6 : 1)) : d.heal;
   if (cold) { msg.push("Напиток остыл: греет и бодрит слабее."); d = coldCup(d); }
   if (hv && LAB.chem) hv = Math.round(hv * LAB.chem.healK(id, d)); /* (3.0) фармакология: лекарства в умелых руках лечат сильнее */
-  if (d.heal && !od) { var before = G.hp; G.hp = Math.min(G.hpMax, G.hp + (/^medkit|^bandage/.test(id) && LAB.ach && LAB.ach.has("medic") ? Math.round(hv * 1.17) : hv)); if (G.hp > before || !food) msg.push("Здоровье плюс " + (G.hp - before) + ", теперь " + G.hp + " из " + G.hpMax + "."); }
+  if (d.heal && !od) { var before = G.hp; G.hp = Math.min(G.hpMax, G.hp + Math.round((/^medkit|^bandage/.test(id) && LAB.ach && LAB.ach.has("medic") ? Math.round(hv * 1.17) : hv) * (LAB.stats ? LAB.stats.K.heal() : 1))); if (LAB.stats) LAB.stats.healed(G.hp - before); /* (после 4.6) регенерация */ if (G.hp > before || !food) msg.push("Здоровье плюс " + (G.hp - before) + ", теперь " + G.hp + " из " + G.hpMax + "."); }
   if (d.en) { var e0 = G.en; G.en = Math.min(G.enMax, G.en + d.en); msg.push("Энергия имплантов " + G.en + (G.en > e0 ? "" : ", и так полная") + "."); }
   if (d.cure && G.st.poison) { G.st.poison = 0; msg.push("Отравление снято."); }
   if (LAB.stash) { var pc = LAB.stash.cure(id); if (pc) msg.push(pc); } /* (2.5) клещ из хранилища */
@@ -3686,7 +3693,7 @@ function useFx(id, d) {
   if (fx.shield) { G.st.shield = Math.max(G.st.shield, fx.shield); G.st.shieldT = 40; msg.push("Щит: " + G.st.shield + "."); }
   if (fx.haste) { G.st.haste = Math.max(G.st.haste, fx.haste); msg.push("Ускорение."); }
   if (fx.cloak) { G.st.cloak = Math.max(G.st.cloak, fx.cloak); msg.push("Маскировка."); }
-  if (fx.heal) { var b = G.hp; G.hp = Math.min(G.hpMax, G.hp + Math.round(fx.heal * (LAB.chem ? LAB.chem.healK(id, d) : 1))); msg.push("Здоровье плюс " + (G.hp - b) + ", теперь " + G.hp + " из " + G.hpMax + "."); }
+  if (fx.heal) { var b = G.hp; G.hp = Math.min(G.hpMax, G.hp + Math.round(fx.heal * (LAB.chem ? LAB.chem.healK(id, d) : 1) * (LAB.stats ? LAB.stats.K.heal() : 1))); if (LAB.stats) LAB.stats.healed(G.hp - b); msg.push("Здоровье плюс " + (G.hp - b) + ", теперь " + G.hp + " из " + G.hpMax + "."); }
   if (fx.en) { G.en = Math.min(G.enMax, G.en + fx.en); msg.push("Энергия " + G.en + "."); }
   if (fx.cure && G.st.poison) { G.st.poison = 0; msg.push("Отравление снято."); }
   if (fx.unslow) { G.st.slow = 0; G.st.web = 0; }
@@ -4406,7 +4413,7 @@ function characterText() {
   var st = [];
   if (G.st.poison) st.push("отравление"); if (G.st.bleed) st.push("кровотечение"); if (G.st.slow) st.push("замедление"); if (G.st.deaf) st.push("звон в ушах"); if (G.st.antitox) st.push(G.st.atoxIn > 0 ? "антитоксин" : "фильтр противогаза"); if (G.st.shield) st.push("силовой щит " + G.st.shield); if (G.st.haste) st.push("ускорение"); if (G.st.cloak) st.push("маскировка"); if (LAB.combat && LAB.combat.hidden && LAB.combat.hidden()) st.push("в укрытии"); if (LAB.stash) st = st.concat(LAB.stash.status()); if (LAB.plants) st = st.concat(LAB.plants.states());
   if (st.length) lines.push("Состояние: " + st.join(", ") + ".");
-  lines.push("Энергия имплантов " + G.en + " из " + G.enMax + ". Уровень героя " + G.lvl + ", опыт " + G.xp + " из " + LAB.xpNeed(G.lvl) + ". Сила " + statTxt("str") + ", ловкость " + statTxt("agi") + ", интеллект " + statTxt("mind") + ", харизма " + statTxt("cha") + ". Кредиты " + G.credits + ".");
+  lines.push("Энергия имплантов " + G.en + " из " + G.enMax + ". Уровень героя " + G.lvl + ", опыт " + G.xp + " из " + LAB.xpNeed(G.lvl) + ". " + (LAB.stats ? LAB.stats.charLine() : "Сила " + statTxt("str") + ", ловкость " + statTxt("agi") + ", интеллект " + statTxt("mind") + ", харизма " + statTxt("cha") + ".") + " Кредиты " + G.credits + ".");
   if (LAB.chem) lines.push(LAB.chem.line()); /* (3.0) ступени химии */
   if (LAB.traps && LAB.traps.stageCap && LAB.traps.stageCap() > 0 && LAB.traps.skillText) lines.push(LAB.traps.skillText()); /* (после 4.1) ловушечное дело — ниже Истока */
   if (LAB.mastery) { var mln = LAB.mastery.charLine(); if (mln) lines.push(mln); } /* (после 4.6) мастерство */

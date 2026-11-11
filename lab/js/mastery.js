@@ -78,6 +78,7 @@ function dayNow() { return G().day || 1; }
 function gain(k, n, quiet) {
   if (!n || !DIRS[k]) return 0;
   var m = M(), s0 = step(k), o0 = overall();
+  if (n > 0 && LAB.stats) n *= LAB.stats.K.xp(); /* (после 4.6) интеллект: опыт мастерства больше */
   m.xp[k] = Math.round(((m.xp[k] || 0) + n) * 10) / 10;
   var s1 = step(k), o1 = overall();
   if (s1 > s0 && !quiet) { snd("work_pass", "ui_levelup"); sayq("Мастерство растёт: " + DIRS[k].n + " — ступень " + s1 + "."); if (gm().journal) gm().journal("Мастерство: " + DIRS[k].n + ", ступень " + s1 + "."); }
@@ -150,6 +151,7 @@ function flawChance(rc, opts) {
   if (tired()) p *= 1.6;
   if (opts.key ? studiedKey(opts.key) : studiedKey(baseKey(rc))) p *= 0.5;
   if (c === "own" && has("inventor")) p *= 0.5;
+  if (LAB.stats) p *= LAB.stats.K.flaw(); /* (после 4.6) ловкость: «чтобы не ронять инструмент» */
   return Math.min(0.5, p);
 }
 var FLAWS = {

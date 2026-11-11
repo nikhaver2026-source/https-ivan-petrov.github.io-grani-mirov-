@@ -909,7 +909,8 @@ function rewardText(q) {
   if (q.type === "courier" && !q.done) return "Награду дадут те, кому передадите весточку.";
   var echo = handOf(q) === "echo";
   /* (3.6) по связи: кредиты — на браслет, подарок — у выжившего поближе к вам */
-  var t = "Награда — " + r.cr + " " + pl(r.cr, "кредит", "кредита", "кредитов") + (echo ? " на браслет" + (r.gift ? ", а " + giftName(r.gift) + " — у выжившего поблизости" : "") : (r.gift ? " и " + giftName(r.gift) : "")) + ".";
+  var crS = Math.round((r.cr || 0) * (LAB.stats ? LAB.stats.K.quest() : 1)); /* (после 4.6) с харизмой — столько и заплатят */
+  var t = "Награда — " + crS + " " + pl(crS, "кредит", "кредита", "кредитов") + (echo ? " на браслет" + (r.gift ? ", а " + giftName(r.gift) + " — у выжившего поблизости" : "") : (r.gift ? " и " + giftName(r.gift) : "")) + ".";
   var c = condText(q);
   return c ? t + " " + c : t;
 }
@@ -1356,7 +1357,7 @@ function finish(q, n, opt, echo) {
 function pay(q, head, extra, later) {
   var g = G(), r = q.reward || { cr: 0, xp: 0 }, k = condK(q);
   if (LAB.ach) LAB.ach.ev("quest", 1);
-  var cr = Math.round((r.cr || 0) * k), xp = Math.round((r.xp || 0) * k);
+  var cr = Math.round((r.cr || 0) * k * (LAB.stats ? LAB.stats.K.quest() : 1)), xp = Math.round((r.xp || 0) * k); /* (после 4.6) харизма: выжившие платят щедрее */
   g.credits += cr;
   LAB.UI.fanfare();
   var kept = (q.cond || []).filter(function (c) { return !c.lost; }), giftT = "";

@@ -812,6 +812,8 @@ function characterItems() {
     its.push({ label: "Назад", fn: function () {} });
     menu("Прокатный комплект", its);
   } });
+  /* (после 4.6) характеристики: очки за уровень и практика (stats.js) */
+  if (LAB.stats && LAB.stats.S()) items.push({ label: "Характеристики" + (LAB.stats.S().pts ? ": очков для распределения " + LAB.stats.S().pts : ": сила, ловкость, телосложение, интеллект, харизма"), fn: function () { LAB.stats.menu(); } });
   items.push({ label: "Сохранить игру", fn: saveMenu });
   items.push({ label: "Настройки", fn: settingsMenu });
   items.push({ label: "Руководство", fn: function () { if (LAB.guide) LAB.guide.open(); } });

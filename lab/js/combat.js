@@ -2216,6 +2216,7 @@ function toxins(n, blood) {
   var g = G();
   if (!g.body || (blood ? g.st.atoxIn > 0 : g.st.antitox > 0) || n <= 0) return;
   if (gm().armorSpecial("antitox")) n = Math.ceil(n / 2);
+  if (LAB.stats) n = Math.max(1, Math.round(n * LAB.stats.K.tox())); /* (после 4.6) телосложение */
   g.body.tox = Math.min(100, g.body.tox + n);
   if (gm().bodyWarn) gm().bodyWarn();
 }
@@ -2265,6 +2266,7 @@ function hurtPlayer(dmg, adt, src, opts) {
   if (LAB.repair) LAB.repair.armorHit(raw, fin); /* (2.0) броня изнашивается от ударов, которые держит */
   g.hp -= fin;
   g.lastHurt = Date.now();
+  if (LAB.stats) LAB.stats.hurt(fin); /* (после 4.6) раны закаляют: практика телосложения */
   if (LAB.chem && src && fin > 0) LAB.chem.onBite(src); /* (3.0) укус ядовитой твари — немного мутагена */
   A("hurt", adt, fin, src);
   LAB.vib(fin > g.hpMax * 0.15 ? [80, 40, 80] : 40);
