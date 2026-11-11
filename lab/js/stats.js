@@ -6,6 +6,14 @@
    копят навык, и не чаще раза в сутки характеристика подрастает сама.
    Три вторичные — выносливость, ментал, регенерация — очками не растут,
    только повторением: ходьба и груз, нейронагрузка, лечение и отдых.
+   (просьба автора: прокачка медленная, накрутить нельзя) Очко — раз в пять
+   уровней героя (уровни идут быстро: прежние пять очков за каждый упирали
+   все пять характеристик в предел на первых уровнях комплекса). Практика
+   привязана к настоящему времени: у каждой характеристики запас практики,
+   он пополняется только минутами настоящей игры (игра на экране, игрок
+   действует; свёрнутая игра, пауза, капсула и простой — не в счёт), — сон,
+   что проматывает сутки комплекса, и повтор одного дела без конца больше
+   не ускоряют рост; цена единицы практики круто растёт с характеристикой.
    Предел основных — сорок, ниже Истока — шестьдесят; вторичных — тридцать.
    Записи прежних версий: телосложение получает то, что дал бы ровный
    рост (по единице за уровень), — здоровье не пересчитывается.
@@ -30,7 +38,9 @@ var MAIN = ["str", "agi", "con", "mind", "cha"], SEC = ["stam", "ment", "regen"]
 var NAME = { str: "сила", agi: "ловкость", con: "телосложение", mind: "интеллект", cha: "харизма", stam: "выносливость", ment: "ментал", regen: "регенерация" };
 var NAMEA = { str: "силу", agi: "ловкость", con: "телосложение", mind: "интеллект", cha: "харизму", stam: "выносливость", ment: "ментал", regen: "регенерацию" };
 var GREW = { str: "выросла", agi: "выросла", con: "выросло", mind: "вырос", cha: "выросла", stam: "выросла", ment: "вырос", regen: "выросла" };
-var PER_LVL = 5, SEC_CAP = 30;
+var PTS_EVERY = 5, SEC_CAP = 30;   /* очко характеристик — на каждом пятом уровне героя */
+var RATE = 20, STORE_H = 2;        /* запас практики: 20 единиц за час настоящей игры, копится до двух часов */
+var IDLE_MS = 180000;              /* простой дольше трёх минут — не игра */
 
 /* был ли герой ниже Истока: предел основных — шестьдесят */
 function below() { var g = G(); if (g.L > 100) return true; for (var k in (g.maxF || {})) if (+k > 100) return true; return false; }
@@ -50,6 +60,39 @@ function base(k) { var g = G(); if (SEC.indexOf(k) >= 0) return (S().sec[k] || 0
 /* с прибавкой плода — для действий; основа — для порогов окна и гнёзд дрона */
 function val(k) { if (SEC.indexOf(k) >= 0) return base(k); return LAB.heroStat ? LAB.heroStat(k) : base(k); }
 function sec(k) { return S() ? S().sec[k] || 0 : 0; }
+
+/* ── НАСТОЯЩЕЕ ВРЕМЯ ИГРЫ ── секунды, пока игра на экране и игрок действует (s.play, в записи).
+   Счёт — по ходу игры (performance.now), а не по часам устройства: перевести его нельзя; шаг счёта —
+   не больше пяти секунд (устройство уснуло — время не набежало). */
+var playT = 0;
+function playTick() {
+  var now = typeof performance !== "undefined" && performance.now ? performance.now() : Date.now();
+  var dt = playT ? Math.min(5000, Math.max(0, now - playT)) : 0;
+  playT = now;
+  var g = LAB.game, sp = LAB.Speech;
+  if (!dt || !g || !g.entered || g.paused || LAB.bg || !g.G || g.G.dead || g.G.done) return;
+  if (!sp || !sp.lastUser || Date.now() - sp.lastUser > IDLE_MS) return;
+  var s = S(); if (s) s.play = (s.play || 0) + dt / 1000;
+}
+if (typeof window !== "undefined" && !LAB.selftesting) setInterval(function () { LAB.safe ? LAB.safe(playTick) : playTick(); }, 2000);
+function playMin() { var s = S(); return s ? (s.play || 0) / 60 : 0; }
+/* запас практики характеристики: пополняется минутами игры, не больше чем на два часа вперёд */
+function store(k) {
+  var s = S(), top = RATE * STORE_H, p = s.play || 0;
+  if (!s.pb) s.pb = {}; if (!s.pt) s.pt = {};
+  if (s.pb[k] == null) { s.pb[k] = top; s.pt[k] = p; }
+  s.pb[k] = Math.min(top, s.pb[k] + Math.max(0, p - (s.pt[k] || 0)) / 3600 * RATE);
+  s.pt[k] = p;
+  return s.pb[k];
+}
+/* запас иссяк — сказать, но не чаще раза в два часа игры на характеристику */
+function spent(k) {
+  var s = S(); if (!s.ps) s.ps = {};
+  var p = s.play || 0;
+  if (s.ps[k] != null && p - s.ps[k] < 7200) return;
+  s.ps[k] = p;
+  sayq(cap1(NAME[k]) + ": практики пока довольно — навыку нужно время. Запас практики растёт, пока вы играете: единица за три минуты игры.");
+}
 
 /* ── ПОРОГИ ── звучат, когда характеристика их переходит */
 var TH = {
@@ -114,15 +157,21 @@ var GROWS = {
   regen: "только практикой: лечение и отдых"
 };
 
-/* ── ПРАКТИКА ── сколько нужно на единицу; не чаще раза в сутки на характеристику */
-function need(k) { var v = base(k); return SEC.indexOf(k) >= 0 ? 20 + 10 * v : 30 + 5 * Math.max(0, v - 10); }
+/* ── ПРАКТИКА ── сколько нужно на единицу (круто растёт с характеристикой: 50 у десяти, 680 у двадцати,
+   1610 у тридцати, 2840 у сорока); дело берёт из запаса практики (store), не больше, чем в нём есть и чем
+   осталось до единицы; подрастает характеристика не чаще раза в сутки комплекса */
+function need(k) { var v = base(k); if (SEC.indexOf(k) >= 0) return 20 + 10 * v; var d = Math.max(0, v - 10); return Math.round(50 + 48 * d + 1.5 * d * d); }
 function today() { return G().day || 1; }
 function practice(k, units) {
-  var s = S(); if (!s || !units) return;
+  var s = S(); if (!s || !(units > 0)) return;
   if (base(k) >= capOf(k)) return;
-  var n = need(k);
-  s.px[k] = Math.min(n, (s.px[k] || 0) + units);
-  if (s.px[k] < n || s.day[k] === today()) return;
+  var n = need(k), room = Math.max(0, n - (s.px[k] || 0));
+  if (room > 0) {
+    var have = store(k), take = Math.min(units, room, have);
+    if (take > 0) { s.pb[k] = have - take; s.px[k] = (s.px[k] || 0) + take; }
+    if (take < Math.min(units, room) && s.pb[k] < 0.5 && MAIN.indexOf(k) >= 0) spent(k); /* вторичные растут сами, от шагов и лечения: о них не говорим */
+  }
+  if ((s.px[k] || 0) < n || s.day[k] === today()) return;
   s.px[k] = 0; s.day[k] = today();
   var v0 = base(k);
   raise(k, 1);
@@ -198,60 +247,78 @@ function minutes(min) {
   if (s.rg >= 1) { var n = Math.floor(s.rg); s.rg -= n; g.hp = Math.min(g.hpMax, g.hp + n); UIx("refresh"); }
 }
 
-/* ── УРОВЕНЬ ГЕРОЯ ── очки; всё на пределе — опыт уровня уходит в здоровье */
+/* ── ЦЕНА ЕДИНИЦЫ ── (просьба автора: с каждым уровнем — дольше и труднее) чем выше характеристика, тем дороже
+   поднять её очками: до двадцати — очко за единицу, с двадцати — два, с тридцати — три, с сорока — четыре, с
+   пятидесяти — пять. Так и практика: цена единицы растёт с характеристикой (need), и уровни героя: каждый следующий
+   стоит больше опыта (LAB.xpNeed). Одна характеристика от десяти до сорока — шестьдесят очков, то есть триста
+   уровней героя без практики; на предел всех пяти очков одних уровней не хватит до самых глубин. */
+function costAt(v) { return 1 + Math.floor(Math.max(0, v - 10) / 10); }
+function cost(k) { return costAt(base(k)); }
+/* сколько очков стоит поднять на n единиц (не выше предела) */
+function costN(k, n) { var v = base(k), m = capOf(k), c = 0; for (var i = 0; i < n && v + i < m; i++) c += costAt(v + i); return c; }
+/* на сколько единиц хватит p очков */
+function affordable(k, p) { var v = base(k), m = capOf(k), n = 0; while (v + n < m && costAt(v + n) <= p) { p -= costAt(v + n); n++; } return n; }
+function ptsW(n) { return n + " " + plural(n, "очко", "очка", "очков"); }
+
+/* ── УРОВЕНЬ ГЕРОЯ ── очко — на каждом пятом уровне; всё на пределе — опыт уровня уходит в здоровье */
+function nextPtLevel(l) { return (Math.floor(l / PTS_EVERY) + 1) * PTS_EVERY; }
 function onLevel() {
   var s = S(), g = G();
-  var room = MAIN.reduce(function (a, k) { return a + Math.max(0, capOf(k) - base(k)); }, 0) - (s.pts || 0);
+  if (g.lvl % PTS_EVERY) return " Следующее очко характеристик — на " + nextPtLevel(g.lvl) + "-м уровне.";
+  var room = MAIN.reduce(function (a, k) { return a + costN(k, capOf(k) - base(k)); }, 0) - (s.pts || 0);
   if (room <= 0) { g.hpMax += 5; g.hp = g.hpMax; return " Характеристики на пределе: уровень дал ещё пять здоровья."; }
-  var add = Math.min(PER_LVL, room);
-  s.pts = (s.pts || 0) + add;
-  return " Очков характеристик: " + s.pts + " — " + LAB.K("окно «Характеристики»: " + LAB.gw("stats", "тройное касание тремя пальцами"), "окно «Характеристики»: Shift+C") + ".";
+  s.pts = (s.pts || 0) + 1;
+  return " Очко характеристик" + (s.pts > 1 ? ", теперь их " + s.pts : "") + " — " + LAB.K("окно «Характеристики»: " + LAB.gw("stats", "тройное касание тремя пальцами"), "окно «Характеристики»: Shift+C") + ".";
 }
 function spend(k, n) {
-  var s = S();
-  n = Math.min(n || 1, s.pts || 0, capOf(k) - base(k));
-  if (n <= 0) return false;
-  var v0 = base(k);
-  s.pts -= n; raise(k, n);
-  var th = thCross(k, v0, base(k));
+  var s = S(), got = Math.min(n || 1, affordable(k, s.pts || 0));
+  if (got <= 0) return false;
+  var v0 = base(k), paid = costN(k, got);
+  s.pts -= paid; raise(k, got);
+  var th = thCross(k, v0, base(k)), c = base(k) < capOf(k) ? cost(k) : 0;
   snd("stat_up", "ui_levelup");
-  say(cap1(NAME[k]) + " " + base(k) + ". " + (s.pts ? "Осталось очков: " + s.pts + "." : "Очки распределены.") + (th ? " " + th : ""));
+  say(cap1(NAME[k]) + " " + base(k) + (paid > got ? " — за " + ptsW(paid) : "") + ". " + (s.pts ? "Осталось очков: " + s.pts + "." : "Очки распределены.") + (c > 1 ? " Следующая единица — " + ptsW(c) + "." : "") + (th ? " " + th : ""));
   return true;
 }
-/* поровну: по очку туда, где меньше (основа), пока есть очки и место */
+/* поровну: по единице туда, где меньше (основа), пока хватает очков на её цену и есть место */
 function spread() {
-  var s = S(), got = {}, guard = 0;
+  var s = S(), got = {}, guard = 0, any = false;
   while ((s.pts || 0) > 0 && guard++ < 500) {
-    var open = MAIN.filter(function (k) { return base(k) < capOf(k); });
+    var open = MAIN.filter(function (k) { return base(k) < capOf(k) && cost(k) <= s.pts; });
     if (!open.length) break;
     open.sort(function (a, b) { return base(a) - base(b) || MAIN.indexOf(a) - MAIN.indexOf(b); });
     var k = open[0], v0 = base(k);
-    s.pts--; raise(k, 1);
+    s.pts -= cost(k); raise(k, 1); any = true;
     got[k] = (got[k] || 0) + 1;
     var th = thCross(k, v0, base(k)); if (th) got.th = (got.th ? got.th + " " : "") + th;
   }
+  if (!any) { LAB.UI && LAB.UI.error && LAB.UI.error(); say("Очков не хватает: единица любой характеристики сейчас стоит дороже, чем у вас есть, — " + ptsW(s.pts || 0) + "."); return; }
   snd("stat_up", "ui_levelup");
-  say("Распределено: " + MAIN.filter(function (k) { return got[k]; }).map(function (k) { return NAME[k] + " плюс " + got[k] + ", теперь " + base(k); }).join("; ") + "." + (got.th ? " " + got.th : ""));
+  say("Распределено: " + MAIN.filter(function (k) { return got[k]; }).map(function (k) { return NAME[k] + " плюс " + got[k] + ", теперь " + base(k); }).join("; ") + "." + (s.pts ? " Осталось " + ptsW(s.pts) + ": на следующую единицу не хватает." : "") + (got.th ? " " + got.th : ""));
 }
 
 /* ── ОКНО «ХАРАКТЕРИСТИКИ» ── */
 function statLabel(k) {
   var s = S(), v = base(k), b = val(k), m = capOf(k), isSec = SEC.indexOf(k) >= 0;
-  return cap1(NAME[k]) + " " + v + (b !== v ? " (с плодом " + b + ")" : "") + " из " + m + (v >= m ? ", предел" : "") + ". " + cap1(effects(k)) + "." + (v < m ? " Практика: " + Math.floor(s.px[k] || 0) + " из " + need(k) + (s.day[k] === today() && (s.px[k] || 0) >= need(k) ? ", подрастёт завтра" : "") + "." : "") + (isSec ? " Растёт " + GROWS[k] + "." : "");
+  var px = Math.floor(s.px[k] || 0), st = Math.floor(store(k));
+  return cap1(NAME[k]) + " " + v + (b !== v ? " (с плодом " + b + ")" : "") + " из " + m + (v >= m ? ", предел" : "") + ". " + cap1(effects(k)) + "." +
+    (v < m && !isSec && cost(k) > 1 ? " Очками — " + ptsW(cost(k)) + " за единицу." : "") +
+    (v < m ? " Практика: " + px + " из " + need(k) + (s.day[k] === today() && (s.px[k] || 0) >= need(k) ? ", подрастёт завтра" : "; запас практики " + st + " из " + RATE * STORE_H) + "." : "") + (isSec ? " Растёт " + GROWS[k] + "." : "");
 }
 function items() {
   var s = S(), its = [];
-  its.push({ label: function () { return s.pts ? "Очков для распределения: " + s.pts + ". Выберите характеристику, чтобы вложить очко." : "Свободных очков нет: они приходят с каждым уровнем героя, по " + PER_LVL + "."; }, info: true, keep: true, fn: function () { say(s.pts ? "Очков для распределения: " + s.pts + "." : "Свободных очков нет."); } });
+  its.push({ label: function () { return s.pts ? "Очков для распределения: " + s.pts + ". Выберите характеристику, чтобы вложить очко." : "Свободных очков нет: очко приходит на каждом пятом уровне героя, следующее — на " + nextPtLevel(G().lvl || 1) + "-м."; }, info: true, keep: true, fn: function () { say(s.pts ? "Очков для распределения: " + s.pts + "." : "Свободных очков нет. Следующее — на " + nextPtLevel(G().lvl || 1) + "-м уровне героя."); } });
   MAIN.forEach(function (k) { its.push({ label: function () { return statLabel(k); }, fn: function () { statMenu(k); } }); });
   SEC.forEach(function (k) { its.push({ label: function () { return statLabel(k); }, info: true, keep: true, fn: function () { say(statLabel(k)); } }); });
-  if (s.pts) its.push({ label: "Распределить все очки поровну: по очку туда, где меньше", fn: function () { spread(); UIx("closeTop", true); menu(); } });
+  if (s.pts) its.push({ label: "Распределить все очки поровну: по единице туда, где меньше, пока хватает на её цену", fn: function () { spread(); UIx("closeTop", true); menu(); } });
   its.push({ label: "Как растут характеристики", fn: function () { UIx("note", "Как растут характеристики", HOWTO()); } });
   its.push({ label: "Назад", fn: function () {} });
   return its;
 }
 function HOWTO() {
-  return "С каждым уровнем героя приходят " + PER_LVL + " очков характеристик — вложите их сами: выберите характеристику и «Вложить очко». Вложенное назад не вынуть. " +
-    "Характеристики растут и от дел — практикой: сила — от ближнего боя, разбора и ходьбы с тяжёлым грузом; ловкость — от стрельбы, ловушек, отмычек и тонкой работы; телосложение — от ран, ядов и долгих переходов; интеллект — от взлома, головоломок, книг и опытов; харизма — от поручений, торговли и разговоров. Практика поднимает каждую характеристику не чаще раза в сутки. " +
+  return "Характеристики растут медленно, и каждая следующая единица — труднее. Очко характеристик приходит на каждом пятом уровне героя, а каждый уровень героя стоит больше опыта, чем прежний. Вложите очко сами: выберите характеристику и «Вложить очко». Чем выше характеристика, тем дороже единица: до двадцати — очко, с двадцати — два, с тридцати — три, с сорока — четыре, с пятидесяти — пять. Вложенное назад не вынуть. " +
+    "Растут они и от дел — практикой: сила — от ближнего боя, разбора и ходьбы с тяжёлым грузом; ловкость — от стрельбы, ловушек, отмычек и тонкой работы; телосложение — от ран, ядов и долгих переходов; интеллект — от взлома, головоломок, книг и опытов; харизма — от поручений, торговли и разговоров. " +
+    "Практика привязана к настоящему времени: у каждой характеристики свой запас практики, он пополняется, только пока вы играете, — двадцать единиц за час игры, впрок не больше чем на два часа. Свёрнутая игра, пауза, капсула и простой не в счёт, сон, что проматывает сутки комплекса, тоже. Повторять одно дело без конца бесполезно: запас иссяк — дела этой характеристике пока ничего не дают. Чем выше характеристика, тем больше практики нужно на следующую единицу, и подрастает она не чаще раза в сутки комплекса. " +
     "Выносливость, ментал и регенерация очками не растут — только повторением: шаги и груз, пережитая нейронагрузка, лечение и отдых. " +
     "Предел основных — сорок, ниже Истока — шестьдесят; вторичных — тридцать. Пороги — в описании каждой характеристики: дойдёте — «Эхо» скажет, что открылось.";
 }
@@ -263,12 +330,15 @@ function statMenu(k) {
   var s = S(), v = base(k), m = capOf(k);
   var its = [];
   if (v >= m) its.push({ label: cap1(NAME[k]) + " на пределе: " + m + ".", info: true, keep: true, fn: function () { say(cap1(NAME[k]) + " на пределе."); } });
-  else if (!s.pts) its.push({ label: "Очков нет: они приходят с уровнем героя.", info: true, keep: true, fn: function () { say("Очков нет."); } });
+  else if (!s.pts) its.push({ label: "Очков нет: очко приходит на каждом пятом уровне героя, следующее — на " + nextPtLevel(G().lvl || 1) + "-м.", info: true, keep: true, fn: function () { say("Очков нет."); } });
+  else if (cost(k) > s.pts) its.push({ label: "Поднять " + NAMEA[k] + " до " + (v + 1) + " стоит " + ptsW(cost(k)) + ", у вас " + s.pts + ": чем выше характеристика, тем дороже единица. Копите очки — или растите " + NAMEA[k] + " делами.", info: true, keep: true, fn: function () { say("Не хватает очков: нужно " + cost(k) + "."); } });
   else {
-    its.push({ label: "Вложить очко: " + NAME[k] + " станет " + (v + 1) + ". Очков останется " + (s.pts - 1), fn: function () { spend(k, 1); UIx("closeTop", true); UIx("rebuildTop"); } });
-    if (s.pts >= 5 && m - v >= 5) its.push({ label: "Вложить пять очков: " + NAME[k] + " станет " + (v + 5), fn: function () { spend(k, 5); UIx("closeTop", true); UIx("rebuildTop"); } });
-    if (s.pts > 1 && m - v >= s.pts && s.pts !== 5) its.push({ label: "Вложить все очки, " + s.pts + ": " + NAME[k] + " станет " + (v + s.pts), fn: function () { spend(k, s.pts); UIx("closeTop", true); UIx("rebuildTop"); } });
+    var c1 = cost(k), nAll = affordable(k, s.pts);
+    its.push({ label: (c1 > 1 ? "Вложить " + ptsW(c1) : "Вложить очко") + ": " + NAME[k] + " станет " + (v + 1) + ". Очков останется " + (s.pts - c1), fn: function () { spend(k, 1); UIx("closeTop", true); UIx("rebuildTop"); } });
+    if (nAll >= 5 && nAll !== 5) its.push({ label: "Поднять на пять: " + NAME[k] + " станет " + (v + 5) + ", это " + ptsW(costN(k, 5)), fn: function () { spend(k, 5); UIx("closeTop", true); UIx("rebuildTop"); } });
+    if (nAll > 1) its.push({ label: "На все очки, что хватит: " + NAME[k] + " станет " + (v + nAll) + ", это " + ptsW(costN(k, nAll)) + (s.pts - costN(k, nAll) ? ", останется " + (s.pts - costN(k, nAll)) : ""), fn: function () { spend(k, nAll); UIx("closeTop", true); UIx("rebuildTop"); } });
   }
+  if (v < m) its.push({ label: "Цена единицы очками: до 20 — очко, с 20 — два, с 30 — три, с 40 — четыре, с 50 — пять. Сейчас — " + ptsW(cost(k)) + ".", info: true, keep: true, fn: function () { say("Сейчас единица стоит " + ptsW(cost(k)) + "."); } });
   its.push({ label: "Сейчас: " + effects(k) + ".", info: true, keep: true, fn: function () { say(effects(k) + "."); } });
   var nx = thNext(k); if (nx) its.push({ label: "Следующий порог — " + nx, info: true, keep: true, fn: function () { say(nx); } });
   its.push({ label: "Растёт " + GROWS[k] + ".", info: true, keep: true, fn: function () { say("Растёт " + GROWS[k] + "."); } });
@@ -285,7 +355,9 @@ function charLine() {
 
 LAB.stats = {
   MAIN: MAIN, SEC: SEC, NAME: NAME, K: K, S: S, base: base, val: val, sec: sec, capOf: capOf, need: need,
-  deed: deed, step: step, hurt: hurt, healed: healed, neuro: neuro, minutes: minutes, practice: practice,
+  deed: deed, step: step, hurt: hurt, healed: healed, neuro: neuro, minutes: minutes, practice: practice, playMin: playMin, store: store,
+  PTS_EVERY: PTS_EVERY, RATE: RATE, STORE_H: STORE_H, nextPtLevel: nextPtLevel, costAt: costAt, cost: cost, costN: costN, affordable: affordable,
+  _play: function (min) { var s = S(); if (s) s.play = (s.play || 0) + min * 60; }, _tick: playTick, /* для проверок: минуты игры */
   onLevel: onLevel, spend: spend, spread: spread, raise: raise, menu: menu, statMenu: statMenu, charLine: charLine, effects: effects, thNext: thNext
 };
 })();

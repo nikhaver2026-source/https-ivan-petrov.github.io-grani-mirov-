@@ -180,14 +180,22 @@ function chemLearn(q) {
   var rc = pool[h32("chembook:" + q.id) % pool.length];
   return C.learn(rc.id, "Её описала книга «" + q.t + "».") ? "Рецептура — в химическом журнале «Эхо»." : "";
 }
+var SCI_AT = [5, 12, 21], SCI_MAX = SCI_AT.length; /* сколько книг о науке прочитано всего к каждой прибавке */
 function bookEffect(q) {
   var R = rec(), c = q.cat || "fiction", msg = [], g = G();
   R.cnt[c] = (R.cnt[c] || 0) + 1;
   gm().gainXP(4 + Math.min(8, Math.round(bodyOf(q).length / 450)) + (c === "history" ? 6 : 0) + (c === "manual" ? 3 : 0));
   if (CALM[c]) { var m = []; gm().bodyApply({ neuro: -CALM[c] }, m); msg.push("Книга успокаивает" + (m.length ? ": " + m.join(" ") : ".")); }
+  /* (просьба автора: прокачка медленная, с каждым разом — труднее) книги о науке прибавляют интеллект трижды за игру:
+     после пятой, двенадцатой и двадцать первой — каждая следующая прибавка дальше (прежде — каждые три, до четырёх:
+     очко характеристик теперь приходит раз в пять уровней героя) */
   if (c === "science") {
-    if (R.cnt.science % 3 === 0 && R.mind < 4) { R.mind++; g.mind = Math.max(g.mind || 10, Math.min(LAB.stats ? LAB.stats.capOf("mind") : 40, (g.mind || 10) + 1)); /* (после 4.6) ниже Истока предел — шестьдесят */ msg.push("Прочитанное складывается в голове: интеллект " + g.mind + "."); }
-    else if (R.mind < 4) { var leftS = 3 - R.cnt.science % 3; msg.push("Ещё " + leftS + " " + pl(leftS, "книга", "книги", "книг") + " о науке — и интеллект вырастет."); }
+    if (R.mind < SCI_MAX && R.cnt.science >= SCI_AT[R.mind]) {
+      R.mind++;
+      if (LAB.stats) LAB.stats.raise("mind", 1); else g.mind = Math.min(40, (g.mind || 10) + 1); /* (после 4.6) предел — как у очков: ниже Истока шестьдесят */
+      msg.push("Прочитанное складывается в голове: интеллект " + g.mind + "." + (R.mind >= SCI_MAX ? " Больше книги о науке интеллекта не прибавят — дальше он растёт от дел и очков уровня." : ""));
+    }
+    else if (R.mind < SCI_MAX) { var leftS = SCI_AT[R.mind] - R.cnt.science; msg.push("Ещё " + leftS + " " + pl(leftS, "книга", "книги", "книг") + " о науке — и интеллект вырастет."); }
   }
   if (c === "tech" && LAB.workshop && LAB.workshop.unknownPick) {
     var bp = LAB.workshop.unknownPick(g.L > 20 ? 3 : 2, "book:" + q.id) || LAB.workshop.unknownPick(4, "book:" + q.id);

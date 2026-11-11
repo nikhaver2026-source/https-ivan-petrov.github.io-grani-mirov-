@@ -538,24 +538,31 @@ E("ui_levelup", "ui", [S(B, "lab_assorted7*", "Level Up.mp3")], v=0.8, bus="ui",
 E("near_tick", "ui", [S(A, "lab_interface*", "tick_002.ogg"), S(A, "lab_interface*", "pluck_002.ogg")], v=0.45, bus="ui")
 E("nav_ping", "gen", "sonar", v=0.9, bus="ui")
 
-# ═════ ШАГИ: пол везде металлический, у каждого уровня свой; звонко и ярко ═════
-# (заход G) Прежние шаги звучали глухо — почти вся энергия ниже 200 Гц. Теперь
-# подъём середины и верха и возбудитель гармоник: шаг слышно чётко и на
-# динамике телефона, и он ясно отличается от удара о стену. Низ не срезается
-# (в наушниках у шага остаётся вес) — убирается только гул ниже 50 Гц, а
-# гулкая середина низа у глухих записей лишь чуть приглушается.
-BRIGHT = "highpass=f=50,equalizer=f=2600:t=q:w=1.1:g=6,treble=g=5:f=5000,aexciter=amount=2:drive=7:freq=2500"
-BRIGHT2 = "highpass=f=50,lowshelf=f=160:g=-4,equalizer=f=1800:t=q:w=1.0:g=7,equalizer=f=3600:t=q:w=1.2:g=6,treble=g=6:f=6000,aexciter=amount=3:drive=8:freq=2200"
-E("step_plate", "step", [SPL(208101, 10, af=BRIGHT, min_len=0.05), FS(144103, af=BRIGHT), SPL(698697, 3, af=BRIGHT2, min_len=0.2)], n=10, mx=0.4)
-E("step_sheet", "step", [SPL(462598, 10, af=BRIGHT, min_len=0.05)], n=8, mx=0.4)
-E("step_wetmetal", "step", [SPL(253735, 9, af=BRIGHT2, min_len=0.15)], n=8, mx=0.45)
-E("step_steel", "step", [SPL(696374, 8, af=BRIGHT2, min_len=0.15), FS(384656, af=BRIGHT)], n=8, mx=0.4)
-E("step_checker", "step", [SPL(455058, 10, af=BRIGHT, min_len=0.06)], n=8, mx=0.35)
-E("step_frost", "step", [SPL(834029, 10, af="highpass=f=60,treble=g=4,aexciter=amount=1.5:drive=6:freq=3000", min_len=0.06)], n=8, mx=0.35)
-E("step_armor", "step", [SPL(809440, 7, af=BRIGHT2, min_len=0.08), SPL(215308, 3, af=BRIGHT, start=3.2, min_len=0.06)], n=8, mx=0.4)
-E("step_catwalk", "step", [SPL(669095, 10, min_len=0.05, af="aexciter=amount=1:drive=5:freq=3000"), SPL(770804, 4, min_len=0.05)], n=9, mx=0.4)
-E("step_deck", "step", [("slice", FS(148462, af=PITCH(0.96) + "," + BRIGHT2), 5), ("slice", FS(149454, af=PITCH(0.96) + "," + BRIGHT2), 4)], n=8, mx=0.45)
-E("step_grate", "step", [SPL(398937, 10, min_len=0.08, af="highpass=f=50,treble=g=3:f=4000")], n=8, mx=0.4)
+# ═════ ШАГИ: металлический пол — своя запись на каждые пять уровней; слышно и на телефоне ═════
+# (заход G) Глухой шаг (почти вся энергия ниже 200 Гц) на динамике телефона не слышен. Прежде шаги
+# поднимались одной общей цепочкой (середина, верх, возбудитель гармоник); (после 4.6) записи,
+# выбранные игроком на слух, звучат как на прослушивании, а phone=1 поднимает середину и верх с
+# возбудителем гармоник лишь тем вариантам, у которых выше 350 Гц меньше PHONE_MIN, — ровно
+# столько, сколько им не хватает (полная цепочка: низ до 160 Гц −4 дБ, 1,8 кГц +7, 3,6 кГц +6,
+# верх от 6 кГц +6, возбудитель от 2,2 кГц); яркие варианты не трогаются, а тот, кому мало и
+# полного подъёма, в набор не идёт. Низ не срезается — в наушниках у шага остаётся вес.
+PHONE_MIN = -8.8
+def phone_chain(w):
+    return ("lowshelf=f=160:g=%.2f,equalizer=f=1800:t=q:w=1.0:g=%.2f,equalizer=f=3600:t=q:w=1.2:g=%.2f,"
+            "treble=g=%.2f:f=6000,aexciter=amount=%.2f:drive=8:freq=2200" % (-4 * w, 7 * w, 6 * w, 6 * w, 3 * w))
+# (после 4.6, выбор игрока из девяти вариантов на прослушивание) Металлический пол — три записи
+# Freesound (CC0, заход 13), по одной на пять уровней подряд (atmos.js, metalStep): «8» — мягкая обувь
+# по листу металла, студийная запись (SecureSubset 813620) — уровни 1–5; «6» — ботинки по полому
+# настилу, глубокий звук (BlondPanda 778399–778412) — 6–10; «5» — ботинки по металлическому полу,
+# обычный шаг (RFCaldas 749711) — 11–15; дальше тот же круг. Шаги вырезаны там же, где в образцах на
+# прослушивание: начало удара и естественный хвост (до 0,45 с), с. Прежние записи металлических
+# шагов (по своей на каждый пол уровня) больше не используются.
+CUT8 = [0.009, 0.758, 1.532, 2.204, 2.88]  # длина каждого — 0,254 с
+CUT5 = [(2.095, 0.338), (3.279, 0.454), (3.958, 0.454), (4.596, 0.454), (5.871, 0.454), (6.55, 0.454),
+        (7.204, 0.364), (7.878, 0.454), (9.929, 0.454), (10.62, 0.454), (12.642, 0.454), (15.424, 0.454)]
+E("step_plate", "step", [FS(813620, start=t, dur=0.254, af="highpass=f=40") for t in CUT8], mx=0.3, phone=1)
+E("step_hollow", "step", [FS(i, dur=0.454, af="highpass=f=40") for i in range(778399, 778413)], mx=0.46, phone=1)
+E("step_boots", "step", [FS(749711, start=t, dur=d, af="highpass=f=40") for t, d in CUT5], mx=0.46, phone=1)
 # Отзвук шага от стены рядом: короткий высокий щелчок — тише и выше самого шага.
 E("step_echo", "step", [SPL(208101, 4, af="highpass=f=1100,treble=g=4:f=5000", min_len=0.05)], n=4, mx=0.18, v=0.8)
 # (3.0) Полы (заход 10, Freesound, CC0): бетон — коридоры у лестниц и технических помещений,
@@ -1524,6 +1531,14 @@ def build():
                         a = process_one(path, lo, kind, sp["mx"])
                 if len(a) < int(0.02 * SR): continue
                 if kind not in ("music", "loop"): a = ffx(a, o.get("post"))
+                if o.get("phone") and audible_db(a) < PHONE_MIN:
+                    raw = a
+                    for w in [0.1 * q for q in range(1, 11)]:
+                        a = ffx(raw, phone_chain(w))
+                        if audible_db(a) >= PHONE_MIN: break
+                    else:
+                        print("   %s: вариант %d глухой и с полным подъёмом — не взят" % (id_, len(outs) + 1)); continue
+                    print("   %s: вариант %d — подъём для телефона %.0f%%" % (id_, len(outs) + 1, w * 100))
                 a = loudnorm(a, o.get("tgt", TARGET.get(kind, -16)))
                 if kind == "music":
                     hear = audible_db(a)

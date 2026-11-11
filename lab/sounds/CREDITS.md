@@ -661,11 +661,89 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `186374_2421128-hq.ogg`
 
-## boots on aluminum ladder 01
+## Boots_On_Hollow_Metal_Deep_01
 
-Автор: Eelke. Лицензия: CC BY 4.0. Источник: https://freesound.org/s/462598/
+Автор: BlondPanda. Лицензия: CC0 1.0. Источник: https://freesound.org/s/778399/
 
-Файлы: `462598_670687-hq.ogg`
+Файлы: `778399_8927049-hq.ogg`
+
+## Boots_On_Hollow_Metal_Deep_02
+
+Автор: BlondPanda. Лицензия: CC0 1.0. Источник: https://freesound.org/s/778400/
+
+Файлы: `778400_8927049-hq.ogg`
+
+## Boots_On_Hollow_Metal_Deep_03
+
+Автор: BlondPanda. Лицензия: CC0 1.0. Источник: https://freesound.org/s/778401/
+
+Файлы: `778401_8927049-hq.ogg`
+
+## Boots_On_Hollow_Metal_Deep_04
+
+Автор: BlondPanda. Лицензия: CC0 1.0. Источник: https://freesound.org/s/778402/
+
+Файлы: `778402_8927049-hq.ogg`
+
+## Boots_On_Hollow_Metal_Deep_05
+
+Автор: BlondPanda. Лицензия: CC0 1.0. Источник: https://freesound.org/s/778403/
+
+Файлы: `778403_8927049-hq.ogg`
+
+## Boots_On_Hollow_Metal_Deep_06
+
+Автор: BlondPanda. Лицензия: CC0 1.0. Источник: https://freesound.org/s/778404/
+
+Файлы: `778404_8927049-hq.ogg`
+
+## Boots_On_Hollow_Metal_Deep_07
+
+Автор: BlondPanda. Лицензия: CC0 1.0. Источник: https://freesound.org/s/778405/
+
+Файлы: `778405_8927049-hq.ogg`
+
+## Boots_On_Hollow_Metal_Deep_08
+
+Автор: BlondPanda. Лицензия: CC0 1.0. Источник: https://freesound.org/s/778406/
+
+Файлы: `778406_8927049-hq.ogg`
+
+## Boots_On_Hollow_Metal_Deep_09
+
+Автор: BlondPanda. Лицензия: CC0 1.0. Источник: https://freesound.org/s/778407/
+
+Файлы: `778407_8927049-hq.ogg`
+
+## Boots_On_Hollow_Metal_Deep_10
+
+Автор: BlondPanda. Лицензия: CC0 1.0. Источник: https://freesound.org/s/778408/
+
+Файлы: `778408_8927049-hq.ogg`
+
+## Boots_On_Hollow_Metal_Deep_11
+
+Автор: BlondPanda. Лицензия: CC0 1.0. Источник: https://freesound.org/s/778409/
+
+Файлы: `778409_8927049-hq.ogg`
+
+## Boots_On_Hollow_Metal_Deep_12
+
+Автор: BlondPanda. Лицензия: CC0 1.0. Источник: https://freesound.org/s/778410/
+
+Файлы: `778410_8927049-hq.ogg`
+
+## Boots_On_Hollow_Metal_Deep_13
+
+Автор: BlondPanda. Лицензия: CC0 1.0. Источник: https://freesound.org/s/778411/
+
+Файлы: `778411_8927049-hq.ogg`
+
+## Boots_On_Hollow_Metal_Deep_14
+
+Автор: BlondPanda. Лицензия: CC0 1.0. Источник: https://freesound.org/s/778412/
+
+Файлы: `778412_8927049-hq.ogg`
 
 ## bullet impacts
 
@@ -1501,18 +1579,6 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `822745_9250976-hq.ogg`
 
-## FOLEY_Footsteps_Metal_001
-
-Автор: conleec. Лицензия: CC0 1.0. Источник: https://freesound.org/s/148462/
-
-Файлы: `148462_221578-hq.ogg`
-
-## FOLEY_Footsteps_Metal_002
-
-Автор: conleec. Лицензия: CC0 1.0. Источник: https://freesound.org/s/149454/
-
-Файлы: `149454_221578-hq.ogg`
-
 ## Foley_Leather_Stress_Mono.wav
 
 Автор: Nox_Sound. Лицензия: CC0 1.0. Источник: https://freesound.org/s/559079/
@@ -1530,6 +1596,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: Nox_Sound. Лицензия: CC0 1.0. Источник: https://freesound.org/s/550342/
 
 Файлы: `550342_9250976-hq.ogg`
+
+## Footsteps - Metal, Car, Plane, Sheet, Boat
+
+Автор: SecureSubset. Лицензия: CC0 1.0. Источник: https://freesound.org/s/813620/
+
+Файлы: `813620_16752880-hq.ogg`
 
 ## Footsteps - Stone, Rock, Concrete, Cement
 
@@ -1549,35 +1621,11 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `698697_9616576-hq.ogg`
 
-## Footsteps On Metal (single steps)
-
-Автор: IENBA. Лицензия: CC0 1.0. Источник: https://freesound.org/s/834029/
-
-Файлы: `834029_9616576-hq.ogg`
-
 ## Footsteps on wooden flooring.wav
 
 Автор: Rickmk2. Лицензия: CC0 1.0. Источник: https://freesound.org/s/164315/
 
 Файлы: `164315_2407533-hq.ogg`
-
-## footsteps-metal-surfaces-various
-
-Автор: audioninja001. Лицензия: CC0 1.0. Источник: https://freesound.org/s/455058/
-
-Файлы: `455058_2699264-hq.ogg`
-
-## Footsteps_Metal.wav
-
-Автор: jaredi. Лицензия: CC BY 3.0. Источник: https://freesound.org/s/215308/
-
-Файлы: `215308_4027076-hq.ogg`
-
-## FootstepsOnMetal-07.wav
-
-Автор: elgronbo. Лицензия: CC0 1.0. Источник: https://freesound.org/s/144103/
-
-Файлы: `144103_16776-hq.ogg`
 
 ## Freedoom
 
@@ -2257,12 +2305,6 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `235615_4028838-hq.ogg`
 
-## metal catwalk footsteps
-
-Автор: vestibule-door. Лицензия: CC0 1.0. Источник: https://freesound.org/s/669095/
-
-Файлы: `669095_14100561-hq.ogg`
-
 ## Metal crackling
 
 Автор: JavierSerrat. Лицензия: CC0 1.0. Источник: https://freesound.org/s/497427/
@@ -2286,18 +2328,6 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: loganzsound. Лицензия: CC0 1.0. Источник: https://freesound.org/s/874472/
 
 Файлы: `874472_16682330-hq.ogg`
-
-## Metal Footstep 3.wav
-
-Автор: morganpurkis. Лицензия: CC BY 4.0. Источник: https://freesound.org/s/384656/
-
-Файлы: `384656_5937039-hq.ogg`
-
-## Metal Footsteps (grate)
-
-Автор: SoftDistortionFX. Лицензия: CC0 1.0. Источник: https://freesound.org/s/398937/
-
-Файлы: `398937_5993580-hq.ogg`
 
 ## Metal footsteps on concrete
 
@@ -2328,12 +2358,6 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: akennedybrewer. Лицензия: CC0 1.0. Источник: https://freesound.org/s/389188/
 
 Файлы: `389188_7268131-hq.ogg`
-
-## Metal Staircase Steps
-
-Автор: Arcorias. Лицензия: CC0 1.0. Источник: https://freesound.org/s/770804/
-
-Файлы: `770804_4982778-hq.ogg`
 
 ## Metal Stairs Foot Steps
 
@@ -3319,6 +3343,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `398077_6996854-hq.ogg`
 
+## Steps boots on metal surface
+
+Автор: RFCaldas. Лицензия: CC0 1.0. Источник: https://freesound.org/s/749711/
+
+Файлы: `749711_3838926-hq.ogg`
+
 ## stir tea in cup.wav
 
 Автор: cupido-1. Лицензия: CC0 1.0. Источник: https://freesound.org/s/433539/
@@ -3594,12 +3624,6 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: weaveofkev. Лицензия: CC0 1.0. Источник: https://freesound.org/s/396240/
 
 Файлы: `396240_453602-hq.ogg`
-
-## Wet Metal Footsteps
-
-Автор: Kodack. Лицензия: CC0 1.0. Источник: https://freesound.org/s/253735/
-
-Файлы: `253735_2276808-hq.ogg`
 
 ## Wholesome
 

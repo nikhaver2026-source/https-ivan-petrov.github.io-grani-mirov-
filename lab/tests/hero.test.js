@@ -44,20 +44,49 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     const G = g.G; said();
     out.start = G.str === 10 && G.agi === 10 && G.con === 10 && G.mind === 10 && G.cha === 10 && ST.S().pts === 0;
     const hp0 = G.hpMax;
+    /* (просьба автора: прокачка медленная) очко — на каждом пятом уровне героя, а не пять за каждый */
     g.gainXP(LAB.xpNeed(G.lvl));
-    out.level = G.lvl === 2 && ST.S().pts === 5 && G.str === 10 && G.hpMax === hp0 + 5 && /Очков характеристик: 5/.test(said());
+    out.level2 = G.lvl === 2 && ST.S().pts === 0 && G.str === 10 && G.hpMax === hp0 + 5 && /Следующее очко характеристик — на 5-м уровне/.test(said());
+    while (G.lvl < 5) g.gainXP(LAB.xpNeed(G.lvl));
+    out.level5 = ST.S().pts === 1 && /Очко характеристик/.test(said());
+    while (G.lvl < 10) g.gainXP(LAB.xpNeed(G.lvl));
+    out.level10 = ST.S().pts === 2;
+    out.level = out.level2 && out.level5 && out.level10;
+    if (!out.level) out.levelDiag = "уровень " + G.lvl + ", очков " + ST.S().pts;
     /* вложить: телосложение даёт здоровье */
+    ST.S().pts = 5;
     const hp1 = G.hpMax; ST.spend("con", 2);
     out.con = G.con === 12 && G.hpMax === hp1 + 10 && ST.S().pts === 3;
     ST.spread(); out.spread = ST.S().pts === 0 && G.str + G.agi + G.mind + G.cha + G.con === 50 + 5;
-    /* практика: раз в сутки */
-    const a0 = G.agi;
-    for (let i = 0; i < 40; i++) ST.deed("disarm");
-    const a1 = G.agi;
-    for (let i = 0; i < 40; i++) ST.deed("disarm");
-    out.daily = a1 === a0 + 1 && G.agi === a1;
-    G.day++; ST.deed("disarm"); out.nextDay = G.agi === a1 + 1;
-    out.practiceSaid = /Практика: ловкость выросла/.test(said());
+    /* (просьба автора: с каждым уровнем — труднее) цена единицы растёт: до 20 — очко, с 20 — два, с 30 — три */
+    const keep = { str: G.str, agi: G.agi, con: G.con, mind: G.mind, cha: G.cha };
+    G.str = 19; ST.S().pts = 3; ST.spend("str", 1); const c1 = ST.S().pts; ST.spend("str", 1);
+    out.cost20 = c1 === 2 && G.str === 21 && ST.S().pts === 0 && /за 2 очка/.test(said());
+    G.str = 29; ST.S().pts = 2; out.cost30 = ST.cost("str") === 2 && ST.spend("str", 1) && G.str === 30 && ST.cost("str") === 3 && !ST.spend("str", 1) && G.str === 30;
+    out.costSum = (G.str = 10, ST.costN("str", 30)) === 60;
+    /* «поровну» не тратит очко впустую: всё от двадцати, очко одно — отказ, очко осталось */
+    G.str = G.agi = G.con = G.mind = G.cha = 20; ST.S().pts = 1; ST.spread(); out.spreadShort = ST.S().pts === 1 && G.str === 20 && /Очков не хватает/.test(said());
+    Object.assign(G, keep); ST.S().pts = 0;
+    /* практика — из запаса, который пополняют только минуты настоящей игры; раз в сутки комплекса */
+    const S = ST.S(); G.agi = 10; S.px.agi = 0; delete S.day.agi; if (S.pb) delete S.pb.agi; S.play = 0;
+    const top = ST.RATE * ST.STORE_H; /* полный запас: 40 */
+    for (let i = 0; i < 40; i++) ST.deed("disarm");   /* хотели бы 120 единиц — запас даёт 40 */
+    out.store = S.px.agi === top && G.agi === 10 && Math.abs(S.pb.agi) < 1e-9 && /практики пока довольно/.test(said());
+    /* сон: сутки комплекса прошли, игры — ни минуты: запас пуст, рост тот же */
+    g.advanceTime(3 * 1440, true); for (let i = 0; i < 20; i++) ST.deed("disarm");
+    out.sleep = S.px.agi === top && G.agi === 10;
+    /* полчаса игры — десять единиц: набралось пятьдесят — ловкость 11 */
+    ST._play(30); for (let i = 0; i < 4; i++) ST.deed("disarm");
+    out.grow = G.agi === 11 && /Практика: ловкость выросла/.test(said());
+    /* следующая единица дороже (100), и в те же сутки — не раньше завтра */
+    ST._play(600); for (let i = 0; i < 40; i++) ST.deed("disarm"); ST._play(600); for (let i = 0; i < 40; i++) ST.deed("disarm");
+    out.daily = ST.need("agi") === 100 && S.px.agi === 80 && G.agi === 11;
+    ST._play(600); for (let i = 0; i < 10; i++) ST.deed("disarm");
+    out.full = S.px.agi === 100 && G.agi === 11;
+    G.day++; ST.deed("disarm"); out.nextDay = G.agi === 12;
+    out.practiceSaid = out.grow;
+    if (!(out.store && out.sleep && out.grow && out.daily && out.full && out.nextDay)) out.pDiag = JSON.stringify({ px: S.px.agi, pb: S.pb.agi, agi: G.agi, need: ST.need("agi"), store: out.store, sleep: out.sleep, grow: out.grow, daily: out.daily, full: out.full, next: out.nextDay });
+
     /* окно и строка персонажа */
     ST.menu(); const w = LAB.ui.top(); const lbl = it => typeof it.label === "function" ? it.label() : it.label;
     out.window = w.title === "Характеристики" && w.items.some(it => /^Телосложение \d+ из 40/.test(lbl(it))) && w.items.some(it => /^Выносливость/.test(lbl(it)));
@@ -81,14 +110,35 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     return out;
   });
   ok(r1.start, "новый герой: все характеристики 10, очков нет");
-  ok(r1.level, "уровень: пять очков, пять здоровья, характеристики сами не растут; «Эхо» говорит про очки");
+  ok(r1.level, "уровень: очко характеристик — на каждом пятом уровне (на 5-м и 10-м), пять здоровья за каждый, характеристики сами не растут; «Эхо» говорит, когда следующее очко" + (r1.levelDiag ? " (" + r1.levelDiag + ")" : ""));
   ok(r1.con && r1.spread, "очки: телосложение даёт по пять здоровья; «поровну» раскладывает все очки");
-  ok(r1.daily && r1.nextDay && r1.practiceSaid, "практика поднимает характеристику не чаще раза в сутки");
+  ok(r1.cost20 && r1.cost30 && r1.costSum && r1.spreadShort, "чем выше характеристика, тем дороже единица очками: до 20 — очко, с 20 — два, с 30 — три; от 10 до 40 — 60 очков; «поровну» не тратит очко, которого не хватает на единицу");
+  ok(r1.store && r1.sleep, "практика — из запаса (40 единиц): повтор одного дела без конца ничего не даёт сверх запаса, «Эхо» говорит, что практики пока довольно; сон без игры запас не пополняет" + (r1.pDiag ? " " + r1.pDiag : ""));
+  ok(r1.grow && r1.daily && r1.full && r1.nextDay, "полчаса игры — десять единиц практики; следующая единица дороже (100); подрастает не чаще раза в сутки комплекса" + (r1.pDiag ? " " + r1.pDiag : ""));
   ok(r1.window && r1.charLine, "окно «Характеристики» и строка в окне персонажа");
   ok(r1.frameNeedsCon && r1.frameOk, "тяжёлому каркасу нужны сила 14 и телосложение 13");
   ok(r1.flawAgi && r1.cha25, "пороги: ловкость 15 — меньше брака, харизма 25 — уступки торговцев");
   ok(r1.stamPx && r1.regenPx, "вторичные растут практикой: шаги — выносливость, лечение — регенерация");
   ok(r1.migrate, "запись прежней версии: телосложение по уровню, очков нет" + (r1.migrateDiag ? " (" + r1.migrateDiag + ")" : ""));
+
+  console.log("Минуты игры: на экране и в действии — в счёт; простой, фон и пауза — нет");
+  const r1b = await page.evaluate(async () => {
+    const ST = LAB.stats, g = LAB.game, S = ST.S(), out = {}, wait = ms => new Promise(r => setTimeout(r, ms));
+    LAB.ui.closeAll(); g.paused = false; LAB.bg = false;
+    const p0 = () => S.play || 0;
+    ST._tick();
+    LAB.Speech.lastUser = Date.now(); let a = p0(); await wait(1100); ST._tick(); out.active = +(p0() - a).toFixed(2);
+    LAB.Speech.lastUser = Date.now() - 600000; a = p0(); await wait(600); ST._tick(); out.idle = p0() - a;
+    LAB.Speech.lastUser = Date.now(); LAB.bg = true; a = p0(); await wait(600); ST._tick(); out.bg = p0() - a; LAB.bg = false;
+    g.paused = true; a = p0(); await wait(600); ST._tick(); out.paused = p0() - a; g.paused = false;
+    /* окно «Характеристики» показывает запас практики */
+    ST.menu(); const w = LAB.ui.top(), lbl = it => typeof it.label === "function" ? it.label() : it.label;
+    out.storeShown = w.items.some(it => /^Ловкость .*запас практики \d+ из 40/.test(lbl(it)) || /^Ловкость .*подрастёт завтра/.test(lbl(it)));
+    LAB.ui.closeAll();
+    return out;
+  });
+  ok(r1b.active > 0.8 && r1b.active < 2.5 && r1b.idle === 0 && r1b.bg === 0 && r1b.paused === 0, "минуты игры идут, пока игра на экране и игрок действует; простой дольше трёх минут, фон и пауза — не в счёт (" + JSON.stringify(r1b) + ")");
+  ok(r1b.storeShown, "окно «Характеристики»: у характеристики видно, сколько практики в запасе");
 
   console.log("Груз: вес, предел, перегруз, неподъёмно, тяжёлое оружие");
   const r2 = await page.evaluate(async () => {

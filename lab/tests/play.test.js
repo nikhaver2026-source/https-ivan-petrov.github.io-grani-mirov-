@@ -338,14 +338,32 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(bk.rep3 && bk.rep4 && bk.rep5, "повтор цифр — не попытка: «цифры ключа не повторяются»");
   ok(bk.win3 && bk.win4 && bk.win5, "верный ключ подбирается — замок открыт");
 
-  console.log("Звуки: металлический пол у каждого уровня, одна запись удара о стену");
+  console.log("Звуки: металлический пол — одна запись на пять уровней подряд, одна запись удара о стену");
   const snd = await page.evaluate(() => {
     const surf = LAB.LEVELS.slice(1).filter(Boolean).map(l => (LAB.SURF[l.surf] && LAB.SURF[l.surf].base) || l.surf);
-    const steps = surf.map(s => LAB.SND["step_" + s] ? LAB.SND["step_" + s].f.length : 0);
-    return { uniq: new Set(LAB.LEVELS.slice(1).filter(Boolean).map(l => l.surf)).size, steps: steps, metal: surf.every(s => /plate|sheet|wetmetal|steel|checker|grate|frost|armor|catwalk|deck/.test(s)), wall: LAB.SND.bump_wall ? LAB.SND.bump_wall.f.length : 0 };
+    /* (после 4.6, выбор игрока) уровни 1–5 — «лист металла», 6–10 — «полый настил», 11–15 — «ботинки», дальше круг */
+    const want = L => ["step_plate", "step_hollow", "step_boots"][Math.floor((L - 1) / 5) % 3];
+    const Ls = [1, 2, 5, 6, 10, 11, 15, 16, 20, 21, 30, 31, 99, 100, 101, 205, 806];
+    const bad = Ls.filter(L => LAB.atmos.metalStep(L) !== want(L)).map(L => L + ":" + LAB.atmos.metalStep(L));
+    /* живой шаг: на любом металле уровня (и с «высотой» поверхности глубин) звучит запись этих пяти уровней */
+    const G = LAB.game.G, L0 = G.L, sp0 = LAB.Sound.play, heard = [];
+    LAB.Sound.play = function (id) { if (/^step_/.test(id) && id !== "step_echo") heard.push(id); return sp0.apply(this, arguments); };
+    const live = [[3, "plate"], [3, "grate"], [8, "deck"], [8, "g_castiron"], [13, "steel"], [13, "g_ringdeck"], [17, "catwalk"]].map(q => {
+      G.L = q[0]; heard.length = 0; LAB.atmos.step(q[1], false, false); return heard[0] === want(q[0]) ? "" : q.join("/") + "→" + heard[0];
+    }).filter(Boolean);
+    heard.length = 0; LAB.atmos.step("concrete", false, false); const conc = heard[0];
+    heard.length = 0; LAB.atmos.step("wood", false, false); const wood = heard[0];
+    LAB.Sound.play = sp0; G.L = L0;
+    const old = ["sheet", "wetmetal", "steel", "checker", "grate", "frost", "armor", "catwalk", "deck"].filter(k => LAB.SND["step_" + k]);
+    return { uniq: new Set(LAB.LEVELS.slice(1).filter(Boolean).map(l => l.surf)).size, metal: surf.every(s => /plate|sheet|wetmetal|steel|checker|grate|frost|armor|catwalk|deck/.test(s)),
+      recs: ["step_plate", "step_hollow", "step_boots"].map(id => LAB.SND[id] ? LAB.SND[id].f.length : 0), bad, live, conc, wood, old,
+      pre: [1, 7, 12].every(L => LAB.atmos.idsFor(L).indexOf(want(L)) >= 0), wall: LAB.SND.bump_wall ? LAB.SND.bump_wall.f.length : 0 };
   });
   ok(snd.uniq >= 10 && snd.metal, "у уровней свои металлические полы: " + snd.uniq);
-  ok(snd.steps.every(n => n >= 4), "у каждого пола свои записи шагов: " + snd.steps.join(", "));
+  ok(snd.recs.every(n => n >= 4), "три записи шагов по металлу, у каждой несколько вариантов: " + snd.recs.join(", "));
+  ok(!snd.bad.length && !snd.live.length, "шаг по металлу — по уровням: 1–5, 6–10, 11–15 и дальше по кругу" + (snd.bad.concat(snd.live).length ? ": " + snd.bad.concat(snd.live).join("; ") : ""));
+  ok(snd.conc === "step_concrete" && snd.wood === "step_wood", "бетон и дерево звучат своими записями: " + snd.conc + ", " + snd.wood);
+  ok(!snd.old.length && snd.pre, "прежних записей металла нет, запись уровня грузится заранее" + (snd.old.length ? ": " + snd.old.join(", ") : ""));
   ok(snd.wall === 1, "удар о стену — одна и та же запись");
 
   console.log("Речь: длинный текст дочитывается, четыре пальца вниз — тишина");
@@ -5328,7 +5346,8 @@ LAB.ui.closeAll();
         }
         return null;
       };
-      const lev = LAB.LEVELS[found.L].surf, lb = "step_" + ((LAB.SURF[lev] || {}).base || lev);
+      /* (после 4.6) металл звучит записью своих пяти уровней */
+      const lev = LAB.LEVELS[found.L].surf, lb = ["step_plate", "step_hollow", "step_boots"][Math.floor((found.L - 1) / 5) % 3];
       out.lev = lev;
       const wood = stepIn(i => fl.room[i] === found.wr), stair = stepIn(i => fl.room[i] === found.cr);
       const conc = stepIn(i => fl.corrAt[i] === found.cc), metal = stepIn(i => fl.corrAt[i] === found.mc);
@@ -5372,7 +5391,7 @@ LAB.ui.closeAll();
   if (flr.found) {
     ok(flr.wood, "в деревянном помещении («" + flr.woodRoom + "», этаж " + flr.at + ") шаги по дереву");
     ok(flr.stair, "лестничная клетка — бетонный колодец: шаги по бетону");
-    ok(flr.conc && flr.metal, "коридоры: где бетон — шаги по бетону, где металл — прежний металл уровня (" + flr.lev + "): " + flr.ids);
+    ok(flr.conc && flr.metal, "коридоры: где бетон — шаги по бетону, где металл — металл этих уровней (" + flr.lev + "): " + flr.ids);
     ok(flr.echo, "у стены шаг отдаётся прежним коротким эхом — и на дереве, и на бетоне; вдали от стен эха нет (" + flr.echoIds + ")");
     ok(flr.creak, "по деревянному полу изредка скрипят половицы");
     ok(flr.bump, "звук стены прежний: удар о сталь, без звука шага");
@@ -5719,7 +5738,6 @@ LAB.ui.closeAll();
         out.rest20 = { gain: G.hp - 10, want: share((20 + mR) / 60), time: nowM() - t0 === mR, said: /в полную силу отдых поможет через/.test(last()) };
         RS().restAt = nowM() - 61; G.hp = 10; act(ch, "rest");
         out.rest61 = { gain: G.hp - 10, need: Math.min(G.hpMax - 10, full), part: /лишь на/.test(last()) };
-        if (G.chs && G.chs.sec) G.chs.sec.regen = rg0;
         /* сидеть подряд без конца: за час — не больше одного полного отдыха */
         RS().restAt = nowM(); G.hp = 10; let n = 0; const tc = nowM();
         while (nowM() - tc < 60 && n < 30) { act(ch, "rest"); n++; }
@@ -5731,6 +5749,7 @@ LAB.ui.closeAll();
         G.hp = 10; act(other, "rest"); const gOther = G.hp - 10, otherAt = g.objState(other).restAt;
         G.hp = 10; act(other, "rest"); const gOther2 = G.hp - 10;
         out.restPerObj = { same: gSame, other: gOther, other2: gOther2, full: share(1), started: otherAt === nowM() - mR };
+        if (G.chs && G.chs.sec) G.chs.sec.regen = rg0; /* регенерация героя за минуты отдыха прибавляет своё — до сих пор её не было */
         RS().restAt = -1e9; G.hp = 10; LAB.oko.setLevel(6, "проверка"); act(ch, "rest"); out.restSearch = G.hp === 10 && /прочёсывает/.test(last());
         LAB.oko.setLevel(1, "проверка"); RS().restAt = -1e9; G.hp = 10; act(ch, "rest"); out.restSuspect = G.hp > 10; LAB.oko.setLevel(0, "проверка");
         const sk0 = C.strikers;
@@ -5749,6 +5768,13 @@ LAB.ui.closeAll();
         G.train = { strPts: 5, aimPts: 0 }; out.gymCapNote = itemOf(gym, "train");
         const st0 = G.str; act(gym, "train"); out.gymCap = { same: G.str === st0, said: /больше ничего не дадут/.test(last()) };
         G.train = { strPts: 0, aimPts: 0, strAt: (G.day || 0) * 1440 + (G.min || 0) }; act(gym, "train"); out.gymGap = /не восстановились/.test(last());
+        /* (просьба автора: прокачка медленная) три часа комплекса прошли (сон), а игры — нет: тренировка не засчитана;
+           прошло полчаса игры — засчитана */
+        const pm = LAB.stats.playMin(), n0 = 0;
+        G.train = { strPts: 0, aimPts: 0, strN: n0, strAt: -1e9, strPlay: pm }; act(gym, "train");
+        out.gymPlay = /засчитается через 30 минут игры/.test(last()) && !G.train.strN;
+        LAB.stats._play(31); act(gym, "train"); out.gymPlayOk = G.train.strN === 1 && /Двадцать минут на тренажёре/.test(last());
+        if (!(out.gymPlay && out.gymPlayOk)) out.gymPlaySaid = last();
       }
       /* 4. инвентарь: аптечка, назад в инвентарь, «Еда» — открывается, а не отказ */
       U.closeAll(); G.inv.medkit_s = (G.inv.medkit_s || 0) + 2; G.hp = Math.max(1, Math.floor(G.hpMax / 3));
@@ -5870,8 +5896,9 @@ LAB.ui.closeAll();
   ok(holes.restSearch && holes.restSuspect, "пока ОКО прочёсывает этаж — отдыха нет; тревога снята (подозрение) — отдыхать можно (" + JSON.stringify({ s: holes.restSearch, u: holes.restSuspect }) + ")");
   ok(holes.restPun && holes.restAmbush, "каратели идут по следу — отдыха нет; в засаде — можно (" + JSON.stringify({ p: holes.restPun, a: holes.restAmbush }) + ")");
   ok(holes.restFresh && !/ — /.test(holes.restFresh) && / — здесь вы недавно отдыхали: поможет на \d+ процент(а|ов)?, в полную силу — через (1 час|\d+ мину)/.test(holes.restNote || ""), "пункт отдыха сам говорит, на сколько поможет и когда в полную силу (" + holes.restNote + ")");
-  ok(/ — накачано 2 из 5 единиц$/.test(holes.gymNote || "") && / — больше ничего не даст$/.test(holes.gymCapNote || ""), "пункт тренажёра: сколько прибавок из пяти взято, на пределе — «больше ничего не даст» (" + holes.gymNote + " / " + holes.gymCapNote + ")");
-  ok(holes.gymCap && holes.gymCap.same && holes.gymCap.said && holes.gymGap, "тренажёр: предел в пять единиц и перерыв три часа");
+  ok(/ — накачано 2 из 3 единиц$/.test(holes.gymNote || "") && / — больше ничего не даст$/.test(holes.gymCapNote || ""), "пункт тренажёра: сколько прибавок из пяти взято, на пределе — «больше ничего не даст» (" + holes.gymNote + " / " + holes.gymCapNote + ")");
+  ok(holes.gymCap && holes.gymCap.same && holes.gymCap.said && holes.gymGap, "тренажёр: предел в три единицы и перерыв три часа");
+  ok(holes.gymPlay && holes.gymPlayOk, "тренажёр: сон перерыв не проматывает — между тренировками ещё и полчаса игры" + (holes.gymPlaySaid ? " (" + holes.gymPlaySaid + ")" : ""));
   ok(holes.invBack === "Инвентарь" && holes.invFood === "Еда и напитки", "инвентарь: после аптечки — снова инвентарь, «Еда» открывается (" + holes.invBack + " → " + holes.invFood + ")");
   ok(holes.staleNoRebuild.hits === 0 && holes.staleNoRebuild.closed, "устаревшее окно без сборщика: старый пункт не выполняется, окно закрыто");
   ok(holes.staleRebuild.hits === 0 && holes.staleRebuild.open && /Кредитов: /.test(holes.staleRebuild.label) && holes.staleSameLabel === 10, "окно со сборщиком собирается заново: сменившийся пункт не выполняется, прежний — выполняется (" + JSON.stringify(holes.staleRebuild) + ", " + holes.staleSameLabel + ")");
@@ -6459,12 +6486,14 @@ LAB.ui.closeAll();
         out.noRepeat = { fixtures: bks.length, got, empty, dup: dupB };
         g.enterFloor(back.L, back.F, "down", true); C.stop(); /* назад: следующие проверки — книги верхней глубины */
       }
-      /* 3. чему учат книги: три детектива — «Чутьё»; три о науке — интеллект; техника — схема; химия — рецептура */
+      /* 3. чему учат книги: три детектива — «Чутьё»; пять о науке — интеллект (просьба автора: прокачка медленная —
+         прежде хватало трёх); техника — схема; химия — рецептура */
       const books = LB.pool("book"), byCat = c => books.filter(b => b.cat === c && !LB.isRead(b, bc));
       byCat("detective").slice(0, 3).forEach(b => { LB.readText(b, bc); U.closeAll(); });
       out.perk = !!(G().perks && G().perks.searcher);
-      const m0 = G().mind; byCat("science").slice(0, 3).forEach(b => { LB.readText(b, bc); U.closeAll(); });
-      out.mind = G().mind - m0;
+      const m0 = G().mind, sci = byCat("science"); sci.slice(0, 4).forEach(b => { LB.readText(b, bc); U.closeAll(); });
+      out.mind4 = G().mind - m0; sci.slice(4, 5).forEach(b => { LB.readText(b, bc); U.closeAll(); });
+      out.mind = G().mind - m0; out.sciN = sci.length;
       const bp0 = Object.keys(G().bp || {}).length; const tb = byCat("tech")[0]; if (tb) { LB.readText(tb, bc); U.closeAll(); }
       out.bp = Object.keys(G().bp || {}).length - bp0;
       /* (3.8) книга по химии учит рецептуре своей ступени, которой герой ещё не знает; на первых уровнях
@@ -6605,7 +6634,7 @@ LAB.ui.closeAll();
   ok(lib.geo && lib.geo.mainMin >= 9 && lib.geo.annAvg >= 38 && lib.geo.perRoom >= 6 && lib.geo.newKinds >= 8, "помещения просторнее: главные — от девяти шагов, кабинеты в среднем втрое больше прежнего, вещей — по площади, новые вещи на этажах (" + JSON.stringify(lib.geo) + ")");
   ok(lib.noRepeat && lib.noRepeat.dup === 0 && lib.noRepeat.got > 0 && lib.case && lib.case.title, "на этаже книги не повторяются; окно книг — своё, окно шкафа под ним цело (" + JSON.stringify(lib.noRepeat) + ")");
   ok(lib.case && lib.case.n >= 4 && lib.case.cats && lib.case.arch && lib.case.xp && lib.case.same && lib.case.text, "книжный шкаф: книги с разделами, прочитанная — в архиве «Книги», опыт, «прочитано», состав тот же, текст по ссылке (" + JSON.stringify(lib.case) + ")");
-  ok(lib.perk && lib.mind === 1 && lib.bp === 1 && lib.chem === 1 && lib.calm, "книги учат: три детектива — «Чутьё», три о науке — интеллект, техника — схема, химия — рецептура, повесть успокаивает (" + JSON.stringify({ perk: lib.perk, mind: lib.mind, bp: lib.bp, chem: lib.chem, calm: lib.calm }) + ")");
+  ok(lib.perk && lib.mind4 === 0 && lib.mind === 1 && lib.bp === 1 && lib.chem === 1 && lib.calm, "книги учат: три детектива — «Чутьё», пять о науке — интеллект (четырёх мало), техника — схема, химия — рецептура, повесть успокаивает (" + JSON.stringify({ perk: lib.perk, mind: lib.mind, bp: lib.bp, chem: lib.chem, calm: lib.calm }) + ")");
   ok(lib.memoItem && lib.memo, "архивные коробки: записка с кодом этажа — код в архиве, замок о нём знает");
   ok(lib.shredWrong && lib.shred, "шредер: не по порядку — снова перемешано; по порядку — документ сложен и лёг в архив");
   ok(lib.vitrine && lib.grate && lib.intercom && lib.intercomCd && lib.deposit && lib.mail >= 2 && lib.catalog, "витрина, решётка, селектор, ячейки, почта, каталог (" + JSON.stringify({ v: lib.vitrine, g: lib.grate, i: lib.intercom, cd: lib.intercomCd, d: lib.deposit, m: lib.mail, c: lib.catalog }) + (lib.grateSaid ? "; решётка: " + lib.grateSaid : "") + (lib.icSaid ? "; селектор: " + lib.icSaid : "") + ")");
@@ -7373,13 +7402,16 @@ LAB.ui.closeAll();
       const f0 = G.body.food; SPOKEN.length = 0; g.advanceTime(P.FX_MAX + 5); out.expire = SPOKEN.join(" | ");
       out.down = LAB.heroStat("str") === s0 && /Действие плода прошло: сила снова/.test(out.expire) && G.body.food < f0;
       /* курс: рано — не в счёт; три приёма с перерывом — навсегда плюс один; дальше — ничего */
-      G.plants.course = {}; G.inv.pf_atlant = 5; const b0 = G.str, said = [];
+      /* (просьба автора: прокачка медленная) между приёмами — ещё и полчаса настоящей игры: шесть часов сна без игры не в счёт */
+      G.plants.course = {}; G.inv.pf_atlant = 6; const b0 = G.str, said = [], PLAY = m => LAB.stats._play(m);
       g.useItem("pf_atlant"); said.push(SPOKEN.slice(-1)[0]); g.advanceTime(60);
       g.useItem("pf_atlant"); said.push(SPOKEN.slice(-1)[0]); g.advanceTime(P.COURSE_GAP + 1);
-      g.useItem("pf_atlant"); said.push(SPOKEN.slice(-1)[0]); g.advanceTime(P.COURSE_GAP + 1);
-      g.useItem("pf_atlant"); said.push(SPOKEN.slice(-1)[0]); const b1 = G.str; g.advanceTime(P.COURSE_GAP + 1);
+      g.useItem("pf_atlant"); said.push(SPOKEN.slice(-1)[0]); PLAY(31);
+      g.useItem("pf_atlant"); said.push(SPOKEN.slice(-1)[0]); g.advanceTime(P.COURSE_GAP + 1); PLAY(31);
+      g.useItem("pf_atlant"); said.push(SPOKEN.slice(-1)[0]); const b1 = G.str; g.advanceTime(P.COURSE_GAP + 1); PLAY(31);
       g.useItem("pf_atlant");
-      out.course = /приём 1 из 3/.test(said[0]) && /рано/.test(said[1]) && /приём 2 из 3/.test(said[2]) && /пройден/.test(said[3]) && b1 === b0 + 1 && G.str === b0 + 1;
+      out.course = /приём 1 из 3/.test(said[0]) && /рано/.test(said[1]) && /рано — тело ещё не приняло/.test(said[2]) && /приём 2 из 3/.test(said[3]) && /пройден/.test(said[4]) && b1 === b0 + 1 && G.str === b0 + 1;
+      if (!out.course) out.courseSaid = said;
       /* плод из тумана: сильнее, мутация растёт, в курс не идёт */
       g.advanceTime(P.FX_MAX + 5); G.plants.course = {}; G.plants.fx = {};
       const m0 = LAB.chem.mut(); G.inv.pf_atlant_m = 1; g.useItem("pf_atlant_m");
@@ -7433,7 +7465,7 @@ LAB.ui.closeAll();
   ok(pl.up && /Сила плюс 3 на 4 часа/.test(pl.eat || ""), "плод прибавляет силу на время — и это видно в окне персонажа (" + String(pl.eat).slice(0, 120) + ")");
   ok(pl.noStack, "второй плод не складывает прибавку, а продлевает её — не дольше шести часов");
   ok(pl.down, "действие плода кончается: характеристика прежняя, после силы — голод (" + String(pl.expire).slice(-120) + ")");
-  ok(pl.course, "курс опытной линии: рано — не в счёт; три приёма с перерывом от шести часов — сила навсегда плюс один, и только раз");
+  ok(pl.course, "курс опытной линии: рано — не в счёт; шесть часов без игры (сон) — тоже; три приёма с перерывом от шести часов и получаса игры — сила навсегда плюс один, и только раз" + (pl.courseSaid ? ": " + pl.courseSaid.join(" | ") : ""));
   ok(pl.mut, "плод из тумана: прибавка больше, мутация растёт, в курс не идёт");
   ok(pl.full, "сытым горсть ягод съесть можно, томат — нет");
   ok(pl.rad && pl.gas && pl.fog, "под излучением и в газу плодов нет; в тумане — плоды с мутагеном и созревают быстрее");

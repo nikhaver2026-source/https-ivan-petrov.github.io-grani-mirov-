@@ -68,11 +68,19 @@ function loop(id, o, slot) {
 }
 
 /* ════════ ШАГИ, СТЕНЫ, ДВЕРИ ════════ */
+/* (после 4.6, выбор игрока на слух) Металлический пол звучит одной записью на пять уровней подряд, какой
+   бы ни был металл: уровни 1–5 — мягкая обувь по листу металла (step_plate), 6–10 — ботинки по полому
+   настилу (step_hollow), 11–15 — ботинки по металлическому полу (step_boots), дальше тот же круг. Бетон,
+   дерево и прочие полы — свои записи, как прежде. */
+var METAL = { plate: 1, sheet: 1, wetmetal: 1, steel: 1, checker: 1, grate: 1, frost: 1, armor: 1, catwalk: 1, deck: 1 };
+var METAL_STEP = ["step_plate", "step_hollow", "step_boots"];
+function metalStep(L) { return METAL_STEP[Math.floor((Math.max(1, L || 1) - 1) / 5) % METAL_STEP.length]; }
 var stepN = 0;
 function step(surf, run, door) {
   stepN++;
-  var sd = LAB.SURF[surf] || {}, base = sd.base || surf || "plate", rate = sd.rate || 1;
+  var sd = LAB.SURF[surf] || {}, base = sd.base || surf || "plate", rate = sd.rate || 1, g = G();
   var id = "step_" + base;
+  if (METAL[base]) { id = metalStep(g && g.L); rate = 1; } /* у пяти уровней подряд — один и тот же шаг */
   play(has(id) ? id : "step_plate", { gain: run ? 1 : 0.88, rate: (run ? 1.04 : 1) * rate, pan: stepN % 2 ? -0.12 : 0.12, reverb: 0.16, bus: "fx" });
   /* (3.0) деревянный пол: изредка скрипит половица — чаще, когда идёте, а не бежите */
   if (sd.creak && has("floor_creak") && Math.random() < sd.creak * (run ? 0.6 : 1)) play("floor_creak", { gain: 0.55, delay: 0.05 + Math.random() * 0.08, pan: stepN % 2 ? -0.1 : 0.1, reverb: 0.12, bus: "fx" });
@@ -434,8 +442,7 @@ function idsFor(L) {
     var m = id.match(/^([a-z]+)_(idle|alert|attack|hurt|death|step)$/);
     if (m && sets[m[1]]) out.push(id);
   });
-  var sf = LAB.SURF[lev.surf] || {};
-  out.push("step_" + (sf.base || lev.surf), "step_echo", "step_concrete", "step_wood", "floor_creak"); /* (3.0) бетон и дерево — на любом уровне */
+  out.push(metalStep(L), "step_echo", "step_concrete", "step_wood", "floor_creak"); /* металл — запись этих пяти уровней; (3.0) бетон и дерево — на любом уровне */
   if (LAB.okoForms) LAB.okoForms.sounds(L).forEach(function (id) { out.push(id); }); /* (3.2) сигналы облика ОКО этой глубины */
   levelEvents(L).forEach(function (id) { out.push(id); });
   return out;
@@ -1046,7 +1053,7 @@ function pad(s, freq, when, dur, vol, cut) {
 /* ════════ ЗАПАСНОЙ СИНТЕЗ (если записи нет) ════════ */
 var FB = {
   bump_wall: function (s) { s.clang(180); }, bump_body: function (s) { s.thump(0, 0.4); }, bump_furniture: function (s) { s.thump(0, 0.3); }, bump_device: function (s) { s.clang(420); },
-  step_plate: function (s) { s.metalstep(0); },
+  step_plate: function (s) { s.metalstep(0); }, step_hollow: function (s) { s.metalstep(0); }, step_boots: function (s) { s.metalstep(0); },
   near_tick: function (s) { s.note(1300, 0, 0.05, "sine", 0.05); },
   door_auto_open: function (s) { s.whoosh(true); }, door_auto_close: function (s) { s.whoosh(false); }, door_heavy_open: function (s) { s.servo(true); s.clang(90); }, door_heavy_close: function (s) { s.clang(80); },
   door_hatch_open: function (s) { s.servo(true); }, door_hatch_close: function (s) { s.servo(false); }, door_locked: function (s) { s.note(220, 0, 0.12, "square", 0.08); s.note(180, 0.13, 0.15, "square", 0.08); },
@@ -1111,7 +1118,7 @@ LAB.atmos = {
   _corrOpenings: function () { return corrOpenings().map(function (o) { return { key: o.key, d: o.d, x: o.sx / o.n, y: o.sy / o.n, corr: o.corr }; }); },
   corrUpdate: corrUpdate,
   enterFloor: enterFloor, setRoom: setRoom, setEvent: setEvent, stopWorld: stopWorld,
-  step: step, bump: bump, bumpWall: bumpWall, bumpSoft: bumpSoft, near: near, doorOpen: doorOpen, doorClose: doorClose, doorPass: doorPass, objUse: objUse,
+  step: step, metalStep: metalStep, bump: bump, bumpWall: bumpWall, bumpSoft: bumpSoft, near: near, doorOpen: doorOpen, doorClose: doorClose, doorPass: doorPass, objUse: objUse,
   container: container, stairs: stairs, stairEnter: stairEnter, stairStep: stairStep, bumpRail: bumpRail, gate: gate, gateSeal: gateSeal, elevRide: elevRide, rest: rest, death: death, npcHello: npcHello,
   navPing: navPing, navStart: navStart, pickup: pickup,
   foeSound: foeSound, foeStep: foeStep, foeHit: foeHit, foeDeath: foeDeath, foeMiss: foeMiss, hurt: hurt,

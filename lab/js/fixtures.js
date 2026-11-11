@@ -53,8 +53,17 @@ function restLeft(m, s) { var t = s && s.restAt; return t == null ? 0 : Math.max
 /* (3.5) Тренировки: тренажёры поднимают силу не больше чем на пять единиц за всю игру,
    и каждая следующая единица — дольше (3, 6, 9, 12, 15 тренировок); мышцам нужен
    перерыв — три часа. Тир так же: меткость — не больше пяти ступеней, перерыв — час.
-   На пределе тренажёр честно говорит, что больше не даст, и не тратит ни время, ни еду. */
-var TRAIN_MAX = 5, TRAIN_GAP = 180, AIM_GAP = 60;
+   На пределе тренажёр честно говорит, что больше не даст, и не тратит ни время, ни еду.
+   (просьба автора: прокачка медленная, накрутить нельзя) Тренажёры — не больше трёх единиц
+   силы (3, 6, 9 тренировок): очко характеристик теперь приходит раз в пять уровней героя, и
+   пять даровых единиц стоили бы двадцати пяти уровней. Перерыв считается и по настоящему
+   времени: три часа комплекса проматываются сном за касание, поэтому тренировка засчитывается
+   ещё и не раньше чем через полчаса игры после прошлой (тир — через четверть часа; stats.js,
+   playMin — минуты, когда игра на экране и игрок действует). */
+var TRAIN_MAX = 3, AIM_MAX = 5, TRAIN_GAP = 180, AIM_GAP = 60, TRAIN_PLAY = 30, AIM_PLAY = 15;
+function playNow() { return LAB.stats && LAB.stats.playMin ? LAB.stats.playMin() : 1e9; }
+/* сколько минут игры ещё ждать после прошлой засчитанной тренировки (0 — можно) */
+function playWait(at, gap) { return at == null ? 0 : Math.max(0, Math.ceil(gap - (playNow() - at))); }
 /* (после 4.6) сила — основа без прибавки плода; предел — как у очков характеристик (stats.js) */
 function strNow() { return LAB.stats ? LAB.stats.base("str") : (G().str == null ? 10 : G().str); }
 function strTop() { return strNow() >= (LAB.stats ? LAB.stats.capOf("str") : 40); }
@@ -408,14 +417,14 @@ function fxNote(kind, p, s) {
   if (kind === "train") {
     t = trainSt();
     if (t.strPts >= TRAIN_MAX || strTop()) return " — больше ничего не даст";
-    var gT = nowMin() - (t.strAt == null ? -1e9 : t.strAt);
-    return " — накачано " + t.strPts + " из " + TRAIN_MAX + " единиц" + (gT < TRAIN_GAP ? ", мышцы отдохнут через " + minW(TRAIN_GAP - gT) : "");
+    var gT = nowMin() - (t.strAt == null ? -1e9 : t.strAt), pT = playWait(t.strPlay, TRAIN_PLAY);
+    return " — накачано " + t.strPts + " из " + TRAIN_MAX + " " + pl(TRAIN_MAX, "единицы", "единиц", "единиц") + (gT < TRAIN_GAP ? ", мышцы отдохнут через " + minW(TRAIN_GAP - gT) : pT ? ", следующая тренировка засчитается через " + minW(pT) + " игры" : "");
   }
   if (kind === "aim") {
     t = trainSt();
-    if (t.aimPts >= TRAIN_MAX) return " — больше ничего не даст";
-    var gA = nowMin() - (t.aimAt == null ? -1e9 : t.aimAt);
-    return " — меткость: ступень " + t.aimPts + " из " + TRAIN_MAX + (gA < AIM_GAP ? ", рука успокоится через " + minW(AIM_GAP - gA) : "");
+    if (t.aimPts >= AIM_MAX) return " — больше ничего не даст";
+    var gA = nowMin() - (t.aimAt == null ? -1e9 : t.aimAt), pA = playWait(t.aimPlay, AIM_PLAY);
+    return " — меткость: ступень " + t.aimPts + " из " + AIM_MAX + (gA < AIM_GAP ? ", рука успокоится через " + minW(AIM_GAP - gA) : pA ? ", следующая серия засчитается через " + minW(pA) + " игры" : "");
   }
   return "";
 }
@@ -591,19 +600,21 @@ function run(o, def, kind, p, label, withId) {
       if (!aw) { say("Нужно оружие: достаньте его."); return; }
       if (aw.ammo === "none") { say("В тире стреляют, а не машут: возьмите в руки стрелковое оружие."); return; }
       var tr = trainSt();
-      if (tr.aimPts >= TRAIN_MAX) { say("Тир больше ничего не даст: меткость уже поднята на все пять ступеней, что даёт тир. Дальше рука твердеет только вместе с ловкостью — от стрельбы в бою и очков уровня."); return; }
+      if (tr.aimPts >= AIM_MAX) { say("Тир больше ничего не даст: меткость уже поднята на все пять ступеней, что даёт тир. Дальше рука твердеет только вместе с ловкостью — от стрельбы в бою и очков уровня."); return; }
       var whyA = restBlock();
       if (whyA) { say(whyA.replace("Не до отдыха", "Не до тира")); return; }
       var gapA = nowMin() - (tr.aimAt == null ? -1e9 : tr.aimAt);
       if (gapA < AIM_GAP) { say("Рука ещё дрожит после прошлой стрельбы: новая серия даст толк через " + minW(AIM_GAP - gapA) + "."); return; }
+      var waitA = playWait(tr.aimPlay, AIM_PLAY);
+      if (waitA) { say("Рука твердеет от стрельбы время от времени, а не серией за серией: сон между ними не помогает. Новая серия засчитается через " + minW(waitA) + " игры."); return; }
       if (!(aw.charge > 0)) { say("Магазин пуст: тренировка стоит заряда, а его нет. Перезарядитесь."); return; }
       var shots = Math.min(aw.charge, 5);
       aw.charge -= shots;
       spend(10); snd("term_beep", null); noise(5);
-      tr.aimAt = nowMin(); tr.aimN = (tr.aimN || 0) + 1;
+      tr.aimAt = nowMin(); tr.aimPlay = playNow(); tr.aimN = (tr.aimN || 0) + 1;
       var needA = tr.aimPts + 2, upA = tr.aimN >= needA;
       if (upA) { tr.aimN = 0; tr.aimPts++; }
-      say("Мишени щёлкают одна за другой, на серию ушло выстрелов: " + shots + ". «Эхо» подсказывает поправку." + (upA ? " Рука твёрже: меткость выросла, ступень " + tr.aimPts + " из " + TRAIN_MAX + "." : " До следующей ступени меткости — ещё " + sessW(needA - tr.aimN) + ", не чаще раза в час."));
+      say("Мишени щёлкают одна за другой, на серию ушло выстрелов: " + shots + ". «Эхо» подсказывает поправку." + (upA ? " Рука твёрже: меткость выросла, ступень " + tr.aimPts + " из " + AIM_MAX + "." : " До следующей ступени меткости — ещё " + sessW(needA - tr.aimN) + ", не чаще раза в час и раза в четверть часа игры."));
       ev("aim", 1);
       return;
     }
@@ -699,20 +710,22 @@ function run(o, def, kind, p, label, withId) {
     }
     case "train": {
       var tr2 = trainSt();
-      if (tr2.strPts >= TRAIN_MAX || strTop()) { say("Тренажёры больше ничего не дадут: сила " + strNow() + ". " + (tr2.strPts >= TRAIN_MAX ? "Всё, что можно накачать на тренажёрах, — пять единиц — вы уже накачали." : "Это предел.") + (strTop() ? "" : " Дальше сила растёт от очков уровня и от дела — ближнего боя, разбора, ходьбы с грузом.") + " Ловкость, телосложение, интеллект и харизму тренажёрами не поднять: их растят очки уровня и дела героя."); return; }
+      if (tr2.strPts >= TRAIN_MAX || strTop()) { say("Тренажёры больше ничего не дадут: сила " + strNow() + ". " + (tr2.strPts >= TRAIN_MAX ? "Всё, что можно накачать на тренажёрах, вы уже накачали." : "Это предел.") + (strTop() ? "" : " Дальше сила растёт от очков уровня и от дела — ближнего боя, разбора, ходьбы с грузом.") + " Ловкость, телосложение, интеллект и харизму тренажёрами не поднять: их растят очки уровня и дела героя."); return; }
       var b = G().body;
       if (b && b.wake < 15) { say("Слишком устали для тренировки: сначала отдохните."); return; }
       var whyT = restBlock();
       if (whyT) { say(whyT.replace("Не до отдыха", "Не до тренировки")); return; }
       var gapT = nowMin() - (tr2.strAt == null ? -1e9 : tr2.strAt);
       if (gapT < TRAIN_GAP) { say("Мышцы ещё не восстановились после прошлой тренировки: толк будет через " + minW(TRAIN_GAP - gapT) + ". Сейчас — только трата сил и еды."); return; }
+      var waitT = playWait(tr2.strPlay, TRAIN_PLAY);
+      if (waitT) { say("Мышцы растут от регулярных тренировок, а не от сна между подходами. Следующая тренировка засчитается через " + minW(waitT) + " игры."); return; }
       UIx("closeAll"); spend(20);
       gm().bodyApply({ wake: -6, food: -4 }, m);
-      tr2.strAt = nowMin(); tr2.strN = (tr2.strN || 0) + 1;
+      tr2.strAt = nowMin(); tr2.strPlay = playNow(); tr2.strN = (tr2.strN || 0) + 1;
       var need = 3 * (tr2.strPts + 1), up = tr2.strN >= need;
       if (up) { tr2.strN = 0; tr2.strPts++; if (LAB.stats) LAB.stats.raise("str", 1); else G().str = strNow() + 1; }
       snd("hit_metal", null);
-      say("Двадцать минут на тренажёре: мышцы гудят." + (up ? " Сила выросла: теперь " + G().str + ". Тренажёры дали " + tr2.strPts + " из " + TRAIN_MAX + " единиц." : " До прибавки силы — ещё " + sessW(need - tr2.strN) + ", не чаще раза в три часа.") + " " + m.join(" "));
+      say("Двадцать минут на тренажёре: мышцы гудят." + (up ? " Сила выросла: теперь " + G().str + ". Тренажёры дали " + tr2.strPts + " из " + TRAIN_MAX + " единиц." : " До прибавки силы — ещё " + sessW(need - tr2.strN) + ", не чаще раза в три часа и раза в полчаса игры.") + " " + m.join(" "));
       ev("train", 1);
       return;
     }
