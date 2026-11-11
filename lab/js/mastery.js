@@ -81,7 +81,7 @@ function gain(k, n, quiet) {
   if (n > 0 && LAB.stats) n *= LAB.stats.K.xp(); /* (после 4.6) интеллект: опыт мастерства больше */
   m.xp[k] = Math.round(((m.xp[k] || 0) + n) * 10) / 10;
   var s1 = step(k), o1 = overall();
-  if (s1 > s0 && !quiet) { snd("work_pass", "ui_levelup"); sayq("Мастерство растёт: " + DIRS[k].n + " — ступень " + s1 + "."); if (gm().journal) gm().journal("Мастерство: " + DIRS[k].n + ", ступень " + s1 + "."); }
+  if (s1 > s0 && !quiet) { snd("skill_up", "ui_levelup"); /* (после 4.6) свой перезвон: мастерство, а не проверка детали */ sayq("Мастерство растёт: " + DIRS[k].n + " — ступень " + s1 + "."); if (gm().journal) gm().journal("Мастерство: " + DIRS[k].n + ", ступень " + s1 + "."); }
   if (o1 > o0 && !quiet) {
     sayq("Общее мастерство — ступень " + o1 + "." + (specFree() > 0 ? " Можно выбрать специализацию мастера — у верстака." : ""));
     if (gm().journal) gm().journal("Общее мастерство — ступень " + o1 + ".");
@@ -421,7 +421,7 @@ function specMenu() {
   var items = SPEC_ORDER.filter(function (k) { return !has(k); }).map(function (k) {
     return { label: cap1(SPECS[k].n) + ": " + SPECS[k].d + ".", fn: function () {
       M().spec.push(k);
-      snd("work_pass", "ui_levelup");
+      snd("skill_up", "ui_levelup");
       say("Специализация мастера — " + SPECS[k].n + ". " + cap1(SPECS[k].d) + ".");
       if (gm().journal) gm().journal("Специализация мастера: " + SPECS[k].n + ".");
       if (LAB.workshop && LAB.workshop.toRoot) LAB.workshop.toRoot();

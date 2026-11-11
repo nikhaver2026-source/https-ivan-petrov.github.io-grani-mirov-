@@ -7,6 +7,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 часть — замедлена или ускорена, петли сведены с перекрёстным затуханием;
 сборщик — lab/tools/build_sounds.py.
 
+## .22 Bolt Action Long Rifle Rechambering
+
+Автор: AlexCoover. Лицензия: CC0 1.0. Источник: https://freesound.org/s/706404/
+
+Файлы: `706404_8398659-hq.ogg`
+
 ## 00_d5.flac
 
 Автор: rbnuser. Лицензия: CC0 1.0. Источник: https://freesound.org/s/347414/
@@ -126,6 +132,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: rbnuser. Лицензия: CC0 1.0. Источник: https://freesound.org/s/347423/
 
 Файлы: `347423_4551235-hq.ogg`
+
+## 130kV Power line short circuit
+
+Автор: prophecy77. Лицензия: CC0 1.0. Источник: https://freesound.org/s/728157/
+
+Файлы: `728157_2760781-hq.ogg`
 
 ## 16 button clicks
 
@@ -397,6 +409,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `202094_3756348-hq.ogg`
 
+## Air release
+
+Автор: davidlay1. Лицензия: CC0 1.0. Источник: https://freesound.org/s/416080/
+
+Файлы: `416080_7175960-hq.ogg`
+
 ## AK-47 Assault Rifle being unloaded and reloaded
 
 Автор: serøutōnin--deprivəd. Лицензия: CC0 1.0. Источник: https://freesound.org/s/674742/
@@ -438,6 +456,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: ani_music. Лицензия: CC0 1.0. Источник: https://freesound.org/s/244983/
 
 Файлы: `244983_3008343-hq.ogg`
+
+## Arc Welding.wav
+
+Автор: squashy555. Лицензия: CC0 1.0. Источник: https://freesound.org/s/256915/
+
+Файлы: `256915_1149179-hq.ogg`
 
 ## Arming a Sci-Fi Gun
 
@@ -481,6 +505,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `448537_9311684-hq.ogg`
 
+## backpack.wav
+
+Автор: j1987. Лицензия: CC0 1.0. Источник: https://freesound.org/s/95560/
+
+Файлы: `95560_367313-hq.ogg`
+
 ## Basic Fire whoosh
 
 Автор: LookIMadeAThing. Лицензия: CC0 1.0. Источник: https://freesound.org/s/260554/
@@ -492,6 +522,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Bathed_in_the_Light_(ISRC_USUAN1100308).mp3
 
 Файлы: `Bathed_in_the_Light_%28ISRC_USUAN1100308%29.mp3`
+
+## Battle Mech walks (fast & slow sequence)
+
+Автор: Breviceps. Лицензия: CC0 1.0. Источник: https://freesound.org/s/557594/
+
+Файлы: `557594_9159316-hq.ogg`
 
 ## BFG Laser
 
@@ -553,11 +589,17 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `854382_71257-hq.ogg`
 
+## Big stereo metal hit
+
+Автор: LPA134. Лицензия: CC0 1.0. Источник: https://freesound.org/s/329515/
+
+Файлы: `329515_424694-hq.ogg`
+
 ## BigSoundBank
 
 Автор: Joseph Sardin. Лицензия: CC0 1.0. Источник: https://bigsoundbank.com
 
-Файлы: `1487_air-compressor.flac`, `3092_beer-compressor-2.flac`, `1803_automatic-hatch-opening.flac`, `1804_automatic-hatch-closing.flac`, `1092_electric-circuit-breaker.flac`, `3442_electric-strike-1.flac`, `1711_elevator-3-floors.flac`, `1712_elevator-6-floors.flac`, `1591_broken-glass-of-champagne.flac`, `1987_pistol-cocking-4.flac`, `3011_hiss-of-steam-train-3.flac`, `3019_hiss-of-steam-train-7.flac`, `2376_microwave-oven-3.flac`, `2143_flashing-light-bulb-1.flac`, `2146_flashing-light-bulb-4.flac`, `2618_radio-frequency-sweep-2.flac`, `1973_robot-1.flac`, `1981_robot-9.flac`, `3114_thunder-3.flac`, `1662_howling-of-a-girl-1.flac`, `3411_evacuation-alarm-1.flac`, `3016_steam-locomotive-1.flac`, `2118_neon-or-transformer-1.flac`, `2119_neon-or-transformer-2.flac`, `1023_explosion-far-away.flac`, `1234_trap.flac`, `1807_explosion-1.flac`, `1808_explosion-2.flac`, `2205_cracking-ice-1.flac`, `2856_fireplace-4.flac`
+Файлы: `1487_air-compressor.flac`, `3092_beer-compressor-2.flac`, `1803_automatic-hatch-opening.flac`, `1804_automatic-hatch-closing.flac`, `1092_electric-circuit-breaker.flac`, `3442_electric-strike-1.flac`, `1711_elevator-3-floors.flac`, `1712_elevator-6-floors.flac`, `1591_broken-glass-of-champagne.flac`, `1987_pistol-cocking-4.flac`, `3011_hiss-of-steam-train-3.flac`, `3019_hiss-of-steam-train-7.flac`, `2376_microwave-oven-3.flac`, `2143_flashing-light-bulb-1.flac`, `2146_flashing-light-bulb-4.flac`, `2618_radio-frequency-sweep-2.flac`, `1973_robot-1.flac`, `1981_robot-9.flac`, `3114_thunder-3.flac`, `1662_howling-of-a-girl-1.flac`, `3411_evacuation-alarm-1.flac`, `3016_steam-locomotive-1.flac`, `2118_neon-or-transformer-1.flac`, `2119_neon-or-transformer-2.flac`, `1023_explosion-far-away.flac`, `1234_trap.flac`, `1807_explosion-1.flac`, `1808_explosion-2.flac`, `2205_cracking-ice-1.flac`, `2856_fireplace-4.flac`, `1030_exo_low.flac`, `1491_exo_on.flac`, `1989_rail_barrel.flac`, `1992_work_pass.flac`, `2437_mw_hum.flac`, `2905_exo_servo.flac`
 
 ## Bitcrushed voice one-shots
 
@@ -571,11 +613,23 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `420687_5523662-hq.ogg`
 
+## Blaster 04.wav
+
+Автор: NHumphrey. Лицензия: CC0 1.0. Источник: https://freesound.org/s/204456/
+
+Файлы: `204456_3430035-hq.ogg`
+
 ## blaster shot single 5.wav
 
 Автор: MikeE63. Лицензия: CC0 1.0. Источник: https://freesound.org/s/466867/
 
 Файлы: `466867_8430571-hq.ogg`
+
+## blaster.wav
+
+Автор: jradcoolness. Лицензия: CC0 1.0. Источник: https://freesound.org/s/334224/
+
+Файлы: `334224_3454378-hq.ogg`
 
 ## Bomb Countdown Beeps
 
@@ -649,6 +703,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `448551_9311684-hq.ogg`
 
+## cannon_boom10.wav
+
+Автор: ReadeOnly. Лицензия: CC0 1.0. Источник: https://freesound.org/s/186930/
+
+Файлы: `186930_545448-hq.ogg`
+
 ## Canon in D Major
 
 Автор: Johann Pachelbel; исполняет Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Canon_in_D_Major_(ISRC_USUAN1100301).mp3
@@ -690,6 +750,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: bewareofkites20. Лицензия: CC0 1.0. Источник: https://freesound.org/s/147759/
 
 Файлы: `147759_2610233-hq.ogg`
+
+## Cigarette Sizzle 02
+
+Автор: chaosportal. Лицензия: CC0 1.0. Источник: https://freesound.org/s/133449/
+
+Файлы: `133449_880637-hq.ogg`
 
 ## Cinematic Boom Impact Hit 2021
 
@@ -786,6 +852,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: SpeedY. Лицензия: CC0 1.0. Источник: https://freesound.org/s/8403/
 
 Файлы: `8403_6479-hq.ogg`
+
+## Clickity clak sound library
+
+Автор: DesignDean. Лицензия: CC0 1.0. Источник: https://freesound.org/s/755026/
+
+Файлы: `755026_3366726-hq.ogg`
 
 ## Coffee Espresso Machine Wave 44100hz
 
@@ -931,6 +1003,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `826213_13332713-hq.ogg`
 
+## depressurized and pressurized air tank ST.aif
+
+Автор: alexmol. Лицензия: CC0 1.0. Источник: https://freesound.org/s/140578/
+
+Файлы: `140578_861061-hq.ogg`
+
 ## detonator switching
 
 Автор: cambrianman. Лицензия: CC0 1.0. Источник: https://freesound.org/s/418329/
@@ -954,6 +1032,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Distant_Tension_(ISRC_USUAN1100257).mp3
 
 Файлы: `Distant_Tension_%28ISRC_USUAN1100257%29.mp3`
+
+## Dji Mavic Mini 2 take-off UP-DOWN XY mic placement Zoom H5.wav
+
+Автор: Sadiquecat. Лицензия: CC0 1.0. Источник: https://freesound.org/s/683300/
+
+Файлы: `683300_5287430-hq.ogg`
 
 ## Dog Growl - Beast / Creature
 
@@ -1003,6 +1087,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `320139_140737-hq.ogg`
 
+## Droid falls over (messy).mp3
+
+Автор: J.R.Mythical. Лицензия: CC0 1.0. Источник: https://freesound.org/s/589621/
+
+Файлы: `589621_12393343-hq.ogg`
+
 ## DSRXPLOD.WAV
 
 Автор: wildweasel. Лицензия: CC BY 4.0. Источник: https://freesound.org/s/39020/
@@ -1045,6 +1135,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `Echoes_of_Time_v2_%28ISRC_USUAN1300030%29.mp3`
 
+## Electric Sparks.wav
+
+Автор: kev_durr. Лицензия: CC0 1.0. Источник: https://freesound.org/s/396470/
+
+Файлы: `396470_5415774-hq.ogg`
+
 ## Electric zap.wav
 
 Автор: michael_grinnell. Лицензия: CC0 1.0. Источник: https://freesound.org/s/512471/
@@ -1056,6 +1152,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: JoelAudio. Лицензия: CC0 1.0. Источник: https://freesound.org/s/136542/
 
 Файлы: `136542_1206321-hq.ogg`
+
+## Electricity 4
+
+Автор: PureAudioNinja. Лицензия: CC0 1.0. Источник: https://freesound.org/s/341612/
+
+Файлы: `341612_5939807-hq.ogg`
 
 ## Electricity crackling
 
@@ -1074,6 +1176,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: NachtmahrTV. Лицензия: CC0 1.0. Источник: https://freesound.org/s/556717/
 
 Файлы: `556717_5620304-hq.ogg`
+
+## Electricity.wav
+
+Автор: danielpodlovics. Лицензия: CC0 1.0. Источник: https://freesound.org/s/530356/
+
+Файлы: `530356_10106687-hq.ogg`
 
 ## electrocute.wav
 
@@ -1146,6 +1254,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: deleted_user_1887925. Лицензия: CC0 1.0. Источник: https://freesound.org/s/132929/
 
 Файлы: `132929_1887925-hq.ogg`
+
+## Explosion in a can
+
+Автор: SamsterBirdies. Лицензия: CC0 1.0. Источник: https://freesound.org/s/587887/
+
+Файлы: `587887_5487341-hq.ogg`
 
 ## Explosion Outdoors (Medium)
 
@@ -1255,6 +1369,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `503559_1287465-hq.ogg`
 
+## Fire Burst Flash
+
+Автор: Za-Games. Лицензия: CC0 1.0. Источник: https://freesound.org/s/539972/
+
+Файлы: `539972_12029332-hq.ogg`
+
 ## Fire Burst.wav
 
 Автор: SilverIllusionist. Лицензия: CC BY 4.0. Источник: https://freesound.org/s/472688/
@@ -1266,6 +1386,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: hnhnh. Лицензия: CC0 1.0. Источник: https://freesound.org/s/244926/
 
 Файлы: `244926_3983630-hq.ogg`
+
+## flame burst ignite bbq barbecue.flac
+
+Автор: kyles. Лицензия: CC0 1.0. Источник: https://freesound.org/s/637533/
+
+Файлы: `637533_612689-hq.ogg`
 
 ## Flamethrower
 
@@ -1302,6 +1428,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: Streety. Лицензия: CC0 1.0. Источник: https://freesound.org/s/27879/
 
 Файлы: `27879_56897-hq.ogg`
+
+## Flashover discharge 280KV.wav
+
+Автор: jensfelger. Лицензия: CC0 1.0. Источник: https://freesound.org/s/367454/
+
+Файлы: `367454_6750383-hq.ogg`
 
 ## Foley bullet hit metal pipe
 
@@ -1411,6 +1543,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `611356_9616576-hq.ogg`
 
+## Futuristic Woosh sound
+
+Автор: Mega-X-stream. Лицензия: CC0 1.0. Источник: https://freesound.org/s/546278/
+
+Файлы: `546278_4937681-hq.ogg`
+
 ## G3.ogg
 
 Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448559/
@@ -1470,6 +1608,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Ghost_Story_(ISRC_USUAN1300034).mp3
 
 Файлы: `Ghost_Story_%28ISRC_USUAN1300034%29.mp3`
+
+## Glitch Computer
+
+Автор: TheMinkman. Лицензия: CC0 1.0. Источник: https://freesound.org/s/434657/
+
+Файлы: `434657_3491501-hq.ogg`
 
 ## Glock 17 Trigger Pull
 
@@ -1543,6 +1687,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `175267_3261532-hq.ogg`
 
+## Gunshot with silencer
+
+Автор: hotpin7. Лицензия: CC0 1.0. Источник: https://freesound.org/s/819269/
+
+Файлы: `819269_17707799-hq.ogg`
+
 ## Gunshot, stage pistol
 
 Автор: TRP. Лицензия: CC0 1.0. Источник: https://freesound.org/s/717584/
@@ -1560,6 +1710,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: Erik Satie; исполняет Robin Alciatore (Musopen). Лицензия: общественное достояние. Источник: https://commons.wikimedia.org/wiki/File:Erik_Satie_-_gymnopedies_-_la_1_ere._lent_et_douloureux.ogg
 
 Файлы: `Erik_Satie_-_gymnopedies_-_la_1_ere._lent_et_douloureux.ogg`
+
+## Hammer hitting an anvil
+
+Автор: draftcraft. Лицензия: CC0 1.0. Источник: https://freesound.org/s/434339/
+
+Файлы: `434339_6599148-hq.ogg`
 
 ## Hard Glass Impact
 
@@ -1579,11 +1735,29 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `heartbeat.mp3_.flac`
 
+## Heartbeat 97 BPM
+
+Автор: Cloud-10. Лицензия: CC0 1.0. Источник: https://freesound.org/s/688735/
+
+Файлы: `688735_10403690-hq.ogg`
+
+## Heartbeat_1.WAV
+
+Автор: deleted_user_2104797. Лицензия: CC0 1.0. Источник: https://freesound.org/s/164648/
+
+Файлы: `164648_2104797-hq.ogg`
+
 ## Heavy Laser Cannon.wav
 
 Автор: waxsocks. Лицензия: CC0 1.0. Источник: https://freesound.org/s/500546/
 
 Файлы: `500546_1766049-hq.ogg`
+
+## Heavy Metal Impact 2
+
+Автор: magnuswaker. Лицензия: CC0 1.0. Источник: https://freesound.org/s/614063/
+
+Файлы: `614063_11537497-hq.ogg`
 
 ## Heavy Robot Footsteps
 
@@ -1621,6 +1795,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `Blood_Dripping_Loop_00.mp3`, `Blood_Drip_00.mp3`, `Blood_Drip_01.mp3`, `Blood_Drip_02.mp3`, `Blood_Drip_03.mp3`, `Blood_Drip_04.mp3`, `Blood_Drip_06.mp3`, `Breath_Scared_01.mp3`, `Breath_Scared_02.mp3`, `Breath_Scared_03.mp3`, `Breath_Scared_04.mp3`, `Breath_Scared_05.mp3`, `Breath_Scared_06.mp3`, `Breath_Scared_07.mp3`, `Breath_Scared_09.mp3`, `Gate_Open_00.mp3`, `Scream_Male_01.mp3`, `Scream_Male_02.mp3`, `Scream_Male_03.mp3`, `Scream_Male_04.mp3`
 
+## hum movements whooshes.wav
+
+Автор: JavierZumer. Лицензия: CC0 1.0. Источник: https://freesound.org/s/426058/
+
+Файлы: `426058_2836758-hq.ogg`
+
 ## Hungry ghoul
 
 Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/hungry-ghoul
@@ -1632,6 +1812,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: john129pats. Лицензия: CC0 1.0. Источник: https://freesound.org/s/146558/
 
 Файлы: `146558_831330-hq.ogg`
+
+## hydraulics.wav
+
+Автор: nuckan. Лицензия: CC0 1.0. Источник: https://freesound.org/s/212941/
+
+Файлы: `212941_3910980-hq.ogg`
 
 ## Ice cracking
 
@@ -1698,6 +1884,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Inner_Sanctum_(ISRC_USUAN1100196).mp3
 
 Файлы: `Inner_Sanctum_%28ISRC_USUAN1100196%29.mp3`
+
+## Inserting Magazine.wav
+
+Автор: morganpurkis. Лицензия: CC0 1.0. Источник: https://freesound.org/s/379977/
+
+Файлы: `379977_5937039-hq.ogg`
 
 ## Interface beeps
 
@@ -1795,6 +1987,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `378185_932959-hq.ogg`
 
+## Large duffel bag drop
+
+Автор: vintage2005. Лицензия: CC0 1.0. Источник: https://freesound.org/s/438988/
+
+Файлы: `438988_4807538-hq.ogg`
+
 ## Laser
 
 Автор: Daleonfire. Лицензия: CC0 1.0. Источник: https://freesound.org/s/376694/
@@ -1849,6 +2047,18 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `719638_15601358-hq.ogg`
 
+## Level Up
+
+Автор: qubodup. Лицензия: CC0 1.0. Источник: https://freesound.org/s/442943/
+
+Файлы: `442943_71257-hq.ogg`
+
+## Light Switch On 2
+
+Автор: HunteR4708. Лицензия: CC0 1.0. Источник: https://freesound.org/s/256840/
+
+Файлы: `256840_4772965-hq.ogg`
+
 ## Lightless Dawn
 
 Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Lightless_Dawn_(ISRC_USUAN1100655).mp3
@@ -1860,6 +2070,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: pip_. Лицензия: CC0 1.0. Источник: https://freesound.org/s/557194/
 
 Файлы: `557194_6737463-hq.ogg`
+
+## Lightsaber Whoosh
+
+Автор: h2p34. Лицензия: CC0 1.0. Источник: https://freesound.org/s/650564/
+
+Файлы: `650564_9534185-hq.ogg`
 
 ## lightsaber3.mp3
 
@@ -1897,6 +2113,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `620080_13582756-hq.ogg`
 
+## Machine Charge.wav
+
+Автор: Glitchedtones. Лицензия: CC0 1.0. Источник: https://freesound.org/s/375925/
+
+Файлы: `375925_3294528-hq.ogg`
+
 ## Madagascar Hissing Cockroach
 
 Автор: TheKingOfGeeks360. Лицензия: CC0 1.0. Источник: https://freesound.org/s/811205/
@@ -1920,6 +2142,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Mary_Celeste_(ISRC_USUAN1500016).mp3
 
 Файлы: `Mary_Celeste_%28ISRC_USUAN1500016%29.mp3`
+
+## Match Sizzle 02
+
+Автор: squareal. Лицензия: CC0 1.0. Источник: https://freesound.org/s/237407/
+
+Файлы: `237407_1502374-hq.ogg`
 
 ## mech_step_001
 
@@ -1957,6 +2185,18 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `669095_14100561-hq.ogg`
 
+## Metal crackling
+
+Автор: JavierSerrat. Лицензия: CC0 1.0. Источник: https://freesound.org/s/497427/
+
+Файлы: `497427_3518208-hq.ogg`
+
+## Metal Creak 4.wav
+
+Автор: ingudios. Лицензия: CC0 1.0. Источник: https://freesound.org/s/119468/
+
+Файлы: `119468_1819253-hq.ogg`
+
 ## Metal Cup Drop
 
 Автор: AlecCorday. Лицензия: CC0 1.0. Источник: https://freesound.org/s/181115/
@@ -1986,6 +2226,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/metal-footsteps-on-concrete
 
 Файлы: `metal_steps_03.flac`, `metal_steps_04.flac`, `metal_steps_05.flac`, `metal_steps_06.flac`, `metal_steps_09.flac`, `metal_steps_10.flac`, `metal_steps_12.flac`, `metal_steps_13.flac`, `metal_steps_14.flac`, `metal_steps_16.flac`
+
+## Metal Hit
+
+Автор: alegemaate. Лицензия: CC0 1.0. Источник: https://freesound.org/s/364706/
+
+Файлы: `364706_2531187-hq.ogg`
 
 ## Metal Impact 1
 
@@ -2028,6 +2274,18 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: DDT197. Лицензия: CC0 1.0. Источник: https://freesound.org/s/445775/
 
 Файлы: `445775_8292592-hq.ogg`
+
+## metal_rasp.wav
+
+Автор: j1987. Лицензия: CC0 1.0. Источник: https://freesound.org/s/532136/
+
+Файлы: `532136_367313-hq.ogg`
+
+## metalimpact_4.wav
+
+Автор: j1987. Лицензия: CC0 1.0. Источник: https://freesound.org/s/140722/
+
+Файлы: `140722_367313-hq.ogg`
 
 ## Metaphysik
 
@@ -2155,6 +2413,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `240311_864571-hq.ogg`
 
+## New Skill 01.wav
+
+Автор: LilMati. Лицензия: CC0 1.0. Источник: https://freesound.org/s/523753/
+
+Файлы: `523753_6142149-hq.ogg`
+
 ## Night Break
 
 Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Night_Break_(ISRC_USUAN1100380).mp3
@@ -2215,6 +2479,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `344972_1255966-hq.ogg`
 
+## Plasma Cutter 01
+
+Автор: C-V. Лицензия: CC0 1.0. Источник: https://freesound.org/s/733483/
+
+Файлы: `733483_8956746-hq.ogg`
+
 ## Plasma Rifle Gun Shots - Various
 
 Автор: synthy95. Лицензия: CC0 1.0. Источник: https://freesound.org/s/331240/
@@ -2250,6 +2520,24 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: FOSSarts. Лицензия: CC0 1.0. Источник: https://freesound.org/s/740116/
 
 Файлы: `740116_14631530-hq.ogg`
+
+## Power Charge
+
+Автор: crashoverride6. Лицензия: CC0 1.0. Источник: https://freesound.org/s/193610/
+
+Файлы: `193610_1274078-hq.ogg`
+
+## Power Up.wav
+
+Автор: michael_grinnell. Лицензия: CC0 1.0. Источник: https://freesound.org/s/512474/
+
+Файлы: `512474_7372230-hq.ogg`
+
+## PowerUp.wav
+
+Автор: kianda. Лицензия: CC0 1.0. Источник: https://freesound.org/s/328120/
+
+Файлы: `328120_5668811-hq.ogg`
 
 ## Pressure Plate
 
@@ -2287,11 +2575,23 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `699655_1474204-hq.ogg`
 
+## Rasping Saw on Metal.wav
+
+Автор: ProductionNow. Лицензия: CC0 1.0. Источник: https://freesound.org/s/223051/
+
+Файлы: `223051_3646900-hq.ogg`
+
 ## Rat
 
 Автор: egomassive. Лицензия: CC0 1.0. Источник: https://freesound.org/s/536753/
 
 Файлы: `536753_1415754-hq.ogg`
+
+## ratchet socket wrench tool
+
+Автор: AlaskaRobotics. Лицензия: CC0 1.0. Источник: https://freesound.org/s/551497/
+
+Файлы: `551497_1282865-hq.ogg`
 
 ## Rats
 
@@ -2317,17 +2617,41 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `855248_71257-hq.ogg`
 
+## release_air_pffft.wav
+
+Автор: reg7783. Лицензия: CC0 1.0. Источник: https://freesound.org/s/131302/
+
+Файлы: `131302_2394357-hq.ogg`
+
 ## Reminiscing
 
 Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Reminiscing_(ISRC_USUAN1100097).mp3
 
 Файлы: `Reminiscing_%28ISRC_USUAN1100097%29.mp3`
 
+## Repair_metal.wav
+
+Автор: zbig77. Лицензия: CC0 1.0. Источник: https://freesound.org/s/244985/
+
+Файлы: `244985_4487520-hq.ogg`
+
 ## Retro computer noise
 
 Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/retro-computer-noise
 
 Файлы: `computer-noise_0.mp3`
+
+## Retro Future Data Transfer
+
+Автор: DeVern. Лицензия: CC0 1.0. Источник: https://freesound.org/s/426191/
+
+Файлы: `426191_2866779-hq.ogg`
+
+## Retro, Out Of This World.wav
+
+Автор: LilMati. Лицензия: CC0 1.0. Источник: https://freesound.org/s/658267/
+
+Файлы: `658267_6142149-hq.ogg`
 
 ## Return of Lazarus
 
@@ -2527,11 +2851,23 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `490266_8311588-hq.ogg`
 
+## SciFi Blaster
+
+Автор: SeanSecret. Лицензия: CC0 1.0. Источник: https://freesound.org/s/440654/
+
+Файлы: `440654_2742396-hq.ogg`
+
 ## SciFi Futuristic Rail Gun Shot
 
 Автор: Sabacky. Лицензия: CC BY 4.0. Источник: https://freesound.org/s/767161/
 
 Файлы: `767161_16544389-hq.ogg`
+
+## Scifi_Gun_Blast
+
+Автор: tradeachest. Лицензия: CC0 1.0. Источник: https://freesound.org/s/730564/
+
+Файлы: `730564_8026845-hq.ogg`
 
 ## ScifiHeavyBlasterShot.wav
 
@@ -2569,6 +2905,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `587443_5487341-hq.ogg`
 
+## Screwdriver 1
+
+Автор: 16GPanskaToman_Kristian. Лицензия: CC0 1.0. Источник: https://freesound.org/s/496286/
+
+Файлы: `496286_10773661-hq.ogg`
+
 ## Secret coin
 
 Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/secret-coin
@@ -2592,6 +2934,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: Smice_6. Лицензия: CC0 1.0. Источник: https://freesound.org/s/536529/
 
 Файлы: `536529_5546157-hq.ogg`
+
+## Servo 2
+
+Автор: JoontheFloof. Лицензия: CC0 1.0. Источник: https://freesound.org/s/740240/
+
+Файлы: `740240_16085440-hq.ogg`
 
 ## Servo 7
 
@@ -2713,6 +3061,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `427979_2247456-hq.ogg`
 
+## Silenced Gunshot.wav
+
+Автор: morganpurkis. Лицензия: CC0 1.0. Источник: https://freesound.org/s/369781/
+
+Файлы: `369781_5937039-hq.ogg`
+
 ## Silver Blue Light
 
 Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Silver_Blue_Light_(ISRC_USUAN1100718).mp3
@@ -2724,6 +3078,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: morganpurkis. Лицензия: CC0 1.0. Источник: https://freesound.org/s/392229/
 
 Файлы: `392229_5937039-hq.ogg`
+
+## Sizzle
+
+Автор: roboroo. Лицензия: CC0 1.0. Источник: https://freesound.org/s/436791/
+
+Файлы: `436791_3206727-hq.ogg`
 
 ## Sizzle / Acid Burn
 
@@ -2779,11 +3139,29 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `562191_12618935-hq.ogg`
 
+## Socket Wrench
+
+Автор: xxqmanxx. Лицензия: CC0 1.0. Источник: https://freesound.org/s/147018/
+
+Файлы: `147018_2188235-hq.ogg`
+
+## Soft Warning Buzzer
+
+Автор: magnuswaker. Лицензия: CC0 1.0. Источник: https://freesound.org/s/641416/
+
+Файлы: `641416_11537497-hq.ogg`
+
 ## some sort of click.wav
 
 Автор: Reitanna. Лицензия: CC0 1.0. Источник: https://freesound.org/s/332671/
 
 Файлы: `332671_950925-hq.ogg`
+
+## Sonar ping
+
+Автор: nicorico_120. Лицензия: CC0 1.0. Источник: https://freesound.org/s/808185/
+
+Файлы: `808185_11548422-hq.ogg`
 
 ## Space monster Roar
 
@@ -2827,6 +3205,18 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `547446_9912277-hq.ogg`
 
+## Squish.ogg
+
+Автор: egomassive. Лицензия: CC0 1.0. Источник: https://freesound.org/s/536765/
+
+Файлы: `536765_1415754-hq.ogg`
+
+## squishy oobleck goo
+
+Автор: AlaskaRobotics. Лицензия: CC0 1.0. Источник: https://freesound.org/s/221089/
+
+Файлы: `221089_1282865-hq.ogg`
+
 ## Static Motion
 
 Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Static_Motion_(ISRC_USUAN1200062).mp3
@@ -2869,6 +3259,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `238428_1088850-hq.ogg`
 
+## Submarine sonar ping
+
+Автор: therealdeevee. Лицензия: CC0 1.0. Источник: https://freesound.org/s/653896/
+
+Файлы: `653896_14374430-hq.ogg`
+
 ## Swarm of roaches
 
 Автор: szczur_banshee. Лицензия: CC0 1.0. Источник: https://freesound.org/s/380769/
@@ -2904,6 +3300,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: Manim8. Лицензия: CC0 1.0. Источник: https://freesound.org/s/469121/
 
 Файлы: `469121_4996003-hq.ogg`
+
+## taser.wav
+
+Автор: birdswkaren. Лицензия: CC0 1.0. Источник: https://freesound.org/s/540012/
+
+Файлы: `540012_11920129-hq.ogg`
 
 ## Taser/High Voltage discharge
 
@@ -2959,11 +3361,23 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `209645_2886479-hq.ogg`
 
+## Toggle Switch
+
+Автор: pillwave. Лицензия: CC0 1.0. Источник: https://freesound.org/s/423957/
+
+Файлы: `423957_6164481-hq.ogg`
+
 ## Tossing grenade onto cement.flac
 
 Автор: CGEffex. Лицензия: CC BY 4.0. Источник: https://freesound.org/s/93839/
 
 Файлы: `93839_1386366-hq.ogg`
+
+## transformer-hum.aif
+
+Автор: alienistcog. Лицензия: CC0 1.0. Источник: https://freesound.org/s/125168/
+
+Файлы: `125168_296888-hq.ogg`
 
 ## trexroar
 
@@ -3006,6 +3420,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Unrelenting_(ISRC_USUAN1100029).mp3
 
 Файлы: `Unrelenting_%28ISRC_USUAN1100029%29.mp3`
+
+## User Interface Elegant Wooden Confirmation Sound
+
+Автор: qubodup. Лицензия: CC0 1.0. Источник: https://freesound.org/s/822568/
+
+Файлы: `822568_71257-hq.ogg`
 
 ## Velociraptor_Snarls
 
@@ -3060,6 +3480,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: SpeedY. Лицензия: CC0 1.0. Источник: https://freesound.org/s/62925/
 
 Файлы: `62925_6479-hq.ogg`
+
+## Welding_Electric Sparks.wav
+
+Автор: weaveofkev. Лицензия: CC0 1.0. Источник: https://freesound.org/s/396240/
+
+Файлы: `396240_453602-hq.ogg`
 
 ## Wet Metal Footsteps
 
