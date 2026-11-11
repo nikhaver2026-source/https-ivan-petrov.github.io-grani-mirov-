@@ -251,6 +251,10 @@ def SPL(i, k, af=None, start=0, dur=None, **so):
     if dur: o["dur"] = dur
     return ("split", FS(i, **o), k, so)
 
+def G(name):
+    """(после 4.6) Вариант, синтезированный здесь же (gen): среди записей одного звука."""
+    return ("gen", name)
+
 def L(src, off=0.0, g=1.0):
     """Слой сведения: источник, сдвиг (с), громкость."""
     return (src, off, g)
@@ -856,7 +860,9 @@ E("turret_servo", "sfx", [FS(418881, dur=0.8), FS(264592, dur=0.9)], n=2, mx=0.9
 E("turret_lock", "sfx", [FS(189327, dur=1.3)], n=1, mx=1.3, v=0.7)
 E("cam_spot", "mixv", [[L(FS(202530, start=0.08)), L(FS(18726), 0.05, 0.6)], [L(FS(202530, start=0.08, af=PITCH(1.12))), L(FS(18725, dur=0.6), 0.05, 0.6)]], mx=0.9, v=0.8)
 E("oko_chime", "sfx", [FS(238428, dur=1.9), FS(244583, dur=2.9)], n=2, mx=3.0, v=0.85)
-E("oko_alarm", "sfx", [FS(32088, dur=2.95), FS(54047)], n=2, mx=3.0, v=0.75)
+# (после 4.6, выбор автора на прослушивании) тревога ОКО: прежний клаксон (jbum) снят, зуммер остался;
+# к нему — клаксон аварийной блокировки и тревога «уханье» (синтез, gen): хриплые гудки и восходящие свисты
+E("oko_alarm", "sfx", [FS(54047), G("siren_klaxon"), G("siren_whoop")], n=3, mx=3.0, v=0.75)
 
 # ═════ ПОПАДАНИЯ, ВЗРЫВЫ ═════
 E("hit_metal", "sfx", [SPL(144444, 6, min_len=0.1), SPL(675951, 4, min_len=0.3)], n=8, mx=0.7)
@@ -1311,7 +1317,55 @@ def gen(name):
         for k, (d, g) in enumerate([(0.18, 0.35), (0.36, 0.18)]):
             o = int(d * SR); out[o: o + len(a)] += a * g
         return fade(out.astype(np.float32), 0.002, 0.3)
+    if name in ("siren_klaxon", "siren_whoop"):
+        return siren(name)
     raise SystemExit("нет синтеза " + name)
+
+
+def siren(name):
+    """(после 4.6) Сирены тревоги ОКО — синтез, выбранный автором на прослушивании. Сухие, моно:
+    пространство (реверберацию зала) даёт сама игра (atmos.js, okoAlarm, reverb 0,5).
+    siren_klaxon — клаксон аварийной блокировки: два хриплых гудка (0,75 с звук, 0,45 с пауза),
+    две пилы 338 и 343,5 Гц бьются друг о друга, резонансы рупора 700, 1550 и 2600 Гц;
+    siren_whoop — тревога «уханье»: три восходящих свиста 450 → 1150 Гц по 0,6 с.
+    Насыщение рупора — на учетверённой частоте, без наложения частот."""
+    from scipy.signal import butter, sosfilt, resample_poly
+    def bp(x, lo, hi):
+        return sosfilt(butter(2, [lo / (SR / 2), hi / (SR / 2)], btype="band", output="sos"), x)
+    def lp(x, f):
+        return sosfilt(butter(2, f / (SR / 2), output="sos"), x)
+    def peak(x, f, gain_db, q=1.0):
+        bw = f / q
+        return x + (10 ** (gain_db / 20) - 1) * bp(x, max(20, f - bw / 2), min(SR / 2 - 100, f + bw / 2))
+    def sat(x, drive):
+        u = resample_poly(x, 4, 1)
+        return resample_poly(np.tanh(drive * u) / np.tanh(drive), 1, 4)[: len(x)]
+    def phase(f):
+        return np.cumsum(f) / SR
+    if name == "siren_klaxon":
+        n = int(2.4 * SR)
+        t = np.arange(n) / SR
+        g = (((t % 1.2) < 0.75) & (t < 1.95)).astype(float)
+        g = lp(g, 40)
+        def saw(f0):
+            # пила с ограниченной полосой: обертоны только до 19 кГц — без ложных призвуков
+            ph = 2 * np.pi * phase(np.full(n, f0))
+            return -2 / np.pi * sum(np.sin(k * ph) / k for k in range(1, int(19000 / f0) + 1))
+        saw1, saw2 = saw(338.0), saw(343.5)
+        x = peak(peak(peak(saw1 + 0.8 * saw2, 700, 10, 2.5), 1550, 8, 3), 2600, 4, 3)
+        x = sat(bp(x, 180, 5000) / 3.0, 1.8) * g
+    else:
+        n = int(2.35 * SR)
+        t = np.arange(n) / SR
+        tt = t % 0.72
+        f = 450 * (1150 / 450) ** np.clip(tt / 0.6, 0, 1)
+        ph = phase(f)
+        x = np.sin(2 * np.pi * ph) + 0.35 * np.sin(4 * np.pi * ph) + 0.2 * np.sin(6 * np.pi * ph)
+        x = sat(x / 1.6, 1.3)
+        gate = lp(((tt < 0.62) & (t < 3 * 0.72)).astype(float), 60)
+        x = bp(x * gate, 300, 5500)
+    x = x / (np.abs(x).max() + 1e-9) * 0.9
+    return fade(x.astype(np.float32), 0.004, 0.08)
 
 # ═════ СБОРКА ═════
 GROUP = {"ui": "ui", "step": "step", "bcn": "bcn", "loop": "amb", "music": "mus", "voice": "fx", "sfx": "fx", "mix": "fx", "mixv": "fx", "splicev": "fx", "seq": "fx", "gen": "fx", "note": "inst"}
@@ -1469,6 +1523,9 @@ def build():
         else:
             items = []
             for s in sp["srcs"]:
+                if isinstance(s, tuple) and s[0] == "gen":
+                    items.append(("arr", gen(s[1])))
+                    continue
                 if isinstance(s, tuple) and s[0] == "split":
                     _, src, k = s[:3]
                     so = dict(s[3]) if len(s) > 3 else {}

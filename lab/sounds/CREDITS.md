@@ -2059,12 +2059,6 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `365412_179538-hq.ogg`
 
-## jsyd_klaxon.wav
-
-Автор: jbum. Лицензия: CC0 1.0. Источник: https://freesound.org/s/32088/
-
-Файлы: `32088_114160-hq.ogg`
-
 ## Kettle Boil
 
 Автор: OwlStorm. Лицензия: CC0 1.0. Источник: https://freesound.org/s/212179/
