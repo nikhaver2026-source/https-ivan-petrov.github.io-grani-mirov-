@@ -4430,9 +4430,9 @@ const Speech={voice:null,keepAlive:null,
  /* Голосовой пакет (4.8): всё, что Gemini прочёл сверх описей, вшитых в
     сборки, — отдельной описью. (26 октября) Пакет лежит в самой игре (sounds/gvoice_pack) — в полной
     сборке для Windows и Android и на сайте одинаково; ставить и скачивать его не нужно. */
- GVOICES:{m:{url:"sounds/gvoice/bank_48.js",dir:"sounds/gvoice/",glob:"GVOICE_BANK",map:null,state:"off",
+ GVOICES:{m:{url:"sounds/gvoice/bank_49.js",dir:"sounds/gvoice/",glob:"GVOICE_BANK",map:null,state:"off",
    pack:{url:"sounds/gvoice_pack/m/bank.js",dir:"sounds/gvoice_pack/m/",glob:"GVOICE_PACK_M",map:null,state:"off"}},
-  f:{url:"sounds/gvoice_f/bank_f48.js",dir:"sounds/gvoice_f/",glob:"GVOICE_BANK_F",map:null,state:"off",
+  f:{url:"sounds/gvoice_f/bank_f49.js",dir:"sounds/gvoice_f/",glob:"GVOICE_BANK_F",map:null,state:"off",
    pack:{url:"sounds/gvoice_pack/f/bank.js",dir:"sounds/gvoice_pack/f/",glob:"GVOICE_PACK_F",map:null,state:"off"}},
   /* (9.5.1) Вестник — свой голос для достижений и событий (Zephyr). Пока его
      опись не записана (GV_HERALD_ON), вести звучат выбранным голосом. */
@@ -31384,7 +31384,7 @@ function revealSecret(x,y,propId,поМесту){
    setTimeout(()=>safeFn(()=>Bank.play("ad_gate_open",{gain:0.6,maxSec:5})),320);
    setTimeout(()=>safeFn(()=>beaconAt("stairs_down",0,0,-1,1)),700);});
   safeFn(()=>passageNote(x,y,propId,поМесту));
-  narrate(`Что-то щёлкнуло под рукой${propId&&PROP_BY_ID[propId]?` — за ${PROP_BY_ID[propId].n} подалась плита`:поМесту?", и кладка рядом поехала в сторону":""}. Открывается ход: ${v.вид}. Внутри ${v.страж}. Коснитесь поля дважды — войдёте.`,{interrupt:false});
+  narrate(`Что-то щёлкнуло под рукой${propId&&PROP_BY_ID[propId]?` — ${PROP_BY_ID[propId].n}: рядом подалась плита`:поМесту?", и кладка рядом поехала в сторону":""}. Открывается ход: ${v.вид}. Внутри ${v.страж}. Коснитесь поля дважды — войдёте.`,{interrupt:false});
   journal("Найден тайный ход.");
   safeFn(()=>saveGame(true));
   return true;}
@@ -51334,7 +51334,14 @@ const Langs=Modules.register("LANGS",{
  lesson(n){try{if(!n||!this.teachers.includes(n.prof))return "Языкам здесь не учат.";const l=this.ofNPC(n);const цель=l.id==="common"?LANGS.find(x=>x.область===((regionIndexAt(n.x,n.y)+1)%20)):l;if(!цель)return "Учить нечему.";
   if(this.level(цель.id)>=3)return `${цель.n[0].toUpperCase()+цель.n.slice(1)} вы знаете свободно: ${n.name} разводит руками.`;const цена=30;if((Number(G.gold)||0)<цена)return `Урок языка стоит ${цена} золота: не хватает.`;G.gold-=цена;
   const up=this.learn(цель.id,8,`урок у ${n.name}`);return `${n.name} берёт ${цена} золота и час говорит с вами только на ${цель.n}: ${up?"ступень взята.":`понимание растёт (${(G.langs[цель.id]||{}).оп||0} из ${this.need(цель.id)}).`}`;}catch(_){return "Урок не сложился.";}},
- npcLine(n){try{const c=this.check(n);if(c.id==="common")return "";const t=`${n.name} говорит на ${c.n}${c.общий?" и на общей речи":""}: вы ${LANG_LEVELS[c.ур]}${c.понятно?"":" — понимаете лишь обрывки"}.`;
+ /* (12 ноября 2026) название языка в предложном падеже: «на эфирной речи», «на северном наречии», «на языке Хаоса» */
+ пр(имя){const С={"говор":"говоре","распев":"распеве","напев":"напеве","жаргон":"жаргоне","язык":"языке","шёпот":"шёпоте","слог":"слоге","речь":"речи","наречие":"наречии","письмо":"письме"};
+  const w=String(имя||"").split(" "),out=[];let i=0;
+  for(;i<w.length;i++){const x=w[i];if(С[x]){out.push(С[x]);i++;break;}
+   const m=/^[а-яё]/.test(x)&&x.match(/^(.+?)(ый|ой|ий|ая|яя|ое|ее)$/);if(!m){out.push(x);continue;}
+   const о=m[1],к=m[2];out.push(о+(к==="ая"?(/[жшчщ]$/.test(о)?"ей":"ой"):к==="яя"?"ей":к==="ее"?"ем":к==="ий"&&!/[гкх]$/.test(о)?"ем":"ом"));}
+  return out.concat(w.slice(i)).join(" ");},
+ npcLine(n){try{const c=this.check(n);if(c.id==="common")return "";const t=`${n.name} говорит на ${this.пр(c.n)}${c.общий?" и на общей речи":""}: вы ${LANG_LEVELS[c.ур]}${c.понятно?"":" — понимаете лишь обрывки"}.`;
   return `<div class="list-line" tabindex="0" data-speak="${t.replace(/"/g,"&quot;")}">${t}</div>`+(this.teachers.includes(n.prof)&&this.level(c.id)<3?`<button class="item" data-cmd="langlesson:${n.key}" data-speak="Урок языка: ${c.n}, 30 золота.">Урок языка (30 золота)</button>`:"");}catch(_){return "";}},
  text(){this.ensure();const зн=LANGS.filter(l=>this.level(l.id)>0).map(l=>`${l.n} — ${LANG_LEVELS[this.level(l.id)]}`);return `Языков в мире ${LANGS.length}. Вы знаете: ${зн.join("; ")}. Здесь говорят на ${this.at().n}.`;}});
 /* ── ШЕСТЬ НАУК ── */
@@ -51720,7 +51727,7 @@ const Cases=Modules.register("CASES",{
   return `Улика найдена: ${CLUE_KINDS[kind].n} — ${слова}. Улик ${Object.keys(h.st.улики).length} из ${h.t.улики.length}. ${this.versionsText()}`;},
  /* Свидетель: житель города даёт показание, если понимает вас. */
  ask(n){const h=this.here();if(!h)return this.need();if(h.st.решено)return "Дело закрыто: свидетелям больше нечего добавить.";if(!h.t.улики.includes("показание"))return "В этом деле показания не нужны.";
-  const яз=safeFn(()=>Langs.check(n),{понятно:true});if(!яз.понятно)return `${n.name} что-то говорит на ${яз.n}, но вы разбираете лишь обрывки: показания не выйдет.`;
+  const яз=safeFn(()=>Langs.check(n),{понятно:true});if(!яз.понятно)return `${n.name} что-то говорит на ${Langs.пр(яз.n)}, но вы разбираете лишь обрывки: показания не выйдет.`;
   if(h.st.улики["показание"])return `${n.name} повторяет то, что вы уже слышали.`;
   return this.find("показание",true).replace(/^Улика найдена/,`${n.name} говорит, понизив голос. Улика найдена`);},
  versionsText(){const h=this.here();if(!h)return "";return `Версии: ${h.t.версии.map(v=>`${v.n} (улики: ${v.улики.map(k=>CLUE_KINDS[k].n).join(", ")}${v.улики.every(k=>h.st.улики[k])?" — собраны":""})`).join("; ")}.`;},
@@ -65151,7 +65158,7 @@ function tellNPCStory(n){if(!n)return;
  /* Чужой язык: без него слышны обрывки, но каждый разговор — урок. */
  safeFn(()=>Arcs.note(n));
  {const яз=safeFn(()=>Langs.check(n),null);safeFn(()=>Langs.practice(n));
-  if(яз&&!яз.понятно){narrate(`${n.name}, ${R.n}, ${Род.ремесло(n)}, говорит на ${яз.n}. Вы разбираете лишь обрывки: ${Langs.garble(lines[idx])} ${яз.совет}`,{ждать:послеСлова});return;}}
+  if(яз&&!яз.понятно){narrate(`${n.name}, ${R.n}, ${Род.ремесло(n)}, говорит на ${Langs.пр(яз.n)}. Вы разбираете лишь обрывки: ${Langs.garble(lines[idx])} ${яз.совет}`,{ждать:послеСлова});return;}}
  narrate(`${n.name}, ${R.n}, ${Род.ремесло(n)}: ${Род.жителя(n,lines[idx]+" "+extra)}${своё}`,{ждать:послеСлова});
 }
 
