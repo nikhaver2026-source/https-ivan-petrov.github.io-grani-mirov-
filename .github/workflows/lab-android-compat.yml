@@ -13,6 +13,12 @@
 name: Подземная лаборатория — Android на разных версиях
 
 on:
+  # ручной запуск — когда процесс окажется и в основной ветке; до того — пушем файла
+  # .github/lab-compat-run (строки new=<сборка Android или release>, old=<сборка Android или пусто>)
+  push:
+    branches: ['claude/**']
+    paths:
+      - '.github/lab-compat-run'
   workflow_dispatch:
     inputs:
       run_id:
@@ -57,7 +63,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RUN_ID: ${{ inputs.run_id }}
           OLD_RUN: ${{ inputs.old_run }}
+          EVENT: ${{ github.event_name }}
         run: |
+          if [ "$EVENT" = "push" ]; then
+            RUN_ID=$(sed -n 's/^new=//p' .github/lab-compat-run | tr -d ' \r'); [ "$RUN_ID" = "release" ] && RUN_ID=""
+            OLD_RUN=$(sed -n 's/^old=//p' .github/lab-compat-run | tr -d ' \r')
+          fi
+          echo "новый APK: ${RUN_ID:-выпуск lab-android-latest}; прежний: ${OLD_RUN:-без обновления}"
           if [ -n "$RUN_ID" ]; then
             gh run download "$RUN_ID" -R "$GITHUB_REPOSITORY" -D new
           else
