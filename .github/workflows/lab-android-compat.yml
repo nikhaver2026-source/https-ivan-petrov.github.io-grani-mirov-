@@ -1,0 +1,90 @@
+# «Подземная лаборатория» для Android: готовый APK — на других версиях Android, без пересборки.
+#
+# Игроки с телефонами Xiaomi, Redmi, POCO, realme, OPPO пишут, что игра у них не ставится. Образов
+# с оболочками производителей (MIUI и HyperOS, realme UI и ColorOS) для эмулятора не бывает, но под
+# каждой оболочкой — обычный Android своей версии, и диспетчер пакетов у неё — его:
+#   MIUI 12–14, realme UI 1–4 — Android 10–13; HyperOS 1–3, realme UI 5–7 — Android 14–16;
+#   новые телефоны — ещё и память страницами по 16 КБ.
+# Основная сборка (lab-android.yml) проверяет Android 9, 15 и 17; здесь — все версии между ними и
+# образ с 16 КБ страницами. На каждом: сначала прежний выпуск (4.6), поверх него — новый APK
+# обновлением, как ставят игроки (подпись и номер версии должны это позволить, сохранения —
+# остаться), потом то же, что в основной сборке: установка, запуск, самопроверка игры, запуск после
+# фона (install-check.sh). Запуск — вручную: run_id — сборка Android, чей APK проверить.
+name: Подземная лаборатория — Android на разных версиях
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Сборка Android, чей APK проверить (число из адреса …/actions/runs/<число>); пусто — выпуск lab-android-latest"
+        type: string
+        default: ""
+      old_run:
+        description: "Прежний выпуск для проверки обновления поверх него (сборка Android); пусто — без обновления"
+        type: string
+        default: "42530157320"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  check:
+    name: Android ${{ matrix.v }} (API ${{ matrix.api }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { api: 29, v: "10", target: google_apis }
+          - { api: 30, v: "11", target: google_apis }
+          - { api: 31, v: "12", target: google_apis }
+          - { api: 33, v: "13", target: google_apis }
+          - { api: 34, v: "14", target: google_apis }
+          - { api: 36, v: "16", target: google_apis }
+          - { api: 35, v: "15, 16 КБ страницы", target: google_apis_ps16k }
+    steps:
+      - name: Забрать сценарии проверки
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            lab/android
+            .github
+
+      - name: APK — новый и прежний
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ inputs.run_id }}
+          OLD_RUN: ${{ inputs.old_run }}
+        run: |
+          if [ -n "$RUN_ID" ]; then
+            gh run download "$RUN_ID" -R "$GITHUB_REPOSITORY" -D new
+          else
+            gh release download lab-android-latest -R "$GITHUB_REPOSITORY" -p '*.apk' -D new
+          fi
+          F=$(find new -name '*.apk' | head -1); [ -n "$F" ] || { echo "::error::APK не найден"; exit 1; }
+          cp "$F" lab.apk; echo "новый: $(basename "$F")"; ls -la lab.apk
+          if [ -n "$OLD_RUN" ]; then
+            gh run download "$OLD_RUN" -R "$GITHUB_REPOSITORY" -D old || true
+            O=$(find old -name '*.apk' 2>/dev/null | head -1)
+            [ -n "$O" ] && cp "$O" old.apk && echo "прежний: $(basename "$O")" && ls -la old.apk
+          fi
+
+      - name: Эмулятор — включить KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Обновление поверх прежнего, установка и самопроверка
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          target: ${{ matrix.target }}
+          arch: x86_64
+          disk-size: 6G
+          ram-size: 2048M
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: bash .github/lab-compat-check.sh lab.apk old.apk
