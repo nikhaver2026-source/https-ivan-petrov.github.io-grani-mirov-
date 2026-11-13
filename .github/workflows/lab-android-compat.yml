@@ -50,6 +50,9 @@ jobs:
           - { api: 34, v: "14", target: google_apis }
           - { api: 36, v: "16", target: google_apis }
           - { api: 35, v: "15, 16 КБ страницы", target: google_apis_ps16k }
+          # тот же образ с памятью как у настоящих телефонов с 16 КБ страницами (от 4 ГБ):
+          # отличить нехватку памяти эмулятора от сбоя самих 16 КБ страниц
+          - { api: 35, v: "15, 16 КБ страницы, 4 ГБ памяти", target: google_apis_ps16k, ram: 4096M }
     steps:
       - name: Забрать сценарии проверки
         uses: actions/checkout@v4
@@ -96,7 +99,7 @@ jobs:
           target: ${{ matrix.target }}
           arch: x86_64
           disk-size: 6G
-          ram-size: 2048M
+          ram-size: ${{ matrix.ram || '2048M' }}
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: bash .github/lab-compat-check.sh lab.apk old.apk
