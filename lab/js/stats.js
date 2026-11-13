@@ -60,6 +60,12 @@ function base(k) { var g = G(); if (SEC.indexOf(k) >= 0) return (S().sec[k] || 0
 /* с прибавкой плода — для действий; основа — для порогов окна и гнёзд дрона */
 function val(k) { if (SEC.indexOf(k) >= 0) return base(k); return LAB.heroStat ? LAB.heroStat(k) : base(k); }
 function sec(k) { return S() ? S().sec[k] || 0 : 0; }
+/* (5.0, просьба автора) Спокойствие у воды: после тихих минут у аквариума ментал на время действует сильнее
+   (G.calm: на сколько и до какой минуты комплекса); основу ментала это не меняет */
+function nowM() { var g = G(); return (g.day || 0) * 1440 + (g.min || 0); }
+function calmV() { var g = G(), c = g && g.calm; return c && c.until > nowM() ? c.v || 0 : 0; }
+function calmLeft() { var g = G(), c = g && g.calm; return c && c.until > nowM() ? c.until - nowM() : 0; }
+function calm(v, min) { var g = G(); if (!g) return; var c = g.calm; if (c && c.until > nowM() && c.v > v) { c.until = Math.max(c.until, nowM() + min); return; } g.calm = { v: v, until: nowM() + min }; }
 
 /* ── НАСТОЯЩЕЕ ВРЕМЯ ИГРЫ ── секунды, пока игра на экране и игрок действует (s.play, в записи).
    Счёт — по ходу игры (performance.now), а не по часам устройства: перевести его нельзя; шаг счёта —
@@ -115,7 +121,7 @@ var K = {
   hp: function () { return (base("con") - 10) * 5; },
   tox: function () { return (1 - Math.min(0.4, Math.max(0, d10("con")) * 0.012)) * (val("con") >= 20 ? 0.85 : 1); },   /* токсины копятся; порог 20 */
   wake: function () { return (1 - Math.min(0.3, Math.max(0, d10("con")) * 0.008)) * (1 - Math.min(0.3, sec("stam") * 0.01)); }, /* усталость */
-  neuro: function () { return 1 - Math.min(0.45, sec("ment") * 0.015); },    /* нейронагрузка */
+  neuro: function () { return 1 - Math.min(0.45, (sec("ment") + calmV()) * 0.015); },    /* нейронагрузка; спокойствие у воды — ментал выше на время */
   heal: function () { return 1 + Math.min(0.45, sec("regen") * 0.015); },    /* лечение */
   regen: function () { return sec("regen") * 0.02; },                         /* здоровья в минуту само */
   xp: function () { return 1 + Math.min(0.6, Math.max(0, d10("mind")) * 0.02); },    /* опыт мастерства */
@@ -142,7 +148,7 @@ function effects(k) {
   if (k === "mind") out.push(K.xp() > 1 ? "опыт мастерства плюс " + pw(pct(K.xp() - 1)) : "опыт мастерства обычный", "нейроприцел — с 15", "взлом короче с 16 и с 24", "лишнее гнездо дрона — с 25");
   if (k === "cha") out.push(K.buy() ? "у людей покупка дешевле на " + pw(K.buy() * 100) + ", продажа дороже на " + pw(K.sell() * 100) : "цены без уступок", K.quest() > 1 ? "награды за поручения больше на " + pw(pct(K.quest() - 1)) : "награды за поручения — как обещано", base("cha") >= 30 ? "в ячейке хранения четыре лишних места" : base("cha") >= 20 ? "в ячейке хранения два лишних места" : "");
   if (k === "stam") { out.push(sec("stam") ? "усталость медленнее на " + pw(Math.min(30, sec("stam"))) : "пока ничего: растёт от шагов"); if (L && sec("stam")) out.push("груз плюс " + L.kg(L.capOf("stam")) + ", перегруз меньше замедляет"); }
-  if (k === "ment") out.push(sec("ment") ? "нейронагрузка копится медленнее на " + pw(pct(1 - K.neuro())) : "пока ничего: растёт от пережитой нейронагрузки");
+  if (k === "ment") { out.push(sec("ment") || calmV() ? "нейронагрузка копится медленнее на " + pw(pct(1 - K.neuro())) : "пока ничего: растёт от пережитой нейронагрузки"); if (calmV()) out.push("сейчас спокойствие у воды: ментал плюс " + calmV() + " ещё " + calmLeft() + " " + gm().plural(calmLeft(), "минуту", "минуты", "минут")); }
   if (k === "regen") out.push(sec("regen") ? "лечение сильнее на " + pw(pct(K.heal() - 1)) + "; вне боя здоровье возвращается само: " + Math.round(K.regen() * 60) + " в час" : "пока ничего: растёт от лечения и отдыха");
   return out.filter(Boolean).join("; ");
 }
@@ -153,7 +159,7 @@ var GROWS = {
   mind: "очками и практикой: взлом, головоломки, книги и записи, опыты, изучение устройств",
   cha: "очками и практикой: поручения выживших, торговля, разговоры и помощь",
   stam: "только практикой: шаги, особенно с грузом",
-  ment: "только практикой: пережитая нейронагрузка и сны в капсуле",
+  ment: "только практикой: пережитая нейронагрузка, сны в капсуле и тихие минуты у аквариума",
   regen: "только практикой: лечение и отдых"
 };
 
@@ -206,7 +212,7 @@ var DEEDS = {
   rest_fx: [["regen", 1]], rest_drink: [["regen", 0.5]], sleep: [["regen", 2], ["ment", 1]], dream: [["ment", 1]],
   puzzle: [["mind", 3]], rubble: [["str", 2], ["stam", 1]],
   mini_hack: [["mind", 3]], mini_code: [["mind", 1]], mini_bulls: [["mind", 2]], mini_sort: [["mind", 2]], mini_relays: [["mind", 2]],
-  mini_rhythm: [["agi", 2]], mini_sync: [["agi", 2]], mini_tune: [["agi", 1], ["mind", 1]], mini_melody: [["cha", 1], ["mind", 1]]
+  mini_rhythm: [["agi", 2]], mini_sync: [["agi", 2]], mini_spin: [["agi", 1]], calm_water: [["ment", 2]], mini_tune: [["agi", 1], ["mind", 1]], mini_melody: [["cha", 1], ["mind", 1]]
 };
 /* (после 4.6, нелогичность) убийство — практика только тому, кто убил сам: ach.ev("kill") приходит и за
    добычу дрона, турели, ловушки и союзника; герою засчитывает combat.js (deed "herokill" с самой целью).
@@ -358,6 +364,7 @@ LAB.stats = {
   deed: deed, step: step, hurt: hurt, healed: healed, neuro: neuro, minutes: minutes, practice: practice, playMin: playMin, store: store,
   PTS_EVERY: PTS_EVERY, RATE: RATE, STORE_H: STORE_H, nextPtLevel: nextPtLevel, costAt: costAt, cost: cost, costN: costN, affordable: affordable,
   _play: function (min) { var s = S(); if (s) s.play = (s.play || 0) + min * 60; }, _tick: playTick, /* для проверок: минуты игры */
-  onLevel: onLevel, spend: spend, spread: spread, raise: raise, menu: menu, statMenu: statMenu, charLine: charLine, effects: effects, thNext: thNext
+  onLevel: onLevel, spend: spend, spread: spread, raise: raise, menu: menu, statMenu: statMenu, charLine: charLine, effects: effects, thNext: thNext,
+  calm: calm, calmV: calmV, calmLeft: calmLeft /* (5.0) спокойствие у воды */
 };
 })();

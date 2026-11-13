@@ -829,14 +829,14 @@ function frontOk() {
   return !(c[0] === g.x && c[1] === g.y);
 }
 function hereOk() { var g = G(); return cellT(g.x, g.y) !== LAB.T.DOOR && !trapOn(g.x, g.y); }
-function place(k, where) {
+function place(k, where, inWin) {
   var g = G(), d = T[k], item = itemOf(k);
   if (!d || !(g.inv[item] > 0)) { say("Нет: " + (d ? d.n : k) + "."); return false; }
   if (g.stair) { say("На лестнице ловушку не поставить."); return false; }
   if (ownCount() >= maxOwn()) { LAB.UI.error(); say("На этаже уже " + maxOwn() + " ваших ловушек: больше не уследить. Снимите какую-нибудь."); return false; }
   var c = where === "front" ? frontCell() : [g.x, g.y];
   if (where === "front" ? !frontOk() : !hereOk()) { LAB.UI.error(); say(where === "front" ? "Впереди ловушку не поставить: там стена, дверь, вещь, враг или уже стоит ловушка." : "Здесь ловушку не поставить: дверной проём или тут уже стоит ловушка."); return false; }
-  UIx("closeAll");
+  if (!inWin) UIx("closeAll"); /* (5.0, просьба игрока) из инвентаря — остаётесь в разделе «Ловушки и мины» */
   var tp = { id: nextId(), t: k, x: c[0], y: c[1], own: 1, known: 1, uses: d.uses || 1, st: where === "front" ? "arm" : "wait", arm: armTicks(d) };
   if (d.trig === "wire") tp.cells = wireCells(c[0], c[1], g.face);
   if (d.trig === "cone") { tp.dir = g.face; tp.cells = coneCells(c[0], c[1], g.face); }
@@ -985,6 +985,10 @@ function effLine(d) {
 }
 function menu() {
   if (!gm().entered) return;
+  /* (5.0, просьба игрока) раздел собирается заново: поставили ловушку — остаётесь в разделе с новыми числами */
+  UIx("menu", "Ловушки и мины", menuItems(), { rebuild: menuItems });
+}
+function menuItems() {
   var g = G(), items = [];
   haveIds().forEach(function (k) {
     var d = T[k];
@@ -996,12 +1000,12 @@ function menu() {
   if (trapCap() > 0) items.push({ label: skillText(), info: true, keep: true, fn: function () { say(skillText() + " " + perksText()); } }); /* (после 4.1) ловушечное дело — ниже Истока */
   items.push({ label: "Как обращаться с ловушками", keep: true, fn: help });
   items.push(back());
-  UIx("menu", "Ловушки и мины", items);
+  return items;
 }
 function itemMenu(k) {
   var d = T[k], g = G(), items = [];
-  items.push({ label: "Поставить здесь, под ногами: взведётся, когда отойдёте", fn: function () { place(k, "here"); } });
-  if (frontOk()) items.push({ label: "Поставить на шаг впереди, " + LAB.DIRN[g.face], fn: function () { place(k, "front"); } });
+  items.push({ label: "Поставить здесь, под ногами: взведётся, когда отойдёте", fn: function () { place(k, "here", true); } });
+  if (frontOk()) items.push({ label: "Поставить на шаг впереди, " + LAB.DIRN[g.face], fn: function () { place(k, "front", true); } });
   items.push({ label: "Осмотреть", keep: true, fn: function () { say(cap1(d.n) + ". " + d.d + " " + effLine(d)); } });
   items.push({ label: "Назад", fn: menu });
   UIx("menu", cap1(d.n) + ": " + (g.inv[itemOf(k)] || 0), items);

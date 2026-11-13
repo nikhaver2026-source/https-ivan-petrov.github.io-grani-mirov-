@@ -52,13 +52,13 @@ jobs:
           - bits: '64'
             arch: x64
             electron: '44.5.1'
-            appdir: Подземная лаборатория Альфа 4.6
-            zip: Podzemnaya-laboratoriya-Alfa-4.6-windows.zip
+            appdir: Подземная лаборатория Альфа 5.0
+            zip: Podzemnaya-laboratoriya-Alfa-5.0-windows.zip
           - bits: '32'
             arch: ia32
             electron: '22.3.27'
-            appdir: Подземная лаборатория Альфа 4.6 (32 бит)
-            zip: Podzemnaya-laboratoriya-Alfa-4.6-windows-32bit.zip
+            appdir: Подземная лаборатория Альфа 5.0 (32 бит)
+            zip: Podzemnaya-laboratoriya-Alfa-5.0-windows-32bit.zip
     defaults:
       run:
         shell: bash
@@ -130,11 +130,11 @@ jobs:
         working-directory: lab/desktop
         run: |
           ICONARG=""; [ -n "$ICON" ] && ICONARG="--icon=$ICON"
-          # Версия в свойствах программы — номер игры, 4.6, без номера запуска сборки (просьба автора:
+          # Версия в свойствах программы — номер игры, 5.0, без номера запуска сборки (просьба автора:
           # игрок видит только номер версии); прежде было 4.1.0 и номер запуска, до 3.7 — 1.0.0.
           npx @electron/packager . lab --platform=win32 --arch=$ARCH --electron-version=$ELECTRON --out=out --overwrite \
-            --executable-name="${EXE%.exe}" --app-version=4.6 --build-version=4.6 \
-            --win32metadata.ProductName="Подземная лаборатория" --win32metadata.FileDescription="Подземная лаборатория Альфа 4.6" \
+            --executable-name="${EXE%.exe}" --app-version=5.0 --build-version=5.0 \
+            --win32metadata.ProductName="Подземная лаборатория" --win32metadata.FileDescription="Подземная лаборатория Альфа 5.0" \
             --win32metadata.CompanyName="Грани Миров" \
             --extra-resource=sapi --extra-resource=sr \
             --ignore='^/out(/|$)' --ignore='icon\.ico' --ignore='sapi-build\.js' --ignore='^/sapi(/|$)' --ignore='^/sr(/|$)' $ICONARG
@@ -292,8 +292,8 @@ jobs:
         working-directory: dist
         env:
           GH_TOKEN: ${{ github.token }}
-          Z64: Podzemnaya-laboratoriya-Alfa-4.6-windows.zip
-          Z32: Podzemnaya-laboratoriya-Alfa-4.6-windows-32bit.zip
+          Z64: Podzemnaya-laboratoriya-Alfa-5.0-windows.zip
+          Z32: Podzemnaya-laboratoriya-Alfa-5.0-windows-32bit.zip
         run: |
           ls -la
           gh release delete lab-windows-latest --cleanup-tag -y --repo "$GITHUB_REPOSITORY" || true
@@ -305,7 +305,7 @@ jobs:
           for i in $(seq 1 12); do git ls-remote --exit-code --tags "https://github.com/$GITHUB_REPOSITORY" "refs/tags/lab-windows-latest" > /dev/null 2>&1 || break; sleep 5; done
           S64=$(stat -c %s "$Z64"); S32=$(stat -c %s "$Z32")
           cat > "$RUNNER_TEMP/notes.md" <<EOF
-          «Подземная лаборатория» Альфа 4.6 для Windows — звуковая игра.
+          «Подземная лаборатория» Альфа 5.0 для Windows — звуковая игра.
 
           Две полные сборки — выберите свою:
           - $Z64 (${S64} байт) — 64 бит: Windows 10 и 11, 64-битные.
@@ -322,7 +322,7 @@ jobs:
           Код: ветка ${GITHUB_REF_NAME}, коммит ${GITHUB_SHA}.
           EOF
           gh release create lab-windows-latest "$Z64" "$Z32" --prerelease --target "$GITHUB_SHA" --repo "$GITHUB_REPOSITORY" \
-            --title "Подземная лаборатория Альфа 4.6 для Windows" \
+            --title "Подземная лаборатория Альфа 5.0 для Windows" \
             --notes-file "$RUNNER_TEMP/notes.md"
           for i in $(seq 1 6); do
             sleep 10

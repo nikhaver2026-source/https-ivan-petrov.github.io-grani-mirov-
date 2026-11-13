@@ -61,7 +61,12 @@ function settle(w) { var f = function () { if (w.stamp == null) w.stamp = stamp(
 function rebuildWin(t) {
   var its = (t.rebuild() || []).filter(Boolean);
   if (!its.length) return false;
-  t.items = its; t.i = Math.max(0, Math.min(t.i, its.length - 1)); t.stamp = stamp();
+  /* (5.0, просьба игрока) фокус — на той же вещи, даже если строки сдвинулись (sameFocus); вещь кончилась —
+     на соседней вещи, а не на «Назад» */
+  var old = { items: t.items || [], i: t.i || 0 }, was = old.items[old.i];
+  t.items = its; t.i = Math.max(0, Math.min(was ? sameFocus(old, its) : t.i, its.length - 1)); t.stamp = stamp();
+  var isBack = function (it) { return /^(Назад|Отойти|Отмена)$/.test(String(itemText(it))); };
+  if (t.i > 0 && t.i === its.length - 1 && isBack(its[t.i]) && was && !isBack(was)) t.i--;
   return true;
 }
 /* (3.5) Окно сверху — заново, когда мир изменили не его пункты (сон в капсуле, музыка
@@ -831,6 +836,9 @@ function exitMenu() {
 /* ════════ ИНВЕНТАРЬ (три пальца вниз) ════════ */
 /* (3.5) Окна инвентаря собираются заново (rebuild), когда к ним возвращаются:
    съели, вставили пластину, разобрали — числа в пунктах уже новые. */
+/* (5.0, просьба игрока) Разделы инвентаря после применения вещи остаются открытыми (keep): съели, выпили
+   лекарство, наложили бинт, перезарядили, бросили, применили имплант — окно раздела собирается заново на
+   той же строке, а не выкидывает в общий список. Вещь кончилась — фокус на соседней строке. */
 function inventory(focus, silent) {
   if (!gm().entered) return;
   var items = invItems(), o = { rebuild: invItems, silent: !!silent };
@@ -965,7 +973,7 @@ function weaponItems(id) {
 }
 function ammoMenu() {
   var w = gm().curWeapon();
-  menu("Батареи и боеприпасы", ammoItems(), { rebuild: ammoItems, intro: w && w.ammo !== "none" ? LAB.K("Двойное касание на нужной батарее — перезарядить оружие в руках.", "Enter на нужной батарее — перезарядить оружие в руках.") : "" });
+  menu("Батареи и боеприпасы", ammoItems(), { rebuild: ammoItems, keep: true, intro: w && w.ammo !== "none" ? LAB.K("Двойное касание на нужной батарее — перезарядить оружие в руках.", "Enter на нужной батарее — перезарядить оружие в руках.") : "" });
 }
 function ammoItems() {
   var g = G(), w = gm().curWeapon();
@@ -984,7 +992,7 @@ var MEDS = ["medkit_s", "medkit_l", "bandage", "antidote", "sorbent", "stim", "e
 function catIds(cat) { return Object.keys(LAB.ITEMS).filter(function (k) { return LAB.ITEMS[k].cat === cat; }); }
 /* Лекарства: прежние — всегда в списке, новые — только те, что есть с собой. */
 function medIds() { var g = G(); return MEDS.concat(catIds("med").filter(function (k) { return MEDS.indexOf(k) < 0 && g.inv[k] > 0; })); }
-function medsMenu() { menu("Аптечки и лекарства", medsItems(), { rebuild: medsItems }); }
+function medsMenu() { menu("Аптечки и лекарства", medsItems(), { rebuild: medsItems, keep: true }); }
 function medsItems() {
   var g = G();
   return medIds().map(function (k) {
@@ -992,7 +1000,7 @@ function medsItems() {
   }).concat([{ label: "Состояние тела", keep: true, fn: function () { gm().bodyStatus(); } }, back()]);
 }
 /* Защита (респираторы, изолента) и инструменты (дозиметр, кусачки, набор): инструменты не тратятся. */
-function toolsMenu() { menu("Защита и инструменты", toolsItems(), { rebuild: toolsItems }); }
+function toolsMenu() { menu("Защита и инструменты", toolsItems(), { rebuild: toolsItems, keep: true }); }
 function toolsItems() {
   var g = G();
   var items = catIds("protect").concat(catIds("tool")).filter(function (k) { return g.inv[k] > 0; }).map(function (k) {
@@ -1008,7 +1016,7 @@ function valuablesMenu() {
   var g = G(), tot = 0;
   /* (3.7, нелогичность) то, что не продаётся (жетон погибшего, nosell), — без цены и не в сумме */
   catIds("valuable").forEach(function (k) { if (g.inv[k] > 0 && !LAB.ITEMS[k].nosell) tot += (LAB.sellPrice ? LAB.sellPrice.item(k, { who: "supply" }) : Math.round(LAB.ITEMS[k].price * 0.7)) * g.inv[k]; });
-  menu("Ценности", valuablesItems(), { rebuild: valuablesItems, intro: tot ? "Всё вместе стоит примерно " + tot + " " + LAB.plural(tot, "кредит", "кредита", "кредитов") + "." : "" }); /* (3.7) «примерно 41 кредит», не «около 41 кредитов» */
+  menu("Ценности", valuablesItems(), { rebuild: valuablesItems, keep: true, intro: tot ? "Всё вместе стоит примерно " + tot + " " + LAB.plural(tot, "кредит", "кредита", "кредитов") + "." : "" }); /* (3.7) «примерно 41 кредит», не «около 41 кредитов» */
 }
 function valuablesItems() {
   var g = G();
@@ -1024,7 +1032,7 @@ function foodIds() { return Object.keys(LAB.ITEMS).filter(function (k) { return 
 /* Еда в рюкзаке: съесть; вверху — сколько сытости и энергии. */
 function foodMenu() {
   var g = G(), b = g.body || { food: 0 };
-  menu("Еда и напитки", foodItems(), { rebuild: foodItems, intro: "Сытость " + Math.round(b.food) + " из 100, энергия имплантов " + g.en + " из " + g.enMax + "." });
+  menu("Еда и напитки", foodItems(), { rebuild: foodItems, keep: true, intro: "Сытость " + Math.round(b.food) + " из 100, энергия имплантов " + g.en + " из " + g.enMax + "." });
 }
 function foodItems() {
   var g = G();
@@ -1073,7 +1081,7 @@ function gadgetIds() {
   for (var k in LAB.ITEMS) { var d = LAB.ITEMS[k]; if (d.kind !== "part" && !d.cat && d.depth && ids.indexOf(k) < 0) ids.push(k); }
   return ids;
 }
-function gadgetsMenu() { menu("Гранаты, пластины и устройства", gadgetsItems(), { rebuild: gadgetsItems }); }
+function gadgetsMenu() { menu("Гранаты, пластины и устройства", gadgetsItems(), { rebuild: gadgetsItems, keep: true }); }
 function gadgetsItems() {
   var g = G();
   var items = [
@@ -1091,7 +1099,7 @@ function gadgetsItems() {
   items.push(back());
   return items;
 }
-function partsMenu() { menu("Детали", partsItems(), { rebuild: partsItems }); }
+function partsMenu() { menu("Детали", partsItems(), { rebuild: partsItems, keep: true }); }
 function partsItems() {
   var g = G();
   var items = LAB.PARTS.filter(function (k) { return g.inv[k] > 0; }).map(function (k) {
@@ -1105,7 +1113,7 @@ function partsItems() {
 }
 /* Запасные модули оружия: ставятся у верстака. */
 function modIds() { return Object.keys(LAB.ITEMS).filter(function (k) { return LAB.ITEMS[k].kind === "wmodule"; }); }
-function modsMenu() { menu("Модули оружия в запасе", modsItems(), { rebuild: modsItems }); }
+function modsMenu() { menu("Модули оружия в запасе", modsItems(), { rebuild: modsItems, keep: true }); }
 function modsItems() {
   var g = G();
   var items = modIds().filter(function (k) { return g.inv[k] > 0; }).map(function (k) {
@@ -1115,7 +1123,7 @@ function modsItems() {
   items.push(back());
   return items;
 }
-function passesMenu() { menu("Пропуска и ключи", passesItems(), { rebuild: passesItems }); }
+function passesMenu() { menu("Пропуска и ключи", passesItems(), { rebuild: passesItems, keep: true }); }
 function passesItems() {
   var g = G(), items = [];
   items.push({ label: "Пропуск доступа: " + (g.tier ? LAB.TIERS[g.tier].n : "нет"), keep: true, fn: function () { say(g.tier ? LAB.TIERS[g.tier].n + ": открывает двери с картридером этого цвета и ниже." : "Пропуска нет."); } });
@@ -1264,7 +1272,7 @@ function craft(o) { if (LAB.workshop) LAB.workshop.open(o); }
 /* ════════ ИМПЛАНТЫ (четыре пальца, двойное касание) ════════ */
 function implants() {
   if (!gm().entered) return;
-  menu("Импланты", implantItems(), { rebuild: implantItems });
+  menu("Импланты", implantItems(), { rebuild: implantItems, keep: true });
 }
 function implantItems() {
   var g = G(), IM = LAB.implants;

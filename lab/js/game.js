@@ -444,6 +444,7 @@ function noteText(it, L, F) {
   if (it.note === "depth" && LAB.depths) return LAB.depths.noteText(it, L, F);
   if (it.note === "agen" && LAB.agen) return LAB.agen.noteText(it); /* записки кабинетов: из частей, с людьми этажа (1.5) */
   if (it.note === "lib" && LAB.library) return LAB.library.noteText(it); /* (3.6) книги, дела, газеты, записи — по ссылке на библиотеку */
+  if (it.note === "curio" && LAB.curios) return LAB.curios.noteText(it); /* (5.0) записки глобусов и аквариумов */
   if (it.note === "riddle") { var rd = riddleFor(it.rid, it.L || L); return LAB.riddleNote ? LAB.riddleNote(rd, it.room, h) : { t: "Отгадка", x: "Замок помещения «" + it.room + "»: ответ — «" + rd.a[0] + "»." }; }
   /* (3.7) документы, прежде хранившиеся полным текстом: письма, документы и журналы компьютеров
      (office.js), журналы терминалов (termText), письма почтовых ящиков, служебные записки и

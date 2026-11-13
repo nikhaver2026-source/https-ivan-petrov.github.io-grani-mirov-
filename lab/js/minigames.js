@@ -36,15 +36,15 @@ function puzzleDuck() {
 }
 /* (3.5) приглушение мира переключается там, где головоломка начинается и кончается
    (прежде — опросом раз в 150 мс всю игру, и в меню, и в фоне) */
-function finish(ok, val) {
+function finish(ok, val, quiet) {
   var c = cur;
   if (!c) return;
   cur = null; puzzleDuck();
   if (c.cleanup) LAB.safe(c.cleanup);
   if (LAB.ui && LAB.ui.refresh) LAB.ui.refresh();
-  LAB.UI[ok ? "ok" : "error"]();
+  if (!quiet) LAB.UI[ok ? "ok" : "error"](); /* (5.0) глобус, что остановился сам, — не ошибка: без сигнала */
   if (c.cb) setTimeout(function () { c.cb(val !== undefined ? val : ok); }, 30);
-  if (ok && LAB.tutor) LAB.tutor.ev("puzzle");
+  if (ok && LAB.tutor && c.type !== "spin") LAB.tutor.ev("puzzle"); /* (5.0) пойманный глобус — не головоломка: подсказки о замках не нужно */
   if (ok && LAB.stats && c.type) LAB.stats.deed("mini_" + c.type); /* (после 4.6) практика: взлом — интеллект, ритм — ловкость */
 }
 var lastCancel = 0;
@@ -533,6 +533,62 @@ function syncGesture(g) {
   }
 }
 
+/* ════════ ГЛОБУС: остановить пальцем на метке (5.0, просьба автора) ════════
+   Глобус раскручен и замедляется; раз в оборот под пальцем проходит метка — горы, крестик,
+   булавка с флажком — и слышен её звук (cue). Касание экрана (пробел) в этот миг прижимает
+   глобус, и палец ложится на метку. Касание одно: мимо — палец ложится на другое место; не
+   коснулись — глобус останавливается сам. Задержка вывода звука учтена, как в ритме ловушки. */
+function spin(opts, cb) {
+  opts = opts || {};
+  var c = { type: "spin", name: opts.title || "Глобус", cb: cb, raw: true, ready: false, done: false, timers: [], cueAt: [], next: 0,
+    revs: Math.max(4, opts.revs || 9), p0: opts.p0 || 700, k: opts.k || 1.16, cue: opts.cue || "globe_bump", win: opts.win || 170 };
+  cur = c; puzzleDuck();
+  say(opts.intro || ("Глобус крутится. " + LAB.K("Коснитесь экрана", "Нажмите пробел") + " в тот миг, когда под пальцем пройдёт метка."));
+  waitSpeech(function () {
+    if (cur !== c) return;
+    c.ready = true;
+    if (LAB.AE && LAB.AE.ensure) LAB.AE.ensure();
+    var play = function (id, o, f, d) {
+      if (LAB.Bank && LAB.Bank.has && LAB.Bank.has(id) && LAB.atmos) LAB.atmos.play(id, o);
+      else tone(f, d, 0, "triangle", 0.12); /* записи нет — тон, чтобы метку было слышно */
+    };
+    var P = c.p0, at = 0, ph = 0.35 + Math.random() * 0.4, t0 = performance.now();
+    play("globe_push", { bus: "puzzle", gain: 0.9 }, 220, 0.12);
+    for (var i = 0; i < c.revs; i++) {
+      (function (rs, cueT, gain) {
+        c.timers.push(setTimeout(function () { if (cur === c && !c.done) play("globe_rev", { bus: "puzzle", gain: 0.12 + 0.25 * gain, rate: 0.85 + 0.3 * gain }, 120, 0.05); /* шорох оборота тише метки: метку не спутать */ }, rs));
+        c.timers.push(setTimeout(function () {
+          if (cur !== c || c.done) return;
+          c.cueAt.push(performance.now()); c.next = 0;
+          play(c.cue, { bus: "puzzle", gain: 1 }, 1700, 0.05);
+        }, cueT));
+      })(at, at + ph * P, 1 - i / c.revs);
+      at += P; P *= c.k;
+    }
+    /* ближайшая будущая метка — чтобы касание чуть раньше звука тоже засчитывалось */
+    c.plan = []; var a2 = 0, P2 = c.p0; for (var j = 0; j < c.revs; j++) { c.plan.push(t0 + a2 + ph * P2); a2 += P2; P2 *= c.k; }
+    c.timers.push(setTimeout(function () {
+      if (cur !== c || c.done) return;
+      c.done = true;
+      play("globe_stop", { bus: "puzzle", gain: 0.6 }, 160, 0.1);
+      setTimeout(function () { if (cur === c) finish(false, { hit: false, self: true }, true); }, 250);
+    }, at + 150));
+    c.cleanup = function () { c.timers.forEach(clearTimeout); };
+  });
+}
+function spinDown(t) {
+  var c = cur;
+  if (!c.ready || c.done) return;
+  var now = t || performance.now(), lat = outLatency(), heard = now - lat, best = 1e9;
+  c.cueAt.forEach(function (x) { best = Math.min(best, Math.abs(heard - x)); });
+  (c.plan || []).forEach(function (x) { if (x > heard) best = Math.min(best, Math.abs(heard - x)); });
+  var hit = best <= c.win + Math.min(60, lat * 0.25);
+  c.done = true; c.timers.forEach(clearTimeout);
+  if (LAB.Bank && LAB.Bank.has && LAB.Bank.has("globe_stop") && LAB.atmos) LAB.atmos.play("globe_stop", { bus: "puzzle", gain: 1 });
+  else tone(hit ? 880 : 180, 0.12, 0, hit ? "sine" : "sawtooth", 0.1);
+  setTimeout(function () { if (cur === c) finish(hit, { hit: hit, off: Math.round(best) }); }, 220);
+}
+
 /* Подождать, пока «Эхо» договорит инструкцию (но не дольше 9 секунд). */
 function waitSpeech(fn) {
   var t0 = Date.now();
@@ -558,8 +614,8 @@ function gesture(g) {
     if (cur.type === "ext" && cur.back && LAB.safe(cur.back)) return true;
     cancel(); return true;
   }
-  if (g.kind === "down") { if (cur.type === "rhythm") rhythmDown(g.t); return true; }
-  if (cur.type === "rhythm") return true;
+  if (g.kind === "down") { if (cur.type === "rhythm") rhythmDown(g.t); else if (cur.type === "spin") spinDown(g.t); return true; }
+  if (cur.type === "rhythm" || cur.type === "spin") return true;
   if (cur.type === "ext") { if (cur.handler) LAB.safe(function () { cur.handler(g); }); return true; }
   if (cur.type === "hack") hackGesture(g);
   else if (cur.type === "tune") tuneGesture(g);
@@ -585,7 +641,7 @@ function chain(steps, cb) {
 }
 
 LAB.mini = {
-  hack: hack, tune: tune, rhythm: rhythm, sync: sync, code: code, relays: relays, bulls: bulls, sortTones: sortTones, melody: melody, chain: chain, gesture: gesture, cancel: cancel, start: start,
+  hack: hack, tune: tune, rhythm: rhythm, sync: sync, spin: spin, code: code, relays: relays, bulls: bulls, sortTones: sortTones, melody: melody, chain: chain, gesture: gesture, cancel: cancel, start: start,
   /* (2.0) сигналы с цифрами: вверх 1, вправо 2, вниз 3, влево 4 — и для радиоприёмника */
   playSeq: playSeq, sigHelp: sigHelp, SIG_DIGIT: { U: 1, R: 2, D: 3, L: 4 },
   active: function () { return !!cur || gapOn; },

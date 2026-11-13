@@ -101,11 +101,13 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     out.prev40 = LAB.news.text(LAB.NEWS.filter(n => n.v === "Альфа 4.0")[0] || { x: [] });
     out.prev41 = LAB.news.text(LAB.NEWS.filter(n => n.v === "Альфа 4.1")[0] || { x: [] });
     out.prev45 = LAB.news.text(LAB.NEWS.filter(n => n.v === "Альфа 4.5")[0] || { x: [] });
+    out.prev46 = LAB.news.text(LAB.NEWS.filter(n => n.v === "Альфа 4.6")[0] || { x: [] });
     LAB.ui.closeTop(true); LAB.ui.closeAll(); LAB.ui.mainMenu(true);
     return out;
   });
-  ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.ver === "Альфа 4.6" && news.items.some(l => /^Альфа 4\.5$/.test(l)) && news.items.some(l => /^Альфа 4\.1$/.test(l)) && news.items.some(l => /^Альфа 4\.0$/.test(l)) && news.items.some(l => /^Альфа 3\.7$/.test(l)) && news.items.some(l => /^Альфа 3\.6$/.test(l)) && news.items.some(l => /^Альфа 3\.5$/.test(l)) && news.items.some(l => /^Альфа 3\.2$/.test(l)) && news.items.some(l => /^Альфа 3\.1$/.test(l)) && news.items.some(l => /^Альфа 3\.0$/.test(l)) && news.items.some(l => /^Альфа 2\.6$/.test(l)) && news.items.some(l => /^Альфа 2\.5$/.test(l)) && news.items.some(l => /^Альфа 2\.2$/.test(l)) && news.items.some(l => /^Альфа 2\.1$/.test(l)) && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
-  ok(/Что нового: /.test(news.note) && /ОКО говорит разнообразнее/.test(news.text) && /Перекличка разговорчивее/.test(news.text) && /Отдых — у каждой вещи свой/.test(news.text) && /Головоломки без подвохов/.test(news.text) && /запись «Альфы 4\.5», «Альфы 4\.1» и «Альфы 4\.0» загружается с того же места/.test(news.text) && /Настройки остались прежними/.test(news.text) && !/Ниже Истока\. У пульта Истока игра больше не кончается/.test(news.text) && !/Растения\. Над растениями/.test(news.text) && !/Гран[ьи] Миров|Странник/.test(news.text) && !news.tech, "что нового в этой версии (4.6) — без технических подробностей; выпущенное в 4.5 и раньше — в своих разделах");
+  ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.ver === "Альфа 5.0" && news.items.some(l => /^Альфа 4\.6$/.test(l)) && news.items.some(l => /^Альфа 4\.5$/.test(l)) && news.items.some(l => /^Альфа 4\.1$/.test(l)) && news.items.some(l => /^Альфа 4\.0$/.test(l)) && news.items.some(l => /^Альфа 3\.7$/.test(l)) && news.items.some(l => /^Альфа 3\.6$/.test(l)) && news.items.some(l => /^Альфа 3\.5$/.test(l)) && news.items.some(l => /^Альфа 3\.2$/.test(l)) && news.items.some(l => /^Альфа 3\.1$/.test(l)) && news.items.some(l => /^Альфа 3\.0$/.test(l)) && news.items.some(l => /^Альфа 2\.6$/.test(l)) && news.items.some(l => /^Альфа 2\.5$/.test(l)) && news.items.some(l => /^Альфа 2\.2$/.test(l)) && news.items.some(l => /^Альфа 2\.1$/.test(l)) && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
+  ok(/Что нового: /.test(news.note) && /ОКО заговорило своим голосом/.test(news.text) && /Характеристики\./.test(news.text) && /Груз\./.test(news.text) && /Ячейка хранения/.test(news.text) && /Инженерное дело/.test(news.text) && /Глобус и аквариум\. Глобус теперь раскручивают и останавливают пальцем/.test(news.text) && /запись «Альфы 4\.6», «Альфы 4\.5», «Альфы 4\.1» и «Альфы 4\.0» загружается с того же места/.test(news.text) && /Настройки остались прежними/.test(news.text) && !/ОКО говорит разнообразнее/.test(news.text) && !/Ниже Истока\. У пульта Истока игра больше не кончается/.test(news.text) && !/Гран[ьи] Миров|Странник/.test(news.text) && !news.tech, "что нового в этой версии (5.0) — без технических подробностей; выпущенное в 4.6 и раньше — в своих разделах");
+  ok(/ОКО говорит разнообразнее/.test(news.prev46) && /Отдых — у каждой вещи свой/.test(news.prev46) && /запись «Альфы 4\.5», «Альфы 4\.1» и «Альфы 4\.0» загружается с того же места/.test(news.prev46), "«Что нового?» 4.6 — в своём разделе");
   ok(/Ниже Истока\. У пульта Истока игра больше не кончается/.test(news.prev45) && /Перекличка\. Ниже Истока ОКО не слышит/.test(news.prev45) && /Норма смены — задание Переклички/.test(news.prev45) && /Срезы — короткие пути вниз/.test(news.prev45) && /Головоломки: 28 новых видов/.test(news.prev45) && /Коридор слышно заранее/.test(news.prev45) && /запись «Альфы 4\.1» и «Альфы 4\.0» загружается с того же места/.test(news.prev45) && /пройдена у Истока, тоже загружается/.test(news.prev45) && /Настройки остались прежними/.test(news.prev45) && !/Растения\. Над растениями/.test(news.prev45) && !/Ёмкость оружия поднимает только верстак/.test(news.prev45) && !/Гран[ьи] Миров|Странник/.test(news.prev45), "раздел «Альфа 4.5» — как она вышла: Разлом, Перекличка, нормы, срезы, головоломки, отзвук коридоров, записи 4.1 и 4.0");
   ok(/Растения\. Над растениями ставили опыты/.test(news.prev41) && /Сколько выбросить — решаете вы/.test(news.prev41) && /(свайп вверх или вниз выбирает|стрелки вправо и влево выбирают), сколько выбросить/.test(news.prev41) && /Игра больше не встаёт на «Загрузке»/.test(news.prev41) && /запись «Альфы 4\.0» загружается с того же места/.test(news.prev41) && !/Ниже Истока/.test(news.prev41), "раздел «Альфа 4.1» — как она вышла: глубины ниже Истока — в 4.5");
   ok(/Ёмкость оружия поднимает только верстак/.test(news.prev40) && /Вещи ведут себя как вещи/.test(news.prev40) && /Обстановка — по назначению помещений/.test(news.prev40) && /одну штуку или все сразу/.test(news.prev40) && /запись «Альфы 3\.7» можно загрузить/.test(news.prev40) && !/Растения\. Над растениями/.test(news.prev40) && !/Сколько выбросить/.test(news.prev40), "раздел «Альфа 4.0» — как она вышла: растения и ползунок — в 4.1");
@@ -211,6 +213,34 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(/Оружие/.test(inv[0]) && inv.some(l => /Батареи/.test(l)) && inv.some(l => /Аптечки/.test(l)) && inv.some(l => /Броня/.test(l)), "инвентарь по разделам");
   await gest({ kind: "dtap", n: 1 });
   ok(await page.evaluate(() => LAB.ui.top().title) === "Оружие", "раздел «Оружие»");
+  /* (5.0, просьба игрока) применили вещь в разделе — остаётесь в том же разделе, на той же строке */
+  const ivk = await page.evaluate(() => {
+    const G = LAB.game.G, out = {}, lb = (i) => typeof i.label === "function" ? i.label() : i.label;
+    const dt = () => LAB.input.dispatch({ kind: "dtap", n: 1 });
+    const pick = (re) => { const w = LAB.ui.top(); w.i = w.items.findIndex(i => re.test(lb(i))); return w.i >= 0; };
+    G.inv.bread = 2; G.body.food = 30;
+    LAB.ui.closeAll(); LAB.ui.inventory("Еда и напитки"); dt();
+    out.food0 = LAB.ui.top().title;
+    pick(/^Хлеб из пекарни/); dt();
+    out.food = LAB.ui.top().title + " / " + lb(LAB.ui.top().items[LAB.ui.top().i]) + " / " + (G.inv.bread || 0);
+    G.inv.bandage = 3; G.st.bleed = 4;
+    LAB.ui.closeAll(); LAB.ui.inventory("Аптечки и лекарства"); dt();
+    pick(/^Кровоостанавливающий бинт/); dt();
+    out.med = LAB.ui.top().title + " / " + lb(LAB.ui.top().items[LAB.ui.top().i]);
+    const tk = Object.keys(LAB.ITEMS).find(k => LAB.ITEMS[k].kind === "trap");
+    if (tk) {
+      G.inv[tk] = 2;
+      LAB.ui.closeAll(); LAB.ui.inventory("Ловушки и мины"); dt();
+      pick(new RegExp("^" + LAB.ITEMS[tk].n.charAt(0).toUpperCase())); dt();
+      pick(/^Поставить здесь/); dt();
+      out.trap = LAB.ui.top().title;
+    }
+    LAB.ui.closeAll();
+    return out;
+  });
+  ok(ivk.food0 === "Еда и напитки" && /^Еда и напитки \/ Хлеб из пекарни[^/]*: 1\. [^/]* \/ 1$/.test(ivk.food), "съели в разделе «Еда» — остаётесь в разделе, на той же еде (" + ivk.food.slice(0, 80) + ")");
+  ok(/^Аптечки и лекарства \/ Кровоостанавливающий бинт: 2\./.test(ivk.med), "наложили бинт — остаётесь в разделе лекарств (" + ivk.med.slice(0, 60) + ")");
+  if (ivk.trap != null) ok(ivk.trap === "Ловушки и мины", "поставили ловушку из инвентаря — остаётесь в разделе «Ловушки и мины» (" + ivk.trap + ")");
   await page.evaluate(() => LAB.ui.closeAll());
 
   console.log("Оружие и бой");
@@ -506,7 +536,11 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(st.L === 1 && st.F === 1 && st.scr === "game", "загружено: уровень 1, этаж 1");
 
   console.log("Клавиатура: W A S D, R, стрелки, окна, руководство");
-  await page.evaluate(() => { LAB.ui.closeAll(); LAB.game.G.drawn = false; SPOKEN.length = 0; });
+  /* (5.0) раздел ходит по случайному миру у капсулы, а там часто лежит записка (код сейфа): шаг на неё
+     открывал окно чтения, клавиши уходили в окно, и падали проверки раскладки, R, стрелок, Q и цифр.
+     Это верное поведение игры (его проверяет раздел «Записка: подобрал — окно»), а не клавиатуры:
+     на время раздела записки сами не открываются, в конце настройка возвращается */
+  await page.evaluate(() => { LAB.ui.closeAll(); LAB.game.G.drawn = false; SPOKEN.length = 0; window.KB_AUTOREAD = LAB.settings.autoRead; LAB.settings.autoRead = 0; });
   const pos = () => page.evaluate(() => LAB.game.G.x + "," + LAB.game.G.y);
   let kmoved = 0;
   for (const k of ["w", "d", "s", "a", "w", "d", "s", "a"]) { const p0 = await pos(); await key(k); if ((await pos()) !== p0) kmoved++; }
@@ -588,6 +622,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   await page.evaluate(() => { window.KCODE = null; LAB.mini.code(v => { window.KCODE = v; }); });
   for (const k of ["4", "0", "7", "1", "Enter"]) await key(k);
   ok(await page.evaluate(() => window.KCODE) === "4071", "кодовый замок: цифры с клавиатуры и Enter — " + (await page.evaluate(() => window.KCODE)));
+  await page.evaluate(() => { LAB.settings.autoRead = window.KB_AUTOREAD; });
 
   console.log("Мир: двери, таблички, лестницы, компьютеры, автоматы, записки");
   await page.evaluate(() => { LAB.ui.closeAll(); const G = LAB.game.G; G.dead = false; G.hp = G.hpMax; G.drawn = false; LAB.combat.foes().forEach(f => { f.dead = true; }); });
@@ -2532,24 +2567,27 @@ LAB.ui.closeAll();
     await ctx.close();
     return out;
   };
-  const kept37 = await keptAs(6), kept37b = await keptAs(7), kept38 = await keptAs(7, "Альфа 3.8"), kept40 = await keptAs(7, "Альфа 4.0"), kept41 = await keptAs(7, "Альфа 4.1"), kept45 = await keptAs(7, "Альфа 4.5");
-  ok(kept37 && kept37.ver === kept37.cur && kept37.cur === "Альфа 4.6" && kept37.slot && kept37.kept >= 2 && !kept37.wiped && kept37.from === "Альфа 3.7" && /Сохранения прежней версии остались/.test(kept37.intro || "") && /этажи построены заново/.test(kept37.intro || "") && kept37.relocate,
-    "запись выпущенной «Альфы 3.7» при переходе на 4.6 не стёрта; главное меню говорит, что этажи построены заново, загрузка ставит у входа на свой этаж (" + JSON.stringify(kept37).slice(0, 300) + ")");
-  ok(kept37b && kept37b.cur === "Альфа 4.6" && kept37b.slot && !kept37b.wiped && /Сохранения прежней версии остались/.test(kept37b.intro || "") && /с того же места/.test(kept37b.intro || "") && !/этажи построены заново/.test(kept37b.intro || ""),
+  const kept37 = await keptAs(6), kept37b = await keptAs(7), kept38 = await keptAs(7, "Альфа 3.8"), kept40 = await keptAs(7, "Альфа 4.0"), kept41 = await keptAs(7, "Альфа 4.1"), kept45 = await keptAs(7, "Альфа 4.5"), kept46 = await keptAs(7, "Альфа 4.6");
+  ok(kept37 && kept37.ver === kept37.cur && kept37.cur === "Альфа 5.0" && kept37.slot && kept37.kept >= 2 && !kept37.wiped && kept37.from === "Альфа 3.7" && /Сохранения прежней версии остались/.test(kept37.intro || "") && /этажи построены заново/.test(kept37.intro || "") && kept37.relocate,
+    "запись выпущенной «Альфы 3.7» при переходе на 5.0 не стёрта; главное меню говорит, что этажи построены заново, загрузка ставит у входа на свой этаж (" + JSON.stringify(kept37).slice(0, 300) + ")");
+  ok(kept37b && kept37b.cur === "Альфа 5.0" && kept37b.slot && !kept37b.wiped && /Сохранения прежней версии остались/.test(kept37b.intro || "") && /с того же места/.test(kept37b.intro || "") && !/этажи построены заново/.test(kept37b.intro || ""),
     "запись поздней сборки 3.7 (уже седьмой выпуск мира): меню говорит, что играть дальше можно с того же места (" + JSON.stringify(kept37b).slice(0, 300) + ")");
   /* (4.0) пробные сборки 3.8 уже строили этажи по седьмому выпуску: их запись при переходе на 4.0 не стёрта
      и грузится с того же места, без переноса героя к входу на этаж */
-  ok(kept38 && kept38.ver === kept38.cur && kept38.cur === "Альфа 4.6" && kept38.slot && kept38.kept >= 2 && !kept38.wiped && kept38.from === "Альфа 3.8" && /Сохранения прежней версии остались/.test(kept38.intro || "") && /с того же места/.test(kept38.intro || "") && !/этажи построены заново/.test(kept38.intro || "") && kept38.relocate === false,
-    "запись пробной сборки 3.8 при переходе на 4.6 не стёрта и грузится с того же места (" + JSON.stringify(kept38).slice(0, 300) + ")");
+  ok(kept38 && kept38.ver === kept38.cur && kept38.cur === "Альфа 5.0" && kept38.slot && kept38.kept >= 2 && !kept38.wiped && kept38.from === "Альфа 3.8" && /Сохранения прежней версии остались/.test(kept38.intro || "") && /с того же места/.test(kept38.intro || "") && !/этажи построены заново/.test(kept38.intro || "") && kept38.relocate === false,
+    "запись пробной сборки 3.8 при переходе на 5.0 не стёрта и грузится с того же места (" + JSON.stringify(kept38).slice(0, 300) + ")");
   /* (4.1) мир тот же, седьмой выпуск: запись «Альфы 4.0» не стёрта и грузится с того же места */
-  ok(kept40 && kept40.ver === kept40.cur && kept40.cur === "Альфа 4.6" && kept40.slot && kept40.kept >= 2 && !kept40.wiped && kept40.from === "Альфа 4.0" && /Сохранения прежней версии остались/.test(kept40.intro || "") && /с того же места/.test(kept40.intro || "") && !/этажи построены заново/.test(kept40.intro || "") && kept40.relocate === false,
-    "запись «Альфы 4.0» при переходе на 4.6 не стёрта и грузится с того же места (" + JSON.stringify(kept40).slice(0, 300) + ")");
+  ok(kept40 && kept40.ver === kept40.cur && kept40.cur === "Альфа 5.0" && kept40.slot && kept40.kept >= 2 && !kept40.wiped && kept40.from === "Альфа 4.0" && /Сохранения прежней версии остались/.test(kept40.intro || "") && /с того же места/.test(kept40.intro || "") && !/этажи построены заново/.test(kept40.intro || "") && kept40.relocate === false,
+    "запись «Альфы 4.0» при переходе на 5.0 не стёрта и грузится с того же места (" + JSON.stringify(kept40).slice(0, 300) + ")");
   /* (4.5) мир уровней 1–100 тот же, седьмой выпуск: запись «Альфы 4.1» не стёрта и грузится с того же места */
-  ok(kept41 && kept41.ver === kept41.cur && kept41.cur === "Альфа 4.6" && kept41.slot && kept41.kept >= 2 && !kept41.wiped && kept41.from === "Альфа 4.1" && /Сохранения прежней версии остались/.test(kept41.intro || "") && /с того же места/.test(kept41.intro || "") && !/этажи построены заново/.test(kept41.intro || "") && !kept41.relocate,
-    "запись «Альфы 4.1» при переходе на 4.6 не стёрта и грузится с того же места (" + JSON.stringify(kept41).slice(0, 300) + ")");
+  ok(kept41 && kept41.ver === kept41.cur && kept41.cur === "Альфа 5.0" && kept41.slot && kept41.kept >= 2 && !kept41.wiped && kept41.from === "Альфа 4.1" && /Сохранения прежней версии остались/.test(kept41.intro || "") && /с того же места/.test(kept41.intro || "") && !/этажи построены заново/.test(kept41.intro || "") && !kept41.relocate,
+    "запись «Альфы 4.1» при переходе на 5.0 не стёрта и грузится с того же места (" + JSON.stringify(kept41).slice(0, 300) + ")");
   /* (4.6) мир тот же, седьмой выпуск: запись «Альфы 4.5» не стёрта и грузится с того же места */
-  ok(kept45 && kept45.ver === kept45.cur && kept45.cur === "Альфа 4.6" && kept45.slot && kept45.kept >= 2 && !kept45.wiped && kept45.from === "Альфа 4.5" && /Сохранения прежней версии остались/.test(kept45.intro || "") && /с того же места/.test(kept45.intro || "") && !/этажи построены заново/.test(kept45.intro || "") && !kept45.relocate,
-    "запись «Альфы 4.5» при переходе на 4.6 не стёрта и грузится с того же места (" + JSON.stringify(kept45).slice(0, 300) + ")");
+  ok(kept45 && kept45.ver === kept45.cur && kept45.cur === "Альфа 5.0" && kept45.slot && kept45.kept >= 2 && !kept45.wiped && kept45.from === "Альфа 4.5" && /Сохранения прежней версии остались/.test(kept45.intro || "") && /с того же места/.test(kept45.intro || "") && !/этажи построены заново/.test(kept45.intro || "") && !kept45.relocate,
+    "запись «Альфы 4.5» при переходе на 5.0 не стёрта и грузится с того же места (" + JSON.stringify(kept45).slice(0, 300) + ")");
+  /* (5.0) мир тот же, седьмой выпуск: запись «Альфы 4.6» не стёрта и грузится с того же места */
+  ok(kept46 && kept46.ver === kept46.cur && kept46.cur === "Альфа 5.0" && kept46.slot && kept46.kept >= 2 && !kept46.wiped && kept46.from === "Альфа 4.6" && /Сохранения прежней версии остались/.test(kept46.intro || "") && /с того же места/.test(kept46.intro || "") && !/этажи построены заново/.test(kept46.intro || "") && !kept46.relocate,
+    "запись «Альфы 4.6» при переходе на 5.0 не стёрта и грузится с того же места (" + JSON.stringify(kept46).slice(0, 300) + ")");
   /* (2.0) прохождение заново: та же версия, прежнее прохождение — сохранения стёрты, настройки остались */
   let run = null;
   {
@@ -5202,7 +5240,12 @@ LAB.ui.closeAll();
       const pats = C.foes().filter(f => f.beat && f.beat.length > 2 && f.kind === "mech" && !f.spawned && !f.sapper);
       reset(); fs.wIn = false;
       const cells = want => { const a = []; for (let i = 0; i < fl.t.length; i++) { const x = i % W, y = (i / W) | 0; if (fl.t[i] === LAB.T.DOOR || !g.passable(x, y)) continue; if (want === "room" ? fl.room[i] >= 0 : fl.corrAt[i] >= 0 && fl.room[i] < 0) a.push([x, y]); } return a; };
-      const corrs = cells("corr"), rooms = cells("room"), cC = corrs[Math.floor(corrs.length / 2)], cR = rooms[Math.floor(rooms.length / 2)];
+      /* (5.0) «носитель в помещении» — в обычном помещении, куда ОКО входит: средняя клетка помещений бывала
+         в тайнике за потайной дверью, а тайными ходами ОКО не ходит — смена караула без цели (точку выхода
+         ищут от носителя) не находила выхода, и проверка «в свой срок» изредка падала */
+      const okoRoom = rid => fl.doors.some(d => (d.room === rid || d.other === rid) && !d.lock);
+      const rooms0 = cells("room"), roomsOk = rooms0.filter(c => okoRoom(fl.room[c[1] * W + c[0]])), rooms = roomsOk.length ? roomsOk : rooms0;
+      const corrs = cells("corr"), cC = corrs[Math.floor(corrs.length / 2)], cR = rooms[Math.floor(rooms.length / 2)];
       const at = c => { G.x = c[0]; G.y = c[1]; };
       const live = () => C.foes().filter(f => !f.dead && f.wv > 0);
       const until = (fn, max) => { for (let i = 1; i <= max; i++) { C.tick(); if (fn()) return i; } return -1; };
@@ -5800,11 +5843,16 @@ LAB.ui.closeAll();
         LAB.stats._play(31); act(gym, "train"); out.gymPlayOk = G.train.strN === 1 && /Двадцать минут на тренажёре/.test(last());
         if (!(out.gymPlay && out.gymPlayOk)) out.gymPlaySaid = last();
       }
-      /* 4. инвентарь: аптечка, назад в инвентарь, «Еда» — открывается, а не отказ */
+      /* 4. инвентарь: аптечка — (5.0, просьба игрока) остаётесь в разделе на той же аптечке; «Назад» — в инвентарь;
+         «Еда» — открывается, а не отказ */
       U.closeAll(); G.inv.medkit_s = (G.inv.medkit_s || 0) + 2; G.hp = Math.max(1, Math.floor(G.hpMax / 3));
+      const mk0 = G.inv.medkit_s;
       U.inventory(); let w = U.top(); w.i = w.items.findIndex(x => /^Аптечки/.test(label(x))); U.activate();
       w = U.top(); w.i = w.items.findIndex(x => /^Аптечка:/.test(label(x))); U.activate();
       out.invBack = U.top() && U.top().title;
+      out.invStay = !!U.top() && /^Аптечка: /.test(label(U.top().items[U.top().i])) && G.inv.medkit_s === mk0 - 1;
+      w = U.top(); if (w && w.title === "Аптечки и лекарства") { w.i = w.items.findIndex(x => /^Назад$/.test(label(x))); U.activate(); }
+      out.invRoot = U.top() && U.top().title;
       w = U.top(); if (w && w.title === "Инвентарь") { w.i = w.items.findIndex(x => /^Еда/.test(label(x))); U.activate(); }
       out.invFood = U.top() && U.top().title;
       /* 5. устаревшее окно: без сборщика — старый пункт не выполняется; со сборщиком — собирается заново */
@@ -5923,7 +5971,7 @@ LAB.ui.closeAll();
   ok(/ — накачано 2 из 3 единиц$/.test(holes.gymNote || "") && / — больше ничего не даст$/.test(holes.gymCapNote || ""), "пункт тренажёра: сколько прибавок из пяти взято, на пределе — «больше ничего не даст» (" + holes.gymNote + " / " + holes.gymCapNote + ")");
   ok(holes.gymCap && holes.gymCap.same && holes.gymCap.said && holes.gymGap, "тренажёр: предел в три единицы и перерыв три часа");
   ok(holes.gymPlay && holes.gymPlayOk, "тренажёр: сон перерыв не проматывает — между тренировками ещё и полчаса игры" + (holes.gymPlaySaid ? " (" + holes.gymPlaySaid + ")" : ""));
-  ok(holes.invBack === "Инвентарь" && holes.invFood === "Еда и напитки", "инвентарь: после аптечки — снова инвентарь, «Еда» открывается (" + holes.invBack + " → " + holes.invFood + ")");
+  ok(holes.invBack === "Аптечки и лекарства" && holes.invStay && holes.invRoot === "Инвентарь" && holes.invFood === "Еда и напитки", "инвентарь: после аптечки — в том же разделе, на аптечке; «Назад» — инвентарь, «Еда» открывается (" + [holes.invBack, holes.invStay, holes.invRoot, holes.invFood].join(" → ") + ")");
   ok(holes.staleNoRebuild.hits === 0 && holes.staleNoRebuild.closed, "устаревшее окно без сборщика: старый пункт не выполняется, окно закрыто");
   ok(holes.staleRebuild.hits === 0 && holes.staleRebuild.open && /Кредитов: /.test(holes.staleRebuild.label) && holes.staleSameLabel === 10, "окно со сборщиком собирается заново: сменившийся пункт не выполняется, прежний — выполняется (" + JSON.stringify(holes.staleRebuild) + ", " + holes.staleSameLabel + ")");
   ok(holes.sentFirst > 0 && holes.sentLast === 0, "присланные машины: опыт есть, на пороге этажа — ноль (" + holes.sentFirst + " → " + holes.sentLast + ")");
@@ -6520,9 +6568,18 @@ LAB.ui.closeAll();
       const books = LB.pool("book"), byCat = c => books.filter(b => b.cat === c && !LB.isRead(b, bc));
       byCat("detective").slice(0, 3).forEach(b => { LB.readText(b, bc); U.closeAll(); });
       out.perk = !!(G().perks && G().perks.searcher);
+      /* (5.0) практика здесь ни при чём: книги дают интеллекту ещё и практику, и за долгий прогон её могло
+         накопиться на единицу — тогда «четырёх мало» ломалось от времени прогона, а не от правила книг.
+         На время чтения — будто интеллект уже подрос от практики сегодня (stats.js: не чаще раза в сутки) */
+      /* (5.0) и счёт книг о науке — с нуля: в разделе 2 первой книгой шкафа случайного мира бывает книга
+         о науке, и тогда интеллект прибавлялся уже на четвёртой из этих (редкий сбой «четырёх мало») */
+      { const R = G().lib || (G().lib = {}); R.cnt = R.cnt || {}; R.cnt.science = 0; R.mind = 0; }
+      const chs = G().chs || (G().chs = { pts: 0, px: {}, day: {}, sec: { stam: 0, ment: 0, regen: 0 }, rg: 0, th: {} });
+      chs.day = chs.day || {}; const pday0 = chs.day.mind; chs.day.mind = G().day || 1;
       const m0 = G().mind, sci = byCat("science"); sci.slice(0, 4).forEach(b => { LB.readText(b, bc); U.closeAll(); });
       out.mind4 = G().mind - m0; sci.slice(4, 5).forEach(b => { LB.readText(b, bc); U.closeAll(); });
       out.mind = G().mind - m0; out.sciN = sci.length;
+      chs.day.mind = pday0;
       const bp0 = Object.keys(G().bp || {}).length; const tb = byCat("tech")[0]; if (tb) { LB.readText(tb, bc); U.closeAll(); }
       out.bp = Object.keys(G().bp || {}).length - bp0;
       /* (3.8) книга по химии учит рецептуре своей ступени, которой герой ещё не знает; на первых уровнях
@@ -6663,7 +6720,7 @@ LAB.ui.closeAll();
   ok(lib.geo && lib.geo.mainMin >= 9 && lib.geo.annAvg >= 38 && lib.geo.perRoom >= 6 && lib.geo.newKinds >= 8, "помещения просторнее: главные — от девяти шагов, кабинеты в среднем втрое больше прежнего, вещей — по площади, новые вещи на этажах (" + JSON.stringify(lib.geo) + ")");
   ok(lib.noRepeat && lib.noRepeat.dup === 0 && lib.noRepeat.got > 0 && lib.case && lib.case.title, "на этаже книги не повторяются; окно книг — своё, окно шкафа под ним цело (" + JSON.stringify(lib.noRepeat) + ")");
   ok(lib.case && lib.case.n >= 4 && lib.case.cats && lib.case.arch && lib.case.xp && lib.case.same && lib.case.text, "книжный шкаф: книги с разделами, прочитанная — в архиве «Книги», опыт, «прочитано», состав тот же, текст по ссылке (" + JSON.stringify(lib.case) + ")");
-  ok(lib.perk && lib.mind4 === 0 && lib.mind === 1 && lib.bp === 1 && lib.chem === 1 && lib.calm, "книги учат: три детектива — «Чутьё», пять о науке — интеллект (четырёх мало), техника — схема, химия — рецептура, повесть успокаивает (" + JSON.stringify({ perk: lib.perk, mind: lib.mind, bp: lib.bp, chem: lib.chem, calm: lib.calm }) + ")");
+  ok(lib.perk && lib.mind4 === 0 && lib.mind === 1 && lib.bp === 1 && lib.chem === 1 && lib.calm, "книги учат: три детектива — «Чутьё», пять о науке — интеллект (четырёх мало), техника — схема, химия — рецептура, повесть успокаивает (" + JSON.stringify({ perk: lib.perk, mind4: lib.mind4, mind: lib.mind, bp: lib.bp, chem: lib.chem, calm: lib.calm }) + ")");
   ok(lib.memoItem && lib.memo, "архивные коробки: записка с кодом этажа — код в архиве, замок о нём знает");
   ok(lib.shredWrong && lib.shred, "шредер: не по порядку — снова перемешано; по порядку — документ сложен и лёг в архив");
   ok(lib.vitrine && lib.grate && lib.intercom && lib.intercomCd && lib.deposit && lib.mail >= 2 && lib.catalog, "витрина, решётка, селектор, ячейки, почта, каталог (" + JSON.stringify({ v: lib.vitrine, g: lib.grate, i: lib.intercom, cd: lib.intercomCd, d: lib.deposit, m: lib.mail, c: lib.catalog }) + (lib.grateSaid ? "; решётка: " + lib.grateSaid : "") + (lib.icSaid ? "; селектор: " + lib.icSaid : "") + ")");
@@ -7681,6 +7738,10 @@ LAB.ui.closeAll();
     LAB.OKO_VOICED.ready = true; LAB.settings.okoVoice = "m"; V._rng(() => 0.99);
     if (!LAB.Bank.has("oko_m_" + K)) LAB.Bank.def("oko_m_" + K, ["oko/m/" + K + ".mp3"], { bus: "voice", vary: 0 });
     for (let i = 0; i < 50 && !LAB.Bank.ready("oko_m_" + K); i++) { LAB.Bank.preload(["oko_m_" + K]); await sleep(100); }
+    /* (5.0) голос ОКО записан целиком и включён во всей игре: прошлые шаги проверки могли оставить его
+       реплику, которая ещё звучит (busyTill в okovoice.js), — тогда проверочная ждала бы своей очереди
+       дольше двух секунд. Начинаем с тишины, как после «тишины» в игре */
+    LAB.Speech.hush(); await sleep(150);
     ids.length = 0;
     V.play("ОКО по громкой связи: «" + REC + "»", { prio: "event" }); V.play("ОКО по громкой связи: «" + REC + "»", { prio: "event" });
     /* (3.8) ждём, пока первая реплика зазвучит (под нагрузкой — не сразу), но не дольше двух секунд:

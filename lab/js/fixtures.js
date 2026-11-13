@@ -120,6 +120,9 @@ function plantEnv(o, def, t, rm) {
 function plantVar(fx) { return function (o, def, t, rm) { return LAB.plants && LAB.plants.variant ? LAB.plants.variant(fx, o, def, t, rm, plantEnv(o, def, t, rm)) : null; }; }
 var VAR = {
   appletree: plantVar("appletree"), berrybush: plantVar("berrybush"), mushrooms: plantVar("mushrooms"), palm: plantVar("palm"), moss: plantVar("moss"), roots: plantVar("roots"),
+  /* (5.0) глобус и аквариум — по глубине и помещению (curios.js) */
+  globe: function (o, def, t, rm) { return LAB.curios && LAB.curios.variant ? LAB.curios.variant("globe", o, def, t, rm) : null; },
+  aquarium: function (o, def, t, rm) { return LAB.curios && LAB.curios.variant ? LAB.curios.variant("aquarium", o, def, t, rm) : null; },
   plants: function (o, def, t, rm) {
     if (LAB.plants && LAB.plants.variant) { var pv = LAB.plants.variant("plants", o, def, t, rm, plantEnv(o, def, t, rm)); if (pv) return pv; }
     var water = actOf(def, "listen"), d0 = rm ? (LAB.ROOMS || {})[rm.type] || {} : {}, nm = rm ? ((rm.name || "") + ". " + (d0.n || "")).toLowerCase() : "", crop = !!(rm && CROP_T[rm.type]) || P_CROP.test(String((rm && rm.name) || "").toLowerCase()) || P_CROP.test(String(d0.n || "").toLowerCase());
@@ -385,6 +388,7 @@ function fresh(o, def, a, it) {
 }
 function actionItem(o, def, a, s) {
   var kind = a[0], label = a[1], p = a[2] || {};
+  if (kind === "globe" || kind === "aqua") return LAB.curios ? LAB.curios.item(o, def, a, s) : null; /* (5.0) глобус и аквариум — curios.js */
   if (s.salv && kind !== "salvage" && SALV_KILLS[kind] && !salvKeep(def)) return null;
   switch (kind) {
     case "search": return s["s_" + label] ? { label: label + ": уже обыскано", info: true, keep: true, fn: function () { say("Здесь вы уже искали."); } } : { label: label, fn: function () { doSearch(o, def, label, p); } };
@@ -1068,6 +1072,7 @@ function examine(o) {
     if (LAB.stash) { var tl0 = LAB.stash.examineLine(o); if (tl0) out.push(tl0); }
     if (LAB.library) { var lb0 = LAB.library.examineLine(o); if (lb0) out.push(lb0); }
     if (LAB.plants && def.plant) { var pl0 = LAB.plants.examineLine(o); if (pl0) out.push(pl0); } /* (после 4.0) вид и опыт */
+    if (LAB.curios && (o.fx === "globe" || o.fx === "aquarium")) { var cu0 = LAB.curios.examineLine(o); if (cu0) out.push(cu0); } /* (5.0) булавки, записка, банка с кормом, провод */
     return out.join(" ");
   }
   if (o.type === "corpse") { var ct = corpseText(o, identity(o)), tl1 = LAB.stash ? LAB.stash.examineLine(o) : ""; return tl1 ? ct + " " + tl1 : ct; }

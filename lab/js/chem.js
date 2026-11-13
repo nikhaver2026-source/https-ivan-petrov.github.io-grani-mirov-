@@ -847,7 +847,8 @@ function skillMenu() {
   menu("Химия: ступени и специализация", build(), { keep: true, rebuild: build });
 }
 /* Инвентарь: «Химия: сырьё». */
-function invMenu() {
+function invMenu() { menu("Химия: сырьё", invItems(), { rebuild: invItems }); } /* (5.0) раздел собирается заново, а не закрывается */
+function invItems() {
   var g = G(), items = [];
   FAM_IDS.forEach(function (f) { units(f).forEach(function (u) { items.push({ label: LAB.ITEMS[u.id].n + ": " + u.n + ". " + (FAM[f].one ? "" : cap1(GRADE_W[u.g]) + ". ") + FAM[f].desc, keep: true, fn: function () { study(f); } }); }); });
   /* (3.7, нелогичность) фотоплёнка и отчёт об анализе — тоже здесь: прежде их не было ни в одном разделе
@@ -857,7 +858,7 @@ function invMenu() {
   if (level() >= 6) items.push({ label: "Походная химия: простые составы без стола", fn: function () { pocketMenu(); } });
   items.push({ label: line(), info: true, keep: true, fn: function () { say(line()); } });
   items.push({ label: "Назад", close: true, fn: function () {} });
-  menu("Химия: сырьё", items);
+  return items;
 }
 function pocketMenu() {
   var build = function () {

@@ -759,7 +759,7 @@ function invItems() {
   items.push({ label: "Назад", fn: function () { if (LAB.ui.inventory) LAB.ui.inventory(); } });
   return items;
 }
-function invMenu() { menu("Инженерное", invItems(), { rebuild: invItems }); }
+function invMenu() { menu("Инженерное", invItems(), { rebuild: invItems, keep: true }); } /* (5.0) после действия — в разделе */
 function charLine() {
   var n = ownList().length, c = G().weapons.filter(function (w) { return w.core; }).length;
   return n || c ? "Своих конструкций " + n + (c ? ", оружия с ядром " + c : "") + "." : "";

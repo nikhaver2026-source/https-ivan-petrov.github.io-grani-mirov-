@@ -863,6 +863,16 @@ E("oko_chime", "sfx", [FS(238428, dur=1.9), FS(244583, dur=2.9)], n=2, mx=3.0, v
 # (после 4.6, выбор автора на прослушивании) тревога ОКО: прежний клаксон (jbum) снят, зуммер остался;
 # к нему — клаксон аварийной блокировки и тревога «уханье» (синтез, gen): хриплые гудки и восходящие свисты
 E("oko_alarm", "sfx", [FS(54047), G("siren_klaxon"), G("siren_whoop")], n=3, mx=3.0, v=0.75)
+# (5.0) Глобус и аквариум (curios.js, minigames.js «spin») — синтез, см. curio()
+E("globe_push", "sfx", [G("globe_push_1"), G("globe_push_2")], n=2, v=0.8)
+E("globe_rev", "sfx", [G("globe_rev_1"), G("globe_rev_2")], n=2, v=0.5)
+E("globe_bump", "sfx", [G("globe_bump_1"), G("globe_bump_2"), G("globe_bump_3")], n=3, v=0.95)
+E("globe_pin", "sfx", [G("globe_pin_1"), G("globe_pin_2"), G("globe_pin_3")], n=3, v=0.95)
+E("globe_stop", "sfx", [G("globe_stop_1"), G("globe_stop_2")], n=2, v=0.85)
+E("aqua_tap", "sfx", [G("aqua_tap_1"), G("aqua_tap_2"), G("aqua_tap_3")], n=3, v=0.85)
+E("aqua_feed", "sfx", [G("aqua_feed_1"), G("aqua_feed_2")], n=2, v=0.75)
+E("aqua_splash", "sfx", [G("aqua_splash_1"), G("aqua_splash_2")], n=2, v=0.8)
+E("aqua_swish", "sfx", [G("aqua_swish_1"), G("aqua_swish_2")], n=2, v=0.55)
 
 # ═════ ПОПАДАНИЯ, ВЗРЫВЫ ═════
 E("hit_metal", "sfx", [SPL(144444, 6, min_len=0.1), SPL(675951, 4, min_len=0.3)], n=8, mx=0.7)
@@ -1319,7 +1329,134 @@ def gen(name):
         return fade(out.astype(np.float32), 0.002, 0.3)
     if name in ("siren_klaxon", "siren_whoop"):
         return siren(name)
+    if name.startswith(("globe_", "aqua_")):
+        return curio(name)
     raise SystemExit("нет синтеза " + name)
+
+
+def curio(name):
+    """(5.0) Глобус и аквариум (curios.js) — синтез: записей таких звуков в наборах нет.
+    Имя — вид и номер варианта (globe_bump_2): у вариантов свой посев случайностей.
+    globe_push — ладонь толкает глобус: глухой удар полой сферы, шорох и скрип оси;
+    globe_rev — оборот: мягкий шорох бумаги под пальцем, зернистый;
+    globe_bump — горы проходят под пальцем: шершавый рубец щелчков и толчок полой сферы;
+    globe_pin — булавка: металлический щелчок головки и трепет бумажного флажка;
+    globe_stop — ладонь прижимает глобус: скрип кожи, толчок, дребезг подставки;
+    aqua_tap — костяшки о толстое стекло с водой: два глухих «тук», моды стекла и масса воды;
+    aqua_feed — банка о край, хлопья на воду, рыбы хватают корм у поверхности (пузырьковые «плипы»);
+    aqua_splash — рука входит в воду: всплеск, капли, пузыри под водой, плеск;
+    aqua_swish — рыбы бросаются врассыпную: короткий водяной вихрь.
+    Всё сухое и моно: пространство даёт игра."""
+    import zlib
+    from scipy.signal import butter, sosfilt
+    rs = np.random.RandomState(zlib.crc32(name.encode()) & 0x7fffffff)
+    base = name.rsplit("_", 1)[0] if name[-1].isdigit() else name
+    def z(sec): return np.zeros(int(sec * SR), dtype=np.float64)
+    def noise(n): return rs.standard_normal(n)
+    def bp(x, lo, hi, order=2): return sosfilt(butter(order, [lo / (SR / 2), min(hi, SR / 2 - 200) / (SR / 2)], btype="band", output="sos"), x)
+    def lp(x, f, order=2): return sosfilt(butter(order, f / (SR / 2), output="sos"), x)
+    def hp(x, f, order=2): return sosfilt(butter(order, f / (SR / 2), btype="high", output="sos"), x)
+    def tt(sec): return np.arange(int(sec * SR)) / SR
+    def add(buf, x, at):
+        i = int(at * SR)
+        if i >= len(buf): return
+        k = min(len(x), len(buf) - i); buf[i: i + k] += x[:k]
+    def mode(f, dec, sec, ph=0.0):
+        t = tt(sec); return np.sin(2 * np.pi * f * t + ph) * np.exp(-t / dec)
+    def click(sec=0.004, lo=1500, hi=9000):
+        x = noise(int(sec * SR)) * np.exp(-tt(sec) / (sec / 4)); return bp(x, lo, hi)
+    def plip(f0, dec, rise=0.8, sec=None):
+        # пузырёк, лопающийся у поверхности (резонанс Миннарта): частота растёт, звук быстро гаснет
+        sec = sec or dec * 6; t = tt(sec); f = f0 * (1 + rise * t / max(dec * 4, 1e-3))
+        return np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t / dec) * (1 - np.exp(-t * 2000))
+    def env_ad(n, a, d):
+        t = np.arange(n) / SR; return np.minimum(1, t / max(a, 1e-4)) * np.exp(-np.maximum(0, t - a) / d)
+    def mixa(*xs):
+        # слои разной длины — в один отрезок по самому длинному
+        m = np.zeros(max(len(x) for x in xs))
+        for x in xs: m[: len(x)] += x
+        return m
+    out = None
+    if base == "globe_push":
+        out = z(0.75)
+        th = mixa(mode(170 + rs.uniform(-15, 15), 0.05, 0.3), 0.5 * mode(310 + rs.uniform(-20, 20), 0.03, 0.2))
+        add(out, th * 0.9, 0.0)
+        br = bp(noise(int(0.5 * SR)), 900, 5200) * env_ad(int(0.5 * SR), 0.01, 0.12)
+        add(out, br * 0.35, 0.0)
+        wh = bp(noise(int(0.7 * SR)), 300, 2400) * env_ad(int(0.7 * SR), 0.06, 0.22)
+        add(out, wh * 0.25, 0.05)
+        t = tt(0.16); f = np.linspace(1350, 1900, len(t)) + 40 * np.sin(2 * np.pi * 37 * t)
+        sq = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.sin(np.pi * t / t[-1]) ** 2
+        add(out, sq * 0.06, 0.03)
+    elif base == "globe_rev":
+        n = int(0.5 * SR); t = np.arange(n) / SR
+        x = bp(noise(n), 350, 2600) * np.sin(np.pi * t / t[-1]) ** 1.5
+        grain = 1 + 0.35 * np.sign(np.sin(2 * np.pi * rs.uniform(24, 34) * t)) * rs.uniform(0.6, 1.0, n)
+        out = x * grain * 0.5
+        if name.endswith("2"):
+            tq = tt(0.07); f = np.linspace(1850, 1650, len(tq))
+            add(out, np.sin(2 * np.pi * np.cumsum(f) / SR) * np.sin(np.pi * tq / tq[-1]) * 0.03, 0.2)
+    elif base == "globe_bump":
+        out = z(0.18); k = rs.randint(7, 11); at = 0.0
+        for i in range(k):
+            g = np.sin(np.pi * (i + 0.5) / k) ** 0.8
+            add(out, click(0.003, 1400, 6500) * g, at)
+            at += rs.uniform(0.006, 0.012)
+        add(out, mode(240 + rs.uniform(-25, 25), 0.03, 0.15) * 0.45, at * 0.45)
+        add(out, bp(noise(int(0.09 * SR)), 2000, 7000) * env_ad(int(0.09 * SR), 0.02, 0.03) * 0.25, 0.0)
+    elif base == "globe_pin":
+        out = z(0.16)
+        f1, f2 = 3100 + rs.uniform(-150, 150), 5200 + rs.uniform(-250, 250)
+        add(out, mixa(mode(f1, 0.007, 0.05) * 0.9, 0.6 * 0.9 * mode(f2, 0.004, 0.04), click(0.002, 3000, 11000) * 0.7), 0.0)
+        for i in range(rs.randint(2, 4)):
+            fl = bp(noise(int(0.014 * SR)), 2200, 7500) * env_ad(int(0.014 * SR), 0.002, 0.004)
+            add(out, fl * (0.45 - 0.1 * i), 0.018 + i * rs.uniform(0.018, 0.024))
+    elif base == "globe_stop":
+        out = z(0.35)
+        t = tt(0.09); f = np.linspace(650, 1050, len(t))
+        sq = (np.sin(2 * np.pi * np.cumsum(f) / SR) + 0.3 * bp(noise(len(t)), 600, 3000)) * np.sin(np.pi * t / t[-1])
+        add(out, sq * 0.12, 0.0)
+        add(out, mixa(mode(150 + rs.uniform(-15, 15), 0.045, 0.25) * 0.9, 0.4 * mode(290, 0.025, 0.15)), 0.03)
+        add(out, click(0.003, 2000, 8000) * 0.4, 0.06)
+        add(out, click(0.003, 2000, 8000) * 0.25, 0.06 + rs.uniform(0.025, 0.04))
+    elif base == "aqua_tap":
+        out = z(0.5)
+        fr = [600, 1350, 2400, 3900]; dc = [0.04, 0.025, 0.014, 0.008]; sh = rs.uniform(0.92, 1.08)
+        for j, at in enumerate((0.0, rs.uniform(0.16, 0.2))):
+            g = 1.0 if j == 0 else rs.uniform(0.75, 0.9)
+            knock = sum(mode(f * sh, d, 0.2, rs.uniform(0, 3)) * w for f, d, w in zip(fr, dc, (1.0, 0.6, 0.35, 0.2)))
+            knock = mixa(knock, mode(110 * sh, 0.06, 0.25) * 0.8, click(0.0015, 800, 9000) * 0.6)
+            add(out, knock * g, at)
+    elif base == "aqua_feed":
+        out = z(1.6)
+        add(out, mixa(mode(2500 + rs.uniform(-200, 200), 0.01, 0.06) * 0.35, click(0.002, 2000, 9000) * 0.3), 0.0)
+        add(out, mode(2500 + rs.uniform(-200, 200), 0.01, 0.06) * 0.25, 0.09)
+        for i in range(rs.randint(7, 11)):
+            add(out, plip(rs.uniform(1300, 3200), rs.uniform(0.012, 0.025)) * rs.uniform(0.2, 0.45), rs.uniform(0.15, 0.9))
+        for i in range(rs.randint(3, 6)):
+            add(out, plip(rs.uniform(450, 900), rs.uniform(0.03, 0.05), rise=1.2) * rs.uniform(0.35, 0.6), rs.uniform(0.35, 1.35))
+        out += lp(bp(noise(len(out)), 200, 1500), 900) * env_ad(len(out), 0.4, 0.5) * 0.04
+    elif base == "aqua_splash":
+        out = z(1.3)
+        sp = lp(noise(int(0.35 * SR)), 6000) * env_ad(int(0.35 * SR), 0.004, 0.09)
+        add(out, sp * 0.8, 0.0)
+        add(out, lp(bp(noise(int(0.6 * SR)), 180, 900), 700) * env_ad(int(0.6 * SR), 0.12, 0.25) * 0.5, 0.05)
+        for i in range(rs.randint(10, 16)):
+            add(out, plip(rs.uniform(300, 1100), rs.uniform(0.02, 0.05), rise=0.6) * rs.uniform(0.15, 0.4), rs.uniform(0.03, 0.75))
+        for i in range(rs.randint(3, 6)):
+            add(out, plip(rs.uniform(1800, 4200), rs.uniform(0.008, 0.015)) * rs.uniform(0.1, 0.25), rs.uniform(0.25, 1.1))
+    elif base == "aqua_swish":
+        n = int(0.32 * SR); t = np.arange(n) / SR
+        x = noise(n); y = np.zeros(n)
+        # вихрь: полоса ползёт вверх и обратно
+        for a0, a1 in ((0, n // 2), (n // 2, n)):
+            y[a0:a1] = bp(x[a0:a1], 260 + 200 * (a0 > 0), 1300 + 300 * (a0 > 0))
+        out = lp(y, 1800) * env_ad(n, 0.05, 0.1) * 0.6
+    if out is None:
+        raise SystemExit("нет синтеза " + name)
+    out = hp(out, 60)
+    out = out / (np.abs(out).max() + 1e-9) * 0.9
+    return fade(out.astype(np.float32), 0.002, 0.04)
 
 
 def siren(name):
