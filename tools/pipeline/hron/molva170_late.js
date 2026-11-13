@@ -71,7 +71,7 @@ const Молва170={
   if(итог)safeFn(()=>saveGame(true));return итог;},
  /* дела из подтверждённых слухов — у этого жителя */
  изСлухов(n){if(!n)return [];return this.ст().слухи.filter(r=>r.подтверждён&&!r.взят&&r.prof===n.prof&&r.x===n.x&&r.y===n.y).map(r=>ЦЕПИ170.find(t=>t.id===r.tid)).filter(Boolean);},
- кнопка(n){if(!n||!this.НАДЁЖНОСТЬ[n.prof])return "";return `<button class="item" data-cmd="molva170:${this.q(n.key)}" data-speak="${this.q(`Что слышно о делах? Спросить у ${n.name}.`)}">Что слышно о делах?</button>`;}};
+ кнопка(n){if(!n||!this.НАДЁЖНОСТЬ[n.prof])return "";return `<button class="item" data-cmd="molva170:${this.q(n.key)}" data-speak="${this.q(`Что слышно о делах? Спросить у ${имяВ(n,"род")}.`)}">Что слышно о делах?</button>`;}};
 CMD.molva170=function(a){return Молва170.окно(String(a||""));};
 /* предложения: дело из подтверждённого слуха всегда в списке */
 safeFn(()=>{const p0=Цепи170.предложения;Цепи170.предложения=function(n){const out=p0.apply(this,arguments);

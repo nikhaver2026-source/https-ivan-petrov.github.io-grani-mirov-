@@ -4430,9 +4430,9 @@ const Speech={voice:null,keepAlive:null,
  /* Голосовой пакет (4.8): всё, что Gemini прочёл сверх описей, вшитых в
     сборки, — отдельной описью. (26 октября) Пакет лежит в самой игре (sounds/gvoice_pack) — в полной
     сборке для Windows и Android и на сайте одинаково; ставить и скачивать его не нужно. */
- GVOICES:{m:{url:"sounds/gvoice/bank_49.js",dir:"sounds/gvoice/",glob:"GVOICE_BANK",map:null,state:"off",
+ GVOICES:{m:{url:"sounds/gvoice/bank_50.js",dir:"sounds/gvoice/",glob:"GVOICE_BANK",map:null,state:"off",
    pack:{url:"sounds/gvoice_pack/m/bank.js",dir:"sounds/gvoice_pack/m/",glob:"GVOICE_PACK_M",map:null,state:"off"}},
-  f:{url:"sounds/gvoice_f/bank_f49.js",dir:"sounds/gvoice_f/",glob:"GVOICE_BANK_F",map:null,state:"off",
+  f:{url:"sounds/gvoice_f/bank_f50.js",dir:"sounds/gvoice_f/",glob:"GVOICE_BANK_F",map:null,state:"off",
    pack:{url:"sounds/gvoice_pack/f/bank.js",dir:"sounds/gvoice_pack/f/",glob:"GVOICE_PACK_F",map:null,state:"off"}},
   /* (9.5.1) Вестник — свой голос для достижений и событий (Zephyr). Пока его
      опись не записана (GV_HERALD_ON), вести звучат выбранным голосом. */
@@ -24800,6 +24800,9 @@ const SOUL_AGES=[
  {id:"star",n:"старый",   от:63,до:88, о:"помнит то, о чём остальные читали"}];
 /* Кэш душ: их выводят часто, а считать одно и то же по десять раз незачем. */
 const soulCache=new Map();
+/* (13 ноября 2026) имя жителя в падеже для подписей: «Поговорить с Селогом», «Учиться у Миры». Склонение — имя180
+   из модуля поселений, пол — из души жителя; модуль не загружен — имя как есть. */
+function имяВ(n,к){try{return typeof имя180==="function"?имя180(n.name,(npcSoul(n)||{}).пол||null,к):n.name;}catch(_){return (n&&n.name)||"";}}
 function npcSoul(n){
  try{
   if(!n||!n.key)return null;
@@ -67264,7 +67267,7 @@ function isTeacher(n){return !!n&&(!!MAST_TEACH[n.prof]||safeFn(()=>Langs.teache
 /* Окно «Учиться» у учителя: ремёсла, язык, чары его школы. */
 function teacherView(key){
  const n=getNPCByKey(key);if(!n){narrate("Этого жителя здесь больше нет.");return false;}
- let html=`<div class="list-line" tabindex="0" data-speak="Учиться у ${n.name}, ${n.prof}.">Учиться у ${n.name} — ${n.prof}</div>`;
+ let html=`<div class="list-line" tabindex="0" data-speak="Учиться у ${имяВ(n,"род")}, ${n.prof}.">Учиться у ${имяВ(n,"род")} — ${n.prof}</div>`;
  html+=safeFn(()=>Mentor.npcButtons(n),"")||"";
  if(safeFn(()=>Langs.teachers.includes(n.prof),false))html+=`<button class="item" data-cmd="langlesson:${n.key}" data-speak="Урок языка: тридцать золота.">Урок языка (30)</button>`;
  const шк=teacherSchoolOf(n);
@@ -67451,7 +67454,7 @@ function openNPC(key,silent,o){const n=getNPCByKey(key);o=o||{};
  {const побоч=safeFn(()=>sideQuestsTaken(n).length,0);
   const сказ=q?`Задания: основное взято — ${safeFn(()=>qProgressText(q),"")}.`:"Задания: основное, побочные"+(safeFn(()=>npcSettlement(n),null)?" и дела общины":"")+".";
   html+=`<button class="item" data-cmd="npcquests:${n.key}" data-speak="${(сказ+(побоч?` Взято побочных: ${побоч}.`:"")).replace(/"/g,"&quot;")}">Задания${q?" (основное взято)":""}${побоч?` · побочных: ${побоч}`:""}</button>`;}
- if(safeFn(()=>isTeacher(n),false))html+=`<button class="item" data-cmd="npclearn:${n.key}" data-speak="Учиться у ${n.name}: ${n.prof}.">Учиться</button>`;
+ if(safeFn(()=>isTeacher(n),false))html+=`<button class="item" data-cmd="npclearn:${n.key}" data-speak="Учиться у ${имяВ(n,"род")}: ${n.prof}.">Учиться</button>`;
  if(safeFn(()=>isHealer(n),false)){const д=safeFn(()=>healCredits(n).length,0);
   html+=`<button class="item" data-cmd="npcheal:${n.key}" data-speak="Лечение: за золото${д?` или даром, в счёт сделанного дела`:""}.">Лечение</button>`;}
  html+=`<div class="list-line"><b>${n.name}</b> — ${Род.ремесло(n)}, ${n.race}${branch}. Уровень влияния ${n.tier}.<br>
@@ -67495,7 +67498,7 @@ function openNPC(key,silent,o){const n=getNPCByKey(key);o=o||{};
    html+=`<div class="list-line" tabindex="0" data-speak="${сказ.replace(/"/g,"&quot;")}">${сказ}</div>`;}}
  {const ст=safeFn(()=>standText(n),"");
   if(ст)html+=`<div class="list-line" tabindex="0" data-speak="${ст.replace(/"/g,"&quot;")}">${ст}</div>`;}
- html+=`<button class="item" data-cmd="npctalk:${n.key}" data-speak="Поговорить с ${n.name}.">Поговорить</button>`;
+ html+=`<button class="item" data-cmd="npctalk:${n.key}" data-speak="Поговорить с ${имяВ(n,"тв")}.">Поговорить</button>`;
  html+=safeFn(()=>Path.npcButtons(n),"");
  html+=safeFn(()=>Mentor.npcButtons(n),"");
  html+=safeFn(()=>Cases.npcButtons(n),"")+safeFn(()=>Oversight.npcButtons(n),"")+safeFn(()=>LastHouse.npcButtons(n),"")+safeFn(()=>Awaken.npcLine(n),"")+safeFn(()=>Arcs.line(n),"")+safeFn(()=>Econ.npcLine(n),"");
@@ -90515,7 +90518,7 @@ const Молва170={
   if(итог)safeFn(()=>saveGame(true));return итог;},
  /* дела из подтверждённых слухов — у этого жителя */
  изСлухов(n){if(!n)return [];return this.ст().слухи.filter(r=>r.подтверждён&&!r.взят&&r.prof===n.prof&&r.x===n.x&&r.y===n.y).map(r=>ЦЕПИ170.find(t=>t.id===r.tid)).filter(Boolean);},
- кнопка(n){if(!n||!this.НАДЁЖНОСТЬ[n.prof])return "";return `<button class="item" data-cmd="molva170:${this.q(n.key)}" data-speak="${this.q(`Что слышно о делах? Спросить у ${n.name}.`)}">Что слышно о делах?</button>`;}};
+ кнопка(n){if(!n||!this.НАДЁЖНОСТЬ[n.prof])return "";return `<button class="item" data-cmd="molva170:${this.q(n.key)}" data-speak="${this.q(`Что слышно о делах? Спросить у ${имяВ(n,"род")}.`)}">Что слышно о делах?</button>`;}};
 CMD.molva170=function(a){return Молва170.окно(String(a||""));};
 /* предложения: дело из подтверждённого слуха всегда в списке */
 safeFn(()=>{const p0=Цепи170.предложения;Цепи170.предложения=function(n){const out=p0.apply(this,arguments);

@@ -130,3 +130,4 @@ hron/patch_guide_k2.py
 hron/patch_guide_dozor.py
 hron/patch_guide_s180.py
 release/releaseA10b.py
+release/releaseA10c.py
