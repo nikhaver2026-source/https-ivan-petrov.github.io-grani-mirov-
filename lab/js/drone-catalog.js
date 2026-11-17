@@ -6,6 +6,51 @@ var groups = {
   cargo: "Грузовой модуль и оснастка", weapons: "Вооружение", sensors: "Разведка и навигация",
   service: "Медицина и ремонт", armor: "Защита корпуса", energy: "Энергоснабжение", control: "Управление"
 };
+/* Детали идут в общую сумку. Свой источник добычи сохраняет состав прежних случайных наборов. */
+var parts = {
+  dr_gimbal: { n: "Карданный подвес", depth: 2, tier: 2, price: 32, wt: .6, source: "parts mech", need: { servo: 1, scrap: 1, wire: 1 } },
+  dr_optic: { n: "Оптическая матрица", depth: 2, tier: 2, price: 35, wt: .2, source: "tech camera", need: { optic: 1, lens: 1, chip: 1 } },
+  dr_cap: { n: "Импульсный конденсатор", depth: 3, tier: 2, price: 39, wt: .3, source: "arms turret mech", need: { cap: 2, cell: 1, wire: 1 } },
+  dr_feed: { n: "Кассета микроподачи", depth: 4, tier: 2, price: 42, wt: .4, source: "parts mech", need: { servo: 1, rubber: 1, gel: 1 } },
+  dr_gyro: { n: "Гироскоп наведения", depth: 8, tier: 2, price: 52, wt: .5, source: "tech mech", need: { servo: 1, magnet: 1, chip: 1 } },
+  dr_sink: { n: "Теплоотводящая кассета", depth: 10, tier: 2, price: 58, wt: .8, source: "arms turret heavy", need: { panel: 1, ceramic: 1, supercond: 1 } },
+  dr_shell: { n: "Ударопоглощающая решётка", depth: 14, tier: 3, price: 64, wt: 1.2, source: "parts heavy", need: { panel: 1, ceramic: 2, rubber: 1 } },
+  dr_logic: { n: "Матрица управления", depth: 18, tier: 3, price: 75, wt: .35, source: "tech camera mech", need: { chip: 2, relay: 1, optic: 1 } },
+  dr_bus: { n: "Силовой разъём", depth: 22, tier: 3, price: 92, wt: .7, source: "tech heavy", need: { powercell: 1, wire: 2, cap: 1 } },
+  dr_prism: { n: "Фазовая линза", depth: 28, tier: 4, price: 108, wt: .35, source: "tech camera", need: { optic: 1, lens: 1, supercond: 1, dr_optic: 1 } },
+  dr_latch: { n: "Нагрузочный узел", depth: 35, tier: 4, price: 126, wt: 2.4, source: "parts heavy", need: { panel: 2, servo: 1, dr_gimbal: 1 } },
+  dr_flux: { n: "Кассета магнитного контура", depth: 46, tier: 4, price: 148, wt: 1.3, source: "arms turret heavy", need: { magnet: 2, supercond: 1, dr_cap: 1 } },
+  dr_cell: { n: "Силовой буфер", depth: 72, tier: 5, price: 184, wt: 2, source: "tech heavy", need: { dr_bus: 1, powercell: 2, supercond: 1 } },
+  dr_isolator: { n: "Резонансный изолятор", depth: 101, tier: 6, price: 216, wt: 1.5, source: "parts heavy turret", need: { dp_alloy: 1, dp_coil: 1, dr_shell: 1 } },
+  dr_relay: { n: "Распределитель Нижних", depth: 321, tier: 7, price: 280, wt: 1, source: "tech camera heavy", need: { dp_reed: 1, dp_coil: 1, dr_logic: 1 } },
+  dr_core: { n: "Синхронизатор Нижних", depth: 1501, tier: 8, price: 370, wt: 1.4, source: "parts arms heavy", need: { dp_reed: 2, dp_nerve: 1, dr_cell: 1 } }
+};
+var partIds = Object.keys(parts);
+var sources = {
+  parts: "ящики складов и мастерских", tech: "контейнеры технических помещений", arms: "оружейные ящики",
+  mech: "обломки роботов", camera: "разбитые камеры", turret: "разбитые турели", heavy: "обломки тяжёлых машин"
+};
+partIds.forEach(function (id) {
+  var p = parts[id], classes = ["", "base", "spec", "exp", "cnc", "syn"];
+  var place = p.source.split(" ").map(function (s) { return sources[s]; }).join(", ");
+  LAB.ITEMS[id] = { n: p.n, kind: "part", cat: "part", depth: p.depth, price: p.price, wt: p.wt, dronePart: true,
+    desc: "Запчасть для техники дрона. Доступна с уровня комплекса " + p.depth + ".",
+    src: place + ", отдел запчастей у снабжения и сборка у верстака" };
+  LAB.PARTS.push(id);
+  LAB.PART_DEPTH[id] = p.depth;
+  LAB.PART_FROM[id] = "drone";
+  var rc = { id: "build_" + id, out: id, n: p.n, need: p.need, minL: p.depth, group: "droneParts", cls: classes[Math.min(p.tier, 5)] };
+  if (p.tier > 5) rc.deepT = p.tier;
+  LAB.RECIPES.push(rc);
+});
+function fieldPart(level, source, key, chance) {
+  var pool = partIds.filter(function (id) { var p = parts[id]; return p.depth <= level && p.source.split(" ").indexOf(source) >= 0; });
+  if (!pool.length || LAB.hash32("drone-drop:" + key) % 100 >= chance) return null;
+  var recent = pool.filter(function (id) { return LAB.Le(parts[id].depth) > LAB.Le(level) - 20; });
+  var pick = LAB.hash32("drone-part:" + key);
+  if (recent.length && pick % 3 !== 0) pool = recent;
+  return { kind: "item", item: pool[Math.floor(pick / 3) % pool.length], n: 1 };
+}
 var equipment = {}, ranks = {};
 function add(id, name, group, tier, weight, need, description, measure, levels, options) {
   equipment[id] = Object.assign({ n: name, group: group, tier: tier, wt: weight, need: need, d: description }, options);
@@ -22,6 +67,16 @@ weapon("plasma", "Плазменная головка", 4, 2.6, { ceramic: 2, ma
 weapon("arc", "Дуговой каскад", 4, 2.2, { supercond: 2, relay: 1, cap: 3 }, "Основной импульс и ослабленный разряд по второй видимой цели рядом.", [5,6,8], 6, 6, 12, "shock", { chain: 3 });
 weapon("sonic", "Акустический проектор", 3, 2, { panel: 1, cap: 2, wire: 2 }, "Короткий импульс нарушает ориентацию обычного врага.", [3,5,6], 4, 4, 10, "sonic", { blind: 4 });
 weapon("ion", "Ионный подавитель", 3, 1.7, { relay: 2, cap: 2, chip: 1 }, "Выбирает только машины и ненадолго глушит их.", [4,6,8], 7, 5, 12, "emp", { target: "mech", slow: 4 });
+weapon("wedge", "Керамический излучатель «Клин»", 3, 2.4, { dr_gimbal: 1, dr_cap: 1, ceramic: 2, magnet: 1 },
+  "Выстрел сильнее по броне. В тесном коридоре важна перезарядка.", [6,8,10], 7, 6, 13, "kinetic", { armored: 1.45 });
+equipment.wedge.depth = 12;
+weapon("flare", "Магнетронный излучатель «Факел»", 4, 3.3, { dr_flux: 1, dr_sink: 1, dr_bus: 1, ceramic: 2 },
+  "Дальняя тепловая атака. Органические цели получают больше урона.", [8,10,13], 7, 8, 18, "therm", { organic: 1.45, machine: .7 });
+equipment.flare.depth = 46;
+weapon("resonator", "Резонатор Нижних «Отзвук»", 7, 3.8, { dr_relay: 1, dr_isolator: 1, dp_reed: 2, supercond: 1 },
+  "Звуковой разряд сбивает ориентацию и отражается к соседней видимой цели.", [8,10,12], 7, 9, 16, "sonic", { chain: 4, blind: 3 });
+equipment.resonator.depth = 321;
+equipment.resonator.level = 7;
 
 function sensor(id, name, tier, need, target, text, range, cost) {
   add(id, name, "sensors", tier, 0.7, need, text + " Поиск по открытой линии.",
@@ -33,6 +88,9 @@ sensor("depot_scope", "Кладовой локатор", 2, { optic: 2, relay: 1
 sensor("latch_scope", "Контурный глаз", 2, { lens: 1, servo: 1, chip: 1 }, "doors", "Слышит видимые двери и проходы, отмеченные на карте.", [8,10,13], 6);
 sensor("lab_scope", "Локатор установок", 3, { optic: 2, relay: 2, chip: 1 }, "stations", "Показывает лабораторные столы, терминалы и верстаки.", [9,11,13], 7);
 sensor("evac_scope", "Эвакуационный маяк", 3, { optic: 1, powercell: 1, wire: 2 }, "exits", "Помогает искать выходы и места лечения.", [9,12,15], 8);
+sensor("salvage_eye", "Локатор деталей «Контур»", 3, { dr_optic: 1, dr_logic: 1, chip: 1 }, "parts",
+  "Ищет детали на полу и подсвечивает ящики складов и мастерских.", [10,13,15], 8);
+equipment.salvage_eye.depth = 18;
 
 function service(id, name, tier, need, method, supply, text, levels, cost) {
   add(id, name, "service", tier, 1.1, need, text + " Работает вне боя.",
@@ -44,16 +102,26 @@ service("insulator", "Нейроизолятор", 3, { ceramic: 1, panel: 1, wi
 service("welder", "Сварочный манипулятор", 3, { servo: 2, ceramic: 1, cell: 1 }, "weapon", "scrap", "За лом восстанавливает состояние выбранного оружия.", [10,15,20], 10);
 service("selfkit", "Саморемонтный блок", 3, { servo: 2, rubber: 1, panel: 1 }, "self", "scrap", "За лом восстанавливает корпус выпущенного дрона.", [9,14,19], 8);
 service("tailor", "Шовный блок", 2, { servo: 1, rubber: 2, wire: 2 }, "armor", "rubber", "За прорезиненную ткань чинит надетую броню.", [10,15,20], 8);
+service("trauma_unit", "Травмоблок «Шов»", 3, { dr_feed: 2, dr_logic: 1, gel: 2 }, "hemo", "bandage",
+  "За один бинт останавливает кровь и восстанавливает больше здоровья. Требует больше заряда.", [24,31,38], 12);
+equipment.trauma_unit.depth = 20;
 
 add("hull", "Композитный набор корпуса", "armor", 3, 2.5, { panel: 2, ceramic: 2, rubber: 1 }, "Альтернатива усиленному кожуху. Защищает корпус запасом прочности.", "Дополнительная прочность", [20,29,38], { hp: true, exclusive: "hull" });
 add("mesh", "Демпферная решётка", "armor", 3, 1.8, { panel: 2, rubber: 2, servo: 1 }, "Смягчает получаемый дроном урон, пока он выпущен.", "Снижение урона в процентах", [12,18,24], { passive: "armor" });
+equipment.mesh.exclusive = "dampers";
+add("shock_cage", "Ударная клетка «Рубеж»", "armor", 4, 3.7, { dr_shell: 2, dr_latch: 1, dr_bus: 1, panel: 2 },
+  "Сменная защита вместо демпферной решётки. Смягчает удары по самому дрону.", "Снижение урона в процентах", [19,26,32],
+  { passive: "armor", exclusive: "dampers", depth: 36, level: 5 });
 add("reserve", "Резервная ячейка", "energy", 2, 0.6, { cell: 1, cap: 1, wire: 1 }, "Лёгкая альтернатива блоку накопителей.", "Дополнительная ёмкость", [21,30,42], { en: true, exclusive: "battery" });
 add("regen", "Инерционный рекуператор", "energy", 3, 1.3, { servo: 1, cap: 2, magnet: 1 }, "На каждом этаже восстанавливает заряд после двадцати пройденных шагов. Срабатывает один раз на этаж.", "Восстановление заряда", [8,12,16], { passive: "recovery" });
 add("sling", "Лёгкая подвеска", "cargo", 2, 0.8, { servo: 1, rubber: 2, scrap: 1 }, "Облегчённая оснастка вместо грузового модуля. Тяговому блоку нужна обычная или тяжёлая платформа.", "Дополнительные килограммы груза", [8,10,12], { passive: "capacity", exclusive: "cargo" });
 add("stabilizer", "Балансир груза", "cargo", 3, 1.1, { servo: 2, rubber: 1, chip: 1 }, "С грузовой оснасткой уменьшает задержку шага при перегрузе.", "Сокращение задержки в миллисекундах", [25,40,55], { passive: "stride" });
 add("baffle", "Тихая подвеска", "cargo", 2, 0.7, { rubber: 2, ceramic: 1 }, "Снижает шум, который даёт перегруз.", "Снижение шума", [1,2,3], { passive: "noise" });
 add("link_amp", "Согласователь кабеля", "energy", 3, 0.9, { relay: 2, cap: 2, wire: 2 }, "Повышает пропускную способность полевого кабеля и уменьшает потери.", "Дополнительный объём передачи", [4,6,8], { passive: "transfer" });
-add("charger", "Зарядный преобразователь", "energy", 3, 1, { powercell: 1, relay: 1, cap: 2 }, "Получает больше заряда от одной энергобатареи.", "Прибавка к заряду батареи", [8,12,16], { passive: "charge" });
+add("charger", "Зарядный преобразователь", "energy", 3, 1, { powercell: 1, relay: 1, cap: 2 }, "Получает больше заряда от одной энергобатареи.", "Прибавка к заряду батареи", [8,12,16], { passive: "charge", exclusive: "charger" });
+add("induction", "Индукционный преобразователь «Каскад»", "energy", 5, 2.1, { dr_cell: 1, dr_bus: 1, dr_flux: 1, dr_cap: 2 },
+  "Альтернатива зарядному преобразователю. Лучше использует полевые энергобатареи.", "Прибавка к заряду батареи", [18,24,30],
+  { passive: "charge", exclusive: "charger", depth: 72, level: 7 });
 
 function carrier(id, name, spec) {
   add(id, name, "cargo", spec.tier, spec.weights[0], spec.need,
@@ -112,7 +180,9 @@ var heavyCarriers = Object.keys(equipment).filter(function (k) { return equipmen
 var metrics = {
   firePower: ["мощность оружия",100,"%"], fireRange: ["дальность оружия",1," шаг."], fireSave: ["экономия выстрела",1," ед."],
   fireCycle: ["сокращение оружейной перезарядки",1," такт."], status: ["длительность помех",1," такт."],
+  chainReach: ["дальность отражённого импульса",1," шаг."], hitMark: ["маяк при попадании",1," сек."],
   scanRange: ["радиус поиска",1," шаг."], scanSave: ["экономия поиска",1," ед."], scanCycle: ["сокращение задержки поиска",1," такт."], mark: ["время маяка",1," сек."],
+  scanCount: ["число целей в докладе",1," ед."],
   healPower: ["лечение",1," здоровья"], cleanPower: ["очистка",1," ед."], repairPower: ["ремонт",1," ед."], serviceSave: ["экономия обслуживания",1," ед."],
   serviceCycle: ["сокращение задержки обслуживания",1," такт."], guard: ["перехват урона экраном",100," п. п."], armor: ["смягчение урона корпусу",100," п. п."],
   capacity: ["постоянная грузоподъёмность",1," кг"], haul: ["дополнительная тяга",1," кг"], stride: ["сокращение задержки шага",1," мс"], noise: ["приглушение перегруза",1," ед."],
@@ -120,9 +190,9 @@ var metrics = {
   charge: ["заряд от батареи",1," ед."], commandSave: ["экономия команд",1," ед."], recovery: ["заряд рекуперации",1," ед."],
   transfer: ["предел передачи",1," ед."], transferLoss: ["эффективность передачи",100," п. п."]
 };
-var weapons = "gun pulse rail cryo plasma arc sonic ion";
-var sensors = "sensor scanner life_array machine_eye depot_scope latch_scope lab_scope evac_scope";
-var treatment = "hemo medic", cleaning = "purifier insulator", workshop = "arm welder selfkit tailor", serviceModes = treatment + " " + cleaning + " " + workshop;
+var weapons = "gun pulse rail cryo plasma arc sonic ion wedge flare resonator";
+var sensors = "sensor scanner life_array machine_eye depot_scope latch_scope lab_scope evac_scope salvage_eye";
+var treatment = "hemo medic trauma_unit", cleaning = "purifier insulator", workshop = "arm welder selfkit tailor", serviceModes = treatment + " " + cleaning + " " + workshop;
 var tuningRows = [
   ["stiff_bore","Жёсткая направляющая","gun pulse rail","firePower",.09],
   ["long_focus","Дальняя фокусировка","pulse rail ion","fireRange",2],
@@ -349,6 +419,70 @@ Object.keys(modifications).forEach(function (id, num) {
       points:base.points * mode.scale, side:side, reactive:mode.extra ? base.points * mode.extra : 0 });
   });
 });
+
+function fieldOption(row) {
+  return { n: row[1], fits: row[2].split(" "), depth: row[3], tier: row[4], need: row[5], effects: row[6], focus: row[7] };
+}
+/* Оснастка собирается из деталей. Эффекты в каждой строке действуют одновременно. */
+[
+  ["gimbal_sight","Гироскопический прицел","pulse wedge rail flare",8,3,{dr_gyro:1,dr_gimbal:1},[["fireRange",1],["hitMark",7]]],
+  ["armour_lattice","Керамическая диафрагма","wedge rail",14,3,{dr_shell:1,ceramic:1},[["firePower",.22,"armored"],["fireSave",-1]]],
+  ["short_pulse","Делитель короткого импульса","pulse wedge ion",8,2,{dr_cap:1,dr_gyro:1},[["fireSave",2],["firePower",-.1]]],
+  ["sink_bank","Сменный теплоотвод","cryo plasma flare",10,3,{dr_sink:1,dr_cap:1},[["fireCycle",3],["fireSave",1]]],
+  ["arc_guides","Разводка отражённого разряда","arc resonator",46,4,{dr_flux:1,dr_prism:1},[["chainReach",2],["status",1]]],
+  ["discharge_gate","Удерживатель разряда","ion cryo zapper",18,3,{dr_logic:1,dr_cap:1},[["status",3],["fireSave",-1]]],
+  ["heat_select","Селектор тёплых целей","plasma flare sonic",28,4,{dr_prism:1,dr_sink:1},[["firePower",.22,"living"],["fireRange",1]]],
+  ["drive_tracking","Компенсатор рывка цели","ion wedge rail",18,3,{dr_logic:1,dr_gyro:1},[["firePower",.17,"machine"],["fireCycle",1]]],
+  ["echo_nozzle","Резонансная насадка","sonic resonator",101,6,{dr_isolator:1,dr_cap:2},[["status",3],["fireRange",1],["fireCycle",-2]]],
+  ["recon_buffer","Буфер сводки","scanner depot_scope latch_scope lab_scope evac_scope salvage_eye",18,3,{dr_logic:1,dr_optic:1},[["scanCount",3],["scanSave",1]]],
+  ["prism_array","Панорамный призменный блок",sensors,28,4,{dr_prism:1,dr_optic:1},[["scanRange",4],["scanSave",-1]]],
+  ["recon_filter","Фильтр отражений",sensors,8,2,{dr_optic:1,dr_gyro:1},[["scanSave",2],["scanCycle",3]]],
+  ["beacon_relay","Релейный блок маяка","sensor life_array machine_eye",18,3,{dr_optic:1,dr_logic:1},[["mark",14],["scanSave",-1]]],
+  ["micro_feed","Быстрая кассета перевязки",treatment,8,2,{dr_feed:1,dr_gimbal:1},[["healPower",7],["serviceCycle",4]]],
+  ["membrane_block","Многослойный картридж",cleaning,18,3,{dr_feed:1,dr_logic:1},[["cleanPower",12],["serviceSave",1]]],
+  ["precision_arm","Пальцы точной доводки",workshop,14,3,{dr_feed:1,dr_shell:1},[["repairPower",6],["serviceSave",1]]],
+  ["impact_grid","Рассеивающие накладки","hull shell mesh shock_cage",14,3,{dr_shell:2,dr_gimbal:1},[["armor",.08],["armor",.05,"machine"]]],
+  ["shield_shunt","Шунт защитного поля","screen",22,3,{dr_bus:1,dr_shell:1},[["guard",.08],["armor",.05,"machine"]]],
+  ["cargo_damping","Гасители раскачивания","cargo sling stabilizer baffle",8,2,{dr_gimbal:1,dr_gyro:1},[["noise",2],["stride",20]]],
+  ["reserve_latches","Парные замки платформы",heavyCarriers,35,4,{dr_latch:2,dr_shell:1},[["payloadReserve",.25],["payloadSave",-1]]],
+  ["cargo_distributor","Распределённое питание платформы",heavyCarriers,101,6,{dr_cell:1,dr_isolator:1},[["payloadSave",2],["payload",-.06]]],
+  ["charge_bus","Обходная шина питания","battery reserve charger induction",72,5,{dr_cell:1,dr_flux:1},[["charge",11],["commandSave",1]]],
+  ["link_stabilizer","Стабилизатор передачи","link_amp",72,5,{dr_cell:1,dr_bus:1},[["transfer",7],["transferLoss",.04]]],
+  ["deep_synchrony","Синхронизация контуров","regen",1501,8,{dr_core:1,dr_relay:1},[["commandSave",2],["recovery",7]]],
+  ["deep_sequence","Контроль силовой нагрузки","nerve charger induction",1501,8,{dr_core:1,dr_relay:1},[["commandSave",2]]]
+].forEach(function (row) {
+  var option = fieldOption(row);
+  option.stage = "engineering";
+  modifications[row[0]] = option;
+});
+
+var profiles = {};
+[
+  ["longshot","Точный дальний выстрел",weapons,8,2,{dr_gyro:1},[["fireRange",2],["fireCycle",-2]]],
+  ["suppress","Удержание цели","cryo ion sonic resonator arc zapper",10,3,{dr_sink:1,dr_cap:1},[["status",3],["fireSave",-2]]],
+  ["armor_first","Охота за бронёй","rail wedge pulse",14,3,{dr_shell:1,dr_gyro:1},[["firePower",.32,"armored"],["firePower",-.12]],"armored"],
+  ["organic_first","Сдерживание тварей","plasma flare sonic pulse",18,3,{dr_logic:1,dr_optic:1},[["firePower",.28,"living"],["fireSave",-1]],"living"],
+  ["machine_first","Перехват машин","rail arc wedge",18,3,{dr_logic:1,dr_cap:1},[["firePower",.28,"machine"],["firePower",-.12]],"machine"],
+  ["steady_burst","Частые короткие выстрелы","gun pulse rail flare",10,3,{dr_sink:1},[["fireCycle",3],["firePower",-.2]]],
+  ["crossfire","Сдерживание группы","arc resonator",46,4,{dr_flux:1},[["chainReach",2],["firePower",-.12]]],
+  ["survey","Широкий поиск",sensors,8,2,{dr_optic:1,dr_gyro:1},[["scanRange",4],["scanSave",-2]]],
+  ["efficient_scan","Короткие сеансы",sensors,8,2,{dr_gyro:1},[["scanSave",2],["scanRange",-2]]],
+  ["long_beacons","Ведение помеченных целей","sensor life_array machine_eye",18,3,{dr_logic:1},[["mark",16],["scanCycle",-5]]],
+  ["catalog_scan","Подробная сводка","scanner depot_scope latch_scope lab_scope evac_scope salvage_eye",18,3,{dr_logic:1,dr_optic:1},[["scanCount",3],["scanCycle",-4]]],
+  ["trauma","Глубокая перевязка",treatment,8,2,{dr_feed:1,dr_gyro:1},[["healPower",9],["serviceSave",-2]]],
+  ["first_aid","Быстрая перевязка",treatment,8,2,{dr_feed:1},[["serviceCycle",10],["healPower",-4]]],
+  ["decontam","Глубокая очистка",cleaning,18,3,{dr_logic:1},[["cleanPower",11],["serviceCycle",-6]]],
+  ["field_repair","Точная подгонка",workshop,8,2,{dr_feed:1,dr_gyro:1},[["repairPower",5],["serviceSave",-1]]],
+  ["escort_guard","Прикрытие напарника","screen",14,3,{dr_shell:1},[["guard",.12],["armor",-.05]]],
+  ["hull_guard","Защита от машин","hull shell mesh shock_cage",14,3,{dr_shell:1},[["armor",.14,"machine"],["armor",-.04,"living"]]],
+  ["field_charge","Быстрая подзарядка","battery reserve charger induction",22,3,{dr_bus:1},[["charge",10],["commandSave",-1]]],
+  ["lean_battery","Длительная смена","battery reserve charger induction",22,3,{dr_bus:1},[["commandSave",1],["charge",-6]]],
+  ["short_link","Передача с малыми потерями","link_amp",22,3,{dr_bus:1},[["transferLoss",.07],["transfer",-4]]],
+  ["cargo_stow","Плотная укладка","cargo sling",8,2,{dr_gimbal:1},[["capacity",16],["noise",-1]]],
+  ["cargo_steady","Плавный перегон","stabilizer baffle",14,3,{dr_shell:1},[["stride",24],["noise",1]]],
+  ["long_recharge","Маршрутная рекуперация","regen",22,3,{dr_bus:1},[["recovery",8],["commandSave",-1]]]
+].forEach(function (row) { profiles[row[0]] = fieldOption(row); });
+
 var difficulty = {
   1: { offset:0, cost:0, energy:1, risk:1, tempo:1 },
   2: { offset:2, cost:1, energy:1.12, risk:1.12, tempo:1.10 },
@@ -361,5 +495,5 @@ Object.keys(equipment).forEach(function (k) {
 });
 LAB.droneCatalog = { groups:groups, equipment:equipment, ranks:ranks, existing:existing, metrics:metrics,
   modifications:modifications, directions:directions, programs:programs, roles:roles, difficulty:difficulty,
-  cargoFrames:cargoFrames, cargoProfiles:cargoProfiles };
+  cargoFrames:cargoFrames, cargoProfiles:cargoProfiles, profiles:profiles, parts:parts, fieldPart:fieldPart };
 })();

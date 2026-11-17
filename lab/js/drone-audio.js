@@ -13,21 +13,25 @@ var textures = {
 var shots = {
   pulse:["work_pass","mw_fry"], rail:["rail_barrel","drone_hit","mw_hum"], cryo:["ev_steam","work_pass"],
   plasma:["mw_fry","ev_steam","pwr_click"], arc:["mw_fry","work_pass","mw_fry"],
-  sonic:["drone_hit","drone_ping"], ion:["mw_hum","mw_fry"]
+  sonic:["drone_hit","drone_ping"], ion:["mw_hum","mw_fry"],
+  wedge:["rail_barrel","work_hammer"], flare:["ev_steam","mw_fry","work_pass"], resonator:["drone_ping","drone_hit","drone_ping"]
 };
 var services = {
   hemo:["paper_turn","pwr_click"], purifier:["ev_steam","work_pass"], insulator:["pwr_click","mw_hum"],
-  welder:["work_weld","work_pass"], selfkit:["exo_servo","work_ratchet"], tailor:["work_file","paper_turn"]
+  welder:["work_weld","work_pass"], selfkit:["exo_servo","work_ratchet"], tailor:["work_file","paper_turn"],
+  trauma_unit:["work_file","paper_turn","pwr_click"]
 };
 var scans = {
   life_array:["drone_ping","paper_turn"], machine_eye:["exo_servo","drone_ping"], depot_scope:["drone_ping","work_ratchet"],
-  latch_scope:["pwr_click","drone_ping"], lab_scope:["mw_hum","drone_ping"], evac_scope:["drone_ping","work_pass"]
+  latch_scope:["pwr_click","drone_ping"], lab_scope:["mw_hum","drone_ping"], evac_scope:["drone_ping","work_pass"],
+  salvage_eye:["pwr_click","drone_ping","work_ratchet"]
 };
 var operations = {
   fire:shots, service:services, scan:scans,
-  energy:{ regen:["exo_servo","mw_hum"], link_amp:["pwr_click","mw_hum","work_pass"], charger:["pwr_click","mw_hum"] },
+  energy:{ regen:["exo_servo","mw_hum"], link_amp:["pwr_click","mw_hum","work_pass"], charger:["pwr_click","mw_hum"],
+    induction:["mw_hum","pwr_click","mw_hum"] },
   move:{ cargo:["exo_servo","pack_heavy"] },
-  armor:{ mesh:["drone_hit","work_ratchet"] }
+  armor:{ mesh:["drone_hit","work_ratchet"], shock_cage:["drone_hit","work_hammer","work_ratchet"] }
 };
 function stamp(id) {
   var h = 13;

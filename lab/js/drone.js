@@ -118,6 +118,13 @@ function programFor(d, role) {
   return catalog.programs[d.programs && d.programs[role.direction]] || catalog.programs[role.direction];
 }
 function explain(effects) { return effects.map(function (e) { return describe(e[0], e[1], e[2], e[3]); }).join(". "); }
+function moduleProfile(d, k) {
+  var def = d && d.moduleProfiles && catalog.profiles[d.moduleProfiles[k]];
+  return def && def.fits && def.fits.indexOf(k) >= 0 ? def : null;
+}
+function fieldEffects(effects) {
+  return effects.map(function (e) { return cap1(describe(e[0], e[1], null, e[2])); }).join(". ") + ".";
+}
 function adjust(metric, models, flags) {
   var d = D(), role = d && ROLES[d.role], total = 0;
   if (!d || d.wreck) return 0;
@@ -137,11 +144,16 @@ function adjust(metric, models, flags) {
     role.effects.forEach(add);
     program.effects.forEach(add);
   }
-  if (d.tuning) keys.forEach(function (key) {
-    var tune = catalog.modifications[d.tuning[key]];
-    if (!hasMod(key) || !tune || !matches(tune.flag)) return;
-    if (tune.metric === metric) total += tune.points + (d.en <= d.enMax * 0.25 ? tune.reactive || 0 : 0);
-    if (tune.side && tune.side[0] === metric) total += tune.side[1];
+  keys.forEach(function (key) {
+    if (!hasMod(key)) return;
+    var tune = d.tuning && catalog.modifications[d.tuning[key]], profile = moduleProfile(d, key);
+    if (tune && matches(tune.flag)) {
+      if (tune.metric === metric) total += tune.points + (d.en <= d.enMax * 0.25 ? tune.reactive || 0 : 0);
+      if (tune.side && tune.side[0] === metric) total += tune.side[1];
+    }
+    function apply(e) { if (e[0] === metric && matches(e[2])) total += e[1]; }
+    if (tune && tune.effects) tune.effects.forEach(apply);
+    if (profile) profile.effects.forEach(apply);
   });
   return total;
 }
@@ -192,7 +204,7 @@ function costK(d) { return d && MS() && MS().flawOf(d) ? 1.3 : 1; }
 function commandSaving() { var m = G().mind || 10; return m >= 18 ? 2 : m >= 13 ? 1 : 0; }
 function energyCost(n, command) {
   var md = MODS[command], kind = md && (md.mount || command === "zapper" ? "fire" : md.group === "sensors" ? "scan" : md.group === "service" ? "service" : "");
-  var general = n >= 6 ? commandSaving() + adjust("commandSave", ["battery", "reserve", "nerve", "charger", "regen", "link_amp"]) : 0;
+  var general = n >= 6 ? commandSaving() + adjust("commandSave", ["battery", "reserve", "nerve", "charger", "induction", "regen", "link_amp"]) : 0;
   return Math.max(1, Math.ceil(n * costK(D()) * policy().energy - 1e-8) - Math.floor(general + (kind ? adjust(kind + "Save", command) : 0)));
 }
 function recorded(event, id, key, place) { if (LAB.droneAudio) LAB.droneAudio.play(event, id, key, place); }
@@ -403,6 +415,32 @@ function tuneModule(k, id) {
   loadChanged();
   return true;
 }
+function knownModuleProfile(d, k, id) {
+  return !!(d && d.profileLessons && d.profileLessons[k] && d.profileLessons[k][id]);
+}
+function setModuleProfile(k, id) {
+  var d = D(), md = MODS[k], def = catalog.profiles[id];
+  if (!d || !md || !hasMod(k) || (id && (!def || !def.fits || def.fits.indexOf(k) < 0))) return false;
+  if (moduleProfile(d, k) === (def || null)) return false;
+  var learn = def && !knownModuleProfile(d, k, id), need = learn ? materialCost(def) : null;
+  var why = d.wreck ? "сначала почините дрона" : learn && requirements(def).why || canWork(learn ? def.tier : 2, need);
+  if (why) return moduleError(md, why);
+  if (!d.moduleProfiles) d.moduleProfiles = {};
+  if (def) {
+    if (learn) {
+      W().take(need);
+      if (!d.profileLessons) d.profileLessons = {};
+      if (!d.profileLessons[k]) d.profileLessons[k] = {};
+      d.profileLessons[k][id] = true;
+    }
+    d.moduleProfiles[k] = id;
+  } else delete d.moduleProfiles[k];
+  worked(learn ? 5 : 2, learn ? 3 : 0);
+  recorded("tune", id || k, k);
+  say(cap1(md.n) + ". " + (def ? "Специализация «" + def.n + "». " + fieldEffects(def.effects) : "Штатный режим.") + cargoNotice(md));
+  loadChanged();
+  return true;
+}
 function reinforceChassis() {
   var d = D(), rank = chassisRank(d), next = CARGO_FRAMES[rank + 1];
   if (!d || !next) return false;
@@ -602,6 +640,12 @@ function hostiles(r) {
   return c.visibleFoes(r).filter(function (o) { return !o.dead && !o.calm && !o.ally && !o.neutral && !o.disguised && !o.burrowed && !o.phased; });
 }
 function nearest(list) { var g = G(), b = null, bd = 99; list.forEach(function (o) { var d = Math.max(Math.abs(o.x - g.x), Math.abs(o.y - g.y)); if (d < bd) { bd = d; b = o; } }); return b; }
+function weaponTarget(k, list) {
+  var profile = moduleProfile(D(), k), preferred = profile && profile.focus;
+  var focused = preferred ? nearest(list.filter(function (o) { return targetFlags(o).indexOf(preferred) >= 0; })) : null;
+  return focused || nearest(list);
+}
+function scanCount(k) { return Math.max(1, Math.min(10, 5 + Math.floor(adjust("scanCount", k)))); }
 function scout(auto) {
   var d = D(), c = C(), g = G();
   if (!active() || !hasMod("sensor")) { if (!auto) say(d && d.wreck ? "Дрон сбит." : !d ? "Дрона нет." : !d.out ? "Дрон свёрнут." : "Нужен сенсорный блок."); return false; }
@@ -629,7 +673,7 @@ function scanSupplies() {
     .forEach(function (o) { list.push({ o: o, n: gm().objName(o) }); });
   list.sort(function (a, b) { return distance(a.o) - distance(b.o); });
   snd("drone_ping", "scan_soft");
-  say(list.length ? "Поисковый блок. Ближайшие цели: " + list.slice(0, 5).map(function (x) { return x.n + ", " + gm().relDir(x.o.x, x.o.y); }).join(". ") + "." : "Поисковый блок. В радиусе " + radius + " шагов по открытым линиям подходящих целей нет.");
+  say(list.length ? "Поисковый блок. Ближайшие цели: " + list.slice(0, scanCount("scanner")).map(function (x) { return x.n + ", " + gm().relDir(x.o.x, x.o.y); }).join(". ") + "." : "Поисковый блок. В радиусе " + radius + " шагов по открытым линиям подходящих целей нет.");
   save();
   return true;
 }
@@ -676,12 +720,15 @@ function hitBack(f, p) {
 function depthK() { var g = G(); return 1 + 0.14 * (LAB.foeLevel(g.L, g.F) - 1); }
 function reduction(source) {
   if (!active()) return 0;
-  return Math.min(0.45, (hasMod("mesh") ? effect("mesh") / 100 : 0) + adjust("armor", ["hull", "shell", "mesh", "screen"], source ? targetFlags(source) : []));
+  var liner = hasMod("shock_cage") ? "shock_cage" : hasMod("mesh") ? "mesh" : null;
+  var base = liner ? effect(liner) / 100 : 0;
+  return Math.max(0, Math.min(0.45, base + adjust("armor", ["hull", "shell", "mesh", "shock_cage", "screen"], source ? targetFlags(source) : [])));
 }
 function hurt(n, source) {
   var d = D(); if (!d || d.wreck) return;
   d.hp = Math.max(0, Math.round((d.hp - n * policy().risk * (1 - reduction(source))) * 100) / 100);
-  if (hasMod("mesh")) recorded("armor", "mesh");
+  if (hasMod("shock_cage")) recorded("armor", "shock_cage");
+  else if (hasMod("mesh")) recorded("armor", "mesh");
   else snd("drone_hit", "shield_hit_foe", { gain: 0.5 });
   if (d.hp <= 0) { d.wreck = 1; snd("drone_down", "drone_death"); sayq(cap1(name()) + " сбит. Блок управления цел — дрона можно починить у верстака."); if (LAB.load) setTimeout(function () { LAB.safe(function () { LAB.load.after(); }); }, 0); /* (после 4.6) сбитый — в рюкзаке, и грузовой захват больше не держит */ }
   else if (d.hp <= d.hpMax * 0.3) sayOnce("dronelow", cap1(name()) + " повреждён: " + d.hp + " из " + d.hpMax + ".", 15000);
@@ -776,14 +823,15 @@ function pack(v) {
   return true;
 }
 function batteryGain() {
-  return 50 + (hasMod("charger") ? effect("charger") : 0) + Math.floor(adjust("charge", ["charger","battery","reserve"]));
+  var charger = hasMod("induction") ? "induction" : hasMod("charger") ? "charger" : null;
+  return Math.max(1, 50 + (charger ? effect(charger) : 0) + Math.floor(adjust("charge", ["charger","induction","battery","reserve"])));
 }
 function chargeBat() {
   var d = D(), g = G(); if (!d) { say("Дрона нет."); return false; }
   if (d.en >= d.enMax) { say("Энергия дрона полна."); return false; }
   if (!(g.ammo.energy > 0)) { say("Энергобатарей нет."); return false; }
   g.ammo.energy--; charge(batteryGain());
-  recorded("energy", "charger");
+  recorded("energy", hasMod("induction") ? "induction" : "charger");
   say(cap1(name()) + " подзаряжен: " + Math.round(d.en) + " из " + d.enMax + ".");
   save(); loadChanged();
   return true;
@@ -872,8 +920,23 @@ function cargoProfileMenu(k) {
   };
   menu("Специализация грузовой платформы", items(), { keep: true, rebuild: items });
 }
+function moduleProfileMenu(k, ids) {
+  var items = function () {
+    var d = D(), current = moduleProfile(d, k);
+    var base = [{ label: "Штатный режим." + (current ? "" : " Активен."), keep: true, fn: function () { setModuleProfile(k, null); } }];
+    return base.concat(ids.map(function (id) {
+      var def = catalog.profiles[id], known = knownModuleProfile(d, k, id);
+      var target = { armored: "Сначала выбирает бронированные цели.", machine: "Сначала выбирает машины.", living: "Сначала выбирает тварей." }[def.focus];
+      return { label: def.n + ". " + fieldEffects(def.effects) + (target ? " " + target : "") +
+        (known ? " Изучена." : " " + requirementLine(def) + " Детали " + W().costText(materialCost(def)) + ".") +
+        (def === current ? " Активна." : ""), keep: true, fn: function () { setModuleProfile(k, id); } };
+    }), back());
+  };
+  menu("Специализация узла «" + MODS[k].n + "»", items(), { keep: true, rebuild: items });
+}
 function moduleMenu(k) {
   var md = MODS[k];
+  var profileIds = Object.keys(catalog.profiles).filter(function (id) { return catalog.profiles[id].fits.indexOf(k) >= 0; });
   var items = function () {
     var d = D(), on = d && d.mods.indexOf(k) >= 0, effectInfo = RANK_EFFECTS[k], rank = on ? modRank(d, k) : 1;
     var ranks = (effectInfo ? [1, 2, 3] : [1]).filter(function (r) { return G().inv[modId(k, r)] > 0; });
@@ -893,6 +956,11 @@ function moduleMenu(k) {
           " " + requirementLine(next) + " Детали " + W().costText(md.lift ? materialCost(next) : next.need) + ".", keep: true, fn: function () { upgradeMod(k); } });
       }
       if (md.lift) out.push({ label: "Специализация платформы. «" + cargoProfile(d, k).n + "».", fn: function () { cargoProfileMenu(k); } });
+      else if (profileIds.length) {
+        var profile = moduleProfile(d, k);
+        out.push({ label: "Специализация узла. " + (profile ? "«" + profile.n + "»." : "Штатный режим."),
+          fn: function () { moduleProfileMenu(k, profileIds); } });
+      }
       if (compatibleTuning(k).length) {
         var tune = d.tuning && catalog.modifications[d.tuning[k]];
         out.push({ label: "Модификации." + (tune ? " Действует «" + tune.n + "»." : ""), fn: function () { tuningMenu(k); } });
@@ -921,13 +989,13 @@ function requirementLine(def) {
 function compatibleTuning(k) {
   return Object.keys(catalog.modifications).filter(function (id) { return catalog.modifications[id].fits.indexOf(k) >= 0; });
 }
-var tuningModes = { standard:"Стандартные", power:"Форсированные", economy:"Бережливые", reserve:"Резервные" };
+var tuningModes = { standard:"Стандартные", power:"Форсированные", economy:"Бережливые", reserve:"Резервные", engineering:"Инженерные" };
 function tuningMenu(k) {
   var ids = compatibleTuning(k), items = function () {
     var d = D(), rows = Object.keys(tuningModes).map(function (mode) {
       var matches = ids.filter(function (id) { return (catalog.modifications[id].stage || "standard") === mode; });
-      return { label:tuningModes[mode] + ", " + matches.length, fn:function () { tuningOptions(k, mode, matches); } };
-    });
+      return matches.length ? { label:tuningModes[mode] + ", " + matches.length, fn:function () { tuningOptions(k, mode, matches); } } : null;
+    }).filter(Boolean);
     if (d.tuning && d.tuning[k]) rows.push({ label:"Отключить модификацию", keep:true, fn:function () { tuneModule(k, null); } });
     return rows.concat(back());
   };
@@ -939,7 +1007,7 @@ function tuningOptions(k, mode, ids) {
     var d = D();
     return ids.map(function (id) {
       var t = catalog.modifications[id];
-      var effect = describe(t.metric, t.points, null, t.flag) + ".";
+      var effect = t.effects ? fieldEffects(t.effects) : describe(t.metric, t.points, null, t.flag) + ".";
       if (t.side) effect += " " + cap1(describe(t.side[0], t.side[1])) + ".";
       if (t.reactive) effect += " При остатке заряда до четверти: " + describe(t.metric, t.reactive) + " дополнительно.";
       return { label:t.n + ". " + cap1(effect) + " " + requirementLine(t) + " Детали: " + W().costText(materialCost(t)) + "." +
@@ -947,6 +1015,18 @@ function tuningOptions(k, mode, ids) {
     }).concat(back());
   };
   menu(tuningModes[mode] + " настройки узла «" + MODS[k].n + "»", items(), { keep:true, rebuild:items });
+}
+/* В справочнике деталей показываем схемы, доступные на указанной глубине. */
+function partUses(part, level) {
+  if (!catalog.parts[part]) return [];
+  var found = [];
+  [MODS, catalog.modifications, catalog.profiles].forEach(function (entries) {
+    Object.keys(entries).forEach(function (id) {
+      var def = entries[id];
+      if (def.need && def.need[part] && unlockDepth(def) <= level) found.push(def.n.toLowerCase());
+    });
+  });
+  return found;
 }
 function roleMenu() {
   var rows = Object.keys(catalog.directions).map(function (key) {
@@ -1111,8 +1191,8 @@ function quick() {
 LAB.drone = {
   MODS: MODS, NEED: NEED, D: D, has: has, slots: slots, active: active, hasMod: hasMod, short: short,
   build: build, craftMod: craftMod, addMod: addMod, delMod: delMod, upgradeMod: upgradeMod, modRank: modRank, setRole: setRole, repair: repair, scrap: scrapDrone, scout: scout, scanSupplies: scanSupplies, treat: treat,
-  craftCable: craftCable, transfer: transfer, tuneModule: tuneModule, setProgram: setProgram,
-  effect: effect, adjust: adjust, delay: delay, spend: spend, hostiles: hostiles, targetFlags: targetFlags, hitBack: hitBack,
+  craftCable: craftCable, transfer: transfer, tuneModule: tuneModule, setProgram: setProgram, setModuleProfile: setModuleProfile, partUses: partUses,
+  effect: effect, adjust: adjust, delay: delay, spend: spend, hostiles: hostiles, targetFlags: targetFlags, weaponTarget: weaponTarget, scanCount: scanCount, hitBack: hitBack,
   recorded: recorded, save: save, markSeconds: markSeconds, overloadHelp: overloadHelp, directionRank: directionRank, unlockDepth: unlockDepth,
   hurt: hurt, onHurt: onHurt, onStep: onStep, tick: tick, onXP: onXP, commandSaving: commandSaving, energyCost: energyCost,
   carriedWeight: carriedWeight, carryCapacity: carryCapacity, cargoRecovery: cargoRecovery, motionNoise: motionNoise,

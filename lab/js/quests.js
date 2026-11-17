@@ -171,7 +171,7 @@ K("fetch", { st: "trade", free: true, bring: true, hand: true,
   gen: function (c) {
     /* (3.7, нелогичность) не то, что заказчик продаёт сам: «купить у него и сдать ему же» было выгодно */
     var own = ownGoods(c.n, c.L);
-    var parts = LAB.PARTS.filter(function (p) { return LAB.ITEMS[p] && (LAB.PART_DEPTH[p] || 1) <= Math.max(c.L, 1) && p !== c.avoid && !own[p]; });
+    var parts = LAB.PARTS.filter(function (p) { return LAB.ITEMS[p] && !LAB.ITEMS[p].dronePart && (LAB.PART_DEPTH[p] || 1) <= Math.max(c.L, 1) && p !== c.avoid && !own[p]; });
     if (!parts.length) return null;
     parts.sort(function (a, b) { return (LAB.ITEMS[a].price || 0) - (LAB.ITEMS[b].price || 0) || (a < b ? -1 : 1); });
     /* чем дальше, тем деталь реже и дороже */
@@ -866,7 +866,7 @@ function questGift(n, h, stage, avoid) {
     }
     if (pick === "@herb") { var hb = LAB.medic && LAB.medic.HERBS; pick = hb && LAB.medic.era ? hb[LAB.medic.era(L)] : null; if (!pick) continue; }
     if (pick === "@part") {
-      var parts = LAB.PARTS.filter(function (p) { return (LAB.PART_DEPTH[p] || 1) <= L && p !== avoid && !mine[p]; });
+      var parts = LAB.PARTS.filter(function (p) { return LAB.PART_FROM[p] !== "drone" && (LAB.PART_DEPTH[p] || 1) <= L && p !== avoid && !mine[p]; });
       var own = parts.filter(function (p) { return LAB.Le(LAB.PART_DEPTH[p] || 1) > LAB.Le(L) - 20; }); /* (3.7) деталь своего блока */
       if (own.length) parts = own;
       if (!parts.length) continue;

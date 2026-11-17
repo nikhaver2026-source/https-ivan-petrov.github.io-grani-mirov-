@@ -517,8 +517,8 @@ console.log("✓ Три настройки оружия, экономия зар
 
 // Расширенный каталог. Каждая модель имеет рецепт, игровой эффект и корректную настройку.
 const catalog = LAB.droneCatalog;
-assert.equal(Object.keys(drone.MODS).length, 44);
-assert.equal(Object.keys(catalog.modifications).length, 212);
+assert.equal(Object.keys(drone.MODS).length, 51);
+assert.equal(Object.keys(catalog.modifications).length, 237);
 assert.equal(Object.keys(catalog.roles).length, 500);
 assert.equal(Object.keys(catalog.programs).length, 800);
 for (const [key, family] of Object.entries(catalog.directions)) {
@@ -531,9 +531,25 @@ for (const md of Object.values(drone.MODS)) {
   assert.ok(Object.keys(md.need).every(id => LAB.ITEMS[id]), md.n);
 }
 for (const [id, tune] of Object.entries(catalog.modifications)) {
-  assert.ok(catalog.metrics[tune.metric] && tune.fits.every(k => drone.MODS[k]), id);
+  assert.ok(tune.fits.every(k => drone.MODS[k]), id);
+  assert.ok(tune.effects ? tune.effects.every(e => catalog.metrics[e[0]]) : catalog.metrics[tune.metric], id);
 }
-console.log("✓ Каталог: 44 устройства, 212 модификаций, 500 специализаций и 800 направлений");
+assert.equal(Object.keys(catalog.profiles).length, 23);
+assert.equal(Object.keys(catalog.parts).length, 16);
+for (const [id, part] of Object.entries(catalog.parts)) {
+  const recipe = LAB.RECIPES.find(rc => rc.out === id);
+  assert.equal(LAB.ITEMS[id].kind, "part");
+  assert.equal(LAB.PART_DEPTH[id], part.depth);
+  assert.equal(load.itemWt(id), part.wt);
+  assert.ok(recipe && work.tierOf(recipe) === part.tier && recipe.minL === part.depth, id);
+  assert.ok(Object.keys(recipe.need).every(key => LAB.ITEMS[key] && (LAB.PART_DEPTH[key] || 1) <= part.depth), id);
+}
+for (const def of [...Object.values(catalog.profiles), ...Object.values(catalog.modifications).filter(m => m.effects)]) {
+  assert.ok(def.fits.every(k => drone.MODS[k]) && def.effects.every(e => catalog.metrics[e[0]]), def.n);
+  assert.ok(Object.keys(def.need).every(id => LAB.ITEMS[id] && (LAB.PART_DEPTH[id] || 1) <= def.depth), def.n);
+  assert.ok(Number.isInteger(def.depth), def.n);
+}
+console.log("✓ Каталог: 51 устройство, 237 модификаций, 23 специализации узлов и 16 новых деталей");
 
 // Глубина комплекса проверяется отдельно от номера этажа и развития героя.
 const advanced = g.G, machine = drone.D();
@@ -645,6 +661,10 @@ for (const [action, ids] of [["craft",Object.keys(drone.MODS)],["tune",Object.ke
 }
 assert.ok(heard.every(([, opts]) => opts.fb === null));
 assert.ok(audio.plan("fire", "rail", "rail", true)[0].gain < audio.plan("fire", "rail", "rail", false)[0].gain);
+for (const [event, key] of [["fire","wedge"], ["fire","flare"], ["fire","resonator"], ["scan","salvage_eye"],
+    ["service","trauma_unit"], ["energy","induction"], ["armor","shock_cage"]]) {
+  assert.ok(audio.plan(event, key, key, false).every(layer => LAB.SND[layer.clip]?.f.length), key);
+}
 LAB.Sound = originalSound;
 assert.equal(g.saveSlot(3), true);
 assert.equal(g.loadSlot(3), true);
@@ -658,9 +678,10 @@ console.log("✓ Звуковые варианты из записей и сох
 const checked = g.G, checkedDrone = drone.D(), checkedBench = g.CUR.fl.objs.find(obj => obj.id === bench.id);
 checked.x = checkedBench.x; checked.y = checkedBench.y;
 work._at(checkedBench);
-work.bench(checkedBench).tier = 6;
+work.bench(checkedBench).tier = 8;
 work.bench(checkedBench).dmg = false;
 checked.event = "norm";
+checked.maxF[321] = 1;
 assert.equal(drone.delMod("regen"), true);
 const losBefore = LAB.los;
 LAB.los = () => true;
@@ -675,7 +696,7 @@ for (const [id, md] of Object.entries(catalog.equipment).filter(([, def]) => def
   checkedDrone.en = 80;
   assert.ok(LAB.droneOps.run(id, false), messages.at(-1));
   assert.ok(Math.min(host.hp, living.hp) < 100, id);
-  if (id === "arc") assert.ok(host.hp < 100 && living.hp < 100);
+  if (id === "arc" || id === "resonator") assert.ok(host.hp < 100 && living.hp < 100);
   if (id === "cryo") assert.ok(living.frozen > 0);
   if (id === "sonic") assert.ok(living.blindT > 0);
   if (id === "ion") assert.ok(host.frozen > 0 && living.hp === 100);
@@ -693,7 +714,7 @@ assert.match(messages.at(-1), /Открытая дверь/);
 assert.doesNotMatch(messages.at(-1), /Закрытая дверь/);
 g.CUR.fl.doors = oldDoors;
 LAB.los = losBefore;
-console.log("✓ Все семь новых стволов выполняют команды, сканер сохраняет тайные двери");
+console.log("✓ Десять сменных стволов выполняют команды, сканер сохраняет тайные двери");
 
 function selectMenuItem(matcher) {
   const row = top().items.find(item => matcher.test(typeof item.label === "function" ? item.label() : item.label));
@@ -833,6 +854,159 @@ assert.equal(drone.D().tuning.cargo_deep, "cargo_braces");
 assert.equal(drone.carryCapacity(), 75000);
 LAB.combat.danger = transportDanger;
 console.log("✓ Платформы на 1–75 тонн, бо́льший резерв, шум, разрядка, разгрузка и сохранение");
+
+// Запчасть можно купить, снять с машины или собрать, затем применить её в оснастке.
+menus.length = 0;
+g.newGame(); LAB.combat.stop();
+g.enterFloor(3, 1, "down", true); LAB.combat.stop();
+const engineer = g.G;
+engineer.diff = 1; engineer.lvl = 30; engineer.credits = 0;
+engineer.event = "norm"; engineer.eventUntil = 1e9;
+const partsPost = g.CUR.fl.objs.find(obj => obj.type === "supply");
+LAB.supply.postMenu(partsPost);
+selectMenuItem(/^Запчасти для дронов$/);
+assert.ok(!top().items.some(row => /Распределитель Нижних/.test(row.label)));
+const shelf = g.objState(partsPost).stock.droneParts.find(e => e.id === "dr_gimbal");
+const oldStock = shelf.n;
+const stockRow = selectMenuItem(/^Карданный подвес/);
+assert.equal(shelf.n, oldStock);
+assert.match(messages.at(-1), /Не хватает кредитов/);
+engineer.credits = 500;
+const cost = Number(stockRow.label.match(/— (\d+) /)[1]);
+stockRow.fn();
+assert.equal(engineer.credits, 500 - cost);
+assert.equal(engineer.inv.dr_gimbal, 1);
+assert.equal(shelf.n, oldStock - 1);
+
+let cameraPart;
+for (let i = 0; i < 100 && !cameraPart; i++) {
+  const drops = [];
+  work.drops({ id: "camera-" + i, kind: "mech", beh: ["camera"] }, drops, () => .99, 1);
+  cameraPart = drops.find(drop => drop.item === "dr_optic");
+}
+assert.ok(cameraPart);
+g.giveItem(cameraPart, true);
+assert.equal(engineer.inv.dr_optic, 1);
+const containerParts = [];
+for (let i = 0; i < 8 && !containerParts.length; i++) {
+  const floor = LAB.getFloor("drone-store-" + i, 14, 1);
+  for (const roomObject of floor.objs) {
+    containerParts.push(...(roomObject.loot || []).filter(drop => LAB.ITEMS[drop.item]?.dronePart));
+  }
+}
+assert.ok(containerParts.length && containerParts.every(drop => LAB.PART_DEPTH[drop.item] <= 14));
+
+const labBench = g.CUR.fl.objs.find(obj => obj.type === "workbench");
+engineer.x = labBench.x; engineer.y = labBench.y;
+work._at(labBench);
+work.bench(labBench).tier = 8; work.bench(labBench).dmg = false;
+const normalDanger = LAB.combat.danger;
+LAB.combat.danger = () => false;
+for (const key of ["cap","cell","wire","kv_ctrl","servo","optic","scrap","ceramic","magnet","panel","relay","chip"]) engineer.inv[key] = 30;
+work.open(labBench);
+selectMenuItem(/^Запчасти для дронов/);
+selectMenuItem(/^Импульсный конденсатор/);
+assert.ok(engineer.inv.dr_cap > 0);
+assert.ok(engineer.craftN.dr_cap > 0);
+const engineerDrone = drone.build({ name: "Механик" });
+assert.ok(engineerDrone, messages.at(-1));
+engineerDrone.lvl = 10;
+const capCount = engineer.inv.dr_cap;
+assert.equal(drone.addMod("wedge"), false);
+assert.match(messages.at(-1), /уровень комплекса 12/);
+assert.equal(engineer.inv.dr_cap, capCount);
+engineer.maxF[14] = 1;
+assert.ok(drone.addMod("wedge"), messages.at(-1));
+assert.equal(engineer.inv.dr_gimbal, 0);
+assert.equal(engineer.inv.dr_cap, capCount - 1);
+engineer.inv.dr_gimbal = 2;
+engineer.inv.dr_gyro = 4;
+engineer.inv.dr_shell = 2;
+drone.benchMenu(8);
+selectMenuItem(/^Оборудование\. Вооружение/);
+selectMenuItem(/^Керамический излучатель/);
+selectMenuItem(/^Специализация узла/);
+selectMenuItem(/^Охота за бронёй/);
+assert.equal(engineerDrone.moduleProfiles.wedge, "armor_first");
+assert.equal(engineer.inv.dr_shell, 1);
+assert.ok(drone.setModuleProfile("wedge", null));
+assert.ok(drone.setModuleProfile("wedge", "armor_first"));
+assert.equal(engineer.inv.dr_shell, 1, "повторный выбор изученной специализации бесплатен");
+assert.equal(drone.setModuleProfile("wedge", "trauma"), false);
+menus.pop(); LAB.ui.rebuildTop();
+selectMenuItem(/^Модификации/);
+selectMenuItem(/^Инженерные/);
+selectMenuItem(/^Гироскопический прицел/);
+assert.equal(engineerDrone.tuning.wedge, "gimbal_sight");
+assert.equal(engineer.inv.dr_gimbal, 1);
+assert.equal(drone.adjust("fireRange", "wedge"), 1);
+
+const closer = { name: "Тварь", kind: "bio", arm: 0, hp: 100, x: engineer.x + 1, y: engineer.y };
+const armored = { name: "Бронированный дозорный", kind: "mech", arm: 9, hp: 100, x: engineer.x + 3, y: engineer.y };
+LAB.combat.visibleFoes = () => [closer, armored];
+LAB.combat.damageFoe = (target, amount) => { target.hp -= amount; };
+engineerDrone.en = 100;
+assert.ok(LAB.droneOps.run("wedge", false), messages.at(-1));
+assert.equal(closer.hp, 100);
+assert.ok(armored.hp < 100 && armored.mark > Date.now());
+LAB.combat.visibleFoes = originalVisible;
+LAB.combat.damageFoe = originalDamage;
+assert.ok(drone.delMod("wedge"));
+assert.equal(drone.adjust("fireRange", "wedge"), 0);
+assert.ok(drone.addMod("wedge") && drone.adjust("fireRange", "wedge") === 1);
+
+engineer.maxF[72] = 1;
+for (const key of ["dr_cell","dr_bus","dr_flux","dr_cap","dr_feed","dr_logic","gel"]) engineer.inv[key] = 4;
+assert.ok(drone.addMod("induction"), messages.at(-1));
+assert.equal(drone.addMod("charger"), false, "преобразователи используют одно крепление");
+assert.ok(drone.setModuleProfile("induction", "field_charge"));
+assert.ok(drone.tuneModule("induction", "charge_bus"));
+engineerDrone.en = 0;
+engineer.ammo.energy = 1;
+assert.ok(drone.chargeBat());
+assert.equal(engineerDrone.en, 89);
+assert.equal(engineer.ammo.energy, 0);
+assert.ok(drone.addMod("trauma_unit"), messages.at(-1));
+assert.ok(drone.setModuleProfile("trauma_unit", "trauma"), messages.at(-1));
+engineer.hpMax = 100; engineer.hp = 10; engineer.st.bleed = 2; engineer.inv.bandage = 1;
+assert.ok(LAB.droneOps.run("trauma_unit", false), messages.at(-1));
+assert.equal(engineer.hp, 43);
+assert.equal(engineer.st.bleed, 0);
+assert.equal(engineer.inv.bandage, 0);
+assert.ok(drone.delMod("trauma_unit"));
+engineer.inv.dr_shell = 3; engineer.inv.dr_latch = 1; engineer.inv.dr_bus = 1;
+assert.ok(drone.addMod("shock_cage"), messages.at(-1));
+assert.equal(drone.addMod("mesh"), false);
+assert.ok(drone.setModuleProfile("shock_cage", "hull_guard"));
+engineerDrone.hp = 30;
+drone.hurt(10, armored);
+assert.equal(engineerDrone.hp, 23.3);
+engineerDrone.hp = 30;
+drone.hurt(10, closer);
+assert.equal(engineerDrone.hp, 21.5);
+assert.ok(drone.delMod("shock_cage"));
+engineer.inv.dr_optic = 2;
+assert.ok(drone.addMod("salvage_eye"), messages.at(-1));
+const droppedParts = g.CUR.fs.drops, scanLos = LAB.los, scanLoot = g.CUR.fl.items;
+g.CUR.fl.items = [];
+g.CUR.fs.drops = Object.keys(catalog.parts).slice(0, 8).map((part, i) => ({
+  id: "scan-part-" + i, kind: "item", item: part, n: 1, x: engineer.x, y: engineer.y
+}));
+LAB.los = () => true;
+assert.ok(drone.setModuleProfile("salvage_eye", "catalog_scan"), messages.at(-1));
+assert.equal(drone.scanCount("salvage_eye"), 8);
+assert.ok(LAB.droneOps.run("salvage_eye", false), messages.at(-1));
+assert.match(messages.at(-1), /Матрица управления/i);
+g.CUR.fs.drops = droppedParts;
+g.CUR.fl.items = scanLoot;
+LAB.los = scanLos;
+assert.ok(g.saveSlot(1) && g.loadSlot(1));
+assert.equal(drone.D().moduleProfiles.wedge, "armor_first");
+assert.equal(drone.D().tuning.wedge, "gimbal_sight");
+assert.equal(drone.D().profileLessons.wedge.armor_first, true);
+assert.equal(g.objState(partsPost).stock.droneParts.find(e => e.id === "dr_gimbal").n, oldStock - 1);
+LAB.combat.danger = normalDanger;
+console.log("✓ Добыча, продажа, крафт, бой, защита, лечение, сканер, заряд и настройки после загрузки");
 
 // Личное хранилище открывается из реального меню пункта снабжения.
 menus.length = 0;

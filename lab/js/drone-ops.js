@@ -14,10 +14,14 @@ function shortName(o) { return String(o.name || "Враг").split(",")[0]; }
 function shot(k, cfg) {
   var radius = cfg.range + Math.floor(drone.adjust("fireRange", k));
   var list = foes(radius);
-  var primary = list.find(function (f) { return !cfg.target || f.kind === cfg.target; });
+  var eligible = cfg.target ? list.filter(function (f) { return f.kind === cfg.target; }) : list;
+  var primary = drone.weaponTarget(k, eligible);
   if (!primary) return "Нет подходящей цели по открытой линии.";
   var cur = game().CUR;
-  var chain = cfg.chain && list.filter(function (f) { return f !== primary && dist(f, primary) <= cfg.chain && LAB.los(cur.fl, cur.fs, primary.x, primary.y, f.x, f.y); }).sort(function (a, b) { return dist(a, primary) - dist(b, primary); })[0];
+  var jump = cfg.chain ? cfg.chain + Math.floor(drone.adjust("chainReach", k)) : 0;
+  var chain = jump && eligible.filter(function (f) {
+    return f !== primary && dist(f, primary) <= jump && LAB.los(cur.fl, cur.fs, primary.x, primary.y, f.x, f.y);
+  }).sort(function (a, b) { return dist(a, primary) - dist(b, primary); })[0];
   return function () {
     var d = drone.D(), g = game().G;
     var scale = (1 + 0.14 * (LAB.foeLevel(g.L, g.F) - 1)) * (1 + 0.06 * (d.lvl - 1));
@@ -28,6 +32,8 @@ function shot(k, cfg) {
       var amount = Math.max(1, Math.round(drone.effect(k) * scale * balance * fraction));
       var status = Math.floor(drone.adjust("status", k, flags)), hardened = target.aff && target.aff.indexOf("hardened") >= 0;
       LAB.combat.damageFoe(target, amount, cfg.type, { quiet: true, ally: true, by: "ally" });
+      var beacon = drone.adjust("hitMark", k, flags);
+      if (!target.dead && beacon > 0) target.mark = Math.max(target.mark || 0, Date.now() + beacon * 1000);
       if (!target.dead && !target.boss && !hardened) {
         if (cfg.slow && (cfg.type !== "cryo" || !(target.res && target.res.cryo <= 0.5))) target.frozen = Math.max(target.frozen || 0, cfg.slow + status);
         if (cfg.blind) target.blindT = Math.max(target.blindT || 0, cfg.blind + status);
@@ -56,6 +62,14 @@ function scan(k, cfg) {
   } else if (cfg.target === "doors") {
     targets = (cur.fl.doors || []).filter(function (o) { return !o.lock || o.lock.type !== "secret" || !!(cur.fs.secrets && cur.fs.secrets[o.id]); })
       .map(function (o) { return { o: o, text: cur.fs.doors && cur.fs.doors[o.id] === 2 ? "Открытая дверь" : "Закрытая дверь" }; });
+  } else if (cfg.target === "parts") {
+    targets = cur.fl.objs.filter(function (o) {
+      var st = cur.fs.objs[o.id], r = cur.fl.rooms[o.room], room = r && LAB.ROOMS[r.type];
+      return (o.type === "crate" || o.type === "locker") && !(st && st.open) && room && (room.loot === "parts" || room.loot === "tech");
+    }).map(function (o) { return { o: o, text: g.objName(o) }; });
+    g.floorItems().forEach(function (o) {
+      if (o.kind === "item" && LAB.ITEMS[o.item] && LAB.ITEMS[o.item].kind === "part") targets.push({ o: o, text: g.itemName(o) });
+    });
   } else {
     targets = cur.fl.objs.filter(function (o) { return scanObjects[cfg.target].indexOf(o.type) >= 0; })
       .map(function (o) { return { o: o, text: g.objName(o) }; });
@@ -67,7 +81,7 @@ function scan(k, cfg) {
   targets = targets.filter(function (t) { return dist(g.G, t.o) <= radius && view(t.o); })
     .sort(function (a, b) { return dist(g.G, a.o) - dist(g.G, b.o); });
   return function () {
-    var listed = targets.slice(0, 5);
+    var listed = targets.slice(0, drone.scanCount(k));
     drone.recorded("scan", k, k, listed.length ? listed[0].o : null);
     if (isFoe) listed.forEach(function (t) { t.o.mark = Math.max(t.o.mark || 0, Date.now() + drone.markSeconds(k) * 1000); });
     if (!listed.length) return "В пределах " + radius + " шагов подходящих целей по открытой линии нет.";
@@ -91,7 +105,7 @@ function service(k, cfg) {
   var t = serviceTarget(cfg.method, g);
   if (!t.obj) return "Подходящее снаряжение не выбрано.";
   var current = t.obj[t.key] == null ? t.bound : t.obj[t.key];
-  var power = drone.effect(k) + Math.floor(drone.adjust(t.metric, k));
+  var power = Math.max(0, drone.effect(k) + Math.floor(drone.adjust(t.metric, k)));
   var delta = Math.min(power, Math.abs(current - t.bound));
   if (!delta && !t.bleed) return "Восстанавливать сейчас нечего.";
   if (!(g.inv[cfg.supply] > 0)) return "Нужен расходник «" + LAB.ITEMS[cfg.supply].n + "».";

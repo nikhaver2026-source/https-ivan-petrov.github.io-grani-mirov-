@@ -1354,6 +1354,12 @@ function throwDevice(id) {
 function drops(f, list, r, dk) {
   if (!f || f.kind !== "mech" || (f.spawned && !f.oko)) return; /* (3.0) присланные ОКО — как обычные */
   var L = G().L, beh = behOf(f);
+  if (LAB.droneCatalog && !f.spawned && !f.ally) {
+    var source = beh.indexOf("camera") >= 0 ? "camera" : beh.indexOf("turret") >= 0 ? "turret" :
+      (f.boss || (f.arm || 0) >= 8) ? "heavy" : "mech";
+    var recovered = LAB.droneCatalog.fieldPart(L, source, G().seed + ":" + CUR().key + ":" + f.id, Math.min(55, Math.round((f.boss ? 45 : 20) * dk)));
+    if (recovered) list.push(recovered);
+  }
   var avail = ["relay", "cell", "servo", "optic"].filter(function (k) { return (LAB.PART_DEPTH[k] || 1) <= L; });
   /* (после 4.1) ниже Истока машины Нижних несут их детали: сферы и камеры — счётную катушку, турели —
      звонкий сплав, прочие — деталь своей глубины (чип утилизатора — чаще), стражи — кристалл слоя */
@@ -1372,11 +1378,12 @@ function drops(f, list, r, dk) {
 }
 
 /* ════════ ОКНА МАСТЕРСКОЙ ════════ */
-var GROUPS = ["Лечение и стимуляторы", "Батареи и боеприпасы", "Гранаты и устройства", "Ловушки и мины", "Оружие", "Броня", "Ремкомплекты", "Улучшения", "Модули оружия", "Чипы имплантов", "Восстановление деталей"];
+var GROUPS = ["Лечение и стимуляторы", "Батареи и боеприпасы", "Гранаты и устройства", "Ловушки и мины", "Оружие", "Броня", "Ремкомплекты", "Улучшения", "Модули оружия", "Чипы имплантов", "Восстановление деталей", "Запчасти для дронов"];
 var KIT_OUT = { fieldkit: 1, wrepair: 1, repairkit: 1, engkit: 1, m_oilcan: 1 };
 function groupOf(rc) {
   var o = String(rc.out), d = LAB.ITEMS[o];
   if (rc.group === "restore") return "Восстановление деталей";
+  if (rc.group === "droneParts") return "Запчасти для дронов";
   if (KIT_OUT[o]) return "Ремкомплекты";
   if (d && d.kind === "implant") return "Чипы имплантов";
   if (d && d.kind === "wmodule") return "Модули оружия";
@@ -1591,6 +1598,7 @@ function uses(k) {
   var kn = [], unk = 0, L0 = G().L, pd = LAB.PART_DEPTH[k] || 1, L = Math.max(L0, pd + aheadOf(pd));
   if (L0 < 10 && pd < 10) L = Math.min(L, 9);
   LAB.RECIPES.forEach(function (rc) { if (!rc.need || !rc.need[k] || (rc.minL && rc.minL > L)) return; if (known(rc)) kn.push(rc.n.toLowerCase()); else unk++; });
+  if (LAB.ITEMS[k] && LAB.ITEMS[k].dronePart && LAB.drone) kn = kn.concat(LAB.drone.partUses(k, L));
   return { kn: kn, unk: unk };
 }
 function partLine(k) {

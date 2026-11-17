@@ -3284,7 +3284,7 @@ function tradeGoods(kind, L) {
   goods.forEach(function (id) { var d0 = LAB.ITEMS[id]; if (d0) named[d0.n] = 1; });
   if (kind === "parts") for (var pk in LAB.PART_DEPTH) {
     var pd = LAB.PART_DEPTH[pk], pi = LAB.ITEMS[pk];
-    if (pd <= 10 || pk === "proto" || !pi || !pi.price || goods.indexOf(pk) >= 0 || named[pi.n]) continue;
+    if (pd <= 10 || pk === "proto" || !pi || !pi.price || pi.dronePart || goods.indexOf(pk) >= 0 || named[pi.n]) continue;
     if ((pd <= L && LAB.Le(pd) > LAB.Le(L) - 20) || ownBlock(pd)) { goods.push(pk); own[pk] = 1; }
   }
   if (kind === "ammo") for (var ak in LAB.AMMO) {

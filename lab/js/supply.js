@@ -285,7 +285,7 @@ function shelfPool(L) {
   var out = [];
   for (var id in LAB.ITEMS) {
     var d = LAB.ITEMS[id];
-    if (!d.price || d.surf || d.nosell || d.kind === "valuable" || id === "proto" || id === "okokey") continue;
+    if (!d.price || d.surf || d.nosell || d.dronePart || d.kind === "valuable" || id === "proto" || id === "okokey") continue;
     if (["food", "use", "throw", "deploy", "tool", "part", "wmodule", "trap"].indexOf(d.kind) < 0) continue;
     if (!LAB.srcOk(d, "buy")) continue; /* (2.0) только верстак или только находка — не на прилавке */
     if (LAB.chemVariant(d)) continue; /* (3.7, нелогичность) сорта и модификации составов — только химический стол */
@@ -351,6 +351,40 @@ function linePrice(e, prof) {
   var P = LAB.SUPPLY_PROFILES[prof];
   return Math.max(2, Math.round(base * (P && P.want[cat] >= 3 ? 0.9 : 1)));
 }
+function stockRows(lines, prof) {
+  return lines.filter(function (e) { return e.n > 0; }).map(function (e) {
+    var p = linePrice(e, prof);
+    return { label: lineName(e) + " — " + cr(p) + ", осталось " + e.n +
+      wtTail(e.ammo ? LAB.load && LAB.load.ammoWt(e.ammo) : LAB.load && LAB.load.itemWt(e.id)), fn: function () {
+      if (!(e.n > 0)) { say("Это уже раскупили."); return; }
+      if (G().credits < p) { LAB.UI.error(); say("Не хватает кредитов: нужно " + p + ", у вас " + G().credits + "."); return; }
+      G().credits -= p; e.n--;
+      if (e.ammo) G().ammo[e.ammo] = (G().ammo[e.ammo] || 0) + 1; else G().inv[e.id] = (G().inv[e.id] || 0) + 1;
+      A("play", "buy"); say("Куплено: " + lineName(e).toLowerCase() + ". Осталось " + cr(G().credits) + ".");
+      if (LAB.ach) LAB.ach.ev("bought", p);
+      gm().autosaveSoon();
+    } };
+  });
+}
+function dronePartsAt(level) {
+  return LAB.droneCatalog ? Object.keys(LAB.droneCatalog.parts).filter(function (id) { return LAB.PART_DEPTH[id] <= level; }) : [];
+}
+function dronePartsMenu(o) {
+  var build = function () {
+    var g = G(), st = stockOf(o);
+    if (!Array.isArray(st.droneParts)) {
+      var r = LAB.Rng(g.seed, "supply-drone:" + g.L + ":" + g.F + ":" + o.id + ":" + (objSt(o).restocks || 0));
+      st.droneParts = dronePartsAt(g.L).map(function (id) {
+        var tier = LAB.droneCatalog.parts[id].tier;
+        return { id: id, n: tier >= 6 ? 1 : r.int(1, st.prof === "tech" ? 4 : 2) };
+      });
+    }
+    var rows = stockRows(st.droneParts, st.prof);
+    if (!rows.length) rows.push(infoLine("Запчасти разобрали. Новый привоз через несколько часов."));
+    return [creditsLine()].concat(rows, { label: "Назад", close: true });
+  };
+  UIx("menu", "Запчасти для дронов", build(), { keep: true, rebuild: build });
+}
 function postName(o) { return era().n; }
 function postMenu(o) {
   A("play", "vend");
@@ -360,6 +394,7 @@ function postMenu(o) {
     var g = G(), items = [creditsLine()], ready = (g.orders || []).filter(function (q) { return q.st === "ready"; });
     if (ready.length) items.push({ label: "Забрать заказ: " + ready.map(function (q) { return q.name; }).join(", "), fn: function () { pickup(o); } });
     items.push({ label: "Прилавок: товар этажа, профиль — " + P.n, fn: function () { counterMenu(o); } });
+    if (dronePartsAt(g.L).length) items.push({ label: "Запчасти для дронов", fn: function () { dronePartsMenu(o); } });
     items.push({ label: "Заказать с поверхности: доставка " + deliveryText(), fn: function () { orderMenu(o); } });
     var way = (g.orders || []).filter(function (q) { return q.st === "way"; });
     if (way.length) items.push({ label: "Заказы в пути: " + way.length, keep: true, fn: function () { say(way.map(function (q) { var m = Math.max(0, q.due - now()); return q.name + " — примерно через " + m + " " + pl(m, "минуту", "минуты", "минут"); }).join(". ") + "."); } });
@@ -375,20 +410,7 @@ function postMenu(o) {
 function counterMenu(o) {
   var st = stockOf(o), prof = st.prof;
   var build = function () {
-    var items = [];
-    st.lines.forEach(function (e) {
-      if (!(e.n > 0)) return;
-      var p = linePrice(e, prof);
-      items.push({ label: lineName(e) + " — " + cr(p) + ", осталось " + e.n + wtTail(e.ammo ? LAB.load && LAB.load.ammoWt(e.ammo) : LAB.load && LAB.load.itemWt(e.id)), fn: function () {
-        if (!(e.n > 0)) { say("Это уже раскупили."); return; }
-        if (G().credits < p) { LAB.UI.error(); say("Не хватает кредитов: нужно " + p + ", у вас " + G().credits + "."); return; }
-        G().credits -= p; e.n--;
-        if (e.ammo) G().ammo[e.ammo] = (G().ammo[e.ammo] || 0) + 1; else G().inv[e.id] = (G().inv[e.id] || 0) + 1;
-        A("play", "buy"); say("Куплено: " + lineName(e).toLowerCase() + ". Осталось " + cr(G().credits) + ".");
-        if (LAB.ach) LAB.ach.ev("bought", p);
-        gm().autosaveSoon();
-      } });
-    });
+    var items = stockRows(st.lines, prof);
     st.arm.forEach(function (a, i) {
       if (!a) return;
       var p = armorBuyPrice(a);

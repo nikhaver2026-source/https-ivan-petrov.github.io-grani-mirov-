@@ -1096,6 +1096,10 @@ function genFloor(seed, L, F, attempt) {
       if (o2 && ot === "puzzle") pz17(o2, seed, L, F, o2.id, stationKinds());
       if (o2 && (ot === "crate" || ot === "locker" || ot === "safe" || ot === "desk" || ot === "corpse")) o2.loot = genLoot(r, L, F, ot, def.loot);
       if (o2 && (ot === "pc" || ot === "puzzle")) o2.loot = genLoot(r, L, F, "desk", def.loot);
+      if (LAB.droneCatalog && o2 && (ot === "crate" || ot === "locker" || ot === "safe")) {
+        var part = LAB.droneCatalog.fieldPart(L, def.loot, seed + ":" + L + ":" + F + ":" + o2.id, 24);
+        if (part) o2.loot.push(part);
+      }
       /* (3.0) у запертого компьютера — пароль из четырёх цифр; записка с ним — в соседнем помещении */
       if (o2 && ot === "pc" && o2.locked) { o2.pin = String(r.int(1000, 9999)); addItem({ kind: "note", note: "pcpin", code: o2.pin, room: rm4.name }, nearSpot(keySpotsForRoom(s), s)); }
       if (o2 && ot === "safe") {
@@ -1757,7 +1761,7 @@ function genLoot(r, L, F, ot, tag) {
 LAB.genLoot = genLoot;
 /* Случайная деталь, какая встречается на этой глубине; чаще — детали своего блока. */
 function partAt(r, L) {
-  var pool = LAB.PARTS.filter(function (p) { return (LAB.PART_DEPTH[p] || 1) <= L; });
+  var pool = LAB.PARTS.filter(function (p) { return LAB.PART_FROM[p] !== "drone" && (LAB.PART_DEPTH[p] || 1) <= L; });
   var recent = L > 10 ? pool.filter(function (p) { return LAB.Le(LAB.PART_DEPTH[p] || 1) > LAB.Le(L) - 20; }) : [];
   return recent.length && r.chance(0.5) ? r.pick(recent) : r.pick(pool);
 }
