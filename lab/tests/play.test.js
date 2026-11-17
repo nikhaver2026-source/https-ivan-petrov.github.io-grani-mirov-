@@ -4909,8 +4909,9 @@ LAB.ui.closeAll();
     "руководство: разделы от простого к сложному, каждый об одном (" + gd.order + ")");
   ok(gd.dups && !gd.dups.length && gd.ctlClean && gd.soundCh && !gd.dupTitles.length, "руководство: каждый абзац — в одной главе, «Управление» — только жесты и клавиши, звук шагов и врагов — в главе «Как звучит комплекс»" + (gd.dups && gd.dups.length ? "; повторы: " + gd.dups.join(" / ") : "") + (gd.dupTitles && gd.dupTitles.length ? "; одинаковые главы: " + gd.dupTitles.join(", ") : ""));
   ok(gd.longCh && !gd.longCh.length && gd.emptyCh && !gd.emptyCh.length, "руководство: главы короткие (до 2400 знаков) и не пустые" + (gd.longCh && gd.longCh.length ? "; длинные: " + gd.longCh.join(", ") : "") + (gd.emptyCh && gd.emptyCh.length ? "; пустые: " + gd.emptyCh.join(", ") : ""));
-  /* (после 4.6) глав прибавилось: жесты, характеристики, груз и ячейка, мастерство, своё оружие, каркас и дрон — предел поднят с 45 до 56 тысяч знаков */
-  ok(gd.spoil && !gd.spoil.length && gd.len < 56000, "в остальных главах нет названий глубин — без спойлеров; руководство короткое (" + gd.len + " знаков" + (gd.spoil && gd.spoil.length ? "; спойлеры: " + gd.spoil.join(", ") : "") + ")");
+  ok(gd.spoil && !gd.spoil.length, "в остальных главах нет названий глубин" + (gd.spoil && gd.spoil.length ? " (" + gd.spoil.join(", ") + ")" : ""));
+  /* (5.5) Новые главы о тайниках и развитии дрона увеличили объём. Предел каждой главы проверяется отдельно. */
+  ok(gd.len <= 60000, "руководство укладывается в 60 тысяч знаков (" + gd.len + " знаков)");
 
   await page.evaluate(() => { LAB.ui.closeAll(); });
 
