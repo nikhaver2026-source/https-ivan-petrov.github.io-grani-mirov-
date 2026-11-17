@@ -38,7 +38,7 @@ var NEED = { kv_ctrl: 1, servo: 2, cell: 1, optic: 1, scrap: 4, wire: 2 };
 var CABLE = "dr_charge_cable", CABLE_NEED = { wire: 3, cap: 1, rubber: 1 };
 LAB.ITEMS[CABLE] = { n: "Полевой кабель питания", kind: "eng", cat: "eng", wt: 0.4, nosell: 1,
   desc: "Переносит заряд между выпущенным дроном и надетым каркасом вне боя. Часть энергии теряется при передаче." };
-var CARGO_KG = 12, BOOST_KG = 8, BATTERY = 40, SHELL_HP = 16;
+var BASE_CARGO_KG = 200, CARGO_KG = 12, BOOST_KG = 8, BATTERY = 40, SHELL_HP = 16;
 var MODS = {
   sensor: { n: "сенсорный блок", need: { optic: 1, chip: 1 }, wt: 0.3, d: "разведка: маяки на врагов вокруг и предупреждение о приближении врага" },
   zapper: { n: "разрядник", need: { cap: 2, wire: 2, cell: 1 }, wt: 0.6, d: "оглушает ближайшего врага на несколько секунд" },
@@ -63,7 +63,7 @@ var RANK_EFFECTS = {
   gun: { n: "Урон ствола в процентах от базового", v: [100, 122, 144] },
   arm: { n: "Предел восстановления состояния снаряжения", v: [85, 92, 100] },
   screen: { n: "Доля принятого урона в процентах", v: [25, 30, 35] },
-  cargo: { n: "Килограммы основной тяги", v: [CARGO_KG, 14, 16] },
+  cargo: { n: "Дополнительные килограммы груза", v: [CARGO_KG, 14, 16] },
   scanner: { n: "Радиус поиска в шагах", v: [10, 12, 14] },
   battery: { n: "Дополнительная ёмкость", v: [BATTERY, 55, 70] },
   boost: { n: "Килограммы дополнительной тяги", v: [BOOST_KG, 10, 12] },
@@ -215,7 +215,8 @@ function build(opts) {
   if (LAB.ach) LAB.ach.ev("craft", 1); /* ОКО слышит работу у верстака — как любую сборку */
   save();
   snd("drone_up", "power_on");
-  var msg = "Дрон собран за " + mins + " минут. Блок управления ожил, винты раскрутились — дрон принял управление от вас и висит рядом. Гнёзд для модулей: " + slots(d) + "; модули ставят здесь же, у верстака.";
+  var msg = "Дрон собран за " + mins + " минут. Блок управления ожил, винты раскрутились — дрон принял управление от вас и висит рядом. Грузоподъёмность корпуса " + cargoKg(BASE_CARGO_KG) + ". Гнёзд для модулей: " + slots(d) + "; модули ставят здесь же, у верстака.";
+  loadChanged();
   if (opts.name != null) { say(msg); return d; }
   nameMenu(msg);
   return d;
@@ -413,14 +414,17 @@ function scrapDrone() {
 }
 
 /* ════════ В ДЕЛЕ ════════ */
-function carriedWeight() {
-  var d = D();
-  if (!d || active()) return 0;
-  return d.mods.reduce(function (sum, k) { return sum + (MODS[k] ? MODS[k].wt : 0); }, 3.5);
-}
+function packedWeight(d) { return d.mods.reduce(function (sum, k) { return sum + (MODS[k] ? MODS[k].wt : 0); }, 3.5); }
+function carriedWeight() { var d = D(); return d && !active() ? packedWeight(d) : 0; }
+function cargoKg(n) { return LAB.load ? LAB.load.kg(n) : n + " кг"; }
 function boostCapacity() { var d = D(); return active() && d.en >= 1 && hasMod("cargo") && hasMod("boost") ? effect("boost", d) + Math.floor(adjust("haul", "boost")) : 0; }
 function cargoModel() { return hasMod("cargo") ? "cargo" : hasMod("sling") ? "sling" : ""; }
-function carryCapacity() { var k = cargoModel(); return active() && k ? effect(k) + Math.floor(adjust("capacity", k)) + boostCapacity() : 0; }
+function carryCapacity(withBoost) {
+  if (!active()) return 0;
+  var k = cargoModel();
+  var passive = k ? effect(k) + Math.floor(adjust("capacity", k)) : 0;
+  return BASE_CARGO_KG + passive + (withBoost === false ? 0 : boostCapacity());
+}
 function overloadHelp(metric) {
   if (!active()) return 0;
   var base = metric === "stride" && cargoModel() && hasMod("stabilizer") ? effect("stabilizer") :
@@ -429,26 +433,25 @@ function overloadHelp(metric) {
 }
 function cargoRecovery() {
   var d = D();
-  if (!d || d.wreck || !cargoModel()) return "";
+  if (!d || d.wreck) return "";
   if (!d.out) return "Можно выпустить дрона через меню команд.";
   return hasMod("boost") && d.en < 1 ? "Можно подзарядить дрона энергобатареей через меню команд." : "";
 }
 function charge(n) {
   var d = D(); if (!d) return;
-  var before = boostCapacity();
+  var before = carryCapacity();
   d.en = Math.min(d.enMax, (d.en || 0) + n);
-  if (boostCapacity() !== before) loadChanged();
+  if (carryCapacity() !== before) loadChanged();
 }
 function spendCharge(n) {
   var d = D();
   if (!d || (d.en || 0) < n) return false;
-  var before = boostCapacity();
+  var before = carryCapacity(), boost = boostCapacity();
   d.en -= n;
   if (d.en <= 10 && d.en + n > 10) sayq(cap1(name()) + ": энергии мало. Подзарядите энергобатареей или у капсулы.");
-  if (before && !boostCapacity()) {
-    sayq("Тяговый блок разряжен. Грузоподъёмность дрона сейчас " + (LAB.load ? LAB.load.kg(carryCapacity()) : carryCapacity()) + ".");
-    loadChanged();
-  }
+  var current = carryCapacity();
+  if (boost && !boostCapacity()) sayq("Тяговый блок разряжен. Грузоподъёмность дрона сейчас " + cargoKg(current) + ".");
+  if (before !== current) loadChanged();
   return true;
 }
 function spend(n, command) { return spendCharge(energyCost(n, command)); }
@@ -715,7 +718,7 @@ function line(d) {
   var focus = role ? ". Направление «" + programFor(d, role).n + "», ступень " + directionRank(d, role.direction) : "";
   return cap1(name(d)) + ": ступень " + (d.lvl || 1) + ", " + (d.wreck ? "сбит" : (d.out ? "в воздухе" : "свёрнут") + ", здоровье " + Math.round(d.hp) + " из " + d.hpMax) +
     ", энергия " + Math.round(d.en) + " из " + d.enMax + ". Профиль «" + (role ? role.n : "Универсальный") + "»" + focus + ". Занято гнёзд " + usedSlots(d) + " из " + slots(d) + ". Модули: " + (listed.length ? listed.map(function (k) { return mark(k, modRank(d, k)); }).join(". ") : "нет") +
-    ((d.mods.indexOf("cargo") >= 0 || d.mods.indexOf("sling") >= 0) && LAB.load ? ". Грузоподъёмность дрона сейчас: " + LAB.load.kg(carryCapacity()) : "");
+    ". Грузоподъёмность дрона сейчас: " + cargoKg(carryCapacity());
 }
 function charLine() { var d = D(); return d ? line(d) + "." : ""; }
 function benchLabel() { return D() ? "Дрон-спутник: модули и починка — " + short() : "Дрон-спутник: сборка корпуса и модулей"; }
@@ -889,7 +892,11 @@ function cmdItems() {
     if (hasMod("scanner")) items.push({ label: "Искать припасы и оборудование. Расход " + energyCost(12, "scanner"), keep: true, fn: scanSupplies });
     if (hasMod("medic")) items.push({ label: "Перевязать раны. Расход " + energyCost(10, "medic") + " энергии и один бинт", keep: true, fn: treat });
     if (LAB.droneOps) items = items.concat(LAB.droneOps.items());
-    items.push({ label: d.out ? "Свернуть дрона" : "Выпустить дрона", keep: true, fn: function () { pack(!d.out); } });
+    var packName = d.out ? "Свернуть дрона. Его груз и корпус перейдут на героя." : "Выпустить дрона";
+    if (d.out && LAB.load && LAB.load.total(packedWeight(d)) > LAB.load.personalCapacity() * 1.5) {
+      packName += " Груз станет неподъёмным. Дрона можно выпустить снова.";
+    }
+    items.push({ label: packName, keep: true, fn: function () { pack(!d.out); } });
     items.push({ label: "Подзарядить энергобатареей: плюс " + batteryGain() + ". Батарей " + (G().ammo.energy || 0), keep: true, fn: function () { chargeBat(); } });
     [true, false].forEach(function (toDrone) {
       var p = transferPlan(toDrone);

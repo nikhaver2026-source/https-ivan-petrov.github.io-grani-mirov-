@@ -3,7 +3,8 @@
    У каждой вещи свой вес. Сколько унесёт герой, решают сила (главное),
    телосложение и выносливость (stats.js), а ещё экзокаркас: пока заряжен,
    его приводы держат груз и сам каркас ничего не весит, разряженный —
-   мёртвый вес; силовая броня «Атлант»; дрон с грузовым захватом в воздухе.
+   мёртвый вес; силовая броня «Атлант». Дрон в воздухе несёт свою долю
+   общего груза. Перегружаться сверх своего предела может только герой.
    Надетая броня весит вполовину: она на теле, а не в рюкзаке.
    Ступени: до половины предела — налегке; до предела — обычный ход;
    на четверть сверх — перегруз: шаг тяжелее и громче, усталость быстрее,
@@ -61,7 +62,7 @@ var RIGS = [
 /* (после 4.6) ключ-карта складской ячейки: без глубины и с разделом — в генерацию этажей не попадает
    (world.js берёт вещи с глубиной и без раздела), не продаётся — на полки пунктов тоже не попадает */
 if (!LAB.ITEMS.lockcard) LAB.ITEMS.lockcard = { n: "Ключ-карта складской ячейки", icon: "🗝️", kind: "use", cat: "eng", nosell: 1, price: 40,
-  desc: "Пластиковая карта выбывшего сотрудника с номером его ячейки в сети снабжения. Использованная из инвентаря, присоединяет ту ячейку к вашей: плюс десять килограммов и два места. Всего — до пяти карт." };
+  desc: "Карта выбывшего сотрудника. При использовании добавляет в личное хранилище две ячейки. Можно использовать до пяти карт." };
 ID_WT.lockcard = 0.02;
 
 function itemWt(id) {
@@ -115,7 +116,11 @@ function parts() {
   p.samples = Object.keys(g.samples || {}).length * 0.1;
   return p;
 }
-function total() { var p = parts(), t = 0; for (var k in p) t += p[k]; return Math.round(t * 10) / 10; }
+function total(extra) {
+  var p = parts(), t = extra || 0;
+  for (var k in p) t += p[k];
+  return Math.round(t * 10) / 10;
+}
 
 /* ── ПРЕДЕЛ ── личная нагрузка и помощь снаряжения */
 function statCapacity(src, value) {
@@ -127,7 +132,7 @@ function rig() { return RIGS[G().loadRig - 1] || null; }
 function capOf(src) {
   var f, r;
   switch (src) {
-    case "base": return 30; /* При стартовой силе 10 герой получает ещё 20 кг, всего 50 кг. */
+    case "base": return 80; /* Стартовая сила 10 даёт ещё 20 кг. */
     case "str":
     case "con": return statCapacity(src, hs(src));
     case "stam": return statCapacity(src, secS(src));
@@ -140,12 +145,28 @@ function capOf(src) {
   }
   return 0;
 }
-var SRC = ["base", "str", "con", "stam", "rig", "exo", "armor", "drone"];
+var PERSONAL_SRC = ["base", "str", "con", "stam", "rig", "exo", "armor"];
 /* LAB.load.off и window.LAB_TEST_NOLOAD — только для старых наборов проверок (play.test.js и другие):
    их герой носит сотни деталей сразу; груз проверяет hero.test.js. В игре выключатель не используется. */
 function offNow() { return !!(LAB.load && LAB.load.off) || !!window.LAB_TEST_NOLOAD; }
-function capacity() { if (offNow()) return 1e9; var c = 0; SRC.forEach(function (s) { c += capOf(s); }); return Math.round(c * 10) / 10; }
-function ratio() { var c = capacity(); return c > 0 ? total() / c : 9; }
+function personalCapacity() {
+  if (offNow()) return 1e9;
+  var c = PERSONAL_SRC.reduce(function (sum, s) { return sum + capOf(s); }, 0);
+  return Math.round(c * 10) / 10;
+}
+function limit(factor) { return personalCapacity() * factor + (offNow() ? 0 : capOf("drone")); }
+function capacity() { return limit(1); }
+/* Герой держит при себе лёгкий груз. Тяговый блок включается только при нехватке обычной тяги. */
+function droneShare(weight, personal) {
+  var passive = LAB.drone ? LAB.drone.carryCapacity(false) : 0;
+  var share = Math.min(passive, Math.max(0, weight - personal * 0.5));
+  var extra = weight - personal - passive;
+  return share + (extra > 0 ? Math.min(extra, capOf("drone") - passive) : 0);
+}
+function ratio() {
+  var weight = total(), personal = personalCapacity();
+  return (weight - droneShare(weight, personal)) / personal;
+}
 /* 0 налегке, 1 обычно, 2 перегруз, 3 тяжёлый перегруз, 4 неподъёмно */
 function tierOf(r) { return r <= 0.5 ? 0 : r <= 1 ? 1 : r <= 1.25 ? 2 : r <= 1.5 ? 3 : 4; }
 function tier() { return tierOf(ratio()); }
@@ -178,7 +199,7 @@ function accPen(w) { var t = tier(); return (t === 2 ? 0.05 : t === 3 ? 0.1 : 0)
 
 /* С места не сдвинуться: предупреждение не чаще раза в три секунды. */
 var stuckSaid = 0;
-function releaseKg(weight) { return Math.ceil((Math.max(0, weight - capacity() * 1.5) - 1e-8) * 10) / 10; }
+function releaseKg(weight) { return Math.ceil((Math.max(0, weight - limit(1.5)) - 1e-8) * 10) / 10; }
 function canMove() {
   if (tier() < 4) return true;
   var t = Date.now();
@@ -191,10 +212,10 @@ function canMove() {
   return false;
 }
 /* Можно ли поднять ещё столько — не дальше тяжёлого перегруза. */
-function canTake(addKg) { return addKg <= 0.05 || (total() + addKg) <= capacity() * 1.5 + 1e-6; }
+function canTake(addKg) { return addKg <= 0 || total(addKg) <= limit(1.5) + 1e-6; }
 function lcf(t) { t = String(t || ""); return t.charAt(0).toLowerCase() + t.slice(1); }
 function refuseText(it, w) {
-  var over = releaseKg(total() + w);
+  var over = releaseKg(total(w));
   return "Не поднять: " + lcf(gm().itemName ? gm().itemName(it) : "вещь") + " — " + kg(w) + ". Груз и так " + kg(total()) + " при пределе " + kg(capacity()) + ", лишнего — " + kg(over) + ".";
 }
 
@@ -236,14 +257,16 @@ function line() {
   return "Груз " + kg(total()) + " из " + kg(capacity()) + ": " + TIER_N[t] + ".";
 }
 function capText() {
-  var names = { base: "основа", str: "сила", con: "телосложение", stam: "выносливость", rig: "грузовое снаряжение", exo: "приводы каркаса", armor: "силовая броня", drone: "грузовой модуль дрона" };
-  return SRC.filter(function (s) { return capOf(s) > 0; }).map(function (s) { return names[s] + " " + kg(capOf(s)); }).join(", ");
+  var names = { base: "основа", str: "сила", con: "телосложение", stam: "выносливость", rig: "грузовое снаряжение", exo: "приводы каркаса", armor: "силовая броня", drone: "опора дрона" };
+  return PERSONAL_SRC.concat("drone").filter(function (s) { return capOf(s) > 0; }).map(function (s) { return names[s] + " " + kg(capOf(s)); }).join(", ");
 }
 function status() {
   if (!gm().entered) return;
   var h = heaviest(), w = gm().curWeapon ? gm().curWeapon() : null, hp = handPen(w);
   var ln = G().locker ? lockerN() : 0;
-  say(line() + " Предел складывают: " + capText() + "." + (ln ? " В ячейке хранения — " + kg(lockerWt()) + "." : "") + (h.length ? " Тяжелее всего: " + h.map(function (x) { return x.n + " — " + kg(x.w); }).join("; ") + "." : "") +
+  var weight = total(), personal = personalCapacity(), share = droneShare(weight, personal);
+  var split = capOf("drone") > 0 ? " На герое " + kg(weight - share) + " из " + kg(personal) + ". На дроне " + kg(share) + " из " + kg(capOf("drone")) + "." : "";
+  say(line() + split + " Предел складывают: " + capText() + "." + (ln ? " В личном хранилище — " + kg(lockerWt()) + "." : "") + (h.length ? " Тяжелее всего: " + h.map(function (x) { return x.n + " — " + kg(x.w); }).join("; ") + "." : "") +
     (hp ? " " + (w ? w.name : "Оружие") + " тяжело для ваших рук: нужна сила " + needStr(w) + ", точность ниже на " + pcW(Math.round(hp * 100)) + "." : ""));
 }
 /* оружие в руках тяжело — сказать, когда его берут (draw, смена) */
@@ -259,34 +282,39 @@ function pcW(n) { return n + " " + plural(n, "процент", "процента
 function weaponLine(w) { return "Вес " + kg(weaponWt(w)) + ", нужна сила " + needStr(w) + (handPen(w) ? " — у вас меньше, точность ниже на " + pcW(Math.round(handPen(w) * 100)) : "") + "."; }
 
 
-/* ════════ ЯЧЕЙКА ХРАНЕНИЯ ════════
-   Своя ячейка в сети снабжения комплекса, как личная ячейка-мастерская в «Квази-эпсилоне»:
-   открывается у любой капсулы восстановления, у верстака и у пункта снабжения; что положили
-   в одном месте, заберёте в другом — ячейку возят пневмопочта и грузовые лифты снабжения.
-   В ячейке вещи ничего не весят, но ячейка не безразмерная: у неё свой предел веса и мест.
-   Место занимает каждый вид вещей (стопка любой длины), вид батарей, каждое оружие; броня —
-   два места, экзокаркас — четыре. Чем больше ячейка, тем дороже каждое новое место.
-   Расширить ячейку можно пятью путями:
-   — кредиты у пункта снабжения: восемь ступеней, плюс двадцать килограммов и четыре места за
-     ступень; каждая следующая в полтора раза дороже прежней, глубже — дороже;
-   — аренда соседней ячейки у пункта снабжения на трое суток: плюс сорок килограммов и восемь
-     мест; цена растёт с размером ячейки и с каждой арендой; кончилась — вещи целы, но класть
-     нельзя, пока не заберёте лишнее;
-   — своими руками у верстака: полки и перегородки (места), усиленное дно (вес) — из деталей,
-     нужна ступень механики, каждые следующие полки и дно — из большего числа деталей;
-   — ключ-карты складских ячеек выбывших сотрудников: падают с машин ОКО — чаще с охраны и
-     начальников смен; карта присоединяет соседнюю ячейку, до пяти карт;
-   — харизма: с 20 и с 30 кладовщики снабжения находят лишние места (цены сети она не трогает).
-   Оружие в руках, надетые броня и каркас и стартовая монтировка (ею вскрывают шкафчики)
-   в ячейку не кладутся. */
-var LOCK_KG = 40, LOCK_SLOTS = 10, LOCK_ADD_KG = 20, LOCK_ADD_SLOTS = 4, LOCK_MAX_LV = 8;
-var SLOT_ARMOR = 2, SLOT_FRAME = 4;
-var RENT_KG = 40, RENT_SLOTS = 8, RENT_MIN = 3 * 1440;          /* аренда соседней ячейки: трое суток */
-var SHELF_SLOTS = 4, FLOOR_KG = 20, CRAFT_MAX = 3;               /* своими руками у верстака */
-var CARD_KG = 10, CARD_SLOTS = 2, CARD_MAX = 5;                  /* ключ-карты складских ячеек */
+/* Личное хранилище доступно из любой капсулы, мастерской и пункта снабжения.
+   В сохранении остаются прежние списки вещей, плюс назначение и ступень каждой ячейки. */
+var LOCK_SLOTS = 10, LOCK_ADD_SLOTS = 4, LOCK_MAX_LV = 8;
+var CELL_BASE = 300, CELL_ADD = 100, CELL_MAX_LV = 8;
+var RENT_SLOTS = 8, RENT_MIN = 3 * 1440;
+var SHELF_SLOTS = 4, FLOOR_ADD = 50, CRAFT_MAX = 3;
+var CARD_SLOTS = 2, CARD_MAX = 5;
 var SHELF_NEED = { scrap: 4, panel: 2, wire: 1 }, FLOOR_NEED = { scrap: 3, servo: 1, magnet: 2 };
+var CELL_NAMES = {
+  part: "Детали", ammo: "Боеприпасы", med: "Медицина", food: "Еда", drink: "Напитки",
+  tool: "Инструменты", access: "Ключи и средства доступа", repair: "Ремонт и защита",
+  chem: "Химические составы", trap: "Ловушки", throw: "Метательные предметы", deploy: "Развёртываемые устройства",
+  implant: "Импланты", eng: "Инженерные узлы", wmodule: "Оружейные модули", valuable: "Ценности",
+  weapons: "Оружие", armors: "Броня", frames: "Экзокаркасы", misc: "Прочее"
+};
+function itemType(id) {
+  var d = LAB.ITEMS[id] || {};
+  var fx = d.fx || {};
+  if (/^(lockcard|okokey|decoder|m_falsepass|v10_forgedslip)$/.test(id) || fx.pick) return "access";
+  if (id === "plate" || d.cat === "protect" || fx.mend || (LAB.repair && LAB.repair.isKit(id))) return "repair";
+  if (d.kind === "food" && (d.brew || d.eat === "sip" || d.eat === "gulp")) return "drink";
+  if (/^(g_thermos|v10_tea|v10_waterflask|v13_thermos)$/.test(id)) return "drink";
+  if (/^(k_honey|v15_kasha)$/.test(id)) return "food";
+  if (Object.prototype.hasOwnProperty.call(CELL_NAMES, d.kind) && d.kind !== "misc") return d.kind;
+  if (d.cat === "med" || (LAB.itemCat && LAB.itemCat(id) === "med")) return "med";
+  if (d.br) return "chem";
+  if (fx.shield || fx.antitox || fx.cloak || id === "v6_harness") return "repair";
+  if (d.rubble || fx.jam || fx.scan || fx.map) return "tool";
+  if (fx.heal || fx.regen || fx.stitch || fx.haste) return "med";
+  return Object.prototype.hasOwnProperty.call(CELL_NAMES, d.cat) ? d.cat : "misc";
+}
 function nowAbs() { var g = G(); return ((g.day || 1) - 1) * 1440 + (g.min || 0); }
-function rented() { var l = Lk(); return (l.rentUntil || 0) > nowAbs(); }
+function rented() { return (Lk().rentUntil || 0) > nowAbs(); }
 function chaSlots() { var c = G().cha == null ? 10 : G().cha; return c >= 30 ? 4 : c >= 20 ? 2 : c >= 14 ? 1 : 0; }
 function Lk() {
   var g = G();
@@ -295,62 +323,106 @@ function Lk() {
   ["inv", "ammo"].forEach(function (k) { if (!l[k]) l[k] = {}; });
   ["weapons", "armors", "frames"].forEach(function (k) { if (!l[k]) l[k] = []; });
   if (!(l.lv >= 0)) l.lv = 0;
+  if (!Array.isArray(l.cells)) l.cells = [];
   return l;
 }
-/* предел: основа + ступени снабжения + полки и дно + ключ-карты + аренда + харизма */
+function permanentSlots() {
+  var l = Lk();
+  return LOCK_SLOTS + LOCK_ADD_SLOTS * Math.min(LOCK_MAX_LV, l.lv) + SHELF_SLOTS * Math.min(CRAFT_MAX, l.shelf || 0) + CARD_SLOTS * Math.min(CARD_MAX, l.cards || 0) + chaSlots();
+}
 function capParts() {
-  var l = Lk(), lv = Math.min(LOCK_MAX_LV, l.lv || 0), sh = Math.min(CRAFT_MAX, l.shelf || 0), fl = Math.min(CRAFT_MAX, l.floor || 0), cd = Math.min(CARD_MAX, l.cards || 0), rt = rented();
+  var l = Lk();
   return [
-    { n: "основа", kg: LOCK_KG, sl: LOCK_SLOTS },
-    { n: "ступени снабжения " + lv + " из " + LOCK_MAX_LV, kg: LOCK_ADD_KG * lv, sl: LOCK_ADD_SLOTS * lv },
-    { n: "полки " + sh + " из " + CRAFT_MAX, kg: 0, sl: SHELF_SLOTS * sh },
-    { n: "усиленное дно " + fl + " из " + CRAFT_MAX, kg: FLOOR_KG * fl, sl: 0 },
-    { n: "ключ-карты " + cd + " из " + CARD_MAX, kg: CARD_KG * cd, sl: CARD_SLOTS * cd },
-    { n: "аренда соседней ячейки" + (rt ? " до " + untilText(l.rentUntil) : ""), kg: rt ? RENT_KG : 0, sl: rt ? RENT_SLOTS : 0 },
-    { n: "договорённость по харизме", kg: 0, sl: chaSlots() }
+    { n: "основа", sl: LOCK_SLOTS },
+    { n: "ступени снабжения", sl: LOCK_ADD_SLOTS * Math.min(LOCK_MAX_LV, l.lv) },
+    { n: "полки", sl: SHELF_SLOTS * Math.min(CRAFT_MAX, l.shelf || 0) },
+    { n: "ключ-карты", sl: CARD_SLOTS * Math.min(CARD_MAX, l.cards || 0) },
+    { n: "аренда до " + untilText(l.rentUntil || 0), sl: rented() ? RENT_SLOTS : 0 },
+    { n: "договорённость по харизме", sl: chaSlots() }
   ];
 }
-function lockCap() { var kgS = 0, sl = 0; capParts().forEach(function (p) { kgS += p.kg; sl += p.sl; }); return { kg: kgS, slots: sl }; }
+function lockCap() { return { slots: permanentSlots() + (rented() ? RENT_SLOTS : 0), perCell: cellCap() }; }
+function cellCap(cell) { return CELL_BASE + CELL_ADD * (cell && cell.lv || 0) + FLOOR_ADD * Math.min(CRAFT_MAX, Lk().floor || 0); }
 function untilText(t) { var d = Math.floor(t / 1440) + 1, m = t % 1440, h = Math.floor(m / 60), mm = m % 60; return "дня " + d + ", " + (h < 10 ? "0" : "") + h + ":" + (mm < 10 ? "0" : "") + mm; }
-function capWhy() { return capParts().filter(function (p) { return p.kg || p.sl; }).map(function (p) { return p.n + ": " + [p.kg ? kg(p.kg) : "", p.sl ? p.sl + " " + plural(p.sl, "место", "места", "мест") : ""].filter(Boolean).join(" и "); }).join("; "); }
+function capWhy() { return capParts().filter(function (p) { return p.sl; }).map(function (p) { return p.n + " — " + p.sl; }).join(", "); }
 function lockerWt() { var l = Lk(), t = 0, k; for (k in l.inv) t += itemWt(k) * l.inv[k]; for (k in l.ammo) t += (AMMO_WT[k] || 0.4) * l.ammo[k]; l.weapons.forEach(function (w) { t += weaponWt(w); }); l.armors.forEach(function (a) { t += armorWt(a); }); l.frames.forEach(function (f) { t += frameWt(f); }); return Math.round(t * 10) / 10; }
-function lockerN() { var l = Lk(), n = 0, k; for (k in l.inv) n += l.inv[k]; for (k in l.ammo) n += l.ammo[k]; return n + l.weapons.length + l.armors.length + l.frames.length; }
-function slotsUsed() {
-  var l = Lk(), n = 0, k;
-  for (k in l.inv) if (l.inv[k] > 0) n++;
-  for (k in l.ammo) if (l.ammo[k] > 0) n++;
-  return n + l.weapons.length + SLOT_ARMOR * l.armors.length + SLOT_FRAME * l.frames.length;
+function storedCounts(l) {
+  var counts = {};
+  Object.keys(l.inv).forEach(function (id) { var type = itemType(id); if (l.inv[id] > 0) counts[type] = (counts[type] || 0) + l.inv[id]; });
+  ["ammo", "weapons", "armors", "frames"].forEach(function (type) {
+    var n = type === "ammo" ? Object.keys(l.ammo).reduce(function (sum, id) { return sum + Math.max(0, l.ammo[id]); }, 0) : l[type].length;
+    if (n > 0) counts[type] = n;
+  });
+  return counts;
 }
-function freeKg() { return Math.max(0, Math.round((lockCap().kg - lockerWt()) * 100) / 100); }
-function freeSlots() { return Math.max(0, lockCap().slots - slotsUsed()); }
-function capLine() { var c = lockCap(); return "занято " + kg(lockerWt()) + " из " + kg(c.kg) + ", мест " + slotsUsed() + " из " + c.slots; }
-/* сколько штук вида влезет: по весу и по месту (новый вид — нужно свободное место) */
-function fitN(have, w1, isNew, slots) {
-  if (isNew && freeSlots() < (slots || 1)) return 0;
-  if (w1 <= 0) return have;
-  return Math.max(0, Math.min(have, Math.floor((freeKg() + 1e-6) / w1)));
+function lockerN() { var c = storedCounts(Lk()); return Object.keys(c).reduce(function (sum, k) { return sum + c[k]; }, 0); }
+function storageView() {
+  var l = Lk(), counts = storedCounts(l), byType = Object.create(null), slots = lockCap().slots;
+  l.cells.forEach(function (c, i) {
+    if (!c || !c.type) return;
+    if (counts[c.type] && byType[c.type] == null) byType[c.type] = i;
+    else { delete c.type; delete c.leased; }
+  });
+  var free = 0;
+  function findFree() { while (l.cells[free] && l.cells[free].type) free++; }
+  /* Старые записи и автоматическая разгрузка. Даже лишние вещи остаются доступны. */
+  Object.keys(CELL_NAMES).forEach(function (type) {
+    if (!counts[type] || byType[type] != null) return;
+    findFree();
+    var cell = l.cells[free] || (l.cells[free] = {});
+    cell.type = type; byType[type] = free;
+  });
+  findFree();
+  return { counts: counts, byType: byType, free: free, slots: slots };
 }
-function whyFull(w1, isNew, slots) {
-  if (isNew && freeSlots() < (slots || 1)) return "в ячейке нет места: занято " + slotsUsed() + " из " + lockCap().slots + (slots > 1 ? ", а здесь нужно " + slots : "");
-  return "в ячейке осталось " + kg(freeKg()) + ", а нужно хотя бы " + kg(w1);
+function slotsUsed() { return Object.keys(storedCounts(Lk())).length; }
+function capLine(view) {
+  view = view || storageView();
+  var occupied = Object.keys(view.byType).filter(function (k) { return view.byType[k] < view.slots; }).length;
+  return "занято " + occupied + " из " + view.slots + " ячеек";
 }
-var upHint = function () { return (Lk().lv || 0) < LOCK_MAX_LV ? " Ячейку расширяют у пункта снабжения." : ""; };
+function fitInfo(type, view, chosen) {
+  view = view || storageView();
+  var assigned = view.byType[type] != null;
+  var index = assigned ? view.byType[type] : chosen == null ? view.free : chosen;
+  if (chosen != null && assigned && index !== chosen) return { fit: 0, why: "для «" + CELL_NAMES[type] + "» уже назначена ячейка " + (index + 1) };
+  var cell = Lk().cells[index];
+  if (!assigned && cell && cell.type) return { fit: 0, why: "ячейка уже назначена для «" + CELL_NAMES[cell.type] + "»" };
+  if (index < 0 || index % 1 !== 0 || index >= view.slots) return { fit: 0, why: assigned ? "ячейка «" + CELL_NAMES[type] + "» сейчас доступна только на выдачу" : "нет свободной ячейки. " + cap1(capLine(view)) };
+  var n = view.counts[type] || 0, cap = cellCap(cell);
+  return { index: index, fit: Math.max(0, cap - n), why: "ячейка «" + CELL_NAMES[type] + "» заполнена. Предметов " + n + " из " + cap };
+}
+function assignCell(type, index) {
+  var cells = Lk().cells, cell = cells[index] || (cells[index] = {});
+  cell.type = type;
+  if (index >= permanentSlots()) cell.leased = true;
+}
+function upHint() { return " Расширить хранилище можно у пункта снабжения."; }
 function itemN(id) { var d = LAB.ITEMS[id]; return d ? d.n : id; }
-/* положить n штук; кладётся сколько влезет — сказать, если не всё */
-function putItem(id, n, quiet) {
+function moveItemToLocker(id, n) {
   var g = G(), l = Lk();
-  var why = gm().dropWhy ? gm().dropWhy(id) : "";
-  if (why) { if (!quiet) { LAB.UI.error(); say(why); } return 0; }
-  n = Math.min(n || 1, g.inv[id] || 0);
-  if (n <= 0) return 0;
-  var w1 = itemWt(id), fit = fitN(n, w1, !(l.inv[id] > 0), 1);
-  if (fit <= 0) { if (!quiet) { LAB.UI.error(); say("Не влезет: " + whyFull(w1, !(l.inv[id] > 0), 1) + "." + upHint()); } return 0; }
-  n = fit;
-  /* собранное своими руками остаётся собранным и в ячейке (скупка собранного — supply.js) */
-  var cH = g.craftN && g.craftN[id] ? Math.min(g.craftN[id], g.inv[id]) : 0, cD = Math.max(0, n - (g.inv[id] - cH));
-  if (cD) { g.craftN[id] -= cD; l.craft = l.craft || {}; l.craft[id] = (l.craft[id] || 0) + cD; }
+  var crafted = g.craftN && g.craftN[id] ? Math.min(g.craftN[id], g.inv[id]) : 0;
+  var movedCrafted = Math.max(0, n - (g.inv[id] - crafted));
+  if (movedCrafted) {
+    g.craftN[id] -= movedCrafted;
+    l.craft = l.craft || {};
+    l.craft[id] = (l.craft[id] || 0) + movedCrafted;
+  }
   g.inv[id] -= n; if (!(g.inv[id] > 0)) delete g.inv[id];
   l.inv[id] = (l.inv[id] || 0) + n;
+}
+function putItem(id, n, quiet, chosen) {
+  var g = G(), why = gm().dropWhy ? gm().dropWhy(id) : "";
+  if (why) { if (!quiet) { LAB.UI.error(); say(why); } return 0; }
+  var have = gm().dropMax ? gm().dropMax(id) : (g.inv[id] || 0);
+  var type = itemType(id), fit = fitInfo(type, null, chosen);
+  n = Math.min(n || 1, have, fit.fit);
+  if (n <= 0) {
+    if (!quiet && have > 0) { LAB.UI.error(); say("Не влезет: " + fit.why + "." + upHint()); }
+    return 0;
+  }
+  assignCell(type, fit.index);
+  moveItemToLocker(id, n);
   return n;
 }
 function takeItem(id, n) {
@@ -371,163 +443,235 @@ function lockOk(kind, o) {
   if (kind === "frame") return !(g.exoOn && g.exoOn === o.id);
   return true;
 }
-/* (после 4.6) положили — лязг и капсула ушла по трубе; забрали — капсула пришла, шорох и звяк вещей */
-function moved(msg) { snd(/^В ячейк/.test(msg) ? "locker_put" : "locker_take", "pick_part", { gain: 0.8 }); say(msg); after(); UIx("refresh"); if (gm().autosaveSoon) gm().autosaveSoon(); }
-/* «Сдать все детали»: детали из рюкзака — в ячейку, сколько влезет: сначала тяжёлые (они больше всего мешают идти) */
+function moved(msg, put) {
+  snd(put ? "locker_put" : "locker_take", "pick_part", { gain: 0.8 });
+  say(msg); after(); UIx("refresh");
+  if (gm().autosaveSoon) gm().autosaveSoon();
+}
+/* Для выдачи ползунок предлагает столько, сколько сейчас можно унести. */
+function carryFit(have, unitWt) {
+  var lo = 0, hi = have;
+  while (lo < hi) {
+    var mid = Math.ceil((lo + hi) / 2);
+    if (canTake(mid * unitWt)) lo = mid;
+    else hi = mid - 1;
+  }
+  return lo;
+}
 function putParts() {
   var g = G(), n = 0, w = 0, left = 0;
-  Object.keys(g.inv).filter(function (id) { var d = LAB.ITEMS[id]; return d && d.kind === "part" && g.inv[id] > 0; })
+  Object.keys(g.inv).filter(function (id) { return itemType(id) === "part" && g.inv[id] > 0; })
     .sort(function (a, b) { return itemWt(b) * g.inv[b] - itemWt(a) * g.inv[a]; })
     .forEach(function (id) { var c = g.inv[id], put = putItem(id, c, true); n += put; w += itemWt(id) * put; left += c - put; });
-  if (!n) { if (left) { LAB.UI.error(); say("Детали не влезают: " + capLine() + "." + upHint()); } else say("Деталей в рюкзаке нет."); return; }
-  moved("В ячейку ушли детали: " + n + " шт., " + kg(w) + "." + (left ? " Не влезло ещё " + left + " шт.: " + capLine() + "." + upHint() : "") + " " + line());
+  if (!n) {
+    if (left) { LAB.UI.error(); say("Детали не влезают: " + fitInfo("part").why + "." + upHint()); }
+    else say("Деталей в рюкзаке нет.");
+    return;
+  }
+  moved("В хранилище сданы детали: " + n + " шт., " + kg(w) + "." + (left ? " В рюкзаке осталось ещё " + left + " шт." : "") + " " + line(), true);
 }
 function takeParts() {
   var l = Lk(), n = 0, w = 0, left = 0;
-  Object.keys(l.inv).forEach(function (id) {
-    var d = LAB.ITEMS[id]; if (!(d && d.kind === "part")) return;
-    var c = l.inv[id], fit = c;
-    while (fit > 0 && !canTake(itemWt(id) * fit)) fit--;
+  Object.keys(l.inv).filter(function (id) { return itemType(id) === "part"; }).forEach(function (id) {
+    var c = l.inv[id], fit = carryFit(c, itemWt(id));
     if (fit > 0 && takeItem(id, fit)) { n += fit; w += itemWt(id) * fit; }
     left += c - fit;
   });
-  if (!n) { say(left ? "Детали не унести: груз и так тяжёлый." : "Деталей в ячейке нет."); return; }
-  moved("Из ячейки взяты детали: " + n + " шт., " + kg(w) + "." + (left ? " Не унести ещё " + left + " шт.: остались в ячейке." : "") + " " + line());
+  if (!n) { say(left ? "Детали не унести: груз и так тяжёлый." : "Деталей в хранилище нет."); return; }
+  moved("Из хранилища взяты детали: " + n + " шт., " + kg(w) + "." + (left ? " В хранилище осталось ещё " + left + " шт." : "") + " " + line());
 }
-function sliderFor(label, max, w1, fn) {
-  var v = { n: max };
-  return { kind: "slider", label: label, min: 1, max: max, step: 1, get: function () { return v.n; }, set: function (x) { v.n = Math.max(1, Math.min(max, Math.round(x))); },
-    fmt: function (x) { return Math.round(x) + " шт., " + kg(w1 * Math.round(x)); }, fn: function () { fn(v.n); } };
+function quantityItem(label, max, w1, fn) {
+  if (max === 1) return { label: label, keep: true, fn: function () { fn(1); } };
+  var v = max;
+  return { kind: "slider", label: label, keep: true, min: 1, max: max, step: 1, get: function () { return v; }, set: function (x) { v = Math.max(1, Math.min(max, Math.round(x))); },
+    fmt: function (x) { return Math.round(x) + " шт., " + kg(w1 * Math.round(x)); }, fn: function () { fn(v); } };
 }
-/* пункт, который не влезает: называет причину и окно не закрывает */
-function fullItem(label, why) { return { label: label + " — не влезет", disabled: true, why: "Не влезет: " + why + "." + upHint() }; }
-function putGear(list, kind, o, slots, wt, label, msgName) {
-  if (!lockOk(kind, o)) return null;
-  var w = wt(o), fits = freeSlots() >= slots && freeKg() + 1e-6 >= w;
-  if (!fits) return fullItem(label, freeSlots() < slots ? whyFull(w, true, slots) : whyFull(w, false, slots));
-  return { label: label, fn: function () {
-    if (!(freeSlots() >= slots && freeKg() + 1e-6 >= w)) { LAB.UI.error(); say("Не влезет: " + capLine() + "." + upHint()); return; }
-    var i = list.indexOf(o); if (i < 0) return; list.splice(i, 1);
-    if (kind === "weapon") { var cur = G().weapons[G().wi]; G().wi = Math.max(0, G().weapons.indexOf(cur)); }
-    Lk()[kind === "weapon" ? "weapons" : kind === "armor" ? "armors" : "frames"].push(o);
-    moved("В ячейке: " + msgName + ". " + line());
+function unavailable(label, why) { return { label: label + " — недоступно", disabled: true, why: why }; }
+var STORAGE_GEAR = {
+  weapons: { name: function (w) { return w.name; }, wt: weaponWt, kind: "weapon" },
+  armors: { name: function (a) { return a.name; }, wt: armorWt, kind: "armor" },
+  frames: { name: function (f) { return LAB.exo && LAB.exo.frameName ? LAB.exo.frameName(f) : "Экзокаркас"; }, wt: frameWt, kind: "frame" }
+};
+function putGear(type, o, view, chosen) {
+  var def = STORAGE_GEAR[type];
+  if (!lockOk(def.kind, o)) return null;
+  var fit = fitInfo(type, view, chosen), name = def.name(o), label = CELL_NAMES[type] + ". " + name + ", " + kg(def.wt(o));
+  if (!fit.fit) return unavailable(label, "Не влезет: " + fit.why + "." + upHint());
+  return { label: label, keep: true, fn: function () {
+    var g = G(), list = g[type], i = list.indexOf(o), current = g.weapons[g.wi], next = fitInfo(type, null, chosen);
+    if (i < 0 || !lockOk(def.kind, o)) { LAB.UI.error(); say("Снаряжение уже перемещено или надето."); return; }
+    if (!next.fit) { LAB.UI.error(); say("Не влезет: " + next.why + "." + upHint()); return; }
+    assignCell(type, next.index);
+    list.splice(i, 1);
+    if (type === "weapons") g.wi = Math.max(0, g.weapons.indexOf(current));
+    Lk()[type].push(o);
+    moved("В хранилище: " + name + ". " + line(), true);
   } };
 }
-function putMenu() {
-  var g = G(), l = Lk(), items = [];
-  Object.keys(g.inv).filter(function (id) { return g.inv[id] > 0 && LAB.ITEMS[id]; }).sort(function (a, b) { return itemWt(b) * g.inv[b] - itemWt(a) * g.inv[a]; }).forEach(function (id) {
-    var c = g.inv[id], w1 = itemWt(id), isNew = !(l.inv[id] > 0), fit = fitN(c, w1, isNew, 1), nm = itemN(id) + (c > 1 ? ": в рюкзаке " + c + ", " : ", ") + kg(w1 * c);
-    if (fit <= 0) { items.push(fullItem(nm, whyFull(w1, isNew, 1))); return; }
-    if (fit > 1) items.push(sliderFor(nm + (fit < c ? "; влезет " + fit : ""), fit, w1, function (n) { var p = putItem(id, n); if (p) moved("В ячейке: " + itemN(id).toLowerCase() + ", " + p + " шт. " + line()); }));
-    else items.push({ label: nm + (fit < c ? "; влезет одна" : ""), fn: function () { if (putItem(id, 1)) moved("В ячейке: " + itemN(id).toLowerCase() + ". " + line()); } });
-  });
+function ammoName(k) { return LAB.AMMO[k] ? LAB.AMMO[k].n : k; }
+function putAmmo(k, n, chosen) {
+  var g = G(), l = Lk(), fit = fitInfo("ammo", null, chosen);
+  n = Math.min(n, g.ammo[k] || 0, fit.fit);
+  if (n <= 0) { LAB.UI.error(); say(fit.fit ? "Боеприпасов в рюкзаке уже нет." : "Не влезет: " + fit.why + "." + upHint()); return; }
+  assignCell("ammo", fit.index);
+  g.ammo[k] -= n; l.ammo[k] = (l.ammo[k] || 0) + n;
+  moved("В хранилище: " + ammoName(k).toLowerCase() + ", " + n + " шт. " + line(), true);
+}
+function putItems(chosen) {
+  var g = G(), view = storageView(), items = [];
+  Object.keys(g.inv).filter(function (id) { return g.inv[id] > 0 && LAB.ITEMS[id]; })
+    .sort(function (a, b) { return itemWt(b) * g.inv[b] - itemWt(a) * g.inv[a]; }).forEach(function (id) {
+      var c = g.inv[id], w1 = itemWt(id), type = itemType(id), fit = fitInfo(type, view, chosen);
+      var label = CELL_NAMES[type] + ". " + itemN(id) + ", в рюкзаке " + c + " шт.";
+      var why = gm().dropWhy(id), max = Math.min(gm().dropMax(id), fit.fit);
+      if (why || !max) { items.push(unavailable(label, why || "Не влезет: " + fit.why + "." + upHint())); return; }
+      items.push(quantityItem(label + (max < c ? " Можно положить " + max + " шт." : ""), max, w1, function (n) {
+        var put = putItem(id, n, false, chosen);
+        if (put) moved("В хранилище: " + itemN(id).toLowerCase() + ", " + put + " шт. " + line(), true);
+      }));
+    });
   Object.keys(g.ammo || {}).filter(function (k) { return g.ammo[k] > 0; }).forEach(function (k) {
-    var c = g.ammo[k], w1 = AMMO_WT[k] || 0.4, nm = LAB.AMMO[k] ? LAB.AMMO[k].n : k, isNew = !(l.ammo[k] > 0), fit = fitN(c, w1, isNew, 1), lb = nm + ": " + c + ", " + kg(w1 * c);
-    if (fit <= 0) { items.push(fullItem(lb, whyFull(w1, isNew, 1))); return; }
-    items.push(sliderFor(lb + (fit < c ? "; влезет " + fit : ""), fit, w1, function (n) {
-      n = Math.min(n, g.ammo[k] || 0, fitN(g.ammo[k] || 0, w1, !(Lk().ammo[k] > 0), 1)); if (n <= 0) { LAB.UI.error(); say("Не влезет: " + capLine() + "."); return; }
-      g.ammo[k] -= n; Lk().ammo[k] = (Lk().ammo[k] || 0) + n; moved("В ячейке: " + nm.toLowerCase() + ", " + n + " шт. " + line());
-    }));
+    var c = g.ammo[k], fit = fitInfo("ammo", view, chosen), max = Math.min(c, fit.fit);
+    var label = "Боеприпасы. " + ammoName(k) + ", в рюкзаке " + c + " шт.";
+    items.push(max ? quantityItem(label + (max < c ? " Можно положить " + max + " шт." : ""), max, AMMO_WT[k] || 0.4, function (n) { putAmmo(k, n, chosen); }) : unavailable(label, "Не влезет: " + fit.why + "." + upHint()));
   });
-  g.weapons.forEach(function (w) { items.push(putGear(g.weapons, "weapon", w, 1, weaponWt, "Оружие: " + w.name + ", " + kg(weaponWt(w)), w.name)); });
-  g.armors.forEach(function (a) { items.push(putGear(g.armors, "armor", a, SLOT_ARMOR, armorWt, "Броня: " + a.name + ", " + kg(armorWt(a)) + ", два места", a.name)); });
-  (g.frames || []).forEach(function (f) { var fnm = LAB.exo && LAB.exo.frameName ? LAB.exo.frameName(f) : "экзокаркас"; items.push(putGear(g.frames, "frame", f, SLOT_FRAME, frameWt, "Каркас: " + fnm + ", " + kg(frameWt(f)) + ", четыре места", fnm.toLowerCase())); });
-  items = items.filter(Boolean);
-  if (!items.length) { say("Класть нечего: в рюкзаке только то, что в руках и на вас."); return; }
-  items.push({ label: "Назад", fn: function () {} });
-  UIx("menu", "Положить в ячейку", items, { intro: capLine() + ". " + LAB.K("Где вещей несколько — свайп вверх и вниз выбирает, сколько; двойное касание кладёт.", "Где вещей несколько — стрелки вправо и влево выбирают, сколько; Enter кладёт.") });
+  Object.keys(STORAGE_GEAR).forEach(function (type) {
+    (g[type] || []).forEach(function (o) { var item = putGear(type, o, view, chosen); if (item) items.push(item); });
+  });
+  if (!items.length) items.push({ label: "В рюкзаке нет вещей для хранения.", info: true, fn: function () {} });
+  return items.concat({ label: "Назад", close: true });
 }
-function takeMenu() {
-  var g = G(), l = Lk(), items = [];
-  Object.keys(l.inv).filter(function (id) { return l.inv[id] > 0; }).forEach(function (id) {
-    var c = l.inv[id], w1 = itemWt(id);
-    if (c > 1) items.push(sliderFor(itemN(id) + ": в ячейке " + c + ", " + kg(w1 * c), c, w1, function (n) { if (takeItem(id, n)) moved("Взято: " + itemN(id).toLowerCase() + ", " + n + " шт. " + line()); }));
-    else items.push({ label: itemN(id) + ", " + kg(w1), fn: function () { if (takeItem(id, 1)) moved("Взято: " + itemN(id).toLowerCase() + ". " + line()); } });
-  });
-  Object.keys(l.ammo).filter(function (k) { return l.ammo[k] > 0; }).forEach(function (k) {
-    var c = l.ammo[k], w1 = AMMO_WT[k] || 0.4, nm = LAB.AMMO[k] ? LAB.AMMO[k].n : k;
-    items.push(sliderFor(nm + ": " + c + ", " + kg(w1 * c), c, w1, function (n) { n = Math.min(n, l.ammo[k] || 0); if (n <= 0) return; if (!canTake(w1 * n)) { LAB.UI.error(); say("Столько не унести."); return; } l.ammo[k] -= n; if (!(l.ammo[k] > 0)) delete l.ammo[k]; g.ammo[k] = (g.ammo[k] || 0) + n; moved("Взято: " + nm.toLowerCase() + ", " + n + " шт. " + line()); }));
-  });
-  var gear = function (list, kind, name, wt, back) {
-    list.forEach(function (o) { items.push({ label: kind + ": " + name(o) + ", " + kg(wt(o)), fn: function () { if (!canTake(wt(o))) { LAB.UI.error(); say("Не унести: " + kg(wt(o)) + ", а груз " + kg(total()) + " при пределе " + kg(capacity()) + "."); return; } var i = list.indexOf(o); if (i < 0) return; list.splice(i, 1); back(o); moved("Взято: " + name(o) + ". " + line()); } }); });
-  };
-  gear(l.weapons, "Оружие", function (w) { return w.name; }, weaponWt, function (w) { g.weapons.push(w); });
-  gear(l.armors, "Броня", function (a) { return a.name; }, armorWt, function (a) { g.armors.push(a); });
-  gear(l.frames, "Каркас", function (f) { return LAB.exo && LAB.exo.frameName ? LAB.exo.frameName(f) : "экзокаркас"; }, frameWt, function (f) { if (!g.frames) g.frames = []; g.frames.push(f); });
-  if (!items.length) { say("Ячейка пуста."); return; }
-  items.push({ label: "Назад", fn: function () {} });
-  UIx("menu", "Забрать из ячейки", items, { intro: line() });
+function putMenu(chosen) {
+  var items = function () { return putItems(chosen); };
+  UIx("menu", chosen == null ? "Положить в хранилище" : "Положить в ячейку " + (chosen + 1), items(), { rebuild: items,
+    intro: cap1(capLine()) + ". " + LAB.K("У нескольких предметов свайп вверх или вниз выбирает количество, двойное касание кладёт.", "Стрелки вправо и влево меняют количество, Enter кладёт.") });
 }
-/* расширение — только у пункта снабжения: ячейку перестраивает служба снабжения */
-/* (после 4.6) цены ячейки — как у прилавка снабжения: глубина и режим (game.priceK: на лёгком дешевле, на трудных
-   дороже); прежде здесь стоял LAB.credits — множитель найденных кредитов, и на «Лёгком» ячейка выходила дороже.
-   Харизме сеть снабжения, как всем терминалам и автоматам, безразлична: в цене её нет */
+function takeAmmo(k, n) {
+  var g = G(), l = Lk(), w1 = AMMO_WT[k] || 0.4;
+  n = Math.min(n, l.ammo[k] || 0);
+  if (n <= 0) return;
+  if (!canTake(w1 * n)) { LAB.UI.error(); say("Столько не унести. " + line()); return; }
+  l.ammo[k] -= n; if (!(l.ammo[k] > 0)) delete l.ammo[k];
+  g.ammo[k] = (g.ammo[k] || 0) + n;
+  moved("Взято: " + ammoName(k).toLowerCase() + ", " + n + " шт. " + line());
+}
+function takeStack(label, have, w1, fn) {
+  var max = carryFit(have, w1);
+  label += ", в ячейке " + have + " шт.";
+  if (!max) return unavailable(label, "Груз слишком тяжёлый. " + line());
+  return quantityItem(label + (max < have ? " Можно унести " + max + " шт." : ""), max, w1, fn);
+}
+function takeGear(type, o) {
+  var l = Lk(), g = G(), def = STORAGE_GEAR[type], i = l[type].indexOf(o);
+  if (i < 0) return;
+  if (!canTake(def.wt(o))) { LAB.UI.error(); say("Не унести: " + kg(def.wt(o)) + ". " + line()); return; }
+  l[type].splice(i, 1);
+  if (!g[type]) g[type] = [];
+  g[type].push(o);
+  moved("Взято: " + def.name(o) + ". " + line());
+}
+function contentsItems(type) {
+  var l = Lk();
+  if (type === "ammo") return Object.keys(l.ammo).filter(function (k) { return l.ammo[k] > 0; }).map(function (k) {
+    return takeStack(ammoName(k), l.ammo[k], AMMO_WT[k] || 0.4, function (n) { takeAmmo(k, n); });
+  });
+  if (STORAGE_GEAR[type]) {
+    var def = STORAGE_GEAR[type];
+    return l[type].map(function (o) {
+      var label = def.name(o) + ", " + kg(def.wt(o));
+      return canTake(def.wt(o)) ? { label: label, keep: true, fn: function () { takeGear(type, o); } } : unavailable(label, "Груз слишком тяжёлый. " + line());
+    });
+  }
+  return Object.keys(l.inv).filter(function (id) { return l.inv[id] > 0 && itemType(id) === type; }).map(function (id) {
+    return takeStack(itemN(id), l.inv[id], itemWt(id), function (n) {
+      if (takeItem(id, n)) moved("Взято: " + itemN(id).toLowerCase() + ", " + n + " шт. " + line());
+    });
+  });
+}
+/* Цены снабжения зависят от глубины и сложности. Ступени дорожают в полтора раза. */
 function cr(b) { return Math.max(1, Math.round(b * (gm().priceK ? gm().priceK() : 1))); }
 function crW(n) { return n + " " + plural(n, "кредит", "кредита", "кредитов"); }
-/* ступень снабжения: каждая следующая — в полтора раза дороже; глубже и на трудных режимах — дороже */
-function upPrice() { return cr(Math.round(120 * Math.pow(1.5, Lk().lv || 0))); }
-/* аренда: чем больше уже ячейка (без самой аренды) и чем чаще арендуют — тем дороже */
-function rentPrice() { var l = Lk(), base = lockCap().kg - (rented() ? RENT_KG : 0); return cr(Math.round((60 + 1.2 * base) * (1 + 0.2 * (l.rentN || 0)))); }
-function rent() {
-  var g = G(), l = Lk(), p = rentPrice();
-  if (g.credits < p) { LAB.UI.error(); say("Не хватает кредитов: аренда стоит " + p + ", у вас " + g.credits + "."); return false; }
-  g.credits -= p; l.rentN = (l.rentN || 0) + 1;
-  l.rentUntil = Math.max(l.rentUntil || 0, nowAbs()) + RENT_MIN;
-  snd("rent_ok", "vend"); LAB.UI.ok(); /* оттиск печати: договор аренды */
-  say("Соседняя ячейка ваша до " + untilText(l.rentUntil) + ": плюс " + kg(RENT_KG) + " и " + RENT_SLOTS + " мест. Теперь " + capLine() + ". Списано " + crW(p) + ", осталось " + g.credits + ". Кончится аренда — вещи останутся целы, но класть будет нельзя, пока не заберёте лишнее.");
-  if (gm().autosaveSoon) gm().autosaveSoon();
+function upPrice() { return cr(Math.round(120 * Math.pow(1.5, Lk().lv))); }
+function cellPrice(index) { var cell = Lk().cells[index]; return cr(Math.round(120 * Math.pow(1.5, cell && cell.lv || 0))); }
+function rentPrice() { return cr(Math.round((60 + 4.8 * permanentSlots()) * (1 + 0.2 * (Lk().rentN || 0)))); }
+function pay(p, service) {
+  var g = G();
+  if (g.credits < p) { LAB.UI.error(); say("Не хватает кредитов. " + service + " стоит " + crW(p) + ", у вас " + g.credits + "."); return false; }
+  g.credits -= p;
   return true;
 }
-/* у верстака: полки (места) и усиленное дно (вес) — из деталей, каждые следующие — из большего числа */
-function craftNeed(kind) { var l = Lk(), n = (kind === "shelf" ? l.shelf : l.floor) || 0, base = kind === "shelf" ? SHELF_NEED : FLOOR_NEED, out = {}; for (var k in base) out[k] = Math.ceil(base[k] * (1 + 0.5 * n)); return out; }
+function paid(p) { return " Списано " + crW(p) + ", осталось " + G().credits + "."; }
+function saveStorage() { if (gm().autosaveSoon) gm().autosaveSoon(); }
+function expanded() { snd("locker_expand", "vend"); LAB.UI.ok(); saveStorage(); }
+function rent() {
+  var l = Lk(), p = rentPrice();
+  if (!pay(p, "Аренда")) return false;
+  feeTick();
+  l.rentN = (l.rentN || 0) + 1;
+  l.rentUntil = Math.max(l.rentUntil || 0, nowAbs()) + RENT_MIN;
+  l.feeAt = nowAbs();
+  snd("rent_ok", "vend"); LAB.UI.ok();
+  say("Открыто " + RENT_SLOTS + " дополнительных ячеек до " + untilText(l.rentUntil) + ". " + cap1(capLine()) + "." + paid(p));
+  saveStorage();
+  return true;
+}
+function craftNeed(kind) { var l = Lk(), n = l[kind] || 0, base = kind === "shelf" ? SHELF_NEED : FLOOR_NEED, out = {}; for (var k in base) out[k] = Math.ceil(base[k] * (1 + 0.5 * n)); return out; }
 function craftStep(kind) { return kind === "shelf" ? 2 : 3; }
 function craftLock(kind) { var MS = LAB.mastery; return MS && MS.step && MS.step("mech") < craftStep(kind) ? "нужна ступень механики " + craftStep(kind) + ", у вас " + MS.step("mech") : ""; }
+var STORAGE_CRAFT = {
+  shelf: { n: "Полки и перегородки", gain: "+" + SHELF_SLOTS + " ячейки" },
+  floor: { n: "Усиленное дно", gain: "+" + FLOOR_ADD + " предметов к вместимости каждой ячейки" }
+};
 function craftCell(kind) {
-  var l = Lk(), W = LAB.workshop, n = (kind === "shelf" ? l.shelf : l.floor) || 0, need = craftNeed(kind), nm = kind === "shelf" ? "Полки и перегородки" : "Усиленное дно";
-  if (n >= CRAFT_MAX) { say(nm + " уже в ячейке: " + CRAFT_MAX + " из " + CRAFT_MAX + "."); return false; }
-  var lock = craftLock(kind); if (lock) { LAB.UI.error(); say(nm + ": " + lock + "."); return false; }
-  if (!W.haveAll(need)) { LAB.UI.error(); say(nm + ": не хватает — " + W.costLack(need) + "."); return false; }
+  var def = STORAGE_CRAFT[kind], l = Lk(), W = LAB.workshop, n = l[kind] || 0, need = craftNeed(kind);
+  if (!def) return false;
+  if (n >= CRAFT_MAX) { say(def.n + ". Уже установлено " + CRAFT_MAX + " из " + CRAFT_MAX + "."); return false; }
+  var lock = craftLock(kind);
+  if (lock) { LAB.UI.error(); say(def.n + ". " + cap1(lock) + "."); return false; }
+  if (!W.haveAll(need)) { LAB.UI.error(); say(def.n + ". Не хватает деталей: " + W.costLack(need) + "."); return false; }
   W.take(need);
-  if (kind === "shelf") l.shelf = n + 1; else l.floor = n + 1;
+  l[kind] = n + 1;
   if (gm().advanceTime) gm().advanceTime(25);
   if (LAB.mastery && LAB.mastery.gain) LAB.mastery.gain("mech", 6);
   snd("work_ratchet", "craft"); LAB.UI.ok();
-  if (gm().later) gm().later(function () { snd("locker_expand", "craft"); }, 900); /* ушли по сети снабжения — ячейка выросла */
-  say(nm + (kind === "shelf" ? " собраны и ушли" : " собрано и ушло") + " в вашу ячейку по сети снабжения: " + (kind === "shelf" ? "мест плюс " + SHELF_SLOTS : "вес плюс " + kg(FLOOR_KG)) + ". Теперь " + capLine() + ".");
-  if (gm().autosaveSoon) gm().autosaveSoon();
+  if (gm().later) gm().later(function () { snd("locker_expand", "craft"); }, 900);
+  say("В хранилище установлено улучшение «" + def.n + "». " + def.gain + ". " + cap1(capLine()) + ".");
+  saveStorage();
   return true;
 }
-/* ключ-карта складской ячейки выбывшего сотрудника: присоединяет соседнюю ячейку */
 function useCard() {
   var g = G(), l = Lk();
   if (!(g.inv.lockcard > 0)) { say("Ключ-карты нет."); return false; }
-  if ((l.cards || 0) >= CARD_MAX) { say("К вашей ячейке и так присоединены " + CARD_MAX + " соседних — больше сеть снабжения не даёт. Лишняя карта не нужна: её можно выбросить."); return false; }
+  if ((l.cards || 0) >= CARD_MAX) { say("По ключ-картам уже добавлено " + CARD_MAX * CARD_SLOTS + " ячеек. Лишнюю карту можно выбросить."); return false; }
   g.inv.lockcard--; if (!(g.inv.lockcard > 0)) delete g.inv.lockcard;
   l.cards = (l.cards || 0) + 1;
   snd("card_ok", "ui_ok"); LAB.UI.ok();
-  if (gm().later) gm().later(function () { snd("locker_expand", "card_ok"); }, 700); /* присоединена соседняя ячейка */
-  say("Карта считана: ячейка выбывшего сотрудника присоединена к вашей — плюс " + kg(CARD_KG) + " и " + CARD_SLOTS + " места. Присоединено " + l.cards + " из " + CARD_MAX + ". Теперь " + capLine() + ".");
-  if (gm().autosaveSoon) gm().autosaveSoon();
+  if (gm().later) gm().later(function () { snd("locker_expand", "card_ok"); }, 700);
+  say("Карта считана. Добавлено " + CARD_SLOTS + " ячейки. Использовано карт " + l.cards + " из " + CARD_MAX + ". " + cap1(capLine()) + ".");
+  saveStorage();
   return true;
 }
-/* карты падают с машин ОКО (combat.js, добыча): чаще с охраны и начальников смен; не больше, чем ещё нужно */
 function drops(f, list, r, dk) {
   if (!f || f.ally || f.calm || f.kind !== "mech" || G().L < 2) return;
   var beh = f.beh || (f.base && f.base.beh) || [], has = function (k) { return beh.indexOf(k) >= 0; };
-  if (has("camera") || ((Lk().cards || 0) + (G().inv.lockcard || 0)) >= CARD_MAX) return;
+  var l = Lk();
+  if (has("camera") || ((l.cards || 0) + (G().inv.lockcard || 0) + (l.inv.lockcard || 0)) >= CARD_MAX) return;
   var pc = f.boss ? 0.3 : has("commander") ? 0.06 : f.guard ? 0.03 : 0.008;
   if (r() < pc * (dk || 1)) list.push({ kind: "item", item: "lockcard", n: 1 });
 }
-/* (после 4.6) Аренда кончилась, а ячейка переполнена: вещи целы, класть нельзя, а за хранение лишнего
-   снабжение берёт плату — сутки как треть аренды на трое суток, то есть как сама аренда. Иначе один
-   раз арендованная полка оставалась бы бесплатным складом навсегда. Плата копится, пока лишнее лежит,
-   и списывается с кредитов у ячейки (не хватает — долг ждёт кредитов); забрать вещи можно всегда. */
-function overFull() { return lockerWt() > lockCap().kg + 1e-6 || slotsUsed() > lockCap().slots; }
+/* Доплата действует только на занятые арендованные ячейки после истечения срока. */
+function leasedOver() {
+  var start = permanentSlots();
+  if (!Lk().cells.some(function (c, i) { return i >= start && c && c.leased; })) return false;
+  var view = storageView();
+  return Object.keys(view.byType).some(function (type) { var i = view.byType[type]; return i >= start && Lk().cells[i].leased; });
+}
 function feeDay() { return Math.max(5, Math.round(rentPrice() / 3)); }
 function feeTick() {
   var l = Lk(), now = nowAbs();
-  if (rented() || !overFull() || l.feeAt == null) { l.feeAt = now; return; }
-  var dm = now - l.feeAt; if (dm <= 0) return;
+  if (!l.rentUntil || rented() || !leasedOver() || l.feeAt == null) { l.feeAt = now; return; }
+  var dm = now - Math.max(l.feeAt, l.rentUntil);
+  if (dm <= 0) return;
   l.feeAt = now;
   l.feeF = (l.feeF || 0) + feeDay() * dm / 1440;
   if (l.feeF >= 1) { var n = Math.floor(l.feeF); l.feeF -= n; l.debt = (l.debt || 0) + n; }
@@ -536,78 +680,114 @@ function collect() {
   var l = Lk(), g = G();
   feeTick();
   if (!(l.debt > 0)) return "";
-  var pay = Math.min(g.credits || 0, l.debt);
-  if (pay <= 0) return " Долг за хранение сверх предела — " + crW(l.debt) + ": спишется, когда появятся кредиты.";
-  g.credits -= pay; l.debt -= pay;
-  return " За хранение сверх предела списано " + crW(pay) + (l.debt > 0 ? ", долг ещё " + crW(l.debt) : "") + ".";
+  var n = Math.min(g.credits || 0, l.debt);
+  if (n <= 0) return " Долг за хранение — " + crW(l.debt) + ".";
+  g.credits -= n; l.debt -= n;
+  saveStorage();
+  return " За хранение списано " + crW(n) + (l.debt > 0 ? ", долг ещё " + crW(l.debt) : "") + ".";
 }
-/* аренда кончилась — сказать (game.js, минуты тела); сказанное помнит запись, а не только этот запуск */
 function minutes() {
   if (!LAB.game || !gm().entered) return;
-  after(); /* ступень груза — и когда она сменилась сама: кончился плод, сел каркас, сбит дрон */
-  var l = G().locker; if (!l) return;
+  after();
+  var l = G().locker; if (!l || !l.rentUntil) return;
   feeTick();
-  if (!l.rentUntil || l.rentUntil > nowAbs() || l.rentSaid === l.rentUntil) return;
+  if (l.rentUntil > nowAbs() || l.rentSaid === l.rentUntil) return;
   l.rentSaid = l.rentUntil;
-  var over = overFull();
-  sayq("Аренда соседней ячейки кончилась. " + cap1(capLine()) + "." + (over ? " Ячейка переполнена: вещи целы, но класть в неё нельзя, а за хранение лишнего снабжение берёт " + crW(feeDay()) + " в сутки, как за аренду, — заберите лишнее или продлите аренду у пункта снабжения." : " Продлить можно у пункта снабжения."));
+  sayq("Аренда ячеек закончилась. " + cap1(capLine()) + "." + (leasedOver() ? " Вещи из бывших арендованных ячеек можно забрать. До выдачи хранение стоит " + crW(feeDay()) + " в сутки." : " Продлить аренду можно у пункта снабжения."));
 }
 function upgrade() {
-  var g = G(), l = Lk();
-  if ((l.lv || 0) >= LOCK_MAX_LV) { say("Ячейка и так самая большая: " + capLine() + "."); return false; }
+  var l = Lk();
+  if (l.lv >= LOCK_MAX_LV) { say("Все ступени расширения куплены. " + cap1(capLine()) + "."); return false; }
   var p = upPrice();
-  if (g.credits < p) { LAB.UI.error(); say("Не хватает кредитов: расширение стоит " + p + ", у вас " + g.credits + "."); return false; }
-  g.credits -= p; l.lv = (l.lv || 0) + 1;
-  snd("locker_expand", "vend"); LAB.UI.ok();
-  say("Ячейка расширена: ступень " + l.lv + " из " + LOCK_MAX_LV + ". Теперь " + capLine() + ". Списано " + p + " " + plural(p, "кредит", "кредита", "кредитов") + ", осталось " + g.credits + ".");
-  if (gm().journal) gm().journal("Ячейка хранения расширена до ступени " + l.lv + ".");
-  if (gm().autosaveSoon) gm().autosaveSoon();
+  if (!pay(p, "Расширение хранилища")) return false;
+  l.lv++;
+  say("В хранилище добавлено " + LOCK_ADD_SLOTS + " ячейки. " + cap1(capLine()) + "." + paid(p));
+  if (gm().journal) gm().journal("Хранилище расширено до ступени " + l.lv + ".");
+  expanded();
   return true;
 }
+function upgradeCell(index) {
+  if (index < 0 || index >= permanentSlots() || index % 1 !== 0) return false;
+  var cells = Lk().cells, cell = cells[index];
+  if (cell && (cell.lv || 0) >= CELL_MAX_LV) { say("Достигнута максимальная вместимость ячейки " + (index + 1) + "."); return false; }
+  var p = cellPrice(index);
+  if (!pay(p, "Увеличение вместимости")) return false;
+  if (!cell) cell = cells[index] = {};
+  cell.lv = (cell.lv || 0) + 1;
+  say("Ячейка " + (index + 1) + " теперь вмещает " + cellCap(cell) + " предметов." + paid(p));
+  expanded();
+  return true;
+}
+function cellLabel(index, view) {
+  var c = Lk().cells[index], type = c && c.type;
+  var label = "Ячейка " + (index + 1) + ". " + (type ? CELL_NAMES[type] : "Свободна") + ". " + (view.counts[type] || 0) + " из " + cellCap(c) + " предметов.";
+  if (index >= view.slots) return label + " Только выдача.";
+  if (type && view.counts[type] > cellCap(c)) return label + " Сверх вместимости. Сначала заберите лишнее.";
+  if (index >= permanentSlots()) return label + " В аренде.";
+  return label;
+}
+function cellMenu(index, where) {
+  function items() {
+    var view = storageView(), c = Lk().cells[index], type = c && c.type;
+    var out = [{ label: cellLabel(index, view), info: true, fn: function () {} }];
+    if (index < view.slots) out.push({ label: type ? "Положить ещё" : "Назначить ячейку и положить предметы", fn: function () { putMenu(index); } });
+    if (type) out = out.concat(contentsItems(type));
+    if (where === "post" && index < permanentSlots()) {
+      if ((c && c.lv || 0) >= CELL_MAX_LV) out.push({ label: "Вместимость максимальная.", info: true, fn: function () {} });
+      else out.push({ label: "Увеличить вместимость на " + CELL_ADD + " предметов за " + crW(cellPrice(index)) + ". У вас " + crW(G().credits) + ".", keep: true, fn: function () { upgradeCell(index); } });
+    }
+    return out.concat({ label: "Назад", close: true });
+  }
+  UIx("menu", "Ячейка " + (index + 1), items(), { rebuild: items });
+}
+function cellsMenu(where, onlyFilled) {
+  function items() {
+    var view = storageView(), cells = Lk().cells, out = [];
+    for (var i = 0; i < Math.max(cells.length, view.slots); i++) {
+      if ((onlyFilled || i >= view.slots) && !(cells[i] && cells[i].type)) continue;
+      out.push({ id: "storage-cell-" + i, label: cellLabel(i, view), fn: cellMenu.bind(null, i, where) });
+    }
+    if (!out.length) out.push({ label: "Хранилище пусто.", info: true, fn: function () {} });
+    return out.concat({ label: "Назад", close: true });
+  }
+  UIx("menu", onlyFilled ? "Забрать из хранилища" : "Ячейки хранилища", items(), { rebuild: items });
+}
 function lockerItems(where) {
-  var its = [];
-  its.push({ label: function () { var n = lockerN(), over = lockerWt() > lockCap().kg + 1e-6 || slotsUsed() > lockCap().slots; return (n ? "В ячейке " + n + " " + plural(n, "вещь", "вещи", "вещей") + ": " + capLine() : "Ячейка пуста: " + capLine()) + "." + (over ? " Ячейка переполнена: класть нельзя, пока не заберёте лишнее" + (rented() ? "." : "; хранение лишнего — " + crW(feeDay()) + " в сутки.") : "") + ((Lk().debt || 0) > 0 ? " Долг за хранение — " + crW(Lk().debt) + "." : "") + " " + line(); }, info: true, keep: true, fn: function () {} });
-  its.push({ label: "Положить в ячейку: вещи, батареи, оружие, броню, каркас", fn: putMenu });
-  its.push({ label: "Забрать из ячейки", fn: takeMenu });
-  its.push({ label: "Сдать все детали, сколько влезет", keep: true, fn: putParts });
-  /* (после 4.6) ключ-карта — и здесь: где ещё её применять, как не у ячейки */
-  if ((G().inv.lockcard || 0) > 0) its.push({ label: function () { return "Присоединить по ключ-карте соседнюю ячейку: карт у вас " + (G().inv.lockcard || 0) + ", присоединено " + (Lk().cards || 0) + " из " + CARD_MAX; }, keep: true, fn: useCard });
-  its.push({ label: "Забрать все детали, сколько унесёте", keep: true, fn: takeParts });
+  var view = storageView(), n = lockerN(), debt = Lk().debt || 0;
+  var onlyTake = Object.keys(view.byType).filter(function (type) { return view.byType[type] >= view.slots; }).length;
+  var its = [
+    { label: (n ? "Предметов в хранилище: " + n + ". " : "Хранилище пусто. ") + cap1(capLine(view)) + "." + (onlyTake ? " Ячеек только на выдачу: " + onlyTake + "." : "") + (debt ? " Долг за хранение — " + crW(debt) + "." : "") + " " + line(), info: true, fn: function () {} },
+    { label: "Положить в хранилище", fn: putMenu },
+    { label: "Забрать из хранилища", fn: function () { cellsMenu(where, true); } },
+    { label: "Ячейки хранилища" + (where === "post" ? ". Просмотр и улучшение вместимости" : ""), fn: function () { cellsMenu(where, false); } },
+    { label: "Сдать все детали, сколько влезет", keep: true, fn: putParts },
+    { label: "Забрать все детали, сколько унесёте", keep: true, fn: takeParts }
+  ];
+  if ((G().inv.lockcard || 0) > 0) its.push({ label: "Добавить " + CARD_SLOTS + " ячейки по ключ-карте. Карт у вас " + G().inv.lockcard + ".", keep: true, fn: useCard });
   if (where === "post") {
-    var lv = Lk().lv || 0;
-    if (lv < LOCK_MAX_LV) its.push({ label: function () { return "Расширить ячейку: плюс " + kg(LOCK_ADD_KG) + " и " + LOCK_ADD_SLOTS + " места — " + crW(upPrice()) + " (у вас " + G().credits + "). Ступень " + ((Lk().lv || 0) + 1) + " из " + LOCK_MAX_LV + ", каждая следующая в полтора раза дороже"; }, keep: true, fn: upgrade });
-    else its.push({ label: "Ступени снабжения — все " + LOCK_MAX_LV + " из " + LOCK_MAX_LV, info: true, keep: true, fn: function () {} });
-    its.push({ label: function () { return (rented() ? "Продлить аренду соседней ячейки ещё на трое суток" : "Арендовать соседнюю ячейку на трое суток: плюс " + kg(RENT_KG) + " и " + RENT_SLOTS + " мест") + " — " + crW(rentPrice()) + " (у вас " + G().credits + ")" + (rented() ? ". Сейчас арендована до " + untilText(Lk().rentUntil) : ""); }, keep: true, fn: rent });
+    var lv = Lk().lv;
+    if (lv < LOCK_MAX_LV) its.push({ label: "Расширить хранилище на " + LOCK_ADD_SLOTS + " ячейки за " + crW(upPrice()) + ". Ступень " + (lv + 1) + " из " + LOCK_MAX_LV + ". У вас " + crW(G().credits) + ".", keep: true, fn: upgrade });
+    its.push({ label: (rented() ? "Продлить аренду на трое суток" : "Арендовать " + RENT_SLOTS + " ячеек на трое суток") + " за " + crW(rentPrice()) + "." + (rented() ? " Срок до " + untilText(Lk().rentUntil) + "." : ""), keep: true, fn: rent });
   }
   if (where === "bench") {
-    ["shelf", "floor"].forEach(function (kind) {
-      its.push({ label: function () {
-        var l = Lk(), n = (kind === "shelf" ? l.shelf : l.floor) || 0, nm = kind === "shelf" ? "Собрать полки и перегородки для ячейки: мест плюс " + SHELF_SLOTS : "Собрать усиленное дно для ячейки: вес плюс " + kg(FLOOR_KG);
-        if (n >= CRAFT_MAX) return (kind === "shelf" ? "Полки" : "Усиленное дно") + " — " + CRAFT_MAX + " из " + CRAFT_MAX;
-        var lock = craftLock(kind);
-        return nm + ". Сделано " + n + " из " + CRAFT_MAX + ". " + (lock ? cap1(lock) : "Нужно: " + LAB.workshop.costText(craftNeed(kind)));
-      }, keep: true, fn: function () { craftCell(kind); } });
+    Object.keys(STORAGE_CRAFT).forEach(function (kind) {
+      var def = STORAGE_CRAFT[kind], n = Lk()[kind] || 0;
+      var label = def.n + ". " + def.gain + ". Сделано " + n + " из " + CRAFT_MAX + ".";
+      if (n < CRAFT_MAX) its.push({ label: label + " " + (craftLock(kind) || "Нужно: " + LAB.workshop.costText(craftNeed(kind))) + ".", keep: true, fn: function () { craftCell(kind); } });
     });
   }
-  its.push({ label: function () { return "Из чего складывается ячейка: " + capWhy(); }, info: true, keep: true, fn: function () {} });
-  its.push({ label: "Как ещё расширить ячейку", fn: function () { UIx("note", "Как расширить ячейку", HOW_GROW()); } });
-  its.push({ label: "Назад", fn: function () {} });
-  return its;
+  its.push({ label: "Количество ячеек. " + capWhy() + ".", info: true, fn: function () {} });
+  its.push({ label: "Как устроено хранилище", fn: function () {
+    UIx("note", "Как устроено хранилище", "Назначение ячейки определяется первой положенной вещью. Например, провода и металлолом хранятся вместе в ячейке для деталей. Для одного назначения используется одна ячейка. Пустая ячейка может принять другое назначение и сохраняет купленную вместимость. Чтобы выбрать ячейку вручную, откройте её через список ячеек. Сначала в хранилище 10 ячеек, по 300 предметов в каждой. Пункт снабжения продаёт дополнительные ячейки и увеличивает вместимость выбранной ячейки на 100 предметов за ступень. Когда аренда заканчивается, содержимое временных ячеек остаётся доступным на выдачу.");
+  } });
+  return its.concat({ label: "Назад", close: true });
 }
 function cap1(t) { t = String(t || ""); return t.charAt(0).toUpperCase() + t.slice(1); }
-function HOW_GROW() {
-  return "Ячейка растёт пятью путями, и чем она больше, тем дороже каждое новое место. " +
-    "У пункта снабжения — ступени за кредиты: плюс " + kg(LOCK_ADD_KG) + " и " + LOCK_ADD_SLOTS + " места, всего " + LOCK_MAX_LV + " ступеней, каждая следующая в полтора раза дороже прежней, а глубже всё дороже. " +
-    "Там же — аренда соседней ячейки на трое суток: плюс " + kg(RENT_KG) + " и " + RENT_SLOTS + " мест; цена растёт с размером вашей ячейки и с каждой арендой. Кончилась аренда — вещи целы, но класть нельзя, пока не заберёте лишнее. " +
-    "У верстака — своими руками: полки и перегородки дают места, усиленное дно — вес; нужна ступень механики, и каждые следующие полки и дно — из большего числа деталей, до трёх раз. " +
-    "С машин ОКО, чаще с охраны и начальников смен, падают ключ-карты складских ячеек выбывших сотрудников: карта, использованная из инвентаря, присоединяет соседнюю ячейку — плюс " + kg(CARD_KG) + " и " + CARD_SLOTS + " места, до " + CARD_MAX + " карт. " +
-    "И харизма: с 20 кладовщики снабжения находят вам два лишних места, с 30 — четыре.";
-}
 function lockerMenu(where) {
-  snd("locker_open", "ui_open"); /* (после 4.6) окошко выдачи ячейки: открыть и закрыть */
-  var paid = collect(); /* плата за хранение сверх предела — у ячейки */
-  UIx("menu", "Ячейка хранения", lockerItems(where), { rebuild: function () { return lockerItems(where); }, onClose: function () { snd("locker_close", "ui_close"); },
-    intro: "Ячейка одна: у капсулы, у верстака и у пункта снабжения — та же самая. В ячейке вещи ничего не весят, но у неё свой предел: " + capLine() + "." + paid });
+  snd("locker_open", "ui_open");
+  var paidNow = collect();
+  UIx("menu", "Личное хранилище", lockerItems(where), { rebuild: function () { return lockerItems(where); }, onClose: function () { snd("locker_close", "ui_close"); },
+    intro: "Вещи доступны у капсулы, верстака и пункта снабжения. " + cap1(capLine()) + "." + paidNow });
 }
 function rigGate(def) {
   var w = LAB.workshop, b = w && w.near();
@@ -645,15 +825,16 @@ function rigMenu() {
   UIx("menu", "Грузовое снаряжение", items(), { keep: true, rebuild: items });
 }
 function benchItems(where) {
-  var n = lockerN(), items = [{ label: "Ячейка хранения" + (n ? ": " + n + " " + plural(n, "вещь", "вещи", "вещей") + ", " + kg(lockerWt()) + " из " + kg(lockCap().kg) : ": пуста"), fn: function () { lockerMenu(where || "bench"); } }];
+  var items = [{ label: function () { return "Личное хранилище. " + cap1(capLine()) + "."; }, fn: function () { lockerMenu(where || "bench"); } }];
   if (!where || where === "bench") items.push({ label: "Грузовое снаряжение: пояс, рама и упряжь", fn: rigMenu });
   return items;
 }
 /* Запись прежней версии: если с новым весом герой не сдвинется — лишние детали и ценности
-   уходят в ячейку сами, и «Эхо» об этом говорит. Только здесь ячейка может оказаться сверх
-   меры: тогда класть в неё нельзя, пока не заберут лишнее. */
+   уходят в личное хранилище. Вещи сверх нового предела остаются доступны на выдачу. */
 function init(loaded) {
-  var g = G(); if (!g || g.loadInit) { reset(); return; }
+  var g = G();
+  if (g && g.locker) storageView();
+  if (!g || g.loadInit) { reset(); return; }
   g.loadInit = 1; reset();
   if (!loaded || ratio() <= 1.25) return;
   /* (после 4.6, нелогичность) не уносятся: то, что не выбрасывается (жетоны погибших ждут выжившие),
@@ -665,7 +846,7 @@ function init(loaded) {
     if (ratio() <= 1) return;
     Object.keys(g.inv).filter(function (id) { var d = LAB.ITEMS[id]; return d && d.kind === kd && g.inv[id] > 0 && !keep(id); })
       .sort(function (a, b) { return itemWt(b) * g.inv[b] - itemWt(a) * g.inv[a]; })
-      .forEach(function (id) { if (ratio() > 1) { var c = g.inv[id]; g.inv[id] = 0; delete g.inv[id]; l.inv[id] = (l.inv[id] || 0) + c; moved.inv += c; } });
+      .forEach(function (id) { if (ratio() > 1) { var c = g.inv[id]; moveItemToLocker(id, c); moved.inv += c; } });
   });
   var hand = g.weapons[g.wi];
   (g.weapons || []).slice().sort(function (a, b) { return weaponWt(b) - weaponWt(a); }).forEach(function (w) {
@@ -677,14 +858,15 @@ function init(loaded) {
   var on = wornFrame();
   (g.frames || []).slice().forEach(function (f) { if (ratio() <= 1 || f === on) return; g.frames.splice(g.frames.indexOf(f), 1); l.frames.push(f); moved.f++; });
   Object.keys(g.ammo || {}).forEach(function (k) { if (ratio() <= 1 || !(g.ammo[k] > 0) || (hand && hand.ammo === k)) return; l.ammo[k] = (l.ammo[k] || 0) + g.ammo[k]; moved.am += g.ammo[k]; g.ammo[k] = 0; });
+  storageView();
   var gone = Math.round((w0 - total()) * 10) / 10;
   var what = [moved.inv ? "вещи и детали, " + moved.inv + " шт." : "", moved.w ? "оружие, " + moved.w + " шт." : "", moved.a ? "броня, " + moved.a + " шт." : "", moved.f ? "каркасы, " + moved.f + " шт." : "", moved.am ? "батареи и заряды, " + moved.am + " шт." : ""].filter(Boolean).join("; ");
-  if (gone > 0) setTimeout(function () { LAB.safe(function () { sayq("Теперь у вещей есть вес. " + (ratio() <= 1.5 ? "Чтобы вы могли идти, лишнее" : "Лишнее") + " — " + kg(gone) + " — отправлено в вашу ячейку хранения: " + what + ". Она открывается у любой капсулы восстановления, у верстака и у пункта снабжения. " + (overFull() ? "Ячейка переполнена: пока не заберёте лишнее, класть в неё нельзя. " : "") + line()); }); }, 1500);
+  if (gone > 0) setTimeout(function () { LAB.safe(function () { sayq("Теперь у вещей есть вес. " + (ratio() <= 1.5 ? "Чтобы вы могли идти, лишнее" : "Лишнее") + " — " + kg(gone) + " — отправлено в ваше личное хранилище. " + what + ". Хранилище открывается у капсулы восстановления, верстака и пункта снабжения. " + line()); }); }, 1500);
 }
 
 LAB.load = {
   kg: kg, itemWt: itemWt, weaponWt: weaponWt, armorWt: armorWt, frameWt: frameWt, ammoWt: function (k) { return AMMO_WT[k] || 0.4; }, floorWt: floorWt, parts: parts, total: total,
-  capOf: capOf, statCapacity: statCapacity, capacity: capacity, ratio: ratio, tier: tier, TIER_N: TIER_N,
+  capOf: capOf, statCapacity: statCapacity, personalCapacity: personalCapacity, capacity: capacity, ratio: ratio, tier: tier, TIER_N: TIER_N,
   gapK: gapK, stepGap: stepGap, noise: noise, wakeK: wakeK, accPen: accPen, dodgePen: dodgePen, handPen: handPen, needStr: needStr, handStr: handStr,
   canMove: canMove, canTake: canTake, refuseText: refuseText, after: after, reset: reset,
   line: line, status: status, handNote: handNote, weaponLine: weaponLine, heaviest: heaviest,

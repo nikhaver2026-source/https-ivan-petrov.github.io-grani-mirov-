@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /* (после 4.6) Проверка героя: характеристики (очки уровня, практика раз в сутки, пороги, вторичные,
-   перенос записей), груз (вес, предел, перегруз, неподъёмно, отказ поднять, тяжёлое оружие) и ячейка
-   хранения (предел веса и мест, у капсулы, верстака и пункта снабжения, пять путей расширения,
-   переполнение без потери вещей, разгрузка прежних записей).
+   перенос записей), груз (вес, предел, перегруз, неподъёмно, отказ поднять, тяжёлое оружие) и личное
+   хранилище (лимиты ячеек, доступ у капсулы, верстака и пункта снабжения, улучшения,
+   аренда и перенос вещей из прежних записей).
    Запуск: node lab/tests/hero.test.js  (нужен Playwright с Chromium) */
 "use strict";
 const path = require("path"), http = require("http"), fs = require("fs");
@@ -145,7 +145,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     C.stop(); LAB.ui.closeAll(); g.newGame(); C.stop(); LAB.ui.closeAll();
     g.enterFloor(2, 3, "down", true); C.stop(); C.foes().forEach(f => { f.dead = true; });
     const G = g.G; G.hp = G.hpMax = 9999; said();
-    out.start = L.tier() <= 1 && L.capacity() === 50;
+    out.start = L.tier() <= 1 && L.capacity() === 100;
     /* перегруз и неподъёмно */
     G.inv.scrap = Math.ceil((L.capacity() * 1.1 - L.total()) / L.itemWt("scrap")); L.after(); await wait(10);
     out.overTier = L.tier() === 2 && L.gapK() > 1 && L.noise() > 0 && L.wakeK() > 1 && L.dodgePen() > 0 && /перегруз/.test(said());
@@ -169,7 +169,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     L.status(); out.status = /Предел складывают: основа/.test(said());
     return out;
   });
-  ok(r2.start, "в начале: предел 50 кило, налегке или обычный ход");
+  ok(r2.start, "в начале: предел 100 кило, налегке или обычный ход");
   ok(r2.overTier, "перегруз: шаг реже и громче, усталость быстрее, уклонение хуже; «Эхо» говорит о перегрузе");
   ok(r2.stuck, "неподъёмно: ни шагу, «Эхо» говорит, сколько сбросить");
   ok(r2.refuse, "лишнего с пола не поднять");
@@ -177,7 +177,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(r2.hand, "тяжёлое оружие: силы мало — точность ниже, силы хватает — без потерь");
   ok(r2.invLine && r2.status, "груз в инвентаре и подробно — «Груз: сколько несёте»");
 
-  console.log("Ячейка хранения: предел, доступ, пять путей расширения");
+  console.log("Личное хранилище: назначение, доступ, улучшения");
   const r3 = await page.evaluate(async () => {
     const g = LAB.game, C = LAB.combat, L = LAB.load, out = {}, wait = ms => new Promise(r => setTimeout(r, ms));
     const lbl = it => typeof it.label === "function" ? it.label() : it.label;
@@ -185,36 +185,43 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     C.stop(); LAB.ui.closeAll(); g.newGame(); C.stop(); LAB.ui.closeAll();
     g.enterFloor(2, 3, "down", true); C.stop(); C.foes().forEach(f => { f.dead = true; });
     const G = g.G; said();
-    const cap0 = L.lockCap(); out.base = cap0.kg === 40 && cap0.slots === 10;
-    /* предел веса: всё не влезает */
-    G.inv.scrap = 100; L.putParts(); out.kgLimit = L.lockerWt() <= 40 && G.inv.scrap > 0 && /Не влезло/.test(said());
-    /* предел мест */
-    const ids = Object.keys(LAB.ITEMS).filter(k => LAB.ITEMS[k].kind === "part" && k !== "scrap").slice(0, 15);
-    ids.forEach(k => { G.inv[k] = 1; });
-    let put = 0; ids.forEach(k => { put += L.putItem(k, 1, true); });
-    out.slotLimit = L.slotsUsed() <= 10 && put < ids.length;
-    /* доступ: капсула, верстак, пункт снабжения */
+    const cap0 = L.lockCap(); out.base = cap0.perCell === 300 && cap0.slots === 10;
+    G.inv.scrap = 290; G.inv.wire = 30; L.putParts();
+    out.singlePurpose = L.locker().inv.scrap + L.locker().inv.wire === 300 && L.slotsUsed() === 1 && G.inv.wire === 20 && /осталось ещё 20/.test(said());
+    const ids = ["medkit_s", "ration", "water", "toolkit", "decoder", "plate", "c_solvent", "tr_jaw", "emp"];
+    ids.forEach(id => { G.inv[id] = 1; L.putItem(id, 1); });
+    G.inv.turret_kit = 1;
+    out.slotLimit = L.slotsUsed() === 10 && L.putItem("turret_kit", 1, true) === 0;
     const post = g.CUR.fl.objs.find(o => o.type === "supply");
-    if (post) { LAB.supply.postMenu(post); out.post = LAB.ui.top().items.some(it => /^Ячейка хранения/.test(lbl(it))); LAB.ui.closeAll(); } else out.post = "нет пункта";
+    if (post) { LAB.supply.postMenu(post); out.post = LAB.ui.top().items.some(it => /^Личное хранилище/.test(lbl(it))); LAB.ui.closeAll(); } else out.post = "нет пункта";
     const wb = g.CUR.fl.objs.find(o => o.type === "workbench");
-    if (wb) { G.x = wb.x; G.y = wb.y; LAB.ui.craft(wb); out.bench = LAB.ui.top().items.some(it => /^Ячейка хранения/.test(lbl(it))); LAB.ui.closeAll(); } else out.bench = "нет верстака";
-    /* 1) ступени за кредиты: каждая дороже */
-    G.credits = 1e6; const p0 = L.upPrice(); L.upgrade(); const p1 = L.upPrice(); L.upgrade(); const p2 = L.upPrice();
-    out.ladder = p1 > p0 && p2 > p1 && L.locker().lv === 2 && L.lockCap().kg === 80 && L.lockCap().slots === 18;
-    /* 2) аренда на трое суток: кончилась — вещи целы, класть нельзя */
-    const r0 = L.rentPrice(); L.rent(); out.rent = L.rented() && L.lockCap().kg === 120 && L.rentPrice() > r0;
-    G.inv.lead = 30; const putLead = L.putItem("lead", 30, true); /* по кило за штуку */
-    G.day += 4; L.minutes(); const w0 = L.lockerWt();
-    out.rentEnd = !L.rented() && L.lockCap().kg === 80 && /Аренда соседней ячейки кончилась/.test(said());
-    G.inv.wire = 5; const putAfter = L.putItem("wire", 5, true);
-    out.overfull = w0 > L.lockCap().kg ? putAfter === 0 && L.lockerWt() === w0 : putLead > 0;
+    if (wb) { G.x = wb.x; G.y = wb.y; LAB.ui.craft(wb); out.bench = LAB.ui.top().items.some(it => /^Личное хранилище/.test(lbl(it))); LAB.ui.closeAll(); } else out.bench = "нет верстака";
+    /* В окне снабжения Enter открывает ячейку и покупает вместимость только этой ячейки. */
+    G.credits = 1e6;
+    function activate(label) {
+      const win = LAB.ui.top(); const at = win.items.findIndex(it => label.test(lbl(it)));
+      if (at < 0) return false;
+      win.i = at; LAB.ui.activate(); return true;
+    }
+    L.lockerMenu("post");
+    const c0 = G.credits;
+    out.cellUpgrade = activate(/^Ячейки хранилища/) && activate(/^Ячейка 1\. Детали/) && activate(/^Увеличить вместимость/) && G.credits < c0 && /300 из 400/.test(lbl(LAB.ui.top().items[0])) && L.lockCap().slots === 10;
+    LAB.ui.closeAll();
+    const p0 = L.upPrice(); L.upgrade(); const p1 = L.upPrice(); L.upgrade(); const p2 = L.upPrice();
+    out.ladder = p1 > p0 && p2 > p1 && L.locker().lv === 2 && L.lockCap().perCell === 300 && L.lockCap().slots === 18;
+    const r0 = L.rentPrice(); L.rent(); out.rent = L.rented() && L.lockCap().slots === 26 && L.rentPrice() > r0;
+    const rentedPut = L.putItem("turret_kit", 1, true, 18);
+    G.day += 4; L.minutes();
+    out.rentEnd = !L.rented() && L.lockCap().slots === 18 && /Аренда ячеек закончилась/.test(said());
+    G.inv.turret_kit = 1; G.inv.wire = 5;
+    out.overfull = rentedPut === 1 && L.putItem("turret_kit", 1, true) === 0 && L.locker().inv.turret_kit === 1 && L.putItem("wire", 5, true) === 5;
     /* 3) у верстака: полки и дно, нужна механика, детали растут */
     if (LAB.mastery) LAB.mastery.M().xp.mech = 0;
     ["scrap", "panel", "wire", "servo", "magnet"].forEach(k => { G.inv[k] = 80; });
     out.needMech = !L.craftCell("shelf") || !LAB.mastery;
     if (LAB.mastery) LAB.mastery.M().xp.mech = 500;
     const n0 = L.craftNeed("shelf").scrap; L.craftCell("shelf"); const n1 = L.craftNeed("shelf").scrap; L.craftCell("floor");
-    out.craft = L.locker().shelf === 1 && L.locker().floor === 1 && n1 > n0;
+    out.craft = L.locker().shelf === 1 && L.locker().floor === 1 && L.lockCap().perCell === 350 && n1 > n0;
     /* 4) ключ-карты: с машин, до пяти */
     L.locker().cards = 0; G.inv.lockcard = 6; for (let i = 0; i < 6; i++) L.useCard();
     out.cards = L.locker().cards === 5 && G.inv.lockcard === 1;
@@ -226,18 +233,18 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     /* 5) харизма */
     const s0 = L.lockCap().slots; G.cha = 30; out.cha = L.lockCap().slots === s0 + 4;
     /* разгрузка записи прежней версии */
-    delete G.loadInit; delete G.locker; G.inv.scrap = 150; G.inv.wire = 80; G.str = 10; G.cha = 10;
+    delete G.loadInit; delete G.locker; G.inv.scrap = 250; G.inv.wire = 80; G.str = 10; G.cha = 10;
     L.init(true); await wait(1700);
-    out.relief = L.tier() <= 2 && L.lockerWt() > 0 && /отправлено в вашу ячейку хранения/.test(said());
+    out.relief = L.tier() <= 2 && L.lockerWt() > 0 && /отправлено в ваше личное хранилище/.test(said());
     /* окна ячейки собираются без ошибок */
     ["capsule", "bench", "post"].forEach(wh => { L.lockerMenu(wh); LAB.ui.top().items.forEach(lbl); LAB.ui.closeAll(); });
     return out;
   });
-  ok(r3.base, "ячейка: 40 кило и 10 мест");
-  ok(r3.kgLimit && r3.slotLimit, "предел веса и мест: лишнее не влезает, «Эхо» говорит почему");
+  ok(r3.base, "хранилище: 10 ячеек по 300 предметов");
+  ok(r3.singlePurpose && r3.slotLimit, "разные детали делят лимит одной ячейки, новое назначение требует свободную ячейку");
   ok(r3.post === true && r3.bench === true, "ячейка открывается у пункта снабжения и у верстака (" + r3.post + ", " + r3.bench + ")");
-  ok(r3.ladder, "ступени за кредиты: каждая следующая дороже");
-  ok(r3.rent && r3.rentEnd && r3.overfull, "аренда на трое суток: дороже с размером и с каждой арендой; кончилась — вещи целы, класть нельзя");
+  ok(r3.ladder && r3.cellUpgrade, "за кредиты отдельно покупают ячейки и увеличивают вместимость выбранной ячейки");
+  ok(r3.rent && r3.rentEnd && r3.overfull, "аренда на трое суток: после срока временные ячейки работают на выдачу");
   ok(r3.needMech && r3.craft, "у верстака: полки и дно, нужна ступень механики, детали растут");
   ok(r3.cards && r3.drops && r3.dropsCap, "ключ-карты: с машин ОКО, до пяти, лишние не падают");
   ok(r3.cha, "харизма 30 — четыре лишних места");
@@ -275,13 +282,13 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     fr.en = 50; out.frameLive = L.parts().frames === 0;
     G.exoOn = null; G.frames = G.frames.filter(f => f.id !== "frT");
     /* аренда кончилась, ячейка переполнена: плата за хранение копится и списывается у ячейки */
-    const lk = L.locker(); G.credits = 100000; L.rent(); G.inv.scrap = 200; L.putParts(); out.over0 = L.lockerWt();
+    const lk = L.locker(); G.credits = 100000; L.rent(); G.inv.scrap = 200; L.putItem("scrap", 200, true, L.lockCap().slots - 8); out.over0 = L.lockerWt();
     lk.rentUntil = 1; lk.feeAt = null; L.minutes(); said();
     G.day = (G.day || 1) + 2; L.minutes();
     out.debt = (lk.debt || 0) > 0;
-    const c0 = G.credits; L.lockerMenu("capsule"); out.paid = G.credits < c0 && !(lk.debt > 0) && /За хранение сверх предела списано/.test(said()); LAB.ui.closeAll();
-    lk.rentSaid = 0; L.minutes(); out.rentSaidOnce = /Аренда соседней ячейки кончилась/.test(said());
-    lk.rentSaid = lk.rentUntil; L.minutes(); out.rentQuiet = !/Аренда соседней ячейки кончилась/.test(said());
+    const c0 = G.credits; L.lockerMenu("capsule"); out.paid = G.credits < c0 && !(lk.debt > 0) && /За хранение списано/.test(said()); LAB.ui.closeAll();
+    lk.rentSaid = 0; L.minutes(); out.rentSaidOnce = /Аренда ячеек закончилась/.test(said());
+    lk.rentSaid = lk.rentUntil; L.minutes(); out.rentQuiet = !/Аренда ячеек закончилась/.test(said());
     /* практика: убийство дроном героя не тренирует; своё — тренирует; торговля — по сумме */
     const S = ST.S(); S.day = {}; S.px = {};
     ST.deed("kill"); out.killAch = !(S.px.str > 0) && !(S.px.agi > 0);

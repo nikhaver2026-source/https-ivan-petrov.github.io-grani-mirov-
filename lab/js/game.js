@@ -1067,7 +1067,7 @@ function autoPickup() {
   here.forEach(function (it) {
     /* (после 4.6) груз: то, с чем не сдвинуться, остаётся на полу (load.js) */
     var wt = LAB.load ? LAB.load.floorWt(it) : 0;
-    if (wt > 0.05 && !LAB.load.canTake(wt)) { refused.push({ it: it, w: wt }); return; }
+    if (wt > 0 && !LAB.load.canTake(wt)) { refused.push({ it: it, w: wt }); return; }
     CUR.fs.taken[it.id] = 1;
     parts.push(giveItem(it));
     if (it.kind === "note") notes.push(it);

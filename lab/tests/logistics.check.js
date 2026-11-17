@@ -43,6 +43,7 @@ LAB.ui = {
 };
 LAB.deepLevelsN();
 LAB.enrichLevelFoes();
+const stockDrone = { lvl: 1, hp: 30, hpMax: 30, en: 0, enMax: 100, out: 1, mods: [] };
 const defaultDifficulty = LAB.settings.difficulty;
 for (const [difficulty, mode] of LAB.DIFF.entries()) {
   if (!mode) continue;
@@ -50,16 +51,21 @@ for (const [difficulty, mode] of LAB.DIFF.entries()) {
   g.newGame();
   LAB.combat.stop();
   assert.equal(g.G.diff, difficulty);
-  assert.equal(load.capacity(), 50, mode.n);
-  assert.match(load.line(), /из 50 килограммов/);
+  assert.equal(load.capacity(), 100, mode.n);
+  assert.match(load.line(), /из 100 килограммов/);
+  g.G.drone = { ...stockDrone };
+  assert.equal(drone.carryCapacity(), 200, mode.n);
+  assert.equal(load.personalCapacity(), 100);
+  assert.equal(load.capacity(), 300);
 }
 
 // Изолируем пороги от веса стартового комплекта.
+delete g.G.drone;
 const startingPack = { inv: g.G.inv, weapons: g.G.weapons, armors: g.G.armors, ammo: g.G.ammo };
 g.G.weapons = [];
 g.G.armors = [];
 g.G.ammo = {};
-for (const [weight, tier] of [[25, 0], [25.1, 1], [50, 1], [50.1, 2], [62.5, 2], [62.6, 3], [75, 3], [75.1, 4]]) {
+for (const [weight, tier] of [[50, 0], [50.1, 1], [100, 1], [100.1, 2], [125, 2], [125.1, 3], [150, 3], [150.1, 4]]) {
   const kg = Math.floor(weight);
   g.G.inv = { lead: kg, relay: Math.round((weight - kg) * 10) };
   assert.equal(load.total(), weight);
@@ -67,7 +73,7 @@ for (const [weight, tier] of [[25, 0], [25.1, 1], [50, 1], [50.1, 2], [62.5, 2],
   assert.equal(load.canMove(), tier < 4);
   assert.equal(load.noise() > 0, tier === 2 || tier === 3);
 }
-g.G.inv = { lead: 74 };
+g.G.inv = { lead: 149 };
 assert.equal(load.canTake(1), true);
 assert.equal(load.canTake(1.1), false);
 const startFloor = g.CUR.fs;
@@ -75,25 +81,53 @@ const drops = startFloor.drops;
 const droppedLead = { kind: "item", item: "lead", x: g.G.x, y: g.G.y };
 startFloor.drops = [
   { ...droppedLead, id: "test-lead-fits" },
-  { ...droppedLead, id: "test-lead-over" }
+  { ...droppedLead, id: "test-lead-over" },
+  { ...droppedLead, item: "chip", id: "test-chip-over" }
 ];
 g.autoPickup();
-assert.equal(g.G.inv.lead, 75);
+assert.equal(g.G.inv.lead, 150);
 assert.equal(startFloor.taken["test-lead-fits"], 1);
 assert.equal(startFloor.taken["test-lead-over"], undefined);
-assert.ok(messages.some(text => /Не поднять: .*пределе 50 килограммов/.test(text)));
+assert.equal(startFloor.taken["test-chip-over"], undefined);
+assert.ok(messages.some(text => /Не поднять: .*пределе 100 килограммов/.test(text)));
+assert.equal(load.canTake(0), true);
+assert.equal(load.canTake(load.itemWt("chip")), false);
 startFloor.drops = drops;
+
+// Дрон берёт до 200 кг. Дальнейший перегруз относится только к герою.
+g.G.drone = { ...stockDrone };
+for (const [weight, tier] of [[250, 0], [251, 1], [300, 1], [301, 2], [325, 2], [326, 3], [350, 3], [351, 4]]) {
+  g.G.inv = { lead: weight };
+  assert.equal(load.tier(), tier, weight + " кг с дроном");
+}
+g.G.inv = { lead: 300 };
+load.status();
+assert.match(messages.at(-1), /На герое 100 килограммов из 100 килограммов\. На дроне 200 килограммов из 200 килограммов/);
+g.G.inv.lead = 349;
+assert.equal(load.canTake(1), true);
+assert.equal(load.canTake(1.1), false);
+drone.cmdMenu();
+assert.ok(top().items.some(it => /^Свернуть дрона.*Груз станет неподъёмным/.test(it.label)));
+assert.equal(drone.pack(false), true);
+assert.equal(drone.carryCapacity(), 0);
+assert.equal(load.parts().drone, 3.5);
+assert.equal(load.tier(), 4);
+assert.match(drone.cargoRecovery(), /выпустить дрона/);
+assert.equal(drone.pack(true), true);
+assert.equal(load.tier(), 3);
+assert.equal(g.G.inv.lead, 349);
+delete g.G.drone;
 Object.assign(g.G, startingPack);
 assert.equal(g.saveSlot(1), true);
 const legacyStart = JSON.parse(storage.get(g.slotKey(1)));
 delete legacyStart.g.loadInit;
-legacyStart.g.inv.lead = 40;
+legacyStart.g.inv.lead = 80;
 storage.set(g.slotKey(1), JSON.stringify(legacyStart));
 assert.equal(g.loadSlot(1), true);
-assert.equal(load.capacity(), 50);
-assert.equal(g.G.inv.lead, 40);
+assert.equal(load.capacity(), 100);
+assert.equal(g.G.inv.lead, 80);
 assert.equal(load.lockerWt(), 0);
-console.log("✓ Стартовые 50 кг на всех сложностях, пороги нагрузки и сохранение прежней версии");
+console.log("✓ Стартовые 100 и 200 кг на всех сложностях, личный перегруз, сворачивание и старые записи");
 
 LAB.settings.difficulty = defaultDifficulty;
 g.newGame();
@@ -107,7 +141,7 @@ hero.event = "norm";
 hero.eventUntil = 1e9;
 
 // Предпросмотр характеристик и расход очков.
-assert.equal(load.capacity(), 50);
+assert.equal(load.capacity(), 100);
 hero.xp = 0;
 const xpUntilSix = [1, 2, 3, 4, 5].reduce((sum, level) => sum + LAB.xpNeed(level), 0);
 g.gainXP(xpUntilSix);
@@ -125,7 +159,7 @@ assert.equal(stats.S().pts, 5);
 top().items[0].fn();
 assert.equal(stats.S().pts, 0);
 assert.ok(stats.MAIN.every(key => stats.base(key) === 11));
-assert.equal(load.capacity(), 52.8);
+assert.equal(load.capacity(), 102.8);
 
 hero.agi = 10;
 delete stats.S().day.agi;
@@ -189,6 +223,9 @@ assert.equal(load.locker().inv.dr_mod_scanner, 1);
 
 const d = drone.build({ name: "Светлячок" });
 assert.ok(d);
+assert.equal(drone.carryCapacity(), 200);
+assert.equal(load.capacity(), load.personalCapacity() + 200);
+assert.match(drone.line(), /Грузоподъёмность дрона сейчас: 200 килограммов/);
 delete d.flaw;
 hero.mind = 18;
 assert.equal(drone.energyCost(12), 10);
@@ -199,7 +236,7 @@ inDanger = false;
 assert.equal(drone.addMod("boost"), false);
 assert.equal(drone.addMod("cargo"), true);
 assert.equal(drone.addMod("boost"), true);
-assert.equal(load.capOf("drone"), 20);
+assert.equal(load.capOf("drone"), 220);
 assert.equal(drone.addMod("battery"), false);
 assert.equal(drone.delMod("cargo"), false);
 assert.equal(drone.delMod("boost"), true);
@@ -208,21 +245,25 @@ assert.equal(drone.addMod("boost"), true);
 assert.equal(hero.inv.servo, servos);
 assert.equal(hero.inv.dr_mod_boost, 0);
 
-hero.inv = { scrap: 1 };
+hero.inv = {};
 d.en = 2;
+const passiveLimit = load.personalCapacity() + drone.carryCapacity(false);
+hero.inv.lead = Math.floor(passiveLimit - load.total());
+assert.ok(load.total() <= passiveLimit && load.total() > passiveLimit - 1);
 drone.onStep();
 assert.equal(d.en, 2);
+delete hero.inv.lead;
 hero.inv.scrap = Math.ceil((load.capacity() + 2) / load.itemWt("scrap"));
 LAB.combat.foes().forEach(foe => { foe.dead = true; });
 assert.ok(["N", "E", "S", "W"].some(direction => g.tryMove(direction, false)));
 assert.equal(d.en, 1);
 drone.onStep();
 assert.equal(d.en, 0);
-assert.equal(load.capOf("drone"), 12);
+assert.equal(load.capOf("drone"), 212);
 assert.ok(messages.some(text => /Тяговый блок разряжен/.test(text)));
 hero.ammo.energy = 1;
 drone.chargeBat();
-assert.equal(load.capOf("drone"), 20);
+assert.equal(load.capOf("drone"), 220);
 drone.pack(false);
 assert.equal(load.capOf("drone"), 0);
 assert.ok(load.parts().drone > 3.5);
@@ -235,7 +276,7 @@ Object.values(drone.MODS).forEach(mod => {
   Object.keys(mod.need).forEach(part => { hero.inv[part] = 10; });
 });
 assert.equal(drone.repair(), true);
-assert.equal(load.capOf("drone"), 20);
+assert.equal(load.capOf("drone"), 220);
 assert.equal(drone.delMod("boost"), true);
 d.en = 56;
 assert.equal(drone.addMod("battery"), true);
@@ -297,7 +338,7 @@ previous.g.drone.rcNeed = { ...drone.NEED, scrap: 50 };
 storage.set(g.slotKey(3), JSON.stringify(previous));
 assert.equal(g.loadSlot(3), true);
 assert.equal(load.capOf("rig"), 0);
-assert.equal(load.capOf("drone"), 12);
+assert.equal(load.capOf("drone"), 212);
 g.G.x = bench.x; g.G.y = bench.y;
 const currentBench = g.CUR.fl.objs.find(obj => obj.id === bench.id);
 work._at(currentBench);
@@ -326,13 +367,13 @@ drone.onXP(750);
 assert.equal(grown.lvl, 3);
 assert.equal(drone.upgradeMod("cargo"), true);
 assert.equal(drone.setRole("cargo"), true);
-assert.equal(drone.carryCapacity(), 16);
+assert.equal(drone.carryCapacity(), 216);
 drone.onXP(3000);
 assert.equal(grown.lvl, 6);
 assert.equal(drone.upgradeMod("cargo"), false);
 work.bench(currentBench).tier = 4;
 assert.equal(drone.upgradeMod("cargo"), true);
-assert.equal(drone.carryCapacity(), 18);
+assert.equal(drone.carryCapacity(), 218);
 assert.equal(drone.delMod("cargo"), true);
 assert.equal(h.inv.dr_mod_cargo_r3, 1);
 assert.ok(drone.invItems().some(item => /Грузовой захват, ступень 3/.test(item.label)));
@@ -346,7 +387,7 @@ assert.equal(grown.enMax, 195);
 assert.equal(grown.en, 61);
 assert.equal(drone.setRole("support"), true);
 assert.equal(drone.energyCost(10, "medic"), 6);
-assert.equal(drone.carryCapacity(), 16);
+assert.equal(drone.carryCapacity(), 216);
 
 const rig = exo.build("mid");
 assert.ok(rig);
@@ -592,3 +633,187 @@ assert.doesNotMatch(messages.at(-1), /Закрытая дверь/);
 g.CUR.fl.doors = oldDoors;
 LAB.los = losBefore;
 console.log("✓ Все семь новых стволов выполняют команды, сканер сохраняет тайные двери");
+
+// Личное хранилище открывается из реального меню пункта снабжения.
+function selectStorageItem(matcher) {
+  const row = top().items.find(item => matcher.test(typeof item.label === "function" ? item.label() : item.label));
+  assert.ok(row, `${top().title}: ${matcher}`);
+  assert.ok(!row.disabled, row.why);
+  row.fn();
+  return row;
+}
+menus.length = 0;
+g.newGame(); LAB.combat.stop();
+g.enterFloor(2, 3, "down", true); LAB.combat.stop();
+const stHero = g.G;
+const post = g.CUR.fl.objs.find(obj => obj.type === "supply");
+assert.ok(post);
+LAB.supply.postMenu(post);
+selectStorageItem(/^Личное хранилище/);
+assert.equal(top().title, "Личное хранилище");
+assert.equal(load.lockCap().slots, 10);
+assert.equal(load.lockCap().perCell, 300);
+selectStorageItem(/^Ячейки хранилища/);
+assert.equal(top().items.filter(it => /^Ячейка \d/.test(it.label)).length, 10);
+assert.ok(top().items.every(it => !/^Ячейка \d/.test(it.label) || /Свободна\. 0 из 300/.test(it.label)));
+
+// Две разновидности деталей делят 300 мест. Новое назначение требует свободной ячейки.
+const tenTypes = ["scrap", "medkit_s", "ration", "water", "toolkit", "decoder", "plate", "c_solvent", "tr_jaw", "emp"];
+stHero.inv = Object.fromEntries(tenTypes.concat("turret_kit").map(id => [id, 1]));
+stHero.inv.scrap = 295;
+stHero.inv.wire = 10;
+stHero.craftN = { wire: 8 };
+assert.equal(load.putItem("scrap", 999), 295);
+assert.equal(load.putItem("wire", 10), 5);
+assert.equal(load.locker().craft.wire, 3);
+assert.equal(stHero.craftN.wire, 5);
+assert.equal(load.putItem("wire", 1, true), 0);
+assert.equal(load.slotsUsed(), 1);
+tenTypes.slice(1).forEach(id => assert.equal(load.putItem(id, 1), 1, id));
+assert.equal(load.slotsUsed(), 10);
+assert.equal(load.putItem("turret_kit", 1, true), 0);
+assert.equal(stHero.inv.turret_kit, 1);
+assert.ok(load.lockerWt() > 150);
+assert.equal(load.takeItem("ration", 1), true);
+assert.equal(load.putItem("turret_kit", 1), 1);
+assert.equal(load.slotsUsed(), 10);
+
+// Покупки независимы. Один раз платим за выбранную ячейку и можем сразу ею пользоваться.
+stHero.credits = 0;
+menus.length = 0;
+load.lockerMenu("post");
+selectStorageItem(/^Расширить хранилище/);
+assert.equal(load.lockCap().slots, 10);
+assert.equal(stHero.credits, 0);
+selectStorageItem(/^Ячейки хранилища/);
+selectStorageItem(/^Ячейка 1\. Детали/);
+const oldUpgrade = selectStorageItem(/^Увеличить вместимость/);
+assert.match(messages.at(-1), /Не хватает кредитов/);
+assert.equal(load.putItem("wire", 1, true), 0);
+stHero.credits = 100000;
+const startCredits = stHero.credits;
+const firstPrice = Number(oldUpgrade.label.match(/за (\d+) /)[1]);
+oldUpgrade.fn();
+assert.equal(stHero.credits, startCredits - firstPrice);
+assert.equal(load.lockCap().slots, 10);
+LAB.ui.rebuildTop();
+assert.match(top().items[0].label, /300 из 400/);
+assert.match(top().items.find(it => /^Увеличить вместимость/.test(it.label)).label, /за \d+ кредит/);
+assert.ok(Number(top().items.find(it => /^Увеличить вместимость/.test(it.label)).label.match(/за (\d+) /)[1]) > firstPrice);
+assert.equal(load.putItem("wire", 5), 5);
+assert.equal(load.takeItem("wire", 10), true);
+assert.equal(stHero.craftN.wire, 8);
+menus.length = 0;
+load.lockerMenu("post");
+const priceSlots = load.upPrice(), beforeSlots = stHero.credits;
+selectStorageItem(/^Расширить хранилище/);
+assert.equal(stHero.credits, beforeSlots - priceSlots);
+assert.equal(load.lockCap().slots, 14);
+assert.ok(load.upPrice() > priceSlots);
+assert.equal(load.lockCap().perCell, 300);
+
+// Можно улучшить пустую ячейку и назначить ей назначение вручную.
+selectStorageItem(/^Ячейки хранилища/);
+selectStorageItem(/^Ячейка 13\. Свободна/);
+selectStorageItem(/^Увеличить вместимость/);
+selectStorageItem(/^Назначить ячейку/);
+stHero.ammo.energy = 200; stHero.ammo.magnetron = 250;
+LAB.ui.rebuildTop();
+selectStorageItem(/^Боеприпасы\. Энергобатарея/);
+LAB.ui.rebuildTop();
+selectStorageItem(/^Боеприпасы\. Магнетронная ячейка/);
+assert.equal(load.locker().ammo.energy, 200);
+assert.equal(load.locker().ammo.magnetron, 200);
+assert.equal(stHero.ammo.magnetron, 50);
+assert.equal(load.locker().cells[12].type, "ammo");
+assert.equal(load.locker().cells[12].lv, 1);
+assert.ok(top().items.find(it => /^Детали\. Провода/.test(it.label)).disabled);
+
+// Ремкомплект, который уже начали, и экипировка остаются у героя.
+stHero.inv.fieldkit = 2;
+stHero.kitUse = { fieldkit: 1 };
+assert.equal(load.putItem("fieldkit", 2), 1);
+assert.equal(stHero.inv.fieldkit, 1);
+assert.equal(stHero.kitUse.fieldkit, 1);
+menus.length = 0;
+load.lockerMenu("bench");
+selectStorageItem(/^Положить в хранилище/);
+assert.ok(!top().items.some(it => /^Оружие\./.test(it.label)));
+assert.ok(!top().items.some(it => /^Броня\./.test(it.label)));
+assert.ok(top().items.find(it => /Походный ремнабор/.test(it.label)).disabled);
+
+// Срок аренды: арендуемая ячейка выдаёт содержимое и после отмены доступа на приём.
+assert.equal(load.rent(), true);
+menus.length = 0;
+load.lockerMenu("post");
+selectStorageItem(/^Ячейки хранилища/);
+selectStorageItem(/^Ячейка 15\. Свободна.*В аренде/);
+assert.ok(!top().items.some(it => /^Увеличить вместимость/.test(it.label)));
+selectStorageItem(/^Назначить ячейку/);
+const testArmor = LAB.makeArmor("suit", 1, 2, "storage_test_armor");
+stHero.armors.push(testArmor);
+LAB.ui.rebuildTop();
+selectStorageItem(/^Броня\./);
+assert.equal(load.locker().armors[0], testArmor);
+assert.ok(!stHero.armors.includes(testArmor));
+stHero.day += 4;
+load.minutes();
+assert.equal(load.rented(), false);
+assert.equal(load.lockCap().slots, 14);
+assert.ok(load.locker().debt > 0);
+menus.length = 0;
+load.lockerMenu("capsule");
+assert.equal(load.locker().debt, 0);
+assert.ok(!top().items.some(it => /^Расширить хранилище/.test(it.label)));
+selectStorageItem(/^Забрать из хранилища/);
+assert.ok(top().items.some(it => /^Ячейка 15\. Броня.*Только выдача/.test(it.label)));
+selectStorageItem(/^Ячейка 15\. Броня/);
+selectStorageItem(new RegExp(testArmor.name));
+assert.ok(stHero.armors.includes(testArmor));
+assert.equal(load.locker().armors.length, 0);
+
+// Сохраняются улучшения и назначение. Перенос старых записей сохраняет лишнее и признак самоделок.
+assert.equal(g.saveSlot(2), true);
+assert.equal(g.loadSlot(2), true);
+assert.equal(load.locker().cells[12].lv, 1);
+assert.equal(load.locker().cells[12].type, "ammo");
+assert.equal(load.locker().ammo.magnetron, 200);
+const legacyPayload = JSON.parse(storage.get(g.slotKey(2)));
+legacyPayload.g.inv = { wire: 0 };
+legacyPayload.g.locker = { inv: { scrap: 330, wire: 70 }, craft: { wire: 17 }, ammo: {}, weapons: [], armors: [], frames: [], lv: 0, floor: 0 };
+storage.set(g.slotKey(2), JSON.stringify(legacyPayload));
+assert.equal(g.loadSlot(2), true);
+assert.equal(load.locker().inv.scrap + load.locker().inv.wire, 400);
+assert.equal(load.locker().cells[0].type, "part");
+g.G.inv.scrap = 1;
+assert.equal(load.putItem("scrap", 1, true), 0);
+assert.ok(load.takeItem("wire", 17));
+assert.equal(g.G.craftN.wire, 25);
+assert.equal(load.locker().craft.wire, 0);
+assert.equal(load.locker().inv.wire, 53);
+console.log("✓ Личное хранилище: назначение, количество, обе покупки, аренда, экипировка и старые записи");
+
+// Из мастерской и капсулы доступны те же сохранённые ячейки.
+const accessFloor = g.CUR.fl;
+const workbench = accessFloor.objs.find(obj => obj.type === "workbench");
+const capsule = accessFloor.objs.find(obj => obj.type === "capsule");
+assert.ok(workbench && capsule);
+menus.length = 0;
+g.G.x = workbench.x; g.G.y = workbench.y;
+work.open(workbench);
+assert.equal(top().title, "Мастерская");
+selectStorageItem(/^Личное хранилище/);
+assert.equal(top().title, "Личное хранилище");
+selectStorageItem(/^Ячейки хранилища/);
+assert.ok(top().items.some(it => /^Ячейка 1\. Детали\. 383 из 300/.test(it.label)));
+let openCapsule;
+const originalTimeout = ctx.setTimeout;
+ctx.setTimeout = (fn, ms) => { if (ms === 1200) openCapsule = fn; return 0; };
+try { LAB.capsule.menu(capsule); } finally { ctx.setTimeout = originalTimeout; }
+assert.equal(typeof openCapsule, "function");
+openCapsule();
+assert.equal(top().title, "Капсула восстановления");
+selectStorageItem(/^Личное хранилище/);
+selectStorageItem(/^Ячейки хранилища/);
+assert.ok(top().items.some(it => /^Ячейка 1\. Детали\. 383 из 300/.test(it.label)));
+console.log("✓ Сохранённое хранилище доступно из мастерской и капсулы восстановления");
