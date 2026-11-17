@@ -78,6 +78,8 @@ assert.equal(load.canTake(1), true);
 assert.equal(load.canTake(1.1), false);
 const startFloor = g.CUR.fs;
 const drops = startFloor.drops;
+const generatedLoot = g.CUR.fl.items;
+g.CUR.fl.items = [];
 const droppedLead = { kind: "item", item: "lead", x: g.G.x, y: g.G.y };
 startFloor.drops = [
   { ...droppedLead, id: "test-lead-fits" },
@@ -93,6 +95,7 @@ assert.ok(messages.some(text => /Не поднять: .*пределе 100 ки�
 assert.equal(load.canTake(0), true);
 assert.equal(load.canTake(load.itemWt("chip")), false);
 startFloor.drops = drops;
+g.CUR.fl.items = generatedLoot;
 
 // Дрон берёт до 200 кг. Дальнейший перегруз относится только к герою.
 g.G.drone = { ...stockDrone };
