@@ -53,7 +53,11 @@ var OWN_WT = { rail: 9, pike: 4.5, mw: 6, blade: 1.5, plasma: 7 };
 var FRAME_WT = { light: 12, mid: 24, heavy: 40 };
 var FRAME_CAP = { light: 10, mid: 25, heavy: 45 };   /* приводы держат груз, пока каркас заряжен */
 var FRAME_HAND = { light: 2, mid: 4, heavy: 7 };     /* и добавляют силы рукам с тяжёлым оружием */
-var DRONE_WT = 3.5, DRONE_CAP = 12;
+var RIGS = [
+  { n: "Разгрузочный пояс", kg: 5, tier: 1, con: 10, need: { scrap: 2, rubber: 2, wire: 1 } },
+  { n: "Грузовая рама", kg: 10, tier: 2, con: 12, need: { scrap: 4, panel: 1, rubber: 2 } },
+  { n: "Усиленная упряжь", kg: 15, tier: 3, con: 14, need: { scrap: 4, servo: 2, ceramic: 1, rubber: 2 } }
+];
 /* (после 4.6) ключ-карта складской ячейки: без глубины и с разделом — в генерацию этажей не попадает
    (world.js берёт вещи с глубиной и без раздела), не продаётся — на полки пунктов тоже не попадает */
 if (!LAB.ITEMS.lockcard) LAB.ITEMS.lockcard = { n: "Ключ-карта складской ячейки", icon: "🗝️", kind: "use", cat: "eng", nosell: 1, price: 40,
@@ -107,28 +111,36 @@ function parts() {
   var on = wornFrame();
   /* надетый каркас: заряжен — несёт себя сам; разряжен — весит вполовину, как надетая броня: вес на плечах и поясе */
   (g.frames || []).forEach(function (f) { if (f === on) { if (!frameLive(f)) p.frames += frameWt(f) * 0.5; } else p.frames += frameWt(f); });
-  var d = g.drone; if (d && (!d.out || d.wreck)) p.drone = DRONE_WT;
+  if (LAB.drone) p.drone = LAB.drone.carriedWeight();
   p.samples = Object.keys(g.samples || {}).length * 0.1;
   return p;
 }
 function total() { var p = parts(), t = 0; for (var k in p) t += p[k]; return Math.round(t * 10) / 10; }
 
-/* ── ПРЕДЕЛ ── 20 кило — основа; сила — по два за единицу, телосложение — по 0,75 за единицу
-   выше десяти, выносливость — по 0,5; каркас, силовая броня и дрон — свои прибавки */
+/* ── ПРЕДЕЛ ── личная нагрузка и помощь снаряжения */
+function statCapacity(src, value) {
+  if (src === "str") return Math.max(0, value) * 2;
+  if (src === "con") return Math.max(0, value - 10) * 0.75;
+  return Math.max(0, value) * 0.5;
+}
+function rig() { return RIGS[G().loadRig - 1] || null; }
 function capOf(src) {
-  var g = G(), f;
+  var f, r;
   switch (src) {
     case "base": return 10;
-    case "str": return Math.max(0, hs("str")) * 2;
-    case "con": return Math.max(0, hs("con") - 10) * 0.75;
-    case "stam": return secS("stam") * 0.5;
-    case "exo": f = wornFrame(); return f && frameLive(f) ? (FRAME_CAP[f.cls] || 0) * (LAB.exo.strOk(f) ? 1 : 0.5) : 0;
+    case "str":
+    case "con": return statCapacity(src, hs(src));
+    case "stam": return statCapacity(src, secS(src));
+    case "exo": f = wornFrame(); return f && frameLive(f) ? ((FRAME_CAP[f.cls] || 0) + LAB.exo.loadBonus(f)) * (LAB.exo.strOk(f) ? 1 : 0.5) : 0;
+    case "rig":
+      r = rig();
+      return r ? Math.max(Math.min(4, r.kg), r.kg - capOf("exo")) : 0;
     case "armor": return gm().armorSpecial && gm().armorSpecial("strength") ? 15 : 0;
-    case "drone": return g.drone && g.drone.out && !g.drone.wreck && g.drone.mods && g.drone.mods.indexOf("cargo") >= 0 ? DRONE_CAP : 0;
+    case "drone": return LAB.drone ? LAB.drone.carryCapacity() : 0;
   }
   return 0;
 }
-var SRC = ["base", "str", "con", "stam", "exo", "armor", "drone"];
+var SRC = ["base", "str", "con", "stam", "rig", "exo", "armor", "drone"];
 /* LAB.load.off и window.LAB_TEST_NOLOAD — только для старых наборов проверок (play.test.js и другие):
    их герой носит сотни деталей сразу; груз проверяет hero.test.js. В игре выключатель не используется. */
 function offNow() { return !!(LAB.load && LAB.load.off) || !!window.LAB_TEST_NOLOAD; }
@@ -142,7 +154,7 @@ var TIER_N = ["налегке", "обычный ход", "перегруз", "т
 /* ── ПОСЛЕДСТВИЯ ── выносливость смягчает замедление */
 function stamSoft() { return 1 - Math.min(0.45, secS("stam") * 0.015); }
 function gapK() { var t = tier(); return t <= 1 ? 1 : 1 + (t === 2 ? 0.4 : 1) * stamSoft(); }
-function stepGap() { var t = tier(); return t === 2 ? 120 : t === 3 ? 260 : 0; }
+function stepGap() { var t = tier(); return Math.round((t === 2 ? 120 : t === 3 ? 260 : 0) * stamSoft()); }
 function noise() { var t = tier(); return t === 2 ? 2 : t === 3 ? 4 : 0; }
 function wakeK() { var t = tier(); return t === 2 ? 1.5 : t === 3 ? 2 : 1; }
 function dodgePen() { var t = tier(); return t === 2 ? 0.05 : t === 3 ? 0.1 : 0; }
@@ -159,13 +171,15 @@ function accPen(w) { var t = tier(); return (t === 2 ? 0.05 : t === 3 ? 0.1 : 0)
 
 /* С места не сдвинуться: предупреждение не чаще раза в три секунды. */
 var stuckSaid = 0;
+function releaseKg(weight) { return Math.ceil((Math.max(0, weight - capacity() * 1.5) - 1e-8) * 10) / 10; }
 function canMove() {
   if (tier() < 4) return true;
   var t = Date.now();
   if (t - stuckSaid > 3000) {
     stuckSaid = t;
     snd("strain_stuck", "ui_error"); /* ремни трещат под грузом */
-    say("Груз неподъёмный: " + kg(total()) + " при пределе " + kg(capacity()) + ". С места не сдвинуться — сбросьте хотя бы " + kg(total() - capacity() * 1.5) + ": инвентарь, «Выбросить вещь».");
+    var boost = LAB.drone && LAB.drone.cargoRecovery();
+    say("Груз неподъёмный: " + kg(total()) + " при пределе " + kg(capacity()) + ". С места не сдвинуться. Сбросьте хотя бы " + kg(releaseKg(total())) + " через инвентарь." + (boost ? " " + boost : ""));
   }
   return false;
 }
@@ -173,7 +187,7 @@ function canMove() {
 function canTake(addKg) { return addKg <= 0.05 || (total() + addKg) <= capacity() * 1.5 + 1e-6; }
 function lcf(t) { t = String(t || ""); return t.charAt(0).toLowerCase() + t.slice(1); }
 function refuseText(it, w) {
-  var over = total() + w - capacity() * 1.5;
+  var over = releaseKg(total() + w);
   return "Не поднять: " + lcf(gm().itemName ? gm().itemName(it) : "вещь") + " — " + kg(w) + ". Груз и так " + kg(total()) + " при пределе " + kg(capacity()) + ", лишнего — " + kg(over) + ".";
 }
 
@@ -215,7 +229,7 @@ function line() {
   return "Груз " + kg(total()) + " из " + kg(capacity()) + ": " + TIER_N[t] + ".";
 }
 function capText() {
-  var names = { base: "основа", str: "сила", con: "телосложение", stam: "выносливость", exo: "приводы каркаса", armor: "силовая броня", drone: "грузовой захват дрона" };
+  var names = { base: "основа", str: "сила", con: "телосложение", stam: "выносливость", rig: "грузовое снаряжение", exo: "приводы каркаса", armor: "силовая броня", drone: "грузовой модуль дрона" };
   return SRC.filter(function (s) { return capOf(s) > 0; }).map(function (s) { return names[s] + " " + kg(capOf(s)); }).join(", ");
 }
 function status() {
@@ -266,7 +280,7 @@ var CARD_KG = 10, CARD_SLOTS = 2, CARD_MAX = 5;                  /* ключ-к�
 var SHELF_NEED = { scrap: 4, panel: 2, wire: 1 }, FLOOR_NEED = { scrap: 3, servo: 1, magnet: 2 };
 function nowAbs() { var g = G(); return ((g.day || 1) - 1) * 1440 + (g.min || 0); }
 function rented() { var l = Lk(); return (l.rentUntil || 0) > nowAbs(); }
-function chaSlots() { var c = G().cha == null ? 10 : G().cha; return c >= 30 ? 4 : c >= 20 ? 2 : 0; }   /* основа, без плодов: места не мигают */
+function chaSlots() { var c = G().cha == null ? 10 : G().cha; return c >= 30 ? 4 : c >= 20 ? 2 : c >= 14 ? 1 : 0; }
 function Lk() {
   var g = G();
   if (!g.locker) g.locker = { inv: {}, ammo: {}, weapons: [], armors: [], frames: [], lv: 0 };
@@ -588,7 +602,46 @@ function lockerMenu(where) {
   UIx("menu", "Ячейка хранения", lockerItems(where), { rebuild: function () { return lockerItems(where); }, onClose: function () { snd("locker_close", "ui_close"); },
     intro: "Ячейка одна: у капсулы, у верстака и у пункта снабжения — та же самая. В ячейке вещи ничего не весят, но у неё свой предел: " + capLine() + "." + paid });
 }
-function benchItems(where) { var n = lockerN(); return [{ label: "Ячейка хранения" + (n ? ": " + n + " " + plural(n, "вещь", "вещи", "вещей") + ", " + kg(lockerWt()) + " из " + kg(lockCap().kg) : ": пуста"), fn: function () { lockerMenu(where || "bench"); } }]; }
+function rigGate(def) {
+  var w = LAB.workshop, b = w && w.near();
+  if (!b || w.effTier(b) < def.tier) return "нужен верстак ступени " + def.tier;
+  if (LAB.combat && LAB.combat.danger()) return "рядом враг";
+  if (LAB.stats.base("con") < def.con) return "нужно телосложение " + def.con;
+  if (!w.haveAll(def.need)) return "не хватает деталей: " + w.costText(def.need);
+  return "";
+}
+function fitRig() {
+  var g = G(), level = g.loadRig || 0, next = RIGS[level];
+  if (!next) return false;
+  var why = rigGate(next);
+  if (why) { say(next.n + ": " + why + "."); return false; }
+  LAB.workshop.take(next.need);
+  g.loadRig = level + 1;
+  if (LAB.mastery) LAB.mastery.gain("mech", 4 + 2 * level);
+  if (LAB.ach) LAB.ach.ev("craft", 1);
+  if (gm().advanceTime) gm().advanceTime(5 + 3 * level);
+  if (gm().autosaveSoon) gm().autosaveSoon();
+  snd("work_ratchet", "craft");
+  say("Грузовое снаряжение готово. Установлен комплект «" + next.n + "». " + line());
+  after(true);
+  return true;
+}
+function rigMenu() {
+  var items = function () {
+    var r = rig(), next = RIGS[G().loadRig || 0], out = [
+      { label: r ? r.n + ". Вклад в текущий предел: " + kg(capOf("rig")) + "." : "Грузовое снаряжение ещё не собрано.", info: true, keep: true, fn: status },
+      { label: "Пояс даёт 5, рама 10, упряжь 15 килограммов. Каждый следующий комплект использует предыдущий. С приводами каркаса нижняя опора общая, поэтому их прибавки складываются частично.", info: true, keep: true, fn: function () { say(capText() + "."); } }
+    ];
+    if (next) out.push({ label: "Подогнать: " + next.n + ". Верстак ступени " + next.tier + ", телосложение " + next.con + ". Детали: " + LAB.workshop.costText(next.need) + ".", keep: true, fn: fitRig });
+    return out.concat({ label: "Назад", close: true, fn: function () {} });
+  };
+  UIx("menu", "Грузовое снаряжение", items(), { keep: true, rebuild: items });
+}
+function benchItems(where) {
+  var n = lockerN(), items = [{ label: "Ячейка хранения" + (n ? ": " + n + " " + plural(n, "вещь", "вещи", "вещей") + ", " + kg(lockerWt()) + " из " + kg(lockCap().kg) : ": пуста"), fn: function () { lockerMenu(where || "bench"); } }];
+  if (!where || where === "bench") items.push({ label: "Грузовое снаряжение: пояс, рама и упряжь", fn: rigMenu });
+  return items;
+}
 /* Запись прежней версии: если с новым весом герой не сдвинется — лишние детали и ценности
    уходят в ячейку сами, и «Эхо» об этом говорит. Только здесь ячейка может оказаться сверх
    меры: тогда класть в неё нельзя, пока не заберут лишнее. */
@@ -624,12 +677,12 @@ function init(loaded) {
 
 LAB.load = {
   kg: kg, itemWt: itemWt, weaponWt: weaponWt, armorWt: armorWt, frameWt: frameWt, ammoWt: function (k) { return AMMO_WT[k] || 0.4; }, floorWt: floorWt, parts: parts, total: total,
-  capOf: capOf, capacity: capacity, ratio: ratio, tier: tier, TIER_N: TIER_N,
+  capOf: capOf, statCapacity: statCapacity, capacity: capacity, ratio: ratio, tier: tier, TIER_N: TIER_N,
   gapK: gapK, stepGap: stepGap, noise: noise, wakeK: wakeK, accPen: accPen, dodgePen: dodgePen, handPen: handPen, needStr: needStr, handStr: handStr,
   canMove: canMove, canTake: canTake, refuseText: refuseText, after: after, reset: reset,
-  line: line, status: status, handNote: handNote, weaponLine: weaponLine, heaviest: heaviest, DRONE_CAP: DRONE_CAP,
+  line: line, status: status, handNote: handNote, weaponLine: weaponLine, heaviest: heaviest,
   locker: Lk, lockerWt: lockerWt, lockCap: lockCap, slotsUsed: slotsUsed, lockerMenu: lockerMenu, benchItems: benchItems, putItem: putItem, takeItem: takeItem, putParts: putParts, takeParts: takeParts,
   upgrade: upgrade, upPrice: upPrice, init: init, rent: rent, rentPrice: rentPrice, rented: rented, craftCell: craftCell, craftNeed: craftNeed,
-  useCard: useCard, drops: drops, minutes: minutes, capParts: capParts
+  useCard: useCard, drops: drops, minutes: minutes, capParts: capParts, fitRig: fitRig
 };
 })();

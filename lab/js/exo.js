@@ -53,6 +53,11 @@ var MOUNT = {
   horn: { n: "СВЧ-раструб", need: { magnet: 3, cap: 2, wire: 2 }, tier: 3, d: "по команде глушит и ослепляет машины впереди; залп — пятнадцать единиц заряда" }
 };
 
+var PROFILES = {
+  load: { n: "Грузовые опоры", part: "servo", text: function (r) { return "до " + 3 * r + " килограммов дополнительной тяги"; } },
+  guard: { n: "Амортизаторы", part: "panel", text: function (r) { return "защита плюс " + r + ", износ от ударов ниже на " + 12 * r + " процентов"; } },
+  economy: { n: "Стабилизатор питания", part: "cap", text: function (r) { return "расход энергии ниже на " + 8 * r + " процентов"; } }
+};
 function X() { var g = G(); if (!g.frames) g.frames = []; return g.frames; }
 function frames() { return X(); }
 function worn() { var g = G(); if (!g.exoOn) return null; var f = X().filter(function (x) { return x.id === g.exoOn; })[0]; if (!f) g.exoOn = null; return f || null; }
@@ -69,6 +74,13 @@ function lackText(f) {
 }
 function live(f) { return !!f && (f.en || 0) > 0; }
 function bonusK(f) { return strOk(f) ? 1 : 0.5; }
+function profileRank(f, key) { return f.profiles && f.profiles[key] || 0; }
+function poweredRank(f, key) { return f.profile === key && live(f) ? profileRank(f, key) : 0; }
+function loadBonus(f) { return 3 * poweredRank(f, "load"); }
+function energyCost(f, raw) { return +(raw * (1 - 0.08 * poweredRank(f, "economy"))).toFixed(3); }
+function mountRank(f) { return f.sh ? f.shRank || 1 : 0; }
+function mountCost(f) { return f.sh === "horn" ? 15 + 2 * (mountRank(f) - 1) : 1.5 + 0.25 * (mountRank(f) - 1); }
+function save() { if (gm().autosaveSoon) gm().autosaveSoon(); }
 function condK(f) { var c = f.cond != null ? f.cond : 100; return c >= 50 ? 1 : 0.6 + 0.8 * c / 100; }
 function frameName(f) { return (LAB.QUAL.m[f.qual == null ? 2 : f.qual] + " " + clsOf(f).n).replace(/^./, function (c) { return c.toUpperCase(); }); }
 
@@ -76,12 +88,20 @@ function frameName(f) { return (LAB.QUAL.m[f.qual == null ? 2 : f.qual] + " " + 
 function drain(n, test) {
   var f = worn();
   if (!f || !(n > 0)) return false;
-  if ((f.en || 0) < n) return false;
+  return takeCharge(f, energyCost(f, n), test);
+}
+function takeCharge(f, n, test) {
+  if (!f || !(n > 0) || (f.en || 0) < n) return false;
   if (test) return true;
   var e0 = f.en;
-  f.en = Math.max(0, Math.round((f.en - n) * 100) / 100);
+  f.en = Math.max(0, Math.round((f.en - n) * 1000) / 1000);
   lowWarn(f, e0);
   return true;
+}
+function addCharge(f, n) {
+  var before = f.en || 0;
+  f.en = Math.min(capOf(f), before + n);
+  if (!before && LAB.load) LAB.load.after();
 }
 function lowWarn(f, e0) {
   var cp = capOf(f);
@@ -92,7 +112,8 @@ function lowWarn(f, e0) {
 function onStep(run) {
   var f = worn(); if (!f || !live(f)) return;
   var e0 = f.en, c = clsOf(f), k = c.drain * (strOk(f) ? 1 : 1.5);
-  f.en = Math.max(0, Math.round((f.en - ((0.04 * ((f.arms || 0) + (f.legs || 0)) + 0.03 * (f.plates || []).length) * k * (run ? 1.4 : 1))) * 1000) / 1000);
+  var raw = (0.025 + 0.04 * ((f.arms || 0) + (f.legs || 0)) + 0.03 * (f.plates || []).length + 0.025 * poweredRank(f, "load")) * k * (run ? 1.4 : 1);
+  f.en = Math.max(0, Math.round((f.en - energyCost(f, raw)) * 1000) / 1000);
   lowWarn(f, e0);
   /* сервоприводы слышны в ритме шагов: тяжёлый каркас — через шаг, прочие — реже и тише */
   stepN++;
@@ -110,7 +131,8 @@ function runGapK() { var f = worn(); return f && live(f) ? Math.max(0.7, 1 - 0.0
 function meleeK() {
   var f = worn(); if (!f || !live(f)) return 1;
   var k = 1 + (0.15 * (f.arms || 0) + (f.cls === "heavy" ? 0.1 : 0)) * bonusK(f);
-  f.en = Math.max(0, (f.en || 0) - 0.6 * (f.arms || 0) * clsOf(f).drain);
+  var cost = (0.6 * (f.arms || 0) + (f.cls === "heavy" ? 0.25 : 0)) * clsOf(f).drain;
+  if (cost > 0 && !drain(cost)) return 1;
   if ((f.arms || 0) > 0) snd(f.cls === "heavy" ? "exo_servo_heavy" : "exo_servo", "repairbot_step", { gain: 0.45 });
   return k;
 }
@@ -121,7 +143,7 @@ function defBonus() {
   var f = worn(); if (!f) return 0;
   var d = clsOf(f).def; (f.plates || []).forEach(function (p) { d += (PLATES[p] || {}).def || 0; });
   d *= LAB.QUAL_MULT[f.qual == null ? 2 : f.qual] * condK(f) * (MS() ? MS().defK(f) : 1);
-  return Math.round(d);
+  return Math.round(d) + poweredRank(f, "guard");
 }
 function res(t) {
   var f = worn(); if (!f) return 0;
@@ -137,32 +159,30 @@ function onHurt(raw, adt, src) {
     var v = DIRV[g.face] || DIRV.N, dx = src.x - g.x, dy = src.y - g.y;
     if (dx * v[0] + dy * v[1] < 0) { out = raw * 0.5; snd("exo_shield", "shield_hit"); sayOnce("bshield", "Щит на спине принял удар сзади.", 12000); }
   }
-  var wear = Math.min(2, 0.15 + raw * 0.03) * (MS() && MS().flawOf(f) && MS().flawOf(f).k === "play" ? 1.5 : 1);
+  var wear = Math.min(2, 0.15 + raw * 0.03) * (MS() && MS().flawOf(f) && MS().flawOf(f).k === "play" ? 1.5 : 1) * (1 - 0.12 * poweredRank(f, "guard"));
   var c0 = f.cond != null ? f.cond : 100;
   f.cond = Math.max(0, Math.round((c0 - wear) * 100) / 100);
   if (c0 >= 50 && f.cond < 50) sayq("Каркас изношен: половина состояния, защита слабее. Почините его у верстака.");
   return out;
 }
 /* Такт: наплечная турель в бою. */
-var tN = 0, hornCd = 0;
+var tN = 0;
 function tick() {
   tN++;
-  if (hornCd > 0) hornCd--;
+  X().forEach(function (frame) { if (frame.hornCd > 0) frame.hornCd--; });
   var f = worn(), C = LAB.combat;
   if (!f || f.sh !== "turret" || !live(f) || !C || f.turretOff) return;
   if (tN % 5) return;
   if (!C.danger || !C.danger()) return;
   var g = G(), v = DIRV[g.face] || DIRV.N, best = null, bd = 99;
-  C.visibleFoes(6).forEach(function (o) {
+  C.visibleFoes(5 + mountRank(f)).forEach(function (o) {
     if (o.dead || o.calm || o.ally || o.neutral || o.disguised || o.burrowed || o.phased) return;
     var dx = o.x - g.x, dy = o.y - g.y, along = dx * v[0] + dy * v[1], perp = Math.abs(dx * v[1] - dy * v[0]);
     if (along <= 0 || perp > 1) return;
     if (along < bd) { bd = along; best = o; }
   });
-  if (!best) return;
-  if ((f.en || 0) < 1.5) return;
-  f.en = Math.max(0, f.en - 1.5);
-  var lvl = LAB.foeLevel(g.L, g.F), dmg = Math.max(1, Math.round(5 * (1 + 0.14 * (lvl - 1)) * LAB.QUAL_MULT[f.qual == null ? 2 : f.qual] * bonusK(f)));
+  if (!best || !drain(mountCost(f))) return;
+  var lvl = LAB.foeLevel(g.L, g.F), dmg = Math.max(1, Math.round(5 * (1 + 0.15 * (mountRank(f) - 1)) * (1 + 0.14 * (lvl - 1)) * LAB.QUAL_MULT[f.qual == null ? 2 : f.qual] * bonusK(f)));
   snd("exo_turret", "w_blaster_s", { gain: 0.6 });
   C.damageFoe(best, dmg, "kinetic", { quiet: true, ally: true, by: "ally" });
 }
@@ -170,16 +190,15 @@ function tick() {
 function horn() {
   var f = worn(), C = LAB.combat, g = G();
   if (!f || f.sh !== "horn") { say("На плече каркаса нет СВЧ-раструба."); return false; }
-  if (hornCd > 0) { say("Раструб остывает."); return false; }
-  if (!drain(15, true)) { snd("exo_low", "w_empty"); say("Аккумулятору каркаса не хватает заряда на залп."); return false; }
-  drain(15);
-  hornCd = 40;
+  if (f.hornCd > 0) { say("Раструб остывает."); return false; }
+  if (!drain(mountCost(f))) { snd("exo_low", "w_empty"); say("Аккумулятору каркаса не хватает заряда на залп."); return false; }
+  f.hornCd = 40;
   snd("mw_hum", "mag_hum_short"); setTimeout(function () { snd("mw_fry", "w_shock_crack"); }, 350);
   var v = DIRV[g.face] || DIRV.N, n = 0, lvl = LAB.foeLevel(g.L, g.F);
   C.foes().forEach(function (o) {
     if (o.dead || o.calm || o.ally || o.kind !== "mech" || o.burrowed) return;
     var dx = o.x - g.x, dy = o.y - g.y, along = dx * v[0] + dy * v[1], perp = Math.abs(dx * v[1] - dy * v[0]);
-    if (along <= 0 || along > 4 || perp > along) return;
+    if (along <= 0 || along > 3 + mountRank(f) || perp > along) return;
     if (!LAB.los(gm().CUR.fl, gm().CUR.fs, g.x, g.y, o.x, o.y)) return;
     if (o.aff && o.aff.indexOf("hardened") >= 0) return;
     o.frozen = Math.max(o.frozen || 0, o.boss ? 2 : 6); o.blindT = Math.max(o.blindT || 0, 6);
@@ -216,12 +235,14 @@ function chargeBat(f) {
   var cp = capOf(f);
   if ((f.en || 0) >= cp) { say("Аккумулятор каркаса полон."); return false; }
   if (!(g.ammo.energy > 0)) { say("Энергобатарей нет."); return false; }
-  g.ammo.energy--; f.en = Math.min(cp, (f.en || 0) + 60);
+  g.ammo.energy--; addCharge(f, 60);
   snd("exo_charge", "w_reload_e");
   say("Каркас подзаряжен энергобатареей: " + Math.round(f.en) + " из " + cp + ".");
+  save();
+  if (LAB.load) LAB.load.after();
   return true;
 }
-function chargeFull(f) { f = f || worn(); if (f) f.en = capOf(f); }
+function chargeFull(f) { f = f || worn(); if (f) addCharge(f, capOf(f)); }
 /* Цена зарядки у капсулы и станции: как у энергобатареи за каждые шестьдесят единиц. */
 function chargePrice(f) {
   var miss = capOf(f) - (f.en || 0); if (miss <= 0) return 0;
@@ -275,11 +296,12 @@ function upNode(f, k) {
   var need = nd.need(f), why = canWork(nd.tier(f), need);
   if (why) { LAB.UI.error(); say(cap1(nd.n) + ": " + why + "."); return false; }
   W().take(need); addNeed(f, need);
-  if (k === "arms") f.arms = cur + 1; else if (k === "legs") f.legs = cur + 1; else { f.cell = cur + 1; f.en = Math.min(capOf(f), (f.en || 0) + 40); }
+  f[k] = cur + 1;
   if (gm().advanceTime) gm().advanceTime(4);
   if (MS()) MS().gain("mech", 4);
   snd("work_ratchet", "craft");
   say(cap1(nd.n) + ": ступень " + nd.cur(f) + " из " + nd.max(f) + ". " + effectText(f));
+  save();
   return true;
 }
 function addNeed(f, need) { if (!f.rcNeed) f.rcNeed = {}; for (var k in need) f.rcNeed[k] = (f.rcNeed[k] || 0) + need[k]; }
@@ -305,16 +327,61 @@ function dropPlate(f) {
 }
 function setMount(f, k) {
   var mt = MOUNT[k];
+  if (!mt || X().indexOf(f) < 0) return false;
   if (!clsOf(f).sh) { say("На лёгкий каркас на плечо ничего не встаёт."); return false; }
   if (f.sh === k) { say(cap1(mt.n) + " уже стоит."); return false; }
-  var why = canWork(mt.tier, mt.need);
+  var built = f.mounts && f.mounts[k], why = canWork(built ? 2 : mt.tier, built ? null : mt.need);
   if (why) { LAB.UI.error(); say(cap1(mt.n) + ": " + why + "."); return false; }
-  W().take(mt.need); addNeed(f, mt.need);
+  if (!f.mounts) f.mounts = {};
+  if (f.sh) f.mounts[f.sh] = mountRank(f);
+  if (!built) { W().take(mt.need); addNeed(f, mt.need); }
   f.sh = k;
-  if (gm().advanceTime) gm().advanceTime(5);
-  if (MS()) MS().gain("elec", 5);
+  f.shRank = f.mounts[k] = built || 1;
+  if (gm().advanceTime) gm().advanceTime(built ? 3 : 5);
+  if (!built && MS()) MS().gain("elec", 5);
   snd("work_solder", "craft");
-  say(cap1(mt.n) + " на плече: " + mt.d + ".");
+  say(cap1(mt.n) + " на плече, ступень " + mountRank(f) + ". Расход " + energyCost(f, mountCost(f)) + " энергии.");
+  save();
+  return true;
+}
+function mountNeed(rank) { return rank === 2 ? { chip: 1, wire: 2, cap: 1 } : { chip: 2, servo: 1, supercond: 1 }; }
+function upgradeMount(f) {
+  if (X().indexOf(f) < 0 || !f.sh || mountRank(f) >= 3) return false;
+  var rank = mountRank(f) + 1, need = mountNeed(rank), why = canWork(rank + 2, need);
+  if (why) { say("Усиление наплечного блока. " + cap1(why) + "."); return false; }
+  W().take(need); addNeed(f, need);
+  f.shRank = rank;
+  if (!f.mounts) f.mounts = {};
+  f.mounts[f.sh] = rank;
+  if (gm().advanceTime) gm().advanceTime(6 + rank * 2);
+  if (MS()) MS().gain("elec", 4 + rank);
+  save();
+  say(cap1(MOUNT[f.sh].n) + ", ступень " + rank + ". Расход " + Math.round(energyCost(f, mountCost(f)) * 100) / 100 + " энергии.");
+  return true;
+}
+function profileNeed(key, rank) {
+  var needs = { wire: rank, scrap: rank };
+  needs[PROFILES[key].part] = rank;
+  return needs;
+}
+function profileWork(f, key, upgrade) {
+  var profile = PROFILES[key];
+  if (!profile || X().indexOf(f) < 0) return false;
+  var cur = profileRank(f, key), rank = cur + (upgrade ? 1 : 0);
+  if (rank <= 0 || rank > 3 || (!upgrade && f.profile === key)) return false;
+  var need = upgrade ? profileNeed(key, rank) : null, why = canWork(upgrade ? rank + 1 : 2, need);
+  if (why) { say(profile.n + ". " + cap1(why) + "."); return false; }
+  if (need) {
+    W().take(need); addNeed(f, need);
+    if (!f.profiles) f.profiles = {};
+    f.profiles[key] = rank;
+  }
+  f.profile = key;
+  if (gm().advanceTime) gm().advanceTime(need ? 5 + rank * 2 : 3);
+  if (need && MS()) MS().gain("mech", 3 + rank);
+  save();
+  say(profile.n + ", ступень " + rank + ". " + cap1(profile.text(rank)) + ".");
+  if (LAB.load) LAB.load.after();
   return true;
 }
 function setShield(f) {
@@ -345,8 +412,12 @@ function repair(f) {
 function scrap(f) {
   var g = G();
   if (g.exoOn === f.id) { say("Сначала снимите каркас."); return false; }
+  var i = X().indexOf(f), why = canWork(2);
+  if (i < 0) return false;
+  if (why) { say("Разборка каркаса. " + cap1(why) + "."); return false; }
   var back = {}, s = []; for (var k in (f.rcNeed || {})) { var n = Math.floor(f.rcNeed[k] / 2); if (n > 0) { back[k] = n; g.inv[k] = (g.inv[k] || 0) + n; s.push((LAB.ITEMS[k] ? LAB.ITEMS[k].n.toLowerCase() : k) + " " + n); } }
-  var i = X().indexOf(f); if (i >= 0) X().splice(i, 1);
+  X().splice(i, 1);
+  save();
   if (MS()) MS().ev("salvage");
   snd("work_ratchet", "pry");
   say("Каркас разобран. Вернулось: " + (s.join(", ") || "ничего ценного") + ".");
@@ -361,13 +432,14 @@ function effectText(f) {
   s.push("защита плюс " + previewDef(f));
   return cap1(s.join(", ")) + ".";
 }
-function previewDef(f) { var d = clsOf(f).def; (f.plates || []).forEach(function (p) { d += (PLATES[p] || {}).def || 0; }); return Math.round(d * LAB.QUAL_MULT[f.qual == null ? 2 : f.qual] * condK(f)); }
+function previewDef(f) { var d = clsOf(f).def; (f.plates || []).forEach(function (p) { d += (PLATES[p] || {}).def || 0; }); return Math.round(d * LAB.QUAL_MULT[f.qual == null ? 2 : f.qual] * condK(f)) + poweredRank(f, "guard"); }
 function line(f) {
   var c = clsOf(f), parts = [frameName(f)];
   parts.push("приводы рук " + (f.arms || 0) + " из " + c.arms + ", ног " + (f.legs || 0) + " из " + c.legs);
   parts.push("аккумулятор " + Math.round(f.en || 0) + " из " + capOf(f));
   parts.push((f.plates || []).length ? "накладки: " + f.plates.map(function (p) { return PLATES[p].n; }).join(", ") : "без накладок");
-  if (f.sh) parts.push("на плече " + MOUNT[f.sh].n);
+  if (PROFILES[f.profile]) parts.push(PROFILES[f.profile].n + ", ступень " + profileRank(f, f.profile));
+  if (f.sh) parts.push("на плече " + MOUNT[f.sh].n + ", ступень " + mountRank(f));
   if (f.back) parts.push("на спине ростовой щит");
   parts.push("защита плюс " + previewDef(f));
   if ((f.cond != null ? f.cond : 100) < 100) parts.push("состояние " + Math.round(f.cond) + " из 100");
@@ -397,9 +469,17 @@ function frameBench(f) {
       var nd = NODE[k], cur = nd.cur(f), mx = nd.max(f);
       items.push({ label: cap1(nd.n) + ": " + cur + " из " + mx + (cur < mx ? ". Поднять: " + W().costText(nd.need(f)) + (tierNow() < nd.tier(f) ? ", нужен верстак ступени " + nd.tier(f) : "") : ". Предел"), keep: true, fn: function () { upNode(f, k); } });
     });
+    items.push({ label: "Усиление каркаса: опоры, амортизаторы и стабилизатор", fn: function () { profileMenu(f); } });
     items.push({ label: "Накладки: " + (f.plates || []).length + " из " + plateMax(f) + ". Поставить ещё", fn: function () { plateMenu(f); } });
     if ((f.plates || []).length) items.push({ label: "Снять последнюю накладку — облегчить каркас", keep: true, fn: function () { dropPlate(f); } });
-    if (clsOf(f).sh) Object.keys(MOUNT).forEach(function (k) { var mt = MOUNT[k]; items.push({ label: "На плечо: " + mt.n + (f.sh === k ? " — стоит" : ". " + mt.d + ". Детали: " + W().costText(mt.need)), keep: true, fn: function () { setMount(f, k); } }); });
+    if (clsOf(f).sh) Object.keys(MOUNT).forEach(function (k) {
+      var mt = MOUNT[k], owned = f.mounts && f.mounts[k];
+      items.push({ label: "На плечо: " + mt.n + (f.sh === k ? ", установлено" : owned ? ", установить ступень " + owned + " из запаса каркаса" : ". " + mt.d + ". Детали: " + W().costText(mt.need)), keep: true, fn: function () { setMount(f, k); } });
+    });
+    if (f.sh && mountRank(f) < 3) {
+      var rank = mountRank(f) + 1;
+      items.push({ label: "Усилить наплечный блок до ступени " + rank + ". Верстак ступени " + (rank + 2) + ". Детали: " + W().costText(mountNeed(rank)) + ".", keep: true, fn: function () { upgradeMount(f); } });
+    }
     items.push({ label: "На спину: ростовой щит" + (f.back ? " — стоит" : ". Гасит удары сзади вдвое. Детали: лом 4, керамика 2, защитная панель 1"), keep: true, fn: function () { setShield(f); } });
     var rc = repairCost(f);
     if (rc) items.push({ label: "Починить каркас: " + W().costText(rc), keep: true, fn: function () { repair(f); } });
@@ -408,6 +488,18 @@ function frameBench(f) {
     return items;
   };
   menu(frameName(f), build_(), { keep: true, rebuild: build_, intro: line(f) + "." });
+}
+function profileMenu(f) {
+  var items = function () {
+    var rows = [];
+    Object.keys(PROFILES).forEach(function (k) {
+      var p = PROFILES[k], cur = profileRank(f, k), next = cur + 1;
+      if (cur && f.profile !== k) rows.push({ label: "Включить «" + p.n + "», ступень " + cur + ". " + cap1(p.text(cur)) + ".", keep: true, fn: function () { profileWork(f, k, false); } });
+      if (next <= 3) rows.push({ label: p.n + ", ступень " + next + ". " + cap1(p.text(next)) + ". Верстак ступени " + (next + 1) + ". Детали: " + W().costText(profileNeed(k, next)) + ".", keep: true, fn: function () { profileWork(f, k, true); } });
+    });
+    return rows.concat({ label: "Назад", close: true, fn: function () {} });
+  };
+  menu("Усиление каркаса", items(), { keep: true, rebuild: items, intro: "Один профиль действует при заряде аккумулятора. Установленные узлы сохраняют ступени при переключении у верстака." });
 }
 function plateMenu(f) {
   var items = PLATE_ORDER.map(function (p) {
@@ -453,8 +545,9 @@ LAB.exo = {
   CLS: CLS, PLATES: PLATES, MOUNT: MOUNT, CAP: CAP,
   frames: frames, worn: worn, capOf: capOf, strOk: strOk, live: live, drain: drain, onStep: onStep, stepNoise: stepNoise, runGapK: runGapK,
   meleeK: meleeK, accK: accK, defBonus: defBonus, res: res, onHurt: onHurt, tick: tick, horn: horn,
-  equip: equip, unequip: unequip, chargeBat: chargeBat, chargeFull: chargeFull, chargePrice: chargePrice,
-  build: build, upNode: upNode, addPlate: addPlate, dropPlate: dropPlate, setMount: setMount, setShield: setShield, repair: repair, scrap: scrap,
+  equip: equip, unequip: unequip, chargeBat: chargeBat, chargeFull: chargeFull, chargePrice: chargePrice, addCharge: addCharge, takeCharge: takeCharge,
+  build: build, upNode: upNode, addPlate: addPlate, dropPlate: dropPlate, setMount: setMount, upgradeMount: upgradeMount, setShield: setShield, repair: repair, scrap: scrap,
+  profileWork: profileWork, loadBonus: loadBonus, energyCost: energyCost,
   line: line, charLine: charLine, benchLabel: benchLabel, benchMenu: benchMenu, invItems: invItems, unlockBy: unlockBy, frameName: frameName
 };
 })();

@@ -35,7 +35,7 @@ function newState(seed) {
     hp: 100, hpMax: 100, str: 10, agi: 10, con: 10, mind: 10, cha: 10, /* (после 4.6) телосложение — stats.js */
     en: 30, enMax: 30, lvl: 1, xp: 0, credits: 40,
     weapons: [LAB.makeWeapon("crowbar", 1, 0, 1, "w_start_crowbar"), LAB.makeWeapon("spark", 1, 0, 1, "w_start_spark")], wi: 1, drawn: false,
-    armor: suit, armors: [suit],
+    armor: suit, armors: [suit], loadRig: 0,
     ammo: { energy: 0, magnetron: 0, positron: 0 },
     inv: { bandage: 1, fieldkit: 1, ration: 1 }, keys: {}, tier: 0, elev: {}, gate: {}, core: false, cores: {}, codes: {}, melodies: {}, blockSeen: {},
     notes: {}, noteList: [], samples: {}, implants: ["scan", "echo"], faction: null, crafted: 0, bp: {}, bpNpc: {},
@@ -960,7 +960,7 @@ function gainXP(n, why) {
   if (!n) return;
   G.xp += n;
   if (LAB.drone && n > 0) LAB.drone.onXP(n); /* (после 4.6) дрон-спутник растёт вместе с героем */
-  var lv = false, lvTail = "";
+  var lv = false, lvTail = "", ptsBefore = LAB.stats && LAB.stats.S().pts || 0;
   while (G.xp >= LAB.xpNeed(G.lvl)) {
     G.xp -= LAB.xpNeed(G.lvl); G.lvl++; lv = true;
     /* (после 4.6) здоровья с уровнем — пять, ещё по пять даёт каждая единица телосложения (stats.js);
@@ -969,6 +969,8 @@ function gainXP(n, why) {
     lvTail = LAB.stats ? LAB.stats.onLevel() : "";
   }
   if (lv) {
+    var ptsGained = LAB.stats && LAB.stats.S().pts - ptsBefore || 0;
+    if (ptsGained && !/^ Очко характеристик/.test(lvTail)) lvTail = " Свободных очков характеристик теперь " + LAB.stats.S().pts + "." + lvTail;
     LAB.UI.fanfare(); LAB.vib([60, 80, 60]);
     /* (3.7) keep: следующий жест игрока очищает очередь речи (engine.js, userAct) — важное
        сообщение не теряется, а звучит, когда игрок замрёт */
@@ -1180,6 +1182,7 @@ function tryMove(dir, run) {
   if (LAB.stats) LAB.stats.step(); /* (после 4.6) выносливость; с тяжёлым грузом — сила и телосложение */
   var loud = (armorSpecial("strength") ? 2 : 0) + (LAB.exo ? LAB.exo.stepNoise(run) : 0) + (LAB.load ? LAB.load.noise() : 0), quiet = armorSpecial("stealth"); /* (после 4.6) перегруз громче */ /* (после 4.6) тяжёлый каркас громче, лёгкий на беге тише */
   G.noise = Math.max(G.noise, Math.round(((run ? 6 : 3) + loud) * (quiet ? 0.5 : 1)));
+  if (LAB.drone) LAB.drone.onStep();
   if (LAB.exo) LAB.exo.onStep(run); /* (после 4.6) приводы едят заряд аккумулятора */
   advanceTime(run ? 0.6 : 1);
   CUR.focus = null;
@@ -2186,6 +2189,8 @@ function stairStep(dir, run) {
   A("stairStep", s.down, s.k, s.n);
   G.stats.steps++;
   if (LAB.stats) LAB.stats.step();
+  if (LAB.drone) LAB.drone.onStep();
+  if (LAB.exo) LAB.exo.onStep(run);
   if (s.k === s.land && dir === "N") sayOnce("landing", "Площадка. Лестница поворачивает.", 4000);
   if (s.k >= s.n) {
     var down = s.down;

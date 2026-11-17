@@ -70,20 +70,18 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     /* практика — из запаса, который пополняют только минуты настоящей игры; раз в сутки комплекса */
     const S = ST.S(); G.agi = 10; S.px.agi = 0; delete S.day.agi; if (S.pb) delete S.pb.agi; S.play = 0;
     const top = ST.RATE * ST.STORE_H; /* полный запас: 40 */
-    for (let i = 0; i < 40; i++) ST.deed("disarm");   /* хотели бы 120 единиц — запас даёт 40 */
-    out.store = S.px.agi === top && G.agi === 10 && Math.abs(S.pb.agi) < 1e-9 && /практики пока довольно/.test(said());
-    /* сон: сутки комплекса прошли, игры — ни минуты: запас пуст, рост тот же */
-    g.advanceTime(3 * 1440, true); for (let i = 0; i < 20; i++) ST.deed("disarm");
-    out.sleep = S.px.agi === top && G.agi === 10;
-    /* полчаса игры — десять единиц: набралось пятьдесят — ловкость 11 */
-    ST._play(30); for (let i = 0; i < 4; i++) ST.deed("disarm");
+    for (let i = 0; i < 40; i++) ST.deed("disarm");
     out.grow = G.agi === 11 && /Практика: ловкость выросла/.test(said());
-    /* следующая единица дороже (100), и в те же сутки — не раньше завтра */
-    ST._play(600); for (let i = 0; i < 40; i++) ST.deed("disarm"); ST._play(600); for (let i = 0; i < 40; i++) ST.deed("disarm");
-    out.daily = ST.need("agi") === 100 && S.px.agi === 80 && G.agi === 11;
+    out.store = S.px.agi === top - 32 && Math.abs(S.pb.agi) < 1e-9;
+    /* Следующая единица требует 56. Достичь порога можно, а вырасти повторно в те же сутки нельзя. */
+    ST._play(600); for (let i = 0; i < 40; i++) ST.deed("disarm");
+    out.daily = ST.need("agi") === 56 && S.px.agi === 48 && G.agi === 11;
     ST._play(600); for (let i = 0; i < 10; i++) ST.deed("disarm");
-    out.full = S.px.agi === 100 && G.agi === 11;
-    G.day++; ST.deed("disarm"); out.nextDay = G.agi === 12;
+    out.full = S.px.agi === 56 && G.agi === 11;
+    const bank = ST.store("agi");
+    g.advanceTime(3 * 1440, true);
+    out.sleep = ST.store("agi") === bank && S.px.agi === 56 && G.agi === 11;
+    ST.deed("disarm"); out.nextDay = G.agi === 12;
     out.practiceSaid = out.grow;
     if (!(out.store && out.sleep && out.grow && out.daily && out.full && out.nextDay)) out.pDiag = JSON.stringify({ px: S.px.agi, pb: S.pb.agi, agi: G.agi, need: ST.need("agi"), store: out.store, sleep: out.sleep, grow: out.grow, daily: out.daily, full: out.full, next: out.nextDay });
 

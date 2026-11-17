@@ -104,11 +104,14 @@ function spent(k) {
 var TH = {
   str: [[11, "средний экзокаркас — по силе"], [14, "ящики вскрываются рывком, завалы разбираются быстрее; тяжёлый каркас — по силе"], [20, "тяжёлое оружие в руках не гуляет: силы хватает на любой ствол без каркаса"]],
   agi: [[15, "в тщательной работе брак — заметно реже"], [20, "энергоклинок как влитой: урон им плюс пятнадцать процентов"]],
-  con: [[11, "средний экзокаркас — по костям"], [13, "тяжёлый экзокаркас — по костям: кости держат его вес и рывки приводов"], [20, "яды и токсины берут заметно слабее"]],
-  mind: [[15, "нейроприцел для своего оружия"], [16, "взлом короче на один сигнал"], [24, "взлом короче ещё на один сигнал"], [25, "дрон держит ещё один модуль"]],
-  cha: [[15, "выжившие доверяют: награды за поручения больше"], [20, "кладовщики снабжения находят в ячейке хранения два лишних места"], [25, "торговцы уступают охотнее: цены лучше"], [30, "в ячейке хранения ещё два места — всего четыре лишних"]]
+  con: [[11, "средний экзокаркас — по костям"], [12, "можно подогнать грузовую раму у верстака"], [13, "тело выдерживает тяжёлый экзокаркас"], [14, "можно подогнать усиленную упряжь у верстака"], [20, "яды и токсины действуют заметно слабее"]],
+  mind: [[13, "команды дрону расходуют на одну единицу энергии меньше"], [15, "нейроприцел для своего оружия"], [16, "взлом короче на один сигнал"], [18, "команды дрону расходуют на две единицы энергии меньше"], [24, "взлом короче ещё на один сигнал"], [25, "дрон держит ещё один модуль"]],
+  cha: [[14, "в ячейке хранения одно дополнительное место"], [15, "выжившие доверяют: награды за поручения больше"], [20, "в ячейке хранения два дополнительных места"], [25, "торговцы уступают охотнее: цены лучше"], [30, "в ячейке хранения четыре дополнительных места"]]
 };
-function thNext(k) { var v = base(k); var t = (TH[k] || []).filter(function (x) { return x[0] > v; })[0]; return t ? cap1(NAME[k]) + " " + t[0] + ": " + t[1] + "." : ""; }
+function thNext(k) {
+  var v = base(k), t = (TH[k] || []).find(function (x) { return x[0] > v; });
+  return t ? cap1(NAME[k]) + " " + t[0] + ": " + t[1] + ". До порога " + ptsW(costN(k, t[0] - v)) + ", если вкладывать очки." : "";
+}
 function thCross(k, v0, v1) { return (TH[k] || []).filter(function (x) { return x[0] > v0 && x[0] <= v1; }).map(function (x) { return cap1(NAME[k]) + " " + x[0] + ": " + x[1] + "."; }).join(" "); }
 
 /* ── ЧТО ДАЮТ ── числа для окна и для других модулей */
@@ -145,8 +148,11 @@ function effects(k) {
     if (K.wake() < 1) out.push("усталость медленнее на " + pw(pct(1 - K.wake())) + " вместе с выносливостью");
     if (L) out.push("груз плюс " + L.kg(L.capOf("con")));
   }
-  if (k === "mind") out.push(K.xp() > 1 ? "опыт мастерства плюс " + pw(pct(K.xp() - 1)) : "опыт мастерства обычный", "нейроприцел — с 15", "взлом короче с 16 и с 24", "лишнее гнездо дрона — с 25");
-  if (k === "cha") out.push(K.buy() ? "у людей покупка дешевле на " + pw(K.buy() * 100) + ", продажа дороже на " + pw(K.sell() * 100) : "цены без уступок", K.quest() > 1 ? "награды за поручения больше на " + pw(pct(K.quest() - 1)) : "награды за поручения — как обещано", base("cha") >= 30 ? "в ячейке хранения четыре лишних места" : base("cha") >= 20 ? "в ячейке хранения два лишних места" : "");
+  if (k === "mind") {
+    var saving = LAB.drone ? LAB.drone.commandSaving() : 0;
+    out.push(K.xp() > 1 ? "опыт мастерства плюс " + pw(pct(K.xp() - 1)) : "опыт мастерства обычный", saving ? "команды дрону экономят " + saving + " энергии" : "экономия энергии дрона начинается с 13", "нейроприцел — с 15", "взлом короче с 16 и с 24", "лишнее гнездо дрона — с 25");
+  }
+  if (k === "cha") out.push(K.buy() ? "у людей покупка дешевле на " + pw(K.buy() * 100) + ", продажа дороже на " + pw(K.sell() * 100) : "цены без уступок", K.quest() > 1 ? "награды за поручения больше на " + pw(pct(K.quest() - 1)) : "награды за поручения — как обещано", base("cha") >= 30 ? "в ячейке хранения четыре дополнительных места" : base("cha") >= 20 ? "в ячейке хранения два дополнительных места" : base("cha") >= 14 ? "в ячейке хранения одно дополнительное место" : "");
   if (k === "stam") { out.push(sec("stam") ? "усталость медленнее на " + pw(Math.min(30, sec("stam"))) : "пока ничего: растёт от шагов"); if (L && sec("stam")) out.push("груз плюс " + L.kg(L.capOf("stam")) + ", перегруз меньше замедляет"); }
   if (k === "ment") { out.push(sec("ment") || calmV() ? "нейронагрузка копится медленнее на " + pw(pct(1 - K.neuro())) : "пока ничего: растёт от пережитой нейронагрузки"); if (calmV()) out.push("сейчас спокойствие у воды: ментал плюс " + calmV() + " ещё " + calmLeft() + " " + gm().plural(calmLeft(), "минуту", "минуты", "минут")); }
   if (k === "regen") out.push(sec("regen") ? "лечение сильнее на " + pw(pct(K.heal() - 1)) + "; вне боя здоровье возвращается само: " + Math.round(K.regen() * 60) + " в час" : "пока ничего: растёт от лечения и отдыха");
@@ -163,10 +169,9 @@ var GROWS = {
   regen: "только практикой: лечение и отдых"
 };
 
-/* ── ПРАКТИКА ── сколько нужно на единицу (круто растёт с характеристикой: 50 у десяти, 680 у двадцати,
-   1610 у тридцати, 2840 у сорока); дело берёт из запаса практики (store), не больше, чем в нём есть и чем
+/* ── ПРАКТИКА ── сколько нужно на единицу; дело берёт из запаса практики (store), не больше, чем в нём есть и чем
    осталось до единицы; подрастает характеристика не чаще раза в сутки комплекса */
-function need(k) { var v = base(k); if (SEC.indexOf(k) >= 0) return 20 + 10 * v; var d = Math.max(0, v - 10); return Math.round(50 + 48 * d + 1.5 * d * d); }
+function need(k) { var v = base(k); if (SEC.indexOf(k) >= 0) return 20 + 10 * v; var d = Math.max(0, v - 10); return 32 + 22 * d + 2 * d * d; }
 function today() { return G().day || 1; }
 function practice(k, units) {
   var s = S(); if (!s || !(units > 0)) return;
@@ -178,7 +183,7 @@ function practice(k, units) {
     if (take < Math.min(units, room) && s.pb[k] < 0.5 && MAIN.indexOf(k) >= 0) spent(k); /* вторичные растут сами, от шагов и лечения: о них не говорим */
   }
   if ((s.px[k] || 0) < n || s.day[k] === today()) return;
-  s.px[k] = 0; s.day[k] = today();
+  s.px[k] = Math.max(0, s.px[k] - n); s.day[k] = today();
   var v0 = base(k);
   raise(k, 1);
   var th = thCross(k, v0, base(k));
@@ -189,9 +194,9 @@ function practice(k, units) {
 /* прибавить к основе; телосложение — сразу и здоровье */
 function raise(k, n) {
   var g = G(), s = S();
-  if (SEC.indexOf(k) >= 0) { s.sec[k] = Math.min(SEC_CAP, (s.sec[k] || 0) + n); return; }
   var v0 = base(k), v1 = Math.min(capOf(k), v0 + n);
-  g[k] = v1;
+  if (SEC.indexOf(k) >= 0) s.sec[k] = v1;
+  else g[k] = v1;
   if (k === "con" && v1 > v0) { g.hpMax += 5 * (v1 - v0); g.hp = Math.min(g.hpMax, g.hp + 5 * (v1 - v0)); }
   if (LAB.load && (k === "str" || k === "con" || k === "stam")) setTimeout(function () { LAB.safe(function () { LAB.load.after(); }); }, 0); /* предел груза вырос */
   UIx("refresh");
@@ -277,30 +282,60 @@ function onLevel() {
   return " Очко характеристик" + (s.pts > 1 ? ", теперь их " + s.pts : "") + " — " + LAB.K("окно «Характеристики»: " + LAB.gw("stats", "тройное касание тремя пальцами"), "окно «Характеристики»: Shift+C") + ".";
 }
 function spend(k, n) {
-  var s = S(), got = Math.min(n || 1, affordable(k, s.pts || 0));
-  if (got <= 0) return false;
+  if (MAIN.indexOf(k) < 0) return false;
+  var s = S();
+  if (!s) return false;
+  var got = Math.min(n == null ? 1 : Math.floor(n), affordable(k, s.pts || 0));
+  if (!(got > 0)) return false;
   var v0 = base(k), paid = costN(k, got);
   s.pts -= paid; raise(k, got);
   var th = thCross(k, v0, base(k)), c = base(k) < capOf(k) ? cost(k) : 0;
   snd("stat_up", "ui_levelup");
+  if (gm().autosaveSoon) gm().autosaveSoon();
   say(cap1(NAME[k]) + " " + base(k) + (paid > got ? " — за " + ptsW(paid) : "") + ". " + (s.pts ? "Осталось очков: " + s.pts + "." : "Очки распределены.") + (c > 1 ? " Следующая единица — " + ptsW(c) + "." : "") + (th ? " " + th : ""));
   return true;
 }
-/* поровну: по единице туда, где меньше (основа), пока хватает очков на её цену и есть место */
-function spread() {
-  var s = S(), got = {}, guard = 0, any = false;
-  while ((s.pts || 0) > 0 && guard++ < 500) {
-    var open = MAIN.filter(function (k) { return base(k) < capOf(k) && cost(k) <= s.pts; });
-    if (!open.length) break;
-    open.sort(function (a, b) { return base(a) - base(b) || MAIN.indexOf(a) - MAIN.indexOf(b); });
-    var k = open[0], v0 = base(k);
-    s.pts -= cost(k); raise(k, 1); any = true;
-    got[k] = (got[k] || 0) + 1;
-    var th = thCross(k, v0, base(k)); if (th) got.th = (got.th ? got.th + " " : "") + th;
+function spreadPlan() {
+  var left = S().pts || 0, values = {}, deltas = {};
+  MAIN.forEach(function (k) { values[k] = base(k); deltas[k] = 0; });
+  var ordered = function (a, b) { return values[a] - values[b] || MAIN.indexOf(a) - MAIN.indexOf(b); };
+  while (left > 0) {
+    var k = MAIN.filter(function (s) { return values[s] < capOf(s) && costAt(values[s]) <= left; }).sort(ordered)[0];
+    if (!k) break;
+    left -= costAt(values[k]);
+    values[k]++;
+    deltas[k]++;
   }
-  if (!any) { LAB.UI && LAB.UI.error && LAB.UI.error(); say("Очков не хватает: единица любой характеристики сейчас стоит дороже, чем у вас есть, — " + ptsW(s.pts || 0) + "."); return; }
+  return { keys: MAIN.filter(function (k) { return deltas[k] > 0; }), deltas: deltas, values: values, left: left };
+}
+function spreadText(plan) {
+  return plan.keys.map(function (k) { return NAME[k] + " плюс " + plan.deltas[k] + ", итог " + plan.values[k]; }).join(". ");
+}
+function spread() {
+  var s = S(), plan = spreadPlan();
+  if (!plan.keys.length) { LAB.UI && LAB.UI.error && LAB.UI.error(); say("Очков не хватает: сейчас у вас " + ptsW(s.pts || 0) + "."); return false; }
+  var thresholds = plan.keys.map(function (k) { return thCross(k, base(k), plan.values[k]); }).filter(Boolean);
+  s.pts = plan.left;
+  plan.keys.forEach(function (k) { raise(k, plan.deltas[k]); });
   snd("stat_up", "ui_levelup");
-  say("Распределено: " + MAIN.filter(function (k) { return got[k]; }).map(function (k) { return NAME[k] + " плюс " + got[k] + ", теперь " + base(k); }).join("; ") + "." + (s.pts ? " Осталось " + ptsW(s.pts) + ": на следующую единицу не хватает." : "") + (got.th ? " " + got.th : ""));
+  if (gm().autosaveSoon) gm().autosaveSoon();
+  say("Распределено. " + cap1(spreadText(plan)) + "." + (s.pts ? " Осталось " + ptsW(s.pts) + "." : "") + (thresholds.length ? " " + thresholds.join(" ") : ""));
+  return true;
+}
+function spreadMenu() {
+  var plan = spreadPlan();
+  if (!plan.keys.length) { spread(); return; }
+  var label = "Подтвердить. " + cap1(spreadText(plan)) + ". Останется " + ptsW(plan.left) + ".";
+  UIx("menu", "Распределить поровну", [
+    { label: label, fn: function () {
+      var current = spreadPlan();
+      if (current.left !== plan.left || spreadText(current) !== spreadText(plan)) {
+        UIx("closeTop", true); spreadMenu(); return;
+      }
+      if (spread()) { UIx("closeTop", true); UIx("rebuildTop"); }
+    } },
+    { label: "Назад", close: true, fn: function () {} }
+  ]);
 }
 
 /* ── ОКНО «ХАРАКТЕРИСТИКИ» ── */
@@ -316,7 +351,7 @@ function items() {
   its.push({ label: function () { return s.pts ? "Очков для распределения: " + s.pts + ". Выберите характеристику, чтобы вложить очко." : "Свободных очков нет: очко приходит на каждом пятом уровне героя, следующее — на " + nextPtLevel(G().lvl || 1) + "-м."; }, info: true, keep: true, fn: function () { say(s.pts ? "Очков для распределения: " + s.pts + "." : "Свободных очков нет. Следующее — на " + nextPtLevel(G().lvl || 1) + "-м уровне героя."); } });
   MAIN.forEach(function (k) { its.push({ label: function () { return statLabel(k); }, fn: function () { statMenu(k); } }); });
   SEC.forEach(function (k) { its.push({ label: function () { return statLabel(k); }, info: true, keep: true, fn: function () { say(statLabel(k)); } }); });
-  if (s.pts) its.push({ label: "Распределить все очки поровну: по единице туда, где меньше, пока хватает на её цену", fn: function () { spread(); UIx("closeTop", true); menu(); } });
+  if (s.pts) its.push({ label: "Распределить поровну. Посмотреть итог и подтвердить", fn: spreadMenu });
   its.push({ label: "Как растут характеристики", fn: function () { UIx("note", "Как растут характеристики", HOWTO()); } });
   its.push({ label: "Назад", fn: function () {} });
   return its;
@@ -332,6 +367,18 @@ function menu() {
   if (!gm().entered || !S()) return;
   UIx("menu", "Характеристики", items(), { rebuild: items, intro: S().pts ? "Очков для распределения: " + S().pts + "." : "" });
 }
+function pointPreview(k, n) {
+  var snippets = [];
+  if (LAB.load && (k === "str" || k === "con")) {
+    var l = LAB.load, delta = l.statCapacity(k, val(k) + n) - l.statCapacity(k, val(k));
+    snippets.push("Предел груза плюс " + l.kg(delta) + ".");
+  }
+  if (k === "con") snippets.push("Максимум здоровья плюс " + (5 * n) + ".");
+  if (k === "agi") snippets.push("Точность и уклонение плюс " + pw(n) + ".");
+  var crossed = thCross(k, base(k), base(k) + n);
+  if (crossed) snippets.push(crossed);
+  return snippets.length ? ". " + snippets.join(" ") : "";
+}
 function statMenu(k) {
   var s = S(), v = base(k), m = capOf(k);
   var its = [];
@@ -340,9 +387,9 @@ function statMenu(k) {
   else if (cost(k) > s.pts) its.push({ label: "Поднять " + NAMEA[k] + " до " + (v + 1) + " стоит " + ptsW(cost(k)) + ", у вас " + s.pts + ": чем выше характеристика, тем дороже единица. Копите очки — или растите " + NAMEA[k] + " делами.", info: true, keep: true, fn: function () { say("Не хватает очков: нужно " + cost(k) + "."); } });
   else {
     var c1 = cost(k), nAll = affordable(k, s.pts);
-    its.push({ label: (c1 > 1 ? "Вложить " + ptsW(c1) : "Вложить очко") + ": " + NAME[k] + " станет " + (v + 1) + ". Очков останется " + (s.pts - c1), fn: function () { spend(k, 1); UIx("closeTop", true); UIx("rebuildTop"); } });
-    if (nAll >= 5 && nAll !== 5) its.push({ label: "Поднять на пять: " + NAME[k] + " станет " + (v + 5) + ", это " + ptsW(costN(k, 5)), fn: function () { spend(k, 5); UIx("closeTop", true); UIx("rebuildTop"); } });
-    if (nAll > 1) its.push({ label: "На все очки, что хватит: " + NAME[k] + " станет " + (v + nAll) + ", это " + ptsW(costN(k, nAll)) + (s.pts - costN(k, nAll) ? ", останется " + (s.pts - costN(k, nAll)) : ""), fn: function () { spend(k, nAll); UIx("closeTop", true); UIx("rebuildTop"); } });
+    its.push({ label: (c1 > 1 ? "Вложить " + ptsW(c1) : "Вложить очко") + ": " + NAME[k] + " станет " + (v + 1) + ". Очков останется " + (s.pts - c1) + pointPreview(k, 1), fn: function () { spend(k, 1); UIx("closeTop", true); UIx("rebuildTop"); } });
+    if (nAll > 5) its.push({ label: "Поднять на пять: " + NAME[k] + " станет " + (v + 5) + ", это " + ptsW(costN(k, 5)) + pointPreview(k, 5), fn: function () { spend(k, 5); UIx("closeTop", true); UIx("rebuildTop"); } });
+    if (nAll > 1) its.push({ label: "Поднять на " + nAll + ": " + NAME[k] + " станет " + (v + nAll) + ", это " + ptsW(costN(k, nAll)) + (s.pts - costN(k, nAll) ? ", останется " + (s.pts - costN(k, nAll)) : "") + pointPreview(k, nAll), fn: function () { spend(k, nAll); UIx("closeTop", true); UIx("rebuildTop"); } });
   }
   if (v < m) its.push({ label: "Цена единицы очками: до 20 — очко, с 20 — два, с 30 — три, с 40 — четыре, с 50 — пять. Сейчас — " + ptsW(cost(k)) + ".", info: true, keep: true, fn: function () { say("Сейчас единица стоит " + ptsW(cost(k)) + "."); } });
   its.push({ label: "Сейчас: " + effects(k) + ".", info: true, keep: true, fn: function () { say(effects(k) + "."); } });

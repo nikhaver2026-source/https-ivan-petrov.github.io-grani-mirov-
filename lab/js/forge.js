@@ -444,12 +444,71 @@ function famOfW(w) { return own(w) ? w.own.fam : ""; }
 function battery(w) { return !!(w && w.ammo && w.ammo !== "none" && !LAB.physAmmo(w.ammo)); }
 function ranged(w) { return !!w && (w.rng0 != null ? w.rng0 : w.rng) > 1; }
 var exoNeed = 0;
+var TUNING = {
+  power: { n: "Силовая настройка", part: "magnet", text: function (r) { return "урон выше на " + 4 * r + " процентов, нагрев и износ выше на " + 5 * r + " процентов"; } },
+  precision: { n: "Точная настройка", part: "optic", text: function (r) { return "точность выше на " + 3 * r + " процентных пункта, урон ниже на " + 2 * r + " процентов"; } },
+  service: { n: "Ресурсная настройка", part: "cap", text: function (r) { return "износ ниже на " + 8 * r + " процентов, нагрев ниже на " + 6 * r + " процентов. Энергооружие в обычном и экономном режиме сохраняет заряд за каждый " + (7 - r) + "-й выстрел"; } }
+};
+function tuneRank(w, k) { return w && w.tune && w.tune.ranks[k] || 0; }
+function activeTune(w, k) { return w && w.tune && w.tune.mode === k ? tuneRank(w, k) : 0; }
+function tuneNeed(k, rank) {
+  var need = { scrap: rank + 1, wire: rank };
+  need[TUNING[k].part] = rank;
+  if (rank === 3) need.chip = 1;
+  return need;
+}
+function tuneWork(w, key, upgrade) {
+  var profile = TUNING[key], g = G();
+  if (!profile || g.weapons.indexOf(w) < 0) return false;
+  var cur = tuneRank(w, key), rank = cur + (upgrade ? 1 : 0), tier = upgrade ? rank + 1 : 2;
+  if (rank <= 0 || rank > 3 || (!upgrade && activeTune(w, key))) return false;
+  if (key === "precision" && !ranged(w)) { say("Точная настройка доступна для дальнобойного оружия."); return false; }
+  var need = upgrade ? tuneNeed(key, rank) : null, why = "";
+  if (benchTier() < tier) why = "нужен верстак ступени " + tier;
+  else if (LAB.combat && LAB.combat.danger()) why = "рядом враг";
+  else if (upgrade && w.cond != null && w.cond < 50) why = "сначала восстановите состояние оружия хотя бы до 50";
+  else if (need && !W().haveAll(need)) why = "не хватает: " + lackText(need);
+  if (why) { say(profile.n + ". " + cap1(why) + "."); return false; }
+  if (!w.tune) w.tune = { mode: "", ranks: {}, shots: 0 };
+  if (need) { W().take(need); w.tune.ranks[key] = rank; }
+  if (w.tune.mode !== key || upgrade) w.tune.shots = 0;
+  w.tune.mode = key;
+  if (gm().advanceTime) gm().advanceTime(need ? 5 + rank * 2 : 3);
+  if (need && MS()) MS().gain("design", rank + 3);
+  if (gm().autosaveSoon) gm().autosaveSoon();
+  snd("work_ratchet", "craft");
+  say(cap1(w.name) + ". " + profile.n + ", ступень " + rank + ". " + cap1(profile.text(rank)) + ".");
+  return true;
+}
+function tunedLine(w) {
+  var key = w.tune && w.tune.mode, profile = TUNING[key];
+  return profile ? profile.n + ", ступень " + tuneRank(w, key) : "";
+}
+function tuneFor(w) {
+  var items = function () {
+    var rows = [];
+    Object.keys(TUNING).forEach(function (k) {
+      if (k === "precision" && !ranged(w)) return;
+      var profile = TUNING[k], cur = tuneRank(w, k), next = cur + 1;
+      if (cur && !activeTune(w, k)) rows.push({ label: "Включить. " + profile.n + ", ступень " + cur + ". " + cap1(profile.text(cur)) + ".", keep: true, fn: function () { tuneWork(w, k, false); } });
+      if (next <= 3) rows.push({ label: profile.n + ", ступень " + next + ". " + cap1(profile.text(next)) + ". Верстак ступени " + (next + 1) + ". Детали: " + W().costText(tuneNeed(k, next)) + ".", keep: true, fn: function () { tuneWork(w, k, true); } });
+    });
+    return rows.concat({ label: "Назад", close: true, fn: function () {} });
+  };
+  menu("Настройка «" + w.name + "»", items(), { keep: true, rebuild: items, intro: (tunedLine(w) || "Оружие ещё не настроено") + ". Действует одна настройка. Ступени сохраняются при переключении у верстака." });
+}
+function tuneMenu() {
+  var rows = G().weapons.map(function (w) {
+    return { label: w.name + (tunedLine(w) ? ". " + tunedLine(w) : ""), fn: function () { tuneFor(w); } };
+  });
+  menu("Настройка оружия", rows.concat({ label: "Назад", close: true, fn: function () {} }));
+}
 function beforeShot(w, now) {
   if (!w) return null;
   /* питание от каркаса */
   if (own(w) && w.own.exo) {
-    if (!LAB.exo || !LAB.exo.drain(w.own.exo, true)) { sayOnce("noexo", cap1(w.name) + " питается от каркаса, а " + (LAB.exo && LAB.exo.worn() ? "аккумулятор каркаса пуст. Подзарядите каркас." : "каркаса на вас нет."), 4000); A("play", "w_empty"); return "hot"; }
-    exoNeed = w.own.exo;
+    exoNeed = w.own.exo * (1 - 0.04 * activeTune(w, "service"));
+    if (!LAB.exo || !LAB.exo.drain(exoNeed, true)) { sayOnce("noexo", cap1(w.name) + " питается от каркаса, а " + (LAB.exo && LAB.exo.worn() ? "заряда каркаса не хватает. Подзарядите каркас." : "каркаса на вас нет."), 4000); A("play", "w_empty"); return "hot"; }
   } else exoNeed = 0;
   /* ресурс ствола рельсового ружья */
   if (famOfW(w) === "rail" && w.barrel != null && w.barrel <= 0) {
@@ -478,8 +537,13 @@ function afterShot(w, burst, now) {
   }
   /* мощность: экономный режим иногда не тратит заряд, форсаж тратит лишний */
   var p = w.pwr || 0;
-  if (p && battery(w) && ranged(w) && w.cap) {
-    if (p < 0 && Math.random() < (MS() && MS().has("energy") ? 0.45 : 0.3)) w.charge = Math.min(w.cap, (w.charge || 0) + 1);
+  if (battery(w) && ranged(w) && w.cap) {
+    var service = activeTune(w, "service"), saved = false;
+    if (p <= 0 && service) {
+      w.tune.shots = (w.tune.shots || 0) + 1;
+      if (w.tune.shots >= 7 - service) { w.tune.shots = 0; saved = true; }
+    }
+    if (saved || (p < 0 && Math.random() < (MS() && MS().has("energy") ? 0.45 : 0.3))) w.charge = Math.min(w.cap, (w.charge || 0) + 1);
     if (p > 0 && w.charge > 0) w.charge--;
     if (p > 0 && (w.cond != null ? w.cond : 100) < 35 && Math.random() < 0.04) {
       snd("pwr_overload", "w_power_crack");
@@ -501,9 +565,9 @@ function afterShot(w, burst, now) {
     var g = G(); if (g.hp > 2) { g.hp--; sayOnce("parasite", "Голодное ядро тянет из вас силы: минус здоровье с каждым выстрелом, пока не будет победы.", 15000); }
   }
 }
-function wearK(w) { var p = w && w.pwr || 0, k = p < 0 ? 0.8 : p > 0 ? 1.6 : 1; if (own(w)) k *= statsOf(w.own.fam, w.own.nodes).wear; if (w && w.core && coreHas(w, "regen")) k *= 0.8; return k; }
-function heatK(w) { var p = w && w.pwr || 0, k = p < 0 ? 0.7 : p > 0 ? 1.6 : 1; if (own(w)) k *= statsOf(w.own.fam, w.own.nodes).heat; if (MS() && MS().has("energy")) k *= 0.85; return k; }
-function accK(w) { var a = 0; if (own(w)) a += statsOf(w.own.fam, w.own.nodes).acc; if (w && w.core) a += coreAcc(w); return a; }
+function wearK(w) { var p = w && w.pwr || 0, k = p < 0 ? 0.8 : p > 0 ? 1.6 : 1; if (own(w)) k *= statsOf(w.own.fam, w.own.nodes).wear; if (w && w.core && coreHas(w, "regen")) k *= 0.8; return k * (1 + 0.05 * activeTune(w, "power") - 0.08 * activeTune(w, "service")); }
+function heatK(w) { var p = w && w.pwr || 0, k = p < 0 ? 0.7 : p > 0 ? 1.6 : 1; if (own(w)) k *= statsOf(w.own.fam, w.own.nodes).heat; if (MS() && MS().has("energy")) k *= 0.85; return k * (1 + 0.05 * activeTune(w, "power") - 0.06 * activeTune(w, "service")); }
+function accK(w) { var a = 0.03 * activeTune(w, "precision"); if (own(w)) a += statsOf(w.own.fam, w.own.nodes).acc; if (w && w.core) a += coreAcc(w); return a; }
 var dryW = null;
 function setDry(w, dry) {
   if (!own(w) || w.own.fam !== "blade") { dryW = null; return; }
@@ -513,7 +577,7 @@ function setDry(w, dry) {
 function dryOk(w) { return own(w) && w.own.fam === "blade" && !w.own.exo; }
 var cumHit = null;
 function dmgK(w, f) {
-  var k = 1;
+  var k = 1 + 0.04 * activeTune(w, "power") - 0.02 * activeTune(w, "precision");
   if (w && w.pwr) k *= w.pwr < 0 ? 0.8 : 1.25;
   if (own(w)) {
     var st = statsOf(w.own.fam, w.own.nodes);
@@ -569,6 +633,7 @@ function pwrItem(w) {
 /* Строки в окно оружия (ui.weaponItems). */
 function weaponExtra(w) {
   var items = [];
+  if (tunedLine(w)) items.push({ label: tunedLine(w) + ". " + cap1(TUNING[w.tune.mode].text(tuneRank(w, w.tune.mode))) + ".", info: true, keep: true, fn: function () {} });
   if (pwrOk(w)) items.push(pwrItem(w));
   if (own(w) && w.own.fam === "rail") {
     items.push({ label: "Сердечник", kind: "choice", options: [{ v: "ap", label: "бронебойный: против машин" }, { v: "stop", label: "останавливающий: против живых" }],
@@ -732,6 +797,7 @@ function benchItems(b, et) {
 function engMenu(et) {
   var g = G(), items = [];
   items.push({ label: "Своё оружие: конструктор", fn: constructMenu });
+  items.push({ label: "Настройка оружия: урон, точность или ресурс", fn: tuneMenu });
   if (ownList().length) items.push({ label: "Перебрать конструкцию: заменить узел", fn: rebuildMenu });
   items.push({ label: "Вживить ядро в оружие" + (et < 3 ? ": нужен стенд опытной серии" : "") + ". Ядер: нейро " + (g.inv.kv_ncore || 0) + ", био " + (g.inv.kv_bcore || 0), fn: coreMenu });
   if (LAB.exo) items.push({ label: LAB.exo.benchLabel(et), fn: function () { LAB.exo.benchMenu(et); } });
@@ -741,7 +807,8 @@ function engMenu(et) {
 }
 /* Строка и окно в инвентаре: инженерные вещи, каркас, дрон. */
 function invLine() {
-  var g = G(), n = (g.inv.lockcard || 0); for (var k in ITEMS) n += g.inv[k] || 0; /* (после 4.6) и ключ-карта ячейки */
+  var g = G(), n = (g.inv.lockcard || 0) + (LAB.drone ? LAB.drone.stockCount() : 0);
+  for (var k in ITEMS) n += g.inv[k] || 0;
   var parts = [];
   if (LAB.exo && LAB.exo.worn()) parts.push("каркас надет"); else if (LAB.exo && LAB.exo.frames().length) parts.push("каркасов " + LAB.exo.frames().length);
   if (LAB.drone && LAB.drone.has()) parts.push(LAB.drone.short());
@@ -768,7 +835,7 @@ function charLine() {
 LAB.forge = {
   FAM: FAM, FAM_ORDER: FAM_ORDER, BASES: BASES, ITEMS: ITEMS, DIR_N: DIR_N, NAMES: NAMES,
   F: F, famOpen: famOpen, optWhy: optWhy, unlockBy: unlockBy, statsOf: statsOf, needOf: needOf, apply: apply, capFix: capFix, rename: rename, statText: statText,
-  draft: draft, build: build, swap: swap, own: own, ownList: ownList,
+  draft: draft, build: build, swap: swap, own: own, ownList: ownList, tuneWork: tuneWork,
   beforeShot: beforeShot, afterShot: afterShot, wearK: wearK, heatK: heatK, accK: accK, dmgK: dmgK, pierceK: pierceK, loud: loud, onHit: onHit, onKill: onKill,
   setDry: setDry, dryOk: dryOk, pwrOk: pwrOk, weaponExtra: weaponExtra,
   implant: implant, coreLine: coreLine, hungry: hungry, drops: drops,
