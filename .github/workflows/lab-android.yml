@@ -6,8 +6,8 @@
 # и всё уже внутри: сеть не нужна, докачивать и ставить отдельно нечего.
 #
 # До выпуска: проверка синтаксиса (не новее ES2018 — WebView Android 9),
-# проверка файлов блоков и генератора всех этажей, проверка игры в Chromium, затем APK
-# ставится и запускается на эмуляторах Android 9 (API 28), Android 15
+# проверка файлов блоков и генератора всех этажей, проверка игры в Chromium.
+# Эти проверки идут параллельно со сборкой APK и запуском на Android 9 (API 28), Android 15
 # (API 35) и Android 17 (API 37): страница грузится без ошибок, самопроверка
 # игры проходит.
 # Выпуск «lab-android-5.5» создаётся после проверки на API 28–37.
@@ -18,7 +18,7 @@
 # Подпись. Ключей в репозитории нет. (3.5) Постоянный ключ — в секретах
 # репозитория (ANDROID_KEYSTORE_B64 и пароль, см. lab/android/SIGNING.md): все
 # сборки подписаны одним ключом, ставятся поверх прежних, и Play Protect узнаёт
-# приложение. Ключ проверяется первым шагом, до долгих проверок: неверный секрет
+# приложение. Ключ проверяется в начале сборки APK: неверный секрет
 # останавливает сборку сразу. Без секрета — запасной ключ из кэша Actions; кэш стирается после
 # недели без сборок, и ключ тогда меняется. (Прежняя задача keepkey по расписанию
 # не срабатывала: расписание GitHub запускает только из основной ветки.)
@@ -56,6 +56,74 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  validate:
+    name: ${{ matrix.suite }}
+    if: ${{ !inputs.quick }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: ['Генерация этажей и данные', 'Chromium']
+    steps:
+      - name: Забрать игру и сценарии проверки
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: lab
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Синтаксис (не новее ES2018) и генератор этажей
+        if: matrix.suite == 'Генерация этажей и данные'
+        run: |
+          npm i --no-save --prefix "$RUNNER_TEMP/n" acorn@8.12.1 > /dev/null
+          node -e '
+            const acorn = require(process.env.RUNNER_TEMP + "/n/node_modules/acorn");
+            const fs = require("fs"); let bad = 0;
+            for (const f of fs.readdirSync("lab/js")) {
+              if (!f.endsWith(".js")) continue;
+              try { acorn.parse(fs.readFileSync("lab/js/" + f, "utf8"), { ecmaVersion: 2018 }); console.log("ok", f); }
+              catch (e) { bad++; console.log("FAIL", f, e.message); }
+            }
+            process.exit(bad ? 1 : 0);'
+          ACORN="$RUNNER_TEMP/n/node_modules/acorn" node lab/tools/check_blocks.js
+          node lab/tests/world.test.js 6
+          # (2.0) новые головоломки, оружие глубин, реплики ОКО
+          node lab/tests/puzzles2.check.js
+          node lab/tests/puzzles3.check.js
+          # (после 4.1) головоломки части 4 (логика и вывод) и глубокие блоки ниже Истока
+          node lab/tests/puzzles4.check.js
+          node lab/tests/puzzles5.check.js
+          node lab/tests/deep.test.js 3
+          # (3.6) химические задачи: решаемы, устроены по сложности, неверный ответ окно не закрывает
+          node lab/tests/chempuz.check.js
+          ACORN="$RUNNER_TEMP/n/node_modules/acorn" node lab/tests/arsenal.check.js --fast
+          NODE_PATH="$RUNNER_TEMP/n/node_modules" node lab/tests/oko_lines_a.check.js
+          NODE_PATH="$RUNNER_TEMP/n/node_modules" node lab/tests/oko_lines_b.check.js
+
+      - name: Проверка игры в Chromium
+        if: matrix.suite == 'Chromium'
+        run: |
+          npm i --no-save --prefix "$RUNNER_TEMP/pw" playwright@1.48.2 > /dev/null
+          (cd "$RUNNER_TEMP/pw" && npx playwright install --with-deps chromium > /dev/null)
+          NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/play.test.js
+          NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/sound.test.js
+          # (после 4.6) инженерное дело: мастерство, своё оружие, ядра, каркас, дрон
+          NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/engineer.test.js
+          # (после 4.6) жесты: тройные касания, удержания, переназначение в настройках
+          NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/gestures.test.js
+          # (после 4.6) характеристики героя, груз и ячейка хранения
+          NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/hero.test.js
+          # (5.0) глобус и аквариум: раскрутка, подсказки, записки, корм, дно, риски
+          NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/curios.test.js
+          node lab/tests/curio-cache.check.js
+          node lab/tests/logistics.check.js
+
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 120
@@ -70,7 +138,7 @@ jobs:
             lab
             .github
 
-      # (3.5) Подпись — в самом начале, до долгих проверок: неверный секрет
+      # (3.5) Подпись — в начале сборки APK: неверный секрет
       # останавливает сборку сразу, а заметка задания через минуту говорит, каким
       # ключом будет подписан APK, и называет отпечаток сертификата.
       - name: Java 17
@@ -144,57 +212,6 @@ jobs:
             echo "KS_ALIAS=$A"
             echo "KS_KEY_PASS=$KP"
           } >> "$GITHUB_ENV"
-
-      - name: Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Синтаксис (не новее ES2018) и генератор этажей
-        if: ${{ !inputs.quick }}
-        run: |
-          npm i --no-save --prefix "$RUNNER_TEMP/n" acorn@8.12.1 > /dev/null
-          node -e '
-            const acorn = require(process.env.RUNNER_TEMP + "/n/node_modules/acorn");
-            const fs = require("fs"); let bad = 0;
-            for (const f of fs.readdirSync("lab/js")) {
-              if (!f.endsWith(".js")) continue;
-              try { acorn.parse(fs.readFileSync("lab/js/" + f, "utf8"), { ecmaVersion: 2018 }); console.log("ok", f); }
-              catch (e) { bad++; console.log("FAIL", f, e.message); }
-            }
-            process.exit(bad ? 1 : 0);'
-          ACORN="$RUNNER_TEMP/n/node_modules/acorn" node lab/tools/check_blocks.js
-          node lab/tests/world.test.js 6
-          # (2.0) новые головоломки, оружие глубин, реплики ОКО
-          node lab/tests/puzzles2.check.js
-          node lab/tests/puzzles3.check.js
-          # (после 4.1) головоломки части 4 (логика и вывод) и глубокие блоки ниже Истока
-          node lab/tests/puzzles4.check.js
-          node lab/tests/puzzles5.check.js
-          node lab/tests/deep.test.js 3
-          # (3.6) химические задачи: решаемы, устроены по сложности, неверный ответ окно не закрывает
-          node lab/tests/chempuz.check.js
-          ACORN="$RUNNER_TEMP/n/node_modules/acorn" node lab/tests/arsenal.check.js --fast
-          NODE_PATH="$RUNNER_TEMP/n/node_modules" node lab/tests/oko_lines_a.check.js
-          NODE_PATH="$RUNNER_TEMP/n/node_modules" node lab/tests/oko_lines_b.check.js
-
-      - name: Проверка игры в Chromium
-        if: ${{ !inputs.quick }}
-        run: |
-          npm i --no-save --prefix "$RUNNER_TEMP/pw" playwright@1.48.2 > /dev/null
-          (cd "$RUNNER_TEMP/pw" && npx playwright install --with-deps chromium > /dev/null)
-          NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/play.test.js
-          NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/sound.test.js
-          # (после 4.6) инженерное дело: мастерство, своё оружие, ядра, каркас, дрон
-          NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/engineer.test.js
-          # (после 4.6) жесты: тройные касания, удержания, переназначение в настройках
-          NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/gestures.test.js
-          # (после 4.6) характеристики героя, груз и ячейка хранения
-          NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/hero.test.js
-          # (5.0) глобус и аквариум: раскрутка, подсказки, записки, корм, дно, риски
-          NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/curios.test.js
-          node lab/tests/curio-cache.check.js
-          node lab/tests/logistics.check.js
 
       - name: Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -428,7 +445,7 @@ jobs:
 
   release:
     name: Выпуск «lab-android-5.5»
-    needs: [build, compatibility]
+    needs: [build, compatibility, validate]
     runs-on: ubuntu-latest
     permissions:
       contents: write
