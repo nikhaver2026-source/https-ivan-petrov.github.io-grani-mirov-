@@ -10,7 +10,7 @@
 # ставится и запускается на эмуляторах Android 9 (API 28), Android 15
 # (API 35) и Android 17 (API 37): страница грузится без ошибок, самопроверка
 # игры проходит.
-# Выпуск «lab-android-latest» несёт APK.
+# Выпуск «lab-android-5.5» создаётся после проверки на API 28–37.
 # (4.1) Ручной запуск: compare_old — сначала тот же сценарий запуска после фона проходит
 # прежний APK (old_run — со страницы той сборки), для сравнения; quick — только APK и
 # эмуляторы, без долгих проверок и без выпуска (для опытов на эмуляторах).
@@ -36,11 +36,11 @@ on:
         type: string
         default: ""
       quick:
-        description: "Быстро: только APK и эмуляторы, без долгих проверок; выпуск lab-android-latest не обновляется"
+        description: "Быстро: только APK и эмуляторы, без долгих проверок; выпуск не создаётся"
         type: boolean
         default: false
   push:
-    branches: ['main', 'claude/**']
+    branches: ['main', 'claude/**', 'codex/lab-alpha-*']
     paths:
       - 'lab/**'
       - '!lab/desktop/**'
@@ -193,6 +193,8 @@ jobs:
           NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/hero.test.js
           # (5.0) глобус и аквариум: раскрутка, подсказки, записки, корм, дно, риски
           NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/curios.test.js
+          node lab/tests/curio-cache.check.js
+          node lab/tests/logistics.check.js
 
       - name: Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -233,16 +235,39 @@ jobs:
           BUILD_NUMBER: ${{ github.run_number }}
         run: |
           (cd lab/android && gradle --no-daemon :app:assembleRelease)
-          cp lab/android/app/build/outputs/apk/release/app-release.apk Podzemnaya-laboratoriya-Alfa-5.0.apk
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs Podzemnaya-laboratoriya-Alfa-5.0.apk | grep -E "^Verified using v[123]|certificate SHA-256|certificate DN" 
-          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging Podzemnaya-laboratoriya-Alfa-5.0.apk | head -4
-          ls -la Podzemnaya-laboratoriya-Alfa-5.0.apk
+          cp lab/android/app/build/outputs/apk/release/app-release.apk Podzemnaya-laboratoriya-Alfa-5.5.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs Podzemnaya-laboratoriya-Alfa-5.5.apk | grep -E "^Verified using v[123]|certificate SHA-256|certificate DN"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging Podzemnaya-laboratoriya-Alfa-5.5.apk | head -4
+          ls -la Podzemnaya-laboratoriya-Alfa-5.5.apk
+
+      - name: Совпадение подписи с Альфой 5.0
+        if: ${{ !inputs.quick }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PREV="$RUNNER_TEMP/Podzemnaya-laboratoriya-Alfa-5.0.apk"
+          gh release download lab-android-latest --repo "$GITHUB_REPOSITORY" \
+            --pattern Podzemnaya-laboratoriya-Alfa-5.0.apk --output "$PREV"
+          SIGNER="$ANDROID_HOME/build-tools/36.0.0/apksigner"
+          cert() {
+            "$SIGNER" verify --print-certs "$1" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p'
+          }
+          BEFORE=$(cert "$PREV")
+          AFTER=$(cert Podzemnaya-laboratoriya-Alfa-5.5.apk)
+          if [ -z "$BEFORE" ] || [ "$BEFORE" != "$AFTER" ]; then
+            echo "::error::Сертификат APK Альфы 5.5 отличается от сертификата выпущенной Альфы 5.0"
+            exit 1
+          fi
+          echo "Сертификат соответствует Альфе 5.0. SHA-256: $AFTER"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging Podzemnaya-laboratoriya-Alfa-5.5.apk > "$RUNNER_TEMP/lab-badging.txt"
+          grep -m1 "versionName='Альфа 5.5'" "$RUNNER_TEMP/lab-badging.txt"
+          sha256sum Podzemnaya-laboratoriya-Alfa-5.5.apk
 
       - name: APK — на страницу сборки
         uses: actions/upload-artifact@v4
         with:
-          name: podzemnaya-laboratoriya-alfa-5.0-apk
-          path: Podzemnaya-laboratoriya-Alfa-5.0.apk
+          name: podzemnaya-laboratoriya-alfa-5.5-apk
+          path: Podzemnaya-laboratoriya-Alfa-5.5.apk
           compression-level: 0
           retention-days: 90
 
@@ -291,6 +316,7 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         env:
           LAB_OLD_APK: old-lab.apk
+          LAB_EXPECTED_ANDROID_API: 28
         with:
           api-level: 28
           target: google_apis
@@ -299,12 +325,13 @@ jobs:
           ram-size: 2048M
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: bash lab/android/install-check.sh Podzemnaya-laboratoriya-Alfa-5.0.apk
+          script: bash lab/android/install-check.sh Podzemnaya-laboratoriya-Alfa-5.5.apk
 
       - name: Установка и самопроверка на Android 15
         uses: reactivecircus/android-emulator-runner@v2
         env:
           LAB_OLD_APK: old-lab.apk
+          LAB_EXPECTED_ANDROID_API: 35
         with:
           api-level: 35
           target: google_apis
@@ -313,13 +340,14 @@ jobs:
           ram-size: 2048M
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: bash lab/android/install-check.sh Podzemnaya-laboratoriya-Alfa-5.0.apk
+          script: bash lab/android/install-check.sh Podzemnaya-laboratoriya-Alfa-5.5.apk
 
       # Android 17: имя образа — из списка SDK (шаг «Платформа Android 17»),
       # поэтому эмулятор запускаем сами, без готового действия.
       - name: Установка и самопроверка на Android 17
         env:
           LAB_OLD_APK: old-lab.apk
+          LAB_EXPECTED_ANDROID_API: 37
         run: |
           IMG=$(cat "$RUNNER_TEMP/img37" 2>/dev/null || true)
           [ -n "$IMG" ] || { echo "::error::в списке SDK нет образа эмулятора Android 17 (API 37)"; exit 1; }
@@ -381,42 +409,58 @@ jobs:
           adb devices
           for k in window_animation_scale transition_animation_scale animator_duration_scale; do adb shell settings put global $k 0 || true; done
           set +e
-          bash lab/android/install-check.sh Podzemnaya-laboratoriya-Alfa-5.0.apk
+          bash lab/android/install-check.sh Podzemnaya-laboratoriya-Alfa-5.5.apk
           RC=$?
           adb emu kill > /dev/null 2>&1 || true
           exit $RC
 
-      - name: Выпуск «lab-android-latest»
-        if: ${{ !inputs.quick }}
+  compatibility:
+    name: Дополнительные версии Android
+    needs: build
+    if: ${{ !inputs.quick }}
+    uses: ./.github/workflows/lab-android-compat.yml
+    permissions:
+      contents: read
+      actions: read
+    with:
+      apk_artifact: podzemnaya-laboratoriya-alfa-5.5-apk
+      old_run: '43418930048'
+
+  release:
+    name: Выпуск «lab-android-5.5»
+    needs: [build, compatibility]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Проверенный APK
+        uses: actions/download-artifact@v4
+        with:
+          name: podzemnaya-laboratoriya-alfa-5.5-apk
+          path: dist
+
+      - name: Опубликовать Альфу 5.5 для Android
+        working-directory: dist
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete lab-android-latest --cleanup-tag -y || true
-          # Гонка GitHub: тег удалённого выпуска может исчезнуть позже и снять
-          # тег нового — выпуск откатится в черновик. Черновики прошлых сбоев
-          # убираем, ждём, пока прежний тег пропадёт; после выпуска минуту
-          # проверяем, что он опубликован, и если нет — публикуем снова.
-          for ID in $(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=50" --jq '.[] | select(.tag_name=="lab-android-latest") | select(.draft) | .id'); do gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/$ID" > /dev/null || true; done
-          for i in $(seq 1 12); do git ls-remote --exit-code --tags "https://github.com/$GITHUB_REPOSITORY" "refs/tags/lab-android-latest" > /dev/null 2>&1 || break; sleep 5; done
-          SIZE=$(stat -c %s Podzemnaya-laboratoriya-Alfa-5.0.apk)
+          APK=Podzemnaya-laboratoriya-Alfa-5.5.apk
+          TAG=lab-android-5.5
+          test -s "$APK"
+          sha256sum "$APK"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json targetCommitish,isDraft,assets > "$RUNNER_TEMP/release-state.json" 2>/dev/null; then
+            jq -e --arg sha "$GITHUB_SHA" --arg file "$APK" \
+              '.targetCommitish == $sha and (.isDraft | not) and any(.assets[]; .name == $file)' \
+              "$RUNNER_TEMP/release-state.json"
+            exit 0
+          fi
           cat > "$RUNNER_TEMP/notes.md" <<EOF
-          «Подземная лаборатория» Альфа 5.0 — звуковая игра для Android 9 и новее, по Android 17 включительно.
+          «Подземная лаборатория» Альфа 5.5 для Android. В APK уже есть игра, голоса, музыка и звуки.
 
-          Полная сборка: вся игра внутри одного файла Podzemnaya-laboratoriya-Alfa-5.0.apk (${SIZE} байт) — речь, звуки, музыка. Сеть не нужна, докачивать ничего не надо. Подключённая клавиатура тоже работает: W A S D — шаг, R — оружие, стрелки — выстрел.
+          Проверены установка, запуск и возвращение из фона на эмуляторах Android 9–17, включая Android 12L. Подпись совпадает с Альфой 5.0.
 
-          Проверено: ставится и запускается на эмуляторах Android 9, Android 15 и Android 17, самопроверка игры пройдена.
-
-          Код: ветка ${GITHUB_REF_NAME}, коммит ${GITHUB_SHA}.
+          Коммит ${GITHUB_SHA}.
           EOF
-          gh release create lab-android-latest Podzemnaya-laboratoriya-Alfa-5.0.apk --prerelease --target "$GITHUB_SHA" \
-            --title "Подземная лаборатория Альфа 5.0 для Android" \
-            --notes-file "$RUNNER_TEMP/notes.md"
-          for i in $(seq 1 6); do
-            sleep 10
-            gh api "repos/$GITHUB_REPOSITORY/releases/tags/lab-android-latest" > /dev/null 2>&1 && continue
-            ID=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=50" --jq '[.[] | select(.tag_name=="lab-android-latest") | select(.draft) | .id] | max // empty')
-            [ -z "$ID" ] && continue
-            echo "выпуск lab-android-latest откатился в черновик — публикую снова"
-            gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$ID" -F draft=false -f tag_name=lab-android-latest -f target_commitish="$GITHUB_SHA" > /dev/null
-          done
-          gh api "repos/$GITHUB_REPOSITORY/releases/tags/lab-android-latest" --jq '{tag: .tag_name, draft: .draft, files: [.assets[].name]}'
+          gh release create "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
+            --title "Подземная лаборатория. Альфа 5.5 для Android" --notes-file "$RUNNER_TEMP/notes.md"
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft,tagName,assets

@@ -11,6 +11,10 @@ PKG=io.github.granimirov.lab
 REL=$(adb shell getprop ro.build.version.release | tr -d '\r')
 SDK=$(adb shell getprop ro.build.version.sdk | tr -d '\r')
 echo "Android $REL (API $SDK)"
+if [ -n "${LAB_EXPECTED_ANDROID_API:-}" ] && [ "$SDK" != "$LAB_EXPECTED_ANDROID_API" ]; then
+  echo "::error::Ожидался Android API $LAB_EXPECTED_ANDROID_API, получен $SDK"
+  exit 1
+fi
 adb shell settings put global verifier_verify_adb_installs 0 || true
 adb shell settings put global package_verifier_enable 0 || true
 # установка: службы на свежем эмуляторе иногда ещё не поднялись — подождать и

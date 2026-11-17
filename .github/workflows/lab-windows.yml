@@ -20,13 +20,13 @@
 # До выпуска каждая сборка проходит самопроверку дважды: без голосов игрока
 # (говорит встроенный eSpeak) и с голосами, поставленными так же, как у игрока
 # (RHVoice из дополнения NVDA и eSpeak NG), — мост должен их найти. Выпуск
-# «lab-windows-latest» несёт оба архива.
+# «lab-windows-5.5» несёт оба архива.
 name: Подземная лаборатория — Windows
 
 on:
   workflow_dispatch:
   push:
-    branches: ['main', 'claude/**']
+    branches: ['main', 'claude/**', 'codex/lab-alpha-*']
     paths:
       - 'lab/**'
       - 'desktop/sapi.js'
@@ -52,13 +52,13 @@ jobs:
           - bits: '64'
             arch: x64
             electron: '44.5.1'
-            appdir: Подземная лаборатория Альфа 5.0
-            zip: Podzemnaya-laboratoriya-Alfa-5.0-windows.zip
+            appdir: Подземная лаборатория Альфа 5.5
+            zip: Podzemnaya-laboratoriya-Alfa-5.5-windows-64bit.zip
           - bits: '32'
             arch: ia32
             electron: '22.3.27'
-            appdir: Подземная лаборатория Альфа 5.0 (32 бит)
-            zip: Podzemnaya-laboratoriya-Alfa-5.0-windows-32bit.zip
+            appdir: Подземная лаборатория Альфа 5.5 (32 бит)
+            zip: Podzemnaya-laboratoriya-Alfa-5.5-windows-32bit.zip
     defaults:
       run:
         shell: bash
@@ -130,11 +130,11 @@ jobs:
         working-directory: lab/desktop
         run: |
           ICONARG=""; [ -n "$ICON" ] && ICONARG="--icon=$ICON"
-          # Версия в свойствах программы — номер игры, 5.0, без номера запуска сборки (просьба автора:
+          # Версия в свойствах программы — номер игры, 5.5, без номера запуска сборки (просьба автора:
           # игрок видит только номер версии); прежде было 4.1.0 и номер запуска, до 3.7 — 1.0.0.
           npx @electron/packager . lab --platform=win32 --arch=$ARCH --electron-version=$ELECTRON --out=out --overwrite \
-            --executable-name="${EXE%.exe}" --app-version=5.0 --build-version=5.0 \
-            --win32metadata.ProductName="Подземная лаборатория" --win32metadata.FileDescription="Подземная лаборатория Альфа 5.0" \
+            --executable-name="${EXE%.exe}" --app-version=5.5 --build-version=5.5 \
+            --win32metadata.ProductName="Подземная лаборатория" --win32metadata.FileDescription="Подземная лаборатория Альфа 5.5" \
             --win32metadata.CompanyName="Грани Миров" \
             --extra-resource=sapi --extra-resource=sr \
             --ignore='^/out(/|$)' --ignore='icon\.ico' --ignore='sapi-build\.js' --ignore='^/sapi(/|$)' --ignore='^/sr(/|$)' $ICONARG
@@ -277,7 +277,7 @@ jobs:
           retention-days: 90
 
   release:
-    name: Выпуск «lab-windows-latest»
+    name: Выпуск «lab-windows-5.5»
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -292,20 +292,21 @@ jobs:
         working-directory: dist
         env:
           GH_TOKEN: ${{ github.token }}
-          Z64: Podzemnaya-laboratoriya-Alfa-5.0-windows.zip
-          Z32: Podzemnaya-laboratoriya-Alfa-5.0-windows-32bit.zip
+          Z64: Podzemnaya-laboratoriya-Alfa-5.5-windows-64bit.zip
+          Z32: Podzemnaya-laboratoriya-Alfa-5.5-windows-32bit.zip
         run: |
           ls -la
-          gh release delete lab-windows-latest --cleanup-tag -y --repo "$GITHUB_REPOSITORY" || true
-          # Гонка GitHub: тег удалённого выпуска может исчезнуть позже и снять
-          # тег нового — выпуск откатится в черновик. Черновики прошлых сбоев
-          # убираем, ждём, пока прежний тег пропадёт; после выпуска минуту
-          # проверяем, что он опубликован, и если нет — публикуем снова.
-          for ID in $(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=50" --jq '.[] | select(.tag_name=="lab-windows-latest") | select(.draft) | .id'); do gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/$ID" > /dev/null || true; done
-          for i in $(seq 1 12); do git ls-remote --exit-code --tags "https://github.com/$GITHUB_REPOSITORY" "refs/tags/lab-windows-latest" > /dev/null 2>&1 || break; sleep 5; done
+          test -s "$Z64" && test -s "$Z32"
+          sha256sum "$Z64" "$Z32"
+          if gh release view lab-windows-5.5 --repo "$GITHUB_REPOSITORY" --json targetCommitish,isDraft,assets > "$RUNNER_TEMP/release-state.json" 2>/dev/null; then
+            jq -e --arg sha "$GITHUB_SHA" --arg a "$Z64" --arg b "$Z32" \
+              '.targetCommitish == $sha and (.isDraft | not) and any(.assets[]; .name == $a) and any(.assets[]; .name == $b)' \
+              "$RUNNER_TEMP/release-state.json"
+            exit 0
+          fi
           S64=$(stat -c %s "$Z64"); S32=$(stat -c %s "$Z32")
           cat > "$RUNNER_TEMP/notes.md" <<EOF
-          «Подземная лаборатория» Альфа 5.0 для Windows — звуковая игра.
+          «Подземная лаборатория» Альфа 5.5 для Windows — звуковая игра.
 
           Две полные сборки — выберите свою:
           - $Z64 (${S64} байт) — 64 бит: Windows 10 и 11, 64-битные.
@@ -317,19 +318,11 @@ jobs:
 
           Голоса — все синтезаторы компьютера: голос NVDA и JAWS, RHVoice и eSpeak NG из NVDA, сторонние голоса SAPI 5; голосов Microsoft нет. Без них говорит встроенный eSpeak NG.
 
-          Проверено: обе сборки запускаются и проходят самопроверку на Windows — со встроенным eSpeak и с голосами, поставленными как у игрока.
+          Обе сборки проверяются на Windows со встроенным eSpeak NG. Проверка системных голосов выполняется, если они доступны на тестовой машине.
 
           Код: ветка ${GITHUB_REF_NAME}, коммит ${GITHUB_SHA}.
           EOF
-          gh release create lab-windows-latest "$Z64" "$Z32" --prerelease --target "$GITHUB_SHA" --repo "$GITHUB_REPOSITORY" \
-            --title "Подземная лаборатория Альфа 5.0 для Windows" \
+          gh release create lab-windows-5.5 "$Z64" "$Z32" --prerelease --target "$GITHUB_SHA" --repo "$GITHUB_REPOSITORY" \
+            --title "Подземная лаборатория Альфа 5.5 для Windows" \
             --notes-file "$RUNNER_TEMP/notes.md"
-          for i in $(seq 1 6); do
-            sleep 10
-            gh api "repos/$GITHUB_REPOSITORY/releases/tags/lab-windows-latest" > /dev/null 2>&1 && continue
-            ID=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=50" --jq '[.[] | select(.tag_name=="lab-windows-latest") | select(.draft) | .id] | max // empty')
-            [ -z "$ID" ] && continue
-            echo "выпуск lab-windows-latest откатился в черновик — публикую снова"
-            gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$ID" -F draft=false -f tag_name=lab-windows-latest -f target_commitish="$GITHUB_SHA" > /dev/null
-          done
-          gh api "repos/$GITHUB_REPOSITORY/releases/tags/lab-windows-latest" --jq '{tag: .tag_name, draft: .draft, files: [.assets[].name]}'
+          gh release view lab-windows-5.5 --repo "$GITHUB_REPOSITORY" --json isDraft,tagName,assets

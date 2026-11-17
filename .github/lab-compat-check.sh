@@ -9,12 +9,19 @@ set -e
 NEW=$1; OLD=${2:-}
 PKG=io.github.granimirov.lab
 D="lab/android"
-bash "$D/emu-ready.sh" 300 || true
+bash "$D/emu-ready.sh" 300
+for setting in window_animation_scale transition_animation_scale animator_duration_scale; do
+  adb shell settings put global "$setting" 0 || true
+done
 adb shell settings put global verifier_verify_adb_installs 0 || true
 adb shell settings put global package_verifier_enable 0 || true
 REL=$(adb shell getprop ro.build.version.release | tr -d '\r'); SDK=$(adb shell getprop ro.build.version.sdk | tr -d '\r')
 PG=$(adb shell getconf PAGE_SIZE 2>/dev/null | tr -d '\r' || true)
 echo "Android $REL (API $SDK), страница памяти: ${PG:-?} байт"
+if [ "${LAB_ANDROID_IMAGE_TARGET:-}" = google_apis_ps16k ] && [ "$PG" != 16384 ]; then
+  echo "::error::У образа для проверки 16 КБ страница ${PG:-не определена}"
+  exit 1
+fi
 echo "место в /data до установки: $(adb shell df -h /data 2>/dev/null | tail -1 | tr -s ' ')"
 inst() {
   local F=$1
@@ -46,7 +53,7 @@ if [ -n "$OLD" ] && [ -f "$OLD" ]; then
   inst "$NEW" || { echo "::error::новый APK не встал поверх прежнего на Android $REL"; adb logcat -d | grep -iE "PackageManager|INSTALL_FAILED" | tail -20; exit 1; }
   info
   FIRST1=$(adb shell dumpsys package $PKG | grep -m1 firstInstallTime | tr -d '\r' | sed 's/.*=//')
-  [ "$FIRST0" = "$FIRST1" ] || { echo "::error::это не обновление: дата первой установки сменилась ($FIRST0 → $FIRST1)"; exit 1; }
+  [ -n "$FIRST0" ] && [ "$FIRST0" = "$FIRST1" ] || { echo "::error::дата первой установки не подтверждена: дата первой установки сменилась ($FIRST0 → $FIRST1)"; exit 1; }
   DATA1=$(adb shell ls /data/data/$PKG 2>/dev/null | tr -d '\r' | tr '\n' ' ' || true)
   if [ -n "$DATA0" ]; then
     for x in $DATA0; do echo " $DATA1 " | grep -q " $x " || { echo "::error::после обновления пропала папка данных игры: $x"; exit 1; }; done

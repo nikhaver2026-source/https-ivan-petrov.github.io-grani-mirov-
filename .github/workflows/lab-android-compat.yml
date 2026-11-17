@@ -30,6 +30,17 @@ on:
         type: string
         default: "42530157320"
 
+  workflow_call:
+    inputs:
+      apk_artifact:
+        description: "Артефакт APK родительской сборки"
+        type: string
+        required: true
+      old_run:
+        description: "Сборка прежнего APK для проверки обновления"
+        type: string
+        default: ""
+
 permissions:
   contents: read
   actions: read
@@ -46,13 +57,11 @@ jobs:
           - { api: 29, v: "10", target: google_apis }
           - { api: 30, v: "11", target: google_apis }
           - { api: 31, v: "12", target: google_apis }
+          - { api: 32, v: "12L", target: google_apis }
           - { api: 33, v: "13", target: google_apis }
           - { api: 34, v: "14", target: google_apis }
           - { api: 36, v: "16", target: google_apis }
-          - { api: 35, v: "15, 16 КБ страницы", target: google_apis_ps16k }
-          # тот же образ с памятью как у настоящих телефонов с 16 КБ страницами (от 4 ГБ):
-          # отличить нехватку памяти эмулятора от сбоя самих 16 КБ страниц
-          - { api: 35, v: "15, 16 КБ страницы, 4 ГБ памяти", target: google_apis_ps16k, ram: 4096M }
+          - { api: 35, v: "15, 16 КБ страницы", target: google_apis_ps16k, ram: 4096M }
     steps:
       - name: Забрать сценарии проверки
         uses: actions/checkout@v4
@@ -61,29 +70,41 @@ jobs:
             lab/android
             .github
 
+      - name: APK родительской сборки
+        if: ${{ inputs.apk_artifact != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.apk_artifact }}
+          path: new
+
       - name: APK — новый и прежний
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_ID: ${{ inputs.run_id }}
           OLD_RUN: ${{ inputs.old_run }}
           EVENT: ${{ github.event_name }}
+          APK_ARTIFACT: ${{ inputs.apk_artifact }}
         run: |
-          if [ "$EVENT" = "push" ]; then
+          if [ "$EVENT" = "push" ] && [ -z "$APK_ARTIFACT" ]; then
             RUN_ID=$(sed -n 's/^new=//p' .github/lab-compat-run | tr -d ' \r'); [ "$RUN_ID" = "release" ] && RUN_ID=""
             OLD_RUN=$(sed -n 's/^old=//p' .github/lab-compat-run | tr -d ' \r')
           fi
           echo "новый APK: ${RUN_ID:-выпуск lab-android-latest}; прежний: ${OLD_RUN:-без обновления}"
-          if [ -n "$RUN_ID" ]; then
+          if [ -n "$APK_ARTIFACT" ]; then
+            test -s new/Podzemnaya-laboratoriya-Alfa-5.5.apk
+          elif [ -n "$RUN_ID" ]; then
             gh run download "$RUN_ID" -R "$GITHUB_REPOSITORY" -D new
           else
             gh release download lab-android-latest -R "$GITHUB_REPOSITORY" -p '*.apk' -D new
           fi
           F=$(find new -name '*.apk' | head -1); [ -n "$F" ] || { echo "::error::APK не найден"; exit 1; }
           cp "$F" lab.apk; echo "новый: $(basename "$F")"; ls -la lab.apk
+          sha256sum lab.apk
           if [ -n "$OLD_RUN" ]; then
-            gh run download "$OLD_RUN" -R "$GITHUB_REPOSITORY" -D old || true
+            gh run download "$OLD_RUN" -R "$GITHUB_REPOSITORY" -D old
             O=$(find old -name '*.apk' 2>/dev/null | head -1)
-            [ -n "$O" ] && cp "$O" old.apk && echo "прежний: $(basename "$O")" && ls -la old.apk
+            [ -n "$O" ] || { echo "::error::в сборке $OLD_RUN нет прежнего APK"; exit 1; }
+            cp "$O" old.apk; echo "прежний: $(basename "$O")"; ls -la old.apk
           fi
 
       - name: Эмулятор — включить KVM
@@ -94,6 +115,9 @@ jobs:
 
       - name: Обновление поверх прежнего, установка и самопроверка
         uses: reactivecircus/android-emulator-runner@v2
+        env:
+          LAB_EXPECTED_ANDROID_API: ${{ matrix.api }}
+          LAB_ANDROID_IMAGE_TARGET: ${{ matrix.target }}
         with:
           api-level: ${{ matrix.api }}
           target: ${{ matrix.target }}
@@ -101,5 +125,5 @@ jobs:
           disk-size: 6G
           ram-size: ${{ matrix.ram || '2048M' }}
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: true
+          disable-animations: false
           script: bash .github/lab-compat-check.sh lab.apk old.apk
