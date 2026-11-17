@@ -185,6 +185,7 @@ var NOTES = {
   ]
 };
 function noteText(it) {
+  if (it.cache && CACHE_RECORDS[it.cache]) return CACHE_RECORDS[it.cache];
   var arr = NOTES[it.p] || [], n = arr[(it.k || 0) % (arr.length || 1)];
   if (!n) return { t: "Записка", x: "Буквы расплылись: не прочитать." };
   var mir = it.p === "gO" || it.p === "aO";
@@ -650,6 +651,285 @@ function aquaItems(o, def, a, s) {
   return null;
 }
 
+/* ════════ МЕХАНИЧЕСКИЕ ТАЙНИКИ ════════
+   Загадка и добыча привязаны к вещи и этажу. В сохранении — черновик, ступень
+   подсказок, открытие и взятые позиции. Управление снаружи: ни рыбы, ни вилка
+   не участвуют в замке, обычный осмотр дна остаётся отдельным действием. */
+var CACHE_TYPES = {
+  voyage:   { n: "Маршрут экспедиции", place: "под съёмным кольцом меридиана", open: "Кольцо меридиана приподнимается. Под ним узкий дорожный футляр.", loot: [["wire", 2], ["film", 1]], lead: true },
+  meridian: { n: "Поворотные деления", place: "в полой оси глобуса", open: "Ось выдвигается из опоры, открывая узкий ящик для измерительных деталей.", loot: [["lens", 1], ["magnet", 1]] },
+  mirror:   { n: "Обратный путь", place: "за зеркальной подкладкой", open: "Подкладка выходит из паза. За зеркалом был плоский конверт.", loot: [["datachip", 1], ["film", 1]] },
+  stars:    { n: "Сумма звёзд", place: "в ящике под съёмным куполом глобуса", open: "Под куполом отжимается подпружиненная крышка. В ящике лежат детали счётчика.", loot: [["optic", 1], ["cap", 2]] },
+  current:  { n: "Обход протоки", place: "за сухим люком у фильтра", open: "Внешний люк у фильтра отходит. Внутри сухой контейнер обходчика.", loot: [["filtercart", 1], ["rubber", 2]], lead: true },
+  echo:     { n: "След ударов", place: "под планкой у стекла", open: "Планка у стекла отщёлкивается. Под ней тонкий пенал для журнала наблюдений.", loot: [["relay", 1], ["film", 1]] },
+  flow:     { n: "Пробный пуск", place: "в сервисном отсеке насоса", open: "Щёлкает сервисный отсек. В отдельном кармане остались запасные детали для насоса.", loot: [["servo", 1], ["rubber", 1]] },
+  balance:  { n: "Равные пары", place: "за щитком у клапанов", open: "Щиток отходит по направляющим. За ним коробка с запасными деталями.", loot: [["rubber", 2], ["relay", 2]] }
+};
+var CACHE_RECORDS = {
+  voyage:   { t: "Дорожная ведомость", a: "Выездная группа «Ковчега»", x: "Начальство вычеркнуло из карты обратную дорогу. Мы оставили её на глобусе: тот, кто доберётся до этой ведомости, поймёт, что возвращение вообще планировалось." },
+  meridian: { t: "О поверке глобуса", a: "Метролог", x: "Деления на оси стёрлись, пока дети на ощупь учили стороны света. Вчера заново насёк их надфилем. Оставлю запасную лупу в оси: по документам второго экземпляра у нас всё равно нет." },
+  mirror:   { t: "Маршрут для тех, кто вернётся", a: "Дежурная Отражения", x: "Слева и справа здесь спорят даже две одинаковые карты. Сын просил написать путь домой словами. Вот почему я теперь верю журналу больше, чем стрелкам." },
+  stars:    { t: "Ведомость звёзд", a: "Кружок наблюдателей Истока", x: "Вера предложила считать звёзды вслух, чтобы Олег тоже мог сверить рисунок. Теперь на всех рабочих куполах точки выпуклые. На следующей смене начнём с неба, которое можно потрогать." },
+  current:  { t: "Обходная линия", a: "Дежурный по фильтрам", x: "Показал новенькому возвратный ход. Схема на щите хорошая, пока не пропадёт свет. На крышке оставил выпуклые метки. По ним он закрыл смену один." },
+  echo:     { t: "Журнал ночных ударов", a: "Наблюдатель у стекла", x: "Чтобы отличить отклик отсюда от шума в трубе, считал всё с начала. Сегодня получили ещё один удар после последней паузы. В отчёт не внесла. Завтра попробую услышать его снова." },
+  flow:     { t: "Лист пробного пуска", a: "Служба рециркуляции", x: "Новая помпа тише старой. Впервые за месяц слышно, что в дальнем углу работают две разные форсунки. Снятый сервопривод оставляю в отсеке: он чинится, если дать ему высохнуть." },
+  balance:  { t: "Две пары клапанов", a: "Архив инкубатора", x: "Когда переставляли трубы, подписи «левый» и «правый» остались на старых местах. Перебили на самих ручках расход. Порядок дежурства теперь можно восстановить даже с закрытыми глазами." }
+};
+var LANDMARKS = ["перевал", "остров", "дельта", "полюс", "мыс", "озеро", "пустыня", "пролив"];
+var AQUA_POINTS = ["затон", "решётка", "отстойник", "шлюз", "каскад", "карман"];
+var CACHE_BUILD = {
+  voyage: function (r) {
+    var a = r.shuffle(LANDMARKS.slice()).slice(0, 5);
+    return {
+      marks: a, answer: a.slice(0, 4),
+      evidence: "На круге пять выпуклых меток. Четыре соединены старым шнуром маршрута. Пятую, «" + a[4] + "», зачеркнули.",
+      rule: "В журнале полевых работ стоянки вписаны без номеров. Первая — «" + a[0] + "», последняя — «" + a[3] + "». Стоянка «" + a[1] + "» была раньше стоянки «" + a[2] + "». Введите четыре остановки по порядку.",
+      hints: ["Исключите зачёркнутую стоянку. Начало и конец уже известны.", "У двух средних мест есть одно условие. «" + a[1] + "» должно стоять раньше, чем «" + a[2] + "»."]
+    };
+  },
+  meridian: function (r) {
+    var a = r.shuffle(LANDMARKS.slice()).slice(0, 6), start = r.int(0, 5);
+    var stops = [0].concat(r.shuffle([1, 2, 3, 4, 5]).slice(0, 3));
+    var moves = stops.slice(1).map(function (offset, i) {
+      var right = (offset - stops[i] + 6) % 6;
+      var delta = right < 3 || (right === 3 && r.chance(0.5)) ? right : right - 6;
+      var steps = Math.abs(delta);
+      return "на " + steps + " " + pl(steps, "деление", "деления", "делений") + (delta > 0 ? " вправо" : " влево");
+    });
+    var answer = stops.map(function (offset) { return a[(start + offset) % 6]; });
+    return {
+      marks: a, answer: answer,
+      evidence: "На неподвижном кольце шесть делений. Порядок вправо по кругу такой. " + a.join(", ") + ". За последним идёт первое.",
+      rule: "В инструкции метролога сказано отметить исходное деление «" + a[start] + "». Затем поверните " + moves.join(", затем ") + ". Отметьте место каждой остановки. Повороты продолжаются с предыдущей остановки.",
+      hints: ["Само деление, на котором вы стоите, в шаги поворота не входит.", "Первые две отметки — «" + answer[0] + "» и «" + answer[1] + "». Следующий поворот начинается от второй отметки."]
+    };
+  },
+  mirror: function (r) {
+    var a = r.shuffle(LANDMARKS.slice()).slice(0, 5), fake = r.int(0, 4);
+    return {
+      marks: a, answer: a.filter(function (_, i) { return i !== fake; }).reverse(),
+      evidence: "На зеркальном вкладыше видны пять подписей. «Эхо» читает их в порядке слева направо. " + a.join(", ") + ". Подпись «" + a[fake] + "» находится только на стекле. Под ней нет насечки.",
+      rule: "На обратной стороне оправы выбито «Для обратного пути читай ряд справа налево. Ведут домой только насечки, нанесённые в металл». Отметьте четыре места.",
+      hints: ["Разворачивать надо порядок меток, а не буквы внутри названий.", "Пропустите «" + a[fake] + "». Остальные читайте с правого конца ряда."]
+    };
+  },
+  stars: function (r) {
+    var a = r.shuffle(LANDMARKS.slice()).slice(0, 5), values = [2, 3, 6, 9, 14];
+    var picked = r.shuffle([0, 1, 2, 3, 4]).slice(0, 3).sort(function (x, y) { return x - y; });
+    var total = picked.reduce(function (sum, i) { return sum + values[i]; }, 0);
+    return {
+      marks: a, answer: picked.map(function (i) { return a[i]; }),
+      evidence: "Над пятью метками разные группы выпуклых звёзд. " + a.map(function (m, i) { return m + " — " + values[i]; }).join(", ") + ".",
+      rule: "На табличке указан контрольный счёт " + total + ". Выберите ровно три разные группы, у которых столько звёзд в сумме. Вводите от меньшей группы к большей.",
+      hints: ["Всего над куполом 34 звезды. Можно сначала найти две лишние группы с суммой " + (34 - total) + ".", "Начните с группы «" + a[picked[0]] + "». У двух оставшихся вместе " + (total - values[picked[0]]) + " звёзд."]
+    };
+  },
+  current: function (r) {
+    var a = r.shuffle(AQUA_POINTS.slice()).slice(0, 5);
+    return {
+      marks: a, answer: a.slice(0, 4),
+      evidence: "Под крышкой пять сухих кнопок с названиями камер. «Эхо» прослеживает трубки. Из «" + a[0] + "» есть выходы в «" + a[1] + "» и «" + a[4] + "». Из «" + a[1] + "» — в «" + a[2] + "». Из «" + a[2] + "» — в «" + a[3] + "» и «" + a[4] + "». Из камеры «" + a[4] + "» выхода нет.",
+      rule: "Обходчик начинал с камеры «" + a[0] + "» и доходил до «" + a[3] + "». По трубкам можно идти только по направлению выхода. Отметьте четыре камеры, включая первую и последнюю.",
+      hints: ["Войти в тупик можно, выйти из него по схеме нельзя.", "Исключите камеру «" + a[4] + "». От старта нужно идти в «" + a[1] + "»."]
+    };
+  },
+  echo: function (r) {
+    var a = ["одна насечка", "две насечки", "три насечки", "четыре насечки", "пять насечек"];
+    var counts = r.shuffle([1, 2, 3, 4, 5]).slice(0, 4), running = 0;
+    var log = counts.map(function (v) { running += v; return running; });
+    return {
+      marks: a, answer: counts.map(function (n) { return a[n - 1]; }),
+      evidence: "На внешней планке пять кнопок с одной, двумя, тремя, четырьмя и пятью насечками. В журнале «Эхо» находит счёт ударов на четырёх паузах. " + log.join(", ") + ".",
+      rule: "Смотритель считал удары с начала записи, на паузах счётчик не обнулял. Для каждой паузы нажмите кнопку по числу новых ударов с предыдущей паузы. До первой паузы отсчёт от нуля.",
+      hints: ["Число насечек для первого выбора равно первой записи счётчика.", "Для второй паузы вычтите " + log[0] + " из " + log[1] + ". Так же посчитайте две оставшиеся разницы."]
+    };
+  },
+  flow: function (r) {
+    var a = r.shuffle(["кольцо", "веер", "щель", "тройник", "спираль"]), volume = 0;
+    var values = a.map(function () { volume += r.int(1, 4); return volume; });
+    return {
+      marks: a, answer: [a[0], a[2], a[4], a[1]],
+      evidence: "На сервисных клавишах названия форсунок. Замер воды за одинаковое время. " + a.map(function (m, i) { return m + " — " + values[i]; }).join(", ") + ".",
+      rule: "Пусковой прогон проверяет четыре форсунки. Сначала самую слабую, потом среднюю из пяти, затем самую мощную. В конце резервную, которая по расходу сразу за самой слабой.",
+      hints: ["Расположите пять замеров от меньшего к большему. Средний замер окажется третьим.", "Первые три значения — " + [values[0], values[2], values[4]].join(", ") + ". Для резерва найдите следующее по величине после " + values[0] + "."]
+    };
+  },
+  balance: function (r) {
+    var a = ["подача слева", "подача справа", "слив слева", "слив справа"];
+    var low = r.int(0, 1), drain = r.int(2, 3), small = r.int(2, 4), large = small + r.int(2, 4);
+    return {
+      marks: a, answer: [a[drain], a[low], a[5 - drain], a[1 - low]],
+      evidence: "Пропускная способность выбита на ручках. " + a.map(function (m, i) { return m + " — " + (i === low || i === drain ? small : large); }).join(", ") + ".",
+      rule: "Откройте две пары по очереди, сначала меньшую. В паре у слива и подачи расход должен быть одинаковым. В каждой паре первым открывается слив, второй — подача.",
+      hints: ["Одинаковые числа на ручках связывают их в пару, даже если ручки с разных сторон.", "Начните со слива, на котором стоит " + small + ". Затем добавьте подачу с тем же числом."]
+    };
+  }
+};
+var floorCaches = new WeakMap();
+function cachesHere() {
+  var fl = CUR().fl, cached = floorCaches.get(fl);
+  if (cached) return cached;
+  var winners = {}, best = {};
+  fl.objs.forEach(function (o) {
+    if (o.type !== "fx" || (o.fx !== "globe" && o.fx !== "aquarium")) return;
+    var rm = roomOf(o), t = roomText(rm);
+    var kind = o.fx === "globe" ? globeKind(o, t, rm) : aquaKind(t, rm);
+    var ordinary = kind === "plain" || kind === "asleep";
+    var score = h32(G().seed + ":cache-place:" + CUR().key + ":" + o.id) % 1000 + (ordinary ? 1000 : 0);
+    if (best[o.fx] == null || score < best[o.fx]) {
+      winners[o.fx] = { o: o, kind: kind };
+      best[o.fx] = score;
+    }
+  });
+  cached = {};
+  Object.keys(winners).forEach(function (fx) {
+    var w = winners[fx], o = w.o, r = rng(o, "cache-v1"), key;
+    if (fx === "globe") {
+      key = w.kind === "mirror" ? "mirror" : w.kind === "star" ? "stars" :
+        w.kind === "school" ? r.pick(["meridian", "stars"]) : r.pick(["voyage", "meridian"]);
+    } else {
+      var kinds = { hydro: "balance", fry: "balance", cave: "echo", mirror: "echo", machine: "flow", canteen: "current" };
+      key = kinds[w.kind] || r.pick(["current", "echo", "flow", "balance"]);
+    }
+    var p = CACHE_BUILD[key](r), def = CACHE_TYPES[key];
+    // Порядок пунктов меню сам по себе ничего не сообщает о маршруте.
+    p.marks = p.marks.slice().sort();
+    p.key = key;
+    p.o = o;
+    p.def = def;
+    cached[fx] = p;
+  });
+  floorCaches.set(fl, cached);
+  return cached;
+}
+function cacheOf(o) {
+  var p = cachesHere()[o.fx];
+  return p && p.o.id === o.id ? p : null;
+}
+function cacheLead(o) {
+  var fl = CUR().fl, old = o.fx === "globe" ? hintOf(o) : null, nearest = null, best = 25;
+  fl.doors.forEach(function (d) {
+    if (!d.lock || d.lock.type !== "secret" || d.lock.inner || !fl.rooms[d.room] || !SIDE[d.side]) return;
+    var rm = fl.rooms[d.room], dist = Math.abs(d.x - o.x) + Math.abs(d.y - o.y);
+    if (rm.name && dist < best && !(old && old.type === "secret" && old.room === rm.name && old.side === d.side)) {
+      nearest = { kind: "note", note: "secret", id: o.id + "-cache-lead", room: rm.name + (rm.num ? ", помещение " + rm.num : ""), side: d.side };
+      best = dist;
+    }
+  });
+  return nearest;
+}
+function cacheLoot(p) {
+  var o = p.o, stock = p.def.loot.map(function (entry) { return item(entry[0], entry[1]); });
+  stock.push({ kind: "note", note: "curio", id: o.id + "-cache-log", cache: p.key });
+  if (p.def.lead) stock.push(cacheLead(o) || credits(4));
+  return stock.filter(Boolean);
+}
+function cacheState(o) {
+  var s = st(o);
+  return s.cabinet || (s.cabinet = { draft: [], hints: 0, open: false, taken: 0 });
+}
+function cacheLine(p) {
+  if (!p) return "";
+  var s = st(p.o).cabinet;
+  return s && s.open ? "Тайник " + p.def.place + " открыт." :
+    "«Эхо» замечает " + (p.o.fx === "globe" ? "защёлку в оправе глобуса" : "сухую панель с защёлкой на внешней стороне аквариума") + ". Тайник " + p.def.place + ".";
+}
+function cacheSound(p, event) {
+  if (!LAB.Sound) return;
+  var glass = p.o.fx === "aquarium";
+  var clips = event === "open" ? glass ? ["work_ratchet", "open_crate"] : ["work_file", "open_desk"] :
+    event === "reject" ? ["door_locked"] : event === "clue" ? ["paper_turn"] :
+      event === "take" ? ["pack_heavy"] : [glass ? "pwr_click" : "work_ratchet"];
+  clips.forEach(function (clip, i) {
+    LAB.Sound.play(clip, { bus: "puzzle", gain: i ? 0.36 : 0.44, delay: i * 0.17, wait: 220, fb: null });
+  });
+}
+function cacheMenu(p) {
+  var o = p.o, hero = G(), floor = CUR().fl, s = cacheState(o), n = p.answer.length;
+  function checkAccess() {
+    if (G() !== hero || CUR().fl !== floor || G().dead || Math.abs(o.x - hero.x) + Math.abs(o.y - hero.y) > 1) {
+      say("Подойдите к тайнику, чтобы продолжить.");
+      return false;
+    }
+    if (danger()) { say(busyMsg("заниматься тайником")); return false; }
+    return true;
+  }
+  function entry(label, fn) { return { label: label, fn: function () { if (checkAccess()) fn(); } }; }
+  function report(label, content) { return entry(label, function () { cacheSound(p, "clue"); say(content); }); }
+  function draftText() { return "Введено " + s.draft.length + " из " + n + ". " + (s.draft.length ? s.draft.join(", ") + "." : "Последовательность пока пуста."); }
+  function submit() {
+    if (s.open || s.draft.length !== n) return;
+    var matches = s.draft.filter(function (a, i) { return a === p.answer[i]; }).length;
+    if (matches !== n) {
+      spend(1);
+      cacheSound(p, "reject");
+      say("Защёлка удерживает крышку. Последовательность сохранена, её можно исправить." +
+        (G().diff === 1 || G().diff === 4 ? " На своих местах " + matches + " из " + n + " отметок." : ""));
+      return;
+    }
+    s.open = true;
+    s.draft = [];
+    cacheSound(p, "open");
+    say(p.def.open + " Выберите, что забрать.");
+    ev("search", 1);
+    if (gm().autosaveSoon) gm().autosaveSoon();
+  }
+  function take(it, bit) {
+    if (!s.open || (s.taken & bit)) return;
+    var load = LAB.load, wt = load ? load.floorWt(it) : 0;
+    if (wt && !load.canTake(wt)) { say(load.refuseText(it, wt) + " Находка останется в тайнике."); return; }
+    s.taken |= bit;
+    cacheSound(p, it.kind === "note" ? "clue" : "take");
+    say("Взято. " + gm().giveItem(it, true));
+    if (gm().autosaveSoon) gm().autosaveSoon();
+  }
+  function build() {
+    if (s.open) {
+      var loot = cacheLoot(p).map(function (it, i) {
+        var bit = 1 << i;
+        return s.taken & bit ? null : entry("Забрать. " + gm().itemName(it), function () { take(it, bit); });
+      }).filter(Boolean);
+      if (!loot.length) loot.push({ label: "В тайнике пусто", info: true, fn: function () { say("Всё содержимое уже забрано."); } });
+      loot.push({ label: "Назад", close: true, fn: function () {} });
+      return loot;
+    }
+    var list = [report("Осмотреть метки", p.evidence), report("Прочитать инструкцию", p.rule), entry("Повторить введённое", function () { say(draftText()); })];
+    for (var j = 0; j <= s.hints && j < 3; j++) {
+      (function (i) {
+        list.push(entry(i === 2 ? "Услышать полное решение" : (i ? "Вторая подсказка" : "Первая подсказка"), function () {
+          s.hints = Math.max(s.hints, i + 1);
+          cacheSound(p, "clue");
+          say(i === 2 ? "Порядок действий. " + p.answer.join(", ") + "." : p.hints[i]);
+        }));
+      })(j);
+    }
+    if (s.draft.length < n) p.marks.forEach(function (mark) {
+      if (s.draft.indexOf(mark) >= 0) return;
+      list.push(entry("Отметить. " + mark, function () {
+        if (s.open || s.draft.length >= n || s.draft.indexOf(mark) >= 0) return;
+        s.draft.push(mark);
+        cacheSound(p, "move");
+        say(mark + ". " + draftText());
+      }));
+    });
+    if (s.draft.length === n) list.push(entry("Проверить последовательность", submit));
+    if (s.draft.length) {
+      list.push(entry("Убрать последнюю отметку", function () { s.draft.pop(); say(draftText()); }));
+      list.push(entry("Очистить последовательность", function () { s.draft = []; say(draftText()); }));
+    }
+    list.push({ label: "Назад", close: true, fn: function () {} });
+    return list;
+  }
+  if (checkAccess()) UIx("menu", p.def.n, build(), { keep: true, rebuild: build, puzzle: !s.open,
+    intro: s.open ? "" : "Осмотрите метки и прочитайте инструкцию. Введите по порядку " + n + " " + pl(n, "отметку", "отметки", "отметок") + "." });
+}
+function cacheItem(o) {
+  var p = cacheOf(o);
+  if (!p) return null;
+  var s = st(o).cabinet;
+  return { label: (s && s.open ? "Открытый тайник. " : "Разобраться с тайником. ") + p.def.n, fn: function () { cacheMenu(p); } };
+}
+
 /* ════════ СВЯЗЬ С ОБСТАНОВКОЙ (fixtures.js) ════════ */
 /* Описание аквариума — каким он стал: выключен из розетки, рыбы задохнулись */
 var AD_OFF = {
@@ -669,14 +949,17 @@ function variant(fx, o, def, t, rm) {
   return d ? { n: def.n, d: d, a: def.a, base: def } : null;
 }
 function item2(o, def, a, s) {
+  if (a[1] === "cache") return cacheItem(o);
   if (a[0] === "globe") return globeItems(o, def, a, s);
   if (a[0] === "aqua") return aquaItems(o, def, a, s);
   return null;
 }
 function examineLine(o) {
   if (!o || o.type !== "fx") return "";
-  if (o.fx === "globe") return globeExamine(o, globeOf(o), st(o));
-  if (o.fx === "aquarium") return aquaExamine(o, aquaOf(o), st(o));
+  if (o.fx === "globe" || o.fx === "aquarium") {
+    var old = o.fx === "globe" ? globeExamine(o, globeOf(o), st(o)) : aquaExamine(o, aquaOf(o), st(o));
+    return [old, cacheLine(cacheOf(o))].filter(Boolean).join(" ");
+  }
   return "";
 }
 
@@ -684,6 +967,6 @@ LAB.curios = {
   variant: variant, item: item2, examineLine: examineLine, noteText: noteText,
   /* для проверок */
   _globe: globeOf, _aqua: aquaOf, _hint: hintOf, _spin: globeSpin, _feel: globeFeel, _note: globeNote, _bar: globeBar,
-  _palm: aquaPalm, _feed: aquaFeed, _tap: aquaTap, _bottom: aquaBottom, _plug: aquaPlug, _loot: bottomLoot, _dead: fishDead, NOTES: NOTES
+  _cache: cacheOf, _palm: aquaPalm, _feed: aquaFeed, _tap: aquaTap, _bottom: aquaBottom, _plug: aquaPlug, _loot: bottomLoot, _dead: fishDead, NOTES: NOTES
 };
 })();
