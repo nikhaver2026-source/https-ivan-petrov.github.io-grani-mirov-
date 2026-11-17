@@ -208,7 +208,8 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     out.cellUpgrade = activate(/^Ячейки хранилища/) && activate(/^Ячейка 1\. Детали/) && activate(/^Увеличить вместимость/) && G.credits < c0 && /300 из 400/.test(lbl(LAB.ui.top().items[0])) && L.lockCap().slots === 10;
     LAB.ui.closeAll();
     const p0 = L.upPrice(); L.upgrade(); const p1 = L.upPrice(); L.upgrade(); const p2 = L.upPrice();
-    out.ladder = p1 > p0 && p2 > p1 && L.locker().lv === 2 && L.lockCap().perCell === 300 && L.lockCap().slots === 18;
+    /* После двух пакетов по четыре остаётся два назначения. Их цена за ячейку продолжает расти. */
+    out.ladder = p1 > p0 && p2 * 2 > p1 && L.locker().lv === 2 && L.lockCap().perCell === 300 && L.lockCap().slots === 18;
     const r0 = L.rentPrice(); L.rent(); out.rent = L.rented() && L.lockCap().slots === 26 && L.rentPrice() > r0;
     const rentedPut = L.putItem("turret_kit", 1, true, 18);
     G.day += 4; L.minutes();

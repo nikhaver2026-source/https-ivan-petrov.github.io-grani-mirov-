@@ -3,8 +3,8 @@
 "use strict";
 var LAB = window.LAB;
 var groups = {
-  weapons: "Вооружение", sensors: "Разведка и навигация", service: "Медицина и ремонт",
-  armor: "Защита корпуса", cargo: "Груз и ход", energy: "Энергоснабжение", control: "Управление"
+  cargo: "Грузовой модуль и оснастка", weapons: "Вооружение", sensors: "Разведка и навигация",
+  service: "Медицина и ремонт", armor: "Защита корпуса", energy: "Энергоснабжение", control: "Управление"
 };
 var equipment = {}, ranks = {};
 function add(id, name, group, tier, weight, need, description, measure, levels, options) {
@@ -49,11 +49,34 @@ add("hull", "Композитный набор корпуса", "armor", 3, 2.5,
 add("mesh", "Демпферная решётка", "armor", 3, 1.8, { panel: 2, rubber: 2, servo: 1 }, "Смягчает получаемый дроном урон, пока он выпущен.", "Снижение урона в процентах", [12,18,24], { passive: "armor" });
 add("reserve", "Резервная ячейка", "energy", 2, 0.6, { cell: 1, cap: 1, wire: 1 }, "Лёгкая альтернатива блоку накопителей.", "Дополнительная ёмкость", [21,30,42], { en: true, exclusive: "battery" });
 add("regen", "Инерционный рекуператор", "energy", 3, 1.3, { servo: 1, cap: 2, magnet: 1 }, "На каждом этаже восстанавливает заряд после двадцати пройденных шагов. Срабатывает один раз на этаж.", "Восстановление заряда", [8,12,16], { passive: "recovery" });
-add("sling", "Лёгкая подвеска", "cargo", 2, 0.8, { servo: 1, rubber: 2, scrap: 1 }, "Увеличивает грузоподъёмность корпуса. Легче захвата, тяговый блок с ней несовместим.", "Дополнительные килограммы груза", [8,10,12], { passive: "capacity", exclusive: "cargo" });
-add("stabilizer", "Балансир груза", "cargo", 3, 1.1, { servo: 2, rubber: 1, chip: 1 }, "С действующим захватом или подвеской уменьшает задержку шага при перегрузе.", "Сокращение задержки в миллисекундах", [25,40,55], { passive: "stride" });
+add("sling", "Лёгкая подвеска", "cargo", 2, 0.8, { servo: 1, rubber: 2, scrap: 1 }, "Облегчённая оснастка вместо грузового модуля. Тяговому блоку нужна обычная или тяжёлая платформа.", "Дополнительные килограммы груза", [8,10,12], { passive: "capacity", exclusive: "cargo" });
+add("stabilizer", "Балансир груза", "cargo", 3, 1.1, { servo: 2, rubber: 1, chip: 1 }, "С грузовой оснасткой уменьшает задержку шага при перегрузе.", "Сокращение задержки в миллисекундах", [25,40,55], { passive: "stride" });
 add("baffle", "Тихая подвеска", "cargo", 2, 0.7, { rubber: 2, ceramic: 1 }, "Снижает шум, который даёт перегруз.", "Снижение шума", [1,2,3], { passive: "noise" });
 add("link_amp", "Согласователь кабеля", "energy", 3, 0.9, { relay: 2, cap: 2, wire: 2 }, "Повышает пропускную способность полевого кабеля и уменьшает потери.", "Дополнительный объём передачи", [4,6,8], { passive: "transfer" });
 add("charger", "Зарядный преобразователь", "energy", 3, 1, { powercell: 1, relay: 1, cap: 2 }, "Получает больше заряда от одной энергобатареи.", "Прибавка к заряду батареи", [8,12,16], { passive: "charge" });
+
+function carrier(id, name, spec) {
+  add(id, name, "cargo", spec.tier, spec.weights[0], spec.need,
+      "Сменная платформа с аварийными опорами. Силовой контур тратит заряд при движении с грузом сверх резерва.",
+      "Предел платформы в килограммах", spec.capacity, { exclusive: "cargo", frame: spec.frame, level: spec.level,
+        depth: spec.depths[0], rankWeights: spec.weights, lift: { depths: spec.depths, reserve: spec.reserve, draw: spec.draw } });
+}
+carrier("cargo_platform", "Складская платформа", {
+  tier: 3, frame: 1, level: 4, depths: [12, 20, 28], weights: [5, 9, 14],
+  capacity: [600, 1000, 1500], reserve: [350, 550, 750], draw: 2, need: { panel: 3, servo: 2, magnet: 2, wire: 2 }
+});
+carrier("cargo_frame", "Тяжёлая грузовая рама", {
+  tier: 4, frame: 2, level: 7, depths: [35, 46, 58], weights: [10, 16, 24],
+  capacity: [2500, 4000, 6000], reserve: [1200, 2000, 3000], draw: 3, need: { panel: 5, servo: 3, powercell: 2, supercond: 1 }
+});
+carrier("cargo_industrial", "Промышленная платформа", {
+  tier: 5, frame: 3, level: 9, depths: [72, 101, 321], weights: [20, 32, 45],
+  capacity: [9000, 14000, 22000], reserve: [4000, 6000, 9000], draw: 4, need: { panel: 8, powercell: 3, supercond: 3, proto: 1 }
+});
+carrier("cargo_deep", "Грузовая платформа Нижних", {
+  tier: 7, frame: 4, level: 10, depths: [1501, 3120, 6320], weights: [28, 42, 60],
+  capacity: [30000, 42000, 60000], reserve: [12000, 18000, 24000], draw: 6, need: { dp_alloy: 6, dp_reed: 3, dp_nerve: 1, powercell: 4 }
+});
 
 var existing = {
   sensor: { group: "sensors" }, zapper: { group: "weapons" }, gun: { group: "weapons", mount: true }, arm: { group: "service" },
@@ -62,6 +85,29 @@ var existing = {
   shell: { group: "armor", exclusive: "hull" }, nerve: { group: "control" }
 };
 
+var cargoFrames = [
+  { n: "Штатный корпус", limit: 400, wt: 0, hp: 0 },
+  { n: "Усиленные крепления", limit: 1800, wt: 4, hp: 8, depth: 12, tier: 3, level: 4,
+    need: { panel: 4, servo: 2, wire: 2 }, repair: { panel: 1 } },
+  { n: "Силовая рама корпуса", limit: 7200, wt: 9, hp: 20, depth: 35, tier: 4, level: 7,
+    need: { panel: 6, servo: 3, powercell: 2 }, repair: { panel: 2 } },
+  { n: "Промышленный корпус", limit: 27000, wt: 16, hp: 36, depth: 72, tier: 5, level: 9,
+    need: { panel: 8, powercell: 3, supercond: 2, proto: 1 }, repair: { panel: 2, powercell: 1 } },
+  { n: "Опоры Нижних", limit: 75000, wt: 24, hp: 60, depth: 1501, tier: 7, level: 10,
+    need: { dp_alloy: 8, dp_reed: 4, dp_nerve: 2, powercell: 4 }, repair: { dp_alloy: 2 } }
+];
+var cargoProfiles = {
+  standard: { n: "Штатная укладка", rated: 1, reserve: 1, draw: 0, noise: 0,
+    d: "Предел и резерв соответствуют ступени платформы." },
+  lift: { n: "Тяжёлый подъём", rated: 1.2, reserve: 1, draw: 1, noise: 1, need: { panel: 2, servo: 1, wire: 1 },
+    d: "Предел платформы выше на 20 процентов в пределах прочности корпуса. Силовой контур тратит на единицу заряда больше за шаг и громче работает." },
+  travel: { n: "Дальний перегон", rated: .9, reserve: 1.35, draw: -1, noise: 0, need: { relay: 2, wire: 2, cap: 1 },
+    d: "Резерв выше на 35 процентов. Расход на шаг меньше на единицу, предельный груз ниже на 10 процентов." },
+  quiet: { n: "Тихая перевозка", rated: .85, reserve: 1, draw: 0, noise: -3, need: { rubber: 3, ceramic: 1, relay: 1 },
+    d: "Работа силового контура тише на три единицы. Предельный груз ниже на 15 процентов." }
+};
+var heavyCarriers = Object.keys(equipment).filter(function (k) { return equipment[k].lift; }).join(" ");
+
 /* Настройка действует на один совместимый узел. Положительная экономия уменьшает цену или задержку. */
 var metrics = {
   firePower: ["мощность оружия",100,"%"], fireRange: ["дальность оружия",1," шаг."], fireSave: ["экономия выстрела",1," ед."],
@@ -69,7 +115,8 @@ var metrics = {
   scanRange: ["радиус поиска",1," шаг."], scanSave: ["экономия поиска",1," ед."], scanCycle: ["сокращение задержки поиска",1," такт."], mark: ["время маяка",1," сек."],
   healPower: ["лечение",1," здоровья"], cleanPower: ["очистка",1," ед."], repairPower: ["ремонт",1," ед."], serviceSave: ["экономия обслуживания",1," ед."],
   serviceCycle: ["сокращение задержки обслуживания",1," такт."], guard: ["перехват урона экраном",100," п. п."], armor: ["смягчение урона корпусу",100," п. п."],
-  capacity: ["основная тяга",1," кг"], haul: ["дополнительная тяга",1," кг"], stride: ["сокращение задержки шага",1," мс"], noise: ["приглушение перегруза",1," ед."],
+  capacity: ["постоянная грузоподъёмность",1," кг"], haul: ["дополнительная тяга",1," кг"], stride: ["сокращение задержки шага",1," мс"], noise: ["приглушение перегруза",1," ед."],
+  payload: ["предел платформы",100,"%"], payloadReserve: ["аварийный резерв",100,"%"], payloadSave: ["экономия на шаг",1," ед."],
   charge: ["заряд от батареи",1," ед."], commandSave: ["экономия команд",1," ед."], recovery: ["заряд рекуперации",1," ед."],
   transfer: ["предел передачи",1," ед."], transferLoss: ["эффективность передачи",100," п. п."]
 };
@@ -113,9 +160,9 @@ var tuningRows = [
   ["shield_field","Расширение поля","screen","guard",.05],
   ["shield_focus","Сведение поля","screen","guard",.08],
   ["hinge_stop","Ограничители рывка","cargo sling","capacity",2],
-  ["hook_pair","Двойной подвес","cargo","capacity",3],
+  ["hook_pair","Двойной подвес","cargo","capacity",10],
   ["light_rings","Облегчённые кольца","sling","capacity",2],
-  ["thrust_angle","Настройка угла тяги","boost","haul",3],
+  ["thrust_angle","Настройка угла тяги","boost","haul",5],
   ["elastic_line","Упругие стропы","cargo sling stabilizer","stride",25],
   ["rubber_sleeve","Тихие втулки","baffle stabilizer","noise",1],
   ["stiff_balance","Поперечная опора","stabilizer boost","stride",30],
@@ -126,7 +173,10 @@ var tuningRows = [
   ["return_path","Возврат на прямой","regen","recovery",8],
   ["bridge_wire","Широкий канал","link_amp","transfer",3],
   ["shielded_wire","Экранирование кабеля","link_amp","transferLoss",.05],
-  ["balancing_cell","Согласованный накопитель","battery reserve link_amp","transfer",2]
+  ["balancing_cell","Согласованный накопитель","battery reserve link_amp","transfer",2],
+  ["cargo_braces","Силовые раскосы",heavyCarriers,"payload",.12],
+  ["cargo_reserve_support","Аварийные опоры",heavyCarriers,"payloadReserve",.2],
+  ["cargo_efficient_drive","Экономичные приводы",heavyCarriers,"payloadSave",1]
 ];
 var modifications = {};
 tuningRows.forEach(function (row) {
@@ -283,7 +333,7 @@ function secondary(metric) {
   if (/^scan|^mark$/.test(metric)) return ["scanSave",1];
   if (/^(heal|clean|repair|service)/.test(metric)) return ["serviceSave",1];
   if (/^(armor|guard)$/.test(metric)) return ["armor",.04];
-  if (/^(haul|stride|noise|capacity)$/.test(metric)) return ["noise",1];
+  if (/^(haul|stride|noise|capacity|payload|payloadReserve|payloadSave)$/.test(metric)) return ["noise",1];
   return ["commandSave",1];
 }
 Object.keys(modifications).forEach(function (id, num) {
@@ -307,8 +357,9 @@ var difficulty = {
 };
 Object.keys(equipment).forEach(function (k) {
   var md = equipment[k];
-  md.depth = md.tier === 2 ? 2 : md.tier === 3 ? 7 : 15;
+  if (md.depth == null) md.depth = md.tier === 2 ? 2 : md.tier === 3 ? 7 : 15;
 });
 LAB.droneCatalog = { groups:groups, equipment:equipment, ranks:ranks, existing:existing, metrics:metrics,
-  modifications:modifications, directions:directions, programs:programs, roles:roles, difficulty:difficulty };
+  modifications:modifications, directions:directions, programs:programs, roles:roles, difficulty:difficulty,
+  cargoFrames:cargoFrames, cargoProfiles:cargoProfiles };
 })();

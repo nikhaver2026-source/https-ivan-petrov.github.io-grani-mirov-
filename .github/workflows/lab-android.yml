@@ -441,7 +441,7 @@ jobs:
       actions: read
     with:
       apk_artifact: podzemnaya-laboratoriya-alfa-5.5-apk
-      old_run: '43418930048'
+      old_run: ${{ github.ref_name == 'codex/lab-alpha-5.5-cargo' && '44111066542' || '43418930048' }}
 
   release:
     name: Выпуск «lab-android-5.5»
@@ -463,6 +463,13 @@ jobs:
         run: |
           APK=Podzemnaya-laboratoriya-Alfa-5.5.apk
           TAG=lab-android-5.5
+          TITLE="Подземная лаборатория. Альфа 5.5 для Android"
+          if [ "$GITHUB_REF_NAME" = "codex/lab-alpha-5.5-cargo" ]; then
+            TAG=lab-android-5.5-cargo
+            TITLE="Подземная лаборатория. Грузовое обновление Альфы 5.5 для Android"
+            mv "$APK" "${APK%.apk}-cargo.apk"
+            APK="${APK%.apk}-cargo.apk"
+          fi
           test -s "$APK"
           sha256sum "$APK"
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json targetCommitish,isDraft,assets > "$RUNNER_TEMP/release-state.json" 2>/dev/null; then
@@ -472,12 +479,12 @@ jobs:
             exit 0
           fi
           cat > "$RUNNER_TEMP/notes.md" <<EOF
-          «Подземная лаборатория» Альфа 5.5 для Android. В APK уже есть игра, голоса, музыка и звуки.
+          $TITLE. В APK уже есть игра, голоса, музыка и звуки.
 
           Проверены установка, запуск и возвращение из фона на эмуляторах Android 9–17, включая Android 12L. Подпись совпадает с Альфой 5.0.
 
           Коммит ${GITHUB_SHA}.
           EOF
           gh release create "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
-            --title "Подземная лаборатория. Альфа 5.5 для Android" --notes-file "$RUNNER_TEMP/notes.md"
+            --title "$TITLE" --notes-file "$RUNNER_TEMP/notes.md"
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft,tagName,assets

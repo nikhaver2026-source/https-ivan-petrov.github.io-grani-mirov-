@@ -284,8 +284,9 @@ function weaponLine(w) { return "Вес " + kg(weaponWt(w)) + ", нужна си
 
 /* Личное хранилище доступно из любой капсулы, мастерской и пункта снабжения.
    В сохранении остаются прежние списки вещей, плюс назначение и ступень каждой ячейки. */
-var LOCK_SLOTS = 10, LOCK_ADD_SLOTS = 4, LOCK_MAX_LV = 8;
-var CELL_BASE = 300, CELL_ADD = 100, CELL_MAX_LV = 8;
+var LOCK_SLOTS = 10, LOCK_ADD_SLOTS = 4, LOCK_OLD_MAX_LV = 8;
+var CELL_BASE = 300, CELL_ADD = 100, CELL_MAX_LV = 100;
+var CELL_PACKS = [100, 300, 1000];
 var RENT_SLOTS = 8, RENT_MIN = 3 * 1440;
 var SHELF_SLOTS = 4, FLOOR_ADD = 50, CRAFT_MAX = 3;
 var CARD_SLOTS = 2, CARD_MAX = 5;
@@ -326,15 +327,19 @@ function Lk() {
   if (!Array.isArray(l.cells)) l.cells = [];
   return l;
 }
+function suppliedSlots(l) {
+  return Number.isSafeInteger(l.slotsBought) && l.slotsBought >= 0 ? l.slotsBought :
+    LOCK_ADD_SLOTS * Math.min(LOCK_OLD_MAX_LV, l.lv);
+}
 function permanentSlots() {
   var l = Lk();
-  return LOCK_SLOTS + LOCK_ADD_SLOTS * Math.min(LOCK_MAX_LV, l.lv) + SHELF_SLOTS * Math.min(CRAFT_MAX, l.shelf || 0) + CARD_SLOTS * Math.min(CARD_MAX, l.cards || 0) + chaSlots();
+  return LOCK_SLOTS + suppliedSlots(l) + SHELF_SLOTS * Math.min(CRAFT_MAX, l.shelf || 0) + CARD_SLOTS * Math.min(CARD_MAX, l.cards || 0) + chaSlots();
 }
 function capParts() {
   var l = Lk();
   return [
     { n: "основа", sl: LOCK_SLOTS },
-    { n: "ступени снабжения", sl: LOCK_ADD_SLOTS * Math.min(LOCK_MAX_LV, l.lv) },
+    { n: "покупки у снабжения", sl: suppliedSlots(l) },
     { n: "полки", sl: SHELF_SLOTS * Math.min(CRAFT_MAX, l.shelf || 0) },
     { n: "ключ-карты", sl: CARD_SLOTS * Math.min(CARD_MAX, l.cards || 0) },
     { n: "аренда до " + untilText(l.rentUntil || 0), sl: rented() ? RENT_SLOTS : 0 },
@@ -483,8 +488,22 @@ function takeParts() {
 function quantityItem(label, max, w1, fn) {
   if (max === 1) return { label: label, keep: true, fn: function () { fn(1); } };
   var v = max;
-  return { kind: "slider", label: label, keep: true, min: 1, max: max, step: 1, get: function () { return v; }, set: function (x) { v = Math.max(1, Math.min(max, Math.round(x))); },
-    fmt: function (x) { return Math.round(x) + " шт., " + kg(w1 * Math.round(x)); }, fn: function () { fn(v); } };
+  function slider(name, step, keep) {
+    return { kind: "slider", label: name, keep: keep, min: 1, max: max, step: step,
+      get: function () { return v; }, set: function (x) { v = Math.max(1, Math.min(max, Math.round(x))); },
+      fmt: function (x) { return x + " шт., " + kg(w1 * x); }, fn: function () { fn(v); } };
+  }
+  if (max <= CELL_BASE) return slider(label, 1, true);
+  return { label: label + ". До " + max + " шт.", fn: function () {
+    v = max;
+    var step = max >= 5000 ? 500 : 100;
+    UIx("menu", "Количество. " + label, [
+      slider("Точное количество", 1, false),
+      slider("Крупная партия. Шаг " + step + " шт.", step, false),
+      { label: "Назад", close: true }
+    ], { intro: LAB.K("Свайп вверх или вниз меняет количество, двойное касание подтверждает.",
+      "Стрелки вправо и влево меняют количество, Enter подтверждает.") });
+  } };
 }
 function unavailable(label, why) { return { label: label + " — недоступно", disabled: true, why: why }; }
 var STORAGE_GEAR = {
@@ -588,11 +607,39 @@ function contentsItems(type) {
     });
   });
 }
-/* Цены снабжения зависят от глубины и сложности. Ступени дорожают в полтора раза. */
+/* Пакет стоит столько же, сколько его объём при покупках отдельно на той же глубине. */
 function cr(b) { return Math.max(1, Math.round(b * (gm().priceK ? gm().priceK() : 1))); }
 function crW(n) { return n + " " + plural(n, "кредит", "кредита", "кредитов"); }
-function upPrice() { return cr(Math.round(120 * Math.pow(1.5, Lk().lv))); }
-function cellPrice(index) { var cell = Lk().cells[index]; return cr(Math.round(120 * Math.pow(1.5, cell && cell.lv || 0))); }
+function packSizes(sizes, remaining) {
+  if (remaining <= 0) return [];
+  return sizes.map(function (n) { return Math.min(n, remaining); }).filter(function (n, i, all) { return i === 0 || n !== all[i - 1]; });
+}
+function slotPacks() {
+  var remaining = Object.keys(CELL_NAMES).length - permanentSlots();
+  return packSizes([4, 8, remaining], remaining);
+}
+function cellPacks(index) {
+  var c = Lk().cells[index];
+  return packSizes(CELL_PACKS, (CELL_MAX_LV - (c && c.lv || 0)) * CELL_ADD);
+}
+function upPrice(amount) {
+  var bought = suppliedSlots(Lk()), n = amount == null ? slotPacks()[0] || 0 : amount, total = 0;
+  for (var i = bought; i < bought + n; i++) {
+    var price = cr(Math.round(120 * Math.pow(1.5, Math.floor(i / LOCK_ADD_SLOTS))));
+    var at = i % LOCK_ADD_SLOTS;
+    total += Math.round(price * (at + 1) / LOCK_ADD_SLOTS) - Math.round(price * at / LOCK_ADD_SLOTS);
+  }
+  return total;
+}
+function cellPrice(index, amount) {
+  var cell = Lk().cells[index], lv = cell && cell.lv || 0, price = 0;
+  var end = lv + (amount == null ? CELL_ADD : amount) / CELL_ADD;
+  /* После прежних восьми ступеней цена растёт линейно. */
+  for (var i = lv; i < end; i++) {
+    price += cr(Math.round(120 * Math.pow(1.5, Math.min(i, 7)) + Math.max(0, i - 7) * 90));
+  }
+  return price;
+}
 function rentPrice() { return cr(Math.round((60 + 4.8 * permanentSlots()) * (1 + 0.2 * (Lk().rentN || 0)))); }
 function pay(p, service) {
   var g = G();
@@ -695,25 +742,28 @@ function minutes() {
   l.rentSaid = l.rentUntil;
   sayq("Аренда ячеек закончилась. " + cap1(capLine()) + "." + (leasedOver() ? " Вещи из бывших арендованных ячеек можно забрать. До выдачи хранение стоит " + crW(feeDay()) + " в сутки." : " Продлить аренду можно у пункта снабжения."));
 }
-function upgrade() {
-  var l = Lk();
-  if (l.lv >= LOCK_MAX_LV) { say("Все ступени расширения куплены. " + cap1(capLine()) + "."); return false; }
-  var p = upPrice();
+function upgrade(amount) {
+  var l = Lk(), sizes = slotPacks(), n = amount == null ? sizes[0] : amount;
+  if (sizes.indexOf(n) < 0) { say("Доступные пакеты ячеек указаны в меню снабжения. " + cap1(capLine()) + "."); return false; }
+  var p = upPrice(n);
   if (!pay(p, "Расширение хранилища")) return false;
-  l.lv++;
-  say("В хранилище добавлено " + LOCK_ADD_SLOTS + " ячейки. " + cap1(capLine()) + "." + paid(p));
-  if (gm().journal) gm().journal("Хранилище расширено до ступени " + l.lv + ".");
+  feeTick();
+  l.slotsBought = suppliedSlots(l) + n;
+  l.lv = Math.floor(l.slotsBought / LOCK_ADD_SLOTS);
+  var added = n + " " + plural(n, "ячейка", "ячейки", "ячеек");
+  say("В хранилище добавлено " + added + ". " + cap1(capLine()) + "." + paid(p));
+  if (gm().journal) gm().journal("Расширено хранилище. Добавлено " + added + ".");
   expanded();
   return true;
 }
-function upgradeCell(index) {
+function upgradeCell(index, amount) {
   if (index < 0 || index >= permanentSlots() || index % 1 !== 0) return false;
-  var cells = Lk().cells, cell = cells[index];
-  if (cell && (cell.lv || 0) >= CELL_MAX_LV) { say("Достигнута максимальная вместимость ячейки " + (index + 1) + "."); return false; }
-  var p = cellPrice(index);
+  var cells = Lk().cells, cell = cells[index], sizes = cellPacks(index), n = amount == null ? sizes[0] : amount;
+  if (sizes.indexOf(n) < 0) { say("Доступные пакеты вместимости указаны в меню ячейки " + (index + 1) + "."); return false; }
+  var p = cellPrice(index, n);
   if (!pay(p, "Увеличение вместимости")) return false;
   if (!cell) cell = cells[index] = {};
-  cell.lv = (cell.lv || 0) + 1;
+  cell.lv = (cell.lv || 0) + n / CELL_ADD;
   say("Ячейка " + (index + 1) + " теперь вмещает " + cellCap(cell) + " предметов." + paid(p));
   expanded();
   return true;
@@ -733,8 +783,12 @@ function cellMenu(index, where) {
     if (index < view.slots) out.push({ label: type ? "Положить ещё" : "Назначить ячейку и положить предметы", fn: function () { putMenu(index); } });
     if (type) out = out.concat(contentsItems(type));
     if (where === "post" && index < permanentSlots()) {
-      if ((c && c.lv || 0) >= CELL_MAX_LV) out.push({ label: "Вместимость максимальная.", info: true, fn: function () {} });
-      else out.push({ label: "Увеличить вместимость на " + CELL_ADD + " предметов за " + crW(cellPrice(index)) + ". У вас " + crW(G().credits) + ".", keep: true, fn: function () { upgradeCell(index); } });
+      var sizes = cellPacks(index);
+      if (!sizes.length) out.push({ label: "Вместимость максимальная.", info: true, fn: function () {} });
+      sizes.forEach(function (n) {
+        out.push({ id: "storage-capacity-" + n, label: "Увеличить вместимость на " + n + " предметов за " + crW(cellPrice(index, n)) +
+          ". Станет " + (cellCap(c) + n) + " мест. У вас " + crW(G().credits) + ".", keep: true, fn: function () { upgradeCell(index, n); } });
+      });
     }
     return out.concat({ label: "Назад", close: true });
   }
@@ -765,8 +819,13 @@ function lockerItems(where) {
   ];
   if ((G().inv.lockcard || 0) > 0) its.push({ label: "Добавить " + CARD_SLOTS + " ячейки по ключ-карте. Карт у вас " + G().inv.lockcard + ".", keep: true, fn: useCard });
   if (where === "post") {
-    var lv = Lk().lv;
-    if (lv < LOCK_MAX_LV) its.push({ label: "Расширить хранилище на " + LOCK_ADD_SLOTS + " ячейки за " + crW(upPrice()) + ". Ступень " + (lv + 1) + " из " + LOCK_MAX_LV + ". У вас " + crW(G().credits) + ".", keep: true, fn: upgrade });
+    var sizes = slotPacks();
+    if (!sizes.length) its.push({ label: "Ячеек хватает для всех назначений.", info: true, fn: function () {} });
+    sizes.forEach(function (n) {
+      its.push({ id: "storage-expand-" + n, label: "Расширить хранилище на " + n + " " + plural(n, "ячейку", "ячейки", "ячеек") +
+        " за " + crW(upPrice(n)) + ". Постоянных ячеек станет " + (permanentSlots() + n) + ". У вас " +
+        crW(G().credits) + ".", keep: true, fn: function () { upgrade(n); } });
+    });
     its.push({ label: (rented() ? "Продлить аренду на трое суток" : "Арендовать " + RENT_SLOTS + " ячеек на трое суток") + " за " + crW(rentPrice()) + "." + (rented() ? " Срок до " + untilText(Lk().rentUntil) + "." : ""), keep: true, fn: rent });
   }
   if (where === "bench") {
@@ -778,7 +837,7 @@ function lockerItems(where) {
   }
   its.push({ label: "Количество ячеек. " + capWhy() + ".", info: true, fn: function () {} });
   its.push({ label: "Как устроено хранилище", fn: function () {
-    UIx("note", "Как устроено хранилище", "Назначение ячейки определяется первой положенной вещью. Например, провода и металлолом хранятся вместе в ячейке для деталей. Для одного назначения используется одна ячейка. Пустая ячейка может принять другое назначение и сохраняет купленную вместимость. Чтобы выбрать ячейку вручную, откройте её через список ячеек. Сначала в хранилище 10 ячеек, по 300 предметов в каждой. Пункт снабжения продаёт дополнительные ячейки и увеличивает вместимость выбранной ячейки на 100 предметов за ступень. Когда аренда заканчивается, содержимое временных ячеек остаётся доступным на выдачу.");
+    UIx("note", "Как устроено хранилище", "Первая положенная вещь назначает ячейку. Провода и металлолом хранятся вместе в ячейке для деталей. Одному назначению соответствует одна ячейка. Когда она опустеет, ей можно дать другое назначение. Купленная вместимость сохранится. В начале 10 ячеек по 300 предметов. У снабжения можно добавить 4, 8 или сразу столько ячеек, сколько нужно для оставшихся назначений. В карточке постоянной ячейки можно купить 100, 300 или 1000 мест за раз. Содержимое временных ячеек остаётся доступным на выдачу после аренды.");
   } });
   return its.concat({ label: "Назад", close: true });
 }

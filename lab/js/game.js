@@ -1180,7 +1180,8 @@ function tryMove(dir, run) {
   G.x = nx; G.y = ny;
   G.stats.steps++;
   if (LAB.stats) LAB.stats.step(); /* (после 4.6) выносливость; с тяжёлым грузом — сила и телосложение */
-  var loud = (armorSpecial("strength") ? 2 : 0) + (LAB.exo ? LAB.exo.stepNoise(run) : 0) + (LAB.load ? LAB.load.noise() : 0), quiet = armorSpecial("stealth"); /* (после 4.6) перегруз громче */ /* (после 4.6) тяжёлый каркас громче, лёгкий на беге тише */
+  var loud = (armorSpecial("strength") ? 2 : 0) + (LAB.exo ? LAB.exo.stepNoise(run) : 0) +
+    (LAB.load ? LAB.load.noise() : 0) + (LAB.drone ? LAB.drone.motionNoise() : 0), quiet = armorSpecial("stealth");
   G.noise = Math.max(G.noise, Math.round(((run ? 6 : 3) + loud) * (quiet ? 0.5 : 1)));
   if (LAB.drone) LAB.drone.onStep();
   if (LAB.exo) LAB.exo.onStep(run); /* (после 4.6) приводы едят заряд аккумулятора */

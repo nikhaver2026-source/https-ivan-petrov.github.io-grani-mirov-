@@ -38,22 +38,26 @@ var NEED = { kv_ctrl: 1, servo: 2, cell: 1, optic: 1, scrap: 4, wire: 2 };
 var CABLE = "dr_charge_cable", CABLE_NEED = { wire: 3, cap: 1, rubber: 1 };
 LAB.ITEMS[CABLE] = { n: "Полевой кабель питания", kind: "eng", cat: "eng", wt: 0.4, nosell: 1,
   desc: "Переносит заряд между выпущенным дроном и надетым каркасом вне боя. Часть энергии теряется при передаче." };
-var BASE_CARGO_KG = 200, CARGO_KG = 12, BOOST_KG = 8, BATTERY = 40, SHELL_HP = 16;
+var BASE_CARGO_KG = 200, BATTERY = 40, SHELL_HP = 16;
+var CARGO_KG = [30, 60, 90], BOOST_KG = [15, 25, 35];
+var RANK_LEVEL = [1, 3, 6];
 var MODS = {
   sensor: { n: "сенсорный блок", need: { optic: 1, chip: 1 }, wt: 0.3, d: "разведка: маяки на врагов вокруг и предупреждение о приближении врага" },
   zapper: { n: "разрядник", need: { cap: 2, wire: 2, cell: 1 }, wt: 0.6, d: "оглушает ближайшего врага на несколько секунд" },
   gun: { n: "ствол дрона", need: { scrap: 2, magnet: 1, cap: 1 }, wt: 0.9, d: "сам стреляет по врагам рядом" },
   arm: { n: "манипулятор", need: { servo: 1, scrap: 2 }, wt: 1.2, d: "вне боя понемногу чинит оружие, броню и каркас" },
   screen: { n: "защитный экран", need: { panel: 2, ceramic: 1 }, wt: 2, d: "принимает на себя четверть урона по вам" },
-  cargo: { n: "грузовой захват", need: { servo: 1, magnet: 1, scrap: 2 }, wt: 1.3, d: "плюс " + CARGO_KG + " килограммов к пределу, пока дрон в воздухе" },
+  cargo: { n: "грузовой модуль", need: { servo: 1, magnet: 1, scrap: 2 }, wt: 1.3, tier: 2, rankWeights: [1.3, 2.5, 4], d: "съёмная платформа с тремя ступенями. К грузоподъёмности прибавляется " + CARGO_KG.join(", ") + " килограммов соответственно. Работает и при пустой батарее" },
   scanner: { n: "поисковый блок", need: { optic: 2, chip: 1, relay: 1 }, wt: 0.5, d: "называет направление и расстояние до вещей, верстака, снабжения и капсулы по открытой линии" },
   battery: { n: "блок накопителей", need: { cell: 2, cap: 3, wire: 2 }, wt: 1, en: BATTERY, d: "плюс " + BATTERY + " к ёмкости батареи. После монтажа нужна подзарядка" },
-  boost: { n: "тяговый блок", need: { servo: 2, magnet: 2, wire: 2, cell: 1 }, wt: 2, tier: 3, requires: "cargo", d: "плюс " + BOOST_KG + " килограммов к захвату. Один заряд за шаг, когда груз превышает предел без тяги" },
+  boost: { n: "тяговый блок", need: { servo: 2, magnet: 2, wire: 2, cell: 1 }, wt: 2, tier: 3, requiresCarrier: true,
+    d: "с обычным грузовым модулем даёт ещё 15, 25 или 35 килограммов. С грузовой платформой прибавляет столько же процентов от её грузоподъёмности сверх базовых 200 кг, в пределах прочности корпуса. Тратит единицу заряда за шаг с дополнительной тягой" },
   medic: { n: "медицинский блок", need: { servo: 1, chip: 1, gel: 1, rubber: 1 }, wt: 1, tier: 3, d: "вне боя восстанавливает до 24 здоровья и останавливает кровотечение за бинт и энергию" },
   shell: { n: "усиленный кожух", need: { ceramic: 2, panel: 1, scrap: 2 }, wt: 2.2, tier: 3, hp: SHELL_HP, d: "плюс " + SHELL_HP + " к прочности дрона. После монтажа корпус можно залатать" },
   nerve: { n: "нервный узел Нижних", need: { dp_nerve: 1 }, wt: 0.4, tier: 6, d: "добавляет гнездо для модуля и занимает разъём ядра" }
 };
 var catalog = LAB.droneCatalog;
+var CARGO_FRAMES = catalog.cargoFrames, CARGO_PROFILES = catalog.cargoProfiles;
 Object.keys(catalog.existing).forEach(function (k) { Object.assign(MODS[k], catalog.existing[k]); });
 Object.assign(MODS, catalog.equipment);
 var MOD_ORDER = Object.keys(MODS);
@@ -63,10 +67,10 @@ var RANK_EFFECTS = {
   gun: { n: "Урон ствола в процентах от базового", v: [100, 122, 144] },
   arm: { n: "Предел восстановления состояния снаряжения", v: [85, 92, 100] },
   screen: { n: "Доля принятого урона в процентах", v: [25, 30, 35] },
-  cargo: { n: "Дополнительные килограммы груза", v: [CARGO_KG, 14, 16] },
+  cargo: { n: "Постоянная прибавка в килограммах", v: CARGO_KG },
   scanner: { n: "Радиус поиска в шагах", v: [10, 12, 14] },
   battery: { n: "Дополнительная ёмкость", v: [BATTERY, 55, 70] },
-  boost: { n: "Килограммы дополнительной тяги", v: [BOOST_KG, 10, 12] },
+  boost: { n: "Килограммы дополнительной тяги", v: BOOST_KG },
   medic: { n: "Предел лечения за бинт", v: [24, 30, 36] },
   shell: { n: "Дополнительная прочность корпуса", v: [SHELL_HP, 24, 32] }
 };
@@ -151,12 +155,16 @@ function targetFlags(target) {
 }
 function modId(k, rank) { return "dr_mod_" + k + (rank > 1 ? "_r" + rank : ""); }
 function mark(k, rank) { return cap1(MODS[k].n) + (RANK_EFFECTS[k] ? ", ступень " + rank : ""); }
+function modWeight(k, rank) {
+  var md = MODS[k];
+  return (md.rankWeights && md.rankWeights[rank - 1]) || md.wt;
+}
 MOD_ORDER.forEach(function (k) {
   var md = MODS[k];
   var max = RANK_EFFECTS[k] ? 3 : 1;
   for (var r = 1; r <= max; r++) {
     var effect = RANK_EFFECTS[k];
-    LAB.ITEMS[modId(k, r)] = { n: mark(k, r), kind: "eng", cat: "eng", wt: md.wt, nosell: 1,
+    LAB.ITEMS[modId(k, r)] = { n: mark(k, r), kind: "eng", cat: "eng", wt: modWeight(k, r), nosell: 1,
       desc: (effect ? effect.n + ": " + effect.v[r - 1] : cap1(md.d)) + ". Устанавливается у верстака в меню дрона." };
   }
 });
@@ -164,6 +172,12 @@ var NAMES = ["Жук", "Шмель", "Сверчок", "Стриж", "Светл
 
 function D() { var g = G(); return g.drone || null; }
 function has() { return !!D(); }
+function isCarrier(k) { return !!(MODS[k] && MODS[k].exclusive === "cargo"); }
+function cargoModel(d) { return d.mods.find(isCarrier) || ""; }
+function acceptsBoost(k) { return !!k && k !== "sling"; }
+function chassisRank(d) { return d && Number.isInteger(d.cargoFrame) && CARGO_FRAMES[d.cargoFrame] ? d.cargoFrame : 0; }
+function chassis(d) { return CARGO_FRAMES[chassisRank(d)]; }
+function cargoProfile(d, k) { return CARGO_PROFILES[d.cargoProfiles && d.cargoProfiles[k]] || CARGO_PROFILES.standard; }
 /* (после 4.6) интеллект 25 (основа, без плодов — гнёзда не мигают) — ещё одно гнездо: stats.js */
 function slots(d) { d = d || D(); if (!d) return 0; return 2 + ((d.lvl || 1) >= 5 ? 1 : 0) + (MS() && MS().has("drones") ? 1 : 0) + (d.mods.indexOf("nerve") >= 0 ? 1 : 0) + ((G().mind || 10) >= 25 ? 1 : 0); }
 function usedSlots(d) { return d.mods.filter(function (m) { return m !== "nerve"; }).length; }
@@ -264,7 +278,8 @@ function socketIssue(k, d) {
     return other && ((md.mount && other.mount) || (md.exclusive && md.exclusive === other.exclusive));
   });
   if (conflict) return "сначала снимите «" + MODS[conflict].n + "»";
-  if (md.requires && d.mods.indexOf(md.requires) < 0) return "сначала установите " + MODS[md.requires].n;
+  if (md.requiresCarrier && !acceptsBoost(cargoModel(d))) return "сначала установите грузовой модуль или платформу";
+  if (md.frame > chassisRank(d)) return "сначала усилите корпус до комплекта «" + CARGO_FRAMES[md.frame].n + "»";
   if (k !== "nerve" && usedSlots(d) >= slots(d)) return "все гнёзда заняты";
   return "";
 }
@@ -279,8 +294,8 @@ function addMod(k, rank) {
   if (rank !== 1 && (!RANK_EFFECTS[k] || !RANK_EFFECTS[k].v[rank - 1] || !inv[modId(k, rank)])) return false;
   var id = modId(k, rank);
   var prepared = inv[id] > 0, need = materialCost(md);
-  var why = socketIssue(k, d) || (!prepared && requirements(md).why) || canWork(prepared ? 2 : (md.tier || 2), prepared ? null : need);
-  if (!why && rank > 1 && d.lvl < (rank === 2 ? 3 : 6)) why = "нужна ступень дрона " + (rank === 2 ? 3 : 6);
+  var why = socketIssue(k, d) || (!prepared && requirements(md).why) || canWork(prepared && !md.lift ? 2 : (md.tier || 2), prepared ? null : need);
+  if (!why && d.lvl < RANK_LEVEL[rank - 1]) why = "нужна ступень дрона " + RANK_LEVEL[rank - 1];
   if (why) return moduleError(md, why);
   if (prepared) inv[id]--;
   else W().take(need);
@@ -289,7 +304,7 @@ function addMod(k, rank) {
   if (md.en || md.hp) updateLimits(d, k, effect(k, d));
   worked(prepared ? 2 : 4, prepared ? 0 : 4);
   recorded("mount", k);
-  say("Установлено. " + mark(k, rank) + "."); loadChanged();
+  say("Установлено. " + mark(k, rank) + "." + cargoNotice(md)); loadChanged();
   return true;
 }
 function delMod(k) {
@@ -297,8 +312,7 @@ function delMod(k) {
   if (!d || !md || d.mods.indexOf(k) < 0) return false;
   var why = canWork(2);
   if (why) return moduleError(md, why);
-  var dependant = d.mods.find(function (mod) { return MODS[mod] && MODS[mod].requires === k; });
-  if (dependant) return moduleError(md, "сначала снимите модуль «" + MODS[dependant].n + "»");
+  if (isCarrier(k) && acceptsBoost(k) && d.mods.indexOf("boost") >= 0) return moduleError(md, "сначала снимите тяговый блок");
   if (k === "nerve" && usedSlots(d) > slots(d) - 1) return moduleError(md, "сначала освободите одно гнездо");
   var rank = modRank(d, k);
   if (md.en || md.hp) updateLimits(d, k, -effect(k, d));
@@ -307,29 +321,37 @@ function delMod(k) {
   giveMod(k, rank);
   worked(2, 0);
   recorded("remove", k);
-  say("В рюкзаке. " + mark(k, rank) + "."); loadChanged();
+  say("В рюкзаке. " + mark(k, rank) + "." + cargoNotice(md)); loadChanged();
   return true;
 }
 function upgradeDetails(k, rank) {
   var md = MODS[k], need = Object.assign({}, md.need);
   need.wire = (need.wire || 0) + rank - 1;
   if (rank === 3) need.chip = (need.chip || 0) + 1;
-  return { need: need, tier: Math.max(md.tier || 2, rank + 1), level: rank === 2 ? 3 : 6 };
+  if (k === "cargo" || md.lift) {
+    need.panel = (need.panel || 0) + rank - 1;
+    if (rank === 3) need.relay = 1;
+  }
+  var depth = md.lift ? md.lift.depths[rank - 1] : md.depth;
+  var shop = md.lift ? W().shopMin(depth) : 0;
+  if (md.lift && depth > 100) need.dp_alloy = (need.dp_alloy || 0) + rank;
+  return { need: need, depth: depth, tier: Math.max(md.tier || 2, rank + 1, shop), level: Math.max(md.level || 1, RANK_LEVEL[rank - 1]) };
 }
 function upgradeMod(k) {
   var d = D(), md = MODS[k], stats = RANK_EFFECTS[k];
   if (!d || !stats || d.mods.indexOf(k) < 0 || modRank(d, k) >= 3) return false;
   if (d.wreck) return moduleError(md, "сначала почините дрона");
   var from = modRank(d, k), target = from + 1, upgrade = upgradeDetails(k, target);
-  var why = requirements(MODS[k]).why || (d.lvl < upgrade.level ? "нужна ступень дрона " + upgrade.level : canWork(upgrade.tier, upgrade.need));
+  var need = md.lift ? materialCost(upgrade) : upgrade.need;
+  var why = requirements(upgrade).why || canWork(upgrade.tier, need);
   if (why) return moduleError(md, why);
-  W().take(upgrade.need);
+  W().take(need);
   if (!d.ranks) d.ranks = {};
   d.ranks[k] = target;
   updateLimits(d, k, stats.v[target - 1] - stats.v[from - 1]);
   worked(4 + target * 2, 4 + target);
   recorded("tune", k + "_r" + target, k);
-  say(mark(k, target) + ". " + stats.n + ": " + effect(k, d) + "."); loadChanged();
+  say(mark(k, target) + ". " + stats.n + " " + effect(k, d) + "." + cargoNotice(md)); loadChanged();
   return true;
 }
 function setRole(k) {
@@ -377,11 +399,44 @@ function tuneModule(k, id) {
   else delete d.tuning[k];
   worked(6, change ? 3 : 0);
   recorded(change ? "tune" : "remove", id || k, k);
-  say(change ? "Установлена модификация «" + change.n + "»." : "Модификация отключена.");
+  say((change ? "Установлена модификация «" + change.n + "»." : "Модификация отключена.") + cargoNotice(md));
   loadChanged();
   return true;
 }
-function repairNeed(d) { return d.wreck ? { servo: 1, scrap: 3, wire: 1 } : (d.hp < d.hpMax ? { scrap: 1, wire: 1 } : null); }
+function reinforceChassis() {
+  var d = D(), rank = chassisRank(d), next = CARGO_FRAMES[rank + 1];
+  if (!d || !next) return false;
+  var need = materialCost(next), why = d.wreck ? "сначала почините дрона" : requirements(next).why || canWork(next.tier, need);
+  if (why) return moduleError(next, why);
+  W().take(need);
+  d.cargoFrame = rank + 1;
+  var hp = next.hp - CARGO_FRAMES[rank].hp;
+  d.hpMax += hp;
+  d.hp += hp;
+  worked(12 + 4 * rank, 8 + rank);
+  recorded("mount", "cargo");
+  say("Корпус усилен. «" + next.n + "» поднимает допустимый груз до " + cargoKg(next.limit) + ". " + cargoLine() + ".");
+  loadChanged();
+  return true;
+}
+function specializeCargo(k, id) {
+  var d = D(), md = MODS[k], next = CARGO_PROFILES[id];
+  if (!d || !md || !md.lift || !hasMod(k) || !next || cargoProfile(d, k) === next) return false;
+  var why = canWork(md.tier, next.need);
+  if (why) return moduleError(md, why);
+  if (next.need) W().take(next.need);
+  if (!d.cargoProfiles) d.cargoProfiles = {};
+  d.cargoProfiles[k] = id;
+  worked(5, next.need ? 3 : 0);
+  recorded("tune", id, k);
+  say("Выбрана специализация «" + next.n + "». " + cargoLine() + ".");
+  loadChanged();
+  return true;
+}
+function repairNeed(d) {
+  if (d.wreck) return Object.assign({ servo: 1, scrap: 3, wire: 1 }, chassis(d).repair);
+  return d.hp < d.hpMax ? { scrap: 1, wire: 1 } : null;
+}
 function repair() {
   var d = D(); if (!d) { say("Дрона нет."); return false; }
   var need = repairNeed(d);
@@ -414,28 +469,77 @@ function scrapDrone() {
 }
 
 /* ════════ В ДЕЛЕ ════════ */
-function packedWeight(d) { return d.mods.reduce(function (sum, k) { return sum + (MODS[k] ? MODS[k].wt : 0); }, 3.5); }
+function packedWeight(d) {
+  return d.mods.reduce(function (sum, k) { return sum + (MODS[k] ? modWeight(k, modRank(d, k)) : 0); }, 3.5 + chassis(d).wt);
+}
 function carriedWeight() { var d = D(); return d && !active() ? packedWeight(d) : 0; }
-function cargoKg(n) { return LAB.load ? LAB.load.kg(n) : n + " кг"; }
-function boostCapacity() { var d = D(); return active() && d.en >= 1 && hasMod("cargo") && hasMod("boost") ? effect("boost", d) + Math.floor(adjust("haul", "boost")) : 0; }
-function cargoModel() { return hasMod("cargo") ? "cargo" : hasMod("sling") ? "sling" : ""; }
+function cargoKg(n) {
+  if (n < 1000) return LAB.load.kg(n);
+  var tonnes = Math.floor(n / 1000), rest = n % 1000;
+  return tonnes + " " + LAB.plural(tonnes, "тонна", "тонны", "тонн") + (rest ? " " + LAB.load.kg(rest) : "");
+}
+function liftSpec(k, rank) {
+  return "Штатный предел " + cargoKg(RANK_EFFECTS[k].v[rank - 1]) + ", резерв " + cargoKg(MODS[k].lift.reserve[rank - 1]) + ".";
+}
+function cargoState() {
+  var d = D(), k = cargoModel(d), md = MODS[k], lift = md && md.lift;
+  var ceiling = chassis(d).limit, extra = k ? Math.floor(adjust("capacity", k)) : 0;
+  var rated = BASE_CARGO_KG, reserve, draw = 0, boost = 0, profile;
+  if (lift) {
+    profile = cargoProfile(d, k);
+    rated = Math.floor(effect(k, d) * profile.rated * (1 + adjust("payload", k)) + extra + 1e-6);
+    rated = Math.min(ceiling, rated);
+    reserve = Math.min(rated, Math.floor(lift.reserve[modRank(d, k) - 1] * profile.reserve * (1 + adjust("payloadReserve", k)) + 1e-6));
+    if (reserve < rated) draw = Math.max(1, lift.draw + profile.draw - Math.floor(adjust("payloadSave", k)));
+  } else {
+    if (md) rated = Math.min(ceiling, BASE_CARGO_KG + effect(k, d) + extra);
+    reserve = rated;
+  }
+  var passive = d.en >= draw ? rated : reserve;
+  if (acceptsBoost(k) && hasMod("boost") && d.en >= draw + 1 && rated < ceiling) {
+    var baseBoost = effect("boost", d);
+    if (lift) baseBoost = Math.floor((rated - BASE_CARGO_KG) * baseBoost / 100);
+    boost = Math.max(0, Math.min(ceiling - rated, baseBoost + Math.floor(adjust("haul", "boost"))));
+  }
+  return { model: k, rated: rated, reserve: reserve, draw: draw, passive: passive, boost: boost, ceiling: ceiling, profile: profile };
+}
 function carryCapacity(withBoost) {
   if (!active()) return 0;
-  var k = cargoModel();
-  var passive = k ? effect(k) + Math.floor(adjust("capacity", k)) : 0;
-  return BASE_CARGO_KG + passive + (withBoost === false ? 0 : boostCapacity());
+  var s = cargoState();
+  return s.passive + (withBoost === false ? 0 : s.boost);
 }
+function cargoLine() {
+  if (!active()) return "Сейчас весь груз на герое. Исправный корпус в воздухе несёт " + cargoKg(BASE_CARGO_KG);
+  var s = cargoState(), model = s.model;
+  var current = "Грузоподъёмность " + cargoKg(s.passive + s.boost) + ". ";
+  if (s.profile) {
+    return current + cap1(MODS[model].n) + ", предел " + cargoKg(s.rated) + ", резерв " + cargoKg(s.reserve) +
+      ". Корпус рассчитан на " + cargoKg(s.ceiling) + ". Специализация «" + s.profile.n + "»" +
+      (s.draw ? ". Силовой контур расходует " + s.draw + " энергии за шаг сверх резерва" : "") +
+      (s.boost ? ". Тяговый блок плюс " + cargoKg(s.boost) : "") +
+      (s.passive < s.rated ? ". Платформа работает на резерве" : "");
+  }
+  var parts = ["корпус " + cargoKg(BASE_CARGO_KG)];
+  if (model) parts.push(MODS[model].n + " плюс " + cargoKg(s.passive - BASE_CARGO_KG));
+  if (s.boost) parts.push("тяговый блок плюс " + cargoKg(s.boost));
+  return current + cap1(parts.join(", ")) +
+    (!s.boost && hasMod("boost") && s.rated < s.ceiling ? ". Для тягового блока нужен заряд" : "");
+}
+function cargoNotice(md) { return md.group === "cargo" ? " " + cargoLine() + "." : ""; }
 function overloadHelp(metric) {
   if (!active()) return 0;
-  var base = metric === "stride" && cargoModel() && hasMod("stabilizer") ? effect("stabilizer") :
+  var k = cargoModel(D());
+  var base = metric === "stride" && k && hasMod("stabilizer") ? effect("stabilizer") :
     metric === "noise" && hasMod("baffle") ? effect("baffle") : 0;
-  return Math.floor(base + adjust(metric, ["cargo","sling","stabilizer","boost","baffle"]));
+  return Math.floor(base + adjust(metric, [k,"stabilizer","boost","baffle"]));
 }
 function cargoRecovery() {
   var d = D();
   if (!d || d.wreck) return "";
   if (!d.out) return "Можно выпустить дрона через меню команд.";
-  return hasMod("boost") && d.en < 1 ? "Можно подзарядить дрона энергобатареей через меню команд." : "";
+  var s = cargoState();
+  return s.passive < s.rated || (hasMod("boost") && s.rated < s.ceiling && d.en < s.draw + 1) ?
+    "Можно подзарядить дрона энергобатареей через меню команд." : "";
 }
 function charge(n) {
   var d = D(); if (!d) return;
@@ -446,18 +550,38 @@ function charge(n) {
 function spendCharge(n) {
   var d = D();
   if (!d || (d.en || 0) < n) return false;
-  var before = carryCapacity(), boost = boostCapacity();
+  var before = active() ? cargoState() : null;
   d.en -= n;
   if (d.en <= 10 && d.en + n > 10) sayq(cap1(name()) + ": энергии мало. Подзарядите энергобатареей или у капсулы.");
-  var current = carryCapacity();
-  if (boost && !boostCapacity()) sayq("Тяговый блок разряжен. Грузоподъёмность дрона сейчас " + cargoKg(current) + ".");
-  if (before !== current) loadChanged();
+  if (before) {
+    var after = cargoState(), current = after.passive + after.boost;
+    if (before.passive > after.passive && after.passive < after.rated) {
+      sayq("Платформа перешла на аварийные опоры. Дрон держит " + cargoKg(current) + ". Для полной тяги нужна подзарядка.");
+    } else if (before.boost && !after.boost) {
+      sayq("Тяговый блок разряжен. Грузоподъёмность дрона сейчас " + cargoKg(current) + ".");
+    }
+    if (before.passive + before.boost !== current) loadChanged();
+  }
   return true;
 }
 function spend(n, command) { return spendCharge(energyCost(n, command)); }
+function liftInUse(s, l) { return s.passive > s.reserve && l.total() > l.personalCapacity() * 0.5 + s.reserve; }
+function motionNoise() {
+  var l = LAB.load;
+  if (!active() || !l) return 0;
+  var s = cargoState();
+  if (!liftInUse(s, l)) return 0;
+  var heavier = l.total() - l.personalCapacity() * 0.5 - s.reserve;
+  return Math.max(0, Math.min(4, 1 + Math.floor(heavier / 1000)) + s.profile.noise - Math.floor(adjust("noise", s.model)));
+}
 function onStep() {
-  var bonus = boostCapacity(), l = LAB.load;
-  if (bonus && l && l.total() > l.capacity() - bonus) spendCharge(1);
+  var l = LAB.load;
+  if (active() && l) {
+    var s = cargoState();
+    var liftCharge = liftInUse(s, l) ? s.draw : 0;
+    var boostCharge = s.boost && l.total() > l.personalCapacity() + s.passive ? 1 : 0;
+    if (liftCharge + boostCharge) spendCharge(liftCharge + boostCharge);
+  }
   var d = D(), cur = gm().CUR;
   if (active() && l && l.tier() >= 2 && (hasMod("stabilizer") || hasMod("baffle") || hasMod("sling")) && (G().stats && G().stats.steps % 6 === 0)) recorded("move", "cargo");
   if (!active() || !hasMod("regen") || !cur || !cur.key) return;
@@ -718,23 +842,57 @@ function line(d) {
   var focus = role ? ". Направление «" + programFor(d, role).n + "», ступень " + directionRank(d, role.direction) : "";
   return cap1(name(d)) + ": ступень " + (d.lvl || 1) + ", " + (d.wreck ? "сбит" : (d.out ? "в воздухе" : "свёрнут") + ", здоровье " + Math.round(d.hp) + " из " + d.hpMax) +
     ", энергия " + Math.round(d.en) + " из " + d.enMax + ". Профиль «" + (role ? role.n : "Универсальный") + "»" + focus + ". Занято гнёзд " + usedSlots(d) + " из " + slots(d) + ". Модули: " + (listed.length ? listed.map(function (k) { return mark(k, modRank(d, k)); }).join(". ") : "нет") +
-    ". Грузоподъёмность дрона сейчас: " + cargoKg(carryCapacity());
+    ". " + cargoLine();
 }
 function charLine() { var d = D(); return d ? line(d) + "." : ""; }
 function benchLabel() { return D() ? "Дрон-спутник: модули и починка — " + short() : "Дрон-спутник: сборка корпуса и модулей"; }
 function back() { return { label: "Назад", close: true, fn: function () {} }; }
+function cargoFrameMenu() {
+  var items = function () {
+    var rank = chassisRank(D()), fitted = CARGO_FRAMES[rank], next = CARGO_FRAMES[rank + 1];
+    var info = fitted.n + ". Предел корпуса " + cargoKg(fitted.limit) + ". Без платформы корпус несёт " + cargoKg(BASE_CARGO_KG) + ".";
+    var out = [{ label: info, info: true, keep: true, fn: function () { say(info); } }];
+    if (next) {
+      out.push({ label: "Усилить корпус. «" + next.n + "» до " + cargoKg(next.limit) + ". " +
+        requirementLine(next) + " Детали " + W().costText(materialCost(next)) + ".", keep: true, fn: reinforceChassis });
+    }
+    return out.concat(back());
+  };
+  menu("Грузовой корпус", items(), { keep: true, rebuild: items });
+}
+function cargoProfileMenu(k) {
+  var items = function () {
+    var d = D(), current = cargoProfile(d, k);
+    return Object.keys(CARGO_PROFILES).map(function (id) {
+      var profile = CARGO_PROFILES[id];
+      return { label: profile.n + ". " + profile.d + (profile === current ? " Активна." :
+        profile.need ? " Детали " + W().costText(profile.need) + "." : ""), keep: true,
+        fn: function () { specializeCargo(k, id); } };
+    }).concat(back());
+  };
+  menu("Специализация грузовой платформы", items(), { keep: true, rebuild: items });
+}
 function moduleMenu(k) {
   var md = MODS[k];
   var items = function () {
     var d = D(), on = d && d.mods.indexOf(k) >= 0, effectInfo = RANK_EFFECTS[k], rank = on ? modRank(d, k) : 1;
     var ranks = (effectInfo ? [1, 2, 3] : [1]).filter(function (r) { return G().inv[modId(k, r)] > 0; });
-    var out = [{ label: cap1(md.d) + ". Масса: " + LAB.load.kg(md.wt) + (on && effectInfo ? ". Стоит ступень " + rank + ". " + effectInfo.n + ": " + effectInfo.v[rank - 1] : "") + ".", info: true, keep: true, fn: function () { say(cap1(md.d) + "."); } }];
+    var info = cap1(md.d) + ". Масса " + LAB.load.kg(modWeight(k, rank)) + ".";
+    if (on && effectInfo) info += " Стоит ступень " + rank + ".";
+    if (md.lift) info += " " + liftSpec(k, rank);
+    else if (on && effectInfo) info += " " + effectInfo.n + " " + effectInfo.v[rank - 1] + ".";
+    var out = [{ label: info, info: true, keep: true, fn: function () { say(info); } }];
     out.push({ label: "Собрать в запас. " + requirementLine(md) + " Детали: " + W().costText(materialCost(md)) + ".", keep: true, fn: function () { craftMod(k); } });
     if (on) {
       if (effectInfo && rank < 3) {
         var next = upgradeDetails(k, rank + 1);
-        out.push({ label: "Улучшить до ступени " + (rank + 1) + ". " + effectInfo.n + ": " + effectInfo.v[rank] + ". Дрон ступени " + next.level + ", верстак ступени " + next.tier + ". Детали: " + W().costText(next.need) + ".", keep: true, fn: function () { upgradeMod(k); } });
+        var action = k === "cargo" ? "Расширить грузовой модуль до ступени " : md.lift ? "Расширить платформу до ступени " : "Улучшить до ступени ";
+        var nextWeight = md.rankWeights ? " Масса после расширения " + LAB.load.kg(modWeight(k, rank + 1)) + "." : "";
+        var nextSpec = md.lift ? liftSpec(k, rank + 1) : effectInfo.n + " " + effectInfo.v[rank] + ".";
+        out.push({ label: action + (rank + 1) + ". " + nextSpec + nextWeight +
+          " " + requirementLine(next) + " Детали " + W().costText(md.lift ? materialCost(next) : next.need) + ".", keep: true, fn: function () { upgradeMod(k); } });
       }
+      if (md.lift) out.push({ label: "Специализация платформы. «" + cargoProfile(d, k).n + "».", fn: function () { cargoProfileMenu(k); } });
       if (compatibleTuning(k).length) {
         var tune = d.tuning && catalog.modifications[d.tuning[k]];
         out.push({ label: "Модификации." + (tune ? " Действует «" + tune.n + "»." : ""), fn: function () { tuningMenu(k); } });
@@ -744,9 +902,13 @@ function moduleMenu(k) {
     else if (d) {
       var why = socketIssue(k, d);
       ranks.forEach(function (r) {
-        out.push({ label: "Установить из рюкзака. " + mark(k, r) + ", в наличии " + G().inv[modId(k, r)] + (why ? ". Сейчас: " + why : "") + ".", keep: true, fn: function () { addMod(k, r); } });
+        var reason = why || (d.lvl < RANK_LEVEL[r - 1] ? "нужна ступень дрона " + RANK_LEVEL[r - 1] : "");
+        out.push({ label: "Установить из рюкзака. " + mark(k, r) + ", в наличии " + G().inv[modId(k, r)] + (reason ? ". Сейчас " + reason : "") + ".", keep: true, fn: function () { addMod(k, r); } });
       });
-      if (!ranks.length) out.push({ label: "Собрать и установить" + (why ? ". Сейчас: " + why : "") + ".", keep: true, fn: function () { addMod(k); } });
+      if (ranks.indexOf(1) < 0) {
+        out.push({ label: "Собрать и установить" + (ranks.length ? " модуль первой ступени" : "") +
+          (why ? ". Сейчас " + why : "") + ".", keep: true, fn: function () { addMod(k, 1); } });
+      }
     }
     return out.concat(back());
   };
@@ -856,6 +1018,7 @@ function benchMenu(et) {
     if (!d) items.push({ label: "Собрать дрона: " + W().costText(NEED), keep: true, fn: function () { build(); } });
     else {
       items.push({ label: line(d), info: true, keep: true, fn: function () { say(line(d) + "."); } });
+      items.push({ label: "Грузовой корпус. Допустимая нагрузка " + cargoKg(chassis(d).limit) + ".", fn: cargoFrameMenu });
       items.push({ label:"Специализации, " + Object.keys(ROLES).length, fn:roleMenu });
       items.push({ label:"Направления, " + Object.keys(catalog.programs).length, fn:directionsMenu });
       if (d.mods.length) items.push({ label:"Установленное оборудование, " + d.mods.length, fn:function () {
@@ -871,7 +1034,8 @@ function benchMenu(et) {
       if (rn) items.push({ label: (d.wreck ? "Починить сбитого дрона: " : "Залатать дрона: ") + W().costText(rn), keep: true, fn: function () { repair(); } });
       items.push({ label: "Разобрать корпус. Блок управления и модули вернутся", fn: function () {
         menu("Разборка дрона", [
-          { label: "Разобрать. Опыт этого корпуса будет потерян", keep: true, fn: function () { if (scrapDrone()) { LAB.ui.closeTop(true); LAB.ui.rebuildTop(); } } },
+          { label: "Разобрать. Опыт корпуса будет потерян." + (chassisRank(d) ? " Грузовое усиление придётся собрать заново." : ""),
+            keep: true, fn: function () { if (scrapDrone()) { LAB.ui.closeTop(true); LAB.ui.rebuildTop(); } } },
           back()
         ]);
       } });
@@ -951,7 +1115,7 @@ LAB.drone = {
   effect: effect, adjust: adjust, delay: delay, spend: spend, hostiles: hostiles, targetFlags: targetFlags, hitBack: hitBack,
   recorded: recorded, save: save, markSeconds: markSeconds, overloadHelp: overloadHelp, directionRank: directionRank, unlockDepth: unlockDepth,
   hurt: hurt, onHurt: onHurt, onStep: onStep, tick: tick, onXP: onXP, commandSaving: commandSaving, energyCost: energyCost,
-  carriedWeight: carriedWeight, carryCapacity: carryCapacity, cargoRecovery: cargoRecovery,
+  carriedWeight: carriedWeight, carryCapacity: carryCapacity, cargoRecovery: cargoRecovery, motionNoise: motionNoise,
   pack: pack, charge: charge, chargeBat: chargeBat, chargePrice: chargePrice, line: line, charLine: charLine, benchLabel: benchLabel, benchMenu: benchMenu,
   cmdMenu: cmdMenu, invItems: invItems, stockCount: stockCount, quick: quick
 };
