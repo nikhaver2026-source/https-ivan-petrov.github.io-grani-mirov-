@@ -43,6 +43,59 @@ LAB.ui = {
 };
 LAB.deepLevelsN();
 LAB.enrichLevelFoes();
+const defaultDifficulty = LAB.settings.difficulty;
+for (const [difficulty, mode] of LAB.DIFF.entries()) {
+  if (!mode) continue;
+  LAB.settings.difficulty = difficulty;
+  g.newGame();
+  LAB.combat.stop();
+  assert.equal(g.G.diff, difficulty);
+  assert.equal(load.capacity(), 50, mode.n);
+  assert.match(load.line(), /из 50 килограммов/);
+}
+
+// Изолируем пороги от веса стартового комплекта.
+const startingPack = { inv: g.G.inv, weapons: g.G.weapons, armors: g.G.armors, ammo: g.G.ammo };
+g.G.weapons = [];
+g.G.armors = [];
+g.G.ammo = {};
+for (const [weight, tier] of [[25, 0], [25.1, 1], [50, 1], [50.1, 2], [62.5, 2], [62.6, 3], [75, 3], [75.1, 4]]) {
+  const kg = Math.floor(weight);
+  g.G.inv = { lead: kg, relay: Math.round((weight - kg) * 10) };
+  assert.equal(load.total(), weight);
+  assert.equal(load.tier(), tier, weight + " кг");
+  assert.equal(load.canMove(), tier < 4);
+  assert.equal(load.noise() > 0, tier === 2 || tier === 3);
+}
+g.G.inv = { lead: 74 };
+assert.equal(load.canTake(1), true);
+assert.equal(load.canTake(1.1), false);
+const startFloor = g.CUR.fs;
+const drops = startFloor.drops;
+const droppedLead = { kind: "item", item: "lead", x: g.G.x, y: g.G.y };
+startFloor.drops = [
+  { ...droppedLead, id: "test-lead-fits" },
+  { ...droppedLead, id: "test-lead-over" }
+];
+g.autoPickup();
+assert.equal(g.G.inv.lead, 75);
+assert.equal(startFloor.taken["test-lead-fits"], 1);
+assert.equal(startFloor.taken["test-lead-over"], undefined);
+assert.ok(messages.some(text => /Не поднять: .*пределе 50 килограммов/.test(text)));
+startFloor.drops = drops;
+Object.assign(g.G, startingPack);
+assert.equal(g.saveSlot(1), true);
+const legacyStart = JSON.parse(storage.get(g.slotKey(1)));
+delete legacyStart.g.loadInit;
+legacyStart.g.inv.lead = 40;
+storage.set(g.slotKey(1), JSON.stringify(legacyStart));
+assert.equal(g.loadSlot(1), true);
+assert.equal(load.capacity(), 50);
+assert.equal(g.G.inv.lead, 40);
+assert.equal(load.lockerWt(), 0);
+console.log("✓ Стартовые 50 кг на всех сложностях, пороги нагрузки и сохранение прежней версии");
+
+LAB.settings.difficulty = defaultDifficulty;
 g.newGame();
 LAB.combat.stop();
 g.enterFloor(2, 3, "down", true);
@@ -54,7 +107,7 @@ hero.event = "norm";
 hero.eventUntil = 1e9;
 
 // Предпросмотр характеристик и расход очков.
-assert.equal(load.capacity(), 30);
+assert.equal(load.capacity(), 50);
 hero.xp = 0;
 const xpUntilSix = [1, 2, 3, 4, 5].reduce((sum, level) => sum + LAB.xpNeed(level), 0);
 g.gainXP(xpUntilSix);
@@ -72,6 +125,7 @@ assert.equal(stats.S().pts, 5);
 top().items[0].fn();
 assert.equal(stats.S().pts, 0);
 assert.ok(stats.MAIN.every(key => stats.base(key) === 11));
+assert.equal(load.capacity(), 52.8);
 
 hero.agi = 10;
 delete stats.S().day.agi;

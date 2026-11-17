@@ -145,11 +145,11 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     C.stop(); LAB.ui.closeAll(); g.newGame(); C.stop(); LAB.ui.closeAll();
     g.enterFloor(2, 3, "down", true); C.stop(); C.foes().forEach(f => { f.dead = true; });
     const G = g.G; G.hp = G.hpMax = 9999; said();
-    out.start = L.tier() <= 1 && L.capacity() === 30;
+    out.start = L.tier() <= 1 && L.capacity() === 50;
     /* перегруз и неподъёмно */
-    G.inv.scrap = 45; L.after(); await wait(10);
+    G.inv.scrap = Math.ceil((L.capacity() * 1.1 - L.total()) / L.itemWt("scrap")); L.after(); await wait(10);
     out.overTier = L.tier() === 2 && L.gapK() > 1 && L.noise() > 0 && L.wakeK() > 1 && L.dodgePen() > 0 && /перегруз/.test(said());
-    G.inv.scrap = 100; L.after(); await wait(10);
+    G.inv.scrap = Math.ceil(L.capacity() * 1.6 / L.itemWt("scrap")); L.after(); await wait(10);
     const x0 = G.x, y0 = G.y; said();
     out.stuck = L.tier() === 4 && !g.tryMove("N", false) && !g.tryMove("S", false) && G.x === x0 && G.y === y0 && /С места не сдвинуться/.test(said());
     /* лишнее с пола не поднять */
@@ -169,7 +169,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     L.status(); out.status = /Предел складывают: основа/.test(said());
     return out;
   });
-  ok(r2.start, "в начале: предел 30 кило, налегке или обычный ход");
+  ok(r2.start, "в начале: предел 50 кило, налегке или обычный ход");
   ok(r2.overTier, "перегруз: шаг реже и громче, усталость быстрее, уклонение хуже; «Эхо» говорит о перегрузе");
   ok(r2.stuck, "неподъёмно: ни шагу, «Эхо» говорит, сколько сбросить");
   ok(r2.refuse, "лишнего с пола не поднять");

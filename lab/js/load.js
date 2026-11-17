@@ -127,7 +127,7 @@ function rig() { return RIGS[G().loadRig - 1] || null; }
 function capOf(src) {
   var f, r;
   switch (src) {
-    case "base": return 10;
+    case "base": return 30; /* При стартовой силе 10 герой получает ещё 20 кг, всего 50 кг. */
     case "str":
     case "con": return statCapacity(src, hs(src));
     case "stam": return statCapacity(src, secS(src));
