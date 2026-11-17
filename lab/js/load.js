@@ -154,8 +154,15 @@ var TIER_N = ["налегке", "обычный ход", "перегруз", "т
 /* ── ПОСЛЕДСТВИЯ ── выносливость смягчает замедление */
 function stamSoft() { return 1 - Math.min(0.45, secS("stam") * 0.015); }
 function gapK() { var t = tier(); return t <= 1 ? 1 : 1 + (t === 2 ? 0.4 : 1) * stamSoft(); }
-function stepGap() { var t = tier(); return Math.round((t === 2 ? 120 : t === 3 ? 260 : 0) * stamSoft()); }
-function noise() { var t = tier(); return t === 2 ? 2 : t === 3 ? 4 : 0; }
+function stepGap() {
+  var t = tier(), base = t === 2 ? 120 : t === 3 ? 260 : 0;
+  if (!base) return 0;
+  return Math.max(35, Math.round(base * stamSoft()) - (LAB.drone ? LAB.drone.overloadHelp("stride") : 0));
+}
+function noise() {
+  var t = tier(), base = t === 2 ? 2 : t === 3 ? 4 : 0;
+  return base ? Math.max(0, base - (LAB.drone ? LAB.drone.overloadHelp("noise") : 0)) : 0;
+}
 function wakeK() { var t = tier(); return t === 2 ? 1.5 : t === 3 ? 2 : 1; }
 function dodgePen() { var t = tier(); return t === 2 ? 0.05 : t === 3 ? 0.1 : 0; }
 /* тяжёлое оружие: нужна сила; каркас и силовая броня добавляют силы рукам */

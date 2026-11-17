@@ -53,6 +53,9 @@ var MODS = {
   shell: { n: "усиленный кожух", need: { ceramic: 2, panel: 1, scrap: 2 }, wt: 2.2, tier: 3, hp: SHELL_HP, d: "плюс " + SHELL_HP + " к прочности дрона. После монтажа корпус можно залатать" },
   nerve: { n: "нервный узел Нижних", need: { dp_nerve: 1 }, wt: 0.4, tier: 6, d: "добавляет гнездо для модуля и занимает разъём ядра" }
 };
+var catalog = LAB.droneCatalog;
+Object.keys(catalog.existing).forEach(function (k) { Object.assign(MODS[k], catalog.existing[k]); });
+Object.assign(MODS, catalog.equipment);
 var MOD_ORDER = Object.keys(MODS);
 var RANK_EFFECTS = {
   sensor: { n: "Радиус разведки, без прибавки за ступень дрона", v: [12, 15, 18] },
@@ -67,12 +70,85 @@ var RANK_EFFECTS = {
   medic: { n: "Предел лечения за бинт", v: [24, 30, 36] },
   shell: { n: "Дополнительная прочность корпуса", v: [SHELL_HP, 24, 32] }
 };
-var ROLES = {
-  scout: { n: "Разведчик", d: "Радиус поиска припасов и разведки врагов выше на два шага." },
-  cargo: { n: "Грузовой", d: "Захват держит ещё два килограмма." },
-  support: { n: "Сервисный", d: "Перевязка расходует на две единицы энергии меньше, ремонт манипулятором — на одну." },
-  escort: { n: "Охранный", d: "Ствол наносит на двенадцать процентов больше урона." }
-};
+Object.assign(RANK_EFFECTS, catalog.ranks);
+var ROLES = catalog.roles;
+function directionRank(d, key) {
+  var xp = d.training && d.training[key] || 0;
+  return xp >= 1200 ? 3 : xp >= 400 ? 2 : 1;
+}
+function describe(metric, value, model, flag) {
+  var info = catalog.metrics[metric], amount = Math.round(value * info[1] * 100) / 100;
+  var condition = { armored: "против брони", living: "против живых", machine: "против машин", close: "в пределах двух шагов", dark: "на резервном питании" };
+  return info[0] + " " + (amount > 0 ? "+" : "") + String(amount).replace(".", ",") + info[2] +
+    (model ? " для «" + MODS[model].n + "»" : "") + (flag ? " " + condition[flag] : "");
+}
+function policy() { return catalog.difficulty[G().diff] || catalog.difficulty[1]; }
+function reached() {
+  var g = G();
+  return Object.keys(g.maxF || {}).reduce(function (n, k) { return Math.max(n, +k || 0); }, g.L || 1);
+}
+function unlockDepth(def) {
+  if (!def.depth || def.depth === 1) return 1;
+  return Math.max(1, Math.min(LAB.LEVELS_N || 100, def.depth + policy().offset));
+}
+function requirements(def) {
+  var depth = unlockDepth(def), d = D(), g = G();
+  var heroLevel = def.depth >= 16 ? Math.min(24, 3 + Math.floor(depth / 6)) : 1;
+  var bits = [];
+  if (depth > 1) bits.push("достичь уровня комплекса " + depth);
+  if (heroLevel > 1) bits.push("уровень героя " + heroLevel);
+  if (def.level) bits.push("ступень дрона " + def.level);
+  if (def.tier) bits.push("верстак ступени " + def.tier);
+  var why = reached() < depth ? "сначала посетите уровень комплекса " + depth :
+    (g.lvl || 1) < heroLevel ? "нужен уровень героя " + heroLevel :
+    def.level && (!d || d.lvl < def.level) ? "нужна ступень дрона " + def.level : "";
+  return { text: bits.join(", "), why: why };
+}
+function materialCost(def) {
+  if (!def.need || !def.depth || !policy().cost) return def.need;
+  var need = Object.assign({}, def.need);
+  need.wire = Math.max(1, (need.wire || 0) + policy().cost);
+  return need;
+}
+function programFor(d, role) {
+  return catalog.programs[d.programs && d.programs[role.direction]] || catalog.programs[role.direction];
+}
+function explain(effects) { return effects.map(function (e) { return describe(e[0], e[1], e[2], e[3]); }).join(". "); }
+function adjust(metric, models, flags) {
+  var d = D(), role = d && ROLES[d.role], total = 0;
+  if (!d || d.wreck) return 0;
+  var keys = Array.isArray(models) ? models : models ? [models] : [];
+  flags = flags || [];
+  function matches(flag) {
+    if (!flag) return true;
+    if (flag === "dark") return G().event === "dark";
+    return flags.indexOf(flag) >= 0;
+  }
+  function add(e) {
+    if (e[0] === metric && (!e[2] || keys.indexOf(e[2]) >= 0) && matches(e[3])) total += e[1];
+  }
+  if (role) {
+    var dir = catalog.directions[role.direction], program = programFor(d, role);
+    if (dir.metric === metric) total += dir.points * program.scale * (1 + (directionRank(d, role.direction) - 1) * 0.5);
+    role.effects.forEach(add);
+    program.effects.forEach(add);
+  }
+  if (d.tuning) keys.forEach(function (key) {
+    var tune = catalog.modifications[d.tuning[key]];
+    if (!hasMod(key) || !tune || !matches(tune.flag)) return;
+    if (tune.metric === metric) total += tune.points + (d.en <= d.enMax * 0.25 ? tune.reactive || 0 : 0);
+    if (tune.side && tune.side[0] === metric) total += tune.side[1];
+  });
+  return total;
+}
+function delay(key, base, kind) { return Math.max(kind === "fire" ? 3 : 5, Math.round(base * cdK() * policy().tempo - adjust(kind + "Cycle", key))); }
+function markSeconds(k) { return Math.min(60, 20 + Math.floor(adjust("mark", k))); }
+function targetFlags(target) {
+  var flags = [target.kind === "mech" ? "machine" : "living"];
+  if (target.arm >= 3) flags.push("armored");
+  if (Math.max(Math.abs(target.x - G().x), Math.abs(target.y - G().y)) <= 2) flags.push("close");
+  return flags;
+}
 function modId(k, rank) { return "dr_mod_" + k + (rank > 1 ? "_r" + rank : ""); }
 function mark(k, rank) { return cap1(MODS[k].n) + (RANK_EFFECTS[k] ? ", ступень " + rank : ""); }
 MOD_ORDER.forEach(function (k) {
@@ -101,9 +177,11 @@ function cdK() { return MS() && MS().has("drones") ? 0.75 : 1; }
 function costK(d) { return d && MS() && MS().flawOf(d) ? 1.3 : 1; }
 function commandSaving() { var m = G().mind || 10; return m >= 18 ? 2 : m >= 13 ? 1 : 0; }
 function energyCost(n, command) {
-  var d = D(), roleSaving = d && d.role === "support" ? (command === "medic" ? 2 : command === "arm" ? 1 : 0) : 0;
-  return Math.max(1, Math.ceil(n * costK(d)) - (n >= 6 ? commandSaving() : 0) - roleSaving);
+  var md = MODS[command], kind = md && (md.mount || command === "zapper" ? "fire" : md.group === "sensors" ? "scan" : md.group === "service" ? "service" : "");
+  var general = n >= 6 ? commandSaving() + adjust("commandSave", ["battery", "reserve", "nerve", "charger", "regen", "link_amp"]) : 0;
+  return Math.max(1, Math.ceil(n * costK(D()) * policy().energy - 1e-8) - Math.floor(general + (kind ? adjust(kind + "Save", command) : 0)));
 }
+function recorded(event, id, key, place) { if (LAB.droneAudio) LAB.droneAudio.play(event, id, key, place); }
 function save() { if (gm().autosaveSoon) gm().autosaveSoon(); }
 function loadChanged() { if (LAB.load) LAB.load.after(); }
 
@@ -162,16 +240,16 @@ function worked(minutes, xp) {
   if (xp && MS()) MS().gain("elec", xp);
   if (xp && LAB.ach) LAB.ach.ev("craft", 1);
   save();
-  snd("work_solder", "craft");
 }
 function craftMod(k) {
   var md = MODS[k];
   if (!md) return false;
-  var why = canWork(md.tier || 2, md.need);
+  var need = materialCost(md), why = requirements(md).why || canWork(md.tier || 2, need);
   if (why) return moduleError(md, why);
-  W().take(md.need);
+  W().take(need);
   giveMod(k);
   worked(4, 4);
+  recorded("craft", k);
   say("В рюкзаке: " + md.n + "."); loadChanged();
   return true;
 }
@@ -180,13 +258,18 @@ function socketIssue(k, d) {
   if (!d) return "сначала соберите дрона";
   if (d.wreck) return "сначала почините дрона";
   if (d.mods.indexOf(k) >= 0) return "уже установлено";
+  var conflict = d.mods.find(function (id) {
+    var other = MODS[id];
+    return other && ((md.mount && other.mount) || (md.exclusive && md.exclusive === other.exclusive));
+  });
+  if (conflict) return "сначала снимите «" + MODS[conflict].n + "»";
   if (md.requires && d.mods.indexOf(md.requires) < 0) return "сначала установите " + MODS[md.requires].n;
   if (k !== "nerve" && usedSlots(d) >= slots(d)) return "все гнёзда заняты";
   return "";
 }
 function updateLimits(d, k, change) {
-  if (k === "battery") { d.enMax += change; d.en = Math.min(d.en, d.enMax); }
-  if (k === "shell") { d.hpMax += change; d.hp = Math.min(d.hp, d.hpMax); }
+  if (MODS[k].en) { d.enMax += change; d.en = Math.min(d.en, d.enMax); }
+  if (MODS[k].hp) { d.hpMax += change; d.hp = Math.min(d.hp, d.hpMax); }
 }
 function addMod(k, rank) {
   var d = D(), md = MODS[k], inv = G().inv;
@@ -194,15 +277,17 @@ function addMod(k, rank) {
   rank = rank || [3, 2, 1].find(function (r) { return inv[modId(k, r)] > 0; }) || 1;
   if (rank !== 1 && (!RANK_EFFECTS[k] || !RANK_EFFECTS[k].v[rank - 1] || !inv[modId(k, rank)])) return false;
   var id = modId(k, rank);
-  var prepared = inv[id] > 0, why = socketIssue(k, d) || canWork(prepared ? 2 : (md.tier || 2), prepared ? null : md.need);
+  var prepared = inv[id] > 0, need = materialCost(md);
+  var why = socketIssue(k, d) || (!prepared && requirements(md).why) || canWork(prepared ? 2 : (md.tier || 2), prepared ? null : need);
   if (!why && rank > 1 && d.lvl < (rank === 2 ? 3 : 6)) why = "нужна ступень дрона " + (rank === 2 ? 3 : 6);
   if (why) return moduleError(md, why);
   if (prepared) inv[id]--;
-  else W().take(md.need);
+  else W().take(need);
   d.mods.push(k);
   if (rank > 1) { if (!d.ranks) d.ranks = {}; d.ranks[k] = rank; }
   if (md.en || md.hp) updateLimits(d, k, effect(k, d));
   worked(prepared ? 2 : 4, prepared ? 0 : 4);
+  recorded("mount", k);
   say("Установлено. " + mark(k, rank) + "."); loadChanged();
   return true;
 }
@@ -220,6 +305,7 @@ function delMod(k) {
   if (d.ranks) delete d.ranks[k];
   giveMod(k, rank);
   worked(2, 0);
+  recorded("remove", k);
   say("В рюкзаке. " + mark(k, rank) + "."); loadChanged();
   return true;
 }
@@ -234,25 +320,64 @@ function upgradeMod(k) {
   if (!d || !stats || d.mods.indexOf(k) < 0 || modRank(d, k) >= 3) return false;
   if (d.wreck) return moduleError(md, "сначала почините дрона");
   var from = modRank(d, k), target = from + 1, upgrade = upgradeDetails(k, target);
-  var why = d.lvl < upgrade.level ? "нужна ступень дрона " + upgrade.level : canWork(upgrade.tier, upgrade.need);
+  var why = requirements(MODS[k]).why || (d.lvl < upgrade.level ? "нужна ступень дрона " + upgrade.level : canWork(upgrade.tier, upgrade.need));
   if (why) return moduleError(md, why);
   W().take(upgrade.need);
   if (!d.ranks) d.ranks = {};
   d.ranks[k] = target;
   updateLimits(d, k, stats.v[target - 1] - stats.v[from - 1]);
   worked(4 + target * 2, 4 + target);
+  recorded("tune", k + "_r" + target, k);
   say(mark(k, target) + ". " + stats.n + ": " + effect(k, d) + "."); loadChanged();
   return true;
 }
 function setRole(k) {
-  var d = D(), role = ROLES[k], need = { chip: 1, wire: 1 };
+  var d = D(), role = ROLES[k];
   if (!d || !role || d.role === k) return false;
-  var why = d.wreck ? "сначала почините дрона" : d.lvl < 3 ? "нужна третья ступень дрона" : canWork(3, need);
-  if (why) { say("Профиль дрона. " + cap1(why) + "."); return false; }
-  W().take(need);
+  var known = d.learned && d.learned[k], need = known ? null : materialCost(role);
+  var why = d.wreck ? "сначала почините дрона" : requirements(role).why || canWork(role.tier || 3, need);
+  if (why) { say("Специализация дрона. " + cap1(why) + "."); return false; }
+  if (need) W().take(need);
+  if (!d.learned) { d.learned = {}; if (ROLES[d.role]) d.learned[d.role] = true; }
+  d.learned[k] = true;
   d.role = k;
   worked(8, 0);
-  say("Профиль дрона «" + role.n + "». " + role.d); loadChanged();
+  recorded("role", k);
+  say("Специализация «" + role.n + "». " + explain(role.effects) + ".");
+  loadChanged();
+  return true;
+}
+function setProgram(k) {
+  var d = D(), role = d && ROLES[d.role], program = catalog.programs[k];
+  if (!program) return false;
+  if (!role || role.direction !== program.family) { say("Сначала выберите специализацию в области «" + catalog.directions[program.family].n + "»."); return false; }
+  if (programFor(d, role) === program) { say("Это направление уже выбрано."); return false; }
+  var why = d.wreck ? "сначала почините дрона" : requirements(program).why || canWork(program.tier || 2);
+  if (why) { say("Направление. " + cap1(why) + "."); return false; }
+  if (!d.programs) d.programs = {};
+  d.programs[role.direction] = k;
+  worked(4, 0);
+  recorded("direction", k);
+  say("Выбрано направление «" + program.n + "».");
+  loadChanged();
+  return true;
+}
+function tuneModule(k, id) {
+  var d = D(), md = MODS[k], change = catalog.modifications[id];
+  if (!d || !md || d.mods.indexOf(k) < 0 || (id && (!change || change.fits.indexOf(k) < 0))) return false;
+  if (d.wreck) return moduleError(md, "сначала почините дрона");
+  var prev = d.tuning && d.tuning[k];
+  if ((id || undefined) === prev) return false;
+  var need = change && materialCost(change);
+  var why = (change && requirements(change).why) || canWork(change ? change.tier : 2, need);
+  if (why) return moduleError(md, why);
+  if (!d.tuning) d.tuning = {};
+  if (change) { W().take(need); d.tuning[k] = id; }
+  else delete d.tuning[k];
+  worked(6, change ? 3 : 0);
+  recorded(change ? "tune" : "remove", id || k, k);
+  say(change ? "Установлена модификация «" + change.n + "»." : "Модификация отключена.");
+  loadChanged();
   return true;
 }
 function repairNeed(d) { return d.wreck ? { servo: 1, scrap: 3, wire: 1 } : (d.hp < d.hpMax ? { scrap: 1, wire: 1 } : null); }
@@ -293,11 +418,18 @@ function carriedWeight() {
   if (!d || active()) return 0;
   return d.mods.reduce(function (sum, k) { return sum + (MODS[k] ? MODS[k].wt : 0); }, 3.5);
 }
-function boostCapacity() { var d = D(); return active() && d.en >= 1 && hasMod("cargo") && hasMod("boost") ? effect("boost", d) : 0; }
-function carryCapacity() { var d = D(); return active() && hasMod("cargo") ? effect("cargo", d) + (d.role === "cargo" ? 2 : 0) + boostCapacity() : 0; }
+function boostCapacity() { var d = D(); return active() && d.en >= 1 && hasMod("cargo") && hasMod("boost") ? effect("boost", d) + Math.floor(adjust("haul", "boost")) : 0; }
+function cargoModel() { return hasMod("cargo") ? "cargo" : hasMod("sling") ? "sling" : ""; }
+function carryCapacity() { var k = cargoModel(); return active() && k ? effect(k) + Math.floor(adjust("capacity", k)) + boostCapacity() : 0; }
+function overloadHelp(metric) {
+  if (!active()) return 0;
+  var base = metric === "stride" && cargoModel() && hasMod("stabilizer") ? effect("stabilizer") :
+    metric === "noise" && hasMod("baffle") ? effect("baffle") : 0;
+  return Math.floor(base + adjust(metric, ["cargo","sling","stabilizer","boost","baffle"]));
+}
 function cargoRecovery() {
   var d = D();
-  if (!d || d.wreck || !hasMod("cargo")) return "";
+  if (!d || d.wreck || !cargoModel()) return "";
   if (!d.out) return "Можно выпустить дрона через меню команд.";
   return hasMod("boost") && d.en < 1 ? "Можно подзарядить дрона энергобатареей через меню команд." : "";
 }
@@ -323,6 +455,20 @@ function spend(n, command) { return spendCharge(energyCost(n, command)); }
 function onStep() {
   var bonus = boostCapacity(), l = LAB.load;
   if (bonus && l && l.total() > l.capacity() - bonus) spendCharge(1);
+  var d = D(), cur = gm().CUR;
+  if (active() && l && l.tier() >= 2 && (hasMod("stabilizer") || hasMod("baffle") || hasMod("sling")) && (G().stats && G().stats.steps % 6 === 0)) recorded("move", "cargo");
+  if (!active() || !hasMod("regen") || !cur || !cur.key) return;
+  if (!d.recovered) d.recovered = {};
+  if (d.recovered[cur.key]) return;
+  if (!d.recoveryWalk || d.recoveryWalk.key !== cur.key) d.recoveryWalk = { key: cur.key, steps: 0 };
+  d.recoveryWalk.steps = Math.min(20, d.recoveryWalk.steps + 1);
+  if (d.recoveryWalk.steps < 20 || d.en >= d.enMax) return;
+  var amount = Math.min(d.enMax - d.en, effect("regen") + Math.floor(adjust("recovery", "regen")));
+  d.recovered[cur.key] = true;
+  charge(amount);
+  recorded("energy", "regen");
+  sayq("Рекуператор вернул " + amount + " единиц заряда.");
+  save();
 }
 function hostiles(r) {
   var c = C(); if (!c) return [];
@@ -333,12 +479,12 @@ function scout(auto) {
   var d = D(), c = C(), g = G();
   if (!active() || !hasMod("sensor")) { if (!auto) say(d && d.wreck ? "Дрон сбит." : !d ? "Дрона нет." : !d.out ? "Дрон свёрнут." : "Нужен сенсорный блок."); return false; }
   if ((d.cd.scout || 0) > 0) { if (!auto) say("Сенсоры дрона ещё перезаряжаются."); return false; }
-  if (!spend(20)) { if (!auto) say("Дрону не хватает энергии на разведку."); return false; }
-  d.cd.scout = Math.round(90 * cdK());
+  if (!spend(20, "sensor")) { if (!auto) say("Дрону не хватает энергии на разведку."); return false; }
+  d.cd.scout = delay("sensor", 90, "scan");
   snd("drone_ping", "scan_soft");
-  var R = effect("sensor", d) + Math.floor((d.lvl || 1) / 2) + (d.role === "scout" ? 2 : 0), list = c.foes().filter(function (o) { return !o.dead && !o.calm && !o.ally && !o.neutral && !o.burrowed && Math.max(Math.abs(o.x - g.x), Math.abs(o.y - g.y)) <= R; });
-  list.forEach(function (o) { o.mark = Date.now() + 20000; });
-  var s = list.length ? "Разведка дрона: врагов вокруг " + list.length + " — " + list.slice(0, 5).map(function (o) { return String(o.name || "").split(",")[0] + " " + gm().relDir(o.x, o.y); }).join("; ") + (list.length > 5 ? " и другие" : "") + ". На них маяки на двадцать секунд." : "Разведка дрона: врагов вокруг нет.";
+  var R = effect("sensor", d) + Math.floor((d.lvl || 1) / 2) + Math.floor(adjust("scanRange", "sensor")), list = c.foes().filter(function (o) { return !o.dead && !o.calm && !o.ally && !o.neutral && !o.burrowed && Math.max(Math.abs(o.x - g.x), Math.abs(o.y - g.y)) <= R; });
+  list.forEach(function (o) { o.mark = Math.max(o.mark || 0, Date.now() + markSeconds("sensor") * 1000); });
+  var s = list.length ? "Разведка дрона: врагов вокруг " + list.length + " — " + list.slice(0, 5).map(function (o) { return String(o.name || "").split(",")[0] + " " + gm().relDir(o.x, o.y); }).join("; ") + (list.length > 5 ? " и другие" : "") + ". На них включены маяки." : "Разведка дрона: врагов вокруг нет.";
   if (auto) sayq(s); else say(s);
   return true;
 }
@@ -346,10 +492,10 @@ function scanSupplies() {
   var d = D(), g = G(), cur = gm().CUR;
   if (!active() || !hasMod("scanner") || !cur) { say("Для поиска нужен выпущенный дрон с поисковым блоком."); return false; }
   if (d.cd.scan > 0) { say("Поисковый блок ещё перезаряжается."); return false; }
-  if (!spend(12)) { say("Дрону не хватает энергии для поиска."); return false; }
-  d.cd.scan = Math.round(45 * cdK());
+  if (!spend(12, "scanner")) { say("Дрону не хватает энергии для поиска."); return false; }
+  d.cd.scan = delay("scanner", 45, "scan");
   var distance = function (o) { return Math.max(Math.abs(o.x - g.x), Math.abs(o.y - g.y)); };
-  var radius = effect("scanner", d) + (d.role === "scout" ? 2 : 0);
+  var radius = effect("scanner", d) + Math.floor(adjust("scanRange", "scanner"));
   var visible = function (o) { return distance(o) <= radius && LAB.los(cur.fl, cur.fs, g.x, g.y, o.x, o.y); };
   var list = gm().floorItems().filter(visible).map(function (it) { return { o: it, n: gm().itemName(it) }; });
   cur.fl.objs.filter(function (o) { return ["workbench", "supply", "capsule"].indexOf(o.type) >= 0 && visible(o); })
@@ -369,10 +515,10 @@ function treat() {
   if (g.hp >= g.hpMax && !bleeding) { say("Здоровье полное."); return false; }
   if (!(g.inv.bandage > 0)) { say("Для перевязки нужен бинт."); return false; }
   if (!spend(10, "medic")) { say("Дрону не хватает энергии на перевязку."); return false; }
-  var healed = Math.min(effect("medic", d), g.hpMax - g.hp);
+  var healed = Math.min(effect("medic", d) + Math.floor(adjust("healPower", "medic")), g.hpMax - g.hp);
   g.inv.bandage--; g.hp += healed;
   if (bleeding) g.st.bleed = 0;
-  d.cd.medic = Math.round(40 * cdK());
+  d.cd.medic = delay("medic", 40, "service");
   if (LAB.stats) LAB.stats.healed(healed);
   snd("drone_fix", "craft");
   say(cap1(name()) + " перевязал раны." + (healed ? " Здоровье плюс " + healed + ", теперь " + g.hp + " из " + g.hpMax + "." : "") + (bleeding ? " Кровотечение остановлено." : ""));
@@ -383,12 +529,12 @@ function stun(auto) {
   var d = D();
   if (!active() || !hasMod("zapper")) { if (!auto) say(!d ? "Дрона нет." : d.wreck ? "Дрон сбит." : !d.out ? "Дрон свёрнут." : "Нужен разрядник."); return false; }
   if ((d.cd.stun || 0) > 0) { if (!auto) say("Разрядник дрона ещё копит заряд."); return false; }
-  var t = nearest(hostiles(6).filter(function (o) { return !o.dStun; }));
+  var t = nearest(hostiles(6 + Math.floor(adjust("fireRange", "zapper"))).filter(function (o) { return !o.dStun; }));
   if (!t) { if (!auto) say("Некого оглушать: рядом ни одного врага, которого дрон ещё не бил разрядом."); return false; }
-  if (!spend(15)) { if (!auto) say("Дрону не хватает энергии на разряд."); return false; }
-  d.cd.stun = Math.round(30 * cdK());
+  if (!spend(15, "zapper")) { if (!auto) say("Дрону не хватает энергии на разряд."); return false; }
+  d.cd.stun = delay("zapper", 30, "fire");
   t.dStun = 1;
-  t.frozen = Math.max(t.frozen || 0, t.boss ? 2 : (t.kind === "mech" ? 9 : 6) + effect("zapper", d));
+  t.frozen = Math.max(t.frozen || 0, t.boss ? 2 : (t.kind === "mech" ? 9 : 6) + effect("zapper", d) + Math.floor(adjust("status", "zapper")));
   snd("drone_zap", "w_shock_crack");
   (auto ? sayq : say)(cap1(name()) + " бьёт разрядом: " + String(t.name || "").split(",")[0] + " — оглушение на пару секунд.");
   hitBack(t, 0.25);
@@ -397,14 +543,19 @@ function stun(auto) {
 /* Цель может ответить дрону. */
 function hitBack(f, p) {
   var d = D(); if (!d || !f || f.dead || !(f.dmg > 0) || Math.random() >= p) return;
-  hurt(Math.max(1, Math.round(f.dmg * 0.5 / depthK())));
+  hurt(Math.max(1, Math.round(f.dmg * 0.5 / depthK())), f);
 }
 /* Корпус дрона держит удары своей глубины: урон по нему делится на рост врагов с глубиной. */
 function depthK() { var g = G(); return 1 + 0.14 * (LAB.foeLevel(g.L, g.F) - 1); }
-function hurt(n) {
+function reduction(source) {
+  if (!active()) return 0;
+  return Math.min(0.45, (hasMod("mesh") ? effect("mesh") / 100 : 0) + adjust("armor", ["hull", "shell", "mesh", "screen"], source ? targetFlags(source) : []));
+}
+function hurt(n, source) {
   var d = D(); if (!d || d.wreck) return;
-  d.hp = Math.max(0, d.hp - n);
-  snd("drone_hit", "shield_hit_foe", { gain: 0.5 });
+  d.hp = Math.max(0, Math.round((d.hp - n * policy().risk * (1 - reduction(source))) * 100) / 100);
+  if (hasMod("mesh")) recorded("armor", "mesh");
+  else snd("drone_hit", "shield_hit_foe", { gain: 0.5 });
   if (d.hp <= 0) { d.wreck = 1; snd("drone_down", "drone_death"); sayq(cap1(name()) + " сбит. Блок управления цел — дрона можно починить у верстака."); if (LAB.load) setTimeout(function () { LAB.safe(function () { LAB.load.after(); }); }, 0); /* (после 4.6) сбитый — в рюкзаке, и грузовой захват больше не держит */ }
   else if (d.hp <= d.hpMax * 0.3) sayOnce("dronelow", cap1(name()) + " повреждён: " + d.hp + " из " + d.hpMax + ".", 15000);
 }
@@ -412,9 +563,10 @@ function hurt(n) {
 function onHurt(raw, adt, src) {
   var d = D();
   if (!active() || !hasMod("screen") || !(raw > 0)) return raw;
-  var dk = depthK(), take = Math.min(d.hp * dk, Math.round(raw * effect("screen", d) / 10) / 10);
+  var dk = depthK(), ratio = Math.min(0.5, effect("screen", d) / 100 + adjust("guard", "screen", src ? targetFlags(src) : []));
+  var take = Math.min(d.hp * dk / (policy().risk * (1 - reduction(src))), Math.round(raw * ratio * 10) / 10);
   if (take <= 0) return raw;
-  hurt(Math.max(0.1, Math.round(take / dk * 10) / 10));
+  hurt(Math.max(0.1, Math.round(take / dk * 10) / 10), src);
   return raw - take;
 }
 var tN = 0, lastKey = "", warned = {};
@@ -429,20 +581,24 @@ function tick() {
   /* бой: разряд и огонь */
   if (fight) {
     if (hasMod("zapper") && d.auto.stun && !(d.cd.stun > 0)) stun(true);
-    if (hasMod("gun") && d.auto.gun && tN % 4 === 0) {
-      var t = nearest(hostiles(6));
-      if (t && spend(1)) {
-        var lvl = LAB.foeLevel(g.L, g.F), dmg = Math.max(1, Math.round(3.2 * (1 + 0.14 * (lvl - 1)) * (1 + 0.06 * ((d.lvl || 1) - 1)) * effect("gun", d) / 100 * (d.role === "escort" ? 1.12 : 1)));
+    if (hasMod("gun") && d.auto.gun && tN % delay("gun", 4, "fire") === 0) {
+      var t = nearest(hostiles(6 + Math.floor(adjust("fireRange", "gun"))));
+      if (t && spend(1, "gun")) {
+        var lvl = LAB.foeLevel(g.L, g.F), dmg = Math.max(1, Math.round(3.2 * (1 + 0.14 * (lvl - 1)) * (1 + 0.06 * ((d.lvl || 1) - 1)) * effect("gun", d) / 100 * (1 + adjust("firePower", "gun", targetFlags(t)))));
         snd("drone_shot", "w_blaster_s", { gain: 0.5 });
         c.damageFoe(t, dmg, "energy", { quiet: true, ally: true, by: "ally" });
         hitBack(t, 0.15);
       }
     }
-  } else if (hasMod("arm") && d.auto.arm && tN % 20 === 0) {
+    if (LAB.droneOps) {
+      var mount = d.mods.find(function (id) { return MODS[id] && MODS[id].weapon; });
+      if (mount && d.auto[mount]) LAB.droneOps.run(mount, true);
+    }
+  } else if (hasMod("arm") && d.auto.arm && tN % delay("arm", 20, "service") === 0) {
     /* вне боя: манипулятор чинит понемногу — до 85 */
     var w = gm().curWeapon ? gm().curWeapon() : null, a = g.armor, f = LAB.exo && LAB.exo.worn(), done = false;
     var limit = effect("arm", d);
-    var fix = function (x) { if (done || !x) return; var cv = x.cond != null ? x.cond : 100; if (cv < limit && spend(2, "arm")) { x.cond = Math.min(limit, cv + 1); done = true; if (tN % 200 === 0) snd("drone_fix", "craft", { gain: 0.3 }); } };
+    var fix = function (x) { if (done || !x) return; var cv = x.cond != null ? x.cond : 100; if (cv < limit && spend(2, "arm")) { x.cond = Math.min(limit, cv + 1 + Math.floor(adjust("repairPower", "arm"))); done = true; if (tN % 200 === 0) snd("drone_fix", "craft", { gain: 0.3 }); } };
     fix(w); fix(a); fix(f);
   }
   /* сенсоры: кто подкрадывается */
@@ -459,7 +615,19 @@ function tick() {
 }
 /* Опыт: десятая часть опыта героя (дроноводу — пятая). */
 function onXP(n) {
-  var d = D(); if (!d || d.wreck || (d.lvl || 1) >= 10) return;
+  var d = D(); if (!d || d.wreck || !(n > 0)) return;
+  var role = ROLES[d.role];
+  if (role && active()) {
+    if (!d.training) d.training = {};
+    var before = directionRank(d, role.direction);
+    d.training[role.direction] = Math.min(1200, (d.training[role.direction] || 0) + n * 0.1);
+    if (directionRank(d, role.direction) > before) {
+      recorded("direction", role.direction);
+      sayq(catalog.directions[role.direction].n + ". Ступень направления " + directionRank(d, role.direction) + ".");
+      loadChanged();
+    }
+  }
+  if ((d.lvl || 1) >= 10) return;
   d.xp = (d.xp || 0) + n * (MS() && MS().has("drones") ? 0.2 : 0.1);
   var start = d.lvl || 1;
   while ((d.lvl || 1) < 10 && d.xp >= 25 * (d.lvl || 1)) {
@@ -480,12 +648,15 @@ function pack(v) {
   loadChanged();
   return true;
 }
+function batteryGain() {
+  return 50 + (hasMod("charger") ? effect("charger") : 0) + Math.floor(adjust("charge", ["charger","battery","reserve"]));
+}
 function chargeBat() {
   var d = D(), g = G(); if (!d) { say("Дрона нет."); return false; }
   if (d.en >= d.enMax) { say("Энергия дрона полна."); return false; }
   if (!(g.ammo.energy > 0)) { say("Энергобатарей нет."); return false; }
-  g.ammo.energy--; charge(50);
-  snd("exo_charge", "w_reload_e");
+  g.ammo.energy--; charge(batteryGain());
+  recorded("energy", "charger");
   say(cap1(name()) + " подзаряжен: " + Math.round(d.en) + " из " + d.enMax + ".");
   save(); loadChanged();
   return true;
@@ -494,7 +665,7 @@ function chargePrice() {
   var d = D(); if (!d) return 0;
   var miss = d.enMax - (d.en || 0); if (miss <= 0) return 0;
   var pb = LAB.medic && LAB.medic.vendPrice ? LAB.medic.vendPrice("ammo:energy") : 20;
-  return Math.max(1, Math.round(pb * miss / 50));
+  return Math.max(1, Math.round(pb * miss / batteryGain()));
 }
 function craftCable() {
   var why = canWork(2, CABLE_NEED);
@@ -504,6 +675,7 @@ function craftCable() {
   W().take(CABLE_NEED);
   inv[CABLE] = 1;
   worked(6, 4); loadChanged();
+  recorded("craft", "link_amp");
   say("Полевой кабель питания в рюкзаке. Передача заряда доступна в командах дрона.");
   return true;
 }
@@ -513,8 +685,10 @@ function transferPlan(toDrone) {
   var from = toDrone ? frame : d, to = toDrone ? d : frame;
   var free = (toDrone ? d.enMax : x.capOf(frame)) - (to.en || 0);
   var available = Math.floor((from.en || 0) - 5 + 1e-6);
-  var received = Math.floor(Math.min(16, free + 1e-6, available * 0.8 + 1e-6));
-  return { frame: frame, received: received, sent: Math.ceil(received / 0.8) };
+  var rate = Math.min(0.95, 0.8 + (hasMod("link_amp") ? 0.08 : 0) + adjust("transferLoss", "link_amp"));
+  var limit = 16 + (hasMod("link_amp") ? effect("link_amp") : 0) + Math.floor(adjust("transfer", ["link_amp","battery","reserve"]));
+  var received = Math.max(0, Math.floor(Math.min(limit, free + 1e-6, available * rate + 1e-6)));
+  return { frame: frame, received: received, sent: Math.ceil(received / rate - 1e-6) };
 }
 function transfer(toDrone) {
   var p = transferPlan(toDrone), x = LAB.exo;
@@ -528,6 +702,7 @@ function transfer(toDrone) {
     if (!spendCharge(p.sent)) return false;
     x.addCharge(p.frame, p.received);
   }
+  recorded("energy", "link_amp");
   say((toDrone ? "Дрон получил " : "Каркас получил ") + p.received + " единиц заряда. Потери при передаче " + (p.sent - p.received) + ".");
   save(); loadChanged();
   return true;
@@ -536,10 +711,11 @@ function transfer(toDrone) {
 /* ════════ СЛОВА И ОКНА ════════ */
 function line(d) {
   d = d || D(); if (!d) return "";
-  var listed = d.mods.filter(function (k) { return !!MODS[k]; });
+  var listed = d.mods.filter(function (k) { return !!MODS[k]; }), role = ROLES[d.role];
+  var focus = role ? ". Направление «" + programFor(d, role).n + "», ступень " + directionRank(d, role.direction) : "";
   return cap1(name(d)) + ": ступень " + (d.lvl || 1) + ", " + (d.wreck ? "сбит" : (d.out ? "в воздухе" : "свёрнут") + ", здоровье " + Math.round(d.hp) + " из " + d.hpMax) +
-    ", энергия " + Math.round(d.en) + " из " + d.enMax + ". Профиль «" + (ROLES[d.role] ? ROLES[d.role].n : "Универсальный") + "». Занято гнёзд " + usedSlots(d) + " из " + slots(d) + ". Модули: " + (listed.length ? listed.map(function (k) { return mark(k, modRank(d, k)); }).join(". ") : "нет") +
-    (d.mods.indexOf("cargo") >= 0 && LAB.load ? ". Грузоподъёмность дрона сейчас: " + LAB.load.kg(carryCapacity()) : "");
+    ", энергия " + Math.round(d.en) + " из " + d.enMax + ". Профиль «" + (role ? role.n : "Универсальный") + "»" + focus + ". Занято гнёзд " + usedSlots(d) + " из " + slots(d) + ". Модули: " + (listed.length ? listed.map(function (k) { return mark(k, modRank(d, k)); }).join(". ") : "нет") +
+    ((d.mods.indexOf("cargo") >= 0 || d.mods.indexOf("sling") >= 0) && LAB.load ? ". Грузоподъёмность дрона сейчас: " + LAB.load.kg(carryCapacity()) : "");
 }
 function charLine() { var d = D(); return d ? line(d) + "." : ""; }
 function benchLabel() { return D() ? "Дрон-спутник: модули и починка — " + short() : "Дрон-спутник: сборка корпуса и модулей"; }
@@ -550,11 +726,15 @@ function moduleMenu(k) {
     var d = D(), on = d && d.mods.indexOf(k) >= 0, effectInfo = RANK_EFFECTS[k], rank = on ? modRank(d, k) : 1;
     var ranks = (effectInfo ? [1, 2, 3] : [1]).filter(function (r) { return G().inv[modId(k, r)] > 0; });
     var out = [{ label: cap1(md.d) + ". Масса: " + LAB.load.kg(md.wt) + (on && effectInfo ? ". Стоит ступень " + rank + ". " + effectInfo.n + ": " + effectInfo.v[rank - 1] : "") + ".", info: true, keep: true, fn: function () { say(cap1(md.d) + "."); } }];
-    out.push({ label: "Собрать в запас. Верстак ступени " + (md.tier || 2) + ". Детали: " + W().costText(md.need) + ".", keep: true, fn: function () { craftMod(k); } });
+    out.push({ label: "Собрать в запас. " + requirementLine(md) + " Детали: " + W().costText(materialCost(md)) + ".", keep: true, fn: function () { craftMod(k); } });
     if (on) {
       if (effectInfo && rank < 3) {
         var next = upgradeDetails(k, rank + 1);
         out.push({ label: "Улучшить до ступени " + (rank + 1) + ". " + effectInfo.n + ": " + effectInfo.v[rank] + ". Дрон ступени " + next.level + ", верстак ступени " + next.tier + ". Детали: " + W().costText(next.need) + ".", keep: true, fn: function () { upgradeMod(k); } });
+      }
+      if (compatibleTuning(k).length) {
+        var tune = d.tuning && catalog.modifications[d.tuning[k]];
+        out.push({ label: "Модификации." + (tune ? " Действует «" + tune.n + "»." : ""), fn: function () { tuningMenu(k); } });
       }
       out.push({ label: "Снять и положить в рюкзак.", keep: true, fn: function () { delMod(k); } });
     }
@@ -569,14 +749,103 @@ function moduleMenu(k) {
   };
   menu(cap1(md.n), items(), { keep: true, rebuild: items });
 }
-function roleMenu() {
+function requirementLine(def) {
+  var r = requirements(def);
+  return (r.text ? "Требуется " + r.text + ". " : "") + (r.why ? "Недоступно. " + cap1(r.why) + "." : "");
+}
+function compatibleTuning(k) {
+  return Object.keys(catalog.modifications).filter(function (id) { return catalog.modifications[id].fits.indexOf(k) >= 0; });
+}
+var tuningModes = { standard:"Стандартные", power:"Форсированные", economy:"Бережливые", reserve:"Резервные" };
+function tuningMenu(k) {
+  var ids = compatibleTuning(k), items = function () {
+    var d = D(), rows = Object.keys(tuningModes).map(function (mode) {
+      var matches = ids.filter(function (id) { return (catalog.modifications[id].stage || "standard") === mode; });
+      return { label:tuningModes[mode] + ", " + matches.length, fn:function () { tuningOptions(k, mode, matches); } };
+    });
+    if (d.tuning && d.tuning[k]) rows.push({ label:"Отключить модификацию", keep:true, fn:function () { tuneModule(k, null); } });
+    return rows.concat(back());
+  };
+  menu("Модификации узла «" + MODS[k].n + "»", items(), { keep:true, rebuild:items,
+    intro:"На модели действует одна настройка. Её запоминает корпус, даже когда вы снимаете узел." });
+}
+function tuningOptions(k, mode, ids) {
   var items = function () {
-    return Object.keys(ROLES).map(function (k) {
-      var role = ROLES[k];
-      return { label: "«" + role.n + "». " + role.d + (D().role === k ? " Активен." : ""), keep: true, fn: function () { setRole(k); } };
+    var d = D();
+    return ids.map(function (id) {
+      var t = catalog.modifications[id];
+      var effect = describe(t.metric, t.points, null, t.flag) + ".";
+      if (t.side) effect += " " + cap1(describe(t.side[0], t.side[1])) + ".";
+      if (t.reactive) effect += " При остатке заряда до четверти: " + describe(t.metric, t.reactive) + " дополнительно.";
+      return { label:t.n + ". " + cap1(effect) + " " + requirementLine(t) + " Детали: " + W().costText(materialCost(t)) + "." +
+        (d.tuning && d.tuning[k] === id ? " Активна." : ""), keep:true, fn:function () { tuneModule(k, id); } };
     }).concat(back());
   };
-  menu("Профиль дрона", items(), { keep: true, rebuild: items, intro: "Дрон держит один профиль. Для перенастройки нужна третья ступень дрона и верстака, микросхема и провод." });
+  menu(tuningModes[mode] + " настройки узла «" + MODS[k].n + "»", items(), { keep:true, rebuild:items });
+}
+function roleMenu() {
+  var rows = Object.keys(catalog.directions).map(function (key) {
+    var dir = catalog.directions[key];
+    return { label:dir.n + ", " + dir.roles.length + " специализаций", fn:function () { roleFamily(key); } };
+  });
+  menu("Специализации дрона", rows.concat(back()), { intro:"Дрон использует одну специализацию. Первый выбор требует деталей. Изученную можно снова включить у верстака." });
+}
+function roleFamily(key) {
+  var dir = catalog.directions[key], rows = [{ label:"Основные специализации", fn:function () { roleOptions(key, dir.roles.slice(0, dir.nativeCount)); } }];
+  [0,1,2].forEach(function (block) {
+    var ids = dir.roles.slice(dir.nativeCount + 7 * block, block === 2 ? undefined : dir.nativeCount + 7 * (block + 1));
+    rows.push({ label:"Специализации для уровней комплекса " + unlockDepth(ROLES[ids[0]]) + " и ниже, группа " + (block + 1), fn:function () { roleOptions(key, ids); } });
+  });
+  menu(dir.n + ". Специализации", rows.concat(back()));
+}
+function roleOptions(key, ids) {
+  var items = function () {
+    var d = D();
+    return ids.map(function (id) {
+      var r = ROLES[id], trained = d.learned && d.learned[id];
+      return { label:r.n + ". " + cap1(explain(r.effects)) + ". " + requirementLine(r) +
+        (trained ? " Изучена." : " Детали: " + W().costText(materialCost(r)) + ".") + (d.role === id ? " Активна." : ""),
+        keep:true, fn:function () { setRole(id); } };
+    }).concat(back());
+  };
+  menu(catalog.directions[key].n + ". Выбор специализации", items(), { keep:true, rebuild:items });
+}
+var sections = ["Основное направление", "Верхние уровни", "Середина комплекса", "Глубокие уровни", "Нижние комплексы"];
+function directionsMenu() {
+  var rows = Object.keys(catalog.directions).map(function (key) {
+    return { label:catalog.directions[key].n + ", 40 направлений", fn:function () {
+      var ids = Object.keys(catalog.programs).filter(function (id) { return catalog.programs[id].family === key; });
+      var groups = sections.map(function (n, index) {
+        var group = ids.filter(function (id) { return catalog.programs[id].section === index; });
+        return { label:n + ", " + group.length, fn:function () { directionOptions(key, n, group); } };
+      });
+      menu(catalog.directions[key].n + ". Направления", groups.concat(back()));
+    } };
+  });
+  menu("Направления дрона", rows.concat(back()), { intro:"Чтобы выбрать направление, установите специализацию в той же области. Опыт направления сохраняется при смене. Дрон получает его, пока выпущен и герой набирает опыт." });
+}
+function directionOptions(key, title, ids) {
+  var items = function () {
+    var d = D(), role = ROLES[d.role], dir = catalog.directions[key], rank = directionRank(d, key);
+    return ids.map(function (id) {
+      var r = catalog.programs[id], info = describe(dir.metric, dir.points * r.scale * (1 + (rank - 1) * .5));
+      return { label:r.n + ". " + cap1(info) + (r.effects.length ? ". " + cap1(explain(r.effects)) : "") + ". " +
+        requirementLine(r) + (role && role.direction === key && programFor(d, role) === r ? " Активно." : ""),
+        keep:true, fn:function () { setProgram(id); } };
+    }).concat(back());
+  };
+  menu(catalog.directions[key].n + ". " + title, items(), { keep:true, rebuild:items });
+}
+function equipmentMenu(title, keys) {
+  var items = function () {
+    var d = D();
+    return keys.map(function (k) {
+      var md = MODS[k], count = [1,2,3].reduce(function (n, r) { return n + (G().inv[modId(k, r)] || 0); }, 0), installed = d && d.mods.indexOf(k) >= 0;
+      return { label:cap1(md.n) + (installed ? ", установлен" : "") + (count ? ", в рюкзаке " + count : "") + ". " +
+        requirementLine(md), fn:function () { moduleMenu(k); } };
+    }).concat(back());
+  };
+  menu(title, items(), { keep:true, rebuild:items });
 }
 function benchMenu(et) {
   var b_ = function () {
@@ -584,11 +853,15 @@ function benchMenu(et) {
     if (!d) items.push({ label: "Собрать дрона: " + W().costText(NEED), keep: true, fn: function () { build(); } });
     else {
       items.push({ label: line(d), info: true, keep: true, fn: function () { say(line(d) + "."); } });
-      items.push({ label: "Профиль дрона: разведка, груз, сервис или охрана", fn: roleMenu });
+      items.push({ label:"Специализации, " + Object.keys(ROLES).length, fn:roleMenu });
+      items.push({ label:"Направления, " + Object.keys(catalog.programs).length, fn:directionsMenu });
+      if (d.mods.length) items.push({ label:"Установленное оборудование, " + d.mods.length, fn:function () {
+        equipmentMenu("Установленное оборудование", D().mods.filter(function (k) { return !!MODS[k]; }));
+      } });
     }
-    MOD_ORDER.forEach(function (k) {
-      var md = MODS[k], count = [1, 2, 3].reduce(function (n, r) { return n + (G().inv[modId(k, r)] || 0); }, 0), installed = d && d.mods.indexOf(k) >= 0;
-      items.push({ label: cap1(md.n) + (installed ? ", установлен" : "") + (count ? ", в рюкзаке " + count : ""), fn: function () { moduleMenu(k); } });
+    Object.keys(catalog.groups).forEach(function (id) {
+      var keys = MOD_ORDER.filter(function (k) { return MODS[k].group === id; });
+      items.push({ label:"Оборудование. " + catalog.groups[id] + ", " + keys.length, fn:function () { equipmentMenu(catalog.groups[id], keys); } });
     });
     if (d) {
       var rn = repairNeed(d);
@@ -611,18 +884,23 @@ function cmdItems() {
   if (!d) return [{ label: "Дрона нет: его собирают у верстака из блока управления машины.", info: true, keep: true, fn: function () {} }];
   items.push({ label: line(d), info: true, keep: true, fn: function () { say(line(d) + "."); } });
   if (!d.wreck) {
-    if (hasMod("sensor")) items.push({ label: "Разведка: маяки на врагов вокруг. Расход " + energyCost(20), keep: true, fn: function () { scout(false); } });
-    if (hasMod("zapper")) items.push({ label: "Оглушить ближайшего врага. Расход " + energyCost(15), keep: true, fn: function () { stun(false); } });
-    if (hasMod("scanner")) items.push({ label: "Искать припасы и оборудование. Расход " + energyCost(12), keep: true, fn: scanSupplies });
+    if (hasMod("sensor")) items.push({ label: "Разведка: маяки на врагов вокруг. Расход " + energyCost(20, "sensor"), keep: true, fn: function () { scout(false); } });
+    if (hasMod("zapper")) items.push({ label: "Оглушить ближайшего врага. Расход " + energyCost(15, "zapper"), keep: true, fn: function () { stun(false); } });
+    if (hasMod("scanner")) items.push({ label: "Искать припасы и оборудование. Расход " + energyCost(12, "scanner"), keep: true, fn: scanSupplies });
     if (hasMod("medic")) items.push({ label: "Перевязать раны. Расход " + energyCost(10, "medic") + " энергии и один бинт", keep: true, fn: treat });
+    if (LAB.droneOps) items = items.concat(LAB.droneOps.items());
     items.push({ label: d.out ? "Свернуть дрона" : "Выпустить дрона", keep: true, fn: function () { pack(!d.out); } });
-    items.push({ label: "Подзарядить энергобатареей: плюс 50. Батарей " + (G().ammo.energy || 0), keep: true, fn: function () { chargeBat(); } });
+    items.push({ label: "Подзарядить энергобатареей: плюс " + batteryGain() + ". Батарей " + (G().ammo.energy || 0), keep: true, fn: function () { chargeBat(); } });
     [true, false].forEach(function (toDrone) {
       var p = transferPlan(toDrone);
       if (!p || p.received <= 0) return;
       items.push({ label: "Передать заряд " + (toDrone ? "дрону от каркаса" : "каркасу от дрона") + ". Получит " + p.received + ", источник отдаст " + p.sent + ".", keep: true, fn: function () { transfer(toDrone); } });
     });
-    [["scout", "Разведка при входе на этаж", "sensor"], ["stun", "Разряд в бою сам", "zapper"], ["gun", "Огонь в бою сам", "gun"], ["arm", "Починка вне боя сама", "arm"]].forEach(function (a) {
+    var toggles = [["scout", "Разведка при входе на этаж", "sensor"], ["stun", "Разряд в бою сам", "zapper"],
+      ["gun", "Огонь в бою сам", "gun"], ["arm", "Починка вне боя сама", "arm"]];
+    var mount = d.mods.find(function (id) { return MODS[id] && MODS[id].weapon; });
+    if (mount) toggles.push([mount, "Автоогонь. " + MODS[mount].n, mount]);
+    toggles.forEach(function (a) {
       if (!hasMod(a[2])) return;
       items.push({ label: a[1], kind: "choice", options: [{ v: 1, label: "да" }, { v: 0, label: "нет" }], get: function () { return d.auto[a[0]] ? 1 : 0; }, set: function (v) { d.auto[a[0]] = v ? 1 : 0; save(); snd("pwr_click", "ui_click"); } });
     });
@@ -662,7 +940,9 @@ function quick() {
 LAB.drone = {
   MODS: MODS, NEED: NEED, D: D, has: has, slots: slots, active: active, hasMod: hasMod, short: short,
   build: build, craftMod: craftMod, addMod: addMod, delMod: delMod, upgradeMod: upgradeMod, modRank: modRank, setRole: setRole, repair: repair, scrap: scrapDrone, scout: scout, scanSupplies: scanSupplies, treat: treat,
-  craftCable: craftCable, transfer: transfer,
+  craftCable: craftCable, transfer: transfer, tuneModule: tuneModule, setProgram: setProgram,
+  effect: effect, adjust: adjust, delay: delay, spend: spend, hostiles: hostiles, targetFlags: targetFlags, hitBack: hitBack,
+  recorded: recorded, save: save, markSeconds: markSeconds, overloadHelp: overloadHelp, directionRank: directionRank, unlockDepth: unlockDepth,
   hurt: hurt, onHurt: onHurt, onStep: onStep, tick: tick, onXP: onXP, commandSaving: commandSaving, energyCost: energyCost,
   carriedWeight: carriedWeight, carryCapacity: carryCapacity, cargoRecovery: cargoRecovery,
   pack: pack, charge: charge, chargeBat: chargeBat, chargePrice: chargePrice, line: line, charLine: charLine, benchLabel: benchLabel, benchMenu: benchMenu,

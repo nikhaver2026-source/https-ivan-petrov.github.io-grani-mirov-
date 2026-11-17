@@ -126,6 +126,7 @@ console.log("✓ Три комплекта грузового снаряжени
 
 // Рецепты, слоты, обратимый монтаж и замена источника питания.
 drone.benchMenu(3);
+top().items.find(item => /^Оборудование. Разведка/.test(item.label)).fn();
 top().items.find(item => /^Поисковый блок/.test(item.label)).fn();
 top().items.find(item => /^Собрать в запас/.test(item.label)).fn();
 assert.equal(hero.inv.dr_mod_scanner, 1);
@@ -357,3 +358,183 @@ assert.equal(exo.worn().profiles.load, 2);
 assert.equal(exo.worn().shRank, 3);
 assert.equal(g.G.weapons.find(item => item.id === weapon.id).tune.ranks.service, 3);
 console.log("✓ Три настройки оружия, экономия заряда и сохранение всех ступеней");
+
+// Расширенный каталог. Каждая модель имеет рецепт, игровой эффект и корректную настройку.
+const catalog = LAB.droneCatalog;
+assert.equal(Object.keys(drone.MODS).length, 40);
+assert.equal(Object.keys(catalog.modifications).length, 200);
+assert.equal(Object.keys(catalog.roles).length, 500);
+assert.equal(Object.keys(catalog.programs).length, 800);
+for (const [key, family] of Object.entries(catalog.directions)) {
+  assert.equal(family.roles.length, 25, key);
+  assert.equal(Object.values(catalog.programs).filter(p => p.family === key).length, 40, key);
+  assert.ok(family.roles.every(id => catalog.roles[id].direction === key));
+}
+for (const md of Object.values(drone.MODS)) {
+  assert.ok(catalog.groups[md.group]);
+  assert.ok(Object.keys(md.need).every(id => LAB.ITEMS[id]), md.n);
+}
+for (const [id, tune] of Object.entries(catalog.modifications)) {
+  assert.ok(catalog.metrics[tune.metric] && tune.fits.every(k => drone.MODS[k]), id);
+}
+console.log("✓ Каталог: 40 устройств, 200 модификаций, 500 специализаций и 800 направлений");
+
+// Глубина комплекса проверяется отдельно от номера этажа и развития героя.
+const advanced = g.G, machine = drone.D();
+const nextBench = g.CUR.fl.objs.find(obj => obj.id === bench.id);
+advanced.x = nextBench.x; advanced.y = nextBench.y;
+work._at(nextBench);
+const advancedFixture = work.bench(nextBench);
+advancedFixture.tier = 6; advancedFixture.dmg = false;
+advanced.event = "norm"; advanced.eventUntil = 1e9;
+advanced.lvl = 40; machine.lvl = 10;
+for (const id of Object.keys(LAB.ITEMS)) if (LAB.ITEMS[id].kind === "part") advanced.inv[id] = 100;
+for (const id of ["wire","relay","cap","chip","servo","rubber","scrap","gel","powercell","supercond","optic","panel","ceramic","magnet"]) advanced.inv[id] = 100;
+const depthHistory = advanced.maxF, currentDepth = advanced.L, currentFloor = advanced.F;
+advanced.maxF = {1:9, 2:9}; advanced.L = 2; advanced.F = 9;
+assert.equal(drone.craftMod("rail"), false, "девятый этаж не открывает чертёж уровня комплекса");
+assert.equal(drone.setRole("recon_attack_surge"), false);
+advanced.F = currentFloor;
+advanced.maxF = {...depthHistory, 15:1, 140:1}; advanced.L = currentDepth;
+assert.ok(drone.craftMod("rail"), messages.at(-1));
+assert.equal(advanced.inv.dr_mod_rail, 1);
+assert.ok(drone.addMod("rail"), messages.at(-1));
+assert.equal(drone.addMod("gun"), false, "второй ствол на один подвес не ставится");
+assert.equal(drone.tuneModule("rail", "gel_unit"), false, "чужая модификация отклоняется");
+assert.ok(drone.tuneModule("rail", "long_focus"), messages.at(-1));
+assert.equal(drone.adjust("fireRange", "rail"), 2);
+assert.ok(drone.tuneModule("rail", "long_focus_reserve"), messages.at(-1));
+machine.en = machine.enMax / 4 + 1;
+const normalRange = drone.adjust("fireRange", "rail");
+machine.en--;
+assert.ok(drone.adjust("fireRange", "rail") > normalRange, "резервная схема срабатывает при четверти заряда");
+assert.ok(drone.delMod("rail"), messages.at(-1));
+assert.equal(drone.adjust("fireRange", "rail"), 0);
+assert.ok(drone.addMod("rail"), messages.at(-1));
+assert.ok(drone.adjust("fireRange", "rail") > normalRange);
+assert.ok(drone.setRole("scout"), messages.at(-1));
+const program = "recon_lab_route";
+assert.ok(drone.setProgram(program), messages.at(-1));
+assert.equal(drone.setProgram("cargo_lab_route"), false, "направление должно совпадать с областью специализации");
+assert.equal(drone.adjust("scanRange", "scanner"), 4);
+drone.onXP(4000);
+assert.equal(drone.directionRank(machine, "recon"), 2);
+assert.equal(drone.adjust("scanRange", "scanner"), 4.5);
+assert.ok(drone.setRole("cargo"), messages.at(-1));
+assert.ok(drone.setRole("scout"), messages.at(-1));
+assert.equal(machine.programs.recon, program);
+assert.equal(drone.directionRank(machine, "recon"), 2);
+const normalCost = drone.energyCost(12, "scanner"), normalDepth = drone.unlockDepth(catalog.programs[program]);
+advanced.diff = 3;
+assert.ok(drone.energyCost(12, "scanner") > normalCost);
+assert.equal(drone.unlockDepth(catalog.programs[program]), normalDepth + 5);
+advanced.diff = 4;
+assert.ok(drone.energyCost(12, "scanner") < normalCost);
+assert.equal(drone.unlockDepth(catalog.programs[program]), normalDepth - 2);
+advanced.diff = 1;
+console.log("✓ Глубина и сложность меняют доступ и расход, специализация и опыт сохраняются");
+
+// Стрельба и обслуживание расходуют ресурс только после выбора допустимой цели.
+const originalVisible = LAB.combat.visibleFoes, originalDamage = LAB.combat.damageFoe;
+const host = {id:1, name:"Машина", kind:"mech", hp:100, arm:4, x:advanced.x + 1, y:advanced.y, dmg:0};
+const friend = {id:2, name:"Союзник", ally:true, kind:"mech", hp:100, arm:3, x:advanced.x, y:advanced.y + 1};
+LAB.combat.visibleFoes = () => [friend];
+machine.en = 80;
+assert.equal(LAB.droneOps.run("rail", false), false);
+assert.equal(machine.en, 80);
+LAB.combat.visibleFoes = () => [friend, host];
+LAB.combat.damageFoe = (to, amount) => { to.hp -= amount; };
+assert.ok(LAB.droneOps.run("rail", false), messages.at(-1));
+assert.equal(friend.hp, 100);
+assert.ok(host.hp < 100 && machine.en < 80);
+const spent = machine.en;
+assert.equal(LAB.droneOps.run("rail", false), false);
+assert.equal(machine.en, spent);
+LAB.combat.visibleFoes = originalVisible;
+LAB.combat.damageFoe = originalDamage;
+assert.ok(drone.delMod("rail"), messages.at(-1));
+assert.ok(drone.addMod("hemo"), messages.at(-1));
+advanced.hp = advanced.hpMax - 25; advanced.st.bleed = 3; advanced.inv.bandage = 2;
+inDanger = true;
+assert.equal(LAB.droneOps.run("hemo", false), false);
+assert.equal(advanced.inv.bandage, 2);
+inDanger = false;
+assert.ok(LAB.droneOps.run("hemo", false), messages.at(-1));
+assert.equal(advanced.inv.bandage, 1);
+assert.equal(advanced.st.bleed, 0);
+assert.ok(drone.delMod("hemo"), messages.at(-1));
+assert.ok(drone.addMod("regen"), messages.at(-1));
+machine.en = 10;
+for (let i = 0; i < 20; i++) drone.onStep();
+assert.ok(machine.en > 10);
+const recovered = machine.en;
+for (let i = 0; i < 20; i++) drone.onStep();
+assert.equal(machine.en, recovered);
+console.log("✓ Цели и перезарядка оружия, полевое лечение и предел рекуперации");
+
+// Вся звуковая сетка использует только зарегистрированные записи.
+const audio = LAB.droneAudio;
+const heard = [], originalSound = LAB.Sound;
+LAB.Sound = { play: (clip, opts) => heard.push([clip, opts]), synth: () => assert.fail("синтез звука дрона") };
+for (const [action, ids] of [["craft",Object.keys(drone.MODS)],["tune",Object.keys(catalog.modifications)],["role",Object.keys(catalog.roles)],["direction",Object.keys(catalog.programs)]]) {
+  const patterns = new Set();
+  for (const id of ids) {
+    const model = action === "tune" ? catalog.modifications[id].fits[0] : undefined;
+    const layers = audio.plan(action, id, model, false);
+    assert.ok(layers.every(layer => LAB.SND[layer.clip]?.f.length && layer.gain < 0.5), id);
+    patterns.add(JSON.stringify(layers));
+    audio.play(action, id, model);
+  }
+  assert.equal(patterns.size, ids.length, action);
+}
+assert.ok(heard.every(([, opts]) => opts.fb === null));
+assert.ok(audio.plan("fire", "rail", "rail", true)[0].gain < audio.plan("fire", "rail", "rail", false)[0].gain);
+LAB.Sound = originalSound;
+assert.equal(g.saveSlot(3), true);
+assert.equal(g.loadSlot(3), true);
+assert.equal(drone.D().programs.recon, program);
+assert.equal(drone.D().tuning.rail, "long_focus_reserve");
+assert.equal(drone.directionRank(drone.D(), "recon"), 2);
+assert.equal(drone.D().recovered[g.CUR.key], true);
+console.log("✓ Звуковые варианты из записей и сохранение схем, обучения и рекуперации");
+
+// У каждого оружия есть рабочая команда. Скрытая дверь остаётся скрытой при сканировании.
+const checked = g.G, checkedDrone = drone.D(), checkedBench = g.CUR.fl.objs.find(obj => obj.id === bench.id);
+checked.x = checkedBench.x; checked.y = checkedBench.y;
+work._at(checkedBench);
+work.bench(checkedBench).tier = 6;
+work.bench(checkedBench).dmg = false;
+checked.event = "norm";
+assert.equal(drone.delMod("regen"), true);
+const losBefore = LAB.los;
+LAB.los = () => true;
+LAB.combat.damageFoe = (target, amount) => { target.hp -= amount; };
+const living = { id:3, name:"Тварь", kind:"bio", hp:100, arm:1, x:checked.x + 1, y:checked.y, dmg:0 };
+host.x = checked.x + 2; host.y = checked.y;
+LAB.combat.visibleFoes = () => [host, living];
+for (const [id, md] of Object.entries(catalog.equipment).filter(([, def]) => def.weapon)) {
+  host.hp = living.hp = 100; host.frozen = living.frozen = living.blindT = 0;
+  assert.ok(drone.addMod(id), messages.at(-1));
+  checkedDrone.cd[id] = 0;
+  checkedDrone.en = 80;
+  assert.ok(LAB.droneOps.run(id, false), messages.at(-1));
+  assert.ok(Math.min(host.hp, living.hp) < 100, id);
+  if (id === "arc") assert.ok(host.hp < 100 && living.hp < 100);
+  if (id === "cryo") assert.ok(living.frozen > 0);
+  if (id === "sonic") assert.ok(living.blindT > 0);
+  if (id === "ion") assert.ok(host.frozen > 0 && living.hp === 100);
+  assert.equal(drone.delMod(id), true);
+}
+LAB.combat.visibleFoes = originalVisible;
+LAB.combat.damageFoe = originalDamage;
+assert.ok(drone.addMod("latch_scope"), messages.at(-1));
+const oldDoors = g.CUR.fl.doors;
+g.CUR.fl.doors = [{ id:"test-closed", lock:{type:"secret"}, x:checked.x+1, y:checked.y }, { id:"test-open", x:checked.x+1, y:checked.y }];
+g.CUR.fs.doors["test-open"] = 2;
+checkedDrone.en = 80;
+assert.ok(LAB.droneOps.run("latch_scope", false), messages.at(-1));
+assert.match(messages.at(-1), /Открытая дверь/);
+assert.doesNotMatch(messages.at(-1), /Закрытая дверь/);
+g.CUR.fl.doors = oldDoors;
+LAB.los = losBefore;
+console.log("✓ Все семь новых стволов выполняют команды, сканер сохраняет тайные двери");
