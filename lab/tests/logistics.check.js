@@ -536,6 +536,10 @@ for (const [id, tune] of Object.entries(catalog.modifications)) {
 }
 assert.equal(Object.keys(catalog.profiles).length, 23);
 assert.equal(Object.keys(catalog.parts).length, 16);
+const earlyBefore = g.G.L;
+g.G.L = 1;
+for (const id of ["dr_gimbal", "dr_optic"]) assert.ok(work.uses(id).unk > 0, id);
+g.G.L = earlyBefore;
 for (const [id, part] of Object.entries(catalog.parts)) {
   const recipe = LAB.RECIPES.find(rc => rc.out === id);
   assert.equal(LAB.ITEMS[id].kind, "part");

@@ -1615,7 +1615,11 @@ function uses(k) {
   var kn = [], unk = 0, L0 = G().L, pd = LAB.PART_DEPTH[k] || 1, L = Math.max(L0, pd + aheadOf(pd));
   if (L0 < 10 && pd < 10) L = Math.min(L, 9);
   LAB.RECIPES.forEach(function (rc) { if (!rc.need || !rc.need[k] || (rc.minL && rc.minL > L)) return; if (known(rc)) kn.push(rc.n.toLowerCase()); else unk++; });
-  if (LAB.ITEMS[k] && LAB.ITEMS[k].dronePart && LAB.drone) kn = kn.concat(LAB.drone.partUses(k, L));
+  if (LAB.ITEMS[k] && LAB.ITEMS[k].dronePart && LAB.drone) {
+    var droneUses = LAB.drone.partUses(k, L);
+    kn = kn.concat(droneUses.kn);
+    unk += droneUses.unk;
+  }
   return { kn: kn, unk: unk };
 }
 function partLine(k) {

@@ -1018,12 +1018,14 @@ function tuningOptions(k, mode, ids) {
 }
 /* В справочнике деталей показываем схемы, доступные на указанной глубине. */
 function partUses(part, level) {
-  if (!catalog.parts[part]) return [];
-  var found = [];
-  [MODS, catalog.modifications, catalog.profiles].forEach(function (entries) {
+  var found = { kn: [], unk: 0 };
+  if (!catalog.parts[part]) return found;
+  [MODS, catalog.modifications, catalog.profiles, ROLES].forEach(function (entries) {
     Object.keys(entries).forEach(function (id) {
       var def = entries[id];
-      if (def.need && def.need[part] && unlockDepth(def) <= level) found.push(def.n.toLowerCase());
+      if (!def.need || !def.need[part]) return;
+      if (unlockDepth(def) <= level) found.kn.push(def.n.toLowerCase());
+      else found.unk++;
     });
   });
   return found;

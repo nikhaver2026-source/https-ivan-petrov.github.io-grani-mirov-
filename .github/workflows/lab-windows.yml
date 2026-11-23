@@ -20,7 +20,7 @@
 # До выпуска каждая сборка проходит самопроверку дважды: без голосов игрока
 # (говорит встроенный eSpeak) и с голосами, поставленными так же, как у игрока
 # (RHVoice из дополнения NVDA и eSpeak NG), — мост должен их найти. Выпуск
-# «lab-windows-5.6» несёт оба архива.
+# «lab-windows-5.6-r2» несёт оба архива.
 name: Подземная лаборатория — Windows
 
 on:
@@ -277,7 +277,7 @@ jobs:
           retention-days: 90
 
   release:
-    name: Выпуск «lab-windows-5.6»
+    name: Выпуск «lab-windows-5.6-r2»
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -295,7 +295,7 @@ jobs:
           Z64: Podzemnaya-laboratoriya-Alfa-5.6-windows-64bit.zip
           Z32: Podzemnaya-laboratoriya-Alfa-5.6-windows-32bit.zip
         run: |
-          TAG=lab-windows-5.6
+          TAG=lab-windows-5.6-r2
           TITLE="Подземная лаборатория Альфа 5.6 для Windows"
           ls -la
           test -s "$Z64" && test -s "$Z32"

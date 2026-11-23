@@ -43,13 +43,14 @@ function at(id, x, y, o) {
   var occ = false;
   try { occ = !LAB.los(CUR().fl, CUR().fs, g.x, g.y, x, y); } catch (e) { occ = false; }
   var cur = CUR(), floor = cur.key;
+  function outOfRange() { return !o.blast && LAB.game.canHear && !LAB.game.canHear(x, y); }
   function point() {
     if (G() !== g || CUR().key !== floor || !LAB.game.entered || (o.active && !o.active())) return null;
     return { dx: x - g.x, dy: y - g.y, occ: !LAB.los(CUR().fl, CUR().fs, g.x, g.y, x, y),
-      muted: !!g.stair || (LAB.game.canHear && !LAB.game.canHear(x, y)) };
+      muted: !!g.stair || outOfRange() };
   }
   if (o.follow && cur.fl) o.position = point;
-  else if (LAB.game.canHear && !LAB.game.canHear(x, y)) return null;
+  else if (outOfRange()) return null;
   o.at = { dx: x - g.x, dy: y - g.y, occ: occ };
   if (Date.now() < deafUntil) { o.lp = Math.min(o.lp || 18000, 650); o.gain = (o.gain == null ? 1 : o.gain) * 0.6; }
   return play(id, o);
@@ -797,14 +798,14 @@ function explosion(x, y, kind) {
   /* далеко: от взрыва — глухой раскат, осколки и осыпь не слышны; прочее — только главный слой, приглушённый */
   if (far) lay = BLAST[kind] && has("explosion_far") ? [["explosion_far", 1.1, 0, 0.8]] : lay.slice(0, 1);
   lay.forEach(function (l) {
-    at(l[0], x, y, { gain: l[1] * (far ? 0.85 : 1), delay: l[2], reverb: Math.min(1, l[3] + (far ? 0.2 : 0)), rate: l[4] || 1, lp: far ? 1600 : null });
+    at(l[0], x, y, { blast: true, gain: l[1] * (far ? 0.85 : 1), delay: l[2], reverb: Math.min(1, l[3] + (far ? 0.2 : 0)), rate: l[4] || 1, lp: far ? 1600 : null });
   });
   /* светошумовая и звуковая рядом — звон в ушах */
   if ((kind === "flash" || kind === "sonic") && d <= 3 && has("explosion_ring")) play("explosion_ring", { gain: 0.6, delay: 0.25, bus: "fx" });
   /* кассетная: малые заряды рассыпаются вокруг и рвутся один за другим */
   if (kind === "cluster" && !far) for (var i = 0; i < 4; i++) {
     var an = i * Math.PI / 2 + 0.6;
-    at("explosion_small", Math.round(x + Math.cos(an) * 2), Math.round(y + Math.sin(an) * 2), { gain: 0.9, delay: 0.28 + i * 0.16 + Math.random() * 0.07, reverb: 0.55 });
+    at("explosion_small", Math.round(x + Math.cos(an) * 2), Math.round(y + Math.sin(an) * 2), { blast: true, gain: 0.9, delay: 0.28 + i * 0.16 + Math.random() * 0.07, reverb: 0.55 });
   }
   if (g && d <= 2) LAB.vib(kind === "big" || kind === "shell" || kind === "charge" || kind === "cluster" ? [90, 50, 160] : [60, 40, 120]);
 }
