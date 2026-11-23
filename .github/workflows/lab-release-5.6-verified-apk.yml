@@ -1,0 +1,62 @@
+name: Подземная лаборатория Альфа 5.6 — проверенный APK
+
+on:
+  push:
+    branches: ['codex/lab-publish-5.6']
+    paths: ['.github/workflows/lab-release-5.6-verified-apk.yml']
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      APK_RUN: '45172318733'
+      APK_COMMIT: '24ce7851adb053966145053fb17f61dc2fd01b44'
+      CHROMIUM_RUN: '45174375072'
+      CHROMIUM_COMMIT: 'ca1a55b9083b9792fc0530698427e6323cf70b54'
+      APK_NAME: Podzemnaya-laboratoriya-Alfa-5.6.apk
+      APK_SHA256: 'ccf4bef7c778971e311add2a400b25a4a5ffb5baa2d3c2975c4f220003d30e5c'
+      TAG: lab-android-5.6
+    steps:
+      - name: Проверить результаты сборки, эмуляторов и Chromium
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$APK_RUN/jobs?per_page=100" |
+            jq -e --arg sha "$APK_COMMIT" '
+              (.jobs | all(.head_sha == $sha)) and
+              any(.jobs[]; .name == "build" and .conclusion == "success") and
+              any(.jobs[]; .name == "Генерация этажей и данные" and .conclusion == "success") and
+              ([.jobs[] | select(.name | startswith("Дополнительные версии Android / "))] |
+                length == 8 and all(.conclusion == "success"))'
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CHROMIUM_RUN/jobs?per_page=100" |
+            jq -e --arg sha "$CHROMIUM_COMMIT" '
+              any(.jobs[]; .name == "Chromium" and .head_sha == $sha and .conclusion == "success")'
+          gh api "repos/$GITHUB_REPOSITORY/compare/$APK_COMMIT...$CHROMIUM_COMMIT" |
+            jq -e '
+              .status == "ahead" and
+              ([.files[].filename] | sort) == [".github/workflows/lab-windows.yml","lab/tests/play.test.js"]'
+
+      - name: Скачать подписанный APK и проверить контрольную сумму
+        run: |
+          mkdir -p "$RUNNER_TEMP/dist"
+          cd "$RUNNER_TEMP/dist"
+          gh run download "$APK_RUN" --repo "$GITHUB_REPOSITORY" --name podzemnaya-laboratoriya-alfa-5.6-apk
+          printf '%s  %s\n' "$APK_SHA256" "$APK_NAME" | sha256sum --check
+
+      - name: Опубликовать Альфу 5.6 для Android
+        run: |
+          cd "$RUNNER_TEMP/dist"
+          if gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" > "$RUNNER_TEMP/release.json" 2>/dev/null; then
+            jq -e --arg sha "$APK_COMMIT" --arg file "$APK_NAME" --arg digest "sha256:$APK_SHA256" '
+              .target_commitish == $sha and
+              (.draft | not) and
+              any(.assets[]; .name == $file and .digest == $digest)
+            ' "$RUNNER_TEMP/release.json"
+            exit 0
+          fi
+          printf '%s\n'             'Полная сборка игры со звуками, музыкой и встроенным голосом.'             'Установка и запуск проверены на Android 9–17. Подпись совместима с прежним выпуском.'             > "$RUNNER_TEMP/notes.md"
+          gh release create "$TAG" "$APK_NAME" --repo "$GITHUB_REPOSITORY"             --target "$APK_COMMIT" --prerelease             --title 'Подземная лаборатория. Альфа 5.6 для Android' --notes-file "$RUNNER_TEMP/notes.md"
