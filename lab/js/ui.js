@@ -871,6 +871,7 @@ function invItems() {
     { label: "Защита и инструменты: " + cnt(catIds("protect").concat(catIds("tool"))), fn: toolsMenu },
     { label: "Ценности: " + cnt(catIds("valuable")), fn: valuablesMenu },
     { label: "Детали: " + cnt(LAB.PARTS), fn: partsMenu },
+    { label: "Обстановка этажа", fn: function () { LAB.game.environmentMenu(); } },
     { label: "Химия: сырьё: " + (LAB.chem ? LAB.chem.matCount() : 0), fn: function () { if (LAB.chem) LAB.chem.invMenu(); } }, /* (3.0) */
     { label: "Модули оружия в запасе: " + cnt(modIds()), fn: modsMenu },
     LAB.forge ? LAB.forge.invLine() : null, /* (после 4.6) инженерное: каркас, дрон, ядра и заряды */

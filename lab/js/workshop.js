@@ -383,7 +383,7 @@ function bench(o) {
 }
 function profs(b) { return b && b.spec ? String(b.spec).split(",") : []; }
 function hasP(b, p) { return profs(b).indexOf(p) >= 0; }
-function reserve() { return G().event === "dark"; }
+function reserve() { return G().event === "dark" || gm().gridOffline(); }
 function effTier(b) { return reserve() || b.dmg ? 1 : b.tier; }
 function benchLine(b) {
   var t = TIER[b.tier], ps = profs(b).filter(function (p) { return SPEC[p]; }), s = cap1(t.n) + ": " + t.d + ".";
@@ -496,7 +496,8 @@ var batch = false;
 function batchable(rc) { var o = String(rc.out); return o.indexOf("weapon:") !== 0 && o.indexOf("armor:") !== 0; }
 function batchOn(rc, b) { return batch && !!b && effTier(b) >= 4 && batchable(rc); }
 function batch5(b) { return !!b && effTier(b) >= 8; }
-function craftTimes(rc) { var b = nearBench(); return batchOn(rc, b) ? (batch5(b) ? 5 : 3) : 1; }
+function craftTimesAt(rc, b) { return batchOn(rc, b) ? (batch5(b) ? 5 : 3) : 1; }
+function craftTimes(rc) { return craftTimesAt(rc, nearBench()); }
 function needText(rc) {
   var g = G(), s = [], need = needOf(rc);
   for (var k in need) {
@@ -505,13 +506,9 @@ function needText(rc) {
   }
   return s.join(", ");
 }
-function missText(rc) {
-  var g = G(), s = [], need = needOf(rc);
-  for (var k in need) { var have = g.inv[k] || 0; if (have < need[k]) s.push((LAB.ITEMS[k] ? LAB.ITEMS[k].n.toLowerCase() : k) + " " + have + " из " + need[k]); }
-  return s.join(", ");
-}
 function tierWhy(b, t) {
   if (b.tier >= t && b.dmg) return "Станки этого верстака разбиты: сейчас работает только ручной инструмент. Сначала почините верстак — пункт «Починить верстак».";
+  if (b.tier >= t && gm().gridOffline()) return "Перезагрузка систем. Пока на верстаке работает только ручной инструмент.";
   if (b.tier >= t && reserve()) return "Аварийное освещение: верстак на резервном питании, станки стоят. Дождитесь света — или соберите что-то базовое.";
   if (t >= 6) return "Здесь не собрать: нужен " + TIER[t].n + " — оснастка Нижних, " + (["", "", "", "", "", "", "она стоит в мастерских глубин начиная с Полигона", "она стоит в мастерских глубин начиная с Института", "она стоит в мастерских глубин начиная с Посёлка", "она стоит в мастерских глубин начиная с Котла", "она есть только в Основании"])[t] + "; чаще всего — в мастерских этажей.";
   return "Здесь не собрать: нужен " + TIER[t].n + (t === 5 ? " — такие стоят только в самой глубине, в мастерских этажей." : t === 4 ? " — такие стоят глубже десятого уровня, чаще в мастерских этажей." : t === 3 ? " — стенды опытной серии стоят глубже, в лабораториях." : " — паяльная станция и тестер; они чаще в ремонтных боксах и сборочных цехах.");
@@ -782,6 +779,26 @@ function repairCost(w, cap, b) {
   return need;
 }
 function costText(need) { var s = []; for (var k in need) s.push((LAB.ITEMS[k] ? LAB.ITEMS[k].n.toLowerCase() : k) + " " + need[k]); return s.join(", "); }
+/* Запас для одной операции или партии. Ограничение конкретного улучшения передаёт меню. */
+function materialsText(need, options) {
+  options = options || {};
+  var names = options.name || function (id) { return LAB.ITEMS[id] ? LAB.ITEMS[id].n.toLowerCase() : id; };
+  var stock = options.stock || G().inv;
+  var limit = options.limit == null ? Infinity : Math.max(0, options.limit);
+  var parts = Object.keys(need).filter(function (id) { return need[id] > 0; }).map(function (id) {
+    var have = Math.max(0, stock[id] || 0);
+    limit = Math.min(limit, Math.floor(have / need[id]));
+    return names(id) + " — расход " + need[id] + ", в рюкзаке " + have;
+  });
+  if (!parts.length) return "Расходников нет.";
+  if (options.detailsOnly) return parts.join(". ") + ".";
+  var batchSize = options.batch || 1, output = limit * batchSize;
+  var count = options.action ? "По запасам " + limit + " " + LAB.plural(limit, "операция", "операции", "операций") :
+    batchSize > 1 ? "По запасам " + limit + " " + LAB.plural(limit, "партия", "партии", "партий") +
+      " по " + batchSize + ", всего " + output + " " + LAB.plural(output, "предмет", "предмета", "предметов") :
+      "По запасам " + output + " " + LAB.plural(output, "предмет", "предмета", "предметов");
+  return count + ". " + (batchSize > 1 ? "На партию. " : "За раз. ") + parts.join(". ") + ".";
+}
 function haveAll(need) { var g = G(); for (var k in need) if ((g.inv[k] || 0) < need[k]) return false; return true; }
 function take(need) { var g = G(); for (var k in need) g.inv[k] -= need[k]; }
 function repairCap(b) { return effTier(b) >= 2 ? 100 : (hasP(b, "repair") ? 90 : 80) + (LAB.mastery && LAB.mastery.has("arms") ? 5 : 0); } /* (после 4.6) оружейник */
@@ -1454,9 +1471,9 @@ function recLabel(rc, b) {
   var cyb = rc.cyb && IM && IM.craftWhy(rc) ? "нужна кибернетика «" + (IM.CATS[rc.cyb] ? IM.CATS[rc.cyb].n : rc.cyb) + "», ступень " + (rc.cybN || 0) : "";
   /* (после 4.1) ловушке глубин не хватает ловушечного дела — так и сказать */
   var trp = rc.trapN && LAB.traps && LAB.traps.craftWhy && LAB.traps.craftWhy(rc) ? "нужно ловушечное дело, ступень " + rc.trapN : "";
-  var st = !why ? "можно собрать" : rc.minL && g.L < rc.minL ? "с уровня " + rc.minL : cyb ? cyb : trp ? trp : /^Не хватает:/.test(why) ? "нужно: " + (missText(rc) || needText(rc)) : tierOf(rc) > effTier(b) ? (b.dmg || reserve() ? "станки не работают" : "нужен " + TIER[tierOf(rc)].n) : "нельзя";
+  var st = !why ? "можно собрать" : rc.minL && g.L < rc.minL ? "с уровня " + rc.minL : cyb ? cyb : trp ? trp : /^Не хватает:/.test(why) ? "не хватает ресурсов" : tierOf(rc) > effTier(b) ? (b.dmg || reserve() ? "станки не работают" : "нужен " + TIER[tierOf(rc)].n) : "нельзя";
   var ds = outDesc(rc);
-  return rc.n + " — " + st + ". " + cap1(clsName(rc)) + "." + (ds ? " " + ds : "") + (LAB.mastery ? LAB.mastery.forecast(rc, b) : ""); /* (после 4.6) прогноз мастера */
+  return rc.n + " — " + st + ". " + materialsText(needOf(rc, b), { batch: craftTimesAt(rc, b) }) + " " + cap1(clsName(rc)) + "." + (ds ? " " + ds : "") + (LAB.mastery ? LAB.mastery.forecast(rc, b) : ""); /* (после 4.6) прогноз мастера */
 }
 function groupItems(nm) {
   var b = bench(cur.o), list = avail().filter(function (rc) { return known(rc) && groupOf(rc) === nm; });
@@ -1624,9 +1641,9 @@ LAB.workshop = {
   srcOf: srcOf, uses: uses, heats: heats, hmax: hmax, MODS: MODS, MOD_ORDER: MOD_ORDER, TIER: TIER,
   /* (после 4.1) снаряжение глубин: детали Нижних, модули, оснастка и её работа */
   DEEP_PARTS: DEEP_PARTS, DEEP_MODS: DEEP_MODS, DEEP_SVC: DEEP_SVC, CLS_T: CLS_T, tierOf: tierOf, clsName: clsName, deepTop: deepTop, blockFrom: blockFrom, blockAt: blockAt,
-  onHit: onHit, deepK: deepK, deepSvc: deepSvc, deepMenu: deepMenu, batch5: batch5, craftTimesAt: function (rc, b) { return batchOn(rc, b) ? (batch5(b) ? 5 : 3) : 1; },
+  onHit: onHit, deepK: deepK, deepSvc: deepSvc, deepMenu: deepMenu, batch5: batch5, craftTimesAt: craftTimesAt,
   _at: function (o) { cur = o ? { o: o, key: CUR().key } : null; },
   /* (после 4.6) мастерство и инженерное дело: верстак рядом, возврат в окно мастерской, разделы рецептов */
-  near: nearBench, toRoot: toRoot, groupOf: groupOf, haveAll: haveAll, take: take, costText: costText, costLack: costLack, seq: seq, base: base, md: md, melee: melee, battery: battery, wcls: wcls
+  near: nearBench, toRoot: toRoot, groupOf: groupOf, haveAll: haveAll, take: take, costText: costText, materialsText: materialsText, costLack: costLack, seq: seq, base: base, md: md, melee: melee, battery: battery, wcls: wcls
 };
 })();

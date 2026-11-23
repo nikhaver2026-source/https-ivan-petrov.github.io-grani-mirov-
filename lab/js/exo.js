@@ -384,9 +384,10 @@ function profileWork(f, key, upgrade) {
   if (LAB.load) LAB.load.after();
   return true;
 }
+var SHIELD_NEED = { scrap: 4, ceramic: 2, panel: 1 };
 function setShield(f) {
   if (f.back === "shield") { say("Щит уже на спине."); return false; }
-  var need = { scrap: 4, ceramic: 2, panel: 1 }, why = canWork(2, need);
+  var need = SHIELD_NEED, why = canWork(2, need);
   if (why) { LAB.UI.error(); say("Ростовой щит: " + why + "."); return false; }
   W().take(need); addNeed(f, need);
   f.back = "shield";
@@ -454,7 +455,7 @@ function benchMenu(et) {
   var build_ = function () {
     var items = CLS_ORDER.map(function (k) {
       var c = CLS[k], t = k === "heavy" ? heavyTier() : c.tier;
-      return { label: "Собрать: " + c.n + " — " + c.d + ". Детали: " + W().costText(c.need) + (tierNow() < t ? ". Нужен верстак ступени " + t : ""), keep: true, fn: function () { build(k); } };
+      return { label: "Собрать: " + c.n + ". " + W().materialsText(c.need) + " " + c.d + (tierNow() < t ? ". Нужен верстак ступени " + t : ""), keep: true, fn: function () { build(k); } };
     });
     X().forEach(function (f) { items.push({ label: "Узлы: " + line(f), fn: function () { frameBench(f); } }); });
     items.push({ label: "Назад", close: true, fn: function () {} });
@@ -467,22 +468,22 @@ function frameBench(f) {
     var items = [];
     ["arms", "legs", "cell"].forEach(function (k) {
       var nd = NODE[k], cur = nd.cur(f), mx = nd.max(f);
-      items.push({ label: cap1(nd.n) + ": " + cur + " из " + mx + (cur < mx ? ". Поднять: " + W().costText(nd.need(f)) + (tierNow() < nd.tier(f) ? ", нужен верстак ступени " + nd.tier(f) : "") : ". Предел"), keep: true, fn: function () { upNode(f, k); } });
+      items.push({ label: cap1(nd.n) + ": " + cur + " из " + mx + (cur < mx ? ". Поднять: " + W().materialsText(nd.need(f), { limit: 1, action: true }) + (tierNow() < nd.tier(f) ? ", нужен верстак ступени " + nd.tier(f) : "") : ". Предел"), keep: true, fn: function () { upNode(f, k); } });
     });
     items.push({ label: "Усиление каркаса: опоры, амортизаторы и стабилизатор", fn: function () { profileMenu(f); } });
     items.push({ label: "Накладки: " + (f.plates || []).length + " из " + plateMax(f) + ". Поставить ещё", fn: function () { plateMenu(f); } });
     if ((f.plates || []).length) items.push({ label: "Снять последнюю накладку — облегчить каркас", keep: true, fn: function () { dropPlate(f); } });
     if (clsOf(f).sh) Object.keys(MOUNT).forEach(function (k) {
       var mt = MOUNT[k], owned = f.mounts && f.mounts[k];
-      items.push({ label: "На плечо: " + mt.n + (f.sh === k ? ", установлено" : owned ? ", установить ступень " + owned + " из запаса каркаса" : ". " + mt.d + ". Детали: " + W().costText(mt.need)), keep: true, fn: function () { setMount(f, k); } });
+      items.push({ label: "На плечо: " + mt.n + (f.sh === k ? ", установлено" : owned ? ", установить ступень " + owned + " из запаса каркаса" : ". " + mt.d + ". Детали: " + W().materialsText(mt.need, { limit: 1, action: true })), keep: true, fn: function () { setMount(f, k); } });
     });
     if (f.sh && mountRank(f) < 3) {
       var rank = mountRank(f) + 1;
-      items.push({ label: "Усилить наплечный блок до ступени " + rank + ". Верстак ступени " + (rank + 2) + ". Детали: " + W().costText(mountNeed(rank)) + ".", keep: true, fn: function () { upgradeMount(f); } });
+      items.push({ label: "Усилить наплечный блок до ступени " + rank + ". Верстак ступени " + (rank + 2) + ". " + W().materialsText(mountNeed(rank), { limit: 1, action: true }), keep: true, fn: function () { upgradeMount(f); } });
     }
-    items.push({ label: "На спину: ростовой щит" + (f.back ? " — стоит" : ". Гасит удары сзади вдвое. Детали: лом 4, керамика 2, защитная панель 1"), keep: true, fn: function () { setShield(f); } });
+    items.push({ label: "На спину: ростовой щит" + (f.back ? " — стоит" : ". Гасит удары сзади вдвое. " + W().materialsText(SHIELD_NEED, { limit: 1, action: true })), keep: true, fn: function () { setShield(f); } });
     var rc = repairCost(f);
-    if (rc) items.push({ label: "Починить каркас: " + W().costText(rc), keep: true, fn: function () { repair(f); } });
+    if (rc) items.push({ label: "Починить каркас. " + W().materialsText(rc, { limit: 1, action: true }), keep: true, fn: function () { repair(f); } });
     items.push({ label: "Разобрать каркас: вернётся половина деталей", fn: function () { scrap(f); LAB.ui.closeTop && LAB.ui.closeTop(true); } });
     items.push({ label: "Назад", close: true, fn: function () {} });
     return items;
@@ -495,7 +496,7 @@ function profileMenu(f) {
     Object.keys(PROFILES).forEach(function (k) {
       var p = PROFILES[k], cur = profileRank(f, k), next = cur + 1;
       if (cur && f.profile !== k) rows.push({ label: "Включить «" + p.n + "», ступень " + cur + ". " + cap1(p.text(cur)) + ".", keep: true, fn: function () { profileWork(f, k, false); } });
-      if (next <= 3) rows.push({ label: p.n + ", ступень " + next + ". " + cap1(p.text(next)) + ". Верстак ступени " + (next + 1) + ". Детали: " + W().costText(profileNeed(k, next)) + ".", keep: true, fn: function () { profileWork(f, k, true); } });
+      if (next <= 3) rows.push({ label: p.n + ", ступень " + next + ". " + cap1(p.text(next)) + ". Верстак ступени " + (next + 1) + ". " + W().materialsText(profileNeed(k, next), { limit: 1, action: true }), keep: true, fn: function () { profileWork(f, k, true); } });
     });
     return rows.concat({ label: "Назад", close: true, fn: function () {} });
   };
@@ -504,7 +505,7 @@ function profileMenu(f) {
 function plateMenu(f) {
   var items = PLATE_ORDER.map(function (p) {
     var pl = PLATES[p], rs = []; for (var t in pl.res) rs.push((LAB.ATK_T[t] || (t === "rad" ? "радиация" : t)) + " " + Math.round(pl.res[t] * 100) + "%");
-    return { label: cap1(pl.n) + ": защита плюс " + pl.def + ", стойкость " + rs.join(", ") + ". Детали: " + W().costText(pl.need) + (tierNow() < pl.tier ? ". Нужна оснастка ступени " + pl.tier : ""), fn: function () { addPlate(f, p); } };
+    return { label: cap1(pl.n) + ": защита плюс " + pl.def + ", стойкость " + rs.join(", ") + ". Детали: " + W().materialsText(pl.need, { limit: Math.max(0, plateMax(f) - (f.plates || []).length), action: true }) + (tierNow() < pl.tier ? " Нужна оснастка ступени " + pl.tier : ""), fn: function () { addPlate(f, p); } };
   });
   items.push({ label: "Назад", close: true, fn: function () {} });
   menu("Накладки каркаса", items);

@@ -283,7 +283,7 @@ function items(o) {
   out.push({ label: stateLine(o), info: true, keep: true, fn: function () { say(stateLine(o)); } });
   if (s.cup) out.push({ label: "Кружка на столе: " + cupName(s.cup), fn: function () { cupMenu(o); } });
   if (b) out.push({ label: "Подождать, пока закипит", fn: function () { UIx("closeAll"); sayq("Вы ждёте у чайника: шум нарастает."); } });
-  else if (s.kw > 0 && !hot) out.push({ label: coalK(o) ? "Вскипятить чайник на углях" : "Вскипятить чайник", fn: function () { boil(o); } });
+  else if (s.kw > 0 && !hot) out.push({ label: coalK(o) ? "Вскипятить чайник на углях" : "Вскипятить чайник" + (gm().gridOffline() ? ". Питание отключено" : ""), fn: function () { boil(o); } });
   if (hot && s.kw > 0 && !b && !s.cup) {
     if (has(s, "tea")) out.push({ label: "Заварить чай", fn: function () { brew(o, "tea"); } });
     if (has(s, "cof")) out.push({ label: "Заварить растворимый кофе", fn: function () { brew(o, "cof"); } });
@@ -309,25 +309,30 @@ function menu(o, title) {
 /* ── вскипятить ── */
 function boil(o) {
   var s = kst(o);
+  if (gm().gridOffline() && !coalK(o)) { say(gm().gridNotice); return false; }
   if (isBoiling(o)) { say("Чайник и так уже шумит."); return false; }
   if (!s.kw) { say("Чайник пуст: сначала наберите воды."); return false; }
   if (isHot(s)) { say("Чайник и так горячий."); return false; }
   UIx("closeAll");
   var g = G(), k = kkey(o), key = CUR().key;
-  boiling[k] = { g: g, t: Date.now() };
   var coal = coalK(o);
-  at(coal ? "ev_steam" : "kettle_boil", o);
+  var task = boiling[k] = { g: g, t: Date.now(), floor: key, electric: !coal };
+  A("at", coal ? "ev_steam" : "kettle_boil", o.x, o.y, {
+    follow: true, vary: 0, reverb: 0.08, prio: 2, wait: 1500,
+    active: function () { return boiling[k] === task; }
+  });
   noise(2);
   turns(1);
   say(coal ? "Вы подвигаете чайник на самый жар и раздуваете угли: вода зашумела. Скоро закипит." : "Щелчок выключателя — чайник зашумел. Секунд десять, и закипит.");
-  gm().later(function () { boilEnd(o, s, k, g, key); }, BOIL_MS);
+  gm().later(function () { boilEnd(o, s, k, task); }, BOIL_MS);
   return true;
 }
-function boilEnd(o, s, k, g, key) {
-  var b = boiling[k]; delete boiling[k];
-  if (!b || b.g !== g || G() !== g || g.dead) return;
+function boilEnd(o, s, k, task) {
+  if (boiling[k] !== task) return;
+  delete boiling[k];
+  if (G() !== task.g || task.g.dead) return;
   s.kt = nowMin() + HOT_MIN;
-  if (CUR().key !== key) return;
+  if (CUR().key !== task.floor) return;
   var d = cheb(o);
   if (d > 6) return;
   if (d <= 1 && !(LAB.ui.layer && LAB.ui.layer()) && !danger()) { menu(o, "Чайник вскипел"); return; }
@@ -575,7 +580,7 @@ function samFire(o) {
   if (danger()) { if (LAB.UI && LAB.UI.error) LAB.UI.error(); say("Не до самовара: рядом опасность."); return false; }
   s.sf--;
   UIx("closeAll");
-  at("kettle_boil", o);
+  A("at", "kettle_boil", o.x, o.y, { follow: true, vary: 0, prio: 2, wait: 1500 });
   noise(2);
   spend(SFIRE); turns(2);
   s.sh = nowMin() + SHOT;
@@ -667,6 +672,11 @@ LAB.kitchen = {
   /* для проверок: кипение без ожидания, сброс */
   _boilNow: function (o) { var s = kst(o); delete boiling[kkey(o)]; s.kt = nowMin() + HOT_MIN; return s; },
   _boiling: function (o) { return isBoiling(o); },
+  powerLost: function () {
+    Object.keys(boiling).forEach(function (key) {
+      if (boiling[key].floor === CUR().key && boiling[key].electric) delete boiling[key];
+    });
+  },
   _reset: function () { boiling = {}; },
   COLD: COLD, COOKED: COOKED, BOIL_MS: BOIL_MS
 };

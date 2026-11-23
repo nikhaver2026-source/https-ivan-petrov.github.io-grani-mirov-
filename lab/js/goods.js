@@ -75,6 +75,10 @@ var ITEMS = {
 
   /* защита: расходники */
   respirator:{ n: "Респиратор с угольным фильтром", icon: "😷", kind: "use", cat: "protect", desc: "Пять минут газ, споры и ядовитые пары не действуют: дышите через угольный фильтр. Яд укуса и съеденное он не остановит.", fx: { antitox: 600 }, price: 40, depth: 1 },
+  airmask: { n: "Дыхательная маска", kind: "use", cat: "protect", wt: 0.8, price: 60, fixedStock: true,
+    desc: "Надеть или снять герметичную маску. При отказе подачи воздуха или в дыму она расходует кислород из баллонов." },
+  oxygen_tank: { n: "Кислородный баллон", kind: "use", cat: "protect", wt: 2.2, price: 35, fixedStock: true,
+    desc: "Запас кислорода на 12 минут комплекса. С надетой маской следующий баллон подключается автоматически." },
   tape:      { n: "Изолента", icon: "🎗️", kind: "use", cat: "protect", desc: "Моток изоленты. Вплотную к камере ОКО — заклеить объектив: камера ослепнет, пока ремонтник не отклеит.", price: 8, depth: 1 },
 
   /* инструменты: не тратятся */
@@ -121,6 +125,7 @@ var REC = [
   { id: "a_radsuit", out: "armor:radsuit", n: "Противорадиационный комбинезон «Свинец»", need: { lead: 5, rubber: 2, wire: 2, scrap: 2 }, minL: 2, bp: true, cls: "spec", desc: "Защита от излучения шестьдесят процентов." },
   { id: "a_hazmat", out: "armor:hazmat", n: "Изолирующий костюм «Барьер»", need: { rubber: 4, filtercart: 2, lead: 3, wire: 2 }, minL: 3, bp: true, cls: "spec", desc: "Газ вчетверо слабее, яды действуют вдвое короче, половина излучения не проходит." },
   { id: "a_reactorsuit", out: "armor:reactorsuit", n: "Скафандр реакторщика «Исток-Р»", need: { lead: 8, ceramic: 3, rubber: 3, supercond: 1, chip: 2 }, minL: 6, bp: true, cls: "exp", desc: "Почти всё излучение остаётся снаружи." },
+  { id: "airmask", out: "airmask", n: "Дыхательная маска", need: { rubber: 2, filtercart: 1, wire: 1 }, cls: "base" },
   { id: "respirator", out: "respirator", n: "Респиратор с угольным фильтром", need: { filtercart: 1, rubber: 1 }, cls: "base" },
   { id: "antirad", out: "antirad", n: "Антирадин", need: { reagent: 2, gel: 1 }, cls: "spec" },
   { id: "iodine", out: "iodine", n: "Йодид калия", need: { c_iodine: 1, reagent: 1 }, cls: "base" }, /* (3.7) йодид — из кристаллического йода */

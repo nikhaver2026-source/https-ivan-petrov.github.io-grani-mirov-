@@ -109,6 +109,64 @@ function ok(c, m) { console.log((c ? "  ✓ " : "  ✗ ") + m); if (!c) fails++;
   ok(s, "после пересоздания записи звучат");
   await page.evaluate(() => LAB.Sound.stopLoop("bed", 0.1));
 
+  await page.evaluate(() => new Promise(r => LAB.Sound.preload(["kettle_boil"], r)));
+  s = await page.evaluate(async () => {
+    const gm = LAB.game;
+    gm.newGame();
+    LAB.combat.stop();
+    gm.G.event = "norm";
+    const x = gm.G.x, y = gm.G.y;
+    const kettle = { id: "test-kettle", type: "kettle", x, y, room: null };
+    LAB.kitchen.state(kettle).kw = 2;
+    const context = LAB.AE.ctx;
+    const create = context.createStereoPanner;
+    const panNodes = [];
+    context.createStereoPanner = function () {
+      const node = create.call(this);
+      panNodes.push(node);
+      return node;
+    };
+    let voice, pan;
+    const play = LAB.Bank.play;
+    LAB.Bank.play = function (id, options) {
+      const count = panNodes.length;
+      const h = play.call(this, id, options);
+      if (id === "kettle_boil" && h) { voice = h; pan = panNodes[count]?.pan; }
+      return h;
+    };
+    const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+    try {
+      LAB.kitchen.boil(kettle);
+      const started = !!voice && !!pan;
+      if (!started) return { started };
+      const center = pan.value;
+      gm.G.x = x - 1;
+      LAB.Sound.updatePositions();
+      await wait(180);
+      const right = pan.value;
+      gm.G.x = x + 1;
+      LAB.Sound.updatePositions();
+      await wait(180);
+      const left = pan.value;
+      gm.G.event = "smoke";
+      gm.G.x = x + 4;
+      LAB.Sound.updatePositions();
+      await wait(360);
+      const muted = voice.gain.gain.value < 0.01;
+      gm.G.event = "reboot";
+      LAB.kitchen.powerLost();
+      LAB.Sound.updatePositions();
+      return { started, center, right, left, muted, stopped: voice.stopped,
+        cooling: !LAB.kitchen._boiling(kettle) };
+    } finally {
+      LAB.Bank.play = play;
+      context.createStereoPanner = create;
+    }
+  });
+  ok(s.started && Math.abs(s.center) < 0.05 && s.right > 0.3 && s.left < -0.3,
+    "работающий чайник перемещается из правого наушника в левый при обходе");
+  ok(s.muted && s.stopped && s.cooling, "дым ограничивает слышимость, отключение питания прерывает кипение");
+
   console.log("Единый обработчик речи");
   s = await page.evaluate(() => {
     const Sp = LAB.Speech;

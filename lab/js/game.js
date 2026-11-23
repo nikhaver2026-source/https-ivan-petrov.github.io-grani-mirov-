@@ -150,7 +150,12 @@ function findObj(type) { var o = CUR.fl.objs; for (var i = 0; i < o.length; i++)
 
 /* Вход на этаж. how: start, down (сверху по лестнице), up (снизу), elev, gatedown (через шлюз), load, respawn. */
 function enterFloor(L, F, how, silent) {
-  if (CUR.fs) syncFloorState();
+  if (CUR.fs) {
+    if (G.fs[CUR.key] === CUR.fs && !game.loading && how !== "start") {
+      CUR.fs.environment = { id: G.event, until: G.day * 1440 + G.eventUntil };
+    }
+    syncFloorState();
+  }
   G.stair = null;
   G.L = L; G.F = F;
   /* (1.5) достижения: новые этажи и уровни */
@@ -162,6 +167,7 @@ function enterFloor(L, F, how, silent) {
   var fl = LAB.getFloor(G.seed, L, F), fs = fsFor(L, F);
   CUR.fl = fl; CUR.fs = fs; CUR.key = L + "-" + F; CUR.room = -9; CUR.focus = null; CUR.corr = -1;
   CUR.seen = decodeSeen(fs.seen);
+  enterEnvironment(fs, how);
   if (LAB.medic) LAB.medic.enterFloor(fl); /* (2.6) лечебные припасы и батареи у капсулы — по режиму */
   if (LAB.combat) LAB.combat.loadFoes();
   if (LAB.combat && LAB.combat.fixDrops) LAB.combat.fixDrops(); /* (3.0) добыча на обстановке — рядом, на пол */
@@ -193,6 +199,8 @@ function enterFloor(L, F, how, silent) {
   if (firstVisit) { if (L > 10 && L <= 100) tutor("seam"); else if (L <= 10 && (how === "down" || how === "gatedown")) tutor("sector"); } /* (после 4.1) ниже Истока — не Шов */
   markSeen();
   A("enterFloor", L, F);
+  A("setEvent", game.eventLike(G.event), true);
+  if (LAB.Sound && LAB.Sound.updatePositions) LAB.Sound.updatePositions();
   if (LAB.oko) LAB.oko.event("floor", { how: how });
   if (how === "gatedown" && LAB.oko) LAB.oko.event("enter");
   if (!silent) {
@@ -206,6 +214,7 @@ function enterFloor(L, F, how, silent) {
     if (how === "respawn") head = (G.checkpoint && G.checkpoint.cap ? "«Эхо» вернуло вас к капсуле восстановления, к которой вы привязаны." : "«Эхо» вернуло вас к началу уровня.") + " Уровень " + L + ", этаж " + F + ".";
     if (how === "restart") head = "«Эхо» вернуло вас к началу уровня: привязки к капсуле на этом уровне не было. Уровень " + L + ", этаж " + F + ".";
     say(head);
+    if (G.event !== "norm") sayq(environmentText());
     roomCheck(true);
   } else roomCheck(false, false, true);
   if (LAB.combat) LAB.combat.wake();
@@ -687,7 +696,11 @@ function journal(t) {
 }
 game.journal = journal;
 function advanceTime(min, asleep) {
-  bodyMinutes(min, asleep);
+  if (!(min > 0)) return;
+  var incident = currentIncident();
+  var affected = incident ? Math.min(min, Math.max(0, G.eventUntil - G.min)) : 0;
+  if (affected > 0) bodyMinutes(affected, asleep, G.event);
+  if (affected < min) bodyMinutes(min - affected, asleep);
   G.min += min;
   while (G.min >= 24 * 60) { G.min -= 24 * 60; G.day++; G.eventUntil -= 24 * 60; }
   if (G.min >= G.eventUntil) rollEvent();
@@ -778,18 +791,20 @@ var starve = 0;
 /* Минут (шагов) на единицу сытости: прежде было 9 — голод приходил слишком быстро. */
 var HUNGER_MIN = 30;
 game.HUNGER_MIN = HUNGER_MIN;
-function bodyMinutes(min, asleep) {
+function bodyMinutes(min, asleep, event) {
   var b = body();
   if (asleep) { b.tox = Math.max(0, b.tox - min / 4); b.rad = Math.max(0, b.rad - min / 40); return; } /* сон в капсуле: раствор кормит и выводит, предупреждений нет */
   var mk = (1 - (LAB.implants ? LAB.implants.stat("metab") : 0)) * (LAB.dk().body || 1); /* (2.0) чип метаболизма; (2.2) режим сложности */
-  b.food -= min / HUNGER_MIN * mk;
+  b.food -= min / HUNGER_MIN * mk * (event === "heat" ? 1.85 : 1);
   /* выспались в капсуле (восемь часов и больше) — бодрость какое-то время падает вдвое медленнее */
-  b.wake -= min / 12 * (G.st.restedMin > 0 ? 0.5 : 1) * mk * (LAB.stats ? LAB.stats.K.wake() : 1) * (LAB.load ? LAB.load.wakeK() : 1); /* (после 4.6) телосложение и выносливость; перегруз утомляет */
+  b.wake -= min / 12 * (G.st.restedMin > 0 ? 0.5 : 1) * mk * (LAB.stats ? LAB.stats.K.wake() : 1) *
+    (LAB.load ? LAB.load.wakeK() : 1) * (event === "heat" ? 1.65 : 1);
   if (LAB.stats) LAB.stats.minutes(min); /* (после 4.6) регенерация: вне боя здоровье возвращается само */
   if (LAB.load) LAB.load.minutes(); /* (после 4.6) кончилась аренда соседней ячейки — сказать */
   if (G.st.restedMin > 0) G.st.restedMin = Math.max(0, G.st.restedMin - min);
   if (b.tox > 0) b.tox -= min / (b.food >= 50 ? 4 : 6);
   if (b.rad > 0) b.rad -= min / 180; /* радионуклиды выводятся сами очень медленно */
+  if (event === "smoke" || event === "airloss") breathe(min, event, b);
   clampBody(b);
   /* истощение: голод отнимает здоровье, но не убивает */
   if (b.food <= 0) { starve += min; while (starve >= 6) { starve -= 6; if (G.hp > 1) { G.hp--; UIx("refresh"); } } } else starve = 0;
@@ -942,16 +957,127 @@ function eatSound(kind) {
 }
 game.eatSound = eatSound;
 function eventList() { var b = LAB.blockOf(G.L); return LAB.EVENTS.concat(G.L > 10 && LAB.EVENTS_B[b] ? LAB.EVENTS_B[b] : []); }
+function currentIncident() { return LAB.EVENTS.find(function (e) { return e.id === G.event && e.minutes; }); }
+function enterEnvironment(fs, how) {
+  if (game.loading || how === "load" || how === "start") {
+    if (!G.event) G.event = "norm";
+    if (!Number.isFinite(G.eventUntil)) G.eventUntil = G.min + 45;
+    return;
+  }
+  var state = fs.environment;
+  if (state && state.until > G.day * 1440 + G.min) {
+    G.event = state.id;
+    G.eventUntil = state.until - G.day * 1440;
+  } else {
+    G.event = "norm";
+    G.eventUntil = G.min + 24 + LAB.hash32(G.seed + ":environment:" + CUR.key) % 21;
+  }
+}
+var GRID_OBJECTS = { elevator: 1, terminal: 1, okoterm: 1, pc: 1, comp: 1, radio: 1, supply: 1,
+  vending: 1, medvend: 1, medst: 1, coffee: 1, drinks: 1, snacks: 1, charger: 1, chemlab: 1,
+  implantlab: 1, magnetron: 1, positron: 1, powergrid: 1, incubator: 1, mirrorterm: 1, syncgate: 1 };
+var GRID_FIXTURES = { lamp: 1, redlamp: 1, vent: 1, hood: 1, stove: 1, screens: 1, monitors: 1, copier: 1,
+  speaker: 1, intercom: 1, xray: 1, lightbox: 1, projector: 1, testbooth: 1, fridge: 1, coldroom: 1, washer: 1 };
+var GRID_NOTICE = "Питание этажа восстанавливается. Прибор временно отключён.";
+game.gridOffline = function () { return G.event === "reboot"; };
+game.gridNotice = GRID_NOTICE;
+function gridDevice(o) { return !!(o.type === "fx" ? GRID_FIXTURES[o.fx] : GRID_OBJECTS[o.type]); }
+game.hearingRange = function () { return G.event === "smoke" ? 2 : Infinity; };
+game.canHear = function (x, y) { return Math.abs(x - G.x) + Math.abs(y - G.y) <= game.hearingRange(); };
+game.coldFactor = function () { return G.event === "cold" && !armorSpecial("frost") ? 1.55 : 1; };
+var AIR_MINUTES = 12;
+function airGear() {
+  if (!G.airGear) G.airGear = { on: false, oxygen: 0 };
+  if (!(G.inv.airmask > 0)) G.airGear.on = false;
+  return G.airGear;
+}
+function airText() {
+  var air = airGear();
+  return "Маска " + (air.on ? "надета" : "снята") + ". Кислорода в баллоне на " +
+    Math.ceil(air.oxygen) + " мин. Запасных баллонов " + (G.inv.oxygen_tank || 0) + ".";
+}
+function connectAir(air) {
+  if (!air.on || air.oxygen > 0 || !(G.inv.oxygen_tank > 0)) return false;
+  G.inv.oxygen_tank--;
+  air.oxygen = AIR_MINUTES;
+  return true;
+}
+function useAirGear(id) {
+  var air = airGear();
+  if (id === "airmask") {
+    air.on = !air.on;
+    if (air.on && (G.event === "airloss" || G.event === "smoke")) connectAir(air);
+  } else if (!air.on) { say("Сначала наденьте дыхательную маску."); return false; }
+  else if (!connectAir(air)) { say(airText()); return false; }
+  say(airText());
+  UIx("refresh");
+  autosaveSoon();
+  return true;
+}
+function breathe(min, event, b) {
+  if (event === "smoke" && G.st.antitox > 0) return;
+  var air = airGear(), connected = false;
+  while (air.on && min > 0) {
+    if (!(air.oxygen > 0)) {
+      if (!connectAir(air)) break;
+      connected = true;
+    }
+    var used = Math.min(min, air.oxygen);
+    air.oxygen -= used;
+    min -= used;
+  }
+  if (connected) sayq("Подключён кислородный баллон. " + airText());
+  if (!(min > 0)) return;
+  if (event === "smoke") { b.tox += min * (armorSpecial("antitox") ? 0.8 : 2.1); return; }
+  b.wake -= min * 0.36;
+  var damage = (air.shortfall || 0) + min * 1.25;
+  G.hp = Math.max(1, G.hp - Math.floor(damage));
+  air.shortfall = damage % 1;
+  sayOnce("lowair", "Не хватает воздуха. Наденьте дыхательную маску с баллоном или покиньте этаж.", 14000);
+}
+function environmentText() {
+  var ev = eventList().find(function (e) { return e.id === G.event; });
+  if (!ev) return "";
+  var t = ev.n + ".";
+  if (ev.minutes) t += " До конца примерно " + Math.max(0, Math.ceil(G.eventUntil - G.min)) + " мин. " + ev.desc;
+  if (G.event === "airloss" || G.event === "smoke" || G.airGear) t += " " + airText();
+  return t;
+}
+game.environmentText = environmentText;
+function environmentMenu() {
+  function rows() {
+    var items = [{ label: environmentText(), info: true, fn: function () { say(environmentText()); } }];
+    if (G.inv.airmask > 0) items.push({ label: airGear().on ? "Снять дыхательную маску" : "Надеть дыхательную маску",
+      keep: true, fn: function () { useAirGear("airmask"); } });
+    if (G.inv.oxygen_tank > 0) items.push({ label: "Подключить кислородный баллон", keep: true, fn: function () { useAirGear("oxygen_tank"); } });
+    if (currentIncident()) items.push({ label: "Подождать до 5 минут комплекса", keep: true, fn: function () {
+      var blocked = restBlock();
+      if (blocked) { say(blocked); return; }
+      advanceTime(Math.min(5, Math.max(0.01, G.eventUntil - G.min)));
+      turns(2, "wait");
+      autosaveSoon();
+    } });
+    return items.concat({ label: "Назад", close: true });
+  }
+  UIx("menu", "Обстановка этажа", rows(), { keep: true, rebuild: rows });
+}
+game.environmentMenu = environmentMenu;
 game.eventLike = function (id) { var e = eventList().filter(function (q) { return q.id === id; })[0]; return e ? (e.like || e.id) : id; };
 function rollEvent() {
-  var w = {}; eventList().forEach(function (e) { w[e.id] = e.w; });
+  var depth = LAB.depth(G.L, G.F), list = eventList(), w = {};
+  list.forEach(function (e) { if (!e.after || depth >= e.after) w[e.id] = e.w; });
+  /* Между авариями есть время для лечения и пополнения запасов. */
+  if (currentIncident()) w = { norm: 1 };
   var tot = 0, k; for (k in w) tot += w[k];
   var x = Math.random() * tot, pick = "norm";
   for (k in w) { x -= w[k]; if (x < 0) { pick = k; break; } }
-  G.eventUntil = G.min + 40 + Math.floor(Math.random() * 90);
+  var ev = list.find(function (e) { return e.id === pick; });
+  var span = ev && ev.minutes;
+  G.eventUntil = G.min + (span ? span[0] + Math.floor(Math.random() * (span[1] - span[0] + 1)) : 40 + Math.floor(Math.random() * 90));
   if (pick === G.event) return;
   G.event = pick;
-  var ev = eventList().filter(function (e) { return e.id === pick; })[0];
+  if (pick === "reboot" && LAB.kitchen) LAB.kitchen.powerLost();
+  if (LAB.Sound && LAB.Sound.updatePositions) LAB.Sound.updatePositions();
   A("setEvent", ev && ev.like ? ev.like : pick);
   if (pick !== "norm" && ev) { LAB.sub("⚠️ " + ev.n); sayq("Обстановка: " + ev.n.toLowerCase() + ". " + (ev.desc || "")); }
   else sayq("Обстановка: штатный режим.");
@@ -1104,10 +1230,11 @@ function tryMove(dir, run) {
   if (LAB.load && !LAB.load.canMove()) return false;
   var minGap = run ? Math.round(180 * (LAB.exo ? LAB.exo.runGapK() : 1) * (LAB.load ? LAB.load.gapK() : 1)) : (LAB.load ? LAB.load.stepGap() : 0); /* (после 4.6) приводы ног каркаса */
   if (G.st.slow > 0) minGap = Math.max(minGap, 420);
+  if (game.coldFactor() > 1) minGap = Math.round(Math.max(minGap, run ? 180 : 300) * game.coldFactor());
   if (now - lastMove < minGap) {
     /* (после 4.6) перегруз: шаг реже, но свайп не пропадает молча — один шаг ждёт своей очереди
        (иначе незрячий игрок сбивается со счёта шагов) */
-    if (!run && !pendingStep && LAB.load && LAB.load.stepGap() > 0) pendingStep = setTimeout(function () { pendingStep = null; tryMove(dir, false); }, minGap - (now - lastMove) + 5);
+    if (!run && !pendingStep && (game.coldFactor() > 1 || (LAB.load && LAB.load.stepGap() > 0))) pendingStep = setTimeout(function () { pendingStep = null; tryMove(dir, false); }, minGap - (now - lastMove) + 5);
     return false;
   }
   if (G.st.web > 0) { A("play", "web_stuck"); sayq("Вы в паутине. Рвёте её..."); G.st.web = Math.max(0, G.st.web - 1); return false; }
@@ -1130,7 +1257,14 @@ function tryMove(dir, run) {
     var sd = hiddenSecretAt(nx, ny);
     A("bumpWall", dir); LAB.vib(25);
     if (sd) { bumpFocus({ type: "secret", ref: sd, dir: dir }); sayOnce("wall" + nx + "," + ny, "Из щели у пола тянет сквозняком. " + LAB.K(dtapW() + " — простучать стену.", "Enter — простучать стену.")); }
-    else wallDoorHint(dir, nx, ny);
+    else {
+      var fixture = objAt(nx, ny);
+      if (fixture && fixture.wallFrom && touchesObject(fixture, G.x, G.y)) {
+        bumpFocus({ type: "obj", ref: fixture, dir: dir });
+        sayOnce("wallfixture" + fixture.id, objName(fixture) + " на стене. " +
+          LAB.K(dtapW() + " — осмотреть.", "Enter — осмотреть."));
+      } else wallDoorHint(dir, nx, ny);
+    }
     return false;
   }
   if (tt === T.DOOR) {
@@ -1185,7 +1319,7 @@ function tryMove(dir, run) {
   G.noise = Math.max(G.noise, Math.round(((run ? 6 : 3) + loud) * (quiet ? 0.5 : 1)));
   if (LAB.drone) LAB.drone.onStep();
   if (LAB.exo) LAB.exo.onStep(run); /* (после 4.6) приводы едят заряд аккумулятора */
-  advanceTime(run ? 0.6 : 1);
+  advanceTime((run ? 0.6 : 1) * game.coldFactor());
   CUR.focus = null;
   A("step", surfaceAt(nx, ny), run, tt === T.DOOR);
   if (tt === T.DOOR) tutor("door");
@@ -1389,26 +1523,27 @@ function roomExits(r) {
   });
   return out.length ? "Выходы: " + out.join("; ") + "." : "";
 }
+function heard(o) { return game.canHear(o.x, o.y); }
 function roomStuff(r, brief, itemsFirst, capN) {
-  var objs = brief ? [] : CUR.fl.objs.filter(function (o) { return o.room === r.id; });
+  var objs = brief ? [] : CUR.fl.objs.filter(function (o) { return o.room === r.id && game.canHear(o.x, o.y); });
   /* (3.2) в просторных помещениях нижних глубин вещей много: при входе — ближние, остальное — «Осмотреться» */
   var more = 0;
   if (capN && objs.length > capN + 2) {
     objs = objs.slice().sort(function (a, b) { return Math.max(Math.abs(a.x - G.x), Math.abs(a.y - G.y)) - Math.max(Math.abs(b.x - G.x), Math.abs(b.y - G.y)); });
     more = objs.length - capN; objs = objs.slice(0, capN);
   }
-  objs = objs.map(function (o) { return objName(o) + " " + relDir(o.x, o.y); });
-  var npcs = CUR.fl.npcs.filter(function (n) { return n.room === r.id; }).map(function (n) { return npcName(n) + " " + relDir(n.x, n.y); });
-  var seenF = LAB.combat ? LAB.combat.visibleFoes(8) : [], camF = LAB.combat && LAB.combat.isCam ? seenF.filter(LAB.combat.isCam) : [];
+  objs = objs.map(function (o) { return objName(o) + (o.wallFrom ? " на стене" : "") + " " + relDir(o.x, o.y); });
+  var npcs = CUR.fl.npcs.filter(function (n) { return n.room === r.id && game.canHear(n.x, n.y); }).map(function (n) { return npcName(n) + " " + relDir(n.x, n.y); });
+  var seenF = LAB.combat ? LAB.combat.visibleFoes(8).filter(heard) : [], camF = LAB.combat && LAB.combat.isCam ? seenF.filter(LAB.combat.isCam) : [];
   var foes = seenF.filter(function (f) { return camF.indexOf(f) < 0; }).map(function (f) { return f.name + " " + relDir(f.x, f.y); });
   /* (2.2) камеры — отдельно: их можно разбить */
   var cams = camF.map(function (f) { return f.name.split(",")[0].toLowerCase() + " " + relDir(f.x, f.y) + (f.camOff ? ", обесточена" : ""); });
-  var items = floorItems().filter(function (it) { var rr = roomAt(it.x, it.y); return rr && rr.id === r.id; }).map(function (it) { return itemName(it) + " " + relDir(it.x, it.y); });
+  var items = floorItems().filter(function (it) { var rr = roomAt(it.x, it.y); return rr && rr.id === r.id && heard(it); }).map(function (it) { return itemName(it) + " " + relDir(it.x, it.y); });
   var s = [], floor = items.length ? "На полу: " + items.slice(0, 5).join(", ") + (items.length > 5 ? " и ещё " + (items.length - 5) : "") + "." : "";
   /* «Осмотреться»: сначала что лежит на полу, потом что стоит в помещении */
   if (itemsFirst && floor) s.push(floor);
   if (objs.length) s.push("Здесь: " + objs.join(", ") + (more ? " и ещё " + more + " " + plural(more, "вещь", "вещи", "вещей") + " — " + LAB.K("осмотритесь: " + LAB.gw("look", "два пальца вверх"), "осмотритесь: Tab") : "") + ".");
-  var trapsL = LAB.traps ? LAB.traps.lookList(function (x, y) { var rr = roomAt(x, y); return rr && rr.id === r.id; }) : "";
+  var trapsL = LAB.traps ? LAB.traps.lookList(function (x, y) { var rr = roomAt(x, y); return rr && rr.id === r.id && game.canHear(x, y); }) : "";
   if (trapsL) s.push(trapsL);
   if (npcs.length) s.push("Живые: " + npcs.join(", ") + ".");
   if (!itemsFirst && floor) s.push(floor);
@@ -1441,19 +1576,19 @@ function lookAround() {
   var r = roomAt(G.x, G.y), parts = [];
   if (r) {
     var st = roomStuff(r, false, true);
-    parts.push(st || "В помещении пусто.");
+    parts.push(st || (G.event === "smoke" ? "В пределах двух шагов ничего не слышно." : "В помещении пусто."));
     var ex = roomExits(r); parts.push(ex || "Выходов не видно.");
     parts.push("Помещение: " + r.name + ". " + (r.desc || LAB.ROOMS[r.type].desc));
   } else if (LAB.corrOf(CUR.fl, G.x, G.y) && cellType(G.x, G.y) !== T.DOOR) {
     var cor = LAB.corrOf(CUR.fl, G.x, G.y), cs = corrStuff(cor);
     if (cs) parts.push(cs);
-    var foesC = LAB.combat ? LAB.combat.visibleFoes(12) : [];
+    var foesC = LAB.combat ? LAB.combat.visibleFoes(12).filter(heard) : [];
     if (foesC.length) parts.push("Опасность: " + foesC.map(function (f) { return f.name + " " + relDir(f.x, f.y); }).join(", ") + "!");
     parts.push(corridorText(cor, false));
   } else {
     var near = corrStuff(null);
     if (near) parts.push(near);
-    var foes = LAB.combat ? LAB.combat.visibleFoes(10) : [];
+    var foes = LAB.combat ? LAB.combat.visibleFoes(10).filter(heard) : [];
     if (foes.length) parts.push("Опасность: " + foes.map(function (f) { return f.name + " " + relDir(f.x, f.y); }).join(", ") + "!");
     parts.push(cellType(G.x, G.y) === T.DOOR ? "Дверной проём." : "Коридор.");
     var ways = [];
@@ -1468,7 +1603,7 @@ function lookAround() {
   /* сквозняк из тайника */
   var sd = nearSecret(2);
   if (sd) parts.push("Тянет сквозняком " + LAB.DIRFROM[sd.dir] + ".");
-  if (G.event !== "norm") { var ev = eventList().filter(function (e) { return e.id === G.event; })[0]; if (ev) parts.push("Обстановка: " + ev.n.toLowerCase() + "."); }
+  if (G.event !== "norm") parts.push(environmentText());
   parts.push("Уровень " + G.L + ", этаж " + G.F + ".");
   say(parts.join(" "));
   A("play", "scan_soft");
@@ -1476,7 +1611,7 @@ function lookAround() {
 /* Что лежит и стоит в коридоре (или у дверного проёма) рядом с вами: вещи на полу,
    ловушки, о которых вы знаете, выжившие. cor — коридор или null (рядом, до 6 шагов). */
 function corrStuff(cor) {
-  var inC = function (x, y) { if (cor) { var c2 = LAB.corrOf(CUR.fl, x, y); return c2 === cor; } return Math.max(Math.abs(x - G.x), Math.abs(y - G.y)) <= 6 && !roomAt(x, y); };
+  var inC = function (x, y) { if (!game.canHear(x, y)) return false; if (cor) { var c2 = LAB.corrOf(CUR.fl, x, y); return c2 === cor; } return Math.max(Math.abs(x - G.x), Math.abs(y - G.y)) <= 6 && !roomAt(x, y); };
   var items = floorItems().filter(function (it) { return inC(it.x, it.y); }).map(function (it) { return itemName(it) + " " + relDir(it.x, it.y); });
   var objs = CUR.fl.objs.filter(function (o) { return o.room == null && inC(o.x, o.y) && Math.max(Math.abs(o.x - G.x), Math.abs(o.y - G.y)) <= 12; }).map(function (o) { return objName(o) + " " + relDir(o.x, o.y); });
   var npcs = CUR.fl.npcs.filter(function (n) { return inC(n.x, n.y); }).map(function (n) { return npcName(n) + " " + relDir(n.x, n.y); });
@@ -1502,6 +1637,9 @@ function nearSecret(rad) {
 game.nearSecret = nearSecret;
 
 /* ════════ ЧТО РЯДОМ (касание одним пальцем) ════════ */
+function touchesObject(o, x, y) {
+  return o.wallFrom ? o.wallFrom[0] === x && o.wallFrom[1] === y : Math.abs(x - o.x) + Math.abs(y - o.y) === 1;
+}
 function adjacentTargets() {
   var out = [];
   var order = [G.face, "N", "E", "S", "W"];
@@ -1510,7 +1648,7 @@ function adjacentTargets() {
     if (seen[k]) return; seen[k] = 1;
     var d = DIRS[k], x = G.x + d[0], y = G.y + d[1];
     var o = objAt(x, y), n = npcAt(x, y), dr = doorAt(x, y), f = foeAt(x, y);
-    if (o) out.push({ type: "obj", ref: o, dir: k });
+    if (o && touchesObject(o, G.x, G.y)) out.push({ type: "obj", ref: o, dir: k });
     if (n) out.push({ type: "npc", ref: n, dir: k });
     if (dr) {
       if (dr.lock && dr.lock.type === "secret" && !secretFound(dr)) out.push({ type: "secret", ref: dr, dir: k });
@@ -1983,6 +2121,7 @@ game.revealSecret = revealSecret;
 function objState(o) { var k = o.id; if (!CUR.fs.objs[k] || typeof CUR.fs.objs[k] !== "object") CUR.fs.objs[k] = {}; return CUR.fs.objs[k]; }
 game.objState = objState;
 function objMenu(o) {
+  if (game.gridOffline() && gridDevice(o)) { say(GRID_NOTICE); environmentMenu(); return; }
   var st = objState(o), name = objName(o), items = [];
   A("objUse", o);
   if (LAB.depths && LAB.depths.objMenu(o)) return; /* установки глубин под Ядром */
@@ -2170,6 +2309,7 @@ function useStairs(o) {
   var r = LAB.Rng(G.seed, "stair:" + G.L + ":" + (down ? G.F : G.F - 1));
   var f1 = r.int(5, 7), f2 = r.int(5, 7);
   G.stair = { down: down, k: 0, n: f1 + f2, land: f1, x: G.x, y: G.y };
+  if (LAB.Sound && LAB.Sound.updatePositions) LAB.Sound.updatePositions();
   A("stairEnter", down);
   say((down ? "Вы ступаете на лестницу вниз." : "Вы ступаете на лестницу вверх.") + (G.tut.stairWalk || !hintsOn() ? "" : LAB.K(" Свайп вверх — дальше по ступеням, вниз — обратно. Держите палец — идёте без остановки.", " W — дальше по ступеням, S — обратно. Держите клавишу — идёте без остановки.")));
   G.tut.stairWalk = 1;
@@ -2177,7 +2317,7 @@ function useStairs(o) {
 game.useStairs = useStairs;
 function stairStep(dir, run) {
   var s = G.stair, now = Date.now();
-  if (now - lastMove < (run ? 240 : 110)) return false;
+  if (now - lastMove < (run ? 240 : 110) * game.coldFactor()) return false;
   if (dir === "W" || dir === "E") { A("bumpRail"); sayOnce("rail", "Перила.", 3000); return false; }
   lastMove = now;
   s.k += dir === "N" ? 1 : -1;
@@ -2298,6 +2438,7 @@ function mainQuest() {
 game.mainQuest = mainQuest;
 
 function elevatorMenu() {
+  if (game.gridOffline()) { say(GRID_NOTICE); environmentMenu(); return; }
   if (!G.elev[G.L]) { A("play", "card_fail"); say("Панель лифта мигает: «Нужен пропуск лифта уровня " + G.L + "». Пропуск лифта лежит на втором этаже уровня — на полу или у кого-то на этаже."); /* (3.7, нелогичность) чаще у машин и тварей, чем у сотрудников */ return; }
   /* лифт возит только на этажи, где вы уже были: остальные для него закрыты —
      туда спускаются по лестнице; сколько этажей всего, игрок узнаёт сам */
@@ -2321,6 +2462,7 @@ game.liftOk = liftOk;
 game.elevatorMenu = elevatorMenu;
 game.ride = function (F) { return ride(F); };
 function ride(F) {
+  if (game.gridOffline()) { say(GRID_NOTICE); return false; }
   if (!liftOk(G.L, F)) { LAB.UI.error(); say("Недоступно: на этаже " + F + " вы ещё не были. Лифт туда не поедет — спускайтесь по лестнице."); return false; }
   if (F === G.F) { say("Вы на этом этаже."); return false; }
   var che = LAB.combat && LAB.combat.chaser();
@@ -3414,7 +3556,7 @@ function nearestItem() {
 function routeTo(cell, goalObj) {
   var fs = CUR.fs;
   return LAB.route(CUR.fl, fs, G.x, G.y, function (x, y) {
-    if (goalObj) return Math.abs(x - goalObj.x) + Math.abs(y - goalObj.y) === 1 && !LAB.solidAt(CUR.fl, x, y);
+    if (goalObj) return touchesObject(goalObj, x, y) && !LAB.solidAt(CUR.fl, x, y);
     return x === cell[0] && y === cell[1];
   }, { passDoor: function (d) { return !doorBlock(d) && !(d.lock && d.lock.type === "secret" && !secretFound(d)); } });
 }
@@ -3450,7 +3592,7 @@ function navigate(cycle, fromNpc) {
   var more = list.length > 1 && !fromNpc ? LAB.K(" Ещё раз " + LAB.gw("nav", "два пальца вправо") + " — следующая цель.", " Ещё раз N — следующая цель.") : "";
   if (!path) {
     /* закрыто: путь до ближайшей запертой двери на пути */
-    var p2 = LAB.route(CUR.fl, CUR.fs, G.x, G.y, function (x, y) { return tgt.o ? (Math.abs(x - tgt.o.x) + Math.abs(y - tgt.o.y) === 1) : (x === tgt.cell[0] && y === tgt.cell[1]); }, { passDoor: function (d) { return !(d.lock && d.lock.type === "secret" && !secretFound(d)); } });
+    var p2 = LAB.route(CUR.fl, CUR.fs, G.x, G.y, function (x, y) { return tgt.o ? touchesObject(tgt.o, x, y) : (x === tgt.cell[0] && y === tgt.cell[1]); }, { passDoor: function (d) { return !(d.lock && d.lock.type === "secret" && !secretFound(d)); } });
     var blockDoor = null;
     if (p2) for (var i = 0; i < p2.length; i++) { var dd = doorAt(p2[i][0], p2[i][1]); if (dd && doorBlock(dd)) { blockDoor = dd; break; } }
     if (blockDoor) {
@@ -3514,7 +3656,7 @@ function navFollowStart(cell, o, name) {
 }
 /* Герой уже у цели: рядом с вещью или на самой точке пути. */
 function navAt(nf) {
-  if (nf.o) return Math.abs(G.x - nf.o.x) + Math.abs(G.y - nf.o.y) <= 1;
+  if (nf.o) return touchesObject(nf.o, G.x, G.y) || (!nf.o.wallFrom && G.x === nf.o.x && G.y === nf.o.y);
   return !!nf.cell && G.x === nf.cell[0] && G.y === nf.cell[1];
 }
 function navLive() {
@@ -3626,6 +3768,7 @@ game.useMedkit = useMedkit;
 function useItem(id) {
   var d = LAB.ITEMS[id];
   if (!d || !(G.inv[id] > 0)) { say("Нет: " + (d ? d.n : id) + "."); return false; }
+  if (id === "airmask" || id === "oxygen_tank") return useAirGear(id);
   if (LAB.deepSys && LAB.deepSys.useSpecial(id, d)) return false; /* (после 4.1) страховочная сбруя — у ствола среза */
   if (LAB.repair && LAB.repair.isKit(id)) return LAB.repair.use(id); /* (2.0) походные ремкомплекты */
   if (id === "lockcard" && LAB.load) return LAB.load.useCard(); /* (после 4.6) ключ-карта складской ячейки */
@@ -4003,7 +4146,7 @@ function reload() {
   G.ammo[w.ammo]--;
   w.charge = w.cap;
   A("play", w.ammo === "energy" ? "w_reload_e" : w.ammo === "magnetron" ? "w_reload_m" : "w_reload_p");
-  if (LAB.combat) LAB.combat.reloadPause(Math.round((w.ammo === "positron" ? 1400 : 900) * (LAB.workshop ? LAB.workshop.reloadK(w) : 1)));
+  if (LAB.combat) LAB.combat.reloadPause(Math.round((w.ammo === "positron" ? 1400 : 900) * (LAB.workshop ? LAB.workshop.reloadK(w) : 1) * game.coldFactor()));
   say("Перезаряжено: " + w.cap + " " + plural(w.cap, "выстрел", "выстрела", "выстрелов") + ". Осталось: " + LAB.AMMO[w.ammo].n.toLowerCase() + " — " + G.ammo[w.ammo] + ".");
   UIx("refresh");
   turns(w.ammo === "positron" ? 3 : 2, "reload"); /* (2.6) пошаговый режим: перезарядка — не мгновенно */

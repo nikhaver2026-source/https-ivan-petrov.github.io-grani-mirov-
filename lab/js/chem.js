@@ -518,12 +518,24 @@ function units(f) { var g = G(), out = []; [1, 2, 3].forEach(function (gr) { [fa
 /* План синтеза: что взять (экономно — сначала простое, лучшее — сначала чистое),
    сорт (по слабейшему; мутаген — на сорт выше) и есть ли мутагенное сырьё.
    plain — обычные лекарства: сырьё с мутагеном в них не идёт. */
+function recipeUnits(family, opt) {
+  return units(family).filter(function (u) { return (!opt.minG || u.g >= opt.minG) && !(opt.plain && u.sat); });
+}
+function recipeStock(id, opt) {
+  return FAM[id] ? recipeUnits(id, opt).reduce(function (a, u) { return a + u.n; }, 0) : (G().inv[id] || 0);
+}
+function recipeMaterials(rc) {
+  var stock = {}, opt = popt(rc);
+  Object.keys(rc.need).forEach(function (id) { stock[id] = recipeStock(id, opt); });
+  return "Основной рецепт. " + LAB.workshop.materialsText(rc.need, { name: nm, stock: stock, action: true }) +
+    (rc.minG ? " Учитывается сырьё не ниже очищенного сорта." : "");
+}
 function plan(need, opt) {
   var g = G(), take = {}, minG = 3, any = false, sat = false;
   for (var k in need) {
     var n = need[k];
     if (FAM[k]) {
-      var us = units(k).filter(function (u) { return (!opt.minG || u.g >= opt.minG) && !(opt.plain && u.sat); });
+      var us = recipeUnits(k, opt);
       us.sort(function (a, b) { var ea = a.g + (a.sat ? 0.5 : 0), eb = b.g + (b.sat ? 0.5 : 0); return opt.best ? eb - ea : ea - eb; });
       for (var i = 0; i < us.length && n > 0; i++) {
         var t = Math.min(us[i].n - (take[us[i].id] || 0), n);
@@ -541,9 +553,9 @@ function plan(need, opt) {
   return { ok: true, take: take, grade: any ? minG : 1, sat: sat };
 }
 function lackText(need, opt) {
-  var g = G(), s = [];
+  var s = [];
   for (var k in need) {
-    var h = FAM[k] ? units(k).filter(function (u) { return (!opt.minG || u.g >= opt.minG) && !(opt.plain && u.sat); }).reduce(function (a, u) { return a + u.n; }, 0) : (g.inv[k] || 0);
+    var h = recipeStock(k, opt);
     if (h < need[k]) s.push(nm(k) + " " + h + " из " + need[k] + (FAM[k] && opt.minG ? " (не ниже очищенного сорта)" : "") + (FAM[k] && opt.plain && units(k).some(function (u) { return u.sat; }) ? " (сырьё с мутагеном сюда не идёт — выведите мутаген)" : ""));
   }
   return s.join(", ");
@@ -627,6 +639,7 @@ function why(rc, s) {
   if (brLv(rc.br) < rc.lv) return "нужна ступень " + rc.lv + " направления «" + BR[rc.br].n + "», у вас " + brLv(rc.br);
   if (!s) { if (!(level() >= 6 && rc.st <= 1 && rc.lv <= 1) && !(level() >= 12 && rc.st <= 2 && rc.lv <= 3)) return "нужен химический стол"; }
   else {
+    if (gm().gridOffline()) return gm().gridNotice;
     if (s.dirty) return "стол загрязнён — сначала отмойте его растворителем";
     if (s.tier < rc.st && !(level() >= 5 && s.tier === rc.st - 1)) return "нужен стол ступени " + rc.st + ": " + ST[rc.st].n;
   }
@@ -650,7 +663,8 @@ function forecast(rc, s) {
   if (!p.ok) return null;
   /* (проверка перед сборкой) прибавка за катализатор — только если он есть сверх того, что берёт
      сам рецепт: прежде катализатор рецепта засчитывался ещё и прибавкой, даром */
-  var g = p.grade, cat = !!c.opt.cat && units("c_catalyst").some(function (u) { return u.n > (p.take[u.id] || 0); });
+  var g = p.grade, extras = {}, cat = c.opt.cat && extraUnit("c_catalyst", p.take, extras);
+  if (cat) extras[cat] = 1;
   if (cat) g = Math.min(3, g + 1);
   g = Math.max(1, Math.min(g, stationCap(s), gradeCap(rc.br)));
   var mod = "";
@@ -660,22 +674,43 @@ function forecast(rc, s) {
        только добавка «без побочного действия» (сорбент), прочие добавки не встают и не тратятся —
        прежде любая добавка снимала мутаген, вопреки описанию сырья */
     var satMut = p.sat && PROD[rc.out].mut;
-    if (want && allowed.indexOf(want) >= 0 && haveAdd(want) && (!satMut || want === "clean")) mod = want;
+    if (want && allowed.indexOf(want) >= 0 && (!satMut || want === "clean")) {
+      var add = MOD[want].add, unit = add && extraUnit(add, p.take, extras);
+      if (!add || unit) {
+        mod = want;
+        if (unit) extras[unit] = (extras[unit] || 0) + 1;
+      }
+    }
     if (!mod && satMut) mod = "mut";
   }
   var n = rc.qty || 1;
   if (!isP) n += g - 1; /* обычные лекарства и батареи: из чистого сырья их выходит больше */
-  return { g: g, mod: mod, n: n, cat: cat, sat: p.sat, take: p.take, id: isP ? prodId(rc.out, g, mod) : rc.out };
+  return { g: g, mod: mod, n: n, cat: !!cat, sat: p.sat, take: p.take, extras: extras, id: isP ? prodId(rc.out, g, mod) : rc.out };
 }
 function haveAdd(mod) { var a = MOD[mod] && MOD[mod].add; return !a || (FAM[a] ? units(a).length > 0 : (G().inv[a] || 0) > 0); }
-function useAdd(mod) { var a = MOD[mod] && MOD[mod].add; if (!a) return; if (FAM[a]) useOne(a); else { G().inv[a]--; if (!G().inv[a]) delete G().inv[a]; } }
+function extraUnit(id, base, extras) {
+  function remains(k) { return (G().inv[k] || 0) > (base[k] || 0) + (extras[k] || 0); }
+  if (!FAM[id]) return remains(id) ? id : null;
+  var u = units(id).sort(function (a, b) { return a.g - b.g; }).find(function (v) { return remains(v.id); });
+  return u ? u.id : null;
+}
+function useAdd(mod) {
+  var id = MOD[mod] && MOD[mod].add;
+  var unit = id && extraUnit(id, {}, {});
+  if (unit) { var spent = {}; spent[unit] = 1; takeMap(spent); }
+}
+function synthesisCost(fc) {
+  var exact = Object.assign({}, fc.take);
+  Object.keys(fc.extras).forEach(function (id) { exact[id] = (exact[id] || 0) + fc.extras[id]; });
+  return "Расход при успехе. " + LAB.workshop.materialsText(exact, { detailsOnly: true });
+}
 function outLabel(fc) { var d = LAB.ITEMS[fc.id] || {}, o = String(fc.id); return (o.indexOf("ammo:") === 0 ? LAB.AMMO[o.slice(5)].n : d.n) + (fc.n > 1 ? ", " + fc.n + " " + pl(fc.n, "порция", "порции", "порций") : ""); }
 function brMenu(o, b) {
   var build = function () {
     var s = station(o), items = [{ label: BR[b].t + ": " + BR[b].d + ". Ступень " + brLv(b) + ", опыт " + brXp(b) + (brLv(b) < 5 ? " из " + BR_XP[brLv(b) + 1] : "") + ". Предел чистоты: " + GRADE_W[gradeCap(b)] + ".", info: true, keep: true, fn: function () { say(BR[b].t + ", ступень " + brLv(b) + "."); } }];
     RC.filter(function (rc) { return rc.br === b && outOk(rc) && rcOn(rc); }).forEach(function (rc) {
       var w = why(rc, s), fc = !w ? forecast(rc, s) : null;
-      items.push({ label: known(rc) ? outName(rc) + ". Нужно: " + needText(rc.need) + (rc.minG ? ", сырьё не ниже очищенного сорта" : "") + "." + (w ? " Нельзя: " + w + "." : " Выйдет: " + low(outLabel(fc)) + ".") : outName(rc) + " — рецептура неизвестна", fn: function () { brewMenu(rc, o); } });
+      items.push({ label: known(rc) ? outName(rc) + ". " + recipeMaterials(rc) + (w ? " Нельзя: " + w + "." : " Выйдет: " + low(outLabel(fc)) + ".") : outName(rc) + " — рецептура неизвестна", fn: function () { brewMenu(rc, o); } });
     });
     items.push({ label: "Назад", close: true, fn: function () {} });
     return items;
@@ -686,7 +721,7 @@ function brMenu(o, b) {
 function brewMenu(rc, o) {
   var c = ch(), build = function () {
     var s = o ? station(o) : null, w = why(rc, s), items = [];
-    items.push({ label: outName(rc) + ": " + (PROD[rc.out] ? PROD[rc.out].desc : (LAB.ITEMS[rc.out] || {}).desc || "") + " Нужно: " + needText(rc.need) + ". Направление — " + BR[rc.br].n + ", ступень " + rc.lv + "; стол — не проще ступени " + rc.st + ".", info: true, keep: true, fn: function () { say(outName(rc) + ". Нужно: " + needText(rc.need) + "."); } });
+    items.push({ label: outName(rc) + ": " + (PROD[rc.out] ? PROD[rc.out].desc : (LAB.ITEMS[rc.out] || {}).desc || "") + " " + recipeMaterials(rc) + " Направление — " + BR[rc.br].n + ", ступень " + rc.lv + "; стол — не проще ступени " + rc.st + ".", info: true, keep: true, fn: function () { say(outName(rc) + ". " + recipeMaterials(rc)); } });
     items.push({ label: "Сырьё", kind: "choice", options: [{ v: false, label: "экономно — сначала простое" }, { v: true, label: "лучшее — сначала чистое" }], get: function () { return !!c.opt.best; }, set: function (v) { c.opt.best = v; refresh(); } });
     if (PROD[rc.out] || units("c_catalyst").length) items.push({ label: "Катализатор", kind: "choice", options: [{ v: false, label: "без катализатора" }, { v: true, label: "с катализатором — чистота на ступень выше" + (units("c_catalyst").length ? "" : ", но катализатора нет") }], get: function () { return !!c.opt.cat; }, set: function (v) { c.opt.cat = v; refresh(); } });
     if (PROD[rc.out] && (PROD[rc.out].mods || []).length) {
@@ -695,7 +730,7 @@ function brewMenu(rc, o) {
     }
     var fc = !w ? forecast(rc, s) : null;
     items.push({ label: w ? "Нельзя: " + w + "." : "Выйдет: " + low(outLabel(fc)) + ". Срыв — " + Math.round(failP(rc, s, fc.mod) * 100) + " из ста." + (fc.sat && fc.mod === "mut" ? " Сырьё с мутагеном: состав прибавит мутацию" + (ch().opt.mod && ch().opt.mod !== "clean" ? "; добавка не встанет — мутаген снимает только сорбент" : "") + "." : fc.sat && !PROD[rc.out].mut ? " Мутаген в сырье поднял сорт." : ""), info: true, keep: true, fn: function () { say(w ? "Нельзя: " + w + "." : "Выйдет: " + low(outLabel(forecast(rc, o ? station(o) : null))) + "."); } });
-    items.push({ label: "Синтезировать", keep: true, fn: function () { brew(rc, o); } });
+    items.push({ label: "Синтезировать" + (fc ? ". " + synthesisCost(fc) : ". " + recipeMaterials(rc)), keep: true, fn: function () { brew(rc, o); } });
     items.push({ label: "Назад", close: true, fn: function () {} });
     return items;
   };
@@ -720,8 +755,7 @@ function brew(rc, o) {
     say(msg);
   } else {
     takeMap(fc.take);
-    if (fc.cat) useOne("c_catalyst");
-    if (fc.mod && fc.mod !== "mut") useAdd(fc.mod);
+    takeMap(fc.extras);
     var n = fc.n, extra = 0;
     if (Math.random() < 0.08 * brLv(rc.br) + (level() >= 9 ? 0.2 : 0)) extra++;
     var dbl = (rc.br === "energy" && rank("energy") >= 1 && /^ammo:|^c_fuelamp/.test(rc.out)) || (rc.br === "pyro" && rank("pyro") >= 1 && PROD[rc.out] && PROD[rc.out].kind === "throw");
@@ -745,17 +779,18 @@ function refMenu(o) {
   var build = function () {
     var s = station(o), items = [];
     REF.filter(function (rf) { return refOk(rf) && rcOn(rf) && (!rf.pur || haveExact(rf.need) || s.tier >= rf.st); }).forEach(function (rf) {
-      var okT = s.tier >= rf.st, ok = okT && haveExact(rf.need) && !s.dirty;
+      var okT = s.tier >= rf.st, offline = gm().gridOffline();
+      var ok = okT && haveExact(rf.need) && !s.dirty && !offline;
       if (!ok && !rf.pur && /^d_/.test(rf.id) && !Object.keys(rf.need).some(function (k) { return (G().inv[k] || 0) > 0 && /^[gkomi]_/.test(k); })) return; /* вещества глубин — когда они есть */
-      items.push({ label: rf.n + ". Нужно: " + needLine(rf.need) + (ok ? "." : !okT ? ". Нужен стол ступени " + rf.st + "." : s.dirty ? ". Стол загрязнён." : ". Не хватает: " + lackExact(rf.need) + "."), keep: true, fn: function () { refine(rf, o); } });
+      items.push({ label: rf.n + ". " + LAB.workshop.materialsText(rf.need, { action: true }) + (ok ? "" : offline ? " " + gm().gridNotice : !okT ? " Нужен стол ступени " + rf.st + "." : s.dirty ? " Стол загрязнён." : " Не хватает: " + lackExact(rf.need) + "."), keep: true, fn: function () { refine(rf, o); } });
     });
     items.push({ label: "Назад", close: true, fn: function () {} });
     return items;
   };
   menu("Переработка, очистка и добавки", build(), { keep: true, rebuild: build });
 }
-function needLine(need) { var s = []; for (var k in need) s.push(low(LAB.ITEMS[k] ? LAB.ITEMS[k].n : k) + " " + need[k]); return s.join(", "); }
 function refine(rf, o) {
+  if (gm().gridOffline()) { say(gm().gridNotice); return; }
   var s = station(o);
   if (s.dirty) { say("Стол загрязнён — сначала отмойте его растворителем."); return; }
   if (s.tier < rf.st) { say("Нужен стол ступени " + rf.st + ": " + ST[rf.st].n + "."); return; }
@@ -862,7 +897,7 @@ function invItems() {
 }
 function pocketMenu() {
   var build = function () {
-    var items = RC.filter(function (rc) { return outOk(rc) && rcOn(rc) && ((rc.st <= 1 && rc.lv <= 1) || (level() >= 12 && rc.st <= 2 && rc.lv <= 3)) && known(rc); }).map(function (rc) { var w = why(rc, null); return { label: outName(rc) + ". Нужно: " + needText(rc.need) + "." + (w ? " Нельзя: " + w + "." : ""), fn: function () { brewMenu(rc, null); } }; });
+    var items = RC.filter(function (rc) { return outOk(rc) && rcOn(rc) && ((rc.st <= 1 && rc.lv <= 1) || (level() >= 12 && rc.st <= 2 && rc.lv <= 3)) && known(rc); }).map(function (rc) { var w = why(rc, null); return { label: outName(rc) + ". " + recipeMaterials(rc) + (w ? " Нельзя: " + w + "." : ""), fn: function () { brewMenu(rc, null); } }; });
     items.push({ label: "Назад", close: true, fn: function () {} });
     return items;
   };

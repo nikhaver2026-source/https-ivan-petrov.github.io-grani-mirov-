@@ -1658,7 +1658,38 @@ function genFloor(seed, L, F, attempt) {
 
   fl.sample = L > 100 ? LAB.floorNo(L, F) : d0; /* (после 4.1) образец глубокого этажа — свой номер у каждого этажа */
   fl.turrets = turrets;
+  mountWallFixtures(fl);
   return fl;
+}
+
+var WALL_FIXTURES = { clock: 1, drawings: 1, poster: 1, graffiti: 1, awards: 1,
+  thermometer: 1, backclock: 1, photoboard: 1, blackboard: 1 };
+function mountWallFixtures(fl) {
+  fl.objs.forEach(function (o) {
+    var r = fl.rooms[o.room];
+    if (!r || !(o.type === "fx" ? WALL_FIXTURES[o.fx] : o.type === "board" || o.type === "photos")) return;
+    var best = null, distance = Infinity;
+    function consider(x, y, wx, wy) {
+      if (!LAB.inb(wx, wy)) return;
+      var wall = idx(wx, wy), front = idx(x, y);
+      if (fl.t[wall] !== T_WALL || fl.doorAt[wall] || fl.objAt[wall] || fl.t[front] !== T_ROOM) return;
+      if (fl.objAt[front] !== o && LAB.solidAt(fl, x, y)) return;
+      var d = Math.abs(x - o.x) + Math.abs(y - o.y);
+      if (d < distance) { best = { wall: [wx, wy], front: [x, y] }; distance = d; }
+    }
+    for (var x = r.x0; x <= r.x1; x++) {
+      consider(x, r.y0, x, r.y0 - 1);
+      consider(x, r.y1, x, r.y1 + 1);
+    }
+    for (var y = r.y0; y <= r.y1; y++) {
+      consider(r.x0, y, r.x0 - 1, y);
+      consider(r.x1, y, r.x1 + 1, y);
+    }
+    if (!best) return;
+    delete fl.objAt[idx(o.x, o.y)];
+    o.x = best.wall[0]; o.y = best.wall[1]; o.wallFrom = best.front;
+    fl.objAt[idx(o.x, o.y)] = o;
+  });
 }
 
 function residentBlock(L) { return L > 10 ? LAB.blockOf(L) : 0; }

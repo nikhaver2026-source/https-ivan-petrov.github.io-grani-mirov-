@@ -76,6 +76,9 @@ function gc() {
     if (!v.h || v.h.stopped || (v.end && t > v.end)) voices.splice(i, 1);
   }
 }
+function updatePositions() {
+  voices.forEach(function (v) { if (v.h && v.h.updatePosition) v.h.updatePosition(); });
+}
 function count(fn) { var n = 0; for (var i = 0; i < voices.length; i++) if (fn(voices[i])) n++; return n; }
 /* Освободить место: снять самый неважный и самый старый звук, если он не
    важнее нового. Нет такого — новый звук не звучит. */
@@ -332,7 +335,7 @@ function tick() {
     }
   } else { asleepSince = 0; wakeTries = 0; }
   gc();
-  if (ctxOk()) { reviveSlots(false); flush(); }
+  if (ctxOk()) { reviveSlots(false); flush(); updatePositions(); }
   else if (pend.length) { var t = now(); pend = pend.filter(function (p) { if (t > p.due) { st.late++; return false; } return true; }); }
 }
 function startWatch() {
@@ -374,6 +377,7 @@ LAB.Sound = {
     var sl = {}; for (var k in slots) if (slots[k]) sl[k] = { id: slots[k].id, on: !!(slots[k].h && !slots[k].h.stopped), loading: slots[k].loading };
     return { ctx: AE.ctx ? AE.ctx.state : "none", voices: voices.length, pending: pend.length, slots: sl, stats: copy(st) };
   },
+  updatePositions: updatePositions,
   LIMIT: LIMIT, LIMIT_LITE: LIMIT_LITE, lim: lim,
   /* для проверки: оборвать источник петли, как при сбое (ячейка об этом не знает) */
   _breakSlot: function (name) { var s = slots[name]; if (s && s.h && s.h.src) { try { s.h.src.stop(); } catch (e) { /* */ } } }

@@ -735,7 +735,8 @@ function spendTurns(n, why) {
   var g = gm();
   if (!g || G().dead || G().done) return;
   idleAt = 0;
-  for (var i = 0; i < (n || 1); i++) { tick(); if (G().dead || G().done) return; }
+  var count = Math.ceil((n || 1) * g.coldFactor());
+  for (var i = 0; i < count; i++) { tick(); if (G().dead || G().done) return; }
   if (why && TURN_WHY[why] && danger() && !G().tut["tb_" + why]) { G().tut["tb_" + why] = 1; sayq("Пошаговый режим: " + TURN_WHY[why] + ". Пока вы заняты, враги ходят."); }
 }
 function partingBlows(from) {
@@ -954,7 +955,7 @@ function isCam(f) { return !f.dead && has(f, "camera"); }
 function cams() { return foes.filter(isCam); }
 function camState(f) {
   var T0 = LAB.oko ? LAB.oko.T() : 0;
-  if (f.camOff) return "off";
+  if (f.camOff || gm().gridOffline()) return "off";
   if (f.camOurs && f.camOurs > T0) return "ours";
   if (f.camLoop && f.camLoop > T0) return "loop";
   return "on";
@@ -1530,7 +1531,7 @@ function stalkerTick(f) {
   if (Math.random() < 0.3) sidestep(f, 2);
 }
 /* Есть ли у машин связь с ОКО: глушилка и разбитые узлы связи этажа её рвут. */
-function netUp() { return !(G().st.jam > 0) && !CUR().fs.netCut && !CUR().fs.okoBlind; }
+function netUp() { return !gm().gridOffline() && !(G().st.jam > 0) && !CUR().fs.netCut && !CUR().fs.okoBlind; }
 /* Поиск потерянной цели: последнее место, потом две-три точки рядом
    (помещения, середины коридоров, двери) — вероятные пути. */
 function search(f, p) {
@@ -1588,6 +1589,7 @@ function foeTick(f, spotted) {
   if (f.markT > 0) f.markT--;
   if (f.slowT > 0) { f.slowT--; if (f.slowT % 2 === 1) return; }
   if (f.frozen > 0) { f.frozen--; return; }
+  if (gm().gridOffline() && (isNetTurret(f) || has(f, "camera"))) return;
   if (f.ally) { allyTick(f); return; }
   if (f.calm) { if (Math.random() < 0.02) A("foeSound", f, "idle"); return; }
   if (has(f, "camera")) { cameraTick(f); return; }
@@ -2357,7 +2359,7 @@ function statusTick(onlyTimers) {
 
 /* ════════ ВЫСТРЕЛЫ ГЕРОЯ ════════ */
 function weapon() { return gm().curWeapon(); }
-function shotGap(w) { var cd = LAB.weaponCd(w); if (G().st.haste > 0) cd *= 0.6; if (LAB.workshop) cd *= LAB.workshop.gapK(w); return cd; }
+function shotGap(w) { var cd = LAB.weaponCd(w); if (G().st.haste > 0) cd *= 0.6; if (LAB.workshop) cd *= LAB.workshop.gapK(w); return cd * gm().coldFactor(); }
 /* Кто на линии выстрела: конус вдоль направления. */
 function targetsIn(dir, w, exact) {
   var v = DIRV[dir], out = [];
@@ -2818,7 +2820,7 @@ function stopFire() { if (hold) { clearTimeout(hold.t); hold = null; } }
 /* ════════ ПРОЧЕЕ ════════ */
 function hostile(f) { return !f.dead && !f.calm && !f.ally && !f.neutral && !f.disguised; }
 function danger() {
-  return foes.some(function (f) { return hostile(f) && !has(f, "camera") && f.state === "hunt" && dist(f, heroPos()) <= 9; });
+  return foes.some(function (f) { return hostile(f) && !has(f, "camera") && !(gm().gridOffline() && isNetTurret(f)) && f.state === "hunt" && dist(f, heroPos()) <= 9; });
 }
 /* Кто гонится вплотную: подвижный враг, которому до героя по настоящему
    пути (с дверями, которые он умеет открывать) не больше четырёх шагов.

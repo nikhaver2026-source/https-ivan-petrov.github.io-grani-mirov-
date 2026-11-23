@@ -902,7 +902,7 @@ function cargoFrameMenu() {
     var out = [{ label: info, info: true, keep: true, fn: function () { say(info); } }];
     if (next) {
       out.push({ label: "Усилить корпус. «" + next.n + "» до " + cargoKg(next.limit) + ". " +
-        requirementLine(next) + " Детали " + W().costText(materialCost(next)) + ".", keep: true, fn: reinforceChassis });
+        requirementLine(next) + " " + W().materialsText(materialCost(next), { limit: 1, action: true }), keep: true, fn: reinforceChassis });
     }
     return out.concat(back());
   };
@@ -914,7 +914,7 @@ function cargoProfileMenu(k) {
     return Object.keys(CARGO_PROFILES).map(function (id) {
       var profile = CARGO_PROFILES[id];
       return { label: profile.n + ". " + profile.d + (profile === current ? " Активна." :
-        profile.need ? " Детали " + W().costText(profile.need) + "." : ""), keep: true,
+        profile.need ? " " + W().materialsText(profile.need, { limit: 1, action: true }) : ""), keep: true,
         fn: function () { specializeCargo(k, id); } };
     }).concat(back());
   };
@@ -928,7 +928,7 @@ function moduleProfileMenu(k, ids) {
       var def = catalog.profiles[id], known = knownModuleProfile(d, k, id);
       var target = { armored: "Сначала выбирает бронированные цели.", machine: "Сначала выбирает машины.", living: "Сначала выбирает тварей." }[def.focus];
       return { label: def.n + ". " + fieldEffects(def.effects) + (target ? " " + target : "") +
-        (known ? " Изучена." : " " + requirementLine(def) + " Детали " + W().costText(materialCost(def)) + ".") +
+        (known ? " Изучена." : " " + requirementLine(def) + " " + W().materialsText(materialCost(def), { limit: 1, action: true })) +
         (def === current ? " Активна." : ""), keep: true, fn: function () { setModuleProfile(k, id); } };
     }), back());
   };
@@ -945,7 +945,7 @@ function moduleMenu(k) {
     if (md.lift) info += " " + liftSpec(k, rank);
     else if (on && effectInfo) info += " " + effectInfo.n + " " + effectInfo.v[rank - 1] + ".";
     var out = [{ label: info, info: true, keep: true, fn: function () { say(info); } }];
-    out.push({ label: "Собрать в запас. " + requirementLine(md) + " Детали: " + W().costText(materialCost(md)) + ".", keep: true, fn: function () { craftMod(k); } });
+    out.push({ label: "Собрать в запас. " + requirementLine(md) + " " + W().materialsText(materialCost(md)), keep: true, fn: function () { craftMod(k); } });
     if (on) {
       if (effectInfo && rank < 3) {
         var next = upgradeDetails(k, rank + 1);
@@ -953,7 +953,7 @@ function moduleMenu(k) {
         var nextWeight = md.rankWeights ? " Масса после расширения " + LAB.load.kg(modWeight(k, rank + 1)) + "." : "";
         var nextSpec = md.lift ? liftSpec(k, rank + 1) : effectInfo.n + " " + effectInfo.v[rank] + ".";
         out.push({ label: action + (rank + 1) + ". " + nextSpec + nextWeight +
-          " " + requirementLine(next) + " Детали " + W().costText(md.lift ? materialCost(next) : next.need) + ".", keep: true, fn: function () { upgradeMod(k); } });
+          " " + requirementLine(next) + " " + W().materialsText(md.lift ? materialCost(next) : next.need, { limit: 1, action: true }), keep: true, fn: function () { upgradeMod(k); } });
       }
       if (md.lift) out.push({ label: "Специализация платформы. «" + cargoProfile(d, k).n + "».", fn: function () { cargoProfileMenu(k); } });
       else if (profileIds.length) {
@@ -974,8 +974,8 @@ function moduleMenu(k) {
         out.push({ label: "Установить из рюкзака. " + mark(k, r) + ", в наличии " + G().inv[modId(k, r)] + (reason ? ". Сейчас " + reason : "") + ".", keep: true, fn: function () { addMod(k, r); } });
       });
       if (ranks.indexOf(1) < 0) {
-        out.push({ label: "Собрать и установить" + (ranks.length ? " модуль первой ступени" : "") +
-          (why ? ". Сейчас " + why : "") + ".", keep: true, fn: function () { addMod(k, 1); } });
+        out.push({ label: "Собрать и установить" + (ranks.length ? " модуль первой ступени" : "") + ". " + W().materialsText(materialCost(md), { limit: 1 }) +
+          (why ? " Сейчас " + why + "." : ""), keep: true, fn: function () { addMod(k, 1); } });
       }
     }
     return out.concat(back());
@@ -1010,7 +1010,7 @@ function tuningOptions(k, mode, ids) {
       var effect = t.effects ? fieldEffects(t.effects) : describe(t.metric, t.points, null, t.flag) + ".";
       if (t.side) effect += " " + cap1(describe(t.side[0], t.side[1])) + ".";
       if (t.reactive) effect += " При остатке заряда до четверти: " + describe(t.metric, t.reactive) + " дополнительно.";
-      return { label:t.n + ". " + cap1(effect) + " " + requirementLine(t) + " Детали: " + W().costText(materialCost(t)) + "." +
+      return { label:t.n + ". " + cap1(effect) + " " + requirementLine(t) + " " + W().materialsText(materialCost(t), { limit: 1, action: true }) +
         (d.tuning && d.tuning[k] === id ? " Активна." : ""), keep:true, fn:function () { tuneModule(k, id); } };
     }).concat(back());
   };
@@ -1049,7 +1049,7 @@ function roleOptions(key, ids) {
     return ids.map(function (id) {
       var r = ROLES[id], trained = d.learned && d.learned[id];
       return { label:r.n + ". " + cap1(explain(r.effects)) + ". " + requirementLine(r) +
-        (trained ? " Изучена." : " Детали: " + W().costText(materialCost(r)) + ".") + (d.role === id ? " Активна." : ""),
+        (trained ? " Изучена." : " " + W().materialsText(materialCost(r), { limit: 1, action: true })) + (d.role === id ? " Активна." : ""),
         keep:true, fn:function () { setRole(id); } };
     }).concat(back());
   };
@@ -1095,7 +1095,7 @@ function equipmentMenu(title, keys) {
 function benchMenu(et) {
   var b_ = function () {
     var d = D(), items = [];
-    if (!d) items.push({ label: "Собрать дрона: " + W().costText(NEED), keep: true, fn: function () { build(); } });
+    if (!d) items.push({ label: "Собрать дрона. " + W().materialsText(NEED, { limit: 1 }), keep: true, fn: function () { build(); } });
     else {
       items.push({ label: line(d), info: true, keep: true, fn: function () { say(line(d) + "."); } });
       items.push({ label: "Грузовой корпус. Допустимая нагрузка " + cargoKg(chassis(d).limit) + ".", fn: cargoFrameMenu });
@@ -1120,7 +1120,7 @@ function benchMenu(et) {
         ]);
       } });
     }
-    items.push({ label: "Полевой кабель питания: " + (G().inv[CABLE] > 0 ? "есть в рюкзаке." : "собрать. Детали: " + W().costText(CABLE_NEED) + "."), keep: true, fn: craftCable });
+    items.push({ label: "Полевой кабель питания: " + (G().inv[CABLE] > 0 ? "есть в рюкзаке." : "собрать. " + W().materialsText(CABLE_NEED, { limit: 1 })), keep: true, fn: craftCable });
     items.push(back());
     return items;
   };

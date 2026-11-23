@@ -244,7 +244,7 @@ function walkLoop(gdir, delay) {
 function fireLoop(gdir) { stopHold(); LAB.combat.startFire(gdir); walk = { fire: true }; }
 /* Шаг удержания: под замедлением — реже (иначе шаг «рано» обрывал ходьбу). */
 /* (после 4.6) перегруз — шаги реже (load.js) */
-function stepGap(G) { return Math.round((G.st.slow > 0 ? 440 : G.st.haste > 0 ? 200 : 300) * (LAB.load ? LAB.load.gapK() : 1)); }
+function stepGap(G) { return Math.round((G.st.slow > 0 ? 440 : G.st.haste > 0 ? 200 : 300) * (LAB.load ? LAB.load.gapK() : 1) * LAB.game.coldFactor()); }
 function stopHold() {
   if (!walk) return;
   if (walk.fire && LAB.combat) LAB.combat.stopFire();

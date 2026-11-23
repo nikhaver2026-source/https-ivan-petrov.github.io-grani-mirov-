@@ -774,6 +774,12 @@ var T_COOL = /холодильн|прохладн|погреб|зябк|стыл
 var T_WARM = /тёпл|тепло|душно|духот/;
 var T_NOFIRE = /(не|никто не) топ(ят|ит|или|лен)|нетоплен|остыл|погасл|холодн\S* печ|печ\S* холодн/;
 function roomTemp(rm, o) {
+  var base = baseRoomTemp(rm, o);
+  if (G().event === "cold") return Math.min(5, base - 12);
+  if (G().event === "heat") return Math.max(33, base + 10);
+  return base;
+}
+function baseRoomTemp(rm, o) {
   var base = { K: 21, P: 13, C: 27, O: 11, M: 31, I: 24 }[era()] || 20, h = h32(o.id + CUR().key), d = (h % 7) - 3, t = roomText(rm), m = T_MINUS.exec(t);
   if (m) return -(NUMW[m[1]] || parseInt(m[1], 10) || 2);
   if (T_COLD.test(t)) return -6 + (h % 7);

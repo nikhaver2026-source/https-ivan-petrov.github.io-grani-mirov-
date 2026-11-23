@@ -609,24 +609,35 @@ var Bank = {
     var file = o.variant != null ? ready[o.variant % ready.length] : ready[Math.floor(Math.random() * ready.length)];
     if (o.variant == null && ready.length > 1 && file === d.last) file = ready[(ready.indexOf(file) + 1) % ready.length];
     d.last = file;
+    var point = o.position ? o.position() : o.at;
+    if (o.position && !point) return null;
     var c = AE.ctx, t = c.currentTime + (o.delay || 0);
     var src = c.createBufferSource();
     src.buffer = this.bufs[file];
     var rate = (o.rate || 1) * (1 + (Math.random() * 2 - 1) * (o.vary == null ? d.vary : o.vary));
     src.playbackRate.value = rate;
     if (o.loop) { src.loop = true; if (o.loopStart) src.loopStart = o.loopStart; if (o.loopEnd) src.loopEnd = o.loopEnd; }
-    var sp = o.at ? LAB.spatial(o.at.dx, o.at.dy, o.at.occ) : null;
+    var sp = point ? LAB.spatial(point.dx, point.dy, point.occ) : null;
     var g = c.createGain();
-    var vol = d.v * (o.gain == null ? 1 : o.gain) * (sp ? sp.gain : 1);
+    var baseGain = d.v * (o.gain == null ? 1 : o.gain);
+    var vol = point && point.muted ? 0 : baseGain * (sp ? sp.gain : 1);
     g.gain.value = vol;
     var node = src;
     var lpHz = sp ? sp.lp : o.lp;
     if (o.lp && sp) lpHz = Math.min(o.lp, sp.lp);
-    if (lpHz && lpHz < 18000) { var f = c.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = lpHz; node.connect(f); node = f; }
+    var f = null;
+    if (o.position || (lpHz && lpHz < 18000)) {
+      f = c.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = lpHz || 20000;
+      node.connect(f); node = f;
+    }
     node.connect(g);
     var out = g;
     var pan = sp ? sp.pan : o.pan;
-    if (pan && c.createStereoPanner) { var p = c.createStereoPanner(); p.pan.value = Math.max(-1, Math.min(1, pan)); g.connect(p); out = p; }
+    var pn = null;
+    if ((pan || o.position) && c.createStereoPanner) {
+      pn = c.createStereoPanner(); pn.pan.value = pan ? Math.max(-1, Math.min(1, pan)) : 0;
+      g.connect(pn); out = pn;
+    }
     /* канал внутри шины: оружие, противники, тревоги (o.ch) — своя громкость */
     out.connect((o.ch && AE[o.ch]) || AE[o.bus || d.bus] || AE.fx);
     var rv = o.reverb == null ? (o.bus === "ui" || d.bus === "ui" || d.bus === "beacon" ? 0 : 0.25) : o.reverb;
@@ -642,7 +653,19 @@ var Bank = {
       },
       setGain: function (v, tc) { try { g.gain.setTargetAtTime(d.v * v, c.currentTime, tc || 0.1); } catch (e) { /* */ } }
     };
-    src.onended = function () { h.stopped = true; try { g.disconnect(); } catch (e) { /* */ } };
+    if (o.position) h.updatePosition = function () {
+      if (h.stopped) return;
+      var next = o.position();
+      if (!next) { h.stop(0.04); return; }
+      var pos = LAB.spatial(next.dx, next.dy, next.occ), now = c.currentTime;
+      if (pn) pn.pan.setTargetAtTime(pos.pan, now, 0.035);
+      f.frequency.setTargetAtTime(Math.min(pos.lp, o.lp || 20000), now, 0.06);
+      g.gain.setTargetAtTime(next.muted ? 0 : baseGain * pos.gain, now, 0.06);
+    };
+    src.onended = function () {
+      h.stopped = true;
+      try { g.disconnect(); if (pn) pn.disconnect(); if (sg) sg.disconnect(); } catch (e) { /* */ }
+    };
     return h;
   }
 };

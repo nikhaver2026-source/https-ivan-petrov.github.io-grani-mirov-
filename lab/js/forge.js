@@ -316,7 +316,7 @@ function famItems(fam) {
   });
   var lack = W() ? lackText(need) : "";
   items.push({ label: "Итог: " + statText(fam, d) + "." + forecastOwn(fam), info: true, keep: true, fn: function () {} });
-  items.push({ label: "Собрать: " + W().costText(need) + (lack ? ". Не хватает: " + lack : "") + (t < FAM[fam].tier ? ". Нужен верстак ступени " + FAM[fam].tier : ""), keep: true, fn: function () { build(fam); } });
+  items.push({ label: "Собрать. " + W().materialsText(need) + (lack ? " Не хватает: " + lack + "." : "") + (t < FAM[fam].tier ? " Нужен верстак ступени " + FAM[fam].tier : ""), keep: true, fn: function () { build(fam); } });
   items.push({ label: "Назад", close: true, fn: function () {} });
   return items;
 }

@@ -285,7 +285,7 @@ function shelfPool(L) {
   var out = [];
   for (var id in LAB.ITEMS) {
     var d = LAB.ITEMS[id];
-    if (!d.price || d.surf || d.nosell || d.dronePart || d.kind === "valuable" || id === "proto" || id === "okokey") continue;
+    if (!d.price || d.surf || d.nosell || d.fixedStock || d.dronePart || d.kind === "valuable" || id === "proto" || id === "okokey") continue;
     if (["food", "use", "throw", "deploy", "tool", "part", "wmodule", "trap"].indexOf(d.kind) < 0) continue;
     if (!LAB.srcOk(d, "buy")) continue; /* (2.0) только верстак или только находка — не на прилавке */
     if (LAB.chemVariant(d)) continue; /* (3.7, нелогичность) сорта и модификации составов — только химический стол */
@@ -339,6 +339,10 @@ function stockOf(o) {
   /* товар пополняется: через четыре часа по часам комплекса — новый привоз */
   if (st.stock && now() - (st.stock.t || 0) >= 240) { st.restocks = (st.restocks || 0) + 1; st.stock = null; }
   if (!st.stock) st.stock = makeStock(o);
+  if (!st.stock.airSupplies) {
+    st.stock.lines.push({ id: "airmask", n: 1 }, { id: "oxygen_tank", n: 4 });
+    st.stock.airSupplies = true;
+  }
   return st.stock;
 }
 function lineName(e) { return e.ammo ? LAB.AMMO[e.ammo].n : LAB.ITEMS[e.id].n; }
@@ -356,6 +360,7 @@ function stockRows(lines, prof) {
     var p = linePrice(e, prof);
     return { label: lineName(e) + " — " + cr(p) + ", осталось " + e.n +
       wtTail(e.ammo ? LAB.load && LAB.load.ammoWt(e.ammo) : LAB.load && LAB.load.itemWt(e.id)), fn: function () {
+      if (gm().gridOffline()) { say(gm().gridNotice); return; }
       if (!(e.n > 0)) { say("Это уже раскупили."); return; }
       if (G().credits < p) { LAB.UI.error(); say("Не хватает кредитов: нужно " + p + ", у вас " + G().credits + "."); return; }
       G().credits -= p; e.n--;

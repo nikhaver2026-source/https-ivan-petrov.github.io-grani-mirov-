@@ -42,6 +42,14 @@ function at(id, x, y, o) {
   var g = G(); if (!g) return play(id, o);
   var occ = false;
   try { occ = !LAB.los(CUR().fl, CUR().fs, g.x, g.y, x, y); } catch (e) { occ = false; }
+  var cur = CUR(), floor = cur.key;
+  function point() {
+    if (G() !== g || CUR().key !== floor || !LAB.game.entered || (o.active && !o.active())) return null;
+    return { dx: x - g.x, dy: y - g.y, occ: !LAB.los(CUR().fl, CUR().fs, g.x, g.y, x, y),
+      muted: !!g.stair || (LAB.game.canHear && !LAB.game.canHear(x, y)) };
+  }
+  if (o.follow && cur.fl) o.position = point;
+  else if (LAB.game.canHear && !LAB.game.canHear(x, y)) return null;
   o.at = { dx: x - g.x, dy: y - g.y, occ: occ };
   if (Date.now() < deafUntil) { o.lp = Math.min(o.lp || 18000, 650); o.gain = (o.gain == null ? 1 : o.gain) * 0.6; }
   return play(id, o);
@@ -77,6 +85,7 @@ var METAL_STEP = ["step_plate", "step_hollow", "step_boots"];
 function metalStep(L) { return METAL_STEP[Math.floor((Math.max(1, L || 1) - 1) / 5) % METAL_STEP.length]; }
 var stepN = 0;
 function step(surf, run, door) {
+  if (Snd.updatePositions) Snd.updatePositions();
   stepN++;
   var sd = LAB.SURF[surf] || {}, base = sd.base || surf || "plate", rate = sd.rate || 1, g = G();
   var id = "step_" + base;
@@ -293,8 +302,11 @@ function navStart(path) {
    (game.js, itemKind) — прежде хлеб и тушёнка звенели склянкой стимулятора */
 var PICK_FB = { food: "paper" };
 function pickup(kind) { var id = has("pick_" + kind) ? "pick_" + kind : PICK_FB[kind] && has(PICK_FB[kind]) ? PICK_FB[kind] : "pick_part"; play(id, { bus: "ui", gain: 0.9 }); }
-function setEvent(id) {
+function setEvent(id, silent) {
   eventLayer(id);
+  bedLevel(0.4);
+  if (roomLoop && roomLoop.setGain) roomLoop.setGain(roomGain(), 0.4);
+  if (silent) return;
   if (id === "alarm") play("ev_alarm_start", { gain: 0.7 });
   if (id === "quake") { play("ev_quake", { gain: 1 }); LAB.vib([200, 100, 300]); }
 }
@@ -354,6 +366,10 @@ function beaconTick() {
     if (d === 0 || d > 14) return;
     src.push({ key: "f" + f.id, id: f.kind === "mech" ? "bcn_foe_mech" : "bcn_foe_bio", x: f.x, y: f.y, d: d, max: 14, foe: f.kind });
   });
+  if (LAB.game.hearingRange) {
+    var limit = LAB.game.hearingRange();
+    if (limit < Infinity) src = src.filter(function (s) { return s.d <= limit; });
+  }
   src.sort(function (a, b) { return a.d - b.d; });
   lastSources = src;
   src.slice(0, 8).forEach(function (s) {
@@ -505,7 +521,9 @@ function synthBed(L) {
 /* (2.0) Громкость фона уровня: в коридоре — полная; в помещении, где гудят
    свои машины (своя петля помещения), гул уровня отходит на второй план. */
 var BED_GAIN = 0.62, BED_DUCK = 0.38;
-function bedGain() { return roomLoop ? BED_DUCK : BED_GAIN; }
+function gridOffline() { return LAB.game && LAB.game.gridOffline(); }
+function roomGain() { return gridOffline() ? 0 : 0.55; }
+function bedGain() { return gridOffline() ? 0.03 : roomLoop ? BED_DUCK : BED_GAIN; }
 function bedLevel(fade) { if (bed && bed.h && bed.h.setGain) bed.h.setGain(bedGain(), fade == null ? 1.2 : fade); }
 function setRoom(r) {
   LAB.safe(corrUpdate);
@@ -519,7 +537,7 @@ function setRoom(r) {
   roomLid = lid;
   /* гул прошлого помещения — из памяти */
   if (prevLid && prevLid !== lid) releaseLater(prevLid, 3000);
-  if (lid) roomLoop = loop(lid, { bus: "amb", gain: 0.55, fadeIn: 1.2, reverb: 0.1 }, "room");
+  if (lid) roomLoop = loop(lid, { bus: "amb", gain: roomGain(), fadeIn: 1.2, reverb: 0.1 }, "room");
   bedLevel();
   if (!id) { AE.setReverb(1.2 + depthL(G() ? G().L : 1) * 0.08, 0.28); return; }
   /* отзвук: коридор — длинный, большие залы — гулкие, тесные — сухие */
@@ -536,7 +554,7 @@ function scheduleEvent() {
     evTimer = null;
     if (!worldOn) return;
     var g2 = G();
-    if (g2 && LAB.game.entered && !LAB.game.paused && !LAB.bg && !(LAB.ui && LAB.ui.layer())) {
+    if (g2 && LAB.game.entered && !LAB.game.paused && !LAB.bg && !gridOffline() && LAB.game.hearingRange() > 6 && !(LAB.ui && LAB.ui.layer())) {
       var pool = levelEvents(g2.L);
       var id = pool[Math.floor(Math.random() * pool.length)];
       var ang = Math.random() * Math.PI * 2, dist = 6 + Math.random() * 10;
@@ -546,7 +564,8 @@ function scheduleEvent() {
   }, Math.max(4000, gap));
 }
 function eventLayer(id) {
-  var want = { alarm: "evl_alarm", dark: "evl_dark", surge: "evl_surge", steam: "evl_steam", quake: "evl_quake" }[id] || "";
+  var want = { alarm: "evl_alarm", dark: "evl_dark", surge: "evl_surge", steam: "evl_steam", quake: "evl_quake", smoke: "evl_steam", cold: "evl_dark",
+    heat: "evl_steam", airloss: "evl_dark" }[id] || "";
   if (want === evLayerId) return;
   var prevEv = evLayerId;
   evLayerId = want;

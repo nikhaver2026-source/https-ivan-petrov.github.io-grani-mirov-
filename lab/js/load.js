@@ -106,6 +106,7 @@ function floorWt(it) {
 function parts() {
   var g = G(), p = { inv: 0, weapons: 0, armor: 0, ammo: 0, frames: 0, drone: 0, samples: 0 }, k;
   for (k in g.inv) if (g.inv[k] > 0) p.inv += itemWt(k) * g.inv[k];
+  if (g.airGear && g.airGear.oxygen > 0) p.inv += itemWt("oxygen_tank");
   (g.weapons || []).forEach(function (w) { p.weapons += weaponWt(w); });
   (g.armors || []).forEach(function (a) { p.armor += armorWt(a) * (a === g.armor ? 0.5 : 1); });
   for (k in (g.ammo || {})) p.ammo += (AMMO_WT[k] || 0.4) * (g.ammo[k] || 0);
@@ -832,7 +833,7 @@ function lockerItems(where) {
     Object.keys(STORAGE_CRAFT).forEach(function (kind) {
       var def = STORAGE_CRAFT[kind], n = Lk()[kind] || 0;
       var label = def.n + ". " + def.gain + ". Сделано " + n + " из " + CRAFT_MAX + ".";
-      if (n < CRAFT_MAX) its.push({ label: label + " " + (craftLock(kind) || "Нужно: " + LAB.workshop.costText(craftNeed(kind))) + ".", keep: true, fn: function () { craftCell(kind); } });
+      if (n < CRAFT_MAX) its.push({ label: label + " " + LAB.workshop.materialsText(craftNeed(kind), { limit: 1, action: true }) + (craftLock(kind) ? " " + cap1(craftLock(kind)) + "." : ""), keep: true, fn: function () { craftCell(kind); } });
     });
   }
   its.push({ label: "Количество ячеек. " + capWhy() + ".", info: true, fn: function () {} });
@@ -878,7 +879,7 @@ function rigMenu() {
       { label: r ? r.n + ". Вклад в текущий предел: " + kg(capOf("rig")) + "." : "Грузовое снаряжение ещё не собрано.", info: true, keep: true, fn: status },
       { label: "Пояс даёт 5, рама 10, упряжь 15 килограммов. Каждый следующий комплект использует предыдущий. С приводами каркаса нижняя опора общая, поэтому их прибавки складываются частично.", info: true, keep: true, fn: function () { say(capText() + "."); } }
     ];
-    if (next) out.push({ label: "Подогнать: " + next.n + ". Верстак ступени " + next.tier + ", телосложение " + next.con + ". Детали: " + LAB.workshop.costText(next.need) + ".", keep: true, fn: fitRig });
+    if (next) out.push({ label: "Подогнать: " + next.n + ". Верстак ступени " + next.tier + ", телосложение " + next.con + ". Детали: " + LAB.workshop.materialsText(next.need, { limit: 1, action: true }), keep: true, fn: fitRig });
     return out.concat({ label: "Назад", close: true, fn: function () {} });
   };
   UIx("menu", "Грузовое снаряжение", items(), { keep: true, rebuild: items });
