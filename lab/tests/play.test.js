@@ -2004,16 +2004,34 @@ LAB.ui.closeAll();
     /* электронная приманка: робот идёт к ней, ОКО отмечает подозрение (этаж — без перепрошивки и глушилки прежних проверок) */
     g.CUR.fs.robots = false; g.CUR.fs.okoBlind = false; g.CUR.fs.netCut = false; G.st.jam = 0; G.st.cloak = 0;
     C.stop(); /* такты не идут: робот не успеет увидеть героя сам */
-    /* бросаем туда, где приманка улетит хотя бы на четыре шага; робот — вне прямой видимости героя */
+    /* Проверяем в мастерской или в соседнем коридоре, если из первой позиции
+       за укрытием нет свободной клетки для робота в радиусе приманки. */
     const DV = { N: [0, -1], S: [0, 1], W: [-1, 0], E: [1, 0] };
-    let face = "E", land = [G.x, G.y], best = -1;
-    for (const k of ["E", "W", "N", "S"]) { let x = G.x, y = G.y, n = 0; while (n < 6 && g.passable(x + DV[k][0], y + DV[k][1])) { x += DV[k][0]; y += DV[k][1]; n++; } if (n > best) { best = n; face = k; land = [x, y]; } }
-    /* (после 4.5) в убежище и в безопасную зону у капсулы игра машин не выводит (spawnFoe — null): тогда
-       берём следующую клетку; прежде проверка брала первую подходящую и иногда оставалась без робота */
-    let bot = null;
-    for (let y = 0; y < LAB.H && !bot; y++) for (let x = 0; x < LAB.W && !bot; x++) {
-      const dl = Math.abs(x - land[0]) + Math.abs(y - land[1]);
-      if (dl >= 3 && dl <= 12 && g.passable(x, y) && !LAB.los(g.CUR.fl, g.CUR.fs, x, y, G.x, G.y)) bot = C.spawnFoe("patrolbot", x, y, {});
+    const fl = g.CUR.fl, fs = g.CUR.fs, origin = [G.x, G.y];
+    const positions = [origin].concat(fl.corrs.map(c => [Math.floor((c.x0 + c.x1) / 2), Math.floor((c.y0 + c.y1) / 2)]));
+    let bot = null, face = "E", best = -1;
+    for (const [px, py] of positions) {
+      G.x = px; G.y = py;
+      for (const k of ["E", "W", "N", "S"]) {
+        const [dx, dy] = DV[k];
+        let lx = px, ly = py, distance = 0;
+        while (distance < 6) {
+          const nx = lx + dx, ny = ly + dy;
+          if (!LAB.inb(nx, ny)) break;
+          const idx = LAB.idx(nx, ny), tile = fl.t[idx];
+          if (tile === LAB.T.WALL || (tile === LAB.T.DOOR && fs.doors[fl.doorAt[idx].id] !== 2)) break;
+          lx = nx; ly = ny; distance++;
+        }
+        if (distance < 4) continue;
+        for (let y = Math.max(0, ly - 12); y < LAB.H && y <= ly + 12 && !bot; y++) {
+          for (let x = Math.max(0, lx - 12); x < LAB.W && x <= lx + 12 && !bot; x++) {
+            const dl = Math.abs(x - lx) + Math.abs(y - ly);
+            if (dl >= 3 && dl <= 12 && g.passable(x, y) && !LAB.los(fl, fs, x, y, px, py)) bot = C.spawnFoe("patrolbot", x, y, {});
+          }
+        }
+        if (bot) { face = k; best = distance; break; }
+      }
+      if (bot) break;
     }
     if (bot) { bot.ally = false; bot.calm = false; bot.state = "idle"; bot.lastKnown = null; }
     G.face = face; G.inv.decoy_e = 1; g.useItem("decoy_e"); await wait(800);
@@ -2038,6 +2056,7 @@ LAB.ui.closeAll();
       bot.dead = true;
     }
     if (cam) cam.dead = true;
+    [G.x, G.y] = origin;
     out.profile = /останавливает роботов/.test(W.profile(LAB.makeWeapon("suppressor", 3, 0, 1))) && /не греется/.test(W.profile(LAB.makeWeapon("kpistol", 2, 0, 1)));
     /* экономика: у каждой детали — где найти и для чего; рецепты из существующих предметов; у каждого — класс */
     out.parts = LAB.PARTS.filter(k => !(W.srcOf(k) && (W.uses(k).kn.length + W.uses(k).unk) > 0));

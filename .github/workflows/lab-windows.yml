@@ -26,7 +26,7 @@ name: Подземная лаборатория — Windows
 on:
   workflow_dispatch:
   push:
-    branches: ['main', 'claude/**', 'codex/lab-alpha-*']
+    branches: ['main', 'claude/**', 'codex/lab-alpha-*', '!codex/lab-alpha-*-android']
     paths:
       - 'lab/**'
       - 'desktop/sapi.js'
