@@ -632,6 +632,7 @@ function clean(o) {
   refresh();
 }
 function stationCap(s) { return !s ? 1 : s.tier >= 3 ? 3 : s.tier; }
+function gridOffline() { return G().event === "reboot"; }
 /* Почему нельзя (пусто — можно). */
 function why(rc, s) {
   if (!outOk(rc)) return "нет в игре";
@@ -639,7 +640,7 @@ function why(rc, s) {
   if (brLv(rc.br) < rc.lv) return "нужна ступень " + rc.lv + " направления «" + BR[rc.br].n + "», у вас " + brLv(rc.br);
   if (!s) { if (!(level() >= 6 && rc.st <= 1 && rc.lv <= 1) && !(level() >= 12 && rc.st <= 2 && rc.lv <= 3)) return "нужен химический стол"; }
   else {
-    if (gm().gridOffline()) return gm().gridNotice;
+    if (gridOffline()) return gm().gridNotice;
     if (s.dirty) return "стол загрязнён — сначала отмойте его растворителем";
     if (s.tier < rc.st && !(level() >= 5 && s.tier === rc.st - 1)) return "нужен стол ступени " + rc.st + ": " + ST[rc.st].n;
   }
@@ -779,7 +780,7 @@ function refMenu(o) {
   var build = function () {
     var s = station(o), items = [];
     REF.filter(function (rf) { return refOk(rf) && rcOn(rf) && (!rf.pur || haveExact(rf.need) || s.tier >= rf.st); }).forEach(function (rf) {
-      var okT = s.tier >= rf.st, offline = gm().gridOffline();
+      var okT = s.tier >= rf.st, offline = gridOffline();
       var ok = okT && haveExact(rf.need) && !s.dirty && !offline;
       if (!ok && !rf.pur && /^d_/.test(rf.id) && !Object.keys(rf.need).some(function (k) { return (G().inv[k] || 0) > 0 && /^[gkomi]_/.test(k); })) return; /* вещества глубин — когда они есть */
       items.push({ label: rf.n + ". " + LAB.workshop.materialsText(rf.need, { action: true }) + (ok ? "" : offline ? " " + gm().gridNotice : !okT ? " Нужен стол ступени " + rf.st + "." : s.dirty ? " Стол загрязнён." : " Не хватает: " + lackExact(rf.need) + "."), keep: true, fn: function () { refine(rf, o); } });
@@ -790,7 +791,7 @@ function refMenu(o) {
   menu("Переработка, очистка и добавки", build(), { keep: true, rebuild: build });
 }
 function refine(rf, o) {
-  if (gm().gridOffline()) { say(gm().gridNotice); return; }
+  if (gridOffline()) { say(gm().gridNotice); return; }
   var s = station(o);
   if (s.dirty) { say("Стол загрязнён — сначала отмойте его растворителем."); return; }
   if (s.tier < rf.st) { say("Нужен стол ступени " + rf.st + ": " + ST[rf.st].n + "."); return; }
