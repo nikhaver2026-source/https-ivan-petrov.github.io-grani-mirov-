@@ -759,10 +759,11 @@ function clampBody(b) {
   b.rad = Math.max(0, Math.min(100, b.rad || 0));
 }
 /* Ступени: [порог, слово, предупреждение при переходе вниз (к худшему)]. */
+var LIGHT_INTOXICATION = 20;
 var BODY_STEPS = {
   food: [[80, "сыты"], [50, "сытость в норме"], [25, "проголодались", "Вы проголодались: энергия имплантов восстанавливается медленнее. Поешьте: еда — в автоматах с едой, на кухнях и в столовых."], [10, "голод", "Голод: энергия имплантов почти не восстанавливается."], [1, "сильный голод", "Сильный голод: энергия имплантов не восстанавливается, скоро голод начнёт отнимать здоровье."], [0, "истощение", "Истощение: голод отнимает здоровье. Срочно поешьте."]],
   wake: [[70, "бодры"], [40, "бодрость в норме"], [20, "устали", "Вы устали: руки дрожат, целиться труднее. Отдохните в капсуле восстановления или выпейте кофе."], [5, "сильная усталость", "Сильная усталость: точность заметно ниже. Нужен сон или стимулятор."], [0, "валитесь с ног", "Вы валитесь с ног от усталости."]],
-  tox: [[80, "тяжёлая интоксикация", "Тяжёлая интоксикация: токсины отнимают здоровье. Антидот, сорбент или большая аптечка!"], [50, "интоксикация", "Интоксикация: подташнивает, целиться труднее. Антидот или энтеросорбент выведут токсины."], [20, "лёгкая интоксикация"], [0, "токсинов нет"]],
+  tox: [[80, "тяжёлая интоксикация", "Тяжёлая интоксикация: токсины отнимают здоровье. Антидот, сорбент или большая аптечка!"], [50, "интоксикация", "Интоксикация: подташнивает, целиться труднее. Антидот или энтеросорбент выведут токсины."], [LIGHT_INTOXICATION, "лёгкая интоксикация"], [0, "токсинов нет"]],
   neuro: [[85, "критическая нейронагрузка", "Нейроперегрузка: импланты отключились, пока нагрузка не спадёт. Поможет нейроблокатор."], [60, "нейроперегрузка", "Нейронагрузка высокая: импланты тратят больше энергии."], [30, "нейронагрузка повышена"], [0, "нейронагрузка в норме"]],
   rad: [[90, "смертельная доза", "Смертельная доза облучения: здоровье тает. Немедленно антирадин или раствор «Чистота» — и прочь из зоны!"], [70, "тяжёлая лучевая болезнь", "Тяжёлая лучевая болезнь: облучение отнимает здоровье. Выведите его: антирадин, раствор «Чистота», дезактивационный душ."], [45, "лучевая болезнь", "Лучевая болезнь: мутит, руки дрожат, импланты восстанавливаются медленнее. Уходите из зоны облучения."], [20, "лёгкое облучение", "Во рту металлический привкус: лёгкое облучение. В зоне излучения долго не стойте."], [0, "облучения нет"]]
 };
@@ -982,8 +983,20 @@ var GRID_NOTICE = "Питание этажа восстанавливается.
 game.gridOffline = function () { return G.event === "reboot"; };
 game.gridNotice = GRID_NOTICE;
 function gridDevice(o) { return !!(o.type === "fx" ? GRID_FIXTURES[o.fx] : GRID_OBJECTS[o.type]); }
-game.hearingRange = function () { return G.event === "smoke" ? 2 : Infinity; };
+var LIMITED_HEARING = 4;
+var HEARING_HAZARDS = { dark: 1, surge: 1, steam: 1, quake: 1, reboot: 1, smoke: 1, cold: 1, heat: 1, airloss: 1 };
+game.hearingRange = function () {
+  if (G.st.poison > 0 || Math.round(body().tox) >= LIGHT_INTOXICATION) return LIMITED_HEARING;
+  var id = G.event;
+  if (!id || id === "norm") return Infinity;
+  if (HEARING_HAZARDS[id]) return LIMITED_HEARING;
+  var events = G.L > 10 && LAB.EVENTS_B[LAB.blockOf(G.L)];
+  return events && events.some(function (e) { return e.id === id && HEARING_HAZARDS[e.like]; }) ? LIMITED_HEARING : Infinity;
+};
 game.canHear = function (x, y) { return Math.abs(x - G.x) + Math.abs(y - G.y) <= game.hearingRange(); };
+function hearingText() {
+  return game.hearingRange() === LIMITED_HEARING ? "Звуки предметов слышны в пределах четырёх шагов." : "";
+}
 game.coldFactor = function () { return G.event === "cold" && !armorSpecial("frost") ? 1.55 : 1; };
 var AIR_MINUTES = 12;
 function airGear() {
@@ -1041,6 +1054,8 @@ function environmentText() {
   var t = ev.n + ".";
   if (ev.minutes) t += " До конца примерно " + Math.max(0, Math.ceil(G.eventUntil - G.min)) + " мин. " + ev.desc;
   if (G.event === "airloss" || G.event === "smoke" || G.airGear) t += " " + airText();
+  var hearing = hearingText();
+  if (hearing) t += " " + hearing;
   return t;
 }
 game.environmentText = environmentText;
@@ -1079,7 +1094,10 @@ function rollEvent() {
   if (pick === "reboot" && LAB.kitchen) LAB.kitchen.powerLost();
   if (LAB.Sound && LAB.Sound.updatePositions) LAB.Sound.updatePositions();
   A("setEvent", ev && ev.like ? ev.like : pick);
-  if (pick !== "norm" && ev) { LAB.sub("⚠️ " + ev.n); sayq("Обстановка: " + ev.n.toLowerCase() + ". " + (ev.desc || "")); }
+  if (pick !== "norm" && ev) {
+    LAB.sub("⚠️ " + ev.n);
+    sayq(["Обстановка: " + ev.n.toLowerCase() + ".", ev.desc, hearingText()].filter(Boolean).join(" "));
+  }
   else sayq("Обстановка: штатный режим.");
 }
 function gainXP(n, why) {
@@ -1576,7 +1594,7 @@ function lookAround() {
   var r = roomAt(G.x, G.y), parts = [];
   if (r) {
     var st = roomStuff(r, false, true);
-    parts.push(st || (G.event === "smoke" ? "В пределах двух шагов ничего не слышно." : "В помещении пусто."));
+    parts.push(st || (game.hearingRange() < Infinity ? "Рядом ничего не слышно." : "В помещении пусто."));
     var ex = roomExits(r); parts.push(ex || "Выходов не видно.");
     parts.push("Помещение: " + r.name + ". " + (r.desc || LAB.ROOMS[r.type].desc));
   } else if (LAB.corrOf(CUR.fl, G.x, G.y) && cellType(G.x, G.y) !== T.DOOR) {
@@ -1604,6 +1622,7 @@ function lookAround() {
   var sd = nearSecret(2);
   if (sd) parts.push("Тянет сквозняком " + LAB.DIRFROM[sd.dir] + ".");
   if (G.event !== "norm") parts.push(environmentText());
+  else if (game.hearingRange() < Infinity) parts.push(hearingText());
   parts.push("Уровень " + G.L + ", этаж " + G.F + ".");
   say(parts.join(" "));
   A("play", "scan_soft");

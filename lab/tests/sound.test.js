@@ -152,11 +152,24 @@ function ok(c, m) { console.log((c ? "  ✓ " : "  ✗ ") + m); if (!c) fails++;
       gm.G.x = x + 4;
       LAB.Sound.updatePositions();
       await wait(360);
+      const heardAtFour = voice.gain.gain.value > 0.05;
+      gm.G.x = x + 5;
+      LAB.Sound.updatePositions();
+      await wait(360);
       const muted = voice.gain.gain.value < 0.01;
+      gm.G.event = "norm";
+      gm.G.st.poison = 5;
+      LAB.Sound.updatePositions();
+      await wait(360);
+      const mutedWhilePoisoned = voice.gain.gain.value < 0.01;
+      gm.G.st.poison = 0;
+      LAB.Sound.updatePositions();
+      await wait(360);
+      const heardAfterRecovery = voice.gain.gain.value > 0.05;
       gm.G.event = "reboot";
       LAB.kitchen.powerLost();
       LAB.Sound.updatePositions();
-      return { started, center, right, left, muted, stopped: voice.stopped,
+      return { started, center, right, left, heardAtFour, muted, mutedWhilePoisoned, heardAfterRecovery, stopped: voice.stopped,
         cooling: !LAB.kitchen._boiling(kettle) };
     } finally {
       LAB.Bank.play = play;
@@ -165,7 +178,9 @@ function ok(c, m) { console.log((c ? "  ✓ " : "  ✗ ") + m); if (!c) fails++;
   });
   ok(s.started && Math.abs(s.center) < 0.05 && s.right > 0.3 && s.left < -0.3,
     "работающий чайник перемещается из правого наушника в левый при обходе");
-  ok(s.muted && s.stopped && s.cooling, "дым ограничивает слышимость, отключение питания прерывает кипение");
+  ok(s.heardAtFour && s.muted && s.mutedWhilePoisoned && s.heardAfterRecovery,
+    "чайник слышен до четырёх шагов при дыме и отравлении, слух восстанавливается");
+  ok(s.stopped && s.cooling, "отключение питания прерывает кипение");
 
   console.log("Единый обработчик речи");
   s = await page.evaluate(() => {

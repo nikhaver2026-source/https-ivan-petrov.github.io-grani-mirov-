@@ -1332,12 +1332,31 @@ assert.equal(work.effTier(benchState), 4);
 incident("smoke", 2);
 const b = g.G.body;
 b.tox = 0;
-assert.equal(g.canHear(g.G.x + 2, g.G.y), true);
-assert.equal(g.canHear(g.G.x + 2, g.G.y + 1), false);
+assert.equal(g.canHear(g.G.x + 4, g.G.y), true);
+assert.equal(g.canHear(g.G.x + 3, g.G.y + 2), false);
+assert.match(g.environmentText(), /четырёх шагов/);
 g.advanceTime(2);
 assert.equal(g.G.event, "norm");
 assert.ok(b.tox >= 4 && b.tox < 5, b.tox);
 assert.equal(g.canHear(g.G.x + 12, g.G.y), true);
+for (const event of ["dark", "surge", "steam", "quake", "reboot", "cold", "heat", "airloss"]) {
+  incident(event, 10);
+  assert.equal(g.hearingRange(), 4, event);
+}
+incident("norm", 40);
+g.G.st.poison = 3;
+assert.equal(g.canHear(g.G.x + 2, g.G.y + 2), true);
+assert.equal(g.canHear(g.G.x + 5, g.G.y), false);
+g.lookAround();
+assert.match(messages.at(-1), /четырёх шагов/);
+g.G.st.poison = 0;
+b.tox = 20;
+assert.equal(g.hearingRange(), 4);
+g.G.inv.antidote = 1;
+assert.ok(g.useItem("antidote"));
+assert.equal(g.hearingRange(), Infinity);
+console.log("✓ Слышимость до четырёх шагов при авариях и отравлении, восстановление после лечения");
+
 incident("cold", 8);
 assert.ok(g.coldFactor() > 1);
 incident("norm", 40);
