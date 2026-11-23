@@ -20,7 +20,7 @@
 # До выпуска каждая сборка проходит самопроверку дважды: без голосов игрока
 # (говорит встроенный eSpeak) и с голосами, поставленными так же, как у игрока
 # (RHVoice из дополнения NVDA и eSpeak NG), — мост должен их найти. Выпуск
-# «lab-windows-5.5» несёт оба архива.
+# «lab-windows-5.6» несёт оба архива.
 name: Подземная лаборатория — Windows
 
 on:
@@ -52,13 +52,13 @@ jobs:
           - bits: '64'
             arch: x64
             electron: '44.5.1'
-            appdir: Подземная лаборатория Альфа 5.5
-            zip: Podzemnaya-laboratoriya-Alfa-5.5-windows-64bit.zip
+            appdir: Подземная лаборатория Альфа 5.6
+            zip: Podzemnaya-laboratoriya-Alfa-5.6-windows-64bit.zip
           - bits: '32'
             arch: ia32
             electron: '22.3.27'
-            appdir: Подземная лаборатория Альфа 5.5 (32 бит)
-            zip: Podzemnaya-laboratoriya-Alfa-5.5-windows-32bit.zip
+            appdir: Подземная лаборатория Альфа 5.6 (32 бит)
+            zip: Podzemnaya-laboratoriya-Alfa-5.6-windows-32bit.zip
     defaults:
       run:
         shell: bash
@@ -130,11 +130,11 @@ jobs:
         working-directory: lab/desktop
         run: |
           ICONARG=""; [ -n "$ICON" ] && ICONARG="--icon=$ICON"
-          # Версия в свойствах программы — номер игры, 5.5, без номера запуска сборки (просьба автора:
+          # Версия в свойствах программы — номер игры, 5.6, без номера запуска сборки (просьба автора:
           # игрок видит только номер версии); прежде было 4.1.0 и номер запуска, до 3.7 — 1.0.0.
           npx @electron/packager . lab --platform=win32 --arch=$ARCH --electron-version=$ELECTRON --out=out --overwrite \
-            --executable-name="${EXE%.exe}" --app-version=5.5 --build-version=5.5 \
-            --win32metadata.ProductName="Подземная лаборатория" --win32metadata.FileDescription="Подземная лаборатория Альфа 5.5" \
+            --executable-name="${EXE%.exe}" --app-version=5.6 --build-version=5.6 \
+            --win32metadata.ProductName="Подземная лаборатория" --win32metadata.FileDescription="Подземная лаборатория Альфа 5.6" \
             --win32metadata.CompanyName="Грани Миров" \
             --extra-resource=sapi --extra-resource=sr \
             --ignore='^/out(/|$)' --ignore='icon\.ico' --ignore='sapi-build\.js' --ignore='^/sapi(/|$)' --ignore='^/sr(/|$)' $ICONARG
@@ -277,7 +277,7 @@ jobs:
           retention-days: 90
 
   release:
-    name: Выпуск «lab-windows-5.5»
+    name: Выпуск «lab-windows-5.6»
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -292,19 +292,11 @@ jobs:
         working-directory: dist
         env:
           GH_TOKEN: ${{ github.token }}
-          Z64: Podzemnaya-laboratoriya-Alfa-5.5-windows-64bit.zip
-          Z32: Podzemnaya-laboratoriya-Alfa-5.5-windows-32bit.zip
+          Z64: Podzemnaya-laboratoriya-Alfa-5.6-windows-64bit.zip
+          Z32: Podzemnaya-laboratoriya-Alfa-5.6-windows-32bit.zip
         run: |
-          TAG=lab-windows-5.5
-          TITLE="Подземная лаборатория Альфа 5.5 для Windows"
-          if [ "$GITHUB_REF_NAME" = "codex/lab-alpha-5.5-cargo" ]; then
-            TAG=lab-windows-5.5-cargo
-            TITLE="Подземная лаборатория. Грузовое обновление Альфы 5.5 для Windows"
-            mv "$Z64" "${Z64/-windows-/-cargo-windows-}"
-            mv "$Z32" "${Z32/-windows-/-cargo-windows-}"
-            Z64=${Z64/-windows-/-cargo-windows-}
-            Z32=${Z32/-windows-/-cargo-windows-}
-          fi
+          TAG=lab-windows-5.6
+          TITLE="Подземная лаборатория Альфа 5.6 для Windows"
           ls -la
           test -s "$Z64" && test -s "$Z32"
           sha256sum "$Z64" "$Z32"

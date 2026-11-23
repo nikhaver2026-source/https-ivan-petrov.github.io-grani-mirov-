@@ -7,7 +7,7 @@
    ════════════════════════════════════════════════════════════════════ */
 var LAB = (typeof window !== "undefined" ? (window.LAB = window.LAB || {}) : (globalThis.LAB = globalThis.LAB || {}));
 
-LAB.VERSION = "Альфа 5.5";
+LAB.VERSION = "Альфа 5.6";
 /* (3.6, просьба игрока) Записи прежних версий начиная с этой не стираются, а переносятся
    (engine.js — хранилище, game.js — validSave и migrate); старше — с чистого листа, как прежде. */
 LAB.KEEP_FROM = 3.0;
