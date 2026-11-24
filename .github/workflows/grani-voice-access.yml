@@ -1,0 +1,32 @@
+name: Проверка доступа Gemini для Грани Миров
+on:
+  push:
+    branches: [codex/grani-daily-voice]
+    paths: ['.github/workflows/grani-voice-access.yml']
+permissions:
+  contents: read
+jobs:
+  access:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Проверка ключа Gemini
+        env:
+          GRANI_GEMINI_PRIMARY: ${{ secrets.GEMINI_API_KEY || secrets.GOOGLE_API_KEY || secrets.GEMINI_KEY || secrets.GEMINI_API_KEY_1 || secrets.GEMINI_API_KEY1 }}
+          GRANI_GEMINI_SET: ${{ secrets.GEMINI_API_KEYS || secrets.GEMINI_KEYS }}
+        run: |
+          python3 - <<'PY'
+          import os, re, urllib.request, urllib.error
+          key = re.search(r'AIza[A-Za-z0-9_-]{30,}', '\n'.join(
+              os.environ.get(name, '') for name in ('GRANI_GEMINI_PRIMARY', 'GRANI_GEMINI_SET')))
+          if key is None:
+              raise SystemExit('Gemini credentials are absent from the configured repository secrets')
+          req = urllib.request.Request(
+              'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash-tts',
+              headers={'x-goog-api-key':key.group()})
+          try:
+              with urllib.request.urlopen(req, timeout=20) as response:
+                  print('Gemini TTS model access:', response.status)
+          except urllib.error.HTTPError as exc:
+              raise SystemExit(f'Gemini TTS model access: HTTP {exc.code}') from None
+          PY
