@@ -22,10 +22,27 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          sdkmanager 'platforms;android-35' 'build-tools;35.0.0' >/dev/null
+          sdk_home="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          platform="$sdk_home/platforms/android-35/android.jar"
+          build_tools="$sdk_home/build-tools/35.0.0"
+          if [ ! -f "$platform" ] || [ ! -x "$build_tools/aapt2" ]; then
+            sdkmanager="$sdk_home/cmdline-tools/latest/bin/sdkmanager"
+            if [ -x "$sdkmanager" ]; then
+              "$sdkmanager" 'platforms;android-35' 'build-tools;35.0.0' >/dev/null
+            else
+              mkdir -p "$RUNNER_TEMP/grani-sdk"
+              curl -fsSL --retry 3 https://dl.google.com/android/repository/platform-35_r02.zip -o "$RUNNER_TEMP/grani-sdk/platform.zip"
+              curl -fsSL --retry 3 https://dl.google.com/android/repository/build-tools_r35_linux.zip -o "$RUNNER_TEMP/grani-sdk/tools.zip"
+              unzip -q "$RUNNER_TEMP/grani-sdk/platform.zip" -d "$RUNNER_TEMP/grani-sdk"
+              unzip -q "$RUNNER_TEMP/grani-sdk/tools.zip" -d "$RUNNER_TEMP/grani-sdk"
+              platform="$RUNNER_TEMP/grani-sdk/android-35/android.jar"
+              build_tools="$RUNNER_TEMP/grani-sdk/android-15"
+            fi
+          fi
+          echo "GRANI_BUILD_TOOLS=$build_tools" >> "$GITHUB_ENV"
           cd android/alpha-1.1
           python3 prepare.py inputs www
-          bash build.sh "$ANDROID_HOME/platforms/android-35/android.jar" "$ANDROID_HOME/build-tools/35.0.0" www out
+          bash build.sh "$platform" "$build_tools" www out
       - name: Подписать ключом проекта
         working-directory: android/alpha-1.1
         shell: bash
@@ -41,7 +58,7 @@ jobs:
           KEYSTORE=$(mktemp)
           trap 'rm -f "$KEYSTORE"' EXIT
           printf '%s' "$GRANI_KEY_B64" | base64 --decode > "$KEYSTORE"
-          B="$ANDROID_HOME/build-tools/35.0.0"
+          B="$GRANI_BUILD_TOOLS"
           "$B/apksigner" sign --ks "$KEYSTORE" --ks-key-alias "$GRANI_KEY_ALIAS" --ks-pass env:GRANI_STORE_PASS --key-pass env:GRANI_KEY_PASS --out out/Grani-Mirov-Alfa-1.1.apk out/aligned.apk
           "$B/apksigner" verify --min-sdk-version 24 --verbose --print-certs out/Grani-Mirov-Alfa-1.1.apk
           "$B/zipalign" -c 4 out/Grani-Mirov-Alfa-1.1.apk

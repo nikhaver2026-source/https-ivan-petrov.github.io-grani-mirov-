@@ -23,7 +23,9 @@ cp -a "$game/." "$build/assets/www/"
 if command -v javac >/dev/null && javac -version >/dev/null 2>&1; then
   javac --release 17 -encoding UTF-8 -cp "$platform" -d "$build/classes" "$root"/inputs/*.java
 else
-  java -jar "$root/ecj.jar" -17 -proc:none -encoding UTF-8 -cp "$platform" -d "$build/classes" "$root"/inputs/*.java
+  cp "$platform" "$build/platform-compile.jar"
+  zip -q -d "$build/platform-compile.jar" 'java/*' 'javax/*' 'org/w3c/dom/*' 'org/xml/sax/*' 'org/ietf/jgss/*' || test "$?" -eq 12
+  java -jar "$root/ecj.jar" -17 -proc:none -encoding UTF-8 -cp "$build/platform-compile.jar" -d "$build/classes" "$root"/inputs/*.java
 fi
 mapfile -d '' classes < <(find "$build/classes" -name '*.class' -print0 | sort -z)
 "$tools/d8" --release --min-api 24 --lib "$platform" --output "$build/dex" "${classes[@]}"

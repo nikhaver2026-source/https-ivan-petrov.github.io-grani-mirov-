@@ -49,6 +49,9 @@ def verify(path, expected):
 inputs, web = (Path(arg).resolve() for arg in sys.argv[1:])
 config = json.loads((inputs / 'assets.json').read_bytes())
 cache = web.parent / 'base-assets'
+if web.exists():
+    raise FileExistsError(f'Expected an empty output path: {web}')
+web.mkdir(parents=True)
 with ThreadPoolExecutor(max_workers=12) as pool:
     downloads = [pool.submit(fetch, path, cache / path) for path in config['upstream']]
     for pending in downloads:
