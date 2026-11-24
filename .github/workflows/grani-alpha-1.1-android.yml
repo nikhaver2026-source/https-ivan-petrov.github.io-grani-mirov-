@@ -3,7 +3,7 @@ name: Грань Миров Альфа 1.1 Android
 on:
   push:
     branches: [codex/grani-alpha-1.1-android]
-    paths: ['android/alpha-1.1/ready']
+    paths: ['android/alpha-1.1/**', '.github/workflows/grani-alpha-1.1-android.yml']
   workflow_dispatch:
 
 permissions:
@@ -14,10 +14,15 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-        with:
-          sparse-checkout: /android/alpha-1.1/
-          sparse-checkout-cone-mode: false
+      - name: Fetch the pinned Android build inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p android/alpha-1.1
+          cd android/alpha-1.1
+          base="https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$GITHUB_SHA/android/alpha-1.1"
+          export base
+          printf '%s\n' inputs/AndroidManifest.xml inputs/AssetFiles.java inputs/MainActivity.java inputs/assets.json inputs/index.patch.gz inputs/new-sounds/gvoice/gv37885.flac inputs/new-sounds/gvoice/gv37886.flac inputs/new-sounds/gvoice/gv37887.flac inputs/new-sounds/gvoice/gv37888.flac inputs/new-sounds/gvoice/gv37889.flac inputs/new-sounds/gvoice_f/gf37079.flac inputs/new-sounds/gvoice_f/gf37080.flac inputs/new-sounds/gvoice_f/gf37081.flac inputs/new-sounds/gvoice_f/gf37082.flac inputs/new-sounds/gvoice_f/gf37083.flac inputs/new-sounds/gvoice_f/gf37084.flac inputs/new-sounds/gvoice_f/gf37085.flac inputs/new-sounds/gvoice_f/gf37086.flac inputs/new-sounds/gvoice_f/gf37087.flac inputs/new-sounds/gvoice_f/gf37088.flac inputs/styles.xml prepare.py build.sh ready | xargs -P 8 -I '{}' bash -ec 'mkdir -p "$(dirname "$1")"; curl -fsSL --retry 3 --max-time 30 "$base/$1" -o "$1"' _ '{}'
       - name: Собрать APK
         shell: bash
         run: |
