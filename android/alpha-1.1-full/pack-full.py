@@ -4,11 +4,9 @@ import argparse
 import json
 import os
 import re
-import shutil
 import subprocess
 import zipfile
 
-BUFFER = 1024 * 1024
 PREFIX = 'assets/www/sounds/'
 
 
@@ -32,8 +30,10 @@ def pack(config):
         for info in src.infolist():
             if info.filename.startswith('META-INF/') or info.filename.startswith(PREFIX):
                 continue
-            info.compress_type = zipfile.ZIP_STORED
-            out.writestr(info,src.read(info))
+            data = src.read(info)
+            entry = zipfile.ZipInfo(info.filename, date_time=info.date_time)
+            entry.external_attr = info.external_attr
+            out.writestr(entry,data,compress_type=zipfile.ZIP_STORED)
         for name,path in sorted(source.items()):
             if path.is_symlink() or not path.is_file():
                 raise ValueError(f'Missing or unexpected audio asset: {path}')
