@@ -1,0 +1,114 @@
+name: Проверка APK Грань Миров Альфа 1.1
+on:
+  push:
+    branches: [codex/grani-alpha-1.1-android]
+    paths: ['.github/workflows/check-grani-alpha-1.1-apk.yml']
+permissions:
+  actions: read
+  contents: read
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [35, 36]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Grani-Mirov-Alfa-1.1-Android
+          run-id: 45387826470
+          github-token: ${{ github.token }}
+          path: apk
+      - name: Verify the exact signed APK
+        run: echo 'bd9f48cbfab2018c219d9e295dfd859630997913a8d41380a297c428620e51aa  apk/Grani-Mirov-Alfa-1.1.apk' | sha256sum -c
+      - name: Prepare the offline launch check
+        shell: bash
+        run: |
+          sudo chmod a+rw /dev/kvm
+          cat > verify-grani.py <<'GRANI_PY'
+          import re
+          import subprocess
+          import time
+          import xml.etree.ElementTree as ET
+          
+          PACKAGE = "io.github.granimirov"
+          APK = "apk/Grani-Mirov-Alfa-1.1.apk"
+          SCREEN = "/sdcard/grani-check.xml"
+          
+          def adb(*args, check=True):
+              return subprocess.run(["adb", *args], check=check, text=True,
+                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                    timeout=25).stdout
+          
+          def read_screen():
+              adb("shell", "uiautomator", "dump", SCREEN, check=False)
+              output = adb("shell", "cat", SCREEN, check=False)
+              try:
+                  return ET.fromstring(output)
+              except ET.ParseError:
+                  return None
+          
+          def label(node):
+              return " ".join(node.get(k, "") for k in ("text", "content-desc", "resource-id"))
+          
+          def wait_for(*snippets, limit=50):
+              end = time.monotonic() + limit
+              names = ""
+              while time.monotonic() < end:
+                  root = read_screen()
+                  if root is not None:
+                      names = "\n".join(label(node) for node in root.iter("node"))
+                      if all(snippet in names for snippet in snippets):
+                          return root
+                  time.sleep(0.6)
+              raise AssertionError(f"Expected {snippets}, got:\n{names[-4500:]}")
+          
+          def tap(root, snippet):
+              parents = {child: parent for parent in root.iter() for child in parent}
+              for node in root.iter("node"):
+                  if snippet not in label(node):
+                      continue
+                  while node.get("clickable") == "false" and node in parents and parents[node].tag == "node":
+                      node = parents[node]
+                  bounds = [int(n) for n in re.findall(r"\d+", node.get("bounds", ""))]
+                  if len(bounds) == 4 and bounds[2] > bounds[0] and bounds[3] > bounds[1]:
+                      x = (bounds[0] + bounds[2]) // 2
+                      y = (bounds[1] + bounds[3]) // 2
+                      adb("shell", f"input tap {x} {y}; input tap {x} {y}")
+                      return
+              raise AssertionError(f"Cannot tap {snippet!r}")
+          
+          print("Android", adb("shell", "getprop", "ro.build.version.release").strip())
+          assert "Success" in adb("install", APK)
+          package = adb("shell", "dumpsys", "package", PACKAGE)
+          assert "versionCode=40110000" in package and "versionName=Альфа 1.1" in package
+          adb("shell", "wm", "size", "1080x2400")
+          adb("shell", "wm", "density", "280")
+          adb("shell", "cmd", "connectivity", "airplane-mode", "enable")
+          adb("shell", "svc", "wifi", "disable")
+          adb("shell", "svc", "data", "disable")
+          assert adb("shell", "settings", "get", "global", "airplane_mode_on").strip() == "1"
+          adb("logcat", "-c")
+          assert "Status: ok" in adb("shell", "am", "start", "-W", "-n", PACKAGE + "/.MainActivity",
+                                    "--es", "grani_probe", "www/sounds/espeak/espeak-ru-data.js")
+          title = wait_for("Альфа 1.1", "Проверить звук", "Без пролога")
+          probe = adb("logcat", "-d", "-s", "GraniProbe:I", "*:S")
+          assert re.search(r"ok www/sounds/espeak/espeak-ru-data\.js [1-9]\d+", probe), probe
+          print("Offline title and bundled Russian voice data checked")
+          tap(title, "Без пролога")
+          hero = wait_for("Настройки персонажа", "Готово — в путь")
+          tap(hero, "Готово — в путь")
+          wait_for("Уровень 1", "Опыт", limit=55)
+          print("Entered the game world and read the status from the Android UI tree")
+          launch_log = adb("logcat", "-d", "-b", "crash")
+          assert PACKAGE not in launch_log, launch_log
+          GRANI_PY
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: python3 verify-grani.py
