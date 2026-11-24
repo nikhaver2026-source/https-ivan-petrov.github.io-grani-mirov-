@@ -1,0 +1,465 @@
+package io.github.granimirov;
+
+import android.app.Activity;
+import android.content.ContentValues;
+import android.content.Intent;
+import android.media.AudioManager;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
+import android.speech.tts.Voice;
+import android.webkit.JavascriptInterface;
+import android.webkit.ValueCallback;
+import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.window.OnBackInvokedDispatcher;
+import android.view.WindowInsets;
+import android.widget.FrameLayout;
+
+import android.webkit.WebViewClient;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+
+/* «Грань Миров» на Android.
+
+   Вся игра лежит в assets/www и открывается по адресу
+   https://appassets.androidplatform.net/assets/www/index.html: так у страницы
+   настоящий https-источник. Игра, записи и встроенный русский голос
+   доступны без подключения к сети.
+
+   Мост GraniTTS отдаёт странице синтезатор речи телефона — тот же, что у
+   TalkBack. Страница зовёт speak(текст, темп, громкость, номер), stop(),
+   isSpeaking(), getVoices() и setVoice(имя); о конце фразы приложение
+   сообщает вызовом GraniTTSDone(номер), об ошибке — GraniTTSError(номер).
+   Темп приходит в той же шкале, что у Web Speech API в Chrome для Android:
+   единица — обычная речь.
+
+   «Сохранить в файл» кладёт файл в «Загрузки» телефона (saveDownload), «Загрузить из файла» открывает выбор
+   файла (WebChromeClient). */
+public class MainActivity extends Activity {
+    private static final String START = "https://appassets.androidplatform.net/assets/www/index.html";
+
+    private WebView web;
+    private TextToSpeech tts;
+    /* (9.0) Все движки речи телефона, а не только основной: игрок, поставивший
+       себе ещё один синтезатор, выбирает его голос прямо в игре, не меняя
+       движок по умолчанию в настройках Android. Говорит тот, чей голос выбран. */
+    private final java.util.Map<String, TextToSpeech> others = new java.util.HashMap<>();
+    private final java.util.Map<String, String> labels = new java.util.HashMap<>();
+    private volatile TextToSpeech speaker;
+    private volatile String activeVoice;
+    private volatile String voicesSnapshot;
+    private TextToSpeech rateEngine;
+    private float lastRate;
+    private final UtteranceProgressListener prog = new UtteranceProgressListener() {
+        /* (9.5.2) Начало фразы — игре: фразу, которую синтезатор так и не начал
+           (бывает при быстром листании), игра подаёт ещё раз. */
+        @Override public void onStart(String id) { callJs("GraniTTSStart", id); }
+        @Override public void onDone(String id) { callJs("GraniTTSDone", id); }
+        @Override public void onError(String id) { callJs("GraniTTSError", id); }
+        @Override public void onError(String id, int code) { callJs("GraniTTSError", id); }
+    };
+    private volatile boolean ready = false;
+    private final List<String[]> pending = new ArrayList<>();
+    private static final int REQ_FILE = 7102;
+    private ValueCallback<Uri[]> fileCb;
+
+    @Override
+    protected void onCreate(Bundle state) {
+        super.onCreate(state);
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
+
+        tts = new TextToSpeech(this, status -> {
+            if (status != TextToSpeech.SUCCESS) return;
+            tts.setLanguage(new Locale("ru", "RU"));
+            tts.setOnUtteranceProgressListener(prog);
+            if (speaker == null) speaker = tts;
+            try {
+                String def = tts.getDefaultEngine();
+                for (TextToSpeech.EngineInfo e : tts.getEngines()) {
+                    if (e.name == null || e.name.equals(def)) continue;
+                    final String pkg = e.name;
+                    labels.put(pkg, e.label != null ? e.label : pkg);
+                    final TextToSpeech[] h = new TextToSpeech[1];
+                    h[0] = new TextToSpeech(this, st -> {
+                        if (st != TextToSpeech.SUCCESS) return;
+                        h[0].setOnUtteranceProgressListener(prog);
+                        synchronized (others) { others.put(pkg, h[0]); voicesSnapshot = null; }
+                    }, pkg);
+                }
+            } catch (Exception ignored) { }
+            List<String[]> wait;
+            synchronized (pending) { ready = true; wait = new ArrayList<>(pending); pending.clear(); }
+            for (String[] p : wait) say(p[0], Float.parseFloat(p[1]), Float.parseFloat(p[2]), p[3]);
+        });
+
+        final AssetFiles loader = new AssetFiles(this);
+
+        web = new WebView(this);
+        WebSettings s = web.getSettings();
+        s.setJavaScriptEnabled(true);
+        s.setDomStorageEnabled(true);
+        s.setDatabaseEnabled(true);
+        s.setMediaPlaybackRequiresUserGesture(false);
+        s.setAllowFileAccess(false);
+        s.setAllowContentAccess(false);
+        s.setTextZoom(100);
+
+        web.setWebViewClient(new WebViewClient() {
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest req) {
+                return loader.open(req);
+            }
+
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest req) {
+                Uri u = req.getUrl();
+                if ("appassets.androidplatform.net".equals(u.getHost())) return false;
+                /* Внешние ссылки (лицензии, авторы) — в браузере телефона. */
+                try { startActivity(new Intent(Intent.ACTION_VIEW, u)); } catch (Exception ignored) { }
+                return true;
+            }
+        });
+        /* (17.0) «Загрузить из файла»: поле выбора файла открывает выбор файла
+           телефона. Без WebChromeClient WebView молча пропускал нажатие. */
+        web.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> cb, FileChooserParams params) {
+                if (fileCb != null) fileCb.onReceiveValue(null);
+                Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                i.addCategory(Intent.CATEGORY_OPENABLE);
+                i.setType("*/*");
+                try { startActivityForResult(i, REQ_FILE); }
+                catch (Exception e) { fileCb = null; return false; }
+                fileCb = cb;
+                return true;
+            }
+        });
+        web.addJavascriptInterface(new Bridge(), "GraniTTS");
+        /* С целевым API 35 и выше окно всегда рисуется от края до края:
+           поля под строку состояния и панель жестов ставим сами, иначе
+           верх и низ игры уходят под них. */
+        FrameLayout root = new FrameLayout(this);
+        root.setBackgroundColor(0xFF10121C);
+        root.addView(web, new FrameLayout.LayoutParams(-1, -1));
+        root.setOnApplyWindowInsetsListener((v, ins) -> {
+            int l, t, r, b;
+            if (Build.VERSION.SDK_INT >= 30) {
+                android.graphics.Insets i = ins.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+                l = i.left; t = i.top; r = i.right; b = i.bottom;
+            } else {
+                l = ins.getSystemWindowInsetLeft(); t = ins.getSystemWindowInsetTop();
+                r = ins.getSystemWindowInsetRight(); b = ins.getSystemWindowInsetBottom();
+            }
+            v.setPadding(l, t, r, b);
+            return ins;
+        });
+        setContentView(root);
+        /* Android 13+ и тем более 16: «Назад» приходит обратным вызовом,
+           onBackPressed при целевом API 36 не зовётся. */
+        if (Build.VERSION.SDK_INT >= 33) {
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                    OnBackInvokedDispatcher.PRIORITY_DEFAULT, this::goBack);
+        }
+        if (state == null || web.restoreState(state) == null) web.loadUrl(START);
+
+        /* (14.5) Проверка полного APK на эмуляторе (android/install-check.sh):
+           прочесть запись из конца архива ZIP64 — за пределом 4 ГиБ — тем же
+           путём, каким записи читает страница, и сказать об этом в журнал. */
+        final String probe = getIntent() != null ? getIntent().getStringExtra("grani_probe") : null;
+        if (probe != null) new Thread(() -> {
+            long n = 0;
+            try (InputStream in = getAssets().open(probe)) {
+                byte[] b = new byte[1 << 16]; int k;
+                while ((k = in.read(b)) > 0) n += k;
+                android.util.Log.i("GraniProbe", "ok " + probe + " " + n);
+            } catch (Exception e) { android.util.Log.e("GraniProbe", "fail " + probe + " " + e); }
+        }).start();
+    }
+
+    /* Кнопка «Назад» закрывает верхнее окно игры, как свайп двумя пальцами
+       вниз; на игровом поле — сворачивает приложение, не выходя из игры. */
+    @Override
+    public void onBackPressed() {
+        goBack();
+    }
+
+    private void goBack() {
+        web.evaluateJavascript(
+                "(function(){try{if(typeof activeLayer==='function'&&activeLayer()){closeTopUI();return 1;}}catch(e){}return 0;})()",
+                v -> { if (!"1".equals(v)) moveTaskToBack(true); });
+    }
+
+    /* Приложение уходит в фон или его закрывают: игра записывает себя там,
+       где стоит герой, — система может выгрузить её, не спросив страницу. */
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (web != null) web.evaluateJavascript(
+            "try{if(typeof entered!=='undefined'&&entered&&typeof saveGame==='function')saveGame(true);}catch(e){}", null);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle out) {
+        super.onSaveInstanceState(out);
+        web.saveState(out);
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (tts != null) { tts.stop(); tts.shutdown(); }
+        synchronized (others) { for (TextToSpeech t : others.values()) { try { t.stop(); t.shutdown(); } catch (Exception ignored) { } } others.clear(); }
+        if (web != null) web.destroy();
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onActivityResult(int req, int res, Intent data) {
+        super.onActivityResult(req, res, data);
+        if (req == REQ_FILE) {
+            ValueCallback<Uri[]> cb = fileCb;
+            fileCb = null;
+            if (cb != null) cb.onReceiveValue(res == RESULT_OK && data != null && data.getData() != null ? new Uri[]{data.getData()} : null);
+            return;
+        }
+    }
+
+    private void callJs(String fn, String id) {
+        final String js = "window." + fn + "&&window." + fn + "(" + JSONObject.quote(id) + ")";
+        web.post(() -> web.evaluateJavascript(js, null));
+    }
+
+    /* (10.0) Громкость синтезатора выше ста процентов. Сам Android принимает
+       у синтезатора громкость только от нуля до единицы, и ползунок на 150%
+       ничего не менял. Теперь фраза идёт в своей звуковой сессии, а на ней
+       стоит усилитель громкости (LoudnessEnhancer): 150% — плюс шесть
+       децибел, 200% — плюс двенадцать. */
+    private int ttsSession = 0;
+    private android.media.audiofx.LoudnessEnhancer boost;
+    private int boostMb = -1;
+    private void applyBoost(float volume, Bundle p) {
+        try {
+            if (ttsSession == 0) {
+                AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+                if (am != null) ttsSession = am.generateAudioSessionId();
+            }
+            if (ttsSession <= 0) return;
+            p.putInt(TextToSpeech.Engine.KEY_PARAM_SESSION_ID, ttsSession);
+            int mb = volume > 1f ? Math.round(Math.min(1f, volume - 1f) * 1200f) : 0;
+            if (boost == null) boost = new android.media.audiofx.LoudnessEnhancer(ttsSession);
+            if (mb != boostMb) {
+                boost.setTargetGain(mb);
+                boost.setEnabled(mb > 0);
+                boostMb = mb;
+            }
+        } catch (Throwable t) { /* усилителя нет — звучит как прежде */ }
+    }
+
+    private void say(String text, float rate, float volume, String id) {
+        final TextToSpeech tts = speaker != null ? speaker : this.tts;
+        /* (9.5.2) Темп приходит числом ползунка «Скорость синтезатора» и
+           пересчитывается так же, как у записей Gemini и у моста Windows:
+           1 — обычная речь, 5 — в 2,8 раза быстрее. Прежде 5 значило «впятеро». */
+        float r = rate > 0 ? rate : 1f;
+        float tempo = r <= 1f ? r : 1f + (r - 1f) * 0.45f;
+        /* (12.5) Шкала синтезатора выросла до 10 — темп до пятикратного. */
+        float speed = Math.max(0.1f, Math.min(5.05f, tempo));
+        if (rateEngine != tts || lastRate != speed) {
+            if (tts.setSpeechRate(speed) == TextToSpeech.SUCCESS) {
+                rateEngine = tts;
+                lastRate = speed;
+            }
+        }
+        Bundle p = new Bundle();
+        p.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, Math.max(0f, Math.min(1f, volume >= 0 ? volume : 1f)));
+        applyBoost(volume, p);
+        /* Очередь ведёт сама игра и шлёт по одной фразе, дождавшись конца прежней.
+           QUEUE_FLUSH снимает всё недосказанное в самом синтезаторе в тот же миг,
+           что и новая фраза: при быстром листании устаревший пункт больше не
+           успевает прозвучать поверх нужного. */
+        if (tts.speak(text, TextToSpeech.QUEUE_FLUSH, p, id) != TextToSpeech.SUCCESS) callJs("GraniTTSError", id);
+    }
+
+    private class Bridge {
+        @JavascriptInterface
+        public void speak(String text, double rate, double volume, String id) {
+            synchronized (pending) {
+                if (!ready) { pending.clear(); pending.add(new String[]{text, String.valueOf(rate), String.valueOf(volume), id}); return; }
+            }
+            say(text, (float) rate, (float) volume, id);
+        }
+
+        @JavascriptInterface
+        public void stop() {
+            synchronized (pending) { pending.clear(); }
+            /* (10.0) Не tts.stop(), а беззвучная фраза с QUEUE_FLUSH: у части
+               движков stop() доходит до службы синтеза позже следующей фразы и
+               гасит уже её — при быстром листании пункт молчал. Сброс очереди
+               беззвучием идёт в том же порядке, что и фразы, и обогнать
+               следующую не может. */
+            if (ready) {
+                TextToSpeech sp = speaker != null ? speaker : tts;
+                try { sp.playSilentUtterance(1, TextToSpeech.QUEUE_FLUSH, "__hush"); }
+                catch (Throwable t) { sp.stop(); }
+                if (sp != tts) { try { tts.playSilentUtterance(1, TextToSpeech.QUEUE_FLUSH, "__hush"); } catch (Throwable t) { tts.stop(); } }
+            }
+        }
+
+        /* Мост сообщает о начале фразы (GraniTTSStart). */
+        @JavascriptInterface
+        public boolean hasStart() { return true; }
+
+        @JavascriptInterface
+        public boolean isSpeaking() {
+            TextToSpeech sp = speaker != null ? speaker : tts;
+            return ready && sp.isSpeaking();
+        }
+
+        /* Голоса телефона: имя, язык, работает ли без сети. Сетевые страница
+           сама прячет по умолчанию. */
+        @JavascriptInterface
+        public String getVoices() {
+            if (!ready) return "[]";
+            String saved = voicesSnapshot;
+            if (saved != null) return saved;
+            JSONArray a = new JSONArray();
+            try {
+                Set<Voice> vs = tts.getVoices();
+                Voice cur = tts.getVoice();
+                if (vs != null) for (Voice v : vs) {
+                    JSONObject o = new JSONObject();
+                    Locale l = v.getLocale();
+                    o.put("id", v.getName());
+                    o.put("name", v.getName() + " (" + l.getDisplayName(new Locale("ru")) + ")");
+                    o.put("lang", l.toLanguageTag());
+                    o.put("local", !v.isNetworkConnectionRequired());
+                    o.put("default", cur != null && cur.getName().equals(v.getName()));
+                    o.put("engine", tts.getDefaultEngine());
+                    a.put(o);
+                }
+                /* Голоса прочих движков: id — «движок::голос». */
+                synchronized (others) {
+                    for (java.util.Map.Entry<String, TextToSpeech> en : others.entrySet()) {
+                        Set<Voice> ov = en.getValue().getVoices();
+                        if (ov == null) continue;
+                        String lab = labels.containsKey(en.getKey()) ? labels.get(en.getKey()) : en.getKey();
+                        for (Voice v : ov) {
+                            JSONObject o = new JSONObject();
+                            Locale l = v.getLocale();
+                            o.put("id", en.getKey() + "::" + v.getName());
+                            o.put("name", v.getName() + " (" + l.getDisplayName(new Locale("ru")) + ")");
+                            o.put("lang", l.toLanguageTag());
+                            o.put("local", !v.isNetworkConnectionRequired());
+                            o.put("default", false);
+                            o.put("engine", lab);
+                            a.put(o);
+                        }
+                    }
+                    if (a.length() > 0) voicesSnapshot = a.toString();
+                }
+            } catch (Exception ignored) { }
+            return voicesSnapshot != null ? voicesSnapshot : a.toString();
+        }
+
+        /* (17.0) «Сохранить в файл» (сохранение игры, журнал речи и звука):
+           файл — в папку «Загрузки» телефона, как и говорит игра. Ссылку blob:
+           со скачиванием WebView молча пропускал, и файла не было. */
+        @JavascriptInterface
+        public boolean saveDownload(String name, String mime, String text) {
+            if (name == null || text == null) return false;
+            String safe = name.replaceAll("[\\\\/:*?\"<>|]", "_").trim();
+            if (safe.isEmpty()) safe = "grani-mirov.txt";
+            String type = mime != null && !mime.trim().isEmpty() ? mime.split(";")[0].trim() : "application/octet-stream";
+            byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
+            try {
+                if (Build.VERSION.SDK_INT >= 29) {
+                    ContentValues cv = new ContentValues();
+                    cv.put(MediaStore.MediaColumns.DISPLAY_NAME, safe);
+                    cv.put(MediaStore.MediaColumns.MIME_TYPE, type);
+                    cv.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+                    cv.put(MediaStore.MediaColumns.IS_PENDING, 1);
+                    Uri u = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, cv);
+                    if (u == null) return false;
+                    try (OutputStream out = getContentResolver().openOutputStream(u)) {
+                        if (out == null) throw new java.io.IOException("нет потока");
+                        out.write(bytes);
+                    } catch (Exception e) { getContentResolver().delete(u, null, null); return false; }
+                    cv.clear();
+                    cv.put(MediaStore.MediaColumns.IS_PENDING, 0);
+                    getContentResolver().update(u, cv, null, null);
+                    return true;
+                }
+                File d = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+                if (d == null || (!d.isDirectory() && !d.mkdirs())) return false;
+                try (OutputStream out = new FileOutputStream(new File(d, safe))) { out.write(bytes); }
+                return true;
+            } catch (Exception e) { return false; }
+        }
+
+        /* «Выход» в меню действий: игра уже сохранилась — закрываем приложение. */
+        @JavascriptInterface
+        public void exitApp() {
+            runOnUiThread(() -> {
+                try { if (ready) tts.stop(); } catch (Exception ignored) { }
+                finishAndRemoveTask();
+            });
+        }
+
+        @JavascriptInterface
+        public void setVoice(String name) {
+            if (!ready || name == null || name.equals(activeVoice)) return;
+            try {
+                int cut = name.indexOf("::");
+                if (cut > 0) {
+                    TextToSpeech t;
+                    synchronized (others) { t = others.get(name.substring(0, cut)); }
+                    String vn = name.substring(cut + 2);
+                    if (t != null) {
+                        Set<Voice> ov = t.getVoices();
+                        if (ov != null) for (Voice v : ov) if (vn.equals(v.getName())) {
+                            TextToSpeech before = speaker;
+                            if (t.setVoice(v) == TextToSpeech.SUCCESS) {
+                                if (before != null && before != t) before.stop();
+                                speaker = t;
+                                activeVoice = name;
+                                voicesSnapshot = null;
+                            }
+                            return;
+                        }
+                    }
+                    return;
+                }
+                Set<Voice> vs = tts.getVoices();
+                if (vs != null) for (Voice v : vs) if (name.equals(v.getName())) {
+                    TextToSpeech before = speaker;
+                    if (tts.setVoice(v) == TextToSpeech.SUCCESS) {
+                        if (before != null && before != tts) before.stop();
+                        speaker = tts;
+                        activeVoice = name;
+                        voicesSnapshot = null;
+                    }
+                    return;
+                }
+            } catch (Exception ignored) { }
+        }
+    }
+}

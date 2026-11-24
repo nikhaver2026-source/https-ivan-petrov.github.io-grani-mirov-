@@ -1,0 +1,111 @@
+name: Грань Миров Альфа 1.1 — полный APK
+
+on:
+  push:
+    branches: [codex/grani-alpha-1.1-android]
+    paths: ['android/alpha-1.1-full/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    env:
+      GRANI_APK: Grani-Mirov-Alfa-1.1-Full.apk
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            /sounds/
+            /android/alpha-1.1/
+            /android/alpha-1.1-full/
+            /index.html
+            /sw.js
+            /manifest.json
+            /icon-192.png
+            /icon-512.png
+          sparse-checkout-cone-mode: false
+      - name: Собрать полный пакет без сжатия
+        shell: bash
+        run: |
+          set -euo pipefail
+          kit=android/alpha-1.1-full
+          test "$(git rev-parse HEAD:sounds)" = "$(cat "$kit/sound-tree.txt")"
+          df -h .
+          sdk="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          platform="$sdk/platforms/android-35/android.jar"
+          tools="$sdk/build-tools/35.0.0"
+          if [ ! -s "$platform" ] || [ ! -x "$tools/aapt2" ]; then
+            "$sdk/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-35' 'build-tools;35.0.0'
+          fi
+          work="$RUNNER_TEMP/grani-full"
+          mkdir -p "$work"
+          python3 "$kit/prepare-web.py" "$PWD" "$work"
+          bash "$kit/build.sh" "$platform" "$tools" "$work/web" "$work/core"
+          python3 "$kit/pack-full.py" --project "$PWD" --overlay "$work/overlay" --core "$work/core/aligned.apk" --apk "$work/full-unsigned.apk" --inventory "$work/inventory.json"
+          echo "GRANI_SDK_TOOLS=$tools" >> "$GITHUB_ENV"
+      - name: Подписать прежним ключом и проверить все записи
+        env:
+          KEY_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KEY_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASS || secrets.ANDROID_KS_PASS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASS || secrets.ANDROID_KEYSTORE_PASS || secrets.ANDROID_KS_PASS }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || secrets.ANDROID_KS_ALIAS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/grani-full"
+          umask 077
+          ks=$(mktemp)
+          trap 'rm -f "$ks"' EXIT
+          test -n "$KEY_B64" && test -n "$KEY_STORE_PASSWORD"
+          printf '%s' "$KEY_B64" | tr -d ' \t\r\n' | base64 -d > "$ks"
+          alias="$KEY_ALIAS"
+          if [ -z "$alias" ]; then
+            listing=$(keytool -J-Duser.language=en -list -v -keystore "$ks" -storepass:env KEY_STORE_PASSWORD)
+            mapfile -t aliases < <(awk '/^Alias name: / {a=substr($0,13)} /^Entry type: PrivateKeyEntry/ {print a}' <<< "$listing")
+            test "${#aliases[@]}" -eq 1
+            alias="${aliases[0]}"
+          fi
+          jarsigner -J-Xmx6g -keystore "$ks" -storepass:env KEY_STORE_PASSWORD -keypass:env KEY_PASSWORD -digestalg SHA-256 -sigalg SHA256withRSA -signedjar "$GRANI_APK" "$work/full-unsigned.apk" "$alias"
+          rm -f "$work/full-unsigned.apk"
+          jarsigner -J-Xmx6g -verify "$GRANI_APK" | grep -F 'jar verified'
+          python3 android/alpha-1.1-full/pack-full.py --verify --apk "$GRANI_APK" --inventory "$work/inventory.json"
+          python3 - "$GRANI_APK" "$work/cert.p7b" <<'PY'
+          import re, sys, zipfile
+          with zipfile.ZipFile(sys.argv[1]) as apk:
+              signatures=[n for n in apk.namelist() if re.fullmatch(r'META-INF/[^/]+\.RSA',n,re.I)]
+              assert len(signatures)==1
+              with open(sys.argv[2],'wb') as certificate:
+                  certificate.write(apk.read(signatures[0]))
+          PY
+          actual=$(keytool -J-Duser.language=en -printcert -file "$work/cert.p7b" | awk '/SHA256:/ {gsub(":","",$2); print tolower($2)}')
+          test "$actual" = '58ed564bca621adbf2f955be4355bea0c0fde96b2f829994cf3d93c51c1655ae'
+          "$GRANI_SDK_TOOLS/aapt2" dump badging "$GRANI_APK" | sed -n '1,5p'
+          sha256sum "$GRANI_APK"
+      - uses: actions/download-artifact@v4
+        with:
+          name: Grani-Mirov-Alfa-1.1-Android
+          run-id: 45387826470
+          github-token: ${{ github.token }}
+          path: previous
+      - name: Разрешить аппаратное ускорение эмулятора
+        run: sudo chmod a+rw /dev/kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 36
+          target: google_apis
+          arch: x86_64
+          disk-size: 20G
+          disable-animations: true
+          script: python3 -u android/alpha-1.1-full/verify-device.py previous/Grani-Mirov-Alfa-1.1.apk Grani-Mirov-Alfa-1.1-Full.apk
+      - uses: actions/upload-artifact@v7
+        with:
+          path: Grani-Mirov-Alfa-1.1-Full.apk
+          archive: false
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 90
