@@ -58,13 +58,18 @@ jobs:
           GRANI_KEY_PASS: ${{ secrets.ANDROID_KEY_PASS || secrets.ANDROID_KEYSTORE_PASS || secrets.ANDROID_KS_PASS }}
         run: |
           set -euo pipefail
-          test -n "$GRANI_KEY_B64" && test -n "$GRANI_STORE_PASS" && test -n "$GRANI_KEY_ALIAS"
+          test -n "$GRANI_KEY_B64" && test -n "$GRANI_STORE_PASS"
           umask 077
           KEYSTORE=$(mktemp)
           trap 'rm -f "$KEYSTORE"' EXIT
-          printf '%s' "$GRANI_KEY_B64" | base64 --decode > "$KEYSTORE"
+          printf '%s' "$GRANI_KEY_B64" | tr -d ' \t\r\n' | base64 --decode > "$KEYSTORE"
+          GRANI_STORE_PASS="$(printf '%s' "$GRANI_STORE_PASS" | tr -d '\r\n')"
+          GRANI_KEY_PASS="$(printf '%s' "$GRANI_KEY_PASS" | tr -d '\r\n')"
+          GRANI_KEY_ALIAS="$(printf '%s' "$GRANI_KEY_ALIAS" | tr -d '\r\n')"
+          signing_alias=()
+          if [ -n "$GRANI_KEY_ALIAS" ]; then signing_alias=(--ks-key-alias "$GRANI_KEY_ALIAS"); fi
           B="$GRANI_BUILD_TOOLS"
-          "$B/apksigner" sign --ks "$KEYSTORE" --ks-key-alias "$GRANI_KEY_ALIAS" --ks-pass env:GRANI_STORE_PASS --key-pass env:GRANI_KEY_PASS --out out/Grani-Mirov-Alfa-1.1.apk out/aligned.apk
+          "$B/apksigner" sign --ks "$KEYSTORE" "${signing_alias[@]}" --ks-pass env:GRANI_STORE_PASS --key-pass env:GRANI_KEY_PASS --out out/Grani-Mirov-Alfa-1.1.apk out/aligned.apk
           "$B/apksigner" verify --min-sdk-version 24 --verbose --print-certs out/Grani-Mirov-Alfa-1.1.apk
           "$B/zipalign" -c 4 out/Grani-Mirov-Alfa-1.1.apk
           "$B/aapt2" dump badging out/Grani-Mirov-Alfa-1.1.apk | sed -n '1,7p'
