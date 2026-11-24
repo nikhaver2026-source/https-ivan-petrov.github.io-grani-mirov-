@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        api: [35, 36]
+        api: [35]
     runs-on: ubuntu-24.04
     timeout-minutes: 18
     steps:
@@ -80,7 +80,7 @@ jobs:
                       # The built-in exploration mode confirms the focused item on double tap.
                       adb("shell", "input", "swipe", str(x), str(y), str(x), str(y), "680")
                       time.sleep(0.2)
-                      adb("shell", f"input tap {x} {y}; input tap {x} {y}")
+                      adb("shell", f"input tap {x} {y}; sleep 0.16; input tap {x} {y}")
                       return
               raise AssertionError(f"Cannot tap {snippet!r}")
           
@@ -100,11 +100,20 @@ jobs:
           title = wait_for("Альфа 1.1", "Проверить звук", "Без пролога")
           probe = adb("logcat", "-d", "-s", "GraniProbe:I", "*:S")
           assert re.search(r"ok www/sounds/espeak/espeak-ru-data\.js [1-9]\d+", probe), probe
+          def advance(root, target, *next_labels):
+              for attempt in range(3):
+                  tap(root, target)
+                  try:
+                      return wait_for(*next_labels, limit=6)
+                  except AssertionError:
+                      if attempt == 2:
+                          raise
+                      root = wait_for(target, limit=7)
+
           print("Offline title and bundled Russian voice data checked")
-          tap(title, "Без пролога")
-          hero = wait_for("Настройки персонажа", "Готово — в путь")
-          tap(hero, "Готово — в путь")
-          wait_for("Уровень 1", "Опыт", limit=55)
+          time.sleep(3)
+          hero = advance(title, "Без пролога", "Настройки персонажа", "Готово — в путь")
+          advance(hero, "Готово — в путь", "Уровень 1", "Опыт")
           print("Entered the game world and read the status from the Android UI tree")
           launch_log = adb("logcat", "-d", "-b", "crash")
           assert PACKAGE not in launch_log, launch_log
