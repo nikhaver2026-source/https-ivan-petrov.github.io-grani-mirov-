@@ -52,3 +52,34 @@ jobs:
           path: android/alpha-1.1/out/Grani-Mirov-Alfa-1.1.apk
           compression-level: 0
           if-no-files-found: error
+
+  verify-launch:
+    needs: apk
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Grani-Mirov-Alfa-1.1-Android
+          path: apk
+      - name: Enable emulator acceleration
+        run: sudo chmod a+rw /dev/kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: |
+            adb install apk/Grani-Mirov-Alfa-1.1.apk
+            adb shell svc wifi disable
+            adb shell svc data disable
+            adb shell am start -W -n io.github.granimirov/.MainActivity
+            for attempt in $(seq 1 12); do
+              adb shell uiautomator dump /sdcard/grani.xml >/dev/null || true
+              if adb shell cat /sdcard/grani.xml | grep -q 'Грань Миров'; then
+                adb shell cat /sdcard/grani.xml | grep -q 'Альфа 1.1' && break
+              fi
+              sleep 2
+            done
+            adb shell cat /sdcard/grani.xml | grep -q 'Альфа 1.1'
