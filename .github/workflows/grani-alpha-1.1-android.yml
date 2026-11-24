@@ -1,0 +1,54 @@
+name: Грань Миров Альфа 1.1 Android
+
+on:
+  push:
+    branches: [codex/grani-alpha-1.1-android]
+    paths: ['android/alpha-1.1/ready']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: /android/alpha-1.1/
+          sparse-checkout-cone-mode: false
+      - name: Собрать APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdkmanager 'platforms;android-35' 'build-tools;35.0.0' >/dev/null
+          cd android/alpha-1.1
+          python3 prepare.py inputs www
+          bash build.sh "$ANDROID_HOME/platforms/android-35/android.jar" "$ANDROID_HOME/build-tools/35.0.0" www out
+      - name: Подписать ключом проекта
+        working-directory: android/alpha-1.1
+        shell: bash
+        env:
+          GRANI_KEY_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          GRANI_STORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS || secrets.ANDROID_KS_PASS }}
+          GRANI_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || secrets.ANDROID_KS_ALIAS }}
+          GRANI_KEY_PASS: ${{ secrets.ANDROID_KEY_PASS || secrets.ANDROID_KEYSTORE_PASS || secrets.ANDROID_KS_PASS }}
+        run: |
+          set -euo pipefail
+          test -n "$GRANI_KEY_B64" && test -n "$GRANI_STORE_PASS" && test -n "$GRANI_KEY_ALIAS"
+          umask 077
+          KEYSTORE=$(mktemp)
+          trap 'rm -f "$KEYSTORE"' EXIT
+          printf '%s' "$GRANI_KEY_B64" | base64 --decode > "$KEYSTORE"
+          B="$ANDROID_HOME/build-tools/35.0.0"
+          "$B/apksigner" sign --ks "$KEYSTORE" --ks-key-alias "$GRANI_KEY_ALIAS" --ks-pass env:GRANI_STORE_PASS --key-pass env:GRANI_KEY_PASS --out out/Grani-Mirov-Alfa-1.1.apk out/aligned.apk
+          "$B/apksigner" verify --min-sdk-version 24 --verbose --print-certs out/Grani-Mirov-Alfa-1.1.apk
+          "$B/zipalign" -c 4 out/Grani-Mirov-Alfa-1.1.apk
+          "$B/aapt2" dump badging out/Grani-Mirov-Alfa-1.1.apk | sed -n '1,7p'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Grani-Mirov-Alfa-1.1-Android
+          path: android/alpha-1.1/out/Grani-Mirov-Alfa-1.1.apk
+          compression-level: 0
+          if-no-files-found: error
