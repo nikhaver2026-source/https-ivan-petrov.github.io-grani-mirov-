@@ -76,7 +76,11 @@ jobs:
                   if len(bounds) == 4 and bounds[2] > bounds[0] and bounds[3] > bounds[1]:
                       x = (bounds[0] + bounds[2]) // 2
                       y = (bounds[1] + bounds[3]) // 2
-                      adb("shell", f"input tap {x} {y}; input tap {x} {y}")
+                      print(f"Touch-explore {snippet!r} at {x},{y}", flush=True)
+            # The built-in exploration mode confirms the focused item on double tap.
+            adb("shell", "input", "swipe", str(x), str(y), str(x), str(y), "680")
+            time.sleep(0.2)
+            adb("shell", f"input tap {x} {y}; input tap {x} {y}")
                       return
               raise AssertionError(f"Cannot tap {snippet!r}")
           
@@ -111,4 +115,4 @@ jobs:
           arch: x86_64
           target: google_apis
           disable-animations: true
-          script: python3 verify-grani.py
+          script: python3 -u verify-grani.py
