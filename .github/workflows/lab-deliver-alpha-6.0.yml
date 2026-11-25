@@ -1,0 +1,85 @@
+name: Подземная лаборатория — файлы Альфы 6.0
+on:
+  push:
+    branches: [codex/lab-delivery-6.0]
+    paths: [.github/workflows/lab-deliver-alpha-6.0.yml]
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  files:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Архивы Windows
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45693495286
+          pattern: podzemnaya-laboratoriya-windows-*
+          merge-multiple: true
+          path: dist
+      - name: Подписанный APK
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45691355268
+          name: podzemnaya-laboratoriya-alfa-6.0-apk
+          path: dist
+      - name: Проверить содержимое и сохранить файлы в закрытом черновике
+        working-directory: dist
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CODE_SHA: 47ed9e340239ac8a783b27df4b57f017c8468a6f
+        run: |
+          set -eu
+          prefix=Podzemnaya-laboratoriya-Alfa-6.0
+          apk="$prefix.apk"
+          x86="$prefix-windows-32bit.zip"
+          x64="$prefix-windows-64bit.zip"
+          cat > "$RUNNER_TEMP/check.py" <<'PY'
+          import pathlib, struct, sys, zipfile
+
+          def has_file(names, suffix):
+              return any(name.endswith(suffix) for name in names)
+
+          for path in sys.argv[1:]:
+              android = path.endswith('.apk')
+              encoding = None if android or '-64bit' in path else 'cp866'
+              with zipfile.ZipFile(path, metadata_encoding=encoding) as z:
+                  names = z.namelist()
+                  assert len(names) == len(set(names))
+                  root = 'assets/www/' if android else next(name[:-len('index.html')] for name in names if name.endswith('/resources/game/index.html'))
+                  data = z.read(root + 'js/data.js').decode('utf-8')
+                  assert 'LAB.VERSION = "Альфа 6.0"' in data
+                  assert len([name for name in names if name.startswith(root + 'sounds/haunt/') and name.endswith('.ogg')]) == 46
+                  assert len([name for name in names if name.startswith(root + 'sounds/rift/') and name.endswith('.ogg')]) == 42
+                  assert len([name for name in names if name.startswith(root + 'sounds/') and name.endswith('.ogg')]) == 1502
+                  assert has_file(names, '/espeak/espeak-ng.js')
+                  if android:
+                      assert 'AndroidManifest.xml' in names and 'classes.dex' in names
+                  else:
+                      app = next(name for name in names if name.count('/') == 1 and name.endswith('Подземная лаборатория.exe'))
+                      with z.open(app) as stream:
+                          header = stream.read(64)
+                          assert header[:2] == b'MZ'
+                          stream.seek(struct.unpack_from('<I', header, 60)[0])
+                          assert stream.read(4) == b'PE\x00\x00'
+                          assert struct.unpack('<H', stream.read(2))[0] == (0x8664 if '-64bit' in path else 0x14C)
+                  print(path, pathlib.Path(path).stat().st_size)
+          PY
+          python "$RUNNER_TEMP/check.py" "$apk" "$x86" "$x64"
+          sha256sum "$apk" "$x86" "$x64"
+          tag=lab-alpha-6.0
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft,targetCommitish > "$RUNNER_TEMP/draft.json" 2>/dev/null; then
+            jq -e --arg sha "$CODE_SHA" '.isDraft and .targetCommitish == $sha' "$RUNNER_TEMP/draft.json"
+          else
+            gh release create "$tag" "$apk" "$x86" "$x64" --draft --prerelease --latest=false --target "$CODE_SHA" --repo "$GITHUB_REPOSITORY" \
+              --title 'Подземная лаборатория. Альфа 6.0' --notes 'Три полные сборки. Заходите под аккаунтом владельца репозитория, чтобы скачать APK и архивы Windows.'
+          fi
+          gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft,targetCommitish,url,assets > "$RUNNER_TEMP/draft.json"
+          jq -e --arg sha "$CODE_SHA" '.isDraft and .targetCommitish == $sha and ([.assets[].name] | length == 3)' "$RUNNER_TEMP/draft.json"
+          jq -c '{url, assets: [.assets[]|{name,size,url:.url}]}' "$RUNNER_TEMP/draft.json" | tee -a "$GITHUB_STEP_SUMMARY"
