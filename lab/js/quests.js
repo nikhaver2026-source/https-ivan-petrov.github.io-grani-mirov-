@@ -1518,6 +1518,7 @@ function onTime() {
 }
 /* ОКО подняло тревогу: премия «тихо» — у поручений, чьи этажи — этот */
 function onAlarm(lv) {
+  operationAlarm(lv);
   if (lv < 2) return;
   var g = G(), key = g.L + "-" + g.F;
   g.quests.forEach(function (q) {
@@ -1553,6 +1554,7 @@ function onRoom(r) {
 }
 /* пришли на этаж: враги, которых в этом режиме нет на этаже, из расчистки уходят; цели — вслух */
 function onFloor(silent) {
+  operationFloor(silent);
   var g = G(), C = LAB.combat, alive = {}, fx = fst(g.L, g.F) || {}, names = [];
   if (C && C.foes) C.foes().forEach(function (f) { alive[f.id] = 1; });
   allSteps().forEach(function (x) {
@@ -1594,6 +1596,8 @@ function navTargets() {
     var t = null; try { t = Kd.nav(s, q); } catch (e) { t = null; }
     if (t) { t.n = "поручение: " + t.n; out.push(t); }
   });
+  var field = fieldNav(); if (field) out.push(field);
+  var operation = opActive(); if (operation) { var route = opNav(operation); if (route) out.push(route); }
   return out;
 }
 /* (3.5) жетоны, взятые по поручениям «найти тело», — для заказчиков */
@@ -1604,6 +1608,9 @@ function reservedBadges() { return allSteps().filter(function (x) { return !x.q.
 var REPORT_BY = { "Медик": 30, "Генетик": 36, "Лаборант": 26 };
 function npcItems(n) {
   var g = G(), items = [];
+  var q0 = opActive(), site = q0 && q0.sites[q0.step];
+  if (site && site.npc && opCurrent(q0) && opObject(site) === n && opAt(n))
+    items.push({ label: "Передать припасы по наряду. " + OPERATIONS[q0.id].n, fn: function () { opMenu(q0, n); } });
   /* (3.5) весточка сверху — любому выжившему уровнем ниже: он и благодарит своим ремеслом */
   g.quests.filter(function (q) { return q.type === "courier" && !q.done && g.L > q.L; }).forEach(function (q) {
     items.push({ label: "Передать весточку от " + q.giverName + " (уровень " + q.L + ")", fn: function () {
@@ -1710,9 +1717,620 @@ function details(q) {
   else if (hd === "echo" && !q.remote) t += " Сдавать не нужно: как только всё будет сделано, «Эхо» передаст доклад по связи. Заказчик — " + q.giverName + ": " + whereGiver(q) + ".";
   return t;
 }
+/* ── Полевые наряды. Узлы — существующее оборудование, прогресс — в состоянии этажа. ── */
+var FIELD_CASES = [
+  { n: "Давление в обратной магистрали", kind: "balance", area: /power|work/,
+    ask: "Измерьте расход и перекос по двум контрольным приборам. Затем выставьте расход в подающей и обратной ветках." },
+  { n: "Провал сигнала", kind: "sequence", area: /power|server/,
+    ask: "Снимите две отметки о прохождении сигнала. На терминале восстановите порядок подключения реле." },
+  { n: "Перепутанные контейнеры", kind: "records", area: /lab|work/,
+    ask: "Сверьте код серии и номер места хранения. По этим данным отберите правильную накладную." },
+  { n: "Отказ резервного питания", kind: "balance", area: /power|server/,
+    ask: "Проверьте два измерительных поста. Распределите нагрузку между двумя линиями резервного питания." },
+  { n: "Карантинная доставка", kind: "sequence", area: /lab|office/,
+    ask: "На двух постах сохранены части журнала доставки. Восстановите последовательность передачи образца." },
+  { n: "Потерянная запись наблюдения", kind: "records", area: /server|office/,
+    ask: "Поднимите показания двух приборов и определите, какой архивный пакет относится к этому замеру." },
+  { n: "Засор фильтрации", kind: "balance", area: /lab|power/,
+    ask: "Два поста показывают суммарный поток и разницу между каналами. По этим данным настройте распределитель." },
+  { n: "Отложенный запуск секции", kind: "sequence", area: /work|power/,
+    ask: "Изучите отметки двух постов. По ним соберите порядок включения четырёх блоков секции." },
+  { n: "Сверка аварийного отчёта", kind: "records", area: /office|server/,
+    ask: "Снимите два показания о сбое. Сопоставьте их с отчётом, который нужно отправить в архив." }
+];
+var FIELD_TYPES = /^(terminal|okoterm|pc|comp|powergrid|workbench|chemlab|radio|charger|positron|magnetron)$/;
+var FIELD_STEPS = [
+  ["Реле А", "Реле Б", "Реле В", "Реле Г"],
+  ["Разметка", "Герметизация", "Взвешивание", "Приёмка"],
+  ["Насос", "Вентиляция", "Фильтр", "Датчик"]
+];
+function fieldInfo(label) { return { label: label, info: true, keep: true, fn: function () {} }; }
+function fieldObject(id) { return CUR().fl.objs.find(function (o) { return o.id === id; }); }
+function fieldSite(o) {
+  if (!o) return "пункт на этаже";
+  var room = CUR().fl.rooms[o.room];
+  return gm().objName(o) + (room ? ", " + roomLabel(room) : "");
+}
+function fieldSeed(q) { return LAB.hash32(G().seed + ":field:" + CUR().key + ":" + q.id); }
+function fieldData(q) {
+  var seed = fieldSeed(q), kind = FIELD_CASES[q.id].kind;
+  var a = 2 + seed % 9, b = 1 + (seed >>> 9) % 10;
+  if (kind === "balance") return { sum: a + b, diff: a - b };
+  if (kind === "records") return { batch: 20 + seed % 53, rack: 1 + (seed >>> 14) % 19 };
+  var names = FIELD_STEPS[Math.floor(q.id / 3)], order = names.slice();
+  for (var i = order.length - 1; i > 0; i--) {
+    var j = (seed >>> (i * 7)) % (i + 1), x = order[i]; order[i] = order[j]; order[j] = x;
+  }
+  return { names: names, order: order };
+}
+function fieldClue(q, index) {
+  var d = fieldData(q);
+  switch (FIELD_CASES[q.id].kind) {
+    case "balance": return index === 0 ? "Сумма по двум линиям: " + d.sum + "." :
+      "Первая линия минус вторая: " + (d.diff < 0 ? "минус " + (-d.diff) : d.diff) + ".";
+    case "records": return index === 0 ? "Код серии: " + d.batch + "." : "Номер секции хранения: " + d.rack + ".";
+    default: return index === 0 ? "Сразу после «" + d.order[0] + "» идёт «" + d.order[1] + "»." :
+      "Сразу после «" + d.order[1] + "» идёт «" + d.order[2] + "». Блок «" + d.order[3] + "» замыкает цепь.";
+  }
+}
+function fieldPlan(origin) {
+  var cur = CUR(), seed = LAB.hash32(G().seed + ":field:" + cur.key);
+  var byRoom = {};
+  cur.fl.objs.forEach(function (o) {
+    var room = cur.fl.rooms[o.room];
+    if (!room || room.hidden || o.room === origin.room || !FIELD_TYPES.test(o.type)) return;
+    if (!byRoom[o.room]) byRoom[o.room] = [];
+    byRoom[o.room].push(o);
+  });
+  var rooms = Object.keys(byRoom).sort(function (a, b) { return LAB.hash32(seed + ":" + a) - LAB.hash32(seed + ":" + b); });
+  var sites = [];
+  for (var i = 0; i < rooms.length && sites.length < 8; i++) {
+    var usable = byRoom[rooms[i]].find(function (o) { return gm()._routeTo(null, o); });
+    if (usable) sites.push(usable);
+  }
+  if (sites.length < 2) return null;
+  var orders = [];
+  for (var k = 0; k < (G().L > 6 ? 3 : 2); k++) {
+    var id = ((seed + k) % 3) + (((seed >>> (4 + 5 * k)) % 3) * 3), def = FIELD_CASES[id];
+    var preferred = sites.filter(function (o) {
+      var room = cur.fl.rooms[o.room];
+      return def.area.test(LAB.garrison && LAB.garrison.category ? LAB.garrison.category(room) : room.type);
+    });
+    var first = (preferred.length ? preferred : sites)[(seed + k) % (preferred.length || sites.length)];
+    var rest = sites.filter(function (o) { return o !== first; });
+    var second = rest[(seed + k * 3) % rest.length];
+    orders.push({ id: id, sites: [first.id, second.id], step: 0, accepted: false, done: false });
+  }
+  return { source: origin.id, orders: orders };
+}
+function activeField() {
+  var field = CUR().fs && CUR().fs.fieldOrders;
+  return field && field.orders.find(function (q) { return q.accepted && !q.done; });
+}
+function nextFieldObject(q) {
+  return fieldObject(q.step < q.sites.length ? q.sites[q.step] : CUR().fs.fieldOrders.source);
+}
+function fieldNav() {
+  var q = activeField(), o = q && nextFieldObject(q);
+  return o ? { n: "полевое задание «" + FIELD_CASES[q.id].n + "». " + fieldSite(o), o: o } : null;
+}
+function currentField(q, key) { return CUR().key === key && activeField() === q; }
+function fieldSave() { if (gm().autosaveSoon) gm().autosaveSoon(); }
+function fieldTarget(o, openObject) {
+  var q = activeField(), key = CUR().key;
+  if (!q || q.step >= q.sites.length || q.sites[q.step] !== o.id) return false;
+  UIx("menu", fieldSite(o), [
+    { label: "Снять показание для задания «" + FIELD_CASES[q.id].n + "»", fn: function () {
+      if (!currentField(q, key) || !gm().touchesObject(o, G().x, G().y) || q.sites[q.step] !== o.id) return;
+      if (gm().gridOffline()) { say("Показание недоступно. Дождитесь питания."); return; }
+      var clue = fieldClue(q, q.step);
+      q.step++;
+      gm().advanceTime(2);
+      gm().journal("«" + FIELD_CASES[q.id].n + "». " + clue);
+      A("play", "term_ok");
+      say(clue + " Следующая точка: " + fieldSite(nextFieldObject(q)) + ".");
+      fieldSave();
+    } },
+    { label: "Взаимодействовать с оборудованием как обычно", fn: openObject },
+    { label: "Назад", close: true }
+  ]);
+  return true;
+}
+function fieldBoard(origin) {
+  var cur = CUR(), board = cur.fs.fieldOrders || fieldPlan(origin);
+  if (!board) { say("Для полевой работы нужно два доступных поста в разных помещениях. Вернитесь, когда откроются проходы."); return; }
+  cur.fs.fieldOrders = board;
+  function rows() {
+    return board.orders.map(function (q) {
+      var def = FIELD_CASES[q.id], active = activeField();
+      if (q.done) return fieldInfo(def.n + ". Выполнено.");
+      if (q === active) return { label: def.n + ". " + (q.step < q.sites.length ? "Показаний " + q.step + " из " + q.sites.length : "Данные собраны"), fn: function () { fieldDetails(q, origin); } };
+      if (active) return fieldInfo(def.n + ". Сначала завершите текущее задание.");
+      return { label: def.n + ". " + def.ask, fn: function () {
+        if (activeField() || q.done) return;
+        if (gm().gridOffline()) { say("Сеть отключена. Дождитесь питания."); return; }
+        q.accepted = true;
+        gm().journal((q.step ? "Продолжено" : "Взято") + " полевое задание «" + def.n + "».");
+        fieldSave();
+        fieldDetails(q, origin);
+      } };
+    }).concat({ label: "Назад", close: true });
+  }
+  UIx("menu", "Полевые задания этажа", rows(), { rebuild: rows });
+}
+function fieldDetails(q, origin) {
+  var key = CUR().key, def = FIELD_CASES[q.id];
+  var o = nextFieldObject(q), canSolve = q.step === q.sites.length && o && origin && o.id === origin.id;
+  var rows = [fieldInfo(def.ask)];
+  for (var i = 0; i < q.step; i++) rows.push(fieldInfo(fieldClue(q, i)));
+  if (canSolve) rows.push({ label: "Открыть форму решения", fn: function () { fieldSolve(q, key, o); } });
+  else rows.push({ label: "Проложить маршрут. " + fieldSite(o), fn: function () { UIx("closeAll"); var target = fieldNav(); if (target) gm().navigateTo(target); } });
+  rows.push({ label: "Отложить задание. Показания сохранятся", fn: function () {
+    if (!currentField(q, key)) return;
+    q.accepted = false;
+    fieldSave();
+    say("Задание отложено. Его можно продолжить с терминала.");
+  } });
+  rows.push({ label: "Назад", close: true });
+  UIx("menu", def.n, rows);
+}
+function fieldQuestItem() {
+  var q = activeField();
+  if (!q) return null;
+  return { label: "Полевое задание. " + FIELD_CASES[q.id].n + ". " + fieldSite(nextFieldObject(q)), fn: function () { fieldDetails(q); } };
+}
+function fieldSolve(q, key, origin) {
+  var def = FIELD_CASES[q.id], data = fieldData(q);
+  function submit(ok) {
+    if (!currentField(q, key) || !gm().touchesObject(origin, G().x, G().y) || q.step !== q.sites.length) return;
+    if (gm().gridOffline()) { say("Сеть отключена. Дождитесь питания."); return; }
+    if (!ok) { A("play", "term_err"); say("Проверка не пройдена. Сверьте введённые данные с показаниями постов."); return; }
+    q.done = true;
+    var reward = 24 + Math.min(80, LAB.Le(G().L)) + Math.min(10, G().F);
+    G().credits += reward;
+    gm().gainXP(14 + Math.floor(reward / 3));
+    if (LAB.stats) LAB.stats.deed("puzzle", 1);
+    gm().journal("Выполнено полевое задание «" + def.n + "». Начислено кредитов: " + reward + ".");
+    A("play", "term_ok");
+    fieldSave();
+    UIx("closeTop", true);
+    UIx("closeTop", true);
+    UIx("rebuildTop");
+    say("Задание выполнено. Начислено кредитов: " + reward + ".");
+  }
+  var rows = q.sites.map(function (_, i) { return fieldInfo(fieldClue(q, i)); });
+  if (def.kind === "balance") {
+    var v = [0, 0];
+    v.forEach(function (_, i) {
+      rows.push({ kind: "slider", label: i === 0 ? "Расход первой линии" : "Расход второй линии", min: 0, max: 12, step: 1,
+        get: function () { return v[i]; }, set: function (n) { v[i] = n; } });
+    });
+    rows.push({ label: "Проверить расход", keep: true, fn: function () { submit(v[0] + v[1] === data.sum && v[0] - v[1] === data.diff); } });
+  } else if (def.kind === "records") {
+    var correct = fieldSeed(q) % 4;
+    for (var i = 0; i < 4; i++) {
+      (function (n) {
+        var k = (n + 4 - correct) % 4, batch = data.batch + (k & 1), rack = data.rack + ((k >> 1) & 1);
+        rows.push({ label: "Пакет " + (n + 1) + ". Серия " + batch + ", секция " + rack, keep: true, fn: function () { submit(k === 0); } });
+      })(i);
+    }
+  } else {
+    var order = [], opts = data.names.map(function (n) { return { v: n, label: n }; });
+    for (var slot = 0; slot < opts.length; slot++) order.push(opts[slot].v);
+    opts.forEach(function (_, i) {
+      rows.push({ kind: "choice", label: "Блок " + (i + 1), options: opts,
+        get: function () { return order[i]; }, set: function (n) { order[i] = n; } });
+    });
+    rows.push({ label: "Проверить порядок", keep: true, fn: function () {
+      submit(order.every(function (n, i) { return n === data.order[i]; }));
+    } });
+  }
+  rows.push({ label: "Назад", close: true });
+  UIx("menu", "Решение. " + def.n, rows);
+}
+
+/* ── Операции комплекса ──
+   Наряд закреплён за этажом выдачи. Межэтажные этапы ведут только на
+   посещённые этажи этой глубины, к посту у лифта. Прогресс и пломба груза
+   хранятся в записи героя. Сдача отмечается на этаже выдачи. */
+var OPERATIONS = [
+  { kind: "power", n: "Вывести секцию на резерв", ask: "Штатный ввод выдерживает запуск по одному прибору. Снимите нагрузку на контрольном посту и подготовьте независимый резерв.", puzzle: "breaker", need: { wire: 2, cap: 1 } },
+  { kind: "power", n: "Ток для ночной смены", ask: "Ночью приборы отключаются вместе с основным контуром. Проверьте журнал отключений и восстановите резервный ввод.", puzzle: "power", need: { wire: 1, chip: 1, scrap: 1 } },
+  { kind: "air", n: "Дым в воздуховодах", ask: "После срабатывания противопожарной заслонки вытяжка долго выходит на рабочий режим. Найдите контрольный пост и восстановите аварийный отвод.", puzzle: "pipes", need: { filter: 1, scrap: 1 } },
+  { kind: "air", n: "Второй контур воздуха", ask: "Заслонку можно открыть вручную, но ей не хватает исправного регулятора. Проверьте показания и восстановите дублирующую ветку.", puzzle: "valves", need: { wire: 2, reagent: 1 } },
+  { kind: "freight", n: "Запчасти для подъёмников", ask: "У приёмного поста ждут пломбированные корзины с роликами и тормозными колодками. Выберите массу партии при погрузке.", load: [35, 145] },
+  { kind: "freight", n: "Контейнеры холодного хранения", ask: "Отсек хранения перевели на другой пост. Доставьте герметичную партию целиком. В срок обещана доплата.", load: [50, 220] },
+  { kind: "relay", n: "Глухой участок связи", ask: "Сигнал пропадает на переходе между постами. Запишите эталон и настройте повторитель. Маршруты служебной сети попадут в «Эхо».", puzzle: "frequencies" },
+  { kind: "relay", n: "Резервный канал", ask: "Вторая линия отвечает через раз. Снимите контрольную запись, затем проложите обходной канал на другом посту.", puzzle: "route" },
+  { kind: "aid", n: "Перевязочный запас", ask: "В пункте помощи заканчиваются перевязочные средства. Уточните заявку и доставьте готовую аптечку или перевязочные материалы.", supplies: [{ medkit_s: 1 }, { bandage: 2, gel: 1 }] },
+  { kind: "aid", n: "Запас после едкого выброса", ask: "Дежурному нужен комплект после утечки. Сверьте заявку и доставьте набор от отравления или припасы для восстановления.", supplies: [{ antidote: 1, bandage: 1 }, { sorbent: 1, ration: 1 }] },
+  { kind: "archive", n: "Отчёт с мёртвой линии", ask: "В журнале есть команда, которую могли записать при выключенном приводе. Часы двух постов расходятся. По общему контрольному сигналу определите поправку, затем сопоставьте запись с отключением." },
+  { kind: "archive", n: "Пломба без свидетелей", ask: "Терминал зарегистрировал открытие контейнера. Определите поправку часов по общему контрольному сигналу, затем проверьте, был ли датчик пломбы на связи." }
+];
+var OP_CONTROL = /^(terminal|okoterm|pc|comp|radio|powergrid|charger|workbench|fusebox)$/;
+var OP_POINT = {
+  power: /^(powergrid|charger|fusebox|workbench|terminal)$/,
+  air: /^(powergrid|fusebox|terminal|chemlab|workbench)$/,
+  freight: /^(supply|workbench|elevator)$/,
+  relay: /^(radio|terminal|okoterm|comp|pc)$/,
+  aid: /^(medst|medvend|supply|chemlab|terminal)$/,
+  archive: /^(terminal|okoterm|pc|comp|logbook)$/
+};
+function opActive() { return G() && G().operation; }
+function opCurrent(q) { return opActive() === q && q.L === G().L && !G().dead && !G().stair; }
+function opStop() {
+  var guide = gm().navFollow && gm().navFollow();
+  if (guide && /^операция /.test(guide.name)) gm().navStop();
+}
+function opCarry() { var q = opActive(); return q && q.L === G().L ? q.cargo || 0 : 0; }
+function opHistory() { return CUR().fs.opsDone || {}; }
+function opSite(o, F, name, npc) {
+  return { id: npc ? o.key : o.id, F: F, npc: !!npc, name: name || (npc ? o.n + " (" + (o.prof || "выживший") + ")" : fieldSite(o)) };
+}
+function opObject(site) {
+  var fl = CUR().fl;
+  if (!fl || site.F !== G().F) return null;
+  return site.npc ? fl.npcs.find(function (n) { return n.key === site.id; }) : fieldObject(site.id);
+}
+function opLocation(site) { return "Этаж " + site.F + ", " + site.name + "."; }
+function opAt(o) { return o && gm().touchesObject(o, G().x, G().y); }
+function opLift() { return CUR().fl.objs.find(function (o) { return o.type === "elevator"; }); }
+/* Удалённый пост у лифта доступен с площадки прибытия. Ближние посты
+   проверяются обычным маршрутом, с учётом запертых дверей и мебели. */
+function opRemote(kind, seed) {
+  var g = G();
+  if (!g.elev[g.L]) return null;
+  var lift = opLift();
+  if (!lift || !gm()._routeTo(null, lift)) return null;
+  var Fs = [g.F - 1, g.F + 1, g.F - 2, g.F + 2].filter(function (F) {
+    return F >= 1 && F <= LAB.FLOORS_N && gm().liftOk(g.L, F);
+  });
+  if (!Fs.length) return null;
+  var F = Fs[seed % Fs.length], fl = fdef(g.L, F);
+  var obj = fl.objs.find(function (o) { return o.type === "elevator"; });
+  var names = { freight: "грузовой приёмник у лифта", relay: "служебный порт лифта", archive: "независимый регистратор у лифта" };
+  return obj ? opSite(obj, F, names[kind]) : null;
+}
+function opLocal(types, omitRooms, seed) {
+  var fl = CUR().fl, g = G(), seen = {};
+  var list = fl.objs.filter(function (o) {
+    var room = fl.rooms[o.room];
+    return room && !room.hidden && omitRooms.indexOf(o.room) < 0 && types.test(o.type);
+  });
+  list.sort(function (a, b) {
+    function score(o) { return Math.abs(o.x - g.x) + Math.abs(o.y - g.y) + LAB.hash32(seed + ":" + o.id) % 18; }
+    return score(a) - score(b);
+  });
+  var count = 0;
+  for (var i = 0; i < list.length && count < 14; i++) {
+    var o = list[i];
+    if (seen[o.room] >= 2) continue;
+    seen[o.room] = (seen[o.room] || 0) + 1; count++;
+    if (gm()._routeTo(null, o)) return o;
+  }
+  return null;
+}
+function opPatient(omitRooms) {
+  return CUR().fl.npcs.find(function (n) {
+    var prof = LAB.PROFS[n.prof] || {}, room = CUR().fl.rooms[n.room];
+    return !n.robot && (prof.heal || prof.trade === "med") && room && !room.hidden &&
+      omitRooms.indexOf(n.room) < 0 && gm()._routeTo(null, n);
+  });
+}
+function opPlan(index, origin) {
+  var def = OPERATIONS[index], kind = def.kind, g = G(), seed = LAB.hash32(g.seed + ":operation:" + CUR().key + ":" + index);
+  var source = opSite(origin, g.F), rooms = [origin.room], route = [], first, last;
+  if (kind === "freight") route.push(source);
+  else {
+    first = opLocal(kind === "archive" || kind === "relay" ? OP_POINT[kind] : OP_CONTROL, rooms, seed);
+    if (!first) return null;
+    route.push(opSite(first, g.F)); rooms.push(first.room);
+  }
+  var remote = /^(freight|relay|archive)$/.test(kind) ? opRemote(kind, seed) : null;
+  if (remote) route.push(remote);
+  else {
+    var patient = kind === "aid" && opPatient(rooms);
+    last = patient || opLocal(OP_POINT[kind], rooms, seed >>> 7);
+    /* У выдачи припасов и цепи доставки конечный пункт может быть
+       единственным постом в своём корпусе; старт должен отличаться. */
+    if (!last && kind === "aid" && origin.type === "supply") last = origin;
+    if (!last) return null;
+    route.push(opSite(last, g.F, null, patient));
+  }
+  if (kind === "archive") route.push(source);
+  var q = { id: index, L: g.L, F: g.F, sites: route, step: 0, seed: seed, quiet: kind === "relay" && (!LAB.oko || LAB.oko.level() < 2) };
+  if (kind === "freight") {
+    var path = gm()._routeTo(null, remote ? opLift() : last);
+    q.budget = Math.max(30, Math.ceil(path.length * 1.4) + 22 + 6 * Math.abs(route[1].F - g.F));
+  }
+  return q;
+}
+function opOffers() {
+  var g = G(), seed = LAB.hash32(g.seed + ":workboard:" + CUR().key), depth = LAB.depth(g.L, g.F);
+  var kinds = [0, 2, 4, 6, 8, 10].filter(function (id) { return (id !== 0 || depth >= 3) && (id !== 2 || depth >= 4); });
+  return kinds.map(function (id) { return id + ((seed >>> id) & 1); });
+}
+/* У тяжёлой партии выше оплата за рейс. Доплата за килограмм
+   постепенно снижается: большой дрон экономит рейсы, а не печатает кредиты. */
+function opCargoPay(weight) { return Math.floor(Math.min(400, weight) / 4 + Math.max(0, weight - 400) / 12); }
+function opReward(q) {
+  var deep = Math.min(95, LAB.Le(q.L)), distance = Math.abs(q.sites[1].F - q.F), kind = OPERATIONS[q.id].kind;
+  var base = 36 + deep + Math.min(16, q.F) + distance * 10;
+  if (kind === "archive") base += 14;
+  if (q.cargo) base += opCargoPay(q.cargo);
+  return base;
+}
+function opNav(q) {
+  if (!opCurrent(q)) return null;
+  var site = q.sites[q.step], obj = opObject(site), stairs;
+  if (site.F === G().F) return obj ? { n: "операция «" + OPERATIONS[q.id].n + "». " + site.name, o: obj } : null;
+  if (gm().gridOffline()) {
+    var type = site.F > G().F ? "stairs_down" : "stairs_up";
+    stairs = CUR().fl.objs.find(function (o) { return o.type === type && !gm().stairBlocked(o) && gm()._routeTo(null, o); });
+  }
+  obj = stairs || opLift();
+  return obj ? { n: "операция «" + OPERATIONS[q.id].n + "». " + (stairs ? "По лестнице" : "На лифте") + " на этаж " + site.F, o: obj } : null;
+}
+function opLine(q) {
+  var kind = OPERATIONS[q.id].kind;
+  var label = "Этап " + (q.step + 1) + " из " + q.sites.length + ". " + opLocation(q.sites[q.step]);
+  if (kind !== "freight" || q.cargo) label += " Оплата " + opReward(q) + " кредитов.";
+  if (q.cargo) {
+    var left = Math.max(0, Math.ceil(q.due - nowMin()));
+    label += " Масса груза " + LAB.load.kg(q.cargo) + ". " + (left ? "До конца срока доставки с премией " + left + " мин." : "Срок премии вышел. Обычная выплата доступна.");
+  }
+  if (kind === "relay") label += q.quiet ? " Премия за обход без тревоги 16 кредитов." : " Премия за обход без тревоги недоступна.";
+  return label;
+}
+function opReport(q) {
+  var offset = 5 + (q.seed >>> 8) % 40, variant = q.seed % 3;
+  var shift = [-4, -2, 2, 3, 5][(q.seed >>> 17) % 5], sync = 12 + offset;
+  return { start: 4 + offset, end: 10 + offset, record: [2, 7, 13][variant] + offset + shift,
+    sync: sync, mainSync: sync + shift, verdict: variant };
+}
+function opEvidence(q, i) {
+  var def = OPERATIONS[q.id];
+  if (def.kind === "archive") {
+    var d = opReport(q);
+    return i === 0
+      ? "Основной журнал. Минута команды " + d.record + ". Минута общего контрольного сигнала " + d.mainSync + "."
+      : "Независимый журнал. Начало отключения " + d.start + ", конец " + d.end + ", обе минуты включены. Минута того же контрольного сигнала " + d.sync + ".";
+  }
+  if (def.kind === "relay") return "Контрольная запись принята. Следующий пост получил тон и ждёт настройки обходного канала.";
+  if (def.kind === "aid") return "Заявка подтверждена. У дежурного пункт выдачи, который принимает один из двух комплектов.";
+  return def.kind === "power" ? "Замеры подтверждают отказ при переключении вводов. Второй пост даст доступ к резерву." :
+    "Замеры подтверждают, что дублирующая ветка не открывается. На следующем посту доступен ручной привод.";
+}
+function opNext(q, clue) {
+  opStop();
+  q.step++;
+  journal("«" + OPERATIONS[q.id].n + "». " + clue);
+  A("play", "term_ok");
+  fieldSave();
+  say(clue + " " + opLine(q));
+}
+function opClose(q) {
+  opStop(); G().operation = null;
+  if (q.cargo && LAB.load) LAB.load.after();
+  fieldSave();
+}
+function opFinish(q, tale) {
+  if (!opCurrent(q)) return;
+  var def = OPERATIONS[q.id], fs = gm().fsFor(q.L, q.F);
+  var records = fs.opsDone || (fs.opsDone = {});
+  if (records[def.kind]) return;
+  var pay = opReward(q), bonus = (q.cargo && nowMin() <= q.due ? 18 : 0) + (q.quiet ? 16 : 0);
+  records[def.kind] = { id: q.id, reward: pay + bonus };
+  opClose(q);
+  G().credits += pay + bonus;
+  gm().gainXP(15 + Math.floor(pay / 4));
+  if (LAB.stats) LAB.stats.deed("research", 1);
+  journal("Выполнена операция «" + def.n + "». Начислено " + (pay + bonus) + " кредитов.");
+  A("play", "term_ok");
+  fieldSave();
+  say(tale + " Операция завершена. Начислено кредитов " + (pay + bonus) + (bonus ? ", включая премию " + bonus : "") + ".");
+}
+function opRepair(q) {
+  var kind = OPERATIONS[q.id].kind, air = kind === "air";
+  var site = "Этаж " + G().F + ".";
+  gm().installReserve(kind);
+  if (air) A("play", "ev_steam", { gain: 0.4 });
+  return site + (air ? " Резервная вытяжка и подача воздуха сокращают задымление и перебои с воздухом." :
+    " Автономный резерв сокращает перезагрузки оборудования.");
+}
+function opConsume(need) {
+  var g = G();
+  for (var id in need) {
+    var count = g.inv[id] || 0, made = (g.craftN && g.craftN[id]) || 0;
+    var used = Math.max(0, need[id] - Math.max(0, count - made));
+    if (used) g.craftN[id] = Math.max(0, made - used);
+    g.inv[id] = count - need[id];
+    if (!g.inv[id]) delete g.inv[id];
+  }
+  if (LAB.load) LAB.load.after();
+}
+function opPartRow(q, validate, need, label, effect) {
+  var cost = Object.keys(need).map(function (id) {
+    return LAB.ITEMS[id].n + " " + need[id] + ", в рюкзаке " + (G().inv[id] || 0);
+  }).join(". ");
+  function enough() { return Object.keys(need).every(function (id) { return (G().inv[id] || 0) >= need[id]; }); }
+  if (!enough()) return fieldInfo(label + ". Не хватает припасов. " + cost + ".");
+  return { label: label + ". " + cost + ".", fn: function () {
+    if (!validate() || !enough()) { say("Для работы не хватает припасов или пост недоступен."); return; }
+    opConsume(need);
+    opFinish(q, effect());
+  } };
+}
+function opPuzzle(q, validate, effect) {
+  var def = OPERATIONS[q.id], name = LAB.puzzles.nameOf(def.puzzle);
+  return { label: "Настроить вручную. " + name + ".", fn: function () {
+    if (!validate()) return;
+    UIx("closeAll");
+    LAB.puzzles.open(def.puzzle, ((q.seed + (q.attempt || 0) * 7919) >>> 0) || 1, function (ok, away, fresh) {
+      if (!validate()) return;
+      if (!ok) {
+        if (!away || fresh) { q.attempt = (q.attempt || 0) + 1; fieldSave(); }
+        say("Настройка отложена. К этому посту можно вернуться.");
+        return;
+      }
+      opFinish(q, effect());
+    }, { title: def.n + ". " + name, diff: Math.min(2, Math.floor(LAB.Le(q.L) / 10)) });
+  } };
+}
+function opLoadRows(q, validate) {
+  var depth = LAB.Le(q.L), band = Math.floor(depth / 5), base = OPERATIONS[q.id].load;
+  var loads = [
+    { n: "Малая партия", w: base[0] + Math.min(40, band * 2) },
+    { n: "Полная партия", w: base[1] + Math.min(480, band * 24) }
+  ];
+  if (depth >= 12) loads.push({ n: "Промышленная партия", w: Math.min(6500, 1000 + (depth - 12) * 60) });
+  return loads.map(function (cargo) {
+    var w = cargo.w;
+    var text = cargo.n + ", " + LAB.load.kg(w) +
+      ". Выплата " + (opReward(q) + opCargoPay(w)) + " кредитов, премия 18 за доставку за " + q.budget + " мин.";
+    if (!LAB.load.canTake(w)) return fieldInfo(text + " Для этого груза нужна разгрузка или более мощный дрон.");
+    return { label: "Принять. " + text, fn: function () {
+      if (!validate() || !LAB.load.canTake(w)) { say("Сейчас груз недоступен или слишком тяжёлый."); return; }
+      q.cargo = w;
+      q.due = nowMin() + q.budget;
+      LAB.load.after();
+      A("play", "locker_take");
+      opNext(q, "Контейнер принят под пломбой.");
+    } };
+  });
+}
+function opActions(q, obj) {
+  var index = q.step, site = q.sites[index], def = OPERATIONS[q.id], kind = def.kind, rows = [];
+  function validate() { return opCurrent(q) && q.step === index && G().F === site.F && opObject(site) === obj && opAt(obj); }
+  if (kind === "freight" && index === 0) return opLoadRows(q, validate);
+  if ((index === 0 && kind !== "freight") || (kind === "archive" && index === 1)) {
+    return [{ label: kind === "archive" ? "Снять копию контрольной записи" : "Проверить показания на посту", fn: function () {
+      if (!validate()) return;
+      opNext(q, opEvidence(q, index));
+    } }];
+  }
+  if (kind === "freight") rows.push({ label: "Сдать груз по пломбе", fn: function () {
+    if (validate() && q.cargo) opFinish(q, "Приёмник подтвердил целость пломбы и забрал контейнер.");
+  } });
+  if (kind === "power" || kind === "air") {
+    rows.push(opPartRow(q, validate, def.need, "Установить исправные детали", function () { return opRepair(q); }));
+    rows.push(opPuzzle(q, validate, function () { return opRepair(q); }));
+  }
+  if (kind === "relay") rows.push(opPuzzle(q, validate, function () {
+    gm().mapFloor();
+    return "Обходной канал принят. Карта этого этажа передана в «Эхо».";
+  }));
+  if (kind === "aid") def.supplies.forEach(function (need) {
+    rows.push(opPartRow(q, validate, need, "Передать комплект", function () {
+      return site.npc ? obj.n + " принимает припасы и заносит их в журнал помощи." : "Медицинские припасы приняты в резерв пункта.";
+    }));
+  });
+  if (kind === "archive") {
+    var result = ["Запись появилась до отключения.", "Запись появилась при отключённой линии.", "Запись появилась после восстановления линии."];
+    result.forEach(function (text, v) {
+      rows.push({ label: "Заключение. " + text, keep: true, fn: function () {
+        if (!validate()) return;
+        if (v !== opReport(q).verdict) { A("play", "term_err"); say("В заключении расходится время. Сверьте обе копии журнала."); return; }
+        opFinish(q, text + (v === 1 ? " Отметка об исполнении команды отозвана." : " Запись подтверждена."));
+        UIx("closeTop", true);
+      } });
+    });
+  }
+  return rows;
+}
+function operationTarget(o, standard) {
+  var q = opActive(), site = q && q.sites[q.step];
+  if (!site || site.npc || !opCurrent(q) || opObject(site) !== o || !opAt(o)) return false;
+  opMenu(q, o, standard);
+  return true;
+}
+function opMenu(q, o, standard) {
+  var def = OPERATIONS[q.id], rows = [fieldInfo(opLine(q)), fieldInfo(def.ask)];
+  if (def.kind === "archive") for (var i = 0; i < q.step; i++) rows.push(fieldInfo(opEvidence(q, i)));
+  if (o) rows = rows.concat(opActions(q, o));
+  else rows.push({ label: "Вести к следующему посту", fn: function () {
+    if (!opCurrent(q)) return;
+    var target = opNav(q);
+    if (!target) { say(opLine(q)); return; }
+    UIx("closeAll"); gm().navigateTo(target);
+  } });
+  if (o && gm().gridOffline()) rows.splice(1, 0, fieldInfo("Полевой интерфейс работает от сервисной батареи."));
+  if (standard) rows.push({ label: "Открыть обычные действия у оборудования", fn: standard });
+  rows.push({ label: q.cargo ? "Снять груз и закрыть наряд" : "Отказаться от операции", fn: function () {
+    UIx("menu", "Закрыть наряд", [
+      { label: q.cargo ? "Да. Оставить контейнер для службы доставки" : "Да. Закрыть наряд", fn: function () {
+        if (!opCurrent(q)) return;
+        journal("Закрыта операция «" + def.n + "».");
+        opClose(q);
+        UIx("closeTop", true); UIx("closeTop", true); UIx("rebuildTop");
+        say(q.cargo ? "Контейнер оставлен для службы доставки. Наряд закрыт." : "Наряд закрыт.");
+      } },
+      { label: "Назад", close: true }
+    ]);
+  } });
+  rows.push({ label: "Назад", close: true });
+  UIx("menu", "Операция. " + def.n, rows);
+}
+function operationBoard(origin) {
+  var key = CUR().key, state = G(), offers = opOffers();
+  function rows() {
+    var q = opActive(), done = opHistory();
+    var items = q && opCurrent(q) ? [operationQuestItem()] : [];
+    offers.forEach(function (id) {
+      var def = OPERATIONS[id];
+      if (done[def.kind]) { items.push(fieldInfo(OPERATIONS[done[def.kind].id].n + ". Выполнено. Кредитов начислено " + done[def.kind].reward + ".")); return; }
+      if (q) return;
+      items.push({ label: def.n + ". " + def.ask, fn: function () {
+        if (G() !== state || CUR().key !== key || opActive() || !opAt(origin)) return;
+        if (opHistory()[def.kind]) return;
+        var plan = opPlan(id, origin);
+        if (!plan) { say("Для этого наряда нужны доступные посты в разных помещениях. Откройте проходы и обратитесь к диспетчеру снова."); return; }
+        state.operation = plan;
+        journal("Взята операция «" + def.n + "». " + opLocation(plan.sites[0]));
+        fieldSave();
+        opMenu(plan, def.kind === "freight" ? origin : null);
+      } });
+    });
+    items.push({ label: "Назад", close: true });
+    return items;
+  }
+  UIx("menu", "Операции комплекса", rows(), { rebuild: rows });
+}
+function operationQuestItem() {
+  var q = opActive();
+  if (!q || !opCurrent(q)) return null;
+  return { label: "Операция «" + OPERATIONS[q.id].n + "». " + opLine(q), fn: function () {
+    var site = q.sites[q.step], obj = opObject(site);
+    if (!opCurrent(q)) return;
+    opMenu(q, opAt(obj) ? obj : null);
+  } };
+}
+function operationFloor(silent) {
+  var q = opActive();
+  if (!q) return;
+  if (q.L !== G().L) {
+    opClose(q);
+    journal("Наряд «" + OPERATIONS[q.id].n + "» закрыт после перехода через шлюз.");
+    if (!silent) sayq("«Эхо»: наряд прежней глубины закрыт." + (q.cargo ? " Груз передан при входном контроле." : ""));
+    return;
+  }
+  operationAlarm(LAB.oko ? LAB.oko.level() : 0, silent);
+  if (!silent && q.sites[q.step].F === G().F) sayq("«Эхо»: здесь следующий пункт операции. " + opLine(q));
+}
+function operationAlarm(lv, silent) {
+  var q = opActive();
+  if (lv < 2 || !q || !q.quiet || q.L !== G().L) return;
+  if (q.F !== G().F && !q.sites.some(function (s) { return s.F === G().F; })) return;
+  q.quiet = false;
+  fieldSave();
+  if (!silent) sayq("«Эхо»: тревога лишила премии за тихий обход. Операцию можно завершить.");
+}
+
 function reset() { lastNote = {}; }
 
 LAB.quests = {
+  fieldBoard: fieldBoard, fieldTarget: fieldTarget, fieldQuestItem: fieldQuestItem,
+  operationBoard: operationBoard, operationTarget: operationTarget, operationQuestItem: operationQuestItem, operationWeight: opCarry,
   ACTIVE: ACTIVE, KINDS: KINDS, take: take, offers: offers, accept: accept, complete: complete, finish: finish, abandon: abandon,
   active: active, progress: progress, ready: ready, steps: steps, rewardText: rewardText, line: line, details: details,
   check: check, onTime: onTime, onAlarm: onAlarm, onKill: onKill, onRoom: onRoom, onFloor: onFloor, navTargets: navTargets,

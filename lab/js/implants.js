@@ -89,7 +89,7 @@ var NEW = [
   /* нейровзлом */
   { id: "camloop", n: "Петля камер", cat: "hack", t: 1, cost: 8, price: 140, desc: "Камеры ОКО в десяти шагах показывают пустой коридор: тридцать секунд они слепы.", fx: { k: "blind", r: 10, cams: 60 } },
   { id: "veil", n: "Ионная завеса", cat: "hack", t: 2, cost: 11, price: 190, desc: "Завеса помех в четырёх шагах: камеры слепнут, роботы теряют вас из виду.", fx: { k: "blind", r: 4, cams: 40, bots: 16 } },
-  { id: "trojan", n: "Троянский импульс", cat: "hack", t: 2, cost: 14, price: 230, desc: "Роботы в четырёх шагах получают ложный приказ «объект не найден».", fx: { k: "blind", r: 4, bots: 24, forget: 1 } },
+  { id: "trojan", n: "Троянский импульс", cat: "hack", t: 2, cost: 14, price: 230, desc: "На несколько секунд сбивает прицел у двух ближайших роботов в прямой видимости. Их защита затем распознаёт повторную команду.", fx: { k: "blind", r: 4, bots: 7 } },
   { id: "spoof", n: "Подмена сигнала", cat: "hack", t: 2, cost: 10, price: 180, desc: "Ваш сигнал — шагах в шести впереди: машины идут туда.", fx: { k: "lure", rng: 6 } },
   { id: "turret", n: "Перехват турели", cat: "hack", t: 3, cost: 18, price: 320, desc: "Ближайшая турель в шести шагах двадцать секунд бьёт по вашим врагам.", fx: { k: "turret", r: 6, ally: 40 } },
   { id: "overload", n: "Замыкание", cat: "hack", t: 3, cost: 16, price: 300, desc: "Перегрузка цепей у роботов в трёх шагах: урон и остановка.", fx: { k: "area", r: 3, dmg: 30, perL: 9, dt: "emp", kind: "mech", freeze: 3 } },
@@ -105,7 +105,7 @@ var NEW = [
   { id: "dash", n: "Рывок", cat: "move", t: 2, cost: 8, price: 160, desc: "Три шага вперёд мгновенно — уйти из-под удара.", fx: { k: "dash", steps: 3 } },
   { id: "mimic", n: "Мимикрия", cat: "move", t: 3, cost: 14, price: 280, desc: "Десять секунд машины принимают вас за своего.", fx: { k: "buff", mimic: 20 } },
   /* энергетика */
-  { id: "siphon", n: "Сифон энергии", cat: "energy", t: 2, cost: 2, price: 170, desc: "Вытягивает заряд из роботов в трёх шагах: им — урон, вам — энергия.", fx: { k: "siphon", r: 3, dmg: 12, perL: 3, en: 6 } },
+  { id: "siphon", n: "Сифон энергии", cat: "energy", t: 2, cost: 2, price: 170, desc: "Отводит часть заряда одной видимой машины. Машина остаётся боеспособной и замечает вмешательство. Контур восстанавливается со временем.", fx: { k: "siphon", r: 3, en: 6 } },
   { id: "magnet", n: "Магнитный захват", cat: "energy", t: 1, cost: 6, price: 110, desc: "Притягивает вещи в шести шагах вокруг — и сразу в рюкзак.", fx: { k: "magnet", r: 6 } }
 ];
 var CHIPS = [
@@ -492,6 +492,20 @@ function foesNear(r, kind, los) {
     return !los || LAB.los(CUR().fl, CUR().fs, g.x, g.y, f.x, f.y);
   });
 }
+function nearbyMachines(r) {
+  var g = G();
+  function dist(f) { return Math.abs(f.x - g.x) + Math.abs(f.y - g.y); }
+  return foesNear(r, "mech", true).sort(function (a, b) { return dist(a) - dist(b); });
+}
+function machineGuard(kind, f, now, duration) {
+  var fs = CUR().fs, guards = fs.implantGuards || (fs.implantGuards = {});
+  var key = kind + ":" + f.id;
+  if (duration) {
+    Object.keys(guards).forEach(function (k) { if (guards[k] <= now) delete guards[k]; });
+    guards[key] = now + duration;
+  }
+  return guards[key] > now;
+}
 function secW(n) { return n + " " + pl(n, "секунду", "секунды", "секунд"); }
 /* параметры применения: сила, радиус, дальность, длительность, вид урона */
 function params(id) {
@@ -626,7 +640,11 @@ function run(id) {
       break;
     }
     case "secret": {
-      var sec = gm().nearSecret ? gm().nearSecret(p.r) : null, its = gm().floorItems().filter(function (it) { return Math.abs(it.x - g.x) + Math.abs(it.y - g.y) <= p.r; });
+      var sec = gm().nearSecret ? gm().nearSecret(p.r) : null;
+      var itemRange = Math.min(p.r, gm().hearingRange());
+      var its = gm().floorItems().filter(function (it) {
+        return Math.abs(it.x - g.x) + Math.abs(it.y - g.y) <= itemRange;
+      });
       t = d.n + ": " + (sec ? "пустота за стеной " + LAB.DIRN[sec.dir] + " — тайник. " : "тайников рядом нет. ") + (its.length ? "Вещи: " + its.slice(0, 5).map(function (it) { return gm().itemName(it) + " " + gm().relDir(it.x, it.y); }).join(", ") + "." : "");
       break;
     }
@@ -636,6 +654,24 @@ function run(id) {
       break;
     }
     case "blind": {
+      if (id === "trojan") {
+        var pulseAt = Date.now();
+        list = nearbyMachines(p.r).filter(function (f) {
+          return !f.boss && !(C.isCam && C.isCam(f)) && !machineGuard(id, f, pulseAt);
+        }).slice(0, has(id, "virus") ? 3 : 2);
+        list.forEach(function (f) {
+          var disorient = Math.min(12, Math.round(fx.bots * p.dur));
+          f.blindT = Math.max(f.blindT || 0, disorient);
+          machineGuard(id, f, pulseAt, 20000);
+          f.aim = false;
+          f.state = "alert";
+          f.lastKnown = { x: g.x, y: g.y };
+          f.lost = 0;
+        });
+        t = list.length ? d.n + ". Сбит прицел у машин: " + list.length + ". Они помнят, где вас заметили." :
+          d.n + ". В зоне действия нет машин, уязвимых для команды.";
+        break;
+      }
       var cams = 0, bots = 0, extra = has(id, "virus") ? 1 : 0;
       C.foes().forEach(function (f) {
         if (f.dead || f.kind !== "mech" || Math.max(Math.abs(f.x - g.x), Math.abs(f.y - g.y)) > p.r + (extra && bots ? 3 : 0)) return;
@@ -691,11 +727,20 @@ function run(id) {
       break;
     }
     case "siphon": {
-      list = foesNear(p.r, "mech", true);
-      list.forEach(function (f) { hit(id, f, p.dmg, p); });
-      var en = Math.round(list.length * (fx.en || 6) * p.k * (has(id, "capacitor") ? 1.5 : 1));
-      g.en = Math.min(g.enMax, g.en + en);
-      t = d.n + ": " + (list.length ? "заряд вытянут из машин: " + list.length + ", энергия плюс " + en + ", теперь " + g.en : "машин рядом нет") + ".";
+      var siphonAt = Date.now();
+      var target = nearbyMachines(p.r).find(function (f) { return !machineGuard(id, f, siphonAt); });
+      if (!target) { t = d.n + ". Нет доступной машины с зарядом."; break; }
+      var en = Math.min(g.enMax - g.en, 12, Math.round(fx.en * p.k * (has(id, "capacitor") ? 1.5 : 1)));
+      if (!(en > 0)) { t = d.n + ". Ваш заряд уже полный."; break; }
+      machineGuard(id, target, siphonAt, 30000);
+      target.lastKnown = { x: g.x, y: g.y };
+      target.lost = 0;
+      if (target.state !== "hunt") target.state = "alert";
+      g.en += en;
+      if (C.unhide) C.unhide("Разряд выдал ваше укрытие.");
+      if (C.noise) C.noise(3);
+      if (LAB.oko) LAB.oko.report("noise", g.x, g.y, "suspect", "несанкционированный отбор энергии");
+      t = d.n + ": энергия плюс " + en + ". Машина обнаружила отбор заряда.";
       break;
     }
     case "magnet": {

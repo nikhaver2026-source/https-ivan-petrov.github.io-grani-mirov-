@@ -86,8 +86,6 @@ function partsCap(p, out) {
   return Math.max(1, Math.min(p, Math.floor(c * buyK() * 0.4)));
 }
 function craftedHeld(key, held) { var n = (G().craftN && G().craftN[key]) || 0; return Math.max(0, Math.min(n, held)); }
-/* продана одна штука: если найденных уже нет — значит, собранная */
-function soldOne(key, held) { var c = G().craftN; if (c && c[key] > 0 && craftedHeld(key, held) >= held) c[key]--; }
 /* (3.7, нелогичность) Начатый многоразовый ремнабор (походный, инженерный) — по остатку ремонтов: так уходит
    последний набор, он и начатый (пока наборов больше, продаётся целый). Прежде начатый уходил как новый:
    два ремонта из трёх — и продать за полную цену. */
@@ -171,24 +169,49 @@ function soldSay(what, p) {
   if (LAB.ach) LAB.ach.ev("sold", p);
   gm().autosaveSoon();
 }
+/* Сначала уходит найденное, затем изготовленное. */
+function batchCrafted(key, held, n) { return Math.max(0, n - held + craftedHeld(key, held)); }
+function removeBatch(inv, id, key, n) {
+  var g = G(), held = inv[id], made = batchCrafted(key, held, n);
+  if (made) g.craftN[key] -= made;
+  inv[id] -= n;
+  if (!inv[id]) delete inv[id];
+}
+function batchValue(key, held, n, price) {
+  var made = batchCrafted(key, held, n);
+  return price(false) * (n - made) + price(true) * made;
+}
+function saleRows(id, name, inv, key, max, value, eligible) {
+  var held = inv[id];
+  function sell(n) {
+    n = Math.min(n, eligible());
+    if (!n) { say("Этого больше нет в рюкзаке."); return; }
+    var sum = value(n);
+    removeBatch(inv, id, key, n);
+    G().credits += sum;
+    soldSay(name.toLowerCase() + ", " + n + " шт.", sum);
+    if (LAB.load) LAB.load.after();
+  }
+  var label = name + ", у вас " + held + " шт.";
+  var rows = [{ label: "Продать: " + label + " — " + cr(value(1)), keep: true, fn: function () { sell(1); } }];
+  if (max > 1 && LAB.load) rows.push(LAB.load.quantityChoice("Продать партию. " + label, max, function (n) { return n + " шт. за " + cr(value(n)); }, sell));
+  return rows;
+}
 function sellItems(ctx, cat, back) {
   var build = function () {
     var g = G(), items = [];
     Object.keys(g.inv).forEach(function (id) {
       if (!(g.inv[id] > 0) || !sellable(id) || catOf(id) !== cat) return;
-      var p = itemSellPrice(id, ctx), d = LAB.ITEMS[id];
-      items.push({ label: "Продать: " + d.n + " (у вас " + g.inv[id] + ") — " + cr(p), fn: function () {
-        if (!(G().inv[id] > 0)) { say("Больше нет."); return; }
-        var p1 = itemSellPrice(id, ctx); soldOne(id, G().inv[id]);
-        G().inv[id]--; G().credits += p1; soldSay(d.n.charAt(0).toLowerCase() + d.n.slice(1), p1);
-      } });
-      /* (3.7, нелогичность) среди всех — и начатый ремнабор: за него — по остатку ремонтов (kitLeftK) */
-      var allP = function (n) { var c = craftedHeld(id, n), one = itemSellPrice(id, ctx, false); return (n - c) * one + c * itemSellPrice(id, ctx, true) - Math.round(one * (1 - kitLeftK(id))); };
-      if (g.inv[id] > 1) items.push({ label: "Продать все: " + d.n + " (" + g.inv[id] + ") — " + cr(allP(g.inv[id])), fn: function () {
-        var n = G().inv[id] || 0; if (!n) { say("Больше нет."); return; }
-        var sum = allP(n), cn = G().craftN; if (cn && cn[id]) cn[id] = Math.max(0, cn[id] - craftedHeld(id, n));
-        G().inv[id] = 0; G().credits += sum; soldSay(d.n.charAt(0).toLowerCase() + d.n.slice(1) + ", " + n + " шт.", sum);
-      } });
+      function held() { return G().inv[id] || 0; }
+      function value(n) {
+        var total = batchValue(id, held(), n, function (made) { return itemSellPrice(id, ctx, made); });
+        if (n === held() && n > 1) {
+          var last = itemSellPrice(id, ctx, craftedHeld(id, held()) > 0);
+          total -= Math.min(last - 1, Math.round(last * (1 - kitLeftK(id))));
+        }
+        return total;
+      }
+      items = items.concat(saleRows(id, LAB.ITEMS[id].n, g.inv, id, held(), value, held));
     });
     if (!items.length) items.push(infoLine("Здесь больше нечего продать"));
     items.push({ label: "Назад", fn: function () { sellMenu(ctx, back); } });
@@ -201,18 +224,53 @@ function sellAmmo(ctx, back) {
     var g = G(), items = [];
     Object.keys(g.ammo).forEach(function (k) {
       if (!(g.ammo[k] > 0) || !LAB.AMMO[k]) return;
-      var p = ammoSellPrice(k, ctx), nm = LAB.AMMO[k].n;
-      items.push({ label: "Продать: " + nm + " (у вас " + g.ammo[k] + ") — " + cr(p), fn: function () {
-        if (!(G().ammo[k] > 0)) { say("Больше нет."); return; }
-        var p1 = ammoSellPrice(k, ctx); soldOne("ammo:" + k, G().ammo[k]);
-        G().ammo[k]--; G().credits += p1; soldSay(nm.charAt(0).toLowerCase() + nm.slice(1), p1);
-      } });
+      var key = "ammo:" + k;
+      function held() { return G().ammo[k] || 0; }
+      function value(n) {
+        return batchValue(key, held(), n, function (made) { return ammoSellPrice(k, ctx, made); });
+      }
+      items = items.concat(saleRows(k, LAB.AMMO[k].n, g.ammo, key, held(), value, held));
     });
     if (!items.length) items.push(infoLine("Батарей больше нет"));
     items.push({ label: "Назад", fn: function () { sellMenu(ctx, back); } });
     return items;
   };
   UIx("menu", "Продать: батареи и боеприпасы", build(), { keep: true, rebuild: build });
+}
+function recyclable(id) {
+  return !gm().dropWhy(id) && gm().dropMax(id) > 0
+    && (/^dr_mod_/.test(id) || (sellable(id) && /^(part|wmodule|tool|gadget|protect)$/.test(catOf(id))));
+}
+function recycleValue(id, n) {
+  if (/^dr_mod_/.test(id)) return n * 2;
+  return batchValue(id, G().inv[id], n, function (made) {
+    return Math.max(1, Math.floor(itemSellPrice(id, null, made) * 0.4));
+  });
+}
+function recycleMenu() {
+  var build = function () {
+    var items = [creditsLine(), infoLine("Принимаются детали, снятые модули, инструменты и устройства. Выплата за материалы указывается до подтверждения")];
+    Object.keys(G().inv).filter(recyclable).forEach(function (id) {
+      function fmt(n) { return n + " шт., выплата " + cr(recycleValue(id, n)); }
+      var d = LAB.ITEMS[id], have = gm().dropMax(id);
+      var label = "Утилизировать " + d.n.toLowerCase() + ". В рюкзаке " + have + " шт.";
+      if (have === 1) label += " " + fmt(1) + ".";
+      items.push(LAB.load.quantityChoice(label, have, fmt, function (n) {
+        if (!recyclable(id)) { say("В рюкзаке нет пригодных деталей."); return; }
+        n = Math.min(n, gm().dropMax(id));
+        var g = G(), credits = recycleValue(id, n);
+        removeBatch(g.inv, id, id, n);
+        g.credits += credits;
+        gm().autosaveSoon();
+        LAB.load.after();
+        A("play", "work_ratchet");
+        say("Утилизировано: " + d.n.toLowerCase() + ", " + n + " шт. Получено " + cr(credits) + ". Баланс " + cr(g.credits) + ".");
+      }));
+    });
+    if (items.length === 2) items.push(infoLine("Подходящих деталей в рюкзаке нет"));
+    return items.concat({ label: "Назад", close: true });
+  };
+  UIx("menu", "Центр утилизации", build(), { keep: true, rebuild: build });
 }
 function sellWeapons(ctx, back) {
   var build = function () {
@@ -404,8 +462,12 @@ function postMenu(o) {
     var way = (g.orders || []).filter(function (q) { return q.st === "way"; });
     if (way.length) items.push({ label: "Заказы в пути: " + way.length, keep: true, fn: function () { say(way.map(function (q) { var m = Math.max(0, q.due - now()); return q.name + " — примерно через " + m + " " + pl(m, "минуту", "минуты", "минут"); }).join(". ") + "."); } });
     items.push({ label: "Продать: сдать в возвратную капсулу", fn: function () { sellMenu({ who: "supply", prof: prof, name: "Скупка пункта снабжения" }, function () { postMenu(o); }); } });
+    if (LAB.load) items.push({ label: "Центр утилизации. Сдать запчасти за кредиты", fn: recycleMenu });
     /* (после 4.6) личное хранилище: здесь покупают ячейки и их вместимость (load.js) */
     if (LAB.load) items.push(LAB.load.benchItems("post")[0]);
+    if (LAB.quests) items.push({ label: "Операции комплекса", fn: function () { LAB.quests.operationBoard(o); } });
+    var rift = LAB.rift && LAB.rift.boardRow(o);
+    if (rift) items.push(rift);
     items.push({ label: "Как сюда приходят товары", keep: true, fn: function () { var e = era(); say(e.n + ". Профиль этажа — " + P.n + ": " + P.desc + ". " + e.how); } });
     items.push({ label: "Отойти", fn: function () {} });
     return items;

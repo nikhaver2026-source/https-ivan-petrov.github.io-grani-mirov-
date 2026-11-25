@@ -1216,6 +1216,14 @@ function questsItems() {
     var Q = LAB.quests;
     items.push({ label: Q ? Q.line(q) : q.short + " — " + gm().questProgress(q) + ". " + gm().rewardText(q), keep: true, fn: function () { say(Q ? Q.details(q) : q.text || q.short); } });
   });
+  var field = LAB.quests && LAB.quests.fieldQuestItem();
+  if (field) items.push(field);
+  var op = LAB.quests && LAB.quests.operationQuestItem();
+  if (op) items.push(op);
+  var rift = LAB.rift && LAB.rift.journalItem();
+  if (rift) items.push(rift);
+  var haunt = LAB.haunt && LAB.haunt.journalItem();
+  if (haunt) items.push(haunt);
   if (act.length) items.push({ label: "Отказаться от поручения", fn: function () { abandonMenu(); } });
   items.push(back());
   return items;
@@ -1242,6 +1250,8 @@ function journalMenu() { menu("Журнал", journalItems(), { rebuild: journal
 function journalItems() {
   var g = G();
   var items = g.journal.slice(0, 40).map(function (t) { return { label: t, keep: true, fn: function () { say(t); } }; });
+  var haunt = LAB.haunt && LAB.haunt.journalItem();
+  if (haunt) items.unshift(haunt);
   if (!items.length) items.push({ label: "Журнал пуст.", info: true, keep: true, fn: function () {} });
   items.push(back());
   return items;

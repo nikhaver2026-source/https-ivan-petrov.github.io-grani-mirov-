@@ -204,7 +204,8 @@ function costK(d) { return d && MS() && MS().flawOf(d) ? 1.3 : 1; }
 function commandSaving() { var m = G().mind || 10; return m >= 18 ? 2 : m >= 13 ? 1 : 0; }
 function energyCost(n, command) {
   var md = MODS[command], kind = md && (md.mount || command === "zapper" ? "fire" : md.group === "sensors" ? "scan" : md.group === "service" ? "service" : "");
-  var general = n >= 6 ? commandSaving() + adjust("commandSave", ["battery", "reserve", "nerve", "charger", "induction", "regen", "link_amp"]) : 0;
+  var rift = LAB.rift ? LAB.rift.tune(D(), "drone", 1) : 0;
+  var general = n >= 6 ? commandSaving() + adjust("commandSave", ["battery", "reserve", "nerve", "charger", "induction", "regen", "link_amp"]) + Math.floor(rift / 3) : 0;
   return Math.max(1, Math.ceil(n * costK(D()) * policy().energy - 1e-8) - Math.floor(general + (kind ? adjust(kind + "Save", command) : 0)));
 }
 function recorded(event, id, key, place) { if (LAB.droneAudio) LAB.droneAudio.play(event, id, key, place); }
@@ -498,6 +499,8 @@ function scrapDrone() {
   var s = [];
   for (var k in NEED) { var n = k === "kv_ctrl" ? 1 : Math.floor(NEED[k] / 2); if (n > 0) { g.inv[k] = (g.inv[k] || 0) + n; s.push((LAB.ITEMS[k] ? LAB.ITEMS[k].n.toLowerCase() : k) + " " + n); } }
   d.mods.forEach(function (mod) { if (MODS[mod]) { giveMod(mod, modRank(d, mod)); s.push(mark(mod, modRank(d, mod))); } });
+  var recovered = LAB.rift && LAB.rift.recover(d, "drone");
+  if (recovered) s.push(recovered);
   g.drone = null;
   save();
   snd("work_ratchet", "pry");
@@ -508,7 +511,7 @@ function scrapDrone() {
 
 /* ════════ В ДЕЛЕ ════════ */
 function packedWeight(d) {
-  return d.mods.reduce(function (sum, k) { return sum + (MODS[k] ? modWeight(k, modRank(d, k)) : 0); }, 3.5 + chassis(d).wt);
+  return d.mods.reduce(function (sum, k) { return sum + (MODS[k] ? modWeight(k, modRank(d, k)) : 0); }, 3.5 + chassis(d).wt + (LAB.rift ? LAB.rift.unitMass(d) : 0));
 }
 function carriedWeight() { var d = D(); return d && !active() ? packedWeight(d) : 0; }
 function cargoKg(n) {
@@ -526,7 +529,8 @@ function cargoState() {
   if (lift) {
     profile = cargoProfile(d, k);
     rated = Math.floor(effect(k, d) * profile.rated * (1 + adjust("payload", k)) + extra + 1e-6);
-    rated = Math.min(ceiling, rated);
+    var thrust = LAB.rift ? LAB.rift.tune(d, "drone", 0) : 0;
+    rated = Math.min(ceiling, Math.floor(rated * (1 + 0.015 * thrust) + 1e-6));
     reserve = Math.min(rated, Math.floor(lift.reserve[modRank(d, k) - 1] * profile.reserve * (1 + adjust("payloadReserve", k)) + 1e-6));
     if (reserve < rated) draw = Math.max(1, lift.draw + profile.draw - Math.floor(adjust("payloadSave", k)));
   } else {
@@ -610,7 +614,8 @@ function motionNoise() {
   var s = cargoState();
   if (!liftInUse(s, l)) return 0;
   var heavier = l.total() - l.personalCapacity() * 0.5 - s.reserve;
-  return Math.max(0, Math.min(4, 1 + Math.floor(heavier / 1000)) + s.profile.noise - Math.floor(adjust("noise", s.model)));
+  var damper = LAB.rift ? LAB.rift.tune(D(), "drone", 2) / 5 : 0;
+  return Math.max(0, Math.min(4, 1 + Math.floor(heavier / 1000)) + s.profile.noise - Math.floor(adjust("noise", s.model)) - damper);
 }
 function onStep() {
   var l = LAB.load;
@@ -667,13 +672,15 @@ function scanSupplies() {
   d.cd.scan = delay("scanner", 45, "scan");
   var distance = function (o) { return Math.max(Math.abs(o.x - g.x), Math.abs(o.y - g.y)); };
   var radius = effect("scanner", d) + Math.floor(adjust("scanRange", "scanner"));
-  var visible = function (o) { return distance(o) <= radius && LAB.los(cur.fl, cur.fs, g.x, g.y, o.x, o.y); };
+  var visible = function (o) {
+    return distance(o) <= radius && gm().canHear(o.x, o.y) && LAB.los(cur.fl, cur.fs, g.x, g.y, o.x, o.y);
+  };
   var list = gm().floorItems().filter(visible).map(function (it) { return { o: it, n: gm().itemName(it) }; });
   cur.fl.objs.filter(function (o) { return ["workbench", "supply", "capsule"].indexOf(o.type) >= 0 && visible(o); })
     .forEach(function (o) { list.push({ o: o, n: gm().objName(o) }); });
   list.sort(function (a, b) { return distance(a.o) - distance(b.o); });
   snd("drone_ping", "scan_soft");
-  say(list.length ? "Поисковый блок. Ближайшие цели: " + list.slice(0, scanCount("scanner")).map(function (x) { return x.n + ", " + gm().relDir(x.o.x, x.o.y); }).join(". ") + "." : "Поисковый блок. В радиусе " + radius + " шагов по открытым линиям подходящих целей нет.");
+  say(list.length ? "Поисковый блок. Ближайшие цели: " + list.slice(0, scanCount("scanner")).map(function (x) { return x.n + ", " + gm().relDir(x.o.x, x.o.y); }).join(". ") + "." : "Поисковый блок. В радиусе " + Math.min(radius, gm().hearingRange()) + " шагов по открытым линиям подходящих целей нет.");
   save();
   return true;
 }
@@ -1181,12 +1188,13 @@ function stockCount() { var inv = G().inv; return stockIds().reduce(function (su
 function quickItems() {
   var items = D() ? cmdItems() : [];
   var f = LAB.exo && LAB.exo.worn();
+  if (f) items.push(LAB.exo.chargeItem(f));
   if (f && f.sh === "horn") items.push({ label: "СВЧ-залп раструбом каркаса", fn: function () { LAB.exo.horn(); } });
   return items.concat(back());
 }
 function quick() {
   var items = quickItems();
-  if (items.length === 1) { say("Команды появятся, когда вы соберёте дрона или поставите раструб на каркас. Откройте «Инженерное дело» у верстака."); return; }
+  if (items.length === 1) { say("Команды появятся, когда вы соберёте дрона или наденете каркас. Откройте «Инженерное дело» у верстака."); return; }
   menu("Команды: дрон и каркас", items, { rebuild: quickItems });
 }
 

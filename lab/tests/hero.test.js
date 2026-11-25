@@ -103,7 +103,10 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     g.saveSlot(3);
     { const raw = JSON.parse(localStorage.getItem("lab_slot3")); delete raw.g.con; delete raw.g.chs; raw.g.lvl = 9; localStorage.setItem("lab_slot3", JSON.stringify(raw)); }
     g.loadSlot(3); LAB.combat.stop(); LAB.ui.closeAll();
-    out.migrate = g.G.con === 18 && ST.S().pts === 0;
+    out.migrate = g.G.con === 18 && ST.S().pts === 1;
+    g.saveSlot(3);
+    g.loadSlot(3); LAB.combat.stop(); LAB.ui.closeAll();
+    out.migrate = out.migrate && ST.S().pts === 1;
     if (!out.migrate) out.migrateDiag = "con " + g.G.con + ", очков " + ST.S().pts;
     return out;
   });
@@ -117,7 +120,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(r1.frameNeedsCon && r1.frameOk, "тяжёлому каркасу нужны сила 14 и телосложение 13");
   ok(r1.flawAgi && r1.cha25, "пороги: ловкость 15 — меньше брака, харизма 25 — уступки торговцев");
   ok(r1.stamPx && r1.regenPx, "вторичные растут практикой: шаги — выносливость, лечение — регенерация");
-  ok(r1.migrate, "запись прежней версии: телосложение по уровню, очков нет" + (r1.migrateDiag ? " (" + r1.migrateDiag + ")" : ""));
+  ok(r1.migrate, "запись прежней версии: телосложение по уровню, очко за пятую веху возвращается один раз" + (r1.migrateDiag ? " (" + r1.migrateDiag + ")" : ""));
 
   console.log("Минуты игры: на экране и в действии — в счёт; простой, фон и пауза — нет");
   const r1b = await page.evaluate(async () => {

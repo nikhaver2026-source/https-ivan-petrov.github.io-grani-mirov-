@@ -561,7 +561,7 @@ function blaster(w) { return wcls(w) === "blaster" || w.base === "ion"; }
 function battery(w) { return w.ammo && w.ammo !== "none"; }
 /* (3.5) греются только стволы на заряде: картечь, иглы и стальные пули — нет */
 function heats(w) { return battery(w) && !LAB.physAmmo(w.ammo) && !melee(w); }
-function hmax(w) { return 12 + 6 * md(w, "cool") + (w.tempered ? 4 : 0); } /* (после 4.1) закалённый звуком ствол держит дольше */
+function hmax(w) { return (12 + 6 * md(w, "cool") + (w.tempered ? 4 : 0)) * (1 + (LAB.rift ? LAB.rift.tune(w, "gun", 1) * 0.025 : 0)); } /* (после 4.1) закалённый звуком ствол держит дольше */
 function cooled(w, now) {
   if (!w.heat) return 0;
   var dt = Math.max(0, now - (w.heatT || now));
@@ -617,7 +617,7 @@ function afterShot(w, burst, now) {
   });
 }
 function accBonus(w, burst) { return 0.07 * md(w, "acc") + (md(w, "stab") ? 0.03 + (burst ? 0.1 : 0) : 0) + (md(w, "recoil") && burst ? 0.1 : 0) + (LAB.implants ? LAB.implants.stat("acc") : 0) +
-  (LAB.mastery ? LAB.mastery.accK(w) : 0) + (LAB.forge ? LAB.forge.accK(w) : 0) + (LAB.exo ? LAB.exo.accK(w) : 0); } /* (после 4.6) брак прицела, свой прицел и ядро, отдачу гасит каркас */
+  (LAB.mastery ? LAB.mastery.accK(w) : 0) + (LAB.forge ? LAB.forge.accK(w) : 0) + (LAB.exo ? LAB.exo.accK(w) : 0) + (LAB.rift ? LAB.rift.tune(w, "gun", 0) * 0.006 : 0); } /* (после 4.6) брак прицела, свой прицел и ядро, отдачу гасит каркас */
 function condK(w) { var c = cond(w); return c >= 50 ? 1 : 0.75 + 0.5 * c / 100; }
 /* (2.0) чипы и импланты (implants.js): ярость, добивание, разгон, бронебойность, быстрая рука */
 function dmgK(w, f) { return condK(w) * (f && f.kind === "mech" && md(w, "emp") ? 1 + 0.25 * md(w, "emp") : 1) * (LAB.implants ? LAB.implants.dmgK(f) : 1) * deepK(w, f) *
@@ -665,7 +665,8 @@ function loud(w, l) {
   if (wcls(w) === "kinetic") l = 7;
   if (LAB.forge) l = LAB.forge.loud(w, l); /* (после 4.6) зарядка конденсаторов слышна, клинок гудит */
   var q = md(w, "quiet");
-  return q ? Math.max(1, Math.round(l * (1 - 0.35 * q))) : l;
+  var quiet = LAB.rift ? LAB.rift.tune(w, "gun", 2) : 0;
+  return q || quiet ? Math.max(1, Math.round(l * (1 - 0.35 * q) * (1 - 0.03 * quiet))) : l;
 }
 
 /* Слоты и установка */
@@ -1437,6 +1438,8 @@ function rootItems(b) {
   /* (после 4.6) мастерство: режим работы, ступени, испытание и изучение; инженерное дело — своё оружие, ядра, каркас, дрон */
   if (LAB.mastery) items = items.concat(LAB.mastery.benchItems(b, et));
   if (LAB.forge) items = items.concat(LAB.forge.benchItems(b, et));
+  var rift = LAB.rift && LAB.rift.benchRow();
+  if (rift) items.push(rift);
   if (LAB.load) items = items.concat(LAB.load.benchItems("bench")); /* личное хранилище */
   if (spareMods().length) items.push({ label: "Установить модуль в оружие: в запасе " + spareMods().reduce(function (a, k) { return a + g.inv[MODS[k].item]; }, 0), fn: pickModule });
   if (g.weapons.some(function (w) { return used(w) > 0; })) items.push({ label: "Снять модуль с оружия", fn: unModMenu });

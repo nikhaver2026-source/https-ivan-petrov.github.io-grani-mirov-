@@ -51,9 +51,9 @@ var AMMO_WT = { energy: 0.2, magnetron: 0.35, positron: 0.4 };
 var WCLS_WT = { melee: 2, blaster: 1.4, laser: 2.5, ion: 3, plasma: 4, magnetron: 5, positron: 4.5, gauss: 6, cryo: 3.5, thermo: 4, sonic: 3, bio: 2.5, nano: 2, phase: 3, grav: 5.5, kinetic: 3.5 };
 var WBASE_WT = { crowbar: 2.5, spark: 1.2 };
 var OWN_WT = { rail: 9, pike: 4.5, mw: 6, blade: 1.5, plasma: 7 };
-var FRAME_WT = { light: 12, mid: 24, heavy: 40 };
-var FRAME_CAP = { light: 10, mid: 25, heavy: 45 };   /* приводы держат груз, пока каркас заряжен */
-var FRAME_HAND = { light: 2, mid: 4, heavy: 7 };     /* и добавляют силы рукам с тяжёлым оружием */
+var FRAME_WT = { light: 12, mid: 24, heavy: 40, sealed: 27, haul: 47, walk: 16 };
+var FRAME_CAP = { light: 10, mid: 25, heavy: 45, sealed: 21, haul: 70, walk: 15 };   /* приводы держат груз, пока каркас заряжен */
+var FRAME_HAND = { light: 2, mid: 4, heavy: 7, sealed: 4, haul: 6, walk: 3 };     /* и добавляют силы рукам с тяжёлым оружием */
 var RIGS = [
   { n: "Разгрузочный пояс", kg: 5, tier: 1, con: 10, need: { scrap: 2, rubber: 2, wire: 1 } },
   { n: "Грузовая рама", kg: 10, tier: 2, con: 12, need: { scrap: 4, panel: 1, rubber: 2 } },
@@ -75,17 +75,18 @@ function itemWt(id) {
 }
 function weaponWt(w) {
   if (!w) return 0;
-  if (w.own && OWN_WT[w.own.fam] != null) return OWN_WT[w.own.fam];
-  if (WBASE_WT[w.base] != null) return WBASE_WT[w.base];
+  var extra = LAB.rift ? LAB.rift.unitMass(w) : 0;
+  if (w.own && OWN_WT[w.own.fam] != null) return OWN_WT[w.own.fam] + extra;
+  if (WBASE_WT[w.base] != null) return WBASE_WT[w.base] + extra;
   var b = LAB.WEAPONS && LAB.WEAPONS[w.base], c = (b && b.cls) || w.cls;
-  return WCLS_WT[c] != null ? WCLS_WT[c] : 3;
+  return (WCLS_WT[c] != null ? WCLS_WT[c] : 3) + extra;
 }
 function armorWt(a) {
   if (!a) return 0;
   var b = LAB.ARMORS && LAB.ARMORS[a.base], def = b && b.def != null ? b.def : 4;
   return Math.round((2 + def * 1.2 + 1.5 * (a.up || 0)) * 10) / 10;   /* пластины — по полтора кило */
 }
-function frameWt(f) { return f ? (FRAME_WT[f.cls] || 20) + 2 * ((f.plates && f.plates.length) || 0) : 0; }
+function frameWt(f) { return f ? (FRAME_WT[f.cls] || 20) + 2 * ((f.plates && f.plates.length) || 0) + (LAB.rift ? LAB.rift.unitMass(f) : 0) : 0; }
 function wornFrame() { return LAB.exo && LAB.exo.worn ? LAB.exo.worn() : null; }
 function frameLive(f) { return !!f && (f.en || 0) > 0; }
 /* Вес вещи с пола (для отказа поднять): записки, ключи, кредиты, пропуска — ничего не весят. */
@@ -115,6 +116,10 @@ function parts() {
   (g.frames || []).forEach(function (f) { if (f === on) { if (!frameLive(f)) p.frames += frameWt(f) * 0.5; } else p.frames += frameWt(f); });
   if (LAB.drone) p.drone = LAB.drone.carriedWeight();
   p.samples = Object.keys(g.samples || {}).length * 0.1;
+  var cargo = LAB.quests && LAB.quests.operationWeight();
+  if (cargo) p.cargo = cargo;
+  var anomaly = LAB.rift && LAB.rift.cargo();
+  if (anomaly) p.anomaly = anomaly;
   return p;
 }
 function total(extra) {
@@ -250,6 +255,8 @@ function heaviest() {
   for (k in (g.ammo || {})) if (g.ammo[k] > 0 && LAB.AMMO[k]) list.push({ n: LAB.AMMO[k].n + ", " + g.ammo[k] + " шт.", w: (AMMO_WT[k] || 0.4) * g.ammo[k] });
   var pd = parts(); if (pd.drone) list.push({ n: g.drone && g.drone.wreck ? "сбитый дрон" : "свёрнутый дрон", w: pd.drone });
   if (pd.samples) list.push({ n: "образцы", w: pd.samples });
+  if (pd.cargo) list.push({ n: "опломбированный груз по наряду", w: pd.cargo });
+  if (pd.anomaly) list.push({ n: "контейнер аномальной пробы", w: pd.anomaly });
   list.sort(function (a, b) { return b.w - a.w; });
   return list.filter(function (x) { return x.w >= 0.5; }).slice(0, 5);
 }
@@ -486,25 +493,28 @@ function takeParts() {
   if (!n) { say(left ? "Детали не унести: груз и так тяжёлый." : "Деталей в хранилище нет."); return; }
   moved("Из хранилища взяты детали: " + n + " шт., " + kg(w) + "." + (left ? " В хранилище осталось ещё " + left + " шт." : "") + " " + line());
 }
-function quantityItem(label, max, w1, fn) {
+function quantityChoice(label, max, fmt, fn, bulkAt) {
   if (max === 1) return { label: label, keep: true, fn: function () { fn(1); } };
   var v = max;
   function slider(name, step, keep) {
     return { kind: "slider", label: name, keep: keep, min: 1, max: max, step: step,
       get: function () { return v; }, set: function (x) { v = Math.max(1, Math.min(max, Math.round(x))); },
-      fmt: function (x) { return x + " шт., " + kg(w1 * x); }, fn: function () { fn(v); } };
+      fmt: fmt, fn: function () { fn(v); } };
   }
-  if (max <= CELL_BASE) return slider(label, 1, true);
+  if (max < (bulkAt || 20)) return slider(label, 1, true);
   return { label: label + ". До " + max + " шт.", fn: function () {
     v = max;
-    var step = max >= 5000 ? 500 : 100;
-    UIx("menu", "Количество. " + label, [
-      slider("Точное количество", 1, false),
-      slider("Крупная партия. Шаг " + step + " шт.", step, false),
-      { label: "Назад", close: true }
-    ], { intro: LAB.K("Свайп вверх или вниз меняет количество, двойное касание подтверждает.",
+    var step = max >= 5000 ? 500 : max >= 300 ? 100 : 10;
+    var rows = [slider("Точное количество", 1, false), slider("Крупная партия. Шаг " + step + " шт.", step, false)];
+    if (step > 10) rows.push(slider("Средняя партия. Шаг 10 шт.", 10, false));
+    rows.push({ label: "Всё допустимое. " + fmt(max), fn: function () { fn(max); } });
+    rows.push({ label: "Назад", close: true });
+    UIx("menu", "Количество. " + label, rows, { intro: LAB.K("Свайп вверх или вниз меняет количество, двойное касание подтверждает.",
       "Стрелки вправо и влево меняют количество, Enter подтверждает.") });
   } };
+}
+function quantityItem(label, max, w1, fn, take) {
+  return quantityChoice(label, max, function (n) { return n + " шт., " + kg(w1 * n); }, fn, take ? 20 : CELL_BASE + 1);
 }
 function unavailable(label, why) { return { label: label + " — недоступно", disabled: true, why: why }; }
 var STORAGE_GEAR = {
@@ -512,30 +522,76 @@ var STORAGE_GEAR = {
   armors: { name: function (a) { return a.name; }, wt: armorWt, kind: "armor" },
   frames: { name: function (f) { return LAB.exo && LAB.exo.frameName ? LAB.exo.frameName(f) : "Экзокаркас"; }, wt: frameWt, kind: "frame" }
 };
+function storeGear(type, o, chosen, quiet) {
+  var g = G(), def = STORAGE_GEAR[type], list = g[type], i = list.indexOf(o), current = g.weapons[g.wi];
+  if (i < 0 || !lockOk(def.kind, o)) {
+    if (!quiet) { LAB.UI.error(); say("Снаряжение уже перемещено или надето."); }
+    return 0;
+  }
+  var fit = fitInfo(type, null, chosen);
+  if (!fit.fit) {
+    if (!quiet) { LAB.UI.error(); say("Не влезет: " + fit.why + "." + upHint()); }
+    return 0;
+  }
+  assignCell(type, fit.index);
+  list.splice(i, 1);
+  if (type === "weapons") g.wi = Math.max(0, g.weapons.indexOf(current));
+  Lk()[type].push(o);
+  return 1;
+}
 function putGear(type, o, view, chosen) {
   var def = STORAGE_GEAR[type];
   if (!lockOk(def.kind, o)) return null;
   var fit = fitInfo(type, view, chosen), name = def.name(o), label = CELL_NAMES[type] + ". " + name + ", " + kg(def.wt(o));
   if (!fit.fit) return unavailable(label, "Не влезет: " + fit.why + "." + upHint());
   return { label: label, keep: true, fn: function () {
-    var g = G(), list = g[type], i = list.indexOf(o), current = g.weapons[g.wi], next = fitInfo(type, null, chosen);
-    if (i < 0 || !lockOk(def.kind, o)) { LAB.UI.error(); say("Снаряжение уже перемещено или надето."); return; }
-    if (!next.fit) { LAB.UI.error(); say("Не влезет: " + next.why + "." + upHint()); return; }
-    assignCell(type, next.index);
-    list.splice(i, 1);
-    if (type === "weapons") g.wi = Math.max(0, g.weapons.indexOf(current));
-    Lk()[type].push(o);
-    moved("В хранилище: " + name + ". " + line(), true);
+    if (storeGear(type, o, chosen)) moved("В хранилище: " + name + ". " + line(), true);
   } };
 }
 function ammoName(k) { return LAB.AMMO[k] ? LAB.AMMO[k].n : k; }
-function putAmmo(k, n, chosen) {
+function putAmmo(k, n, chosen, quiet) {
   var g = G(), l = Lk(), fit = fitInfo("ammo", null, chosen);
   n = Math.min(n, g.ammo[k] || 0, fit.fit);
-  if (n <= 0) { LAB.UI.error(); say(fit.fit ? "Боеприпасов в рюкзаке уже нет." : "Не влезет: " + fit.why + "." + upHint()); return; }
+  if (n <= 0) {
+    if (!quiet) { LAB.UI.error(); say(fit.fit ? "Боеприпасов в рюкзаке уже нет." : "Не влезет: " + fit.why + "." + upHint()); }
+    return 0;
+  }
   assignCell("ammo", fit.index);
   g.ammo[k] -= n; l.ammo[k] = (l.ammo[k] || 0) + n;
-  moved("В хранилище: " + ammoName(k).toLowerCase() + ", " + n + " шт. " + line(), true);
+  if (!quiet) moved("В хранилище: " + ammoName(k).toLowerCase() + ", " + n + " шт. " + line(), true);
+  return n;
+}
+function depositAll(type, chosen) {
+  var g = G(), movedN = 0, left = 0, weight = 0;
+  function count(have, n, unitWeight) { movedN += n; left += have - n; weight += n * unitWeight; }
+  Object.keys(g.inv).filter(function (id) {
+    return LAB.ITEMS[id] && g.inv[id] > 0 && (!type || itemType(id) === type) && !gm().dropWhy(id);
+  }).sort(function (a, b) {
+    return g.inv[b] * itemWt(b) - g.inv[a] * itemWt(a);
+  }).forEach(function (id) {
+    var have = gm().dropMax(id);
+    count(have, putItem(id, have, true, chosen), itemWt(id));
+  });
+  if (!type || type === "ammo") Object.keys(g.ammo).forEach(function (k) {
+    var have = g.ammo[k];
+    if (have > 0 && LAB.AMMO[k]) count(have, putAmmo(k, have, chosen, true), AMMO_WT[k] || 0.4);
+  });
+  Object.keys(STORAGE_GEAR).forEach(function (kind) {
+    if (type && type !== kind) return;
+    var def = STORAGE_GEAR[kind];
+    (g[kind] || []).slice().forEach(function (o) {
+      if (lockOk(def.kind, o)) count(1, storeGear(kind, o, chosen, true), def.wt(o));
+    });
+  });
+  if (!movedN) { say(left ? "Для этих вещей нет свободных мест." + upHint() : "Подходящих вещей в рюкзаке нет."); return; }
+  moved("В хранилище перемещено: " + movedN + " шт., " + kg(weight) + "." +
+    (left ? " Не поместилось: " + left + " шт." + upHint() : "") + " " + line(), true);
+}
+function depositMenu(type, chosen) {
+  UIx("menu", type ? "Сложить всё в ячейку. " + CELL_NAMES[type] : "Сложить всё, что поместится", [
+    { label: "Подтвердить. Экипировка на герое, оружие в руках и защищённые вещи останутся при вас.", fn: function () { depositAll(type, chosen); } },
+    { label: "Назад", close: true }
+  ]);
 }
 function putItems(chosen) {
   var g = G(), view = storageView(), items = [];
@@ -579,7 +635,7 @@ function takeStack(label, have, w1, fn) {
   var max = carryFit(have, w1);
   label += ", в ячейке " + have + " шт.";
   if (!max) return unavailable(label, "Груз слишком тяжёлый. " + line());
-  return quantityItem(label + (max < have ? " Можно унести " + max + " шт." : ""), max, w1, fn);
+  return quantityItem(label + (max < have ? " Можно унести " + max + " шт." : ""), max, w1, fn, true);
 }
 function takeGear(type, o) {
   var l = Lk(), g = G(), def = STORAGE_GEAR[type], i = l[type].indexOf(o);
@@ -782,6 +838,7 @@ function cellMenu(index, where) {
     var view = storageView(), c = Lk().cells[index], type = c && c.type;
     var out = [{ label: cellLabel(index, view), info: true, fn: function () {} }];
     if (index < view.slots) out.push({ label: type ? "Положить ещё" : "Назначить ячейку и положить предметы", fn: function () { putMenu(index); } });
+    if (type && index < view.slots) out.push({ label: "Сложить всё подходящее в эту ячейку", fn: function () { depositMenu(type, index); } });
     if (type) out = out.concat(contentsItems(type));
     if (where === "post" && index < permanentSlots()) {
       var sizes = cellPacks(index);
@@ -816,7 +873,8 @@ function lockerItems(where) {
     { label: "Забрать из хранилища", fn: function () { cellsMenu(where, true); } },
     { label: "Ячейки хранилища" + (where === "post" ? ". Просмотр и улучшение вместимости" : ""), fn: function () { cellsMenu(where, false); } },
     { label: "Сдать все детали, сколько влезет", keep: true, fn: putParts },
-    { label: "Забрать все детали, сколько унесёте", keep: true, fn: takeParts }
+    { label: "Забрать все детали, сколько унесёте", keep: true, fn: takeParts },
+    { label: "Сложить всё, что поместится", fn: function () { depositMenu(); } }
   ];
   if ((G().inv.lockcard || 0) > 0) its.push({ label: "Добавить " + CARD_SLOTS + " ячейки по ключ-карте. Карт у вас " + G().inv.lockcard + ".", keep: true, fn: useCard });
   if (where === "post") {
@@ -847,7 +905,7 @@ function lockerMenu(where) {
   snd("locker_open", "ui_open");
   var paidNow = collect();
   UIx("menu", "Личное хранилище", lockerItems(where), { rebuild: function () { return lockerItems(where); }, onClose: function () { snd("locker_close", "ui_close"); },
-    intro: "Вещи доступны у капсулы, верстака и пункта снабжения. " + cap1(capLine()) + "." + paidNow });
+    intro: "Вещи доступны у капсулы, верстака, химического стола и пункта снабжения. " + cap1(capLine()) + "." + paidNow });
 }
 function rigGate(def) {
   var w = LAB.workshop, b = w && w.near();
@@ -930,7 +988,7 @@ LAB.load = {
   gapK: gapK, stepGap: stepGap, noise: noise, wakeK: wakeK, accPen: accPen, dodgePen: dodgePen, handPen: handPen, needStr: needStr, handStr: handStr,
   canMove: canMove, canTake: canTake, refuseText: refuseText, after: after, reset: reset,
   line: line, status: status, handNote: handNote, weaponLine: weaponLine, heaviest: heaviest,
-  locker: Lk, lockerWt: lockerWt, lockCap: lockCap, slotsUsed: slotsUsed, lockerMenu: lockerMenu, benchItems: benchItems, putItem: putItem, takeItem: takeItem, putParts: putParts, takeParts: takeParts,
+  locker: Lk, lockerWt: lockerWt, lockCap: lockCap, slotsUsed: slotsUsed, lockerMenu: lockerMenu, quantityChoice: quantityChoice, benchItems: benchItems, putItem: putItem, takeItem: takeItem, putParts: putParts, takeParts: takeParts,
   upgrade: upgrade, upPrice: upPrice, init: init, rent: rent, rentPrice: rentPrice, rented: rented, craftCell: craftCell, craftNeed: craftNeed,
   useCard: useCard, drops: drops, minutes: minutes, capParts: capParts, fitRig: fitRig
 };

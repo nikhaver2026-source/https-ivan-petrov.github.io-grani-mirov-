@@ -337,9 +337,34 @@ assert.equal(drone.scanSupplies(), true);
 assert.ok(messages.at(-1).includes(g.itemName(seen)));
 assert.ok(concealed.every(item => !messages.at(-1).includes(g.itemName(item))));
 assert.equal(drone.scanSupplies(), false);
+const sightBeforeSurvey = LAB.los, eventBeforeSurvey = hero.event, energyBeforeSurvey = drone.D().en;
+LAB.los = () => true;
+const atFour = { kind: "item", item: "chip", x: hero.x + 4, y: hero.y };
+const atSix = { kind: "item", item: "isotope", x: hero.x + 6, y: hero.y };
+g.floorItems = () => [atFour, atSix];
+for (const [event, poison, distant] of [["norm", 0, true], ["smoke", 0, false],
+  ["norm", 0, true], ["norm", 3, false], ["norm", 0, true]]) {
+  hero.event = event;
+  hero.st.poison = poison;
+  LAB.combat.useImplantFree("scan");
+  assert.ok(messages.at(-1).includes(g.itemName(atFour)), messages.at(-1));
+  assert.equal(messages.at(-1).includes(g.itemName(atSix)), distant);
+  drone.D().cd.scan = 0;
+  drone.D().en = energyBeforeSurvey;
+  assert.ok(drone.scanSupplies());
+  assert.ok(messages.at(-1).includes(g.itemName(atFour)), messages.at(-1));
+  assert.equal(messages.at(-1).includes(g.itemName(atSix)), distant);
+}
+hero.event = eventBeforeSurvey;
+drone.D().en = energyBeforeSurvey;
+LAB.los = sightBeforeSurvey;
 g.floorItems = floorItems;
+console.log("✓ Сканер героя и поиск дрона видят предметы дальше четырёх шагов в норме, ограничение действует при аварии или отравлении");
 
 assert.equal(g.saveSlot(3), true);
+const alpha56Slot = JSON.parse(storage.get("lab_slot3"));
+alpha56Slot.meta.ver = "Альфа 5.6";
+storage.set("lab_slot3", JSON.stringify(alpha56Slot));
 assert.equal(g.loadSlot(3), true);
 assert.equal(g.G.loadRig, 3);
 assert.equal(g.G.inv.dr_mod_medic, 1);
@@ -1426,3 +1451,1048 @@ assert.deepEqual([g.G.x, g.G.y], Array.from(fixtureOnWall.wallFrom));
 g.objMenu(fixtureOnWall);
 assert.ok(top().title);
 console.log("✓ Настенная обстановка остаётся доступной со стороны комнаты и освобождает пол");
+
+menus.length = 0;
+g.newGame(); LAB.combat.stop();
+g.G.lvl = 21;
+delete g.G.chs;
+assert.ok(g.saveSlot(3));
+assert.equal(JSON.parse(storage.get(g.slotKey(3))).g.chs, undefined);
+assert.ok(g.loadSlot(3));
+assert.equal(stats.S().pts, 4);
+assert.ok(stats.spend("agi", 1));
+assert.ok(g.saveSlot(3) && g.loadSlot(3));
+assert.equal(stats.S().pts, 3);
+g.G.lvl = 25;
+stats.onLevel(); stats.onLevel();
+assert.equal(stats.S().pts, 4);
+g.G.hp = 40;
+g.G.body.food = 80;
+g.G.diff = 1;
+stats.S().sec.regen = 5;
+stats.minutes(60);
+assert.equal(g.G.hp, 70);
+stats.hurt(1);
+stats.minutes(1);
+assert.equal(g.G.hp, 70);
+
+const converted = JSON.parse(storage.get(g.slotKey(3)));
+delete converted.g.chs.milestones;
+converted.g.chs.pts = 0;
+storage.set(g.slotKey(3), JSON.stringify(converted));
+storage.delete(g.slotKey(3) + "_bak");
+assert.ok(g.loadSlot(3));
+stats.menu();
+selectMenuItem(/^Вернуть пропущенные очки/);
+const legacyAward = top().items.find(it => it.kind === "slider");
+assert.match(legacyAward.fmt(legacyAward.get()), /уровень 20, вернуть 4 очка/);
+legacyAward.fn(); legacyAward.fn();
+assert.equal(stats.S().pts, 4);
+assert.equal(stats.S().milestoneRecoveryMax, undefined);
+menus.length = 0;
+
+const gest = LAB.gestures;
+const altered = gest.list.find(row => row.id === "t4");
+assert.ok(gest.set(altered.id, "none"));
+LAB.settings.gSwipe = 1.3;
+LAB.settings.gHold = 800;
+LAB.settings.gTapGap = 500;
+LAB.saveSettings();
+const reopened = vm.createContext({ LAB: {}, console, performance, setTimeout: noop, setInterval: noop,
+  clearTimeout: noop, clearInterval: noop, addEventListener: noop,
+  document: ctx.document, navigator: ctx.navigator, location: ctx.location, localStorage: ctx.localStorage });
+reopened.window = reopened;
+for (const name of ["engine", "gestures"]) vm.runInContext(fs.readFileSync(path.join(root, "js", name + ".js"), "utf8"), reopened);
+assert.equal(reopened.LAB.gestures.actionOf("t4"), "none");
+assert.equal(reopened.LAB.settings.gSwipe, 1.3);
+assert.equal(reopened.LAB.settings.gHold, 800);
+assert.equal(reopened.LAB.settings.gTapGap, 500);
+console.log("✓ Перенос четырёх вех без повторной выдачи, регенерация на среднем и жесты после перезапуска");
+
+incident("airloss", 12);
+g.G.inv.airmask = 1;
+delete g.G.airGear;
+g.G.inv.oxygen_tank = 1;
+g.G.drawn = true;
+const weaponBefore = g.G.weapons[g.G.wi];
+const batteryBefore = g.G.ammo[weaponBefore.ammo];
+weaponBefore.charge = 0;
+assert.equal(LAB.combat.fire("S", false), false);
+assert.equal(g.G.drawn, false);
+g.toggleDraw();
+g.reload();
+assert.equal(g.G.drawn, false);
+assert.equal(g.G.ammo[weaponBefore.ammo], batteryBefore);
+assert.ok(g.useItem("airmask"));
+g.toggleDraw();
+assert.equal(g.G.drawn, true);
+g.useItem("airmask");
+assert.equal(g.G.drawn, false);
+g.G.seed = "regression-followup";
+g.enterFloor(2, 3, "down", true);
+LAB.combat.stop();
+incident("norm", 100);
+const restingCapsule = g.CUR.fl.objs.find(o => o.type === "capsule");
+assert.ok(restingCapsule);
+openCapsule = null;
+ctx.setTimeout = (fn, ms) => { if (ms === 1200) openCapsule = fn; return 0; };
+try { LAB.capsule.menu(restingCapsule); } finally { ctx.setTimeout = originalTimeout; }
+assert.equal(typeof openCapsule, "function");
+openCapsule();
+const foodBeforeRest = g.G.body.food;
+selectMenuItem(/^Полежать/);
+assert.ok(g.G.body.food < foodBeforeRest);
+LAB.capsule.leave();
+console.log("✓ Маска восстанавливает возможность стрелять, капсула расходует сытость");
+
+menus.length = 0;
+g.G.inv = { wire: 120, medkit_s: 8, lockcard: 1 };
+g.G.ammo.energy = 20;
+const recyclePost = g.CUR.fl.objs.find(o => o.type === "supply");
+g.objMenu(recyclePost);
+selectMenuItem(/^Центр утилизации/);
+const cr0 = g.G.credits;
+selectMenuItem(/^Утилизировать .*провод/i);
+const batchSlider = top().items[1];
+assert.ok(batchSlider.step >= 10);
+batchSlider.set(20);
+batchSlider.fn();
+assert.equal(g.G.inv.wire, 100);
+assert.ok(g.G.credits > cr0);
+menus.length = 0;
+const chemTable = g.CUR.fl.objs.find(o => o.type === "chemlab");
+assert.ok(chemTable);
+g.objMenu(chemTable);
+selectMenuItem(/^Личное хранилище/);
+load.takeParts();
+assert.ok(g.G.inv.wire >= 100);
+selectMenuItem(/^Сложить всё, что поместится/);
+selectMenuItem(/^Подтвердить/);
+assert.equal(g.G.inv.medkit_s, undefined);
+assert.ok(load.locker().inv.medkit_s >= 8);
+assert.ok(load.locker().ammo.energy >= 20);
+assert.equal(g.G.weapons[g.G.wi], weaponBefore);
+menus.length = 0;
+load.lockerMenu("chem");
+selectMenuItem(/^Забрать из хранилища/);
+selectMenuItem(/^Ячейка .*Детали/);
+selectMenuItem(/провод/i);
+assert.ok(top().items.some(row => row.kind === "slider" && row.step >= 10));
+console.log("✓ Утилизация партиями, доступ у химического стола, выгрузка и крупная выдача");
+
+menus.length = 0;
+g.newGame(); LAB.combat.stop();
+g.G.seed = "regression-field-orders";
+g.enterFloor(23, 2, "down", true);
+const originalThreats = LAB.combat.foes().slice();
+originalThreats.forEach(f => { f.dead = true; });
+incident("norm", 500);
+function moveToObject(o) {
+  const p = g._routeTo(null, o);
+  assert.ok(p, o.type + " " + o.id);
+  if (p.length) [g.G.x, g.G.y] = p.at(-1);
+}
+const fieldTerminal = g.CUR.fl.objs.find(o => o.type === "terminal" && g._routeTo(null, o));
+assert.ok(fieldTerminal);
+moveToObject(fieldTerminal);
+g.objState(fieldTerminal).hacked = true;
+g.objMenu(fieldTerminal);
+selectMenuItem(/^Полевые задания этажа$/);
+assert.equal(top().items.length - 1, 3);
+for (let mission = 0; mission < 3; mission++) {
+  const originId = fieldTerminal.id;
+  const source = g.CUR.fl.objs.find(o => o.id === originId);
+  if (mission > 0) LAB.quests.fieldBoard(source);
+  top().items[mission].fn();
+  let order = g.CUR.fs.fieldOrders.orders[mission];
+  if (mission === 0) {
+    assert.ok(g.saveSlot(1) && g.loadSlot(1));
+    order = g.CUR.fs.fieldOrders.orders[mission];
+    assert.equal(order.accepted, true);
+  }
+  for (let n = 0; n < 2; n++) {
+    const guide = LAB.quests.navTargets().find(t => /^полевое задание/.test(t.n));
+    assert.equal(guide.o.id, order.sites[n]);
+    moveToObject(guide.o);
+    g.objMenu(guide.o);
+    const row = selectMenuItem(/^Снять показание/);
+    row.fn();
+    assert.equal(order.step, n + 1);
+  }
+  menus.length = 0;
+  const returnTo = LAB.quests.navTargets().find(t => /^полевое задание/.test(t.n));
+  assert.equal(returnTo.o.id, originId);
+  moveToObject(returnTo.o);
+  LAB.quests.fieldBoard(returnTo.o);
+  top().items[mission].fn();
+  selectMenuItem(/^Открыть форму решения/);
+  const rows = top().items.slice();
+  const before = g.G.credits;
+  const bars = rows.filter(row => row.kind === "slider");
+  const choices = rows.filter(row => row.kind === "choice");
+  if (bars.length) {
+    const [sum, diff] = rows.slice(0, 2).map(row => Number(row.label.match(/(?:минус )?(\d+)\./)[1]) * (/минус \d/.test(row.label) ? -1 : 1));
+    const confirm = rows.find(row => row.label === "Проверить расход");
+    confirm.fn();
+    assert.equal(g.G.credits, before);
+    bars[0].set((sum + diff) / 2); bars[1].set((sum - diff) / 2);
+    confirm.fn(); confirm.fn();
+  } else if (choices.length) {
+    const [start, next, third, last] = Array.from((rows[0].label + rows[1].label).matchAll(/«([^»]+)»/g), m => m[1]).filter((_, i) => i !== 2);
+    [start, next, third, last].forEach((name, i) => {
+      assert.ok(choices[i].options.some(opt => opt.v === name));
+      choices[i].set(name);
+    });
+    rows.find(row => row.label === "Проверить порядок").fn();
+  } else {
+    const [series, section] = rows.slice(0, 2).map(row => row.label.match(/\d+/)[0]);
+    rows.find(row => row.label.includes("Серия " + series + ", секция " + section)).fn();
+  }
+  assert.equal(order.done, true);
+  assert.equal(g.G.credits, before + 24 + 23 + 2);
+}
+assert.ok(g.saveSlot(1) && g.loadSlot(1));
+assert.ok(g.CUR.fs.fieldOrders.orders.every(order => order.done));
+console.log("✓ Три вида полевых задач через терминал, навигатор, оба поста и сохранение");
+
+menus.length = 0;
+g.newGame(); LAB.combat.stop();
+g.G.seed = "regression-echo-turns";
+g.enterFloor(1, 2, "down", true);
+incident("norm", 500);
+const nearbyFoes = LAB.combat.foes();
+nearbyFoes.forEach(f => { f.dead = true; });
+g.CUR.fl.doors.filter(d => !d.lock || d.lock.type !== "secret").forEach(d => { g.CUR.fs.doors[d.id] = 2; });
+const navStairs = g.CUR.fl.objs.find(o => o.type === "stairs_down");
+assert.ok(navStairs && g._routeTo(null, navStairs)?.length > 4);
+LAB.settings.navMode = "full";
+LAB.settings.autoDoors = 1;
+g.CUR.fs.mapped = false;
+const beforeGuide = messages.length;
+g.navigateTo({ n: "лестница вниз", o: navStairs, main: true });
+assert.equal(g.navFollow().o, navStairs);
+let walked = 0;
+while (g.navFollow() && walked++ < 400) {
+  const next = g._navPath()[0];
+  const [x, y] = next;
+  const dir = x > g.G.x ? "E" : x < g.G.x ? "W" : y > g.G.y ? "S" : "N";
+  if (!g.tryMove(dir, false)) {
+    const door = g.doorAt(x, y);
+    if (door) g.CUR.fs.doors[door.id] = 2;
+    assert.ok(g.tryMove(dir, false), "Маршрут к лестнице идёт по проходимым клеткам");
+  }
+}
+assert.ok(g.touchesObject(navStairs, g.G.x, g.G.y));
+assert.ok(messages.slice(beforeGuide).some(t => /Дальше —/.test(t)));
+assert.ok(messages.slice(beforeGuide).some(t => /Вы у цели: лестница вниз/.test(t)));
+console.log("✓ «Эхо» ведёт без карты через двери и повороты до выбранной лестницы");
+
+const blueprints = nearbyFoes.find(f => f.kind === "mech" && !f.boss && !LAB.combat.isCam(f));
+assert.ok(blueprints);
+const machines = [1, 2, 3].map(i => ({ ...blueprints, id: "service-bot-" + i, hp: 1, x: g.G.x, y: g.G.y,
+  dead: false, calm: false, ally: false, state: "hunt", blindT: 0 }));
+nearbyFoes.splice(0, nearbyFoes.length, ...machines);
+g.G.en = 10;
+LAB.implants.run("trojan");
+assert.equal(machines.filter(f => f.blindT > 0).length, 2);
+assert.ok(machines.filter(f => f.blindT > 0).every(f => f.lastKnown.x === g.G.x && f.state === "alert"));
+const charged = machines[0];
+nearbyFoes.splice(1);
+LAB.implants.run("siphon");
+const energyAfterSiphon = g.G.en;
+assert.ok(energyAfterSiphon > 10 && energyAfterSiphon <= 22);
+assert.equal(charged.hp, 1);
+LAB.implants.run("siphon");
+assert.equal(g.G.en, energyAfterSiphon);
+charged.blindT = 0;
+LAB.implants.run("trojan");
+assert.equal(charged.blindT, 0);
+const quickFrame = { id: "test-quick-frame", en: 0, cell: 1 };
+g.G.frames = [quickFrame];
+g.G.exoOn = quickFrame.id;
+g.G.ammo.energy = 2;
+LAB.drone.quick();
+selectMenuItem(/^Зарядить каркас энергобатареей/);
+assert.equal(quickFrame.en, 60);
+assert.equal(g.G.ammo.energy, 1);
+console.log("✓ Сифон не наносит урона, троян ограничен целью и временем, каркас заряжается из быстрых команд");
+
+const damageAudio = [];
+LAB.Sound = { play: (id, opts) => damageAudio.push({ id, ...opts }), onRebuild: noop };
+vm.runInContext(fs.readFileSync(path.join(root, "js", "atmos.js"), "utf8"), ctx);
+const oldHas = LAB.Bank.has;
+LAB.Bank.has = id => Boolean(LAB.SND[id]);
+g.G.hp = g.G.hpMax;
+LAB.atmos.navStart([[g.G.x - 1, g.G.y], [g.G.x - 1, g.G.y + 1]]);
+assert.equal(damageAudio.at(-1).pan, -0.8);
+LAB.atmos.hurt("phys", 2, null, { ranged: true });
+assert.ok(damageAudio.some(sound => sound.id === "hit_flesh" && !sound.at));
+assert.ok(damageAudio.some(sound => sound.id === "player_pain" && sound.lp <= 2000 && sound.gain < 0.5));
+damageAudio.length = 0;
+LAB.atmos.hurt("shock", 2, null, { critical: true });
+assert.ok(damageAudio.some(sound => sound.id === "hurt_shock"));
+assert.ok(damageAudio.some(sound => sound.id === "bump_body"));
+LAB.Bank.has = oldHas;
+console.log("✓ Сигнал на первом шаге пути, локальные попадание, разряд и тяжёлый удар");
+
+// Наряды выдаются через обычный пункт снабжения и проходят через настоящие объекты этажей.
+LAB.atmos = {};
+delete LAB.Sound;
+g.newGame(); LAB.combat.stop();
+g.G.seed = "operation-regression-2";
+const dispatchL = 2, dispatchF = 6, nearbyF = 5;
+g.G.elev[dispatchL] = true;
+g.enterFloor(dispatchL, nearbyF, "down", true);
+g.enterFloor(dispatchL, dispatchF, "up", true);
+const opDoors = () => {
+  for (const d of g.CUR.fl.doors) if (d.lock?.type !== "secret") g.CUR.fs.doors[d.id] = 2;
+  for (const f of LAB.combat.foes()) f.dead = true;
+  incident("norm", 1000);
+};
+function dispatch(pick) {
+  opDoors();
+  const origin = g.CUR.fl.objs.find(o => o.type === "supply");
+  moveToObject(origin);
+  menus.length = 0;
+  g.objMenu(origin);
+  selectMenuItem(/^Операции комплекса$/);
+  const board = top(), option = selectMenuItem(pick);
+  assert.ok(g.G.operation, messages.at(-1));
+  return { option, board };
+}
+function opTargetUI() {
+  menus.length = 0;
+  const op = g.G.operation, target = op.sites[op.step];
+  if (g.G.F !== target.F) {
+    const nav = LAB.quests.navTargets().find(t => /^операция /.test(t.n));
+    assert.equal(nav.o.type, "elevator");
+    assert.match(nav.n, new RegExp("этаж " + target.F));
+    moveToObject(nav.o);
+    let arrive;
+    ctx.setTimeout = (fn, ms) => { if (ms === 1600 + Math.abs(target.F - g.G.F) * 260) arrive = fn; return 0; };
+    try {
+      g.objMenu(nav.o);
+      selectMenuItem(/^Вызвать лифт$/);
+      selectMenuItem(new RegExp("^Этаж " + target.F + "(?:\\D|$)", "i"));
+      assert.equal(typeof arrive, "function");
+      arrive();
+    } finally { ctx.setTimeout = originalTimeout; }
+    assert.equal(g.G.F, target.F);
+    opDoors();
+  }
+  const nav = LAB.quests.navTargets().find(t => /^операция /.test(t.n));
+  const obj = nav.o;
+  assert.equal(target.npc ? obj.key : obj.id, target.id);
+  moveToObject(obj);
+  if (target.npc) {
+    const row = LAB.quests.npcItems(obj).find(it => /^Передать припасы по наряду/.test(it.label));
+    assert.ok(row);
+    row.fn();
+  } else g.objMenu(obj);
+  assert.match(top().title, /^Операция\./);
+  return obj;
+}
+const freightOffer = /^(Запчасти для подъёмников|Контейнеры холодного хранения)/;
+const freightBoard = dispatch(freightOffer);
+let freight = g.G.operation;
+assert.equal(freight.sites[1].F, nearbyF);
+g.G.inv.lead = 135;
+LAB.quests.operationQuestItem().fn();
+assert.ok(top().items.some(row => /Малая партия.*нужна разгрузка/.test(row.label)));
+assert.ok(!top().items.some(row => /^Принять\./.test(row.label)));
+delete g.G.inv.lead;
+g.G.drone = { ...stockDrone, en: 80 };
+const baseMass = load.total();
+LAB.quests.operationQuestItem().fn();
+const cargoChoice = selectMenuItem(/^Принять\. Полная партия/);
+assert.ok(freight.cargo >= 145);
+assert.equal(load.total(), Math.round((baseMass + freight.cargo) * 10) / 10);
+assert.equal(load.parts().cargo, freight.cargo);
+cargoChoice.fn();
+assert.equal(freight.step, 1);
+assert.ok(g.saveSlot(2) && g.loadSlot(2));
+freight = g.G.operation;
+assert.equal(load.parts().cargo, freight.cargo);
+opDoors();
+const freightOrigin = g.CUR.fs;
+opTargetUI();
+const bill = g.G.credits;
+const freightItem = selectMenuItem(/^Сдать груз по пломбе/);
+assert.equal(g.G.operation, null);
+assert.equal(load.parts().cargo, undefined);
+assert.equal(g.G.credits - bill, freightOrigin.opsDone.freight.reward);
+const freightBase = 36 + dispatchL + dispatchF + 10 + Math.floor(freight.cargo / 4);
+assert.equal(g.G.credits - bill, freightBase + 18);
+freightItem.fn();
+assert.equal(g.G.credits - bill, freightOrigin.opsDone.freight.reward);
+freightBoard.option.fn();
+assert.equal(g.G.operation, null);
+console.log("✓ Межэтажная доставка: грузоподъёмность, пломба, сохранение, настоящий лифт и однократная выплата");
+
+// Ручной контур на обесточенном этаже и запчасти как независимые пути.
+g.enterFloor(dispatchL, dispatchF, "elev", true);
+dispatch(/^(Вывести секцию на резерв|Ток для ночной смены)/);
+opTargetUI();
+selectMenuItem(/^Проверить показания/);
+opTargetUI();
+incident("reboot", 14);
+LAB.quests.operationQuestItem().fn();
+assert.ok(top().items.some(row => /сервисной батареи/.test(row.label)));
+const savedPuzzleOpen = LAB.puzzles.open;
+let solve, puzzleKind, attemptSeed;
+LAB.puzzles.open = (kind, seed, cb) => { puzzleKind = kind; attemptSeed = seed; solve = cb; return true; };
+selectMenuItem(/^Настроить вручную/);
+assert.ok(["breaker", "power"].includes(puzzleKind));
+const firstAttempt = attemptSeed;
+solve(false);
+assert.equal(g.G.operation.step, 1);
+LAB.quests.operationQuestItem().fn();
+selectMenuItem(/^Настроить вручную/);
+assert.notEqual(attemptSeed, firstAttempt);
+solve(true);
+assert.equal(g.G.operation, null);
+assert.equal(g.CUR.fs.reserve.power, true);
+assert.equal(g.G.eventUntil - g.G.min, 9);
+assert.equal(g.installReserve("power"), false);
+assert.ok(g.saveSlot(2) && g.loadSlot(2));
+assert.equal(g.CUR.fs.reserve.power, true);
+assert.equal(g.G.eventUntil - g.G.min, 9);
+assert.match(g.environmentText(), /Резервный контур/);
+
+dispatch(/^(Дым в воздуховодах|Второй контур воздуха)/);
+opTargetUI();
+selectMenuItem(/^Проверить показания/);
+opTargetUI();
+Object.assign(g.G.inv, { filter: 2, scrap: 10, wire: 8, reagent: 3 });
+const beforeAir = { ...g.G.inv };
+const fromField = g.G.operation.id;
+incident("smoke", 20);
+LAB.quests.operationQuestItem().fn();
+selectMenuItem(/^Установить исправные детали/);
+const used = fromField === 2 ? { filter: 1, scrap: 1 } : { wire: 2, reagent: 1 };
+for (const [id, n] of Object.entries(used)) assert.equal(g.G.inv[id], beforeAir[id] - n);
+assert.equal(g.CUR.fs.reserve.air, true);
+assert.equal(g.G.eventUntil - g.G.min, 12);
+console.log("✓ Питание и вентиляция: два пути ремонта, цена деталей, уменьшение аварии и сохранение результата");
+
+dispatch(/^(Глухой участок связи|Резервный канал)/);
+assert.equal(g.G.operation.quiet, true);
+opTargetUI();
+selectMenuItem(/^Проверить показания/);
+g.enterFloor(dispatchL, 4, "elev", true);
+LAB.quests.onAlarm(2);
+assert.equal(g.G.operation.quiet, true);
+g.enterFloor(dispatchL, dispatchF, "elev", true);
+LAB.quests.onAlarm(2);
+assert.equal(g.G.operation.quiet, false);
+opDoors();
+opTargetUI();
+assert.equal(!!g.CUR.fs.mapped, false);
+selectMenuItem(/^Настроить вручную/);
+assert.ok(["frequencies", "route"].includes(puzzleKind));
+solve(true);
+assert.equal(g.CUR.fs.mapped, true);
+assert.equal(g.G.operation, null);
+LAB.puzzles.open = savedPuzzleOpen;
+
+g.enterFloor(dispatchL, dispatchF, "elev", true);
+dispatch(/^(Перевязочный запас|Запас после едкого выброса)/);
+opTargetUI();
+selectMenuItem(/^Проверить показания/);
+const aidId = g.G.operation.id;
+opTargetUI();
+Object.assign(g.G.inv, { medkit_s: 3, antidote: 2, bandage: 4, gel: 2, ration: 5, sorbent: 3 });
+LAB.quests.operationQuestItem().fn();
+const supplyBefore = { ...g.G.inv };
+selectMenuItem(/^Передать комплект/);
+const aidNeed = aidId === 8 ? { medkit_s: 1 } : { antidote: 1, bandage: 1 };
+for (const [id, n] of Object.entries(aidNeed)) assert.equal(g.G.inv[id], supplyBefore[id] - n);
+assert.ok(g.CUR.fs.opsDone.aid);
+
+dispatch(/^(Отчёт с мёртвой линии|Пломба без свидетелей)/);
+opTargetUI();
+selectMenuItem(/^Снять копию/);
+opTargetUI();
+selectMenuItem(/^Снять копию/);
+assert.equal(g.G.operation.step, 2);
+opTargetUI();
+const nums = label => [...label.matchAll(/\d+/g)].map(m => +m[0]);
+const [command, ownSync] = nums(top().items.find(it => /^Основной журнал/.test(it.label)).label);
+const [ start, end, refSync ] = nums(top().items.find(it => /^Независимый журнал/.test(it.label)).label);
+const minute = command - (ownSync - refSync);
+const verdict = minute < start ? 0 : minute > end ? 2 : 1;
+const statements = top().items.filter(it => /^Заключение/.test(it.label));
+statements[(verdict + 1) % 3].fn();
+assert.ok(g.G.operation);
+statements[verdict].fn();
+assert.equal(g.G.operation, null);
+assert.ok(g.CUR.fs.opsDone.archive);
+assert.ok(g.CUR.fs.opsDone.relay);
+console.log("✓ Связь, снабжение и расследование: работа ОКО, карта, расход припасов и сверка двух часов");
+
+// В следующей аварии работает тот же сохранённый резерв.
+const eventPool = LAB.EVENTS.filter(e => !e.after || LAB.depth(g.G.L, g.G.F) >= e.after);
+const rebootAt = eventPool.findIndex(e => e.id === "reboot");
+const rollReboot = (eventPool.slice(0, rebootAt).reduce((n, e) => n + e.w, 0) + 0.5) / eventPool.reduce((n, e) => n + e.w, 0);
+const originalRandom = vm.runInContext("Math.random", ctx);
+ctx.rebootRoll = rollReboot;
+vm.runInContext("Math.random = function () { return rebootRoll; };", ctx);
+try {
+  incident("norm", 1);
+  g.advanceTime(1);
+  assert.equal(g.G.event, "reboot");
+  const [minimum, maximum] = eventPool[rebootAt].minutes;
+  assert.equal(g.G.eventUntil - g.G.min, Math.ceil((minimum + Math.floor(rollReboot * (maximum - minimum + 1))) * 0.6));
+} finally {
+  ctx.preTestRandom = originalRandom;
+  vm.runInContext("Math.random = preTestRandom; delete window.preTestRandom; delete window.rebootRoll;", ctx);
+}
+g.enterFloor(dispatchL, nearbyF, "elev", true);
+delete g.G.elev[dispatchL];
+dispatch(freightOffer);
+assert.equal(g.G.operation.sites[1].F, nearbyF);
+const baseLate = load.total();
+selectMenuItem(/^Принять\. Малая партия/);
+assert.ok(load.total() > baseLate);
+LAB.quests.operationQuestItem().fn();
+selectMenuItem(/^Снять груз и закрыть наряд/);
+selectMenuItem(/^Да\. Оставить контейнер/);
+assert.equal(g.G.operation, null);
+assert.equal(load.total(), baseLate);
+
+dispatch(freightOffer);
+selectMenuItem(/^Принять\. Малая партия/);
+const cargoLate = g.G.operation.cargo;
+incident("norm", 1000);
+g.advanceTime(g.G.operation.budget + 1);
+opTargetUI();
+assert.ok(top().items.some(it => /Срок премии вышел/.test(it.label)));
+const beforeLate = g.G.credits;
+selectMenuItem(/^Сдать груз по пломбе/);
+assert.equal(g.G.credits - beforeLate, 36 + dispatchL + nearbyF + Math.floor(cargoLate / 4));
+console.log("✓ Будущие аварии с резервом, рейс без пропуска, снятие груза и сдача после окончания срока");
+
+g.enterFloor(80, 4, "down", true);
+g.G.inv = {};
+g.G.drone = { ...stockDrone, en: 80 };
+dispatch(freightOffer);
+assert.ok(top().items.some(it => /Промышленная партия.*нужна разгрузка/.test(it.label)));
+g.G.drone = { ...stockDrone, en: 80, cargoFrame: 2, mods: ["cargo_frame"], ranks: { cargo_frame: 3 } };
+assert.equal(drone.carryCapacity(), 6000);
+LAB.quests.operationQuestItem().fn();
+selectMenuItem(/^Принять\. Промышленная партия/);
+const industrial = g.G.operation.cargo;
+assert.ok(industrial >= 5000);
+assert.ok(load.canMove());
+assert.equal(load.parts().cargo, industrial);
+opTargetUI();
+const industrialBefore = g.G.credits;
+selectMenuItem(/^Сдать груз по пломбе/);
+assert.equal(g.G.credits - industrialBefore, 36 + 80 + 4 + Math.floor(100 + (industrial - 400) / 12) + 18);
+assert.equal(load.parts().cargo, undefined);
+console.log("✓ Тяжёлая платформа позволяет взять промышленную партию свыше пяти тонн");
+
+// Матрица обследований покрывается реальными адресами и у каждой комбинации свой набор правил.
+const rift = LAB.rift;
+assert.equal(rift.count, 3000);
+const riftSeed = "rift-expedition-regression";
+const encounters = new Set(), signatures = new Set();
+const representatives = [];
+for (let k = 0; k < 3000; k++) {
+  const L = 101 + Math.floor(k / LAB.FLOORS_N), F = 1 + k % LAB.FLOORS_N;
+  const id = rift.serial(riftSeed, L, F), entry = rift.spec(id);
+  encounters.add(id);
+  signatures.add([entry.radius, entry.interval, entry.field.cue, entry.foe.n, entry.chain.seq.join(",")].join("|"));
+  if (!representatives[entry.p] && entry.h === entry.p % 5 && entry.m === entry.p % 5)
+    representatives[entry.p] = { L, F, id };
+  for (const resource of Object.keys(entry.trace[3])) assert.ok(LAB.ITEMS[resource], resource);
+}
+assert.equal(encounters.size, 3000);
+assert.equal(signatures.size, 3000);
+assert.equal(representatives.filter(Boolean).length, 6);
+for (const [id, def] of Object.entries(LAB.SND).filter(([id]) => /^rift_/.test(id))) {
+  assert.equal(def.f.length, 2, id);
+  for (const asset of def.f) assert.equal(fs.readFileSync(path.join(root, "sounds", asset)).subarray(0, 4).toString(), "OggS");
+}
+assert.equal(Object.keys(LAB.SND).filter(id => /^rift_/.test(id)).length, 21);
+
+g.newGame(); LAB.combat.stop();
+g.G.seed = riftSeed;
+for (const id of ["gel", "reagent", "wire", "scrap", "chip", "cap", "servo", "panel", "cell", "dp_alloy", "supercond", "powercell"])
+  g.G.inv[id] = 12;
+g.G.drone = { ...stockDrone, en: 90 };
+const riftSounds = [];
+LAB.atmos = { play: id => riftSounds.push(id), at: id => riftSounds.push(id), deafen: noop };
+const typesHeard = new Set();
+for (const representative of representatives) {
+  const { L, F, id } = representative, entry = rift.spec(id);
+  g.enterFloor(L, F, "down", true);
+  opDoors();
+  g.G.en = g.G.enMax;
+  const station = g.CUR.fl.objs.find(o => o.type === "supply");
+  moveToObject(station);
+  menus.length = 0;
+  g.objMenu(station);
+  selectMenuItem(/^Аномальные обследования$/);
+  selectMenuItem(/^Взять обследование/);
+  let q = g.CUR.fs.riftCase;
+  assert.ok(q && q.id === id, messages.at(-1));
+  const labs = new Set();
+  const latticeBefore = g.G.inv.rift_lattice || 0;
+  for (const stage of entry.chain.seq) {
+    assert.notEqual(g.G.dead, true);
+    assert.equal(entry.chain.seq[q.step], stage);
+    if (stage === "hunt" && !q.killed) {
+      const target = rift.nav();
+      assert.match(target.n, /^тварь у аномалии/);
+      assert.equal(target.o.type, "rift_hunter_" + entry.m);
+      LAB.combat.damageFoe(target.o, 1000000, "kinetic", { quiet: true });
+      assert.ok(q.killed, "гибель врага отмечает этап охоты");
+    }
+    const dest = rift.nav().o;
+    assert.equal(dest.id, q.sites[stage]);
+    moveToObject(dest);
+    menus.length = 0;
+    g.objMenu(dest);
+    assert.match(top().title, /^Аномалия\./);
+    if (stage === "probe") {
+      selectMenuItem(/^Включить зонд/);
+      const enemy = LAB.combat.foes().find(f => f.id === q.foe);
+      assert.ok(enemy && enemy.beh.length);
+      assert.equal(enemy.type, "rift_hunter_" + entry.m);
+      typesHeard.add(enemy.type);
+      const initialCharge = g.G.en, initialHp = g.G.hp, initialTox = g.G.body.tox;
+      for (let i = 0; i < entry.interval; i++) rift.step();
+      if (entry.h === 0) assert.ok(g.G.en < initialCharge, "поле снимает заряд");
+      if (entry.h === 1) assert.ok(g.G.body.tox > initialTox, "аэрозоль отравляет");
+      if (entry.h === 2) assert.ok(g.G.st.slow > 0, "ледяной сдвиг замедляет");
+      if (entry.h === 3) assert.ok(g.G.hp < initialHp, "поле сжатия ранит");
+      if (entry.h === 4) assert.ok(g.G.st.deaf > 0, "звуковой провал оглушает");
+      if (entry.p === 5) {
+        assert.ok(g.saveSlot(3) && g.loadSlot(3));
+        q = g.CUR.fs.riftCase;
+        assert.ok(LAB.combat.foes().some(f => f.id === q.foe && !f.dead));
+        assert.equal(q.step, 1);
+      }
+    }
+    if (stage === "brew") {
+      assert.ok(top().items.some(it => /Матрица .*Расход/.test(it.label)));
+      if (dest.type === "chemlab") {
+        LAB.chem.station(dest).dirty = true;
+        selectMenuItem(/^Приготовить запечатанную ампулу/);
+        assert.match(messages.at(-1), /Стол загрязнён/);
+        LAB.chem.station(dest).dirty = false;
+      }
+      const before = { ...g.G.inv };
+      if (entry.chain.rank === 3) {
+        const setting = +top().items.find(it => /^Замер активной камеры/.test(it.label)).label.match(/\d+/)[0];
+        const dial = top().items.find(it => /^Деление дозатора/.test(it.label));
+        selectMenuItem(/^Приготовить запечатанную ампулу/);
+        assert.match(messages.at(-1), /Деление дозатора/);
+        assert.equal(g.G.inv.reagent, before.reagent);
+        dial.set(setting);
+      }
+      selectMenuItem(/^Приготовить запечатанную ампулу/);
+      assert.equal(q.sites.quench, rift.nav()?.o.id, messages.at(-1));
+      for (const [resource, n] of Object.entries(entry.trace[3])) assert.equal(g.G.inv[resource], before[resource] - n);
+      assert.equal(g.G.inv["rift_vial_" + entry.i], 1);
+      assert.ok(g.dropWhy("rift_vial_" + entry.i));
+    }
+    if (stage === "quench") {
+      selectMenuItem(/^Вставить ампулу/);
+      assert.equal(q.field, false);
+      assert.equal(g.G.inv["rift_vial_" + entry.i] || 0, 0);
+    }
+    if (stage === "hunt") selectMenuItem(/^Подтвердить осмотр/);
+    if (stage === "listen") {
+      const wanted = top().items.find(it => /^Исходная запись/.test(it.label)).label.slice("Исходная запись. ".length).replace(/\.$/, "");
+      const guesses = top().items.filter(it => /^Выбрать запись/.test(it.label));
+      const tones = [];
+      LAB.Sound = { tone: (...args) => tones.push(args) };
+      try { selectMenuItem(/^Прослушать исходный сигнал/); } finally { delete LAB.Sound; }
+      assert.equal(tones.length, 3);
+      assert.ok(tones.every(x => x[2].bus === "puzzle") && tones[1][2].when > tones[0][2].when);
+      const before = q.step;
+      guesses.find(it => !it.label.endsWith(wanted)).fn();
+      assert.equal(q.step, before);
+      guesses.find(it => it.label.endsWith(wanted)).fn();
+    }
+    if (stage === "lift") {
+      const before = load.total();
+      selectMenuItem(/^Взять контейнер/);
+      assert.equal(load.total(), Math.round((before + q.cargo) * 10) / 10);
+      if (entry.p === 5) {
+        assert.ok(g.saveSlot(3) && g.loadSlot(3));
+        q = g.CUR.fs.riftCase;
+        assert.equal(load.parts().anomaly, q.cargo);
+        assert.ok(q.killed);
+      }
+    }
+    if (stage === "unload") {
+      selectMenuItem(/^Сдать опломбированный/);
+      assert.equal(load.parts().anomaly, undefined);
+    }
+    if (stage === "seal") {
+      const expected = +top().items.find(it => /^Контрольная отметка/.test(it.label)).label.match(/\d+/)[0];
+      const valve = top().items.find(it => it.kind === "slider");
+      valve.set((expected + 1) % 10);
+      valve.fn();
+      assert.equal(q.done, undefined);
+      valve.set(expected);
+      const credits = g.G.credits;
+      valve.fn(); valve.fn();
+      assert.equal(g.G.credits - credits, 26 + entry.chain.seq.length * 7 + Math.min(65, Math.floor(LAB.Le(L) / 3)));
+    }
+    labs.add(stage);
+  }
+  assert.equal(q.done, true, [...labs].join(", "));
+  assert.equal((g.G.inv.rift_lattice || 0) - latticeBefore, entry.chain.rank === 3 ? 2 : 1);
+}
+assert.equal(typesHeard.size, 5);
+for (const id of ["probe", "mix", "seal", "carry", "ok", "error"])
+  assert.ok(riftSounds.includes("rift_" + id), id);
+console.log("✓ 3000 адресуемых конфигураций, все шесть цепочек, пять тварей, поле, химия, звук, перенос и загрузка");
+
+let riftBench;
+for (let F = 1; F <= 9 && !riftBench; F++) {
+  g.enterFloor(101, F, "down", true);
+  opDoors();
+  riftBench = g.CUR.fl.objs.find(o => o.type === "workbench" && g._routeTo(null, o));
+}
+assert.ok(riftBench);
+moveToObject(riftBench);
+const researchBench = work.bench(riftBench);
+for (const id of ["wire", "scrap", "chip", "cap", "servo", "panel", "cell", "dp_alloy", "supercond", "powercell"])
+  g.G.inv[id] = 30;
+researchBench.tier = 8; researchBench.dmg = false;
+const mountedW = g.G.weapons[g.G.wi];
+const bareAccuracy = work.accBonus(mountedW, false);
+const bareHeat = work.hmax(mountedW);
+const bareMass = load.weaponWt(mountedW);
+let originalDangerRift = LAB.combat.danger;
+LAB.combat.danger = () => false;
+work.open(riftBench);
+selectMenuItem(/^Резонаторные модули\./);
+selectMenuItem(/^Собрать\. Оружейный блок/);
+work.open(riftBench);
+selectMenuItem(/^Резонаторные модули\./);
+const gunRow = top().items.find(it => it.label === mountedW.name + ". Установить резонатор");
+gunRow.fn();
+assert.ok(Math.abs(load.weaponWt(mountedW) - (bareMass + 1.1)) < 1e-7);
+const [aim, cool, mute] = top().items.filter(it => it.kind === "slider");
+aim.set(10);
+assert.equal(aim.get(), 4);
+mute.set(0); cool.set(0); aim.set(10); cool.set(10);
+assert.equal(cool.get(), 2);
+assert.ok(Math.abs(work.accBonus(mountedW, false) - bareAccuracy - 0.06) < 1e-7);
+assert.equal(work.hmax(mountedW), bareHeat * 1.05);
+
+const liftingDrone = g.G.drone;
+liftingDrone.cargoFrame = 2; liftingDrone.mods = ["cargo_frame"]; liftingDrone.ranks = { cargo_frame: 1 };
+const liftBare = drone.carryCapacity(), costBare = drone.energyCost(12, "zapper");
+work.open(riftBench);
+selectMenuItem(/^Резонаторные модули\./);
+selectMenuItem(/^Собрать\. Блок дрона/);
+work.open(riftBench);
+selectMenuItem(/^Резонаторные модули\./);
+selectMenuItem(/^Дрон-спутник\. Установить резонатор/);
+assert.ok(drone.carryCapacity() > liftBare);
+assert.equal(drone.energyCost(12, "zapper"), costBare - 1);
+
+const sealed = LAB.exo.build("sealed");
+assert.ok(sealed);
+assert.equal(LAB.exo.riftGuard(sealed), 4);
+const haulFrame = LAB.exo.build("haul");
+const walkFrame = LAB.exo.build("walk");
+assert.ok(haulFrame && walkFrame);
+assert.ok(load.frameWt(haulFrame) > load.frameWt(walkFrame));
+g.G.str = 15; g.G.con = 15;
+assert.equal(LAB.exo.equip(haulFrame), true);
+const frameBase = load.capOf("exo");
+work.open(riftBench);
+selectMenuItem(/^Резонаторные модули\./);
+selectMenuItem(/^Собрать\. Блок каркаса/);
+work.open(riftBench);
+selectMenuItem(/^Резонаторные модули\./);
+top().items.find(it => it.label === LAB.exo.frameName(haulFrame) + ". Установить резонатор").fn();
+const specialization = top().items.find(it => it.kind === "choice");
+specialization.set(1);
+assert.equal(load.capOf("exo"), frameBase + 18);
+assert.ok(g.saveSlot(3) && g.loadSlot(3));
+assert.deepEqual(Array.from(g.G.weapons[g.G.wi].rift.v), [10, 2, 0]);
+assert.equal(LAB.exo.worn().rift.profile, 1);
+assert.equal(load.capOf("exo"), frameBase + 18);
+assert.ok(riftSounds.includes("rift_tune") && riftSounds.includes("rift_frame_walk"));
+LAB.combat.danger = originalDangerRift;
+console.log("✓ Сборка и калибровка оружия, дрона и трёх новых каркасов с реальными эффектами и сохранением");
+
+// Происшествия на маршруте: все адреса, разные реакции, реальные шаги и журнал.
+const haunt = LAB.haunt;
+assert.equal(haunt.count, 3000);
+const hauntStarts = [3, 101, 1501, 12701];
+const hauntIds = new Set(), hauntVariants = new Set();
+for (const [rank, level] of hauntStarts.entries()) {
+  for (let n = 0; n < 750; n++) {
+    const h = haunt.spec(haunt.serial("haunt-coverage", level + Math.floor(n / LAB.FLOORS_N), n % LAB.FLOORS_N + 1));
+    assert.equal(h.rank, rank);
+    hauntIds.add(h.i + 25 * h.rule + 125 * h.proc + 750 * h.rank);
+    hauntVariants.add([h.origin[0], h.rule, h.proc, h.d.n].join("|"));
+  }
+  assert.equal(haunt.spec(haunt.serial("haunt-coverage", level - 1, LAB.FLOORS_N))?.rank ?? -1, rank - 1);
+}
+assert.equal(hauntIds.size, 3000);
+assert.equal(hauntVariants.size, 3000);
+assert.equal(haunt.spec(haunt.serial("haunt-coverage", LAB.deepLevelsN(), 20)).rank, 3);
+const hauntKeys = Object.keys(LAB.SND).filter(key => /^haunt_/.test(key));
+assert.equal(hauntKeys.length, 46);
+for (const key of hauntKeys) {
+  assert.ok(LAB.SOUND_ALL.includes(key), key);
+  assert.equal(fs.readFileSync(path.join(root, "sounds", LAB.SND[key].f[0])).subarray(0, 4).toString(), "OggS", key);
+}
+for (const level of LAB.LEVELS.slice(1, 101)) assert.ok(!level.foes.some(type => type.startsWith("haunt_")));
+
+const hauntSounds = [];
+LAB.atmos = {
+  at: (id, x, y) => hauntSounds.push([id, x, y]),
+  play: id => hauntSounds.push([id])
+};
+LAB.settings.turnBased = false;
+LAB.ui.layer = () => top() || null;
+LAB.ui.closeAll = () => { menus.length = 0; };
+const hauntDirs = [[0, -1, "N"], [0, 1, "S"], [-1, 0, "W"], [1, 0, "E"]];
+const hauntOpen = [/^Выждать паузу/, /^Записать ближний/, /^Записать ритм/, /^Нанести метку/, /^Снять показания трёх/, /^Включить переносной/];
+const normalNow = vm.runInContext("Date.now", ctx);
+ctx.hauntClock = normalNow();
+vm.runInContext("Date.now = function () { return hauntClock; };", ctx);
+function hauntMove(dir, run = false) {
+  ctx.hauntClock += 700;
+  const paused = g.tryMove(dir, run);
+  assert.equal(paused, true, JSON.stringify({ dir, position: [g.G.x, g.G.y], stage: g.CUR.fs.haunt?.stage, messages: messages.slice(-5) }));
+}
+function hauntWalk(cell) {
+  const route = g._routeTo(cell);
+  assert.ok(route, JSON.stringify(cell));
+  for (const [x, y] of route) {
+    const dir = hauntDirs.find(([dx, dy]) => g.G.x + dx === x && g.G.y + dy === y);
+    assert.ok(dir);
+    const foe = g.foeAt(x, y);
+    if (foe && foe.id === g.CUR.fs.haunt.foe) {
+      assert.equal(LAB.combat.damageFoe(foe, foe.hp * 100, "phase", { quiet: true }), true);
+    }
+    hauntMove(dir[2]);
+  }
+}
+function hauntMenu(pattern) {
+  menus.length = 0;
+  const item = haunt.journalItem();
+  assert.ok(item);
+  item.fn();
+  selectMenuItem(pattern);
+  menus.length = 0;
+}
+function setHauntFloor(rank, proc, rule) {
+  menus.length = 0;
+  g.newGame();
+  LAB.combat.stop();
+  const L = hauntStarts[rank] + 3, F = 2;
+  for (let n = 0; ; n++) {
+    assert.ok(n < 10000);
+    const seed = "haunt-first-entry-" + n;
+    const candidate = haunt.spec(haunt.serial(seed, L, F));
+    if (candidate.proc === proc && candidate.rule === rule) {
+      g.G.seed = seed;
+      break;
+    }
+  }
+  g.enterFloor(L, F, "down", true);
+  LAB.combat.foes().forEach(f => { f.dead = true; });
+  g.G.inv = {};
+  g.G.stats.steps = 40;
+  incident("norm", 500);
+  const fl = g.CUR.fl;
+  fl.doors.forEach(d => {
+    if (!d.lock) g.CUR.fs.doors[d.id] = 2;
+  });
+  const havenRoom = fl.rooms.find(r => g.CUR.fs.haven?.[r.id]);
+  const roomFor = (d, dx, dy) => g.roomAt(d.x + dx, d.y + dy);
+  for (const d of fl.doors) {
+    if (d.lock) continue;
+    for (const [dx, dy, dir] of hauntDirs) {
+      if (!roomFor(d, dx, dy) || !g.passable(d.x + dx, d.y + dy)) continue;
+      g.G.x = d.x; g.G.y = d.y;
+      hauntMove(dir);
+      if (g.CUR.fs.haunt) {
+        const q = g.CUR.fs.haunt;
+        assert.ok(!havenRoom || q.room !== havenRoom.id);
+        assert.deepEqual(Array.from(q.source), [g.G.x, g.G.y]);
+        assert.ok(g._routeTo(q.remote).length >= 4);
+        assert.ok(hauntSounds.some(([key, x, y]) => key === "haunt_origin" + haunt.spec(q.id).i && x === q.source[0] && y === q.source[1]));
+        assert.match(haunt.journalItem().label, /Происшествие.*Снять исходное показание/);
+        return q;
+      }
+    }
+  }
+  assert.fail("Нет связной комнаты для " + L);
+}
+
+try {
+  for (let proc = 0; proc < hauntOpen.length; proc++) {
+    const rank = [0, 1, 2, 2, 3, 1][proc], rule = [0, 1, 4, 3, 2, 0][proc];
+    let q = setHauntFloor(rank, proc, rule);
+    const config = haunt.spec(q.id), credits = g.G.credits;
+    if (proc === 1) {
+      // Стоянка взвесь накапливает. Фильтр и маска работают через состояние игрока.
+      hauntMenu(hauntOpen[proc]);
+      ctx.hauntClock += 3200;
+      g.G.inv.airmask = 1;
+      g.G.airGear = { on: true, oxygen: 9 };
+      q.heat = config.d.limit - 2;
+      haunt.idle();
+      assert.equal(g.G.body.tox, 0);
+      g.G.airGear.on = false;
+      q.heat = config.d.limit - 2;
+      haunt.idle();
+      assert.ok(g.G.body.tox > 0);
+    } else hauntMenu(hauntOpen[proc]);
+
+    switch (proc) {
+      case 0:
+        q.heat = config.d.limit - 2;
+        const HP = g.G.hp;
+        hauntMenu(/^Замереть/);
+        assert.equal(g.G.hp, HP);
+        break;
+      case 1:
+        hauntMenu(/^Указать путь/);
+        assert.deepEqual(Array.from(g.navFollow().cell), Array.from(q.remote));
+        hauntWalk(q.remote);
+        break;
+      case 2: {
+        const rhythms = [/^Короткий, короткий, длинный$/, /^Короткий, длинный, короткий$/, /^Длинный, короткий, короткий$/];
+        hauntMenu(/^Прослушать запись/);
+        assert.match(messages.at(-1), new RegExp(rhythms[config.rhythm].source.slice(0, -1)));
+        hauntMenu(rhythms[(config.rhythm + 1) % rhythms.length]);
+        assert.equal(q.stage, "echo");
+        assert.ok(g.saveSlot(2) && g.loadSlot(2));
+        q = g.CUR.fs.haunt;
+        assert.equal(q.stage, "echo");
+        assert.equal(haunt.spec(q.id).rhythm, config.rhythm);
+        hauntMenu(rhythms[config.rhythm]);
+        break;
+      }
+      case 3:
+        hauntWalk(q.remote);
+        assert.equal(q.stage, "compare");
+        hauntWalk(q.source);
+        hauntMenu(/^Сверить обе отметки/);
+        break;
+      case 4: {
+        const grounds = [/^Заземлить\. Настил$/, /^Заземлить\. Стена$/, /^Заземлить\. Воздуховод$/];
+        q.heat = config.d.limit - 2;
+        const hp = g.G.hp;
+        hauntMenu(grounds[(config.channel + 1) % grounds.length]);
+        assert.ok(g.G.hp < hp);
+        assert.ok(q.foe);
+        assert.equal(LAB.combat.foes().find(f => f.id === q.foe).type, "haunt_treader");
+        assert.ok(g.saveSlot(2) && g.loadSlot(2));
+        q = g.CUR.fs.haunt;
+        const follower = LAB.combat.foes().find(f => f.id === q.foe);
+        assert.ok(follower && !follower.dead);
+        assert.equal(LAB.combat.damageFoe(follower, follower.hp * 100, "phase", { quiet: true }), true);
+        LAB.combat.foes().filter(f => !f.id.startsWith("s")).forEach(f => { f.dead = true; });
+        hauntMenu(grounds[config.channel]);
+        break;
+      }
+      case 5: {
+        const [x, y] = g._routeTo(q.remote)[0];
+        hauntMove(hauntDirs.find(([dx, dy]) => g.G.x + dx === x && g.G.y + dy === y)[2], true);
+        assert.equal(q.stage, "inspect");
+        hauntWalk(q.source);
+        hauntMenu(hauntOpen[proc]);
+        hauntWalk(q.remote);
+        break;
+      }
+    }
+    if (rank > 1) {
+      assert.equal(q.stage, "seal");
+      hauntWalk(q.source);
+      hauntMenu(/^Закрыть контур$/);
+    }
+    if (rank === 3) {
+      assert.equal(q.stage, "verify");
+      hauntWalk(q.remote);
+      hauntMenu(/^Проверить тишину/);
+      assert.equal(q.stage, "lock");
+      hauntWalk(q.source);
+      hauntMenu(/^Запереть контур/);
+    }
+    assert.equal(q.stage, "done");
+    assert.equal(g.G.credits - credits, [12, 26, 48, 85][rank]);
+    assert.equal(haunt.nav(), null);
+    assert.equal(haunt.journalItem(), null);
+    if (rank === 3) {
+      assert.ok(g.loadSlot("auto"));
+      assert.equal(g.CUR.fs.haunt.stage, "done");
+      assert.equal(g.G.credits - credits, 85);
+      assert.ok(g.G.journal.some(line => line.includes(config.origin[0])));
+    }
+  }
+  assert.ok(hauntSounds.some(([id]) => id === "haunt_answer"));
+  assert.ok(hauntSounds.some(([id]) => id === "haunt_closed"));
+  assert.ok(hauntSounds.some(([id]) => id === "haunt_treader"));
+  console.log("✓ 3000 новых адресов, четыре глубины угрозы, шесть способов пройти, 46 звуков, сохранение и единичная выплата");
+
+  // Используем настоящий стек окон, включая реальные вызовы навигатора из вложенного журнала.
+  const liveHaunt = setHauntFloor(0, 1, 0);
+  const windowList = { children: [], set innerHTML(value) { this.children.length = 0; },
+    appendChild(child) { this.children.push(child); } };
+  const windowNodes = { win: { hidden: true }, winTitle: {}, winList: windowList };
+  Object.assign(ctx.document, {
+    body: { setAttribute: noop },
+    createElement: () => ({ addEventListener: noop }),
+    getElementById: id => windowNodes[id] || null
+  });
+  vm.runInContext(fs.readFileSync(path.join(root, "js/ui.js"), "utf8"), ctx, { filename: "js/ui.js" });
+  LAB.ui.setScreen("game");
+  function activateHauntRow(pattern) {
+    const panel = LAB.ui.top();
+    panel.i = panel.items.findIndex(row => typeof row.label === "string" && pattern.test(row.label));
+    assert.ok(panel.i >= 0, panel.title + " " + pattern);
+    LAB.ui.activate();
+  }
+  LAB.ui.inventory();
+  activateHauntRow(/^Журнал$/);
+  assert.match(windowList.children[0].textContent, /^Происшествие\./);
+  activateHauntRow(/^Происшествие\./);
+  activateHauntRow(/^Записать ближний замер$/);
+  assert.equal(liveHaunt.stage, "distance");
+  LAB.ui.quests();
+  activateHauntRow(/^Происшествие\./);
+  activateHauntRow(/^Указать путь к текущей точке$/);
+  assert.equal(LAB.ui.layer(), null);
+  assert.deepEqual(Array.from(g.navFollow().cell), Array.from(liveHaunt.remote));
+  console.log("✓ Настоящий интерфейс Журнала и Заданий, подписи для скринридера и выход к навигатору");
+} finally {
+  ctx.hauntRealNow = normalNow;
+  vm.runInContext("Date.now = hauntRealNow; delete window.hauntRealNow; delete window.hauntClock;", ctx);
+}
+
+// Запись передаётся штатному позиционированию со свежей панорамой и радиусом в дыму.
+let spatialHaunt;
+LAB.Sound = { onRebuild: noop, play: (id, opts) => { spatialHaunt = { id, opts }; } };
+LAB.registerSounds();
+vm.runInContext(fs.readFileSync(path.join(root, "js/atmos.js"), "utf8"), ctx, { filename: "js/atmos.js" });
+const [soundX, soundY] = g.CUR.fs.haunt.source;
+LAB.atmos.at("haunt_origin0", soundX, soundY, { follow: true });
+assert.equal(spatialHaunt.id, "haunt_origin0");
+const position = spatialHaunt.opts.position;
+g.G.x = soundX - 2;
+assert.equal(position().dx, 2);
+g.G.x = soundX + 2;
+assert.equal(position().dx, -2);
+g.G.event = "smoke";
+g.G.x = soundX + 4;
+assert.equal(position().muted, false);
+g.G.x = soundX + 5;
+assert.equal(position().muted, true);
+console.log("✓ Пространственный звук меняет сторону и соблюдает четыре шага в дыму");

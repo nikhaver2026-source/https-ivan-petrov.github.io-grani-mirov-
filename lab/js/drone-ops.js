@@ -55,6 +55,7 @@ var scanObjects = {
 function scan(k, cfg) {
   var g = game(), cur = g.CUR, radius = drone.effect(k) + Math.floor(drone.adjust("scanRange", k));
   var isFoe = cfg.target === "living" || cfg.target === "machine";
+  var searchesObjects = !isFoe && cfg.target !== "doors" && cfg.target !== "exits";
   var targets;
   if (isFoe) {
     targets = foes(radius).filter(function (f) { return cfg.target === "machine" ? f.kind === "mech" : f.kind !== "mech"; })
@@ -78,13 +79,15 @@ function scan(k, cfg) {
       if (o.kind === "ammo" || (item && (item.kind === "use" || item.kind === "food" || item.kind === "part"))) targets.push({ o: o, text: g.itemName(o) });
     });
   }
-  targets = targets.filter(function (t) { return dist(g.G, t.o) <= radius && view(t.o); })
+  targets = targets.filter(function (t) {
+    return dist(g.G, t.o) <= radius && (!searchesObjects || g.canHear(t.o.x, t.o.y)) && view(t.o);
+  })
     .sort(function (a, b) { return dist(g.G, a.o) - dist(g.G, b.o); });
   return function () {
     var listed = targets.slice(0, drone.scanCount(k));
     drone.recorded("scan", k, k, listed.length ? listed[0].o : null);
     if (isFoe) listed.forEach(function (t) { t.o.mark = Math.max(t.o.mark || 0, Date.now() + drone.markSeconds(k) * 1000); });
-    if (!listed.length) return "В пределах " + radius + " шагов подходящих целей по открытой линии нет.";
+    if (!listed.length) return "В пределах " + (searchesObjects ? Math.min(radius, g.hearingRange()) : radius) + " шагов подходящих целей по открытой линии нет.";
     return listed.map(function (t) { return t.text + " " + g.relDir(t.o.x, t.o.y); }).join(". ") +
       (targets.length > listed.length ? ". Ещё целей " + (targets.length - listed.length) : "") + ".";
   };

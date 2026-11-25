@@ -51,7 +51,7 @@ function S() {
   var g = G();
   if (!g) return null;
   if (g.con == null) g.con = Math.min(40, 10 + Math.max(0, (g.lvl || 1) - 1)); /* запись прежней версии — ровный рост */
-  if (!g.chs) g.chs = { pts: 0, px: {}, day: {}, sec: { stam: 0, ment: 0, regen: 0 }, rg: 0, th: {} };
+  if (!g.chs) g.chs = { pts: 0, milestones: 0, px: {}, day: {}, sec: { stam: 0, ment: 0, regen: 0 }, rg: 0, th: {} };
   var s = g.chs;
   if (!s.px) s.px = {}; if (!s.day) s.day = {}; if (!s.sec) s.sec = { stam: 0, ment: 0, regen: 0 }; if (!s.th) s.th = {};
   return s;
@@ -126,7 +126,7 @@ var K = {
   wake: function () { return (1 - Math.min(0.3, Math.max(0, d10("con")) * 0.008)) * (1 - Math.min(0.3, sec("stam") * 0.01)); }, /* усталость */
   neuro: function () { return 1 - Math.min(0.45, (sec("ment") + calmV()) * 0.015); },    /* нейронагрузка; спокойствие у воды — ментал выше на время */
   heal: function () { return 1 + Math.min(0.45, sec("regen") * 0.015); },    /* лечение */
-  regen: function () { return sec("regen") * 0.02; },                         /* здоровья в минуту само */
+  regen: function () { return Math.min(1.6, sec("regen") * 0.10); },                         /* здоровья в минуту само */
   xp: function () { return 1 + Math.min(0.6, Math.max(0, d10("mind")) * 0.02); },    /* опыт мастерства */
   quest: function () { return 1 + Math.min(0.3, Math.max(0, d10("cha")) * 0.01) + (val("cha") >= 15 ? 0.05 : 0); },  /* награды за поручения; порог 15 */
   buy: function () { return Math.max(0, Math.min(30, d10("cha"))) * 0.004 + (val("cha") >= 25 ? 0.03 : 0); },   /* game.js, chaK; порог 25 */
@@ -245,15 +245,19 @@ function step() {
   practice("stam", 0.02 + (r > 0.5 ? 0.05 * Math.min(1.5, r) : 0));
   if (r > 0.6) { practice("str", 0.02 * Math.min(1.5, r)); practice("con", 0.015 * Math.min(1.5, r)); }
 }
-function hurt(fin) { if (fin >= 3) practice("con", 0.3); }
+function hurt(fin) {
+  S().recoverAt = nowM() + 4;
+  if (fin >= 3) practice("con", 0.3);
+}
 function healed(n) { if (n > 0) practice("regen", n / 25); }
 function neuro(d) { if (d > 0) practice("ment", d / 12); }
 /* вне боя здоровье возвращается само: регенерация (минуты игры) */
-function minutes(min) {
+function minutes(min, event) {
   var s = S(), g = G(); if (!s || !min || g.dead) return;
   var r = K.regen(); if (r <= 0 || g.hp >= g.hpMax) return;
   if (LAB.combat && LAB.combat.danger && LAB.combat.danger()) return;
-  if (g.body && g.body.food < 20) return;
+  if (event === "airloss" || event === "smoke" || (g.body && (g.body.food < 20 || g.body.tox >= 65 || g.body.rad >= 70)) || (g.st && (g.st.bleed > 0 || g.st.poison > 0))) return;
+  min = Math.max(0, min - Math.max(0, (s.recoverAt || 0) - nowM()));
   s.rg = (s.rg || 0) + r * min;
   if (s.rg >= 1) { var n = Math.floor(s.rg); s.rg -= n; g.hp = Math.min(g.hpMax, g.hp + n); UIx("refresh"); }
 }
@@ -273,12 +277,57 @@ function ptsW(n) { return n + " " + plural(n, "очко", "очка", "очко�
 
 /* ── УРОВЕНЬ ГЕРОЯ ── очко — на каждом пятом уровне; всё на пределе — опыт уровня уходит в здоровье */
 function nextPtLevel(l) { return (Math.floor(l / PTS_EVERY) + 1) * PTS_EVERY; }
+/* Сохраняем число уже обработанных вех отдельно от остатка очков. */
+function restoreMilestones(backupLevel) {
+  var g = G(), legacy = !!g.chs && g.chs.milestones == null, s = S();
+  var reached = Math.floor(g.lvl / PTS_EVERY);
+  if (legacy) {
+    s.milestones = reached;
+    /* В первых сохранениях с характеристиками расходовалось только общее число
+       очков. Точный уровень перехода может указать игрок один раз. */
+    var proved = Math.min(reached, Math.floor((backupLevel || 0) / PTS_EVERY));
+    if (proved < reached) {
+      s.milestoneRecoveryMin = proved;
+      s.milestoneRecoveryMax = reached;
+    }
+    s.pts += proved;
+    return proved;
+  }
+  var missed = Math.max(0, reached - s.milestones);
+  s.milestones = Math.max(s.milestones, reached);
+  s.pts += missed;
+  return missed;
+}
+function legacyMenu() {
+  var s = S(), max = s.milestoneRecoveryMax;
+  if (!max) return;
+  var credited = s.milestoneRecoveryMin || 0, n = max;
+  UIx("menu", "Очки за уровни до появления характеристик", [
+    { label: "Укажите последний уровень героя в старой версии, где характеристик ещё не было. Если все очки уже получены, закройте окно.", info: true, keep: true, fn: function () {} },
+    { kind: "slider", label: "Последняя пропущенная веха. Подтвердить возврат один раз", min: credited + 1, max: max, step: 1,
+      get: function () { return n; }, set: function (v) { n = v; },
+      fmt: function (v) { return "уровень " + v * PTS_EVERY + ", вернуть " + ptsW(v - credited); },
+      fn: function () {
+        if (G().chs !== s || !s.milestoneRecoveryMax) return;
+        delete s.milestoneRecoveryMax;
+        delete s.milestoneRecoveryMin;
+        s.pts += n - credited;
+        gm().autosaveSoon();
+        UIx("closeTop", true);
+        UIx("rebuildTop");
+        say("Восстановлено за пропущенные уровни: " + ptsW(n - credited) + ".");
+      } },
+    { label: "Назад", close: true }
+  ]);
+}
 function onLevel() {
-  var s = S(), g = G();
-  if (g.lvl % PTS_EVERY) return " Следующее очко характеристик — на " + nextPtLevel(g.lvl) + "-м уровне.";
+  var s = S(), g = G(), reached = Math.floor(g.lvl / PTS_EVERY);
+  if (reached <= s.milestones) return " Следующее очко характеристик — на " + nextPtLevel(g.lvl) + "-м уровне.";
+  var n = reached - s.milestones;
+  s.milestones = reached;
   var room = MAIN.reduce(function (a, k) { return a + costN(k, capOf(k) - base(k)); }, 0) - (s.pts || 0);
-  if (room <= 0) { g.hpMax += 5; g.hp = g.hpMax; return " Характеристики на пределе: уровень дал ещё пять здоровья."; }
-  s.pts = (s.pts || 0) + 1;
+  if (room <= 0) { g.hpMax += 5 * n; g.hp = g.hpMax; return " Характеристики на пределе: уровень дал дополнительное здоровье."; }
+  s.pts = (s.pts || 0) + n;
   return " Очко характеристик" + (s.pts > 1 ? ", теперь их " + s.pts : "") + " — " + LAB.K("окно «Характеристики»: " + LAB.gw("stats", "тройное касание тремя пальцами"), "окно «Характеристики»: Shift+C") + ".";
 }
 function spend(k, n) {
@@ -352,6 +401,7 @@ function items() {
   MAIN.forEach(function (k) { its.push({ label: function () { return statLabel(k); }, fn: function () { statMenu(k); } }); });
   SEC.forEach(function (k) { its.push({ label: function () { return statLabel(k); }, info: true, keep: true, fn: function () { say(statLabel(k)); } }); });
   if (s.pts) its.push({ label: "Распределить поровну. Посмотреть итог и подтвердить", fn: spreadMenu });
+  if (s.milestoneRecoveryMax) its.push({ label: "Вернуть пропущенные очки из старой версии", fn: legacyMenu });
   its.push({ label: "Как растут характеристики", fn: function () { UIx("note", "Как растут характеристики", HOWTO()); } });
   its.push({ label: "Назад", fn: function () {} });
   return its;
@@ -411,7 +461,7 @@ LAB.stats = {
   deed: deed, step: step, hurt: hurt, healed: healed, neuro: neuro, minutes: minutes, practice: practice, playMin: playMin, store: store,
   PTS_EVERY: PTS_EVERY, RATE: RATE, STORE_H: STORE_H, nextPtLevel: nextPtLevel, costAt: costAt, cost: cost, costN: costN, affordable: affordable,
   _play: function (min) { var s = S(); if (s) s.play = (s.play || 0) + min * 60; }, _tick: playTick, /* для проверок: минуты игры */
-  onLevel: onLevel, spend: spend, spread: spread, raise: raise, menu: menu, statMenu: statMenu, charLine: charLine, effects: effects, thNext: thNext,
+  restoreMilestones: restoreMilestones, onLevel: onLevel, spend: spend, spread: spread, raise: raise, menu: menu, statMenu: statMenu, charLine: charLine, effects: effects, thNext: thNext,
   calm: calm, calmV: calmV, calmLeft: calmLeft /* (5.0) спокойствие у воды */
 };
 })();

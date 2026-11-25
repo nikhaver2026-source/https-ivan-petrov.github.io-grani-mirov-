@@ -383,7 +383,7 @@ LAB.enrichLevelFoes = function () {
   var N = Math.min(100, LAB.LEVELS_N || 0), F0 = LAB.FOES;
   if (LAB._foesRich || !N || !F0) return;
   LAB._foesRich = true;
-  var usable = function (id) { var b = F0[id]; return !!b && !b.boss && !(b.beh || []).some(function (k) { return k === "turret" || k === "camera" || k === "stationary"; }); };
+  var usable = function (id) { var b = F0[id]; return !!b && !b.boss && !b.eventOnly && !(b.beh || []).some(function (k) { return k === "turret" || k === "camera" || k === "stationary"; }); };
   var prefix = function (id) { var m = /^([a-z])_/.exec(id); return m ? m[1] : ""; };
   var fam = {};
   Object.keys(F0).forEach(function (id) { if (F0[id].kind !== "mech" && usable(id)) (fam[prefix(id)] = fam[prefix(id)] || []).push(id); });

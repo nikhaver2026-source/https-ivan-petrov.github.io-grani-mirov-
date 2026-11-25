@@ -36,9 +36,15 @@ var CLS = {
   mid: { n: "средний каркас", def: 3, arms: 2, legs: 2, plates: 2, drain: 1, str: 11, con: 11, loud: 0, sh: true, tier: 3,
     need: { scrap: 8, servo: 4, panel: 2, magnet: 1, cell: 1, wire: 2 }, d: "ровный во всём; нужны сила 11 и телосложение 11" },
   heavy: { n: "тяжёлый каркас", def: 6, arms: 3, legs: 3, plates: 4, drain: 1.3, str: 14, con: 13, loud: 2, sh: true, tier: 4,
-    need: { scrap: 10, servo: 6, panel: 4, powercell: 1, magnet: 2, supercond: 1 }, d: "сильный и шумный, держит удары; нужны сила 14 и телосложение 13" }
+    need: { scrap: 10, servo: 6, panel: 4, powercell: 1, magnet: 2, supercond: 1 }, d: "сильный и шумный, держит удары; нужны сила 14 и телосложение 13" },
+  sealed: { n: "гермокаркас «Кокон»", def: 5, arms: 2, legs: 2, plates: 3, drain: 1.18, str: 12, con: 12, loud: 0, sh: false, tier: 6, deep: true, guard: 4,
+    need: { rift_lattice: 1, dp_alloy: 3, gel: 2, servo: 3, cell: 1 }, d: "герметичные стыки гасят импульсы поля. Нужны сила 12 и телосложение 12" },
+  haul: { n: "такелажный каркас «Строп»", def: 3, arms: 3, legs: 2, plates: 3, drain: 1.38, str: 14, con: 13, loud: 2, sh: true, tier: 6, deep: true,
+    need: { rift_lattice: 1, dp_alloy: 4, servo: 5, panel: 3, powercell: 1 }, d: "заряженные опоры добавляют 70 килограммов. Шумный. Нужны сила 14 и телосложение 13" },
+  walk: { n: "малошумный каркас «Тень»", def: 2, arms: 1, legs: 3, plates: 2, drain: 0.62, str: 11, con: 12, loud: -1, sh: false, tier: 6, deep: true,
+    need: { rift_lattice: 1, dp_alloy: 2, servo: 4, wire: 2, supercond: 1 }, d: "малый расход заряда и тихий бег с приводами. Нужны сила 11 и телосложение 12" }
 };
-var CLS_ORDER = ["light", "mid", "heavy"];
+var CLS_ORDER = ["light", "mid", "heavy", "sealed", "haul", "walk"];
 var CAP = [0, 100, 160, 240];
 var PLATES = {
   steel: { n: "стальная накладка", need: { scrap: 3 }, def: 2, res: { phys: 0.04 }, tier: 2 },
@@ -76,8 +82,11 @@ function live(f) { return !!f && (f.en || 0) > 0; }
 function bonusK(f) { return strOk(f) ? 1 : 0.5; }
 function profileRank(f, key) { return f.profiles && f.profiles[key] || 0; }
 function poweredRank(f, key) { return f.profile === key && live(f) ? profileRank(f, key) : 0; }
-function loadBonus(f) { return 3 * poweredRank(f, "load"); }
-function energyCost(f, raw) { return +(raw * (1 - 0.08 * poweredRank(f, "economy"))).toFixed(3); }
+function loadBonus(f) { return 3 * (poweredRank(f, "load") + (LAB.rift && live(f) ? LAB.rift.tune(f, "frame", 1) : 0)); }
+function energyCost(f, raw) {
+  var rift = LAB.rift && live(f) ? LAB.rift.tune(f, "frame", 2) : 0;
+  return +(raw * (1 - 0.08 * poweredRank(f, "economy")) * (1 - 0.015 * rift)).toFixed(3);
+}
 function mountRank(f) { return f.sh ? f.shRank || 1 : 0; }
 function mountCost(f) { return f.sh === "horn" ? 15 + 2 * (mountRank(f) - 1) : 1.5 + 0.25 * (mountRank(f) - 1); }
 function save() { if (gm().autosaveSoon) gm().autosaveSoon(); }
@@ -117,7 +126,10 @@ function onStep(run) {
   lowWarn(f, e0);
   /* сервоприводы слышны в ритме шагов: тяжёлый каркас — через шаг, прочие — реже и тише */
   stepN++;
-  if ((f.arms || f.legs) && stepN % (c === CLS.heavy ? 2 : 4) === 0) snd(c === CLS.heavy ? "exo_servo_heavy" : "exo_servo", "repairbot_step", { gain: c === CLS.heavy ? 0.45 : 0.25 });
+  if ((f.arms || f.legs) && stepN % (c.loud > 0 ? 2 : 4) === 0) {
+    if (c.deep && LAB.rift) LAB.rift.frameCue(f.cls, run ? 1.35 : 1.22, 0.22);
+    else snd(c === CLS.heavy ? "exo_servo_heavy" : "exo_servo", "repairbot_step", { gain: c === CLS.heavy ? 0.45 : 0.25 });
+  }
 }
 var stepN = 0;
 function stepNoise(run) {
@@ -188,6 +200,7 @@ function tick() {
 }
 /* СВЧ-раструб: залп по машинам впереди. */
 function horn() {
+  if (gm().weaponAirOk && !gm().weaponAirOk()) return false;
   var f = worn(), C = LAB.combat, g = G();
   if (!f || f.sh !== "horn") { say("На плече каркаса нет СВЧ-раструба."); return false; }
   if (f.hornCd > 0) { say("Раструб остывает."); return false; }
@@ -216,6 +229,7 @@ function equip(f) {
   g.exoOn = f.id;
   snd("exo_on", "armor_on");
   var c = clsOf(f), warn = strOk(f) ? "" : " " + lackText(f).charAt(0).toUpperCase() + lackText(f).slice(1) + " — аккумулятор садится быстрее, прибавки вдвое меньше.";
+  if (c.deep && LAB.rift) LAB.rift.frameCue(f.cls, 1.12, 0.48);
   say("Каркас надет: " + line(f) + "." + warn);
   if (LAB.load) LAB.load.after(); /* (после 4.6) заряженный каркас несёт себя и часть груза */
   if (gm().UIx) gm().UIx("refresh");
@@ -242,6 +256,13 @@ function chargeBat(f) {
   if (LAB.load) LAB.load.after();
   return true;
 }
+function chargeItem(f) {
+  return { label: function () {
+    var cap = capOf(f), level = Math.round(f.en || 0);
+    return "Зарядить каркас энергобатареей. Заряд " + level + " из " + cap +
+      ", доступно батарей " + (G().ammo.energy || 0) + ".";
+  }, keep: true, fn: function () { chargeBat(f); } };
+}
 function chargeFull(f) { f = f || worn(); if (f) addCharge(f, capOf(f)); }
 /* Цена зарядки у капсулы и станции: как у энергобатареи за каждые шестьдесят единиц. */
 function chargePrice(f) {
@@ -263,6 +284,7 @@ function heavyTier() { return MS() && MS().M().known && MS().M().known["exo:heav
 function build(cls, opts) {
   opts = opts || {};
   var c = CLS[cls], g = G();
+  if (!c || (c.deep && g.L <= 100)) { say("Эта рама собирается на верстаках Нижних."); return null; }
   var t = cls === "heavy" ? heavyTier() : c.tier;
   var why = canWork(t, c.need);
   if (why) { LAB.UI.error(); say(cap1(c.n) + ": " + why + "."); return null; }
@@ -280,7 +302,9 @@ function build(cls, opts) {
   if (m && !m.first["exo:" + cls]) { m.first["exo:" + cls] = 1; xp *= 3; }
   if (MS()) MS().gain("mech", xp);
   if (LAB.ach) LAB.ach.ev("craft", 1); /* ОКО слышит работу у верстака — как любую сборку */
-  snd("work_weld", "craft"); if (gm().later) gm().later(function () { snd("work_ratchet", "craft_armor"); }, 900);
+  snd("work_weld", "craft");
+  if (c.deep && LAB.rift) LAB.rift.frameCue(cls);
+  else if (gm().later) gm().later(function () { snd("work_ratchet", "craft_armor"); }, 900);
   say(cap1(c.n) + " собран за " + mins + " минут: " + frameName(f) + ". Аккумулятор заряжен. Узлы — приводы, накладки, подвес — ставятся здесь же, у верстака. Надеть — в инвентаре, раздел «Инженерное».");
   return f;
 }
@@ -418,6 +442,8 @@ function scrap(f) {
   if (why) { say("Разборка каркаса. " + cap1(why) + "."); return false; }
   var back = {}, s = []; for (var k in (f.rcNeed || {})) { var n = Math.floor(f.rcNeed[k] / 2); if (n > 0) { back[k] = n; g.inv[k] = (g.inv[k] || 0) + n; s.push((LAB.ITEMS[k] ? LAB.ITEMS[k].n.toLowerCase() : k) + " " + n); } }
   X().splice(i, 1);
+  var recovered = LAB.rift && LAB.rift.recover(f, "frame");
+  if (recovered) s.push(recovered);
   save();
   if (MS()) MS().ev("salvage");
   snd("work_ratchet", "pry");
@@ -453,7 +479,7 @@ function charLine() { var f = worn(); return f ? "Каркас: " + line(f) + (s
 function benchLabel(et) { var n = X().length; return "Каркас: сборка, узлы, накладки, ремонт" + (n ? " — каркасов " + n : ""); }
 function benchMenu(et) {
   var build_ = function () {
-    var items = CLS_ORDER.map(function (k) {
+    var items = CLS_ORDER.filter(function (k) { return !CLS[k].deep || G().L > 100; }).map(function (k) {
       var c = CLS[k], t = k === "heavy" ? heavyTier() : c.tier;
       return { label: "Собрать: " + c.n + ". " + W().materialsText(c.need) + " " + c.d + (tierNow() < t ? ". Нужен верстак ступени " + t : ""), keep: true, fn: function () { build(k); } };
     });
@@ -525,7 +551,7 @@ function frameInv(f) {
   var g = G(), build_ = function () {
     var on = g.exoOn === f.id, items = [];
     items.push(on ? { label: "Снять каркас", fn: function () { unequip(); } } : { label: "Надеть каркас" + (worn() ? " (вместо надетого)" : ""), fn: function () { equip(f); } });
-    items.push({ label: "Подзарядить энергобатареей: плюс 60. Аккумулятор " + Math.round(f.en || 0) + " из " + capOf(f) + ", батарей " + (g.ammo.energy || 0), keep: true, fn: function () { chargeBat(f); } });
+    items.push(chargeItem(f));
     if (f.sh === "turret") items.push({ label: "Наплечная турель", kind: "choice", options: [{ v: 0, label: "бьёт сама в бою" }, { v: 1, label: "молчит" }], get: function () { return f.turretOff ? 1 : 0; }, set: function (v) { f.turretOff = v ? 1 : 0; snd("pwr_click", "ui_click"); } });
     items.push({ label: "Осмотреть: " + line(f) + ". " + effectText(f), info: true, keep: true, fn: function () {} });
     items.push({ label: "Назад", close: true, fn: function () {} });
@@ -546,8 +572,9 @@ LAB.exo = {
   CLS: CLS, PLATES: PLATES, MOUNT: MOUNT, CAP: CAP,
   frames: frames, worn: worn, capOf: capOf, strOk: strOk, live: live, drain: drain, onStep: onStep, stepNoise: stepNoise, runGapK: runGapK,
   meleeK: meleeK, accK: accK, defBonus: defBonus, res: res, onHurt: onHurt, tick: tick, horn: horn,
-  equip: equip, unequip: unequip, chargeBat: chargeBat, chargeFull: chargeFull, chargePrice: chargePrice, addCharge: addCharge, takeCharge: takeCharge,
+  equip: equip, unequip: unequip, chargeBat: chargeBat, chargeItem: chargeItem, chargeFull: chargeFull, chargePrice: chargePrice, addCharge: addCharge, takeCharge: takeCharge,
   build: build, upNode: upNode, addPlate: addPlate, dropPlate: dropPlate, setMount: setMount, upgradeMount: upgradeMount, setShield: setShield, repair: repair, scrap: scrap,
+  riftGuard: function (f) { return clsOf(f).guard || 0; },
   profileWork: profileWork, loadBonus: loadBonus, energyCost: energyCost,
   line: line, charLine: charLine, benchLabel: benchLabel, benchMenu: benchMenu, invItems: invItems, unlockBy: unlockBy, frameName: frameName
 };

@@ -655,3 +655,993 @@ LAB.deepSys = {
   _trial: function () { return trial; }, _finish: finish, _onLevel: onLevel
 };
 })();
+
+/* Аномальные обследования нижних блоков. План хранит только номера постов:
+   геометрия, двери, враги и вес остаются в общих системах игры. */
+(function () {
+"use strict";
+var LAB = typeof window !== "undefined" ? window.LAB : globalThis.LAB;
+function gm() { return LAB.game; }
+function G() { return gm().G; }
+function C() { return gm().CUR; }
+function say(t) { LAB.say(t); }
+function menu(t, rows) { if (LAB.ui) LAB.ui.menu(t, rows); }
+function back() { return { label: "Назад", close: true, fn: function () {} }; }
+function info(t) { return { label: t, info: true, keep: true, fn: function () {} }; }
+function close() { if (LAB.ui && LAB.ui.closeTop) LAB.ui.closeTop(true); }
+function save() { gm().autosaveSoon(); }
+function cue(id, o, rate, gain) {
+  var a = LAB.atmos;
+  if (!a) return;
+  var opts = { rate: rate || 1, gain: gain == null ? 0.82 : gain, prio: gain == null ? 3 : 2 };
+  if (o) a.at("rift_" + id, o.x, o.y, opts);
+  else a.play("rift_" + id, opts);
+}
+
+/* Название, наблюдение, опорная частота, вымышленная расходная матрица.
+   Матрицы меняют рецепт, контрольную отметку, массу пробы и звук зонда. */
+var TRACES = [
+  ["Вторая стрелка", "На отключённом приборе стрелка идёт следом за вашей рукой. Поверните запястье — она догонит.", 183, { gel: 1, reagent: 2 }],
+  ["Чёрная бахрома", "Край перчатки темнеет в воздухе. Волокна со стороны прибора приподнимаются, как от чужого дыхания.", 209, { gel: 2, wire: 1 }],
+  ["Отрицательный слепок", "В чашке слышно, как кто-то перекладывает сухие обломки. На дне сохраняется вмятина от пустоты.", 238, { reagent: 1, scrap: 2 }],
+  ["Пустая лента", "Самописец тянет чистую бумагу. Каждый раз, когда останавливается, за стенкой кто-то сглатывает.", 262, { reagent: 3, chip: 1 }],
+  ["Стеклянный пульс", "Два стекла сдвигаются в оправе точно в такт вашему пульсу. Между ними ничего не видно.", 294, { gel: 3, reagent: 1 }],
+  ["Обратная роса", "Сухая поверхность втягивает капли из воздуха. После каждой капли внутри прибора скребут ногтем.", 316, { reagent: 2, cap: 1 }],
+  ["Голос под лаком", "Слой лака вздулся над закрытым реле. Пока зонд молчит, оттуда слышно тихое мычание.", 342, { gel: 2, scrap: 2 }],
+  ["Три пустые петли", "Сломанная петля трижды щёлкает сама. После третьего щелчка кто-то отвечает на полтона ниже.", 369, { gel: 1, chip: 2 }],
+  ["Соль без следа", "На стойке белая полоска. Её не стереть ни тряпкой, ни рукой. Прибор звучит громче, когда от него отворачиваются.", 397, { reagent: 4, scrap: 1 }],
+  ["Утопленный свет", "За стеклом плавает еле видный отблеск. Металлическая крышка кажется мокрой с обеих сторон.", 421, { gel: 4, wire: 1 }],
+  ["Ход под пластиной", "По обратной стороне пластины что-то перебирает лапами. Когда вы касаетесь края, звук обходит вашу ладонь.", 448, { gel: 1, cap: 2 }],
+  ["Складка в проводе", "У кабеля два одинаковых изгиба. Если распрямить один, другой сам повторяет движение.", 474, { reagent: 1, wire: 3 }],
+  ["Тёмная мерка", "Мерное кольцо становится теснее вокруг стержня. Насечка скрипит, хотя стержень неподвижен.", 503, { gel: 3, scrap: 1 }],
+  ["Долгая пауза", "Проверочный тон обрывается. Тишина в репродукторе продолжается и после того, как вы отходите.", 532, { reagent: 2, chip: 2 }],
+  ["Крошка в шве", "Из шва один за другим выдавливаются кусочки тёмного стекла. С той стороны их кто-то пересчитывает.", 562, { gel: 2, cap: 2 }],
+  ["Камера без дна", "В глубине отсека что-то течёт вверх. Капли по одной ударяют в крышку изнутри.", 589, { reagent: 4, gel: 2 }],
+  ["Привкус железа", "Раз в несколько секунд слышен короткий зубной скрежет. После него датчик показывает, что внутри кто-то вдохнул.", 619, { gel: 1, scrap: 3 }],
+  ["Печать на пустоте", "На целой пломбе проступает след пальцев с внутренней стороны, одного за другим.", 651, { reagent: 5, cap: 1 }],
+  ["Стук на выдохе", "Прибор щёлкает после каждого вашего выдоха. Стоит задержать дыхание, как щелчок раздаётся позади.", 682, { gel: 4, chip: 1 }],
+  ["Пропавший отзвук", "Зонд пишет тон, но слышен лишь его слабый хвост. От лабораторного пола перестали отражаться шаги.", 711, { reagent: 3, wire: 2 }]
+];
+var FIELDS = [
+  { n: "Ионный разряд", cue: "ion", hint: "Поле снимает заряд имплантов. Блок экзокаркаса поглощает часть разряда." },
+  { n: "Аэрозольный след", cue: "mist", hint: "В зоне следа растут токсины. Фильтр или надетая маска с кислородом защищают от аэрозоля." },
+  { n: "Ледяной сдвиг", cue: "frost", hint: "Холод замедляет движение. Помогает броня с защитой от холода." },
+  { n: "Сжатие", cue: "crush", hint: "Рядом с источником импульсы отнимают здоровье. Отойдите за границу поля." },
+  { n: "Звуковой провал", cue: "null", hint: "Импульс на короткое время приглушает окружающие звуки." }
+];
+var CREATURES = [
+  { n: "Подшовник", note: "ныряет в пол и появляется рядом", kind: "bio", beh: ["burrow", "slow"], adt: "phys", rng: 1, spd: 3, hp: 44, dmg: 12, arm: 2, res: { phys: 0.13 } },
+  { n: "Гортань", note: "останавливается для оглушающего крика", kind: "bio", beh: ["screamer", "pack"], adt: "sonic", rng: 1, spd: 3, hp: 35, dmg: 9, arm: 1, res: { sonic: 0.55 } },
+  { n: "Стеклорог", note: "берёт разбег по прямой", kind: "bio", beh: ["charge"], adt: "phys", rng: 1, spd: 4, hp: 56, dmg: 16, arm: 8, res: { phys: 0.33 } },
+  { n: "Двойной след", note: "мерцает и перескакивает через промежутки", kind: "anom", beh: ["blink", "phaseshift"], adt: "field", rng: 3, spd: 4, hp: 41, dmg: 10, arm: 1, res: { field: 0.46 } },
+  { n: "Падальщик тока", note: "отнимает заряд и лечится от попаданий по герою", kind: "bio", beh: ["drain", "leech"], adt: "shock", rng: 1, spd: 3, hp: 48, dmg: 12, arm: 3, res: { shock: 0.47 } }
+];
+var CHAINS = [
+  { n: "Ручная изоляция", seq: ["probe", "seal"], rank: 1 },
+  { n: "Химическое гашение", seq: ["probe", "brew", "quench"], rank: 1 },
+  { n: "Охота за источником", seq: ["probe", "hunt", "seal"], rank: 2 },
+  { n: "Эвакуация пробы", seq: ["probe", "lift", "unload", "seal"], rank: 2 },
+  { n: "Поиск ложного сигнала", seq: ["probe", "listen", "hunt", "seal"], rank: 2 },
+  { n: "Разбор аномальной камеры", seq: ["probe", "brew", "quench", "listen", "hunt", "lift", "unload", "seal"], rank: 3 }
+];
+var TOTAL = TRACES.length * FIELDS.length * CREATURES.length * CHAINS.length;
+var STAGE = {
+  probe: "Снять показание у источника", seal: "Изолировать контур", brew: "Приготовить матрицу", quench: "Погасить активную фазу",
+  hunt: "Устранить тварь", lift: "Снять контейнер со стойки", unload: "Поставить контейнер в приёмник", listen: "Опознать исходный сигнал"
+};
+var SIGNAL = [[1, 2, 1], [2, 1, 1], [1, 1, 2], [2, 2, 1], [1, 2, 2]];
+var SITES = /^(terminal|okoterm|pc|comp|fusebox|powergrid|workbench|radio|chemlab|charger)$/;
+var RECEIVE = /^(workbench|charger|terminal|powergrid|crate|locker|supply)$/;
+var PARTS = {
+  gun: { n: "Оружейный блок", item: "rift_unit_gun", need: { rift_lattice: 1, chip: 2, wire: 2 },
+    axes: ["Точность", "Теплоотвод", "Глушение"] },
+  drone: { n: "Блок дрона", item: "rift_unit_drone", need: { rift_lattice: 1, servo: 2, cap: 2 },
+    axes: ["Тяга", "Экономия команд", "Шум платформы"] },
+  frame: { n: "Блок каркаса", item: "rift_unit_frame", need: { rift_lattice: 1, panel: 2, cell: 1 },
+    axes: ["Герметизация", "Разгрузка", "Экономия каркаса"] }
+};
+var FRAME_PROFILES = [
+  { n: "Изолятор", trait: "Защита от импульсов поля", axis: 0 },
+  { n: "Такелаж", trait: "Прибавка грузоподъёмности", axis: 1 },
+  { n: "Ходок", trait: "Экономия заряда", axis: 2 }
+];
+
+function spec(id) {
+  var n = (id / TRACES.length) | 0, i = id % TRACES.length;
+  var h = n % FIELDS.length; n = (n / FIELDS.length) | 0;
+  var m = n % CREATURES.length, p = (n / CREATURES.length) | 0;
+  return { id: id, i: i, h: h, m: m, p: p, trace: TRACES[i], field: FIELDS[h], foe: CREATURES[m], chain: CHAINS[p],
+    radius: 3 + i % 4, interval: 2 + Math.floor(i / 4) };
+}
+function serial(seed, L, F) {
+  var ordinal = (L - LAB.DEEP_BASE - 1) * LAB.FLOORS_N + F - 1;
+  /* 137 и 3000 взаимно просты: за цикл встречается каждый протокол. */
+  return (ordinal * 137 + LAB.hash32(seed + "|rift") % TOTAL) % TOTAL;
+}
+function available() { return gm() && gm().entered && G().L > LAB.DEEP_BASE && C().fs; }
+function state() { return available() && C().fs.riftCase; }
+function task(q) { return q && spec(q.id).chain.seq[q.step]; }
+function active(q) { return q && state() === q && !q.done && !G().stair && !G().dead; }
+function object(id) { return C().fl.objs.find(function (o) { return o.id === id; }); }
+function near(o) { return o && gm().touchesObject(o, G().x, G().y); }
+function site(q) { return q && object(q.sites[task(q)]); }
+function siteName(o) {
+  if (!o) return "пост обследования";
+  var r = C().fl.rooms[o.room];
+  return gm().objName(o) + (r ? ", помещение " + (r.num ? r.num + ", " : "") + r.name : "");
+}
+function spawnPlace(o) {
+  var Cb = LAB.combat, g = G(), r = C().fl.rooms[o.room], fl = C().fl, out = [];
+  if (!Cb || !r) return null;
+  for (var y = r.y0 + 1; y < r.y1; y++) for (var x = r.x0 + 1; x < r.x1; x++) {
+    if (fl.room[y * LAB.W + x] !== o.room || !gm().passable(x, y)) continue;
+    var from = Math.abs(x - o.x) + Math.abs(y - o.y), d = Math.abs(x - g.x) + Math.abs(y - g.y);
+    if (from < 4 || from > 9 || d < 4 || !Cb.canStand(null, x, y) || Cb.havenAt(x, y)) continue;
+    out.push([x, y]);
+  }
+  out.sort(function (a, b) {
+    return Math.abs(a[0] - o.x) + Math.abs(a[1] - o.y) - Math.abs(b[0] - o.x) - Math.abs(b[1] - o.y);
+  });
+  return out[0] || null;
+}
+function plan(s, source) {
+  var g = G(), fl = C().fl, siteMap = {}, n = 0, picked = {};
+  function pick(types, room, creature) {
+    var list = fl.objs.filter(function (o) {
+      var r = fl.rooms[o.room];
+      return types.test(o.type) && r && !r.hidden && o.room !== room && (!creature || !r.safe);
+    });
+    list.sort(function (a, b) {
+      function score(o) { return Math.abs(o.x - g.x) + Math.abs(o.y - g.y) + LAB.hash32(s.id + ":" + o.id) % 13; }
+      return score(a) - score(b);
+    });
+    for (var i = 0; i < list.length && n < 54; i++) {
+      var o = list[i];
+      if (creature && !spawnPlace(o)) continue;
+      if (!Object.prototype.hasOwnProperty.call(picked, o.id)) { n++; picked[o.id] = !!gm()._routeTo(null, o); }
+      if (picked[o.id]) return o;
+    }
+    return null;
+  }
+  var probe = pick(SITES, source.room, true) || pick(SITES, -2, true);
+  if (!probe) return null;
+  var seq = s.chain.seq, terminal = pick(SITES, probe.room, false) || source;
+  var lab = seq.indexOf("brew") >= 0 && (pick(/^chemlab$/, probe.room, false) || pick(/^workbench$/, probe.room, false) || source);
+  var receiver = seq.indexOf("unload") >= 0 && (pick(RECEIVE, probe.room, false) || (source.room !== probe.room && source));
+  if (seq.indexOf("unload") >= 0 && !receiver) return null;
+  siteMap.probe = siteMap.hunt = siteMap.quench = siteMap.lift = probe.id;
+  siteMap.seal = siteMap.listen = terminal.id;
+  if (lab) siteMap.brew = lab.id;
+  if (receiver) siteMap.unload = receiver.id;
+  return { id: s.id, step: 0, sites: siteMap, field: false, cargo: 0 };
+}
+function mass(s) { return 24 + 4 * s.i + 12 * s.h + s.chain.rank * 8; }
+function kg(x) { return LAB.load ? LAB.load.kg(x) : x + " килограммов"; }
+function currentLine(q) {
+  if (!q || q.done) return "";
+  var s = spec(q.id), stage = task(q);
+  return "Этап " + (q.step + 1) + " из " + s.chain.seq.length + ". " + STAGE[stage] + ". " + siteName(site(q)) +
+    (q.cargo ? ". Груз " + kg(q.cargo) : "") + ".";
+}
+function target(q) {
+  if (!active(q)) return null;
+  var o = site(q);
+  if (task(q) === "hunt" && q.foe && !q.killed) {
+    var f = LAB.combat.foes().find(function (e) { return e.id === q.foe && !e.dead; });
+    if (f) return { n: "тварь у аномалии. " + f.name.split(",")[0], o: f };
+  }
+  return o ? { n: "аномальное обследование. " + STAGE[task(q)] + ". " + siteName(o), o: o } : null;
+}
+function clearPath() {
+  var route = gm().navFollow();
+  if (route && /^(аномальное обследование|тварь у аномалии)\./.test(route.name)) gm().navStop();
+}
+function next(q, text, snd) {
+  clearPath(); q.step++;
+  gm().journal(text);
+  cue(snd || "ok");
+  save(); close();
+  say(text + " " + currentLine(q));
+}
+function mark(s) { return (s.i * 7 + s.h * 3 + s.m * 2 + s.p) % 10; }
+function pattern(s) { return SIGNAL[(s.i + s.h * 2 + s.m + s.p) % SIGNAL.length]; }
+function signalText(p) { return p.map(function (n) { return n === 1 ? "короткий" : "длинный"; }).join(", "); }
+function tone(s, p) {
+  if (!LAB.Sound || !LAB.Sound.tone) return;
+  var at = 0;
+  p.forEach(function (n, i) {
+    LAB.Sound.tone(s.trace[2] * (i === 1 ? 1.5 : 1), n === 1 ? 0.11 : 0.32, { bus: "puzzle", when: at, vol: 0.16 });
+    at += (n === 1 ? 0.11 : 0.32) + 0.12;
+  });
+}
+function callFoe(q, o) {
+  var s = spec(q.id), cell = spawnPlace(o);
+  if (!cell) return false;
+  var f = LAB.combat.spawnFoe("rift_hunter_" + s.m, cell[0], cell[1], { task: "rift:" + q.id, hpK: [0.72, 0.9, 1.12][s.chain.rank - 1] });
+  if (!f) return false;
+  q.foe = f.id;
+  f.state = "alert";
+  f.lastKnown = { x: G().x, y: G().y };
+  cue("beast" + s.m, f);
+  return true;
+}
+function finish(q, text) {
+  if (!active(q)) return;
+  var s = spec(q.id), g = G();
+  q.done = true; q.field = false; q.cargo = 0;
+  clearPath();
+  var fee = 26 + s.chain.seq.length * 7 + Math.min(65, Math.floor(LAB.Le(g.L) / 3));
+  var crystals = s.chain.rank === 3 ? 2 : 1;
+  if (!LAB.load || LAB.load.canTake(crystals * LAB.load.itemWt("rift_lattice")))
+    g.inv.rift_lattice = (g.inv.rift_lattice || 0) + crystals;
+  else q.claim = crystals; /* доступно с той же стойки после разгрузки */
+  g.credits += fee;
+  gm().gainXP(15 + s.chain.seq.length * 5);
+  gm().journal("Закрыто обследование «" + s.trace[0] + "».");
+  if (LAB.load) LAB.load.after();
+  cue("seal");
+  close(); save();
+  say(text + " Обследование завершено. Кредитов " + fee + ". Резонаторных решёток " + crystals +
+    (q.claim ? ", оставлены у поста сдачи. Заберите после разгрузки." : ", в рюкзаке."));
+}
+function consume(cost) {
+  var g = G();
+  Object.keys(cost).forEach(function (id) {
+    var before = g.inv[id], made = (g.craftN && g.craftN[id]) || 0;
+    var used = Math.max(0, cost[id] - Math.max(0, before - made));
+    if (used) g.craftN[id] = Math.max(0, made - used);
+    if (before === cost[id]) delete g.inv[id]; else g.inv[id] -= cost[id];
+  });
+}
+function costs(cost) {
+  return Object.keys(cost).map(function (id) { return LAB.ITEMS[id].n + " " + cost[id] + ", у вас " + (G().inv[id] || 0); }).join(". ");
+}
+function enough(cost) { return Object.keys(cost).every(function (id) { return (G().inv[id] || 0) >= cost[id]; }); }
+function ampoule(q) { return "rift_vial_" + spec(q.id).i; }
+function sealedClaim(q, o) {
+  if (!q.claim || !near(o) || state() !== q) return;
+  if (LAB.load && !LAB.load.canTake(q.claim * LAB.load.itemWt("rift_lattice"))) { say("Для решёток пока нет места по весу."); return; }
+  G().inv.rift_lattice = (G().inv.rift_lattice || 0) + q.claim;
+  q.claim = 0;
+  cue("carry"); save(); close();
+  say("Резонаторные решётки забраны.");
+}
+function controls(q, o, standard) {
+  var s = spec(q.id), stage = task(q), rows = [info(currentLine(q)),
+    info(s.field.n + ". Радиус " + gm().stepsW(s.radius) + ". Импульс за " + gm().stepsW(s.interval) + " внутри поля. " + s.field.hint)];
+  function valid() { return active(q) && task(q) === stage && o === site(q) && near(o); }
+  if (stage === "probe") rows.push({ label: "Включить зонд. Источник может привлечь тварь", fn: function () {
+    if (!valid()) return;
+    if (!callFoe(q, o)) { say("Не удалось открыть камеру. Освободите место у поста и попробуйте снова."); return; }
+    q.field = true;
+    cue(s.field.cue, o, s.trace[2] / 380);
+    next(q, s.trace[1] + " Контрольная отметка " + mark(s) + ". В другом конце камеры что-то ответило.", "probe");
+  } });
+  if (stage === "brew") {
+    var recipe = s.trace[3], vial = ampoule(q), dose = 0;
+    var required = s.chain.rank === 3 ? 1 + (mark(s) + s.h + s.m) % 8 : 0;
+    rows.push(info("Матрица «" + s.trace[0] + "». Расход. " + costs(recipe) + "."));
+    if (required) {
+      rows.push(info("Замер активной камеры. Дозатор должен стоять на делении " + required + "."));
+      rows.push({ label: "Деление дозатора", kind: "slider", min: 0, max: 8, step: 1,
+        get: function () { return dose; }, set: function (v) { dose = v; } });
+    }
+    rows.push({ label: "Приготовить запечатанную ампулу", fn: function () {
+      if (!valid()) return;
+      if (!(G().inv[vial] > 0)) {
+        if (o.type === "chemlab" && LAB.chem.station(o).dirty) { say("Стол загрязнён. Отмойте его в обычном меню."); return; }
+        if (dose !== required) { cue("error"); say("Деление дозатора не совпало с замером. Клапан остался закрыт."); return; }
+        if (!enough(recipe)) { say("Не хватает припасов. " + costs(recipe)); return; }
+        if (LAB.load && !LAB.load.canTake(LAB.load.itemWt(vial))) { say("Ампулу сейчас не поднять."); return; }
+        consume(recipe); G().inv[vial] = 1;
+        if (LAB.chem) LAB.chem.gain("energy", 4);
+      }
+      next(q, "Ампула готова. Подайте её в гнездо у источника.", "mix");
+    } });
+  }
+  if (stage === "quench") rows.push({ label: "Вставить ампулу в камеру и погасить поле", fn: function () {
+    if (!valid()) return;
+    var id = ampoule(q);
+    if (!(G().inv[id] > 0)) { say("Ампулы нет при вас. Обратитесь к посту подготовки."); return; }
+    G().inv[id]--;
+    q.field = false;
+    if (s.chain.seq[q.step + 1]) next(q, "Поле погашено. Проверьте оставшиеся узлы.", "seal");
+    else finish(q, "Матрица погасила активную фазу.");
+  } });
+  if (stage === "hunt") rows.push(info(q.killed ? "Тварь устранена. Продолжите у поста." :
+    s.foe.n + ". " + s.foe.note + ". «Эхо» укажет её направление."));
+  if (stage === "hunt" && q.killed) rows.push({ label: "Подтвердить осмотр камеры", fn: function () {
+    if (valid()) next(q, "Камера проверена. Зона больше не удерживает тварь.", "ok");
+  } });
+  if (stage === "lift") rows.push({ label: "Взять контейнер, " + kg(mass(s)) + ". Перед выходом положите его в приёмник", fn: function () {
+    if (!valid()) return;
+    if (!LAB.load || !LAB.load.canTake(mass(s))) { say("Груз неподъёмный. Разгрузите рюкзак или подключите грузовой модуль."); return; }
+    q.cargo = mass(s); LAB.load.after(); next(q, "Контейнер опломбирован и закреплён.", "carry");
+  } });
+  if (stage === "unload") rows.push({ label: "Сдать опломбированный контейнер", fn: function () {
+    if (!valid() || !q.cargo) return;
+    q.cargo = 0; LAB.load.after(); next(q, "Контейнер установлен в приёмник.", "carry");
+  } });
+  if (stage === "listen") {
+    var correct = pattern(s);
+    rows.push(info("Исходная запись. " + signalText(correct) + "."));
+    rows.push({ label: "Прослушать исходный сигнал", keep: true, fn: function () { if (valid()) tone(s, correct); } });
+    SIGNAL.forEach(function (p) {
+      rows.push({ label: "Выбрать запись. " + signalText(p), keep: true, fn: function () {
+        if (!valid()) return;
+        if (p !== correct) { cue("error"); say("Ритм отличается от исходного. Повторите запись."); return; }
+        next(q, "Прибор принял исходный ритм.", "probe");
+      } });
+    });
+  }
+  if (stage === "seal") {
+    var dial = 0;
+    rows.push(info("Контрольная отметка из замера " + mark(s) + "."));
+    rows.push({ label: "Отметка муфты. Изменить и подтвердить", kind: "slider", min: 0, max: 9, step: 1, keep: true,
+      get: function () { return dial; }, set: function (v) { dial = v; }, fn: function () {
+        if (!valid()) return;
+        if (dial !== mark(s)) { cue("error"); say("Отметка не совпала. Сверьтесь с замером."); return; }
+        finish(q, "Муфта закрыта. Поле затихло.");
+      } });
+  }
+  if (standard) rows.push({ label: "Обычные действия у оборудования", fn: standard });
+  rows.push(back());
+  menu("Аномалия. " + s.trace[0], rows);
+}
+function objMenu(o, standard) {
+  var q = state();
+  if (q && q.done && q.claim && q.sites[spec(q.id).chain.seq.slice(-1)[0]] === o.id && near(o)) {
+    menu("Награда за обследование", [
+      { label: "Забрать решётки, " + q.claim, fn: function () { sealedClaim(q, o); } },
+      { label: "Обычные действия у оборудования", fn: standard }, back()
+    ]);
+    return true;
+  }
+  if (!active(q) || !near(o) || o !== site(q)) return false;
+  controls(q, o, standard);
+  return true;
+}
+function journalItem() {
+  var q = state();
+  if (!active(q)) return null;
+  return { label: "Аномальное обследование. " + currentLine(q), fn: function () {
+    if (!active(q)) return;
+    var s = spec(q.id), o = site(q);
+    if (near(o)) { controls(q, o); return; }
+    var rows = [info(currentLine(q)), info(s.trace[1]), info(s.field.hint)];
+    rows.push({ label: "Проложить путь к следующей цели", fn: function () {
+      var t = target(q);
+      if (t) { if (LAB.ui && LAB.ui.closeAll) LAB.ui.closeAll(); gm().navigateTo(t); }
+    } });
+    if (q.cargo) rows.push({ label: "Вернуть контейнер к стойке", fn: function () {
+      if (!active(q) || !releaseCargo()) return;
+      close(); save(); say("Контейнер отцеплен. Стойка подтянула его страховочным тросом.");
+    } });
+    rows.push(back()); menu("Обследование. " + s.trace[0], rows);
+  } };
+}
+function boardRow(o) {
+  if (!available()) return null;
+  return { label: "Аномальные обследования", fn: function () {
+    if (!available() || !near(o)) return;
+    var q = state(), s = spec(q ? q.id : serial(G().seed, G().L, G().F));
+    var rows = [info(s.trace[0] + ". " + s.field.n + ". " + s.chain.n + ". Этапов " + s.chain.seq.length + ".")];
+    if (q && q.done) rows.push(info("Камера обследована." + (q.claim ? " Награда ждёт у поста сдачи." : "")));
+    else if (q) rows.push(journalItem());
+    else rows.push({ label: "Взять обследование. " + s.field.hint, fn: function () {
+      if (!available() || state() || !near(o)) return;
+      var started = plan(s, o);
+      if (!started) { say("Нет безопасного подхода к контрольным постам. Откройте проходы или обратитесь с другого узла."); return; }
+      C().fs.riftCase = started;
+      gm().journal("Начато обследование «" + s.trace[0] + "».");
+      cue("probe"); save(); close(); say(currentLine(started));
+    } });
+    rows.push(back()); menu("Аномальные обследования", rows);
+  } };
+}
+function releaseCargo() {
+  var q = state();
+  if (!q || !q.cargo) return false;
+  q.cargo = 0;
+  q.step = spec(q.id).chain.seq.indexOf("lift");
+  if (LAB.load) LAB.load.after();
+  gm().journal("Контейнер возвращён страховочным тросом на стойку.");
+  return true;
+}
+function killed(f) {
+  var q = state();
+  if (!active(q) || q.foe !== f.id) return;
+  q.killed = true;
+  cue("ok"); save();
+}
+function step() {
+  var q = state();
+  if (!active(q) || !q.field) return;
+  var o = object(q.sites.probe), g = G(), s = spec(q.id);
+  if (!o || Math.abs(g.x - o.x) + Math.abs(g.y - o.y) > s.radius || !LAB.los(C().fl, C().fs, g.x, g.y, o.x, o.y)) return;
+  q.pulse = (q.pulse || 0) + 1;
+  if (q.pulse % s.interval === 1) cue(s.field.cue, o, 0.86 + s.i * 0.012);
+  if (q.pulse === 1) LAB.say(s.field.hint, { interrupt: false });
+  if (q.pulse % s.interval !== 0) return;
+  var frame = LAB.exo && LAB.exo.worn(), shield = frame && LAB.exo.live(frame)
+    ? tune(frame, "frame", 0) + LAB.exo.riftGuard(frame) : 0;
+  if (s.h === 0) g.en = Math.max(0, g.en - Math.max(0, Math.ceil(s.chain.rank + 2 - shield * 0.4)));
+  if (s.h === 1 && !((g.st.antitox || 0) > 0)) {
+    var air = g.airGear;
+    if (air && air.on && air.oxygen > 0 && g.inv.airmask > 0) air.oxygen = Math.max(0, air.oxygen - 0.25);
+    else g.body.tox = Math.min(100, g.body.tox + Math.max(0, s.chain.rank + 2 - shield * 0.35));
+  }
+  if (s.h === 2 && !gm().armorSpecial("frost")) g.st.slow = Math.max(g.st.slow || 0, 2 + s.chain.rank);
+  if (s.h === 3) LAB.combat.hurtPlayer(Math.round((4 + s.chain.rank * 3) * (1 - 0.035 * shield)), "field", null, { quiet: true });
+  if (s.h === 4) {
+    g.st.deaf = Math.max(g.st.deaf || 0, 2 + s.chain.rank);
+    if (LAB.atmos) LAB.atmos.deafen(800 + s.chain.rank * 350);
+  }
+}
+
+/* Один съёмный блок на предмет. Точный бюджет делит три
+   настраиваемых эффекта; числа из записи ограничиваются при чтении. */
+function block(obj, kind) { return obj && obj.rift && obj.rift.kind === kind ? obj.rift : null; }
+function tune(obj, kind, axis) {
+  var b = block(obj, kind);
+  if (!b || !Array.isArray(b.v)) return 0;
+  var v = Math.max(0, Math.min(10, Math.floor(+b.v[axis] || 0)));
+  if (kind === "frame" && FRAME_PROFILES[b.profile] && FRAME_PROFILES[b.profile].axis === axis) v += 2;
+  return v;
+}
+function moduleEffect(kind, axis, v) {
+  if (kind === "gun") return [v * 0.6 + " процентных пункта точности", v * 2.5 + " процентов дополнительной ёмкости теплоотвода", v * 3 + " процентов глушения"][axis];
+  if (kind === "drone") return [v * 1.5 + " процентов к тяге в пределах корпуса", Math.floor(v / 3) + " экономии энергии на командах от 6 единиц", (v / 5).toFixed(1) + " снижения шума грузовой платформы"][axis];
+  return [v + " единиц защиты от аномальных полей", v * 3 + " килограммов к пределу", v * 1.5 + " процентов экономии энергии"][axis];
+}
+function nearBench() {
+  var b = LAB.workshop && LAB.workshop.near();
+  return b && LAB.workshop.effTier(b) >= 4;
+}
+function held(obj, kind) {
+  if (kind === "gun") return G().weapons.indexOf(obj) >= 0;
+  if (kind === "frame") return (G().frames || []).indexOf(obj) >= 0;
+  return LAB.drone.D() === obj;
+}
+function benchRow() {
+  if (!available() || !nearBench()) return null;
+  return { label: "Резонаторные модули. Сборка и точная настройка", fn: benchMenu };
+}
+function benchMenu() {
+  if (!available() || !nearBench()) { say("Нужен работающий верстак ступени 4."); return; }
+  var rows = [];
+  Object.keys(PARTS).forEach(function (kind) {
+    var m = PARTS[kind];
+    rows.push({ label: "Собрать. " + m.n + ". " + costs(m.need), fn: function () {
+      if (!nearBench() || !enough(m.need)) { say("Нужны станки и детали. " + costs(m.need)); return; }
+      if (LAB.load && !LAB.load.canTake(LAB.load.itemWt(m.item))) { say("Модуль сейчас не поднять."); return; }
+      consume(m.need); G().inv[m.item] = (G().inv[m.item] || 0) + 1;
+      cue("bench"); save(); close(); say(m.n + " собран.");
+    } });
+  });
+  function add(obj, kind, name) {
+    rows.push({ label: name + ". " + (block(obj, kind) ? "Резонатор установлен" : "Установить резонатор"), fn: function () {
+      if (!nearBench() || !held(obj, kind)) return;
+      var m = PARTS[kind];
+      if (!block(obj, kind)) {
+        if (!(G().inv[m.item] > 0)) { say("Сначала соберите " + m.n.toLowerCase() + "."); return; }
+        G().inv[m.item]--; obj.rift = { kind: kind, v: [4, 4, 4], profile: 0 };
+        cue("bench"); save(); if (LAB.load) LAB.load.after();
+      }
+      tuneMenu(obj, kind, name);
+    } });
+  }
+  G().weapons.forEach(function (w) { add(w, "gun", w.name); });
+  var d = LAB.drone && LAB.drone.D();
+  if (d && !d.wreck) add(d, "drone", "Дрон-спутник");
+  (G().frames || []).forEach(function (f) { add(f, "frame", LAB.exo.frameName(f)); });
+  rows.push(back()); menu("Резонаторные модули", rows);
+}
+function tuneMenu(obj, kind, name) {
+  var m = PARTS[kind], b = block(obj, kind);
+  if (!b) return;
+  function valid() { return nearBench() && held(obj, kind) && block(obj, kind) === b; }
+  function changed() { cue("tune"); save(); if (LAB.load) LAB.load.after(true); }
+  var rows = [info("Бюджет 12 единиц на три канала. Сначала освободите единицы на другом канале. Изменения вступают в силу сразу." + (kind === "frame" ? " Специализация добавляет 2 к одному каналу." : ""))];
+  m.axes.forEach(function (label, i) {
+    rows.push({ label: label, kind: "slider", min: 0, max: 10, step: 1,
+      get: function () { return b.v[i]; },
+      set: function (n) {
+        if (!valid()) return;
+        var other = b.v[(i + 1) % 3] + b.v[(i + 2) % 3];
+        var v = Math.max(0, Math.min(10, 12 - other, Math.round(n)));
+        if (v !== b.v[i]) { b.v[i] = v; changed(); }
+        else if (v !== n) say("Освободите единицы на другом канале.");
+      },
+      fmt: function (v) { return v + " из 10. " + moduleEffect(kind, i, tune(obj, kind, i)); }
+    });
+  });
+  if (kind === "frame") rows.push({ label: "Специализация каркаса", kind: "choice",
+    options: FRAME_PROFILES.map(function (p, i) { return { v: i, label: p.n + ". " + p.trait }; }),
+    get: function () { return b.profile || 0; }, set: function (n) { if (valid() && FRAME_PROFILES[n]) { b.profile = n; changed(); } }
+  });
+  rows.push({ label: "Снять блок и вернуть в рюкзак", fn: function () {
+    if (!valid()) return;
+    delete obj.rift;
+    if (LAB.load && !LAB.load.canTake(LAB.load.itemWt(m.item))) {
+      obj.rift = b;
+      say("Сначала снимите лишний груз. Без резонатора его не поднять.");
+      return;
+    }
+    G().inv[m.item] = (G().inv[m.item] || 0) + 1; changed(); close();
+    say("Блок снят. При новой установке каналы выставляются в исходное положение.");
+  } });
+  rows.push(back()); menu("Точная настройка. " + name, rows);
+}
+function register() {
+  LAB.ITEMS.rift_lattice = { n: "Резонаторная решётка", kind: "eng", cat: "eng", wt: 0.65, nosell: 1, desc: "Деталь для сборки на верстаке глубин. Награда за обследование аномалии." };
+  Object.keys(PARTS).forEach(function (k) {
+    var p = PARTS[k]; LAB.ITEMS[p.item] = { n: p.n + " резонатора", kind: "eng", cat: "eng", wt: 1.1, nosell: 1, desc: "Устанавливается и настраивается на работающем верстаке глубин." };
+  });
+  TRACES.forEach(function (t, i) {
+    LAB.ITEMS["rift_vial_" + i] = { n: "Матрица «" + t[0] + "»", kind: "quest", cat: "quest", wt: 0.35, nosell: 1, desc: "Запечатанная ампула для гнезда аномальной камеры." };
+  });
+  CREATURES.forEach(function (b, i) {
+    LAB.FOES["rift_hunter_" + i] = Object.assign({ g: i === 1 || i === 3 ? "f" : "m", acd: 4, det: 8, xp: 16, min: 101, desc: b.note + ".", snd: "rift_beast" + i }, b);
+  });
+  if (LAB.SND) {
+    FIELDS.map(function (f) { return f.cue; }).concat(CREATURES.map(function (_, i) { return "beast" + i; }),
+      ["probe", "mix", "seal", "carry", "ok", "error", "bench", "tune", "frame_sealed", "frame_haul", "frame_walk"]).forEach(function (id) {
+      var key = "rift_" + id;
+      LAB.SND[key] = { f: ["rift/" + id + "_1.ogg", "rift/" + id + "_2.ogg"], o: { v: 0.86, bus: "fx" } };
+      if (LAB.SOUND_ALL) LAB.SOUND_ALL.push(key);
+    });
+  }
+}
+function unitMass(obj) {
+  return obj && obj.rift && PARTS[obj.rift.kind] ? LAB.ITEMS[PARTS[obj.rift.kind].item].wt : 0;
+}
+function recover(obj, kind) {
+  if (!block(obj, kind)) return "";
+  var id = PARTS[kind].item;
+  delete obj.rift;
+  G().inv[id] = (G().inv[id] || 0) + 1;
+  return LAB.ITEMS[id].n.toLowerCase();
+}
+register();
+LAB.rift = { boardRow: boardRow, objMenu: objMenu, journalItem: journalItem, nav: function () { return target(state()); },
+  leave: releaseCargo, step: step, killed: killed, cargo: function () { var q = state(); return q ? q.cargo || 0 : 0; },
+  benchRow: benchRow, tune: tune, unitMass: unitMass, recover: recover,
+  frameCue: function (cls, rate, gain) { cue("frame_" + cls, null, rate, gain); }, count: TOTAL, spec: spec, serial: serial };
+})();
+
+/* Происшествия возникают на обычном маршруте. Этаж хранит только обнаруженный след,
+   а его свойства и звуковые улики восстанавливаются по номеру сценария. */
+(function () {
+"use strict";
+var LAB = window.LAB;
+var ORIGINS = [
+  ["Второй шаг", "Пол отвечает на ваш шаг с короткой задержкой. Второй шаг тяжелее первого.", "ступень", 4],
+  ["Неподвижный вентилятор", "Воздух толчками выходит из решётки. Лопасти за ней прихвачены проволокой.", "воздух", 5],
+  ["Зазор в дверце", "Тонкий скрежет идёт по краю закрытой створки. Зазор с каждой царапиной становится уже.", "стена", 3],
+  ["Останьтесь на линии", "Связь обрывается. Вместо сигнала отбоя из динамика снова и снова натягивают провод.", "стена", 4],
+  ["Пыль в потолке", "Песчинки ударяют по потолку снизу. Ни одна не падает обратно.", "воздух", 5],
+  ["Пустая маска", "На внутренней стороне пустой маски щёлкает клапан. Каждый вдох длиннее предыдущего.", "воздух", 3],
+  ["Шов расходится", "У сварного шва лопается краска. Из щели по очереди выдвигаются три тонкие полоски стали.", "стена", 4],
+  ["Узел на кабеле", "Кабель сам затягивает петлю. После каждого рывка узел оказывается ближе к вам.", "ступень", 5],
+  ["Чей-то жетон", "Жетон, зажатый между плитами, то и дело переворачивается. Номер на обеих сторонах один, а металл звенит по-разному.", "ступень", 3],
+  ["Чужой карандаш", "В пустом отсеке по одному и тому же месту водят тупым грифелем. В конце каждой строки нажим становится сильнее.", "стена", 4],
+  ["Давление изнутри", "Снятую с прибора прокладку распирает. Из неё течёт воздух рывками, как через очень узкую щель.", "воздух", 5],
+  ["Привычный стук", "Из крышки отвечают короткими ударами. В середине последовательности всегда ждут ещё одного.", "стена", 3],
+  ["На обратной стороне", "По нижней стороне плиты тащат что-то тяжёлое, с одной свободной металлической пряжкой.", "ступень", 5],
+  ["Мёрзлое стекло", "На стекле проступает круг от тепла. Лёд трескается из его центра к самому краю.", "стена", 4],
+  ["Укрытие для одного", "Из тесной ниши пыхтит мех. На каждом выдохе он прижимается к решётке всё ближе.", "воздух", 3],
+  ["Обратный слив", "В сливе слышны сперва капли, потом плеск. Уровень воды поднимается с сухой стороны крышки.", "ступень", 4],
+  ["Бляшка на стене", "Под латунной бляшкой перекатывается тяжёлое зерно. Оно добегает до края и ударяет снизу.", "стена", 5],
+  ["Нулевой отсчёт", "Отключённый прибор подаёт сигнал конца замера. После этого его механизм начинает медленно отматывать ленту.", "стена", 3],
+  ["Последний болт", "Плита держится на одном болте. Кто-то перебирает снятый крепёж с её нижней стороны.", "ступень", 4],
+  ["Коридор внутри трубы", "Из трубы доносятся несколько далёких тяжёлых шагов. Раскат от каждого длится дольше, чем позволяет её длина.", "воздух", 5],
+  ["Обратная тяга", "В бумажный фильтр втягивает воздух из помещения. По складкам бегут короткие всплески, словно изнутри бьётся вода.", "воздух", 3],
+  ["Место для сапог", "По пыльному полу тянется скрип подошв. Скрип обрывается каждый раз у одной и той же отметки.", "ступень", 5],
+  ["Переговорная без стен", "Пустой резонатор тихо посвистывает. В промежутках будто кто-то пытается произнести первый слог.", "воздух", 4],
+  ["Беззубый привод", "Под настилом прокручивается передача. Металлическая крошка царапает пластины при каждом обороте.", "ступень", 5],
+  ["Тыльный звон", "Шина касается кожуха с внутренней стороны. После удара тон продолжает дрожать в соседней стене.", "стена", 4]
+];
+var RULES = [
+  { n: "Ответ на шаги", cue: "foot", hint: "Бег усиливает ответ. Безопаснее идти шагом или сделать паузу." },
+  { n: "Скопление взвеси", cue: "air", hint: "Взвесь накапливается, когда вы задерживаетесь. Смените место. Дыхательный фильтр защищает." },
+  { n: "Поверхностный заряд", cue: "arc", hint: "Разряд зарождается в двух шагах от источника. Отойдите, пока он набирает силу." },
+  { n: "Просвет", cue: "sight", hint: "След усиливается по прямой. За стеной и за закрытой дверью он ослабевает." },
+  { n: "Обратная волна", cue: "return", hint: "Приближение усиливает волну. При отступлении она стихает." }
+];
+var PROCEDURES = [
+  { n: "Выждать паузу", open: "Выждать паузу у следа", first: "wait" },
+  { n: "Сравнить ближний и дальний замеры", open: "Записать ближний замер", first: "distance" },
+  { n: "Опознать повтор", open: "Записать ритм источника", first: "echo" },
+  { n: "Сверить две контрольные точки", open: "Нанести метку на источник", first: "relay" },
+  { n: "Отвести помеху в нужный контур", open: "Снять показания трёх контуров", first: "ground" },
+  { n: "Отвести отклик к пустому посту", open: "Включить переносной отражатель", first: "lure" }
+];
+var DEPTHS = [
+  { start: 3, n: "Предвестие", limit: 7, reach: 0, waits: 1, confirm: 0, hit: 0 },
+  { start: 101, n: "Прорыв", limit: 7, reach: 1, waits: 2, confirm: 0, hit: 2 },
+  { start: 1501, n: "Контакт", limit: 6, reach: 2, waits: 2, confirm: 1, hit: 3 },
+  { start: 12701, n: "Вторжение", limit: 5, reach: 3, waits: 3, confirm: 2, hit: 5 }
+];
+var STAGE = {
+  inspect: "Снять исходное показание", wait: "Дослушать паузу у источника",
+  distance: "Выйти к точке дальнего замера", echo: "Выбрать услышанный ритм",
+  relay: "Проверить метку на контрольной точке", compare: "Сверить ответ с исходной меткой",
+  ground: "Выбрать контур для заземления", lure: "Довести отклик шагом до пустого поста",
+  seal: "Закрыть контур у источника", verify: "Подтвердить тишину с контрольной точки",
+  lock: "Вернуться к источнику и запереть контур"
+};
+var RHYTHMS = ["Короткий, короткий, длинный", "Короткий, длинный, короткий", "Длинный, короткий, короткий"];
+var CHANNELS = ["Настил", "Стена", "Воздуховод"];
+var CHANNEL_CLUES = [
+  "Первой отзывается плита под ногами, затем стенка, последним воздуховод.",
+  "Первой отзывается стенка, затем воздуховод, последней плита под ногами.",
+  "Первым отзывается воздуховод, затем плита под ногами, последней стенка."
+];
+var CHANNEL_FOR = { "ступень": 0, "стена": 1, "воздух": 2 };
+var BAND = ORIGINS.length * RULES.length * PROCEDURES.length;
+var TOTAL = BAND * DEPTHS.length;
+var MIN_STEPS = 5;
+
+function gm() { return LAB.game; }
+function hero() { return gm().G; }
+function floor() { return gm().CUR; }
+function say(t) { LAB.say(t, { interrupt: false }); }
+function menu(t, rows, opts) { LAB.ui.menu(t, rows, opts); }
+function back() { return { label: "Назад", fn: function () {} }; }
+function close() { LAB.ui.closeTop(true); }
+function info(t) { return { label: t, keep: true, fn: function () { say(t); } }; }
+function active(q) { return q && state() === q && q.stage !== "done" && !hero().dead && !hero().done && !hero().stair; }
+function state() { return floor().fs && floor().fs.haunt; }
+function dist(a, b) { return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]); }
+function pos() { return [hero().x, hero().y]; }
+function same(a, b) { return a[0] === b[0] && a[1] === b[1]; }
+function rankAt(L) {
+  for (var i = DEPTHS.length - 1; i >= 0; i--) if (L >= DEPTHS[i].start) return i;
+  return -1;
+}
+function serial(seed, L, F) {
+  var rank = rankAt(L);
+  if (rank < 0) return -1;
+  var ordinal = (L - DEPTHS[rank].start) * LAB.FLOORS_N + F - 1;
+  return rank * BAND + (ordinal * 131 + LAB.hash32(seed + "|haunt|" + rank) % BAND) % BAND;
+}
+function spec(id) {
+  if (!Number.isInteger(id) || id < 0 || id >= TOTAL) return null;
+  var rank = Math.floor(id / BAND), local = id % BAND, i = local % ORIGINS.length;
+  var rule = Math.floor(local / ORIGINS.length) % RULES.length;
+  var proc = Math.floor(local / (ORIGINS.length * RULES.length));
+  var base = ORIGINS[i], depth = DEPTHS[rank];
+  return { i: i, rank: rank, origin: base, d: depth, rule: rule, proc: proc,
+    radius: base[3] + depth.reach, rhythm: (i + rule + rank) % RHYTHMS.length,
+    channel: (CHANNEL_FOR[base[2]] + rule) % CHANNELS.length };
+}
+function cue(name, where, gain, rate) {
+  var a = LAB.atmos, o = { gain: gain || 0.58, rate: rate || 1 };
+  if (!a) return;
+  if (where && a.at) { o.follow = true; a.at("haunt_" + name, where[0], where[1], o); }
+  else if (a.play) a.play("haunt_" + name, o);
+}
+function traceCue(q, where) {
+  var s = spec(q.id);
+  cue("origin" + s.i, where || q.source, 0.66, [1, 0.94, 0.89, 0.82][s.rank]);
+}
+function safe(x, y) {
+  var c = LAB.combat, r = gm().roomAt(x, y);
+  return !!(r && floor().fs.haven && floor().fs.haven[r.id]) || !!(c && c.refugeAt(x, y));
+}
+function passInRoom(r, x, y) {
+  return x >= r.x0 && x <= r.x1 && y >= r.y0 && y <= r.y1 &&
+    gm().roomAt(x, y) === r && !gm().doorAt(x, y) && gm().passable(x, y);
+}
+function eligible(r) {
+  return r && !r.hidden && !r.shop && !r.boss && !safe(hero().x, hero().y) &&
+    !floor().fl.objs.some(function (o) {
+      return o.room === r.id && /^(wake|capsule|stairs_|gate_|reactor|elevator|arena_|lift_)/.test(o.type);
+    });
+}
+/* Оба поста в связной области текущей комнаты. Мебель, NPC, двери и границы
+   остаются под контролем исходного генератора. */
+function plan(r, from, s) {
+  var queue = [from], visited = {}, far = [];
+  visited[from[1] * LAB.W + from[0]] = 1;
+  for (var at = 0; at < queue.length; at++) {
+    var p = queue[at], x = p[0], y = p[1];
+    if (dist(p, from) >= 4 && dist(p, from) <= 12 && !safe(x, y)) far.push(p);
+    [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]].forEach(function (n) {
+      var key = n[1] * LAB.W + n[0];
+      if (!visited[key] && passInRoom(r, n[0], n[1])) { visited[key] = 1; queue.push(n); }
+    });
+  }
+  if (!far.length) return null;
+  far.sort(function (a, b) { return dist(b, from) - dist(a, from); });
+  var correctlyPlaced = far.filter(function (p) { return dist(p, from) > s.radius; });
+  var choices = correctlyPlaced.length ? correctlyPlaced : far;
+  var remote = choices[s.i % Math.min(choices.length, 4)];
+  var fixture = floor().fl.objs.find(function (o) {
+    return o.room === r.id && gm().touchesObject(o, from[0], from[1]);
+  });
+  return { source: from, remote: remote, fixture: fixture ? fixture.id : null };
+}
+function begin(from, r) {
+  var g = hero(), fs = floor().fs;
+  if (g.L < DEPTHS[0].start || g.stats.steps < MIN_STEPS || gm().roomAt(from[0], from[1]) === r || !eligible(r)) return;
+  var id = serial(g.seed, g.L, g.F);
+  var s = spec(id), p = plan(r, pos(), s);
+  if (!p) return;
+  var q = fs.haunt = { id: id, stage: "inspect", source: p.source, remote: p.remote, fixture: p.fixture,
+    room: r.id, heat: 0, quiet: 0 };
+  traceCue(q);
+  if (s.rank === 3) cue("answer", q.remote, 0.71);
+  var extra = ["", " След временами меняет показания приборов.",
+    " За границей следа слышно движение.", " Отдалённый пост отвечает сам. В ответе различимы движения, которых вы не делали."][s.rank];
+  say(s.origin[1] + extra + " «Эхо» занесло происшествие в журнал. Здесь можно снять исходное показание или уйти.");
+}
+function target(q) {
+  if (!active(q)) return null;
+  var remote = /^(distance|relay|lure|verify)$/.test(q.stage);
+  return { n: "Происшествие. " + STAGE[q.stage], cell: remote ? q.remote : q.source };
+}
+function change(q, stage, text, sound) {
+  var path = gm().navFollow();
+  if (path && path.name.indexOf("Происшествие. ") === 0) gm().navStop();
+  q.stage = stage;
+  if (sound) cue(sound);
+  if (text) say(text);
+}
+function finish(q) {
+  if (!active(q)) return;
+  var s = spec(q.id), g = hero(), credits = [12, 26, 48, 85][s.rank];
+  change(q, "done", null, "closed");
+  q.heat = 0;
+  g.credits += credits;
+  gm().gainXP([10, 18, 35, 60][s.rank]);
+  gm().journal("Происшествие «" + s.origin[0] + "» завершено.");
+  say("След погас. Получено " + credits + " кредитов.");
+  gm().autosave();
+}
+function solved(q) {
+  q.quiet = 0;
+  if (!spec(q.id).d.confirm) { finish(q); return; }
+  change(q, "seal", "Способ сработал. Вернитесь к источнику и закройте контур.", "catch");
+}
+function closeCircuit(q) {
+  if (spec(q.id).d.confirm < 2) { finish(q); return; }
+  change(q, "verify", "Контур закрыт. На этой глубине возможен обратный прорыв. Проверьте тишину с контрольной точки.", "latch");
+}
+function ruleChange(q, s, kind, before) {
+  var now = pos(), gap = dist(now, q.source);
+  if (gap > s.radius || safe(now[0], now[1])) return -3;
+  switch (s.rule) {
+    case 0: return kind === "run" ? 3 : kind === "step" ? (hero().noise >= 5 ? 2 : -1) : -2;
+    case 1: return kind === "step" || kind === "run" ? -1 : 2;
+    case 2: return gap <= 2 ? 2 : -2;
+    case 3: return LAB.los(floor().fl, floor().fs, now[0], now[1], q.source[0], q.source[1]) ? 2 : -2;
+    case 4: return before && gap < dist(before, q.source) ? 3 : -1;
+  }
+  return 0;
+}
+function airProtected() {
+  return hero().st.antitox > 0 || gm().breathingGear();
+}
+function wakeFollower(q, s) {
+  if (q.foe || s.rank < 2 || (s.rank === 2 && s.rule !== 3 && s.rule !== 4) || !LAB.combat) return false;
+  var c = LAB.combat, x = q.remote[0], y = q.remote[1], g = hero();
+  var p = [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]].find(function (cell) {
+    var r = gm().roomAt(cell[0], cell[1]);
+    return r && r.id === q.room && dist(pos(), cell) >= 4 && c.canStand(null, cell[0], cell[1]) && !safe(cell[0], cell[1]);
+  });
+  if (!p) return false;
+  var f = c.spawnFoe(s.rule % 2 ? "haunt_listening" : "haunt_treader", p[0], p[1], { hpK: s.rank === 2 ? 0.48 : 0.68 });
+  if (!f) return false;
+  q.foe = f.id;
+  f.state = "hunt";
+  f.lastKnown = { x: g.x, y: g.y };
+  cue(s.rule % 2 ? "listening" : "treader", p, 0.78);
+  say(f.name + " вышел из следа. Можно отступить или продолжить проверку позже.");
+  return true;
+}
+function pulse(q, s) {
+  var g = hero(), rank = s.rank, n = s.d.hit, rule = RULES[s.rule];
+  if (!rank) { say("След отозвался и снова стих. Источник помехи указан в журнале."); return; }
+  if (s.rule === 1 && !airProtected()) {
+    var result = [];
+    gm().bodyApply({ tox: n * 2, air: true }, result);
+    say("Вы вдохнули взвесь. " + result.join(" ") + " Здесь лучше двигаться.");
+  } else if (s.rule === 1) say("Взвесь ударила в фильтр. Воздух под маской чист.");
+  if (s.rule === 3) {
+    g.st.slow = Math.max(g.st.slow || 0, n + 1);
+    say("Прямая видимость. Движения на короткое время замедлились.");
+  }
+  var type = { 0: "sonic", 2: "shock", 4: "phys" }[s.rule];
+  if (type && LAB.combat && g.hp > 1) {
+    var raw = Math.min(g.hp - 1, n + Math.ceil(g.hpMax * n * 0.017));
+    LAB.combat.hurtPlayer(raw, type, null, { quiet: true });
+    say(rule.n + ". Отойдите. Здоровье " + g.hp + ".");
+  }
+  if (rank === 3 && !q.foe) cue("answer", q.remote, 0.73, 0.91);
+  wakeFollower(q, s);
+}
+function react(q, s, kind, from) {
+  var old = q.heat;
+  var delta = ruleChange(q, s, kind, from), edge = s.d.limit;
+  q.heat = Math.max(0, Math.min(edge, old + delta));
+  if (old < edge - 2 && q.heat >= edge - 2) {
+    cue(RULES[s.rule].cue, q.source, 0.59);
+    say(RULES[s.rule].hint);
+    return;
+  }
+  if (q.heat >= edge && delta > 0) {
+    cue(RULES[s.rule].cue, q.source, 0.87, 0.92);
+    q.heat = Math.max(0, edge - 4);
+    pulse(q, s);
+  }
+}
+function arrive(q) {
+  if (!same(pos(), q.remote)) return false;
+  if (q.stage === "relay") { change(q, "compare", "Та же метка проступила на удалённом посту. Вернитесь к источнику и сверьте отметки.", "relay"); return true; }
+  if (q.stage === "distance" || q.stage === "lure") { solved(q); return true; }
+  if (q.stage === "verify") {
+    change(q, "lock", "Здесь тихо. За спиной снова дрогнул контур. Вернитесь к источнику и заприте его.", "verify");
+    cue("answer", q.source);
+    return true;
+  }
+  return false;
+}
+function step(from, run) {
+  var g = hero(), r = gm().roomAt(g.x, g.y), q = state();
+  if (g.stair || g.dead || g.done) return;
+  if (!q) { begin(from, r); return; }
+  if (!active(q)) return;
+  if (!r || r.id !== q.room || safe(g.x, g.y)) {
+    q.heat = 0; q.quiet = 0;
+    if (q.stage === "lure") change(q, "inspect", "Отклик сорвался у границы помещения. Отражатель можно включить повторно.", "reset");
+    return;
+  }
+  if (q.stage === "lure" && run) {
+    change(q, "inspect", "Бег сорвал перенос. Вернитесь к источнику и снова включите отражатель.", "reset");
+  }
+  if (q.stage === "distance" || q.stage === "relay" || q.stage === "lure") {
+    if (arrive(q)) return;
+  }
+  q.quiet = 0;
+  if (q.stage !== "verify") react(q, spec(q.id), run ? "run" : "step", from);
+}
+function leave() {
+  var q = state();
+  if (!q || q.stage === "done") return;
+  q.heat = 0;
+  q.quiet = 0;
+  if (q.stage === "lure") q.stage = "inspect";
+}
+function idle() {
+  var q = state(), g = hero();
+  if (!active(q) || q.stage === "inspect" || q.stage === "verify" || Date.now() - gm().lastMoveAt() < 3000) return;
+  var s = spec(q.id), r = gm().roomAt(g.x, g.y);
+  if (!s.rank || s.rule !== 1 || !r || r.id !== q.room) return;
+  react(q, s, "idle");
+}
+function row(q, label, fn) {
+  var stage = q.stage;
+  return { label: label, fn: function () {
+    if (!active(q) || q.stage !== stage) return;
+    fn();
+  } };
+}
+function atSource(q) { return same(pos(), q.source); }
+function wrong(q, s, hint) {
+  cue("reset");
+  say(hint);
+  react(q, s, "work");
+}
+function openControls(q) {
+  if (!active(q)) return;
+  var s = spec(q.id), stage = q.stage, t = target(q);
+  var rows = [info(STAGE[stage] + ". " + RULES[s.rule].hint)];
+  function action(label, cb, away) {
+    rows.push(row(q, label, function () {
+      if (away ? !same(pos(), q.remote) : !atSource(q)) { say("Сначала подойдите к указанной точке."); return; }
+      cb();
+    }));
+  }
+  function leaveMenu(cb) {
+    return function () { close(); cb(); };
+  }
+  if (!atSource(q) || /^(distance|relay|lure|verify)$/.test(stage)) rows.push(row(q, "Указать путь к текущей точке", function () {
+    LAB.ui.closeAll();
+    gm().navigateTo(t);
+  }));
+  if (atSource(q)) {
+    rows.push({ label: "Повторить звук и описание источника", keep: true, fn: function () {
+      if (!active(q) || !atSource(q)) return;
+      traceCue(q); say(s.origin[1]);
+    } });
+    if (stage === "inspect") action(PROCEDURES[s.proc].open, leaveMenu(function () {
+      var p = PROCEDURES[s.proc];
+      change(q, p.first, STAGE[p.first] + ".", /^(echo|ground)$/.test(p.first) ? null : "sample");
+      if (p.first === "echo") cue("rhythm" + s.rhythm);
+      if (p.first === "ground") { cue("contact" + s.channel); say(CHANNEL_CLUES[s.channel] + " Заземлите контур, который откликается первым."); }
+    }));
+    if (stage === "wait") action("Замереть и дождаться паузы", leaveMenu(function () {
+      gm().advanceTime(0.65);
+      if (!active(q)) return;
+      react(q, s, "wait");
+      q.quiet++;
+      if (q.quiet >= s.d.waits) solved(q);
+      else say("Пауза " + q.quiet + " из " + s.d.waits + ". Стойте на месте и дослушайте.");
+    }));
+    if (stage === "echo") {
+      rows.push({ label: "Прослушать запись и прочитать ритм", keep: true, fn: function () {
+        if (!active(q) || q.stage !== stage || !atSource(q)) return;
+        cue("rhythm" + s.rhythm);
+        say(RHYTHMS[s.rhythm] + ".");
+      } });
+      RHYTHMS.forEach(function (line, i) {
+        action(line, leaveMenu(function () {
+          if (i === s.rhythm) solved(q);
+          else wrong(q, s, "Фаза не совпала. Повторите исходную запись.");
+        }));
+      });
+    }
+    if (stage === "compare") action("Сверить обе отметки", leaveMenu(function () { solved(q); }));
+    if (stage === "ground") {
+      rows.push({ label: "Снова измерить отдачу контуров", keep: true, fn: function () {
+        if (!active(q) || q.stage !== stage || !atSource(q)) return;
+        cue("contact" + s.channel);
+        say(CHANNEL_CLUES[s.channel]);
+      } });
+      CHANNELS.forEach(function (channel, i) {
+        action("Заземлить. " + channel, leaveMenu(function () {
+          if (i === s.channel) solved(q);
+          else wrong(q, s, "По контакту вернулась помеха. Возьмите контур, который отзывается первым.");
+        }));
+      });
+    }
+    if (stage === "seal") action("Закрыть контур", leaveMenu(function () { closeCircuit(q); }));
+    if (stage === "lock") action("Запереть контур", leaveMenu(function () { finish(q); }));
+  }
+  if (stage === "verify" && same(pos(), q.remote)) action("Проверить тишину", leaveMenu(function () { arrive(q); }), true);
+  rows.push(back());
+  menu("Происшествие. " + s.origin[0], rows);
+}
+function journalItem() {
+  var q = state();
+  if (!active(q)) return null;
+  var s = spec(q.id);
+  return { label: "Происшествие. " + s.origin[0] + ". " + s.d.n + ". " + STAGE[q.stage],
+    fn: function () { openControls(q); } };
+}
+function objMenu(o, normal) {
+  var q = state();
+  if (!active(q) || q.fixture !== o.id || !atSource(q)) return false;
+  menu("Объект у следа", [
+    { label: "Осмотреть след. " + STAGE[q.stage], fn: function () { close(); openControls(q); } },
+    { label: "Обычные действия. " + gm().objName(o), fn: function () { close(); normal(); } },
+    back()
+  ]);
+  return true;
+}
+function register() {
+  if (LAB.FOES) {
+    LAB.FOES.haunt_listening = { n: "Прислушник", g: "m", kind: "anom", min: 1501, eventOnly: true,
+      desc: "Замирает в просвете и пропадает за краем стены.", snd: "haunt_listening",
+      beh: ["blink"], adt: "field", rng: 2, spd: 4, acd: 5, det: 8, hp: 27, dmg: 7, arm: 0, xp: 12 };
+    LAB.FOES.haunt_treader = { n: "Тяжелоступ", g: "m", kind: "bio", min: 1501, eventOnly: true,
+      desc: "Идёт короткими рывками. Перед броском перестаёт шаркать.", snd: "haunt_treader",
+      beh: ["charge"], adt: "phys", rng: 1, spd: 4, acd: 6, det: 7, hp: 34, dmg: 9, arm: 1, xp: 14 };
+  }
+  if (!LAB.SND) return;
+  var sounds = ORIGINS.map(function (_, i) { return "origin" + i; });
+  sounds.concat(RULES.map(function (r) { return r.cue; }), [
+    "sample", "catch", "answer", "latch", "verify", "closed", "reset", "relay", "listening", "treader",
+    "rhythm0", "rhythm1", "rhythm2", "contact0", "contact1", "contact2"
+  ]).forEach(function (id) {
+    var key = "haunt_" + id;
+    LAB.SND[key] = { f: ["haunt/" + id + ".ogg"], o: { v: 0.78, bus: "fx" } };
+    if (LAB.SOUND_ALL) LAB.SOUND_ALL.push(key);
+  });
+}
+register();
+LAB.haunt = { count: TOTAL, serial: serial, spec: spec, step: step, idle: idle, leave: leave,
+  journalItem: journalItem, objMenu: objMenu, nav: function () { return target(state()); } };
+})();

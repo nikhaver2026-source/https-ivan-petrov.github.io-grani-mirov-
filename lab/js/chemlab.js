@@ -697,6 +697,7 @@ function bench(o) {
     if (G().inv.film > 0) items.push({ label: "Проявить фотоплёнку — плёнок: " + G().inv.film, fn: function () { developFilm(o); } });
     items.push({ label: "Анализ ткани тварей", fn: function () { tissueMenu(o); } });
     items.push({ label: "Журнал опытов", fn: function () { journalMenu(); } });
+    if (LAB.load) items.push(LAB.load.benchItems("chem")[0]);
     items.push({ label: "Правила лаборатории", keep: true, fn: function () { say(RULES, { read: true }); } });
     items.push({ label: "Назад", close: true, fn: function () {} });
     return items;

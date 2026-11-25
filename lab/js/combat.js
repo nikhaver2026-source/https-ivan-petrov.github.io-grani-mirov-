@@ -705,6 +705,7 @@ function realTick() {
   if (LAB.mini && LAB.mini.active && LAB.mini.active()) { idleAt = 0; return; }
   if (S.turnBased) { idleTurn(); return; }     /* по ходам: мир движется после действий героя */
   tick();
+  if (LAB.haunt && tickN % 6 === 0) LAB.haunt.idle();
 }
 /* ════════ ПОШАГОВЫЙ РЕЖИМ (2.6) ════════
    Мир ходит после ваших действий, и в любом режиме сложности здесь свои
@@ -2143,7 +2144,7 @@ function attack(f, seen) {
   if (packLeadNear(f)) dmg = Math.round(dmg * 1.2); /* (2.5) вожак рядом — свои злее */
   if (f.chargeHit) dmg = Math.round(dmg * 1.5);
   if (gm().armorSpecial("phaseveil") && Math.random() < 0.15) { A("play", "phase_out"); sayOnce("pveil", "Удар прошёл сквозь вас."); return; }
-  var fin = hurtPlayer(dmg, f.adt, f);
+  var fin = hurtPlayer(dmg, f.adt, f, { ranged: ranged, critical: !!f.chargeHit });
   if (G().dead) return;
   if (spl) splashNear(f, dmg, false);
   if (has(f, "leech") && fin > 0) f.hp = Math.min(f.maxhp, f.hp + Math.round(fin * 0.5));
@@ -2166,7 +2167,7 @@ function attack(f, seen) {
    попадании. Прежде splash был лишь +10 % к точному удару: промах — ноль, «Экран» отводил залп целиком. */
 function splashNear(f, dmg, miss) {
   var hp = heroPos(), part = Math.max(1, Math.round(dmg * 0.4));
-  if (miss) { hurtPlayer(part, f.adt, f); if (G().dead) return; }
+  if (miss) { hurtPlayer(part, f.adt, f, { ranged: false }); if (G().dead) return; }
   foes.forEach(function (o) {
     if (o.ally && !o.dead && cheb(o, hp) <= 1 && clearTo(hp.x, hp.y, o.x, o.y)) damageFoe(o, part, ADT_DT[f.adt] || "kinetic", { quiet: true, by: "foe" });
   });
@@ -2270,7 +2271,7 @@ function hurtPlayer(dmg, adt, src, opts) {
   g.lastHurt = Date.now();
   if (LAB.stats) LAB.stats.hurt(fin); /* (после 4.6) раны закаляют: практика телосложения */
   if (LAB.chem && src && fin > 0) LAB.chem.onBite(src); /* (3.0) укус ядовитой твари — немного мутагена */
-  A("hurt", adt, fin, src);
+  A("hurt", adt, fin, src, opts);
   LAB.vib(fin > g.hpMax * 0.15 ? [80, 40, 80] : 40);
   if (g.hp <= 0) { g.hp = 0; UIx("refresh"); gm().die(); return fin; }
   var pct = Math.round(100 * g.hp / g.hpMax);
@@ -2390,7 +2391,7 @@ function wallHit(dir, rng) {
 }
 function fire(dir, burst) {
   var g = G(), w = weapon();
-  if (!w || !g.drawn || g.dead || gm().paused) return false;
+  if (!w || !g.drawn || g.dead || gm().paused || (gm().weaponAirOk && !gm().weaponAirOk())) return false;
   /* открыто окно или идёт мини-игра — не стреляем (и мир не делает ход) */
   if ((LAB.ui && LAB.ui.layer()) || (LAB.mini && LAB.mini.active && LAB.mini.active())) { if (hold) stopFire(); return false; }
   var now = Date.now();
@@ -2791,6 +2792,7 @@ function kill(f, quiet) {
       }
     }, 350);
   }
+  if (LAB.rift) LAB.rift.killed(f);
   if (LAB.quests) LAB.quests.onKill(f, xp); /* (3.6) поручения «уничтожить машин, тварей, стражей…» */
   gm().gainXP(xp);
   gm().checkQuests();
@@ -2848,8 +2850,16 @@ function visibleFoes(r) {
   }).map(function (f) { return f; });
 }
 function aliveCount() { return foes.filter(function (f) { return hostile(f); }).length; }
-function jammed() { return foes.some(function (f) { return !f.dead && !f.calm && aff(f, "jammer") && cheb(f, heroPos()) <= 6; }); }
-function jammer() { var b = null, bd = 99; foes.forEach(function (f) { if (!f.dead && !f.calm && aff(f, "jammer") && cheb(f, heroPos()) <= 6 && cheb(f, heroPos()) < bd) { bd = cheb(f, heroPos()); b = f; } }); return b; }
+function jammed() { return !!jammer(); }
+function jammer() {
+  var hero = heroPos(), best = null, dist = 7;
+  foes.forEach(function (f) {
+    if (!hostile(f) || f.blindT > 0 || f.frozen > 0 || !aff(f, "jammer")) return;
+    var near = cheb(f, hero);
+    if (near < dist && clearTo(f.x, f.y, hero.x, hero.y)) { best = f; dist = near; }
+  });
+  return best;
+}
 function noise(n) { G().noise = Math.max(G().noise, n); }
 /* Турели этажа: отключить, перехватить, вернуть ОКО. Переносные — не трогаются. */
 function isNetTurret(f) { return !f.dead && has(f, "turret") && !f.shots; }
@@ -3312,7 +3322,10 @@ function useImplant(id, free) {
          турель врагом и вешали на неё маяк */
       var list = near.filter(function (f) { return !f.ally && !f.calm && !f.neutral; });
       var mine = near.filter(function (f) { return f.ally; }), tame = near.filter(function (f) { return !f.ally && (f.calm || f.neutral); });
-      var items = gm().floorItems().filter(function (it) { return Math.abs(it.x - g.x) + Math.abs(it.y - g.y) <= sr; });
+      var itemRange = Math.min(sr, gm().hearingRange());
+      var items = gm().floorItems().filter(function (it) {
+        return Math.abs(it.x - g.x) + Math.abs(it.y - g.y) <= itemRange;
+      });
       var parts = [];
       parts.push(list.length ? "Враги: " + list.map(describe).join("; ") + "." : "Врагов рядом нет.");
       if (mine.length) parts.push("Свои: " + mine.map(function (f) { return f.name.split(",")[0] + " " + gm().relDir(f.x, f.y); }).join("; ") + ".");
@@ -3506,6 +3519,7 @@ function grenKind(q) {
   return (q.dmg || 0) >= 60 ? "big" : "frag";
 }
 function throwGrenade(id) {
+  if (gm().weaponAirOk && !gm().weaponAirOk()) return false;
   var g = G(), d = LAB.ITEMS[id], q = d && d.fx && d.fx.gren;
   if (!q || !(g.inv[id] > 0)) { say("Нет: " + (d ? d.n : id) + "."); return false; }
   g.inv[id]--;
@@ -3574,7 +3588,7 @@ LAB.combat = {
   signalLure: signalLure, weakness: weakness, vsK: vsK, slowWhy: slowWhy, healsKind: healsKind, /* (3.7) */
   dispatch: dispatch, replacePatrol: replacePatrol, refillRoom: refillRoom, okoPoint: okoPoint, patrols: patrols, sappers: sappers, minePoints: minePoints, drones: drones, repairers: repairers, guards: guards, sendCheck: sendCheck, reroute: reroute, dismiss: dismiss, despawn: despawn,
   tickN: function () { return tickN; }, wakeSafe: function () { return safeHero; }, sheltered: sheltered, refuge: function () { return refugeId; },
-  haven: function () { return havenId; }, havenAt: havenAt, postRoom: postRoom, hidden: hidden,
+  haven: function () { return havenId; }, havenAt: havenAt, refugeAt: inRefuge, postRoom: postRoom, hidden: hidden,
   lodR: lodR, lodLevel: lodLevel, search: search, netUp: netUp, camFacing: camFacing,
   quietTurret: quietTurret, jammer: jammer, freeCellNear: freeCellNear, spawnFoe: spawnFoe, damageFoe: damageFoe, unhide: unhide, unmask: unmask, dropCarry: dropCarry, _relayCall: function (f) { relayCall(f); }, _cleanerTick: function (f) { cleanerTick(f); }, isTurret: isTurret, cutTurret: cutTurret, mineTurret: mineTurret, unmineTurrets: unmineTurrets, flankCell: flankCell,
   cutCount: function () { return foes.filter(function (f) { return (isNetTurret(f) && f.cut) || (isCam(f) && f.camOff); }).length; },

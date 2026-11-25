@@ -293,11 +293,14 @@ function npcRate(n) {
   var p = (LAB.PROFS && LAB.PROFS[n.prof]) || {};
   return n.heal || p.heal ? 1.25 : NPC_RATE[p.beacon] || 1;
 }
-function navPing(x, y) { at("nav_ping", x, y, { bus: "ui", gain: 0.9 }); }
+function navPing(x, y) {
+  var g = G(); if (!g) return;
+  var dx = x - g.x, dy = y - g.y;
+  play("nav_ping", { bus: "ui", gain: 0.9, pan: Math.sign(dx) * 0.8,
+    rate: dy < 0 ? 1.12 : dy > 0 ? 0.89 : 1, reverb: 0 });
+}
 function navStart(path) {
-  if (!path || !path.length) return;
-  var last = path[Math.min(path.length - 1, 5)];
-  at("nav_ping", last[0], last[1], { bus: "ui", gain: 0.8 });
+  if (path && path.length) navPing(path[0][0], path[0][1]);
 }
 /* (3.7, нелогичность) свой звук подбора у вида, для которого нет записи «pick_…»: еда шуршит бумагой
    (game.js, itemKind) — прежде хлеб и тушёнка звенели склянкой стимулятора */
@@ -651,6 +654,13 @@ function foeSound(f, kind) {
   if (kind === "idle" && lastFoeSound[key] && now - lastFoeSound[key] < 3000) return;
   lastFoeSound[key] = now;
   var set = foeSet(f);
+  var haunt = /^haunt_/.test(set);
+  var ownCue = /^(alert|attack|shoot|idle)$/.test(kind) || (haunt && /^(aim|blink_out|blink_in)$/.test(kind));
+  if (ownCue && (haunt || /^rift_beast/.test(set)) && has(set)) {
+    atFoe(set, f.x, f.y, { gain: kind === "idle" ? 0.43 : 0.91, rate: kind === "attack" ? 1.24 : kind === "shoot" ? 1.12 : 0.96 });
+    if (kind === "alert") sub(f.name.split(",")[0] + " заметил вас");
+    return;
+  }
   var id = set + "_" + kind;
   var generic = {
     alert: f.kind === "mech" ? "robot_alert" : "mutant_alert", attack: f.kind === "mech" ? "robot_attack" : "mutant_attack", idle: f.kind === "mech" ? "robot_idle" : "mutant_idle",
@@ -695,6 +705,17 @@ function foeStep(f) {
     atFoe(has(f.snd + "_idle") ? f.snd + "_idle" : "robot_idle", f.x, f.y, { gain: pat ? 0.85 : 0.6, rate: (f.base && f.base.sndRate) || 1 });
     return;
   }
+  if (/^haunt_/.test(f.snd) && has(f.snd)) {
+    f.hauntSteps = (f.hauntSteps || 0) + 1;
+    if (f.hauntSteps % 2 === 0) atFoe(f.snd, f.x, f.y, { gain: 0.31, rate: 1.33 });
+    return;
+  }
+  if (/^rift_beast/.test(f.snd) && has(f.snd)) {
+    f.riftSteps = (f.riftSteps || 0) + 1;
+    atFoe(f.riftSteps % 4 === 0 ? f.snd : "mutant_step", f.x, f.y,
+      { gain: f.riftSteps % 4 === 0 ? 0.35 : 0.6, rate: 0.78 + (+f.snd.slice(-1) || 0) * 0.12 });
+    return;
+  }
   if (Math.random() < 0.35 && f.kind === "bio" && !/rat|roach|micro/.test(f.type)) return;
   var id = f.kind === "mech" ? (has(f.snd + "_step") ? f.snd + "_step" : "robot_step") : (has(f.snd + "_step") ? f.snd + "_step" : "mutant_step");
   atFoe(id, f.x, f.y, { gain: f.boss || pat ? 1 : 0.65, rate: ((f.base && f.base.sndRate) || 1) * (f.boss ? 0.8 : 1) });
@@ -709,7 +730,7 @@ function foeHit(f, dt, dmg, crit) {
    у роботов — взрыв, разряд и осыпающиеся обломки, у тварей — удар тела
    об пол и хрип; босс — тяжёлый взрыв. */
 function foeDeath(f) {
-  var id = foeSet(f) + "_death", mech = f.kind === "mech";
+  var set = foeSet(f), id = /^rift_beast/.test(set) ? set : set + "_death", mech = f.kind === "mech";
   atFoe(has(id) ? id : (mech ? "robot_death" : "mutant_death"), f.x, f.y, { gain: 1.4, rate: ((f.base && f.base.sndRate) || 1) * (f.boss ? 0.8 : 1) });
   if (mech) {
     atFoe("explosion_small", f.x, f.y, { gain: 0.95, delay: 0.1 });
@@ -729,13 +750,28 @@ function foeDeath(f) {
   sub((f.name || "").split(",")[0] + " — повержен");
 }
 function foeMiss(f, ranged) { play(ranged ? "bullet_by" : "swing_by", { ch: "foe", gain: 0.8, pan: (f.x - G().x) > 0 ? 0.5 : (f.x - G().x) < 0 ? -0.5 : 0 }); }
-/* вид урона без своей записи: звуковой удар — давление, как у поля; прочие — удар */
 var HURT_AS = { sonic: "hurt_field" };
-function hurt(adt, dmg, src) {
-  var hid = "hurt_" + (adt || "phys");
-  if (!has(hid) && !FB[hid]) hid = HURT_AS[adt] || "hurt_phys";
-  play(hid, { gain: 0.9 });
-  if (dmg > (G() ? G().hpMax * 0.12 : 20)) play("player_pain", { gain: 0.8, delay: 0.05 });
+var painAt = 0;
+function hurt(adt, dmg, src, impact) {
+  var hid = HURT_AS[adt] || "hurt_" + (adt || "phys");
+  if (!has(hid) && !FB[hid]) hid = "hurt_phys";
+  impact = impact || {};
+  var g = G(), severe = impact.critical || dmg >= (g ? g.hpMax * 0.15 : 18);
+  var ballistic = (adt === "phys" || adt === "kinetic") && (impact.ranged == null ? (src && src.rng > 1) : impact.ranged);
+  if (ballistic) {
+    play("hit_flesh", { gain: 0.82, rate: 1.24, lp: 3400, reverb: 0, prio: 3 });
+    play("hurt_phys", { gain: 0.78, delay: 0.02, reverb: 0, prio: 3 });
+  } else if (adt !== "air") {
+    play(hid, { gain: 0.95, reverb: 0, prio: 3 });
+    if (adt === "shock") play("w_shock_crack", { ch: "fx", gain: 0.4, delay: 0.035, lp: 3700, reverb: 0, prio: 3 });
+  }
+  if (severe && adt !== "air") play("bump_body", { gain: 0.85, lp: 980, rate: 0.77, reverb: 0, prio: 3 });
+  var now = Date.now();
+  if (now - painAt >= (adt === "air" ? 900 : severe ? 220 : 340)) {
+    painAt = now;
+    play("player_pain", { gain: severe ? 0.54 : 0.32, lp: adt === "air" ? 1200 : 1950,
+      rate: adt === "shock" ? 1.16 : severe ? 0.91 : 1.06, reverb: 0, delay: 0.035, prio: 3 });
+  }
   heartCheck();
 }
 
@@ -751,6 +787,7 @@ function shot(w, dir, burst) {
   /* глушитель: выстрел тише и глуше — без раската и треска разряда;
      (3.7) бесшумное оружие («Шёпот», дротики, самострел) тихо звучит и для героя */
   var q = Math.max((w.mod && w.mod.quiet) || 0, b.silent ? 1 : 0);
+  if (LAB.rift) q = Math.min(2, q + 0.065 * LAB.rift.tune(w, "gun", 2));
   if (q) power -= 2 * q;
   play(id, { ch: "weap", pan: v[0] * 0.35, gain: (burst ? 0.9 : 1.05) * (1 - 0.28 * q), rate: (b.sndRate || 1) * (burst ? 1.03 : 1) * (1 - 0.05 * q), reverb: q ? 0.15 : 0.3 });
   if (b.cls === "melee") { if (b.dt === "shock") play("w_shock_crack", { ch: "weap", pan: v[0] * 0.3, gain: 0.8, fb: FB.w_shock_crack }); return; }

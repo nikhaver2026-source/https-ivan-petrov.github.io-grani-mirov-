@@ -618,6 +618,7 @@ function rootItems(o) {
   items.push({ label: "Анализ вещества", fn: function () { anaMenu(o); } });
   items.push({ label: "Химия: ступени и специализация", fn: function () { skillMenu(); } });
   items.push({ label: "Сырьё в рюкзаке: " + matCount(), fn: function () { invMenu(); } });
+  if (LAB.load) items.push(LAB.load.benchItems("chem")[0]);
   items.push({ label: "Отойти", fn: function () {} });
   return items;
 }
