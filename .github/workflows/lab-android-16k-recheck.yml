@@ -1,0 +1,48 @@
+name: Подземная лаборатория — повтор Android 15 с 16 КБ
+on:
+  push:
+    branches: [codex/lab-android-16k-recheck-6.0]
+    paths: [.github/workflows/lab-android-16k-recheck.yml]
+permissions:
+  actions: read
+  contents: read
+jobs:
+  check:
+    name: Android 15, страницы 16 КБ
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            lab/android
+            .github
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45691355268
+          name: podzemnaya-laboratoriya-alfa-6.0-apk
+          path: new
+      - name: Скачать предыдущий выпуск
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download lab-android-5.6 -R "$GITHUB_REPOSITORY" --pattern '*.apk' --output old.apk
+      - name: Доступ к KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Проверка готовности системы и обновления APK
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          LAB_EXPECTED_ANDROID_API: 35
+          LAB_ANDROID_IMAGE_TARGET: google_apis_ps16k
+        with:
+          api-level: 35
+          target: google_apis_ps16k
+          arch: x86_64
+          disk-size: 6G
+          ram-size: 4096M
+          emulator-options: -no-window -no-snapshot -gpu swangle_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: bash .github/lab-compat-check.sh new/Podzemnaya-laboratoriya-Alfa-6.0.apk old.apk
