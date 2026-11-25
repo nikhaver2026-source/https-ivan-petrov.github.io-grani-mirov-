@@ -4544,7 +4544,9 @@ LAB.ui.closeAll();
         out.sThrow = layers(() => LAB.atmos.grenade(X + 4, Y, { fuse: 900 })).join(",");
         out.sLure = layers(() => LAB.atmos.grenade(X + 4, Y, { noPin: true })).join(",");
       } finally { Snd.play = sp0; }
-      /* 8. пошаговый режим: действия стоят ходов, удар вдогонку, враги не ждут вечно */
+      /* 8. Базовая цена действий проверяется в штатной обстановке.
+         В холоде игровые действия закономерно требуют больше ходов. */
+      G.event = "norm"; G.eventUntil = G.min + 120;
       S.turnBased = 1; G.stair = null; G.dead = false;
       C.foes().forEach(f => { f.dead = true; });
       for (let i = 0; i < 8; i++) C.tick(); /* после входа на этаж враги не бьют — эти такты прошли */
