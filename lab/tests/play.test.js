@@ -2341,7 +2341,15 @@ LAB.ui.closeAll();
       if (cell) {
         G.x = cell[0]; G.y = cell[1];
         const fs = g.CUR.fs; fs.drops.push({ kind: "item", item: "scrap", n: 1, id: "dlook" + Date.now(), x: cell[0], y: cell[1] + 0 });
-        SPOKEN.length = 0; g.lookAround();
+        // Порядок описания проверяется в штатной обстановке: аварии и отравление
+        // могут закономерно скрыть дальнюю обстановку выбранной комнаты.
+        const event0 = G.event, poison0 = G.st.poison, tox0 = G.body.tox;
+        try {
+          G.event = "norm"; G.st.poison = 0; G.body.tox = 0;
+          SPOKEN.length = 0; g.lookAround();
+        } finally {
+          G.event = event0; G.st.poison = poison0; G.body.tox = tox0;
+        }
         const t = SPOKEN.join(" "), iFloor = t.indexOf("На полу"), iHere = t.indexOf("Здесь:"), iRoom = t.indexOf(rm.name + "."), iLevel = t.lastIndexOf("Уровень " + G.L + ", этаж " + G.F);
         out.look = iFloor === 0 && iHere > iFloor && iRoom > iHere && iLevel > iRoom && iLevel + ("Уровень " + G.L + ", этаж " + G.F + ".").length >= t.trim().length;
         if (!out.look) out.lookT = t.slice(0, 260);
