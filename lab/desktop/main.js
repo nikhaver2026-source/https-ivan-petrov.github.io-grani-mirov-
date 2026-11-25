@@ -27,7 +27,7 @@ protocol.registerSchemesAsPrivileged([{
 // Звук с первой секунды, без щелчка мышью: игроку нечем «разрешить» звук.
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
-const VERSION = 'Альфа 5.0';
+const VERSION = 'Альфа ' + require('./package.json').version.split('.').slice(0, 2).join('.');
 const TITLE = 'Подземная лаборатория ' + VERSION;
 // Самопроверка (сборка на серверах GitHub): игра проходит все этажи, пишет
 // итог в журнал и закрывается с кодом 0 (всё хорошо) или 1.
@@ -110,6 +110,7 @@ function log(m) {
 // ── ГОЛОСА КОМПЬЮТЕРА ──
 const sapi = SapiMod && process.platform === 'win32' ? new SapiMod.Sapi() : null;
 let ttsState = sapi ? 'init' : 'failed';
+const selftestSpeechIds = new Set();
 const sapiReady = sapi ? sapi.start(12000).then(ok => { ttsState = sapi.ready ? 'ready' : 'failed'; return ok; }).catch(() => { ttsState = 'failed'; return false; }) : Promise.resolve(false);
 function voices() { try { return sapi && sapi.ready ? sapi.list() : []; } catch (_) { return []; } }
 // Состояние голосов — в окно игры сразу, как только оно меняется: окно
@@ -247,9 +248,8 @@ function createWindow() {
   // и в окно (оно знает, говорит ли мост сейчас, — не спрашивая главный процесс).
   if (sapi) {
     sapi.onDone = (kind, id) => {
+      if (selftestSpeechIds.delete(String(id))) log('самопроверка речи: ' + kind + ' ' + id);
       if (win && !win.isDestroyed()) win.webContents.send('lab-tts-end', kind, String(id));
-      if (kind === 'cancel') return;
-      js(`window.${kind === 'done' ? 'LabTTSDone' : 'LabTTSError'}&&window.${kind === 'done' ? 'LabTTSDone' : 'LabTTSError'}(${JSON.stringify(String(id))})`);
     };
     // Голоса, появившиеся позже (мост поднялся после открытия игры, запустили
     // или закрыли NVDA и JAWS, «Перечитать голоса»), уходят в игру без перезапуска.
@@ -262,6 +262,11 @@ function createWindow() {
   sapiReady.then(pushTts);
   win.webContents.on('did-finish-load', () => {
     pageOpened = true;
+    // Один канал IPC доставляет и состояние, и завершение конкретной фразы.
+    js(`window.LabTTS.onEnd(function (kind, id) {
+      var done = kind === 'done' ? window.LabTTSDone : window.LabTTSError;
+      if (done) done(id);
+    });`);
     pushTts();
     if (!SELFTEST) { bgSent = { min: null, blur: null }; bgSync(); }
     // Страница открылась на запасной ступени — с неё и начинать в следующий раз.
@@ -279,8 +284,13 @@ ipcMain.on('lab-tts-speaking', e => { e.returnValue = !!(sapi && sapi.speaking.s
 // Фраза игры — следом за прежней: обрывает речь игра сама (lab-tts-stop), а у
 // чтеца экрана фраза встаёт в его очередь, не обрезая недосказанное.
 ipcMain.on('lab-tts-speak', (e, text, rate, volume, id) => {
-  if (sapi && sapi.ready) sapi.speak(String(text || ''), rate, volume, String(id), { queue: true });
-  else { if (win && !win.isDestroyed()) win.webContents.send('lab-tts-end', 'error', String(id)); js(`window.LabTTSError&&window.LabTTSError(${JSON.stringify(String(id))})`); }
+  const phrase = String(text || '');
+  if (SELFTEST && (phrase === 'Готово.' || phrase.startsWith('Проверка речи:'))) {
+    selftestSpeechIds.add(String(id));
+    log('самопроверка речи: запрос ' + id);
+  }
+  if (sapi && sapi.ready) sapi.speak(phrase, rate, volume, String(id), { queue: true });
+  else if (win && !win.isDestroyed()) win.webContents.send('lab-tts-end', 'error', String(id));
 });
 ipcMain.on('lab-tts-stop', () => { if (sapi) sapi.stop(); });
 ipcMain.on('lab-tts-voice', (e, name) => { if (sapi) { sapi.setVoice(String(name || '')); pushTts(); } });

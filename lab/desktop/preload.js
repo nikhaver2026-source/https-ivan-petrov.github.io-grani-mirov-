@@ -14,6 +14,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 let tts = { state: 'init', voices: [], diag: '' };
 try { tts = ipcRenderer.sendSync('lab-tts-info') || tts; } catch (_) { tts = { state: 'failed', voices: [], diag: '' }; }
 let speakingId = null; // фраза, которую мост говорит сейчас (её конец придёт сам)
+let endHandler = null, pendingEnd = null;
 
 const log = m => ipcRenderer.send('lab-log', String(m));
 const quit = () => ipcRenderer.send('lab-quit');
@@ -31,8 +32,18 @@ contextBridge.exposeInMainWorld('LabDesktop', {
 });
 
 contextBridge.exposeInMainWorld('LabTTS', {
-  speak: (text, rate, volume, id) => { speakingId = String(id); ipcRenderer.send('lab-tts-speak', String(text), Number(rate), Number(volume), String(id)); },
-  stop: () => { speakingId = null; ipcRenderer.send('lab-tts-stop'); },
+  speak: (text, rate, volume, id) => {
+    speakingId = String(id);
+    pendingEnd = null;
+    ipcRenderer.send('lab-tts-speak', String(text), Number(rate), Number(volume), speakingId);
+  },
+  stop: () => { speakingId = null; pendingEnd = null; ipcRenderer.send('lab-tts-stop'); },
+  onEnd: fn => {
+    endHandler = fn;
+    const ended = pendingEnd;
+    pendingEnd = null;
+    if (ended) endHandler(ended.kind, ended.id);
+  },
   status: () => String(tts.state || 'failed'),
   isSpeaking: () => speakingId !== null,
   hasRussian: () => (tts.voices || []).some(v => /^ru/i.test(String(v.lang || ''))),
@@ -44,7 +55,14 @@ contextBridge.exposeInMainWorld('LabTTS', {
 });
 
 // Конец фразы (сказана, снята, сбой) — мост больше не говорит её.
-ipcRenderer.on('lab-tts-end', (e, kind, id) => { if (String(id) === speakingId) speakingId = null; });
+ipcRenderer.on('lab-tts-end', (e, kind, id) => {
+  id = String(id);
+  if (id !== speakingId) return;
+  speakingId = null;
+  if (kind === 'cancel') return;
+  if (endHandler) endHandler(kind, id);
+  else pendingEnd = { kind, id };
+});
 // Голоса поднялись, появились или пропали (запустили или закрыли NVDA, JAWS,
 // «Перечитать голоса») — игра берёт их на лету.
 ipcRenderer.on('lab-tts-state', (e, s) => {
