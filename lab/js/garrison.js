@@ -193,6 +193,37 @@ function startOn(fl, pts, busy, r) {
   return freeCell(fl, a[0], a[1], busy) ? a : null;
 }
 
+function patrolCorridors(fl) {
+  return fl.corrs.filter(function (c) {
+    if (c.mouthRoom === fl.secret || c.doorRoom === fl.secret || c.mouthRoom === fl.U || c.doorRoom === fl.U) return false;
+    var d = null; for (var i = 0; i < fl.doors.length; i++) if (fl.doors[i].id === c.door) { d = fl.doors[i]; break; }
+    return !(d && d.lock && d.lock.type === "secret");
+  });
+}
+
+/* Дополняем короткий обход после генерации всего этажа. Номера прежних
+   противников и содержимое сохранений остаются прежними. */
+function completePatrols(fl, L, F, seed, attempt, makeFoe) {
+  var guard = fl.garrison;
+  if (!guard || guard.patrols + guard.sappers >= 5) return;
+  var r = LAB.Rng(seed, "reservePatrol:" + L + ":" + F + ":" + attempt);
+  var corrs = r.shuffle(patrolCorridors(fl)), busy = busyMap(fl), arr = arrivals(fl);
+  var pool = patrolPool(L, F);
+  for (var lane = 0; lane < 2 && guard.patrols + guard.sappers < 5; lane++) {
+    for (var i = 0; i < corrs.length && guard.patrols + guard.sappers < 5; i++) {
+      var c = corrs[i], path = beatFor(fl, r, c, lane, busy);
+      if (!path) continue;
+      var start = startOn(fl, path, busy, r);
+      if (!start || !farFrom(arr, start[0], start[1], 5)) continue;
+      var type = r.pick(pool);
+      if (LAB.depth(L, F) < 20 && !fl.foes.some(function (f) { return f.beat && f.type === "walker"; })) type = "walker";
+      makeFoe(type, start[0], start[1], -1, { corr: c.id, patrol: true, beat: path, oko: true }, r);
+      busy[start[1] * LAB.W + start[0]] = 1;
+      guard.patrols++;
+    }
+  }
+}
+
 function place(ctx) {
   var fl = ctx.fl, L = ctx.L, F = ctx.F;
   if (!fl || !ctx.makeFoe) return;
@@ -202,11 +233,7 @@ function place(ctx) {
   var stats = { patrols: 0, sappers: 0, rooms: 0 };
 
   /* 1. Патрули в коридорах */
-  var corrs = fl.corrs.filter(function (c) {
-    if (c.mouthRoom === fl.secret || c.doorRoom === fl.secret || c.mouthRoom === fl.U || c.doorRoom === fl.U) return false;
-    var d = null; for (var i = 0; i < fl.doors.length; i++) if (fl.doors[i].id === c.door) { d = fl.doors[i]; break; }
-    return !(d && d.lock && d.lock.type === "secret");
-  });
+  var corrs = patrolCorridors(fl);
   r.shuffle(corrs);
   /* (2.0) патруль — почти в каждом коридоре; глубже — больше, чем коридоров */
   var nP = Math.round(corrs.length * (L === 1 ? (F <= 2 ? 0.85 : 0.95) : Math.min(1.6, 1 + 0.04 * Math.min(L, 10) + d0 * 0.0003)));
@@ -355,5 +382,5 @@ function placeCams(ctx) {
   fl.roomCams = n;
 }
 
-LAB.garrison = { place: place, placeCams: placeCams, category: category, CAT: CAT, rolePool: rolePool, patrolPool: patrolPool, bioPool: bioPool };
+LAB.garrison = { place: place, placeCams: placeCams, completePatrols: completePatrols, category: category, CAT: CAT, rolePool: rolePool, patrolPool: patrolPool, bioPool: bioPool };
 })();

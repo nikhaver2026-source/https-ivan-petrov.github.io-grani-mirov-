@@ -1659,6 +1659,7 @@ function genFloor(seed, L, F, attempt) {
   fl.sample = L > 100 ? LAB.floorNo(L, F) : d0; /* (после 4.1) образец глубокого этажа — свой номер у каждого этажа */
   fl.turrets = turrets;
   mountWallFixtures(fl);
+  if (LAB.garrison && LAB.garrison.completePatrols) LAB.garrison.completePatrols(fl, L, F, seed, attempt, makeFoe);
   return fl;
 }
 

@@ -33,6 +33,9 @@ const stepL = Math.max(1, Number(process.argv[3] || 1));
 let fails = 0, floors = 0, t0 = Date.now();
 const stat = { locks: {}, foes: 0, items: 0, secrets: 0, blocked: 0, npcs: 0, objs: {}, armor: 0, aff: {}, affByL: {}, mechByL: {}, iqByL: {}, turrets: 0, cams: 0, corrMin: 99, corrMax: 0 };
 function err(m) { console.error("✗ " + m); fails++; }
+/* На этом стартовом этаже первый проход расставляет только четыре патруля. */
+const starter = LAB.getFloor("guard-density-50", 1, 1);
+if (starter.foes.filter(f => f.beat).length < 5) err("Стартовый этаж остался без пятого патруля");
 for (let si = 0; si < seeds; si++) {
   const seed = "test" + si;
   let tier = 0, elevpass = {};
