@@ -1,0 +1,110 @@
+name: Подземная лаборатория — файлы Альфы 6.0
+on:
+  push:
+    branches: [codex/lab-delivery-6.0-voices]
+    paths: [.github/workflows/lab-deliver-alpha-6.0.yml]
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  files:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Архивы Windows
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45841272588
+          pattern: podzemnaya-laboratoriya-windows-*
+          merge-multiple: true
+          path: dist
+      - name: Подписанный APK
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45841272665
+          name: podzemnaya-laboratoriya-alfa-6.0-apk
+          path: dist
+      - name: Проверить содержимое и сохранить файлы в закрытом черновике
+        working-directory: dist
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CODE_SHA: 938265de27828a39b16ca7edbe8f675d6e771fd2
+        run: |
+          set -eu
+          prefix=Podzemnaya-laboratoriya-Alfa-6.0
+          apk="$prefix.apk"
+          x86="$prefix-windows-32bit.zip"
+          x64="$prefix-windows-64bit.zip"
+          cat > "$RUNNER_TEMP/check.py" <<'PY'
+          import pathlib, struct, sys, zipfile
+
+          def has_file(names, suffix):
+              return any(name.endswith(suffix) for name in names)
+
+          for path in sys.argv[1:]:
+              android = path.endswith('.apk')
+              encoding = None if android or '-64bit' in path else 'cp866'
+              with zipfile.ZipFile(path, metadata_encoding=encoding) as z:
+                  names = z.namelist()
+                  assert len(names) == len(set(names))
+                  root = 'assets/www/' if android else next(name[:-len('index.html')] for name in names if name.endswith('/resources/game/index.html'))
+                  data = z.read(root + 'js/data.js').decode('utf-8')
+                  assert 'LAB.VERSION = "Альфа 6.0"' in data
+                  assert len([name for name in names if name.startswith(root + 'sounds/haunt/') and name.endswith('.ogg')]) == 46
+                  assert len([name for name in names if name.startswith(root + 'sounds/rift/') and name.endswith('.ogg')]) == 42
+                  assert len([name for name in names if name.startswith(root + 'sounds/') and name.endswith('.ogg')]) == 1502
+                  assert has_file(names, '/espeak/espeak-ng.js')
+                  if android:
+                      assert 'AndroidManifest.xml' in names and 'classes.dex' in names
+                  else:
+                      app = next(name for name in names if name.count('/') == 1 and name.endswith('Подземная лаборатория.exe'))
+                      with z.open(app) as stream:
+                          header = stream.read(64)
+                          assert header[:2] == b'MZ'
+                          stream.seek(struct.unpack_from('<I', header, 60)[0])
+                          assert stream.read(4) == b'PE\x00\x00'
+                          assert struct.unpack('<H', stream.read(2))[0] == (0x8664 if '-64bit' in path else 0x14C)
+                  print(path, pathlib.Path(path).stat().st_size)
+          PY
+          python "$RUNNER_TEMP/check.py" "$apk" "$x86" "$x64"
+          sha256sum -c <<EOF
+          1a50e23507410fa5a34232f7d175fbd6d30e0a0ed146475a4af9ae90ba768930  $apk
+          e20037f69426da6ff08ad23093ef58eaef67eb1762e3958c8835c336115f8d72  $x86
+          0d14ad3c392d9d11455e1b78ded7c047462d1a08cf72cf2eac654c0e9968e113  $x64
+          EOF
+          tag=lab-alpha-6.0-resident-voices
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft,targetCommitish > "$RUNNER_TEMP/draft.json" 2>/dev/null; then
+            jq -e --arg sha "$CODE_SHA" '.isDraft and .targetCommitish == $sha' "$RUNNER_TEMP/draft.json"
+          else
+            gh release create "$tag" "$apk" "$x86" "$x64" --draft --prerelease --latest=false --target "$CODE_SHA" --repo "$GITHUB_REPOSITORY" \
+              --title 'Подземная лаборатория. Альфа 6.0 — голоса жителей' --notes 'Три полные сборки. Заходите под аккаунтом владельца репозитория, чтобы скачать APK и архивы Windows.'
+          fi
+          gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft,targetCommitish,url,assets > "$RUNNER_TEMP/draft.json"
+          jq -e --arg sha "$CODE_SHA" '.isDraft and .targetCommitish == $sha and ([.assets[].name] | length == 3)' "$RUNNER_TEMP/draft.json"
+          jq -c '{url, assets: [.assets[]|{name,size,url:.url}]}' "$RUNNER_TEMP/draft.json" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Podzemnaya-laboratoriya-Alfa-6.0.apk
+        uses: actions/upload-artifact@v7
+        with:
+          path: dist/Podzemnaya-laboratoriya-Alfa-6.0.apk
+          archive: false
+          retention-days: 7
+
+      - name: Podzemnaya-laboratoriya-Alfa-6.0-windows-64bit.zip
+        uses: actions/upload-artifact@v7
+        with:
+          path: dist/Podzemnaya-laboratoriya-Alfa-6.0-windows-64bit.zip
+          archive: false
+          retention-days: 7
+
+      - name: Podzemnaya-laboratoriya-Alfa-6.0-windows-32bit.zip
+        uses: actions/upload-artifact@v7
+        with:
+          path: dist/Podzemnaya-laboratoriya-Alfa-6.0-windows-32bit.zip
+          archive: false
+          retention-days: 7
