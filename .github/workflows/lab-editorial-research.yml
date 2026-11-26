@@ -23,7 +23,7 @@ jobs:
               s=plain(body); title=plain(title)
               ru=len(re.findall('[А-Яа-яЁё]',s[:4000])); en=len(re.findall('[A-Za-z]',s[:4000]))
               if ru<40 or ru<en*.7 or len(s.split())<12:return
-              if re.search(r'технически[ех] работ|регламентны[ех] работ|профилактик|скидк|распродаж|стрим|трансляци|опрос|киберспорт|результаты конкурс', title,re.I):return
+              if re.search(r'технически[ех] работ|регламентны[ех] работ|профилактик|скидк|распродаж|опрос|результаты конкурс', title,re.I):return
               h=hashlib.sha256(s.lower().encode()).digest()
               titlekey=re.sub(r'\W+','',title.lower())
               with lock:
@@ -39,7 +39,7 @@ jobs:
                       time.sleep(2 if getattr(e,'code',0)!=429 else 10)
               return b''
           def game(app):
-              for p in range(16):
+              for p in range(15):
                   b=get(f'https://store.steampowered.com/events/ajaxgetpartnereventspageable/?appid={app}&offset={100*p}&count=100&l=russian')
                   try:events=json.loads(b).get('events',[])
                   except ValueError:break
@@ -62,9 +62,34 @@ jobs:
                       v=re.search(r'href="([^"]+)".*?widget__title">(.*?)</div>.*?widget__comment">(.*?)</div>',item,re.S)
                       if v:add('Gaijin War Thunder',v[1],v[2],v[3],'lead')
               time.sleep(.25)
+          apps += [223750,307960,1818450,668580,355840,550650,322110,1203220,1283700,1237970,342200,1006510,374320,385770,1172620,1326470,253710,244450,244850,1145000,920210,1250410,2537590,919640,919650,1072040,294100,492720,773951,356500,362890,557400,324160,977950,1009290,4920,418370,552520,644930,1693980,3081730,311210,2000950,218230,218620,209160,209660,1172380,206420,393380,674020,228380,1466860,225260,374320,360170,244210,805550,1066890,427520,571740,1063730,878670,438040,1255460,785770,1097150,290430,913740,2231380,1149460,1971870,431960,1039890,884260,454650,454350,342180,55150,699100,285190,4920,365590,953490,882100,1496790,376210,601510,1449110,2357570]
+          import urllib.parse as up
+          def listing(pn):
+              site='https://tanki.su'
+              b=get(f'{site}/ru/news/general-news/p{pn}/').decode('utf8','replace')
+              m=re.search(r'NEWS_LIST\s*=\s*',b)
+              if not m:return []
+              try:arr=json.JSONDecoder().raw_decode(b[m.end():])[0]
+              except ValueError:return []
+              return [(site+a['url'],a['title']) for a in arr if a.get('url','').startswith('/ru/news/') and a.get('title')]
+          def article(item):
+              url,title=item
+              if re.search(r'скидк|распродаж|опрос|технически[ех] работ',title,re.I):return
+              s=get(url).decode('utf8','replace')
+              tags=re.findall(r'<meta\s+[^>]+>',s[:110000],re.I)
+              for tag in tags:
+                  if re.search(r'(?:name|property)=["\x27](?:description|og:description)["\x27]',tag,re.I):
+                      a=re.search(r'content="([^"]+)"',tag,re.I)
+                      if a and len(plain(a[1]).split())>=12:
+                          add('Lesta/Мир танков',url,title,a[1],'lead')
+                          return
+          with cf.ThreadPoolExecutor(max_workers=4) as collector:
+              candidates=dict(x for result in collector.map(listing,range(1,305)) for x in result)
+              print('Tank news candidates',len(candidates),flush=True)
+              for _ in collector.map(article,candidates.items()):pass
           with cf.ThreadPoolExecutor(max_workers=6) as games, cf.ThreadPoolExecutor(max_workers=3) as pages:
               gp=[games.submit(game,v) for v in dict.fromkeys(apps)]
-              items=[('wow',p) for p in range(1,170)]+[('wt',p) for p in range(120,640)]
+              items=[('wow',p) for p in range(1,295)]+[('wt',p) for p in range(1,990)]
               random.Random(26).shuffle(items)
               pp=[pages.submit(portal,v) for v in items]
               for group in [gp,pp]:
