@@ -882,7 +882,7 @@ var Speech = {
     }
     this.queue.forEach(function (it) { if (it.keep) got.push(it); });
     /* важное, что ждало конца чтения, тоже не пропадает */
-    this.later.forEach(function (l) { if (l.keep) self._chunk(l.text).forEach(function (p) { got.push({ text: p, full: l.text, robot: l.robot, prio: l.prio || 1, key: "", t: Date.now(), ttl: 30000, tries: 0, keep: true }); }); });
+    this.later.forEach(function (l) { if (l.keep) got = got.concat(self._items(l, Date.now(), 30000)); });
     got.forEach(function (it) { if (!self.held.some(function (h) { return h.text === it.text; })) self.held.push(it); });
     if (this.held.length > 6) this.held = this.held.slice(-6);
     if (this.held.length) this._armHeld();
@@ -901,6 +901,21 @@ var Speech = {
     this.held = [];
     items.forEach(function (it) { if (now - it.t < 30000 && !self.queue.some(function (q) { return q.text === it.text; })) self.queue.push(it); });
     this._pump();
+  },
+  _items: function (request, now, ttl) {
+    var resident = request.resident, text = request.text, start = resident ? text.indexOf(resident.line) : -1;
+    var parts, recordedPart = -1;
+    if (start >= 0) {
+      var before = text.slice(0, start).replace(/[:«\s]+$/, "");
+      var after = text.slice(start + resident.line.length).replace(/^[»\s]+/, "");
+      parts = this._chunk(before);
+      recordedPart = parts.length;
+      parts.push(resident.line);
+      parts = parts.concat(this._chunk(after));
+    } else parts = this._chunk(text);
+    var items = parts.map(function (p) { return { text: p, full: request.text, robot: request.robot, prio: request.prio, key: request.key, t: now, ttl: ttl, tries: 0, keep: request.keep }; });
+    if (recordedPart >= 0) items[recordedPart].clip = resident.file;
+    return items;
   },
   _prio: function (opts) {
     var P = this.PRIO;
@@ -927,11 +942,12 @@ var Speech = {
     /* (голос ОКО) реплику ОКО говорит его записанный голос (okovoice.js): здесь — только история
        объявлений и субтитры, без синтезатора и без живой области чтеца экрана */
     if (opts.recorded) { if (LAB.showCaption) LAB.showCaption(text); return; }
+    var request = { text: text, robot: !!opts.robot, prio: prio, keep: !!opts.keep, key: opts.key || "", resident: opts.resident };
     var noteOn = this.noteBusy() && !opts.note;
     var readOn = this.reading && (this.speaking || this.queue.length > 0) && !user && prio < P.urgent && !opts.note;
     if (noteOn || readOn) {
       /* ждёт конца чтения; из отложенного остаются самые важные и свежие */
-      this.later.push({ text: text, robot: !!opts.robot, prio: prio, keep: !!opts.keep });
+      this.later.push(request);
       while (this.later.length > 4) {
         var lo = -1; for (var i = 0; i < this.later.length; i++) if (!this.later[i].keep && (lo < 0 || this.later[i].prio < this.later[lo].prio)) lo = i;
         this.later.splice(lo < 0 ? 0 : lo, 1);
@@ -963,22 +979,12 @@ var Speech = {
       } else { this._hold(); this.stop(true); this.later = []; }
       if (prio !== P.urgent) { this.glueAt = now; this.glueTok = this.userTok || 0; }
     }
-    var resident = opts.resident, start = resident ? text.indexOf(resident.line) : -1;
-    var parts, recordedPart = -1;
-    if (start >= 0) {
-      var before = text.slice(0, start).replace(/[:«\s]+$/, "");
-      var after = text.slice(start + resident.line.length).replace(/^[»\s]+/, "");
-      parts = this._chunk(before);
-      recordedPart = parts.length;
-      parts.push(resident.line);
-      parts = parts.concat(this._chunk(after));
-    } else parts = this._chunk(text);
     if (opts.note) { this.noteReading = true; this.reading = true; }
     else if (opts.read || text.length > 230) this.reading = true;
     /* срок годности — у событий без жеста игрока: опоздавшее не звучит */
     var ttl = opts.keep ? 30000 : prio <= P.event && !user && !opts.note && !opts.read ? (this.TTL[prio] || 9000) : 0;
-    var items = parts.map(function (p) { return { text: p, full: full, robot: !!opts.robot, prio: prio, key: opts.key || "", t: now, ttl: ttl, tries: 0, keep: !!opts.keep }; });
-    if (recordedPart >= 0) items[recordedPart].clip = resident.file;
+    request.text = full;
+    var items = this._items(request, now, ttl);
     if (front) { var k = 0; while (k < this.queue.length && this.queue[k].prio >= P.urgent) k++; Array.prototype.splice.apply(this.queue, [k, 0].concat(items)); }
     else Array.prototype.push.apply(this.queue, items);
     /* длинная очередь событий: старые события уступают */
@@ -1061,7 +1067,9 @@ var Speech = {
     if (this.reading || this.noteReading) {
       this.reading = false; this.noteReading = false;
       var later = this.later, self = this; this.later = [];
-      later.forEach(function (l) { self._chunk(l.text).forEach(function (p) { self.queue.push({ text: p, full: l.text, robot: l.robot, prio: l.prio || 1, key: "", t: Date.now(), ttl: l.keep ? 30000 : 0, tries: 0, keep: !!l.keep }); }); });
+      later.forEach(function (l) {
+        Array.prototype.push.apply(self.queue, self._items(l, Date.now(), l.keep ? 30000 : 0));
+      });
       if (later.length && LAB.showCaption) LAB.showCaption(later[later.length - 1].text);
     }
   },
@@ -1259,7 +1267,9 @@ var Speech = {
     this.later = [];
     this.stop();
     keepL.forEach(function (l) {
-      self._chunk(l.text).forEach(function (p) { if (!self.held.some(function (h) { return h.text === p; })) self.held.push({ text: p, full: l.text, robot: l.robot, prio: l.prio || 1, key: "", t: now, ttl: 30000, tries: 0, keep: true }); });
+      self._items(l, now, 30000).forEach(function (item) {
+        if (!self.held.some(function (h) { return h.text === item.text; })) self.held.push(item);
+      });
     });
     if (this.held.length) this._armHeld();
   },

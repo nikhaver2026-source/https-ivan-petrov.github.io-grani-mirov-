@@ -133,6 +133,6 @@ jobs:
           arch: x86_64
           disk-size: 6G
           ram-size: ${{ matrix.ram || '2048M' }}
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-window -no-snapshot -gpu ${{ matrix.target == 'google_apis_ps16k' && 'swangle_indirect' || 'swiftshader_indirect' }} -noaudio -no-boot-anim -camera-back none
           disable-animations: false
           script: bash .github/lab-compat-check.sh lab.apk old.apk

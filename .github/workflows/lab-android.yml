@@ -259,6 +259,7 @@ jobs:
           cp lab/android/app/build/outputs/apk/release/app-release.apk Podzemnaya-laboratoriya-Alfa-6.0.apk
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs Podzemnaya-laboratoriya-Alfa-6.0.apk | grep -E "^Verified using v[123]|certificate SHA-256|certificate DN"
           "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging Podzemnaya-laboratoriya-Alfa-6.0.apk | head -4
+          python3 lab/tools/check_package.py Podzemnaya-laboratoriya-Alfa-6.0.apk
           ls -la Podzemnaya-laboratoriya-Alfa-6.0.apk
 
       - name: Совпадение подписи с Альфой 5.0
@@ -445,7 +446,7 @@ jobs:
       actions: read
     with:
       apk_artifact: podzemnaya-laboratoriya-alfa-6.0-apk
-      old_release: lab-android-5.6
+      old_run: "45691355268"
 
   release:
     name: Выпуск «lab-android-6.0»

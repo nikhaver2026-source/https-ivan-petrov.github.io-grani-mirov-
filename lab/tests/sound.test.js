@@ -291,6 +291,31 @@ function ok(c, m) { console.log((c ? "  ✓ " : "  ✗ ") + m); if (!c) fails++;
   ok(Object.keys(s.dim).every(k => s.dim[k].back > 0.8), "вернулись из фона — каждый звук снова в полную громкость");
   ok(s.muteAt === "suspended" && s.woke === 0 && s.backState === "running" && s.backRms > 0.01, "без флажка в фоне — тишина: устройство спит, звуки и сторож его не будят; вернулись — звук снова (" + s.muteAt + ", проснулось " + s.woke + ", после " + s.backState + ")");
 
+  // Записка удерживает ответ NPC. После неё должны прозвучать имя, запись и результат задания.
+  const heldVoice = await page.evaluate(() => {
+    const sp = LAB.Speech, enabled = LAB.settings.speech;
+    const line = "Слышите? Воздух пошёл. К утру люди перестанут кашлять.";
+    const resident = LAB.residentVoice({ prof: "Инженер" }, line);
+    const result = [];
+    LAB.settings.speech = true;
+    try {
+      for (const route of ["finish", "gesture", "close"]) {
+        sp.hush();
+        sp.noteReading = true;
+        sp.speaking = true;
+        sp.say("Иван: «" + line + "» Кредитов: плюс 25.", { keep: true, resident });
+        sp.speaking = false;
+        if (route === "finish") sp._idle();
+        if (route === "gesture") sp._hold();
+        if (route === "close") sp.endNote();
+        const items = route === "finish" ? sp.queue : sp.held;
+        result.push(items.length === 3 && items[0].text === "Иван" && items[1].clip === resident.file &&
+          items[1].text === line && items[2].text === "Кредитов: плюс 25.");
+      }
+    } finally { sp.hush(); LAB.settings.speech = enabled; }
+    return result;
+  });
+  ok(heldVoice.every(Boolean), "голос жителя и итог задания сохраняются в очереди при чтении и закрытии записки");
   ok(!errs.length, "ошибок страницы нет" + (errs.length ? ": " + errs.join(" | ") : ""));
   await browser.close(); server.close();
   console.log(fails ? "ЕСТЬ ОШИБКИ: " + fails : "ВСЁ ХОРОШО");

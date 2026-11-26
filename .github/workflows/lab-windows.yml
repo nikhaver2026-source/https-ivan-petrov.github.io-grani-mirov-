@@ -248,7 +248,8 @@ jobs:
         working-directory: lab/desktop/out
         run: |
           if [ "$ARCH" = "ia32" ]; then CP="-mcp=866"; else CP=""; fi
-          7z a -tzip -mx=5 $CP "../../../$ZIP" "$APPDIR" > /dev/null
+          7z a -tzip -mx=0 $CP "../../../$ZIP" "$APPDIR" > /dev/null
+          python -X utf8 ../../tools/check_package.py "../../../$ZIP"
           ls -la "../../../$ZIP"
 
       # Имена в 32-битном архиве — в кодировке 866, без метки UTF-8: так их

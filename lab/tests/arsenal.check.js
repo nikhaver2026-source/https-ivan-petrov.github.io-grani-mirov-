@@ -10,7 +10,7 @@
    масштабе магазина; звуки существуют; поля гранат fx.gren — нужных
    типов и в своих пределах; тексты без ASCII-кавычек, дефиса вместо тире
    и запретных слов. Затем копия world.test.js с арсеналом в списке
-   модулей строит комплекс (1 зерно, шаг 10). В конце — «ВСЁ ХОРОШО».
+   модулей строит комплекс (1 зерно, все уровни). В конце — «ВСЁ ХОРОШО».
    Запуск: node lab/tests/arsenal.check.js [--fast — без генерации]
    ACORN=путь/к/acorn — проверить синтаксис по ES2018, если acorn не
    установлен в проекте. */
@@ -361,11 +361,11 @@ if (!FAST) {
     fs.writeFileSync(tmp, mod);
     try {
       const t0 = Date.now();
-      const res = cp.spawnSync(process.execPath, [tmp, "1", "10"], { encoding: "utf8", maxBuffer: 256 * 1024 * 1024 });
+      const res = cp.spawnSync(process.execPath, [tmp, "1", "1"], { encoding: "utf8", maxBuffer: 256 * 1024 * 1024 });
       const out = (res.stdout || "") + (res.stderr || "");
       const line = out.split("\n").filter((l) => /^уровней:/.test(l))[0] || "";
       if (res.status !== 0) err("генерация с арсеналом не прошла: " + (line || "") + "\n" + out.split("\n").filter((l) => /✗|Error|at /.test(l)).slice(0, 20).join("\n"));
-      else ok("генерация с арсеналом (world.test.js 1 10, " + Math.round((Date.now() - t0) / 1000) + " с): " + line);
+      else ok("генерация с арсеналом (world.test.js 1 1, " + Math.round((Date.now() - t0) / 1000) + " с): " + line);
     } finally { try { fs.unlinkSync(tmp); } catch (e) { /* уже нет */ } }
   }
 }
