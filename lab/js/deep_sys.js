@@ -755,7 +755,7 @@ function spec(id) {
 }
 function serial(seed, L, F) {
   var ordinal = (L - LAB.DEEP_BASE - 1) * LAB.FLOORS_N + F - 1;
-  /* 137 и 3000 взаимно просты: за цикл встречается каждый протокол. */
+  /* Шаг взаимно прост с числом протоколов, поэтому цикл охватывает их все. */
   return (ordinal * 137 + LAB.hash32(seed + "|rift") % TOTAL) % TOTAL;
 }
 function available() { return gm() && gm().entered && G().L > LAB.DEEP_BASE && C().fs; }

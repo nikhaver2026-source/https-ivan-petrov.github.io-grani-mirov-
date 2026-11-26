@@ -2151,7 +2151,7 @@ for (const representative of representatives) {
 assert.equal(typesHeard.size, 5);
 for (const id of ["probe", "mix", "seal", "carry", "ok", "error"])
   assert.ok(riftSounds.includes("rift_" + id), id);
-console.log("✓ 3000 адресуемых конфигураций, все шесть цепочек, пять тварей, поле, химия, звук, перенос и загрузка");
+console.log("✓ Уникальные конфигурации обследований, все шесть цепочек, пять тварей, поле, химия, звук, перенос и загрузка");
 
 let riftBench;
 for (let F = 1; F <= 9 && !riftBench; F++) {
@@ -2440,7 +2440,7 @@ try {
   assert.ok(hauntSounds.some(([id]) => id === "haunt_answer"));
   assert.ok(hauntSounds.some(([id]) => id === "haunt_closed"));
   assert.ok(hauntSounds.some(([id]) => id === "haunt_treader"));
-  console.log("✓ 3000 новых адресов, четыре глубины угрозы, шесть способов пройти, 46 звуков, сохранение и единичная выплата");
+  console.log("✓ Уникальные происшествия на маршруте, четыре глубины угрозы, шесть способов пройти, 46 звуков, сохранение и единичная выплата");
 
   // Используем настоящий стек окон, включая реальные вызовы навигатора из вложенного журнала.
   const liveHaunt = setHauntFloor(0, 1, 0);
