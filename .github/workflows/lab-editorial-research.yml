@@ -1,0 +1,72 @@
+name: Проверить русскоязычные анонсы для Альфы 6.0
+on:
+  push:
+    branches: ['codex/lab-editorial-sources-20261126']
+    paths: ['.github/workflows/lab-editorial-research.yml']
+permissions: {}
+jobs:
+  sources:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Сопоставить обезличенные признаки текстов из официальных лент
+        shell: python
+        run: |
+          import concurrent.futures as cf, urllib.request as u, html, collections, time, hashlib, re, json, threading, random
+          # Steam supplies the publisher's own localized title and announcement body. No user posts.
+          apps = [236390,386180,212070,884660,2051620,552990,444200,1407200,790710,570,730,440,1046930,583950,1422450,230410,578080,381210,582010,1446780,2246340,1364780,2050650,1085660,594650,291480,359550,304390,646910,2221490,916440,291550,2225070,2698940,2208920,812140,582160,1172470,1517290,1238840,1238810,1222670,2195250,2669320,3405690,1426210,394360,236850,1158310,281990,529340,255710,949230,1669000,464920,1172620,813780,1466860,933110,1934680,1551360,1240440,962130,1151340,306130,782330,1716740,489830,1142710,594570,779340,1677280,392110,1124300,289070,1295660,397540,268500,271590,1174180,1091500,1284410,292030,2357570,2344520,1938090,440900,1172710,870780,534380,239140,1778820,1245620,232090,1465360,2183900,699130,1029690,552500,1361210,275850,767560,238960,2694490,1599340,1063730,582660,1203220,2767030,2139460,2073850,2074920,216150,273110,218620,227300,270880,252490,553850,1631270,1040080,332070,2183900,755790,438100,548430,346110,2399830,304930,1284210,8500,386360,444090,386180,620980,307950,493520,632360,960090,2379780,552520,552100,236850,49520,976310,1097840,552700,373420,435150,1086940,1184370,640820,2186680,2623190,1809540,2835570,335300,374320,814380,1888160,374040,518790,671860,444200,1044720,233860,361420,322330,588650,1940340,262060,310560,690790,2108330,1849250,234630,236870,1659040,427520,1817070,355890,1124300,268910,1174180,218620,1818750,557340,1604030,794600,1145360,1144400,1293830,714010,974240,418460,413150,367520,1030300,219150,460950,447040,359320,380600,2362910,2152690,2208920,310950,2634890,1030840,292730]
+          lock=threading.Lock(); seen=set(); texts={}; seen_title=set(); counts=collections.Counter()
+          def plain(s):
+              s=re.sub(r'\[img[^\]]*\].*?\[/img\]|\{STEAM[^}]+\}\S*|https?://\S+|\[[^\]]+\]|<[^>]+>', ' ', s, flags=re.S|re.I)
+              return ' '.join(html.unescape(s).split())
+          def add(source,ident,title,body,mode):
+              s=plain(body); title=plain(title)
+              ru=len(re.findall('[А-Яа-яЁё]',s[:4000])); en=len(re.findall('[A-Za-z]',s[:4000]))
+              if ru<40 or ru<en*.7 or len(s.split())<12:return
+              if re.search(r'технически[ех] работ|регламентны[ех] работ|профилактик|скидк|распродаж|стрим|трансляци|опрос|киберспорт|результаты конкурс', title,re.I):return
+              h=hashlib.sha256(s.lower().encode()).digest()
+              titlekey=re.sub(r'\W+','',title.lower())
+              with lock:
+                  if ident in seen or h in texts or titlekey in seen_title:return
+                  seen.add(ident);seen_title.add(titlekey);counts[source]+=1
+                  texts[h]=(source,mode,len(s.split()),'?' in s[:240],bool(re.search(r'\b(?:отправляйтесь|проверьте|исследуйте|узнайте|выберите|найдите|предстоит|сможете|ждёт)\b',s,re.I)))
+          def get(url):
+              for i in range(3):
+                  try:
+                      with u.urlopen(u.Request(url,headers={'User-Agent':'LabEditorialResearch/1.0','Accept-Language':'ru'}),timeout=15) as f:return f.read()
+                  except Exception as e:
+                      if getattr(e,'code',0) in [403,404]:return b''
+                      time.sleep(2 if getattr(e,'code',0)!=429 else 10)
+              return b''
+          def game(app):
+              for p in range(16):
+                  b=get(f'https://store.steampowered.com/events/ajaxgetpartnereventspageable/?appid={app}&offset={100*p}&count=100&l=russian')
+                  try:events=json.loads(b).get('events',[])
+                  except ValueError:break
+                  for e in events:
+                      a=e.get('announcement_body') or {}
+                      if a.get('language')!=8 or a.get('banned') or e.get('hidden'):continue
+                      add(str(app),e['gid'],a.get('headline',''),a.get('body',''),'full')
+                  if len(events)<100:break
+                  time.sleep(.2)
+          def portal(t):
+              site,p=t
+              if site=='wow':
+                  s=get(f'https://worldofwarcraft.blizzard.com/ru-ru/news?page={p}').decode('utf8','replace')
+                  for item in re.findall(r'<article class="NewsBlog".*?</article>',s,re.S):
+                      v=re.search(r'NewsBlog-title">([^<]+).*?NewsBlog-desc[^"]*">(.*?)</p>.*?NewsBlog-link" href="([^"]+)',item,re.S)
+                      if v:add('Blizzard WoW',v[3],v[1],v[2],'lead')
+              else:
+                  s=get(f'https://warthunder.com/ru/news/page/{p}').decode('utf8','replace')
+                  for item in s.split('class="widget__link"')[1:]:
+                      v=re.search(r'href="([^"]+)".*?widget__title">(.*?)</div>.*?widget__comment">(.*?)</div>',item,re.S)
+                      if v:add('Gaijin War Thunder',v[1],v[2],v[3],'lead')
+              time.sleep(.25)
+          with cf.ThreadPoolExecutor(max_workers=6) as games, cf.ThreadPoolExecutor(max_workers=3) as pages:
+              gp=[games.submit(game,v) for v in dict.fromkeys(apps)]
+              items=[('wow',p) for p in range(1,170)]+[('wt',p) for p in range(120,640)]
+              random.Random(26).shuffle(items)
+              pp=[pages.submit(portal,v) for v in items]
+              for group in [gp,pp]:
+                  for future in cf.as_completed(group):future.result()
+          print('RESULT',json.dumps({'unique':len(texts),'sources':len(counts),'modes':dict(collections.Counter(v[1] for v in texts.values())),'action':sum(v[4] for v in texts.values()),'question_open':sum(v[3] for v in texts.values()),'top_sources':counts.most_common(12)},ensure_ascii=False),flush=True)
