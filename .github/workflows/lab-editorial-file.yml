@@ -1,0 +1,25 @@
+name: Текст анонса Подземной лаборатории
+on:
+  push:
+    branches: [codex/lab-editorial-file-6.0]
+    paths: [.github/workflows/lab-editorial-file.yml]
+permissions:
+  contents: read
+jobs:
+  text:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 7f0fedcd4ce7f877fb615c81bd4a42560dd7657d
+          sparse-checkout: lab/docs/announcement-alpha-6.0-ru.txt
+          sparse-checkout-cone-mode: false
+      - name: Подготовить текст в UTF-8
+        run: |
+          cp lab/docs/announcement-alpha-6.0-ru.txt "Анонс_Подземная-лаборатория_Альфа-6.0.txt"
+          sha256sum "Анонс_Подземная-лаборатория_Альфа-6.0.txt"
+      - uses: actions/upload-artifact@v7
+        with:
+          path: Анонс_Подземная-лаборатория_Альфа-6.0.txt
+          archive: false
+          retention-days: 7
