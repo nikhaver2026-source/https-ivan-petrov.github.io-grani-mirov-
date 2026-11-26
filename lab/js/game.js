@@ -3476,7 +3476,8 @@ function npcMenu(n) {
     items.push({ label: "Поговорить", fn: function () {
       var lines = LAB.STORIES[n.prof] || ["..."], ti = (mem.t != null ? mem.t : n.talk || 0) % lines.length;
       mem.t = n.talk = (ti + 1) % lines.length; /* следующая строка: первой звучит вступление */
-      say(n.n + ": " + npcLine(lines[ti], n));
+      var line = npcLine(lines[ti], n);
+      say(n.n + ": " + line, { resident: LAB.residentVoice(n, line) });
     } });
     items.push({ label: "Спросить о себе", fn: function () {
       var Bk = G.L > 10 ? LAB.blockData(G.L) : null, life = Bk && Bk.life && Bk.life.length ? Bk.life : LAB.LIFE, view = Bk && Bk.view && Bk.view.length ? Bk.view : LAB.VIEW;

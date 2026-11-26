@@ -60,7 +60,7 @@ function boot() {
      окна чтец замолкает сам и читает новое окно, а обрыв заглушил бы и это */
   var viaReader = function () {
     var Sp = LAB.Speech;
-    if (!LAB.desktop || !Sp || Sp.backend !== "android" || !Sp.listVoices) return false;
+    if (!LAB.desktop || !Sp || Sp.residentAudio || Sp.backend !== "android" || !Sp.listVoices) return false;
     var id = LAB.settings.voice, v = Sp.listVoices().filter(function (x) { return id ? x.id === id : x.auto; })[0];
     return !!(v && /^чтец экрана/.test(v.engine || ""));
   };

@@ -1349,12 +1349,13 @@ function finish(q, n, opt, echo) {
       journal("История «" + arc.n + "» (" + q.giverName + ") окончена.");
     }
   }
-  pay(q, head, extra.join(" "), later);
+  var resident = n && opt && opt.say ? LAB.residentVoice(n, gx(opt.say, !!n.female)) : null;
+  pay(q, head, extra.join(" "), later, resident);
   compact(q);
   prune();
 }
 /* later — доклад по связи: кредиты и опыт — сразу, вещи — у выжившего поближе (leave) */
-function pay(q, head, extra, later) {
+function pay(q, head, extra, later, resident) {
   var g = G(), r = q.reward || { cr: 0, xp: 0 }, k = condK(q);
   if (LAB.ach) LAB.ach.ev("quest", 1);
   var cr = Math.round((r.cr || 0) * k * (LAB.stats ? LAB.stats.K.quest() : 1)), xp = Math.round((r.xp || 0) * k); /* (после 4.6) харизма: выжившие платят щедрее */
@@ -1363,7 +1364,8 @@ function pay(q, head, extra, later) {
   var kept = (q.cond || []).filter(function (c) { return !c.lost; }), giftT = "";
   if (later) { if (r.gift) later.unshift(r.gift); if (later.length) giftT = " " + leave(q, later); }
   else if (r.gift) { gm().giveItem(r.gift, true); giftT = " В придачу — " + giftName(r.gift) + "."; }
-  (later ? sayq : say)(head + (later ? " Кредитов на браслет: плюс " : " Кредитов: плюс ") + cr + "." + giftT + (kept.length ? " Премия за условия: " + kept.length + " из " + q.cond.length + "." : "") + (extra ? " " + extra : ""));
+  var message = head + (later ? " Кредитов на браслет: плюс " : " Кредитов: плюс ") + cr + "." + giftT + (kept.length ? " Премия за условия: " + kept.length + " из " + q.cond.length + "." : "") + (extra ? " " + extra : "");
+  say(message, { interrupt: !later, resident: resident });
   journal("Выполнено задание: " + q.short + "." + (later ? " Доклад — по связи." : ""));
   gm().gainXP(xp);
   if (g.faction === "res") { g.inv.medkit_s = (g.inv.medkit_s || 0) + 1; sayq("Сопротивление делится аптечкой."); }

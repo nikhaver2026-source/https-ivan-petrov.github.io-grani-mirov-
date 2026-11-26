@@ -963,12 +963,22 @@ var Speech = {
       } else { this._hold(); this.stop(true); this.later = []; }
       if (prio !== P.urgent) { this.glueAt = now; this.glueTok = this.userTok || 0; }
     }
-    var parts = this._chunk(text);
+    var resident = opts.resident, start = resident ? text.indexOf(resident.line) : -1;
+    var parts, recordedPart = -1;
+    if (start >= 0) {
+      var before = text.slice(0, start).replace(/[:«\s]+$/, "");
+      var after = text.slice(start + resident.line.length).replace(/^[»\s]+/, "");
+      parts = this._chunk(before);
+      recordedPart = parts.length;
+      parts.push(resident.line);
+      parts = parts.concat(this._chunk(after));
+    } else parts = this._chunk(text);
     if (opts.note) { this.noteReading = true; this.reading = true; }
     else if (opts.read || text.length > 230) this.reading = true;
     /* срок годности — у событий без жеста игрока: опоздавшее не звучит */
     var ttl = opts.keep ? 30000 : prio <= P.event && !user && !opts.note && !opts.read ? (this.TTL[prio] || 9000) : 0;
     var items = parts.map(function (p) { return { text: p, full: full, robot: !!opts.robot, prio: prio, key: opts.key || "", t: now, ttl: ttl, tries: 0, keep: !!opts.keep }; });
+    if (recordedPart >= 0) items[recordedPart].clip = resident.file;
     if (front) { var k = 0; while (k < this.queue.length && this.queue[k].prio >= P.urgent) k++; Array.prototype.splice.apply(this.queue, [k, 0].concat(items)); }
     else Array.prototype.push.apply(this.queue, items);
     /* длинная очередь событий: старые события уступают */
@@ -1016,6 +1026,7 @@ var Speech = {
     this._arm(id, this.cur.text, true);
   },
   _engineBusy: function () {
+    if (this.residentAudio) return !this.residentAudio.paused;
     if (this.espSrc) return true;
     if (this.backend === "test" && this.testEngine) return !!this.testEngine.busy();
     if (this.backend === "android" && this.hasBridge()) { try { if (window.LabTTS.isSpeaking) return !!window.LabTTS.isSpeaking(); } catch (e) { /* */ } return false; }
@@ -1024,6 +1035,7 @@ var Speech = {
   },
   /* Фраза кончилась (err — сбой): дальше по очереди; сбойную — ещё раз, потом eSpeak. */
   _done: function (err) {
+    this._stopResident();
     clearTimeout(this.timer); this.timer = null;
     if (this.espSrc) { try { this.espSrc.onended = null; } catch (e) { /* */ } this.espSrc = null; }
     var cur = this.cur;
@@ -1076,7 +1088,8 @@ var Speech = {
     /* (3.7, нелогичность) голос робота включили посреди игры: eSpeak догружается — прежде он грузился только
        при запуске, и до перезапуска машины говорили обычным голосом. Эта фраза — обычным, следующие — роботом */
     if (item.robot && settings.robotVoice && this.espSt === "off") this.loadESpeak();
-    var useEsp = this.backend === "espeak" || (item.robot && settings.robotVoice && this.espSt === "ready") || (item.viaEsp && this.backend !== "test");
+    var useClip = !!item.clip;
+    var useEsp = !useClip && (this.backend === "espeak" || (item.robot && settings.robotVoice && this.espSt === "ready") || (item.viaEsp && this.backend !== "test"));
     if (useEsp && this.espSt !== "ready") {
       if (this.espSt === "failed") {
         if (this.backend === "espeak") { this.backend = this.hasWeb() && !this.webBad ? "web" : this.hasBridge() && !this.bridgeBad ? "android" : "none"; }
@@ -1094,6 +1107,11 @@ var Speech = {
     AE.setDuck(true);
     var id = "u" + (++this.seq), backend = useEsp ? "espeak" : this.backend;
     this.cur = { id: id, text: item.text, full: item.full, prio: item.prio, item: item, t0: now, started: false, backend: backend };
+    if (useClip) {
+      this.cur.backend = "resident";
+      this._startResident(id, item);
+      return;
+    }
     this._arm(id, item.text, false);
     if (useEsp) {
       var buf = this.espBuffer(item.text, item.robot);
@@ -1144,6 +1162,48 @@ var Speech = {
     }
     this._done(true);
   },
+  _startResident: function (id, item) {
+    var self = this;
+    function current() { return self.cur && self.cur.id === id; }
+    function fallback() {
+      if (!current()) return;
+      delete item.clip;
+      self.queue.unshift(item);
+      self._done();
+    }
+    try {
+      var audio = new Audio();
+      this.residentAudio = audio;
+      var ctx = AE.ensure();
+      if (!ctx) { fallback(); return; }
+      this.residentNode = ctx.createMediaElementSource(audio);
+      this.residentNode.connect(AE.voice);
+      audio.preservesPitch = true;
+      audio.defaultPlaybackRate = +settings.rate || 1;
+      audio.onerror = fallback;
+      audio.onplaying = function () {
+        if (!current()) return;
+        self.cur.started = true;
+        clearTimeout(self.timer);
+        var seconds = Number.isFinite(audio.duration) ? audio.duration : 30;
+        self.timer = setTimeout(fallback, (seconds / audio.playbackRate + 3) * 1000);
+      };
+      audio.onended = function () { if (current()) self._done(); };
+      this.timer = setTimeout(fallback, 1500);
+      audio.src = Bank.root + item.clip;
+      audio.playbackRate = audio.defaultPlaybackRate;
+      var playing = audio.play();
+      if (playing) playing.catch(fallback);
+    } catch (e) { fallback(); }
+  },
+  _stopResident: function () {
+    var audio = this.residentAudio;
+    if (!audio) return;
+    audio.onerror = audio.onplaying = audio.onended = null;
+    audio.pause();
+    if (this.residentNode) this.residentNode.disconnect();
+    this.residentAudio = this.residentNode = null;
+  },
   _keepAliveOn: function () {
     if (this.keepAlive) return;
     var isChrome = /Chrome\//.test(navigator.userAgent) && !/Edg\//.test(navigator.userAgent) && !/Android/.test(navigator.userAgent);
@@ -1155,6 +1215,7 @@ var Speech = {
   _stopKeepAlive: function () { if (this.keepAlive) { clearInterval(this.keepAlive); this.keepAlive = null; } },
   /* заглушить синтезатор (очередь при этом не трогается) */
   _silence: function () {
+    this._stopResident();
     if (this.espSrc) { try { this.espSrc.onended = null; this.espSrc.stop(); } catch (e) { /* */ } this.espSrc = null; }
     if (this.backend === "test" && this.testEngine) { try { this.testEngine.stop(); } catch (e) { /* */ } }
     if (this.hasBridge()) { try { window.LabTTS.stop(); } catch (e) { /* */ } }
