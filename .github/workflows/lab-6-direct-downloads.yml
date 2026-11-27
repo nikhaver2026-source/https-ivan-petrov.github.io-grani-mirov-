@@ -1,0 +1,54 @@
+name: Файлы Альфы 6.0 для прямого скачивания
+on:
+  push:
+    branches: [codex/lab-6.0-direct-downloads]
+    paths: [.github/workflows/lab-6-direct-downloads.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  files:
+    name: ${{ matrix.platform }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: Android
+            run: '45909108055'
+            id: '15158952855'
+            package: Podzemnaya-laboratoriya-Alfa-6.0.apk
+            sha: 01b26f9edec5c581878b170a6541ecd6d656899836dfc1909c3be66082564ed4
+          - platform: Windows 32
+            run: '45909108068'
+            id: '15158948337'
+            package: Podzemnaya-laboratoriya-Alfa-6.0-windows-32bit.zip
+            sha: a2fcd54afcc96f2608abb9d4c8a06d13985428fba37d7a073c034b8b6cd0f43c
+          - platform: Windows 64
+            run: '45909108068'
+            id: '15158933838'
+            package: Podzemnaya-laboratoriya-Alfa-6.0-windows-64bit.zip
+            sha: eb996b391a0e10c1eb7338c6de6e82c9a306e80a1d17fb3f460ace0e4a0d03da
+    steps:
+      - name: Получить проверенную сборку
+        uses: actions/download-artifact@v8
+        with:
+          artifact-ids: ${{ matrix.id }}
+          github-token: ${{ github.token }}
+          run-id: ${{ matrix.run }}
+          merge-multiple: true
+          path: verified
+      - name: Сверить SHA-256 исходного файла
+        working-directory: verified
+        env:
+          FILE_NAME: ${{ matrix.package }}
+          FILE_SHA: ${{ matrix.sha }}
+        run: printf '%s  %s\n' "$FILE_SHA" "$FILE_NAME" | sha256sum --check --strict
+      - name: Передать файл в исходном формате
+        uses: actions/upload-artifact@v7
+        with:
+          archive: false
+          path: verified/${{ matrix.package }}
+          retention-days: 90
+          if-no-files-found: error
