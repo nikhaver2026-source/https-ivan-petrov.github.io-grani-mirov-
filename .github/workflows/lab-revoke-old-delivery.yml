@@ -1,0 +1,73 @@
+name: Закрыть прежние ссылки Альфы 6.0
+on:
+  push:
+    branches: [codex/lab-alpha-6-owner-delivery]
+    paths: [.github/workflows/lab-revoke-old-delivery.yml]
+permissions:
+  contents: read
+  actions: write
+concurrency: lab-revoke-old-delivery-6-0
+jobs:
+  revoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Проверить личные файлы и отозвать прежние адреса
+        shell: python
+        run: |
+          import json
+          import os
+          import subprocess
+          import urllib.error
+          import urllib.request
+
+          repo = os.environ["GH_REPO"]
+          assert repo == "nikhaver2026-source/https-ivan-petrov.github.io-grani-mirov-"
+          base = "https://api.github.com/repos/" + repo
+          headers = {"Authorization": "Bearer " + os.environ["GH_TOKEN"], "Accept": "application/vnd.github+json", "User-Agent": "lab-owner-delivery"}
+          def api(path, method="GET", allow_missing=False):
+              request = urllib.request.Request(base + path, headers=headers, method=method)
+              try:
+                  with urllib.request.urlopen(request, timeout=35) as response:
+                      return json.load(response) if method == "GET" else response.status
+              except urllib.error.HTTPError as err:
+                  if allow_missing and err.code == 404:
+                      return None
+                  raise
+
+          release = api("/releases/460530079")
+          assert release["draft"] and release["target_commitish"] == "6fc2315ef3eea4202e6a9f5789d6cb43811185f9"
+          expected = {
+              "Podzemnaya-laboratoriya-Alfa-6.0.apk": (796108266, "01b26f9edec5c581878b170a6541ecd6d656899836dfc1909c3be66082564ed4"),
+              "Podzemnaya-laboratoriya-Alfa-6.0-windows-32bit.zip": (999888230, "a2fcd54afcc96f2608abb9d4c8a06d13985428fba37d7a073c034b8b6cd0f43c"),
+              "Podzemnaya-laboratoriya-Alfa-6.0-windows-64bit.zip": (1153155671, "eb996b391a0e10c1eb7338c6de6e82c9a306e80a1d17fb3f460ace0e4a0d03da"),
+          }
+          assert {a["name"] for a in release["assets"]} == expected.keys()
+          for asset in release["assets"]:
+              size, digest = expected[asset["name"]]
+              assert asset["state"] == "uploaded" and asset["size"] == size and asset["digest"] == "sha256:" + digest
+              # curl drops Authorization when following redirects to the storage host.
+              payload = subprocess.check_output(["curl", "--fail", "--silent", "--show-error", "--location", "--range", "0-3", "--max-time", "40", "--max-filesize", "8", "--header", "Authorization: " + headers["Authorization"], "--header", "Accept: application/octet-stream", base + "/releases/assets/" + str(asset["id"])])
+              assert payload == b"PK\x03\x04"
+          print("Три личных оригинала доступны для скачивания.", flush=True)
+
+          copies = [[15193812151,45991132592,"Podzemnaya-laboratoriya-Alfa-6.0-windows-64bit.zip"],[15193263536,45991132592,"Podzemnaya-laboratoriya-Alfa-6.0-windows-32bit.zip"],[15193113998,45991132592,"Podzemnaya-laboratoriya-Alfa-6.0.apk"],[15158952855,45909108055,"podzemnaya-laboratoriya-alfa-6.0-apk"],[15158948337,45909108068,"podzemnaya-laboratoriya-windows-32"],[15158933838,45909108068,"podzemnaya-laboratoriya-windows-64"],[15158886314,45907898344,"podzemnaya-laboratoriya-alfa-6.0-apk"],[15158593083,45907898342,"podzemnaya-laboratoriya-windows-32"],[15158324710,45907898342,"podzemnaya-laboratoriya-windows-64"],[15129687340,45843131386,"Podzemnaya-laboratoriya-Alfa-6.0-windows-32bit.zip"],[15129547308,45843131386,"Podzemnaya-laboratoriya-Alfa-6.0.apk"],[15129230981,45841272588,"podzemnaya-laboratoriya-windows-64"],[15129112693,45843131386,"Podzemnaya-laboratoriya-Alfa-6.0-windows-64bit.zip"],[15129060767,45841272665,"podzemnaya-laboratoriya-alfa-6.0-apk"],[15127664355,45841272588,"podzemnaya-laboratoriya-windows-32"],[15127369766,45840472220,"podzemnaya-laboratoriya-alfa-6.0-apk"],[15126189982,45840472335,"podzemnaya-laboratoriya-windows-64"],[15061040345,45693495286,"podzemnaya-laboratoriya-windows-32"],[15060925368,45693495286,"podzemnaya-laboratoriya-windows-64"],[15059356337,45691355268,"podzemnaya-laboratoriya-alfa-6.0-apk"],[15058518564,45691355108,"podzemnaya-laboratoriya-windows-32"]]
+          eligible_branches = {"codex/lab-6.0-direct-downloads", "codex/lab-alpha-6.0-voices", "codex/lab-delivery-6.0-voices", "codex/lab-alpha-6.0"}
+          verified = []
+          for artifact_id, run_id, name in copies:
+              path = "/actions/artifacts/" + str(artifact_id)
+              item = api(path, allow_missing=True)
+              if item is None:
+                  continue
+              assert item["id"] == artifact_id and item["name"] == name
+              run = item["workflow_run"]
+              assert run["id"] == run_id and run["head_branch"] in eligible_branches
+              verified.append(path)
+          for path in verified:
+              assert api(path, method="DELETE", allow_missing=True) in (204, None)
+          for artifact_id, _, _ in copies:
+              assert api("/actions/artifacts/" + str(artifact_id), allow_missing=True) is None
+          print("Предыдущие копии удалены. Проверено адресов:", len(copies))
