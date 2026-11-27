@@ -4,7 +4,7 @@ on:
     branches: [codex/lab-alpha-6-owner-delivery]
     paths: [.github/workflows/lab-revoke-old-delivery.yml]
 permissions:
-  contents: read
+  contents: write
   actions: write
 concurrency: lab-revoke-old-delivery-6-0
 jobs:
@@ -50,7 +50,7 @@ jobs:
               size, digest = expected[asset["name"]]
               assert asset["state"] == "uploaded" and asset["size"] == size and asset["digest"] == "sha256:" + digest
               # curl drops Authorization when following redirects to the storage host.
-              payload = subprocess.check_output(["curl", "--fail", "--silent", "--show-error", "--location", "--range", "0-3", "--max-time", "40", "--max-filesize", "8", "--header", "Authorization: " + headers["Authorization"], "--header", "Accept: application/octet-stream", base + "/releases/assets/" + str(asset["id"])])
+              payload = subprocess.check_output(["curl", "--fail", "--silent", "--show-error", "--location", "--range", "0-3", "--max-time", "40", "--max-filesize", "8", "--header", "@-", "--header", "Accept: application/octet-stream", base + "/releases/assets/" + str(asset["id"])], input=("Authorization: " + headers["Authorization"] + "\n").encode())
               assert payload == b"PK\x03\x04"
           print("Три личных оригинала доступны для скачивания.", flush=True)
 
