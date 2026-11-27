@@ -1,0 +1,76 @@
+name: Личные установочные файлы Альфы 6.0
+on:
+  push:
+    branches: [codex/lab-alpha-6-owner-delivery]
+    paths: [.github/workflows/lab-owner-delivery.yml]
+permissions:
+  contents: write
+  actions: read
+concurrency: lab-owner-delivery-6-0
+jobs:
+  delivery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      OWNER: nikhaver2026-source
+      TARGET: 6fc2315ef3eea4202e6a9f5789d6cb43811185f9
+      TAG: lab-alpha-6.0-personal-builds
+    steps:
+      - name: Проверить доступ к черновикам
+        run: |
+          set -euo pipefail
+          gh api "repos/$GH_REPO" | jq -e --arg owner "$OWNER" '.owner.type == "User" and .owner.login == $owner' > /dev/null
+          gh api --paginate --slurp "repos/$GH_REPO/collaborators?affiliation=all&per_page=100" |
+            jq -e --arg owner "$OWNER" 'type == "array" and all(.[]; type == "array") and all(.[][]; .login == $owner or (.permissions.push == false and .permissions.admin == false and .permissions.maintain == false))' > /dev/null
+      - name: Получить исходный APK
+        uses: actions/download-artifact@v8
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45909108055
+          artifact-ids: 15158952855
+          merge-multiple: true
+          path: originals
+      - name: Получить исходные архивы Windows
+        uses: actions/download-artifact@v8
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45909108068
+          artifact-ids: 15158948337,15158933838
+          merge-multiple: true
+          path: originals
+      - name: Проверить оригиналы
+        working-directory: originals
+        run: |
+          sha256sum --check --strict <<'HASHES'
+          01b26f9edec5c581878b170a6541ecd6d656899836dfc1909c3be66082564ed4  Podzemnaya-laboratoriya-Alfa-6.0.apk
+          a2fcd54afcc96f2608abb9d4c8a06d13985428fba37d7a073c034b8b6cd0f43c  Podzemnaya-laboratoriya-Alfa-6.0-windows-32bit.zip
+          eb996b391a0e10c1eb7338c6de6e82c9a306e80a1d17fb3f460ace0e4a0d03da  Podzemnaya-laboratoriya-Alfa-6.0-windows-64bit.zip
+          HASHES
+      - name: Сохранить файлы в закрытом черновике
+        working-directory: originals
+        run: |
+          set -euo pipefail
+          id=$(gh api --paginate --slurp "repos/$GH_REPO/releases?per_page=100" | jq -er --arg tag "$TAG" '[.[][] | select(.tag_name == $tag)] | if length == 0 then "" elif length == 1 and .[0].draft then .[0].id else error("Unexpected existing release") end')
+          if [[ -z "$id" ]]; then
+            id=$(gh api -X POST "repos/$GH_REPO/releases" -f tag_name="$TAG" -f target_commitish="$TARGET" -f name='Подземная лаборатория. Альфа 6.0 — личные сборки' -f body='Android — установочный APK. Windows — исходные архивы для 32 и 64 бит.' -F draft=true -F prerelease=true -f make_latest=false --jq '.id')
+          fi
+          read_state() { gh api "repos/$GH_REPO/releases/$id"; }
+          state=$(read_state)
+          jq -e --arg tag "$TAG" --arg target "$TARGET" '.draft == true and .tag_name == $tag and .target_commitish == $target' <<<"$state" > /dev/null
+          for path in *.apk *.zip; do
+            digest="sha256:$(sha256sum "$path" | cut -d' ' -f1)"
+            if jq -e --arg n "$path" 'any(.assets[]; .name==$n)' <<<"$state" > /dev/null; then
+              jq -e --arg n "$path" --arg d "$digest" 'any(.assets[]; .name==$n and .digest==$d and .state=="uploaded")' <<<"$state" > /dev/null
+              continue
+            fi
+            gh release upload "$TAG" "$path" --repo "$GH_REPO"
+          done
+          state=$(read_state)
+          jq -e '.draft and (.assets | length == 3)' <<<"$state" > /dev/null
+          for path in *.apk *.zip; do
+            digest="sha256:$(sha256sum "$path" | cut -d' ' -f1)"
+            bytes=$(stat -c '%s' "$path")
+            jq -e --arg n "$path" --arg d "$digest" --argjson b "$bytes" 'any(.assets[]; .name==$n and .digest==$d and .size==$b and .state=="uploaded")' <<<"$state" > /dev/null
+          done
